@@ -118,7 +118,7 @@ std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExtractInternalSurfacesFromTriangleGeometry::defaultTags() const
 {
-  return {"Geometry", "Triangle Geometry", "Memory Management"};
+  return {className(), "Geometry", "Triangle Geometry", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------

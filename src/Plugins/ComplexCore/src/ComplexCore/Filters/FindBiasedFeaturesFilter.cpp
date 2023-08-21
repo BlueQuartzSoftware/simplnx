@@ -41,7 +41,7 @@ std::string FindBiasedFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindBiasedFeaturesFilter::defaultTags() const
 {
-  return {"Generic", "Spatial"};
+  return {className(), "Generic", "Spatial"};
 }
 
 //------------------------------------------------------------------------------

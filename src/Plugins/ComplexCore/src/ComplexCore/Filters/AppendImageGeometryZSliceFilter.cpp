@@ -49,7 +49,7 @@ std::string AppendImageGeometryZSliceFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AppendImageGeometryZSliceFilter::defaultTags() const
 {
-  return {"Core", "Memory Management"};
+  return {className(), "Core", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------

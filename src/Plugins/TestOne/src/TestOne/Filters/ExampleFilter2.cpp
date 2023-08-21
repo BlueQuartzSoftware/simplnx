@@ -64,7 +64,7 @@ std::string ExampleFilter2::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExampleFilter2::defaultTags() const
 {
-  return {"Example", "Test"};
+  return {className(), "Example", "Test"};
 }
 
 //------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ std::string ErodeDilateMaskFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ErodeDilateMaskFilter::defaultTags() const
 {
-  return {"Processing", "Cleanup", "Erode", "Dilate"};
+  return {className(), "Processing", "Cleanup", "Erode", "Dilate"};
 }
 
 //------------------------------------------------------------------------------

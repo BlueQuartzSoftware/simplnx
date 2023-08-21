@@ -40,7 +40,7 @@ std::string FindBoundaryStrengthsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindBoundaryStrengthsFilter::defaultTags() const
 {
-  return {"Statistics", "Crystallography"};
+  return {className(), "Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

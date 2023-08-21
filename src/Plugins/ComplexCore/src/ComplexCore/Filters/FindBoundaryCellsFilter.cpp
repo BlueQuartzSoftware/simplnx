@@ -42,7 +42,7 @@ std::string FindBoundaryCellsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindBoundaryCellsFilter::defaultTags() const
 {
-  return {"Generic", "Spatial"};
+  return {className(), "Generic", "Spatial"};
 }
 
 //------------------------------------------------------------------------------

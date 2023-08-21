@@ -57,7 +57,7 @@ std::string AlignSectionsMisorientationFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AlignSectionsMisorientationFilter::defaultTags() const
 {
-  return {"Reconstruction", "Alignment"};
+  return {className(), "Reconstruction", "Alignment"};
 }
 
 //------------------------------------------------------------------------------

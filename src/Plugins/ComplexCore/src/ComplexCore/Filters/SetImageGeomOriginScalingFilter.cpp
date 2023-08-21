@@ -40,7 +40,7 @@ std::string SetImageGeomOriginScalingFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> SetImageGeomOriginScalingFilter::defaultTags() const
 {
-  return {"Image Geometry", "Shift", "Spacing", "Mutate"};
+  return {className(), "Image Geometry", "Shift", "Spacing", "Mutate"};
 }
 
 //------------------------------------------------------------------------------

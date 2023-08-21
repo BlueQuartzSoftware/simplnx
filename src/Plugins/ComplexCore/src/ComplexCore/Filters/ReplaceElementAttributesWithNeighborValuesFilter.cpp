@@ -41,7 +41,7 @@ std::string ReplaceElementAttributesWithNeighborValuesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReplaceElementAttributesWithNeighborValuesFilter::defaultTags() const
 {
-  return {"Processing", "Cleanup"};
+  return {className(), "Processing", "Cleanup"};
 }
 
 //------------------------------------------------------------------------------

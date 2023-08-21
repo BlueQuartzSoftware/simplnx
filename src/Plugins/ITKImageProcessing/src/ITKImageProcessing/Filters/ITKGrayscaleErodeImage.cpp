@@ -63,7 +63,7 @@ std::string ITKGrayscaleErodeImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKGrayscaleErodeImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKGrayscaleErodeImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKGrayscaleErodeImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

@@ -52,7 +52,7 @@ std::string ReadCtfDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReadCtfDataFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import", "Oxford", "CTF", "EBSD"};
+  return {className(), "IO", "Input", "Read", "Import", "Oxford", "CTF", "EBSD"};
 }
 
 //------------------------------------------------------------------------------

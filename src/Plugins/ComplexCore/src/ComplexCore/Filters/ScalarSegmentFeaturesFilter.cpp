@@ -57,7 +57,7 @@ std::string ScalarSegmentFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ScalarSegmentFeaturesFilter::defaultTags() const
 {
-  return {"Reconstruction", "Segmentation"};
+  return {className(), "Reconstruction", "Segmentation"};
 }
 
 Parameters ScalarSegmentFeaturesFilter::parameters() const

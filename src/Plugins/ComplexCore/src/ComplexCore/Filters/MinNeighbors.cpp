@@ -303,7 +303,7 @@ std::string MinNeighbors::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MinNeighbors::defaultTags() const
 {
-  return {"Minimum", "Neighbors", "Memory Management", "Cleanup"};
+  return {className(), "Minimum", "Neighbors", "Memory Management", "Cleanup"};
 }
 
 //------------------------------------------------------------------------------

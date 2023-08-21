@@ -53,7 +53,7 @@ std::string ImportH5OimDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportH5OimDataFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

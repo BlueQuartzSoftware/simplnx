@@ -69,7 +69,7 @@ std::string ITKClosingByReconstructionImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKClosingByReconstructionImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKClosingByReconstructionImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKClosingByReconstructionImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

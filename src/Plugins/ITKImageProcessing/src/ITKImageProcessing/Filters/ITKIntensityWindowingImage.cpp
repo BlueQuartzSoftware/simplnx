@@ -66,7 +66,7 @@ std::string ITKIntensityWindowingImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKIntensityWindowingImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKIntensityWindowingImage", "ITKImageIntensity", "ImageIntensity"};
+  return {className(), "ITKImageProcessing", "ITKIntensityWindowingImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------

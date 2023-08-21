@@ -40,7 +40,7 @@ std::string GenerateColorTableFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateColorTableFilter::defaultTags() const
 {
-  return {"Core", "Image"};
+  return {className(), "Core", "Image"};
 }
 
 //------------------------------------------------------------------------------

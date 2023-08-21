@@ -44,7 +44,7 @@ std::string TriangleCentroidFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> TriangleCentroidFilter::defaultTags() const
 {
-  return {"Surface Meshing", "Misc"};
+  return {className(), "Surface Meshing", "Misc"};
 }
 
 //------------------------------------------------------------------------------

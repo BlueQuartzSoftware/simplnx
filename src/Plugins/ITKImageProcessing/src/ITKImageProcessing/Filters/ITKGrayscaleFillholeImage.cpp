@@ -60,7 +60,7 @@ std::string ITKGrayscaleFillholeImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKGrayscaleFillholeImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKGrayscaleFillholeImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKGrayscaleFillholeImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

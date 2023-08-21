@@ -63,7 +63,7 @@ std::string WriteBinaryDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> WriteBinaryDataFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export", "Binary"};
+  return {className(), "IO", "Output", "Write", "Export", "Binary"};
 }
 
 //------------------------------------------------------------------------------

@@ -252,7 +252,7 @@ std::string IdentifySample::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> IdentifySample::defaultTags() const
 {
-  return {"Core", "Identify Sample"};
+  return {className(), "Core", "Identify Sample"};
 }
 
 //------------------------------------------------------------------------------

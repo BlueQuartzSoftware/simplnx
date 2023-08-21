@@ -43,7 +43,7 @@ std::string DynamicTableExample::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> DynamicTableExample::defaultTags() const
 {
-  return {"Example", "Test"};
+  return {className(), "Example", "Test"};
 }
 
 //------------------------------------------------------------------------------

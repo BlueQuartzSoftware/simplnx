@@ -57,7 +57,7 @@ std::string ITKAtanImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKAtanImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKAtanImage", "ITKImageIntensity", "ImageIntensity"};
+  return {className(), "ITKImageProcessing", "ITKAtanImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------

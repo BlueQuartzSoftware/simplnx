@@ -46,7 +46,7 @@ std::string ImageContouringFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImageContouringFilter::defaultTags() const
 {
-  return {"Contouring", "Image Geometry"};
+  return {className(), "Contouring", "Image Geometry"};
 }
 
 //------------------------------------------------------------------------------

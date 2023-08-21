@@ -66,7 +66,7 @@ std::string ITKGrayscaleMorphologicalOpeningImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKGrayscaleMorphologicalOpeningImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKGrayscaleMorphologicalOpeningImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKGrayscaleMorphologicalOpeningImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

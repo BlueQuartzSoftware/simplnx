@@ -63,7 +63,7 @@ std::string IlluminationCorrection::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> IlluminationCorrection::defaultTags() const
 {
-  return {"Processing", "Image"};
+  return {className(), "Processing", "Image"};
 }
 
 //------------------------------------------------------------------------------

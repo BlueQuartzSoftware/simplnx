@@ -70,7 +70,7 @@ std::string ITKBinaryMorphologicalClosingImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKBinaryMorphologicalClosingImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKBinaryMorphologicalClosingImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKBinaryMorphologicalClosingImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

@@ -44,7 +44,7 @@ std::string AvizoUniformCoordinateWriterFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AvizoUniformCoordinateWriterFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export"};
+  return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

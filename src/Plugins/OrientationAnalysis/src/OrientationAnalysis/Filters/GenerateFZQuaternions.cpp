@@ -136,7 +136,7 @@ std::string GenerateFZQuaternions::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateFZQuaternions::defaultTags() const
 {
-  return {"Processing", "OrientationAnalysis"};
+  return {className(), "Processing", "OrientationAnalysis"};
 }
 
 //------------------------------------------------------------------------------

@@ -236,7 +236,7 @@ std::string PartitionGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> PartitionGeometryFilter::defaultTags() const
 {
-  return {"Processing", "Segmentation"};
+  return {className(), "Processing", "Segmentation"};
 }
 
 //------------------------------------------------------------------------------

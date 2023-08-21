@@ -46,7 +46,7 @@ std::string FindGBCDMetricBasedFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindGBCDMetricBasedFilter::defaultTags() const
 {
-  return {"Statistics", "Crystallography"};
+  return {className(), "Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

@@ -43,7 +43,7 @@ std::string ComputeMomentInvariants2DFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeMomentInvariants2DFilter::defaultTags() const
 {
-  return {"Unsupported", "Statistics"};
+  return {className(), "Unsupported", "Statistics"};
 }
 
 //------------------------------------------------------------------------------

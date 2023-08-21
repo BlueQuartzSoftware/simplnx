@@ -48,7 +48,7 @@ std::string StlFileReaderFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> StlFileReaderFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

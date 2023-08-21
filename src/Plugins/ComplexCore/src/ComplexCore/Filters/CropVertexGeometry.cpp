@@ -67,7 +67,7 @@ std::string CropVertexGeometry::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CropVertexGeometry::defaultTags() const
 {
-  return {"Crop", "Vertex Geometry", "Geometry", "Memory Management", "Cut"};
+  return {className(), "Crop", "Vertex Geometry", "Geometry", "Memory Management", "Cut"};
 }
 
 //------------------------------------------------------------------------------

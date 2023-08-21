@@ -44,7 +44,7 @@ std::string ImportZenInfoMontage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportZenInfoMontage::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

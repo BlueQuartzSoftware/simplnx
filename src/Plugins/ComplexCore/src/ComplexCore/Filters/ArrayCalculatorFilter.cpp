@@ -42,7 +42,7 @@ std::string ArrayCalculatorFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ArrayCalculatorFilter::defaultTags() const
 {
-  return {"Core", "Generation"};
+  return {className(), "Core", "Generation"};
 }
 
 //------------------------------------------------------------------------------

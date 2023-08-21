@@ -49,7 +49,7 @@ std::string ResampleRectGridToImageGeomFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ResampleRectGridToImageGeomFilter::defaultTags() const
 {
-  return {"Unsupported", "Sampling"};
+  return {className(), "Unsupported", "Sampling"};
 }
 
 //------------------------------------------------------------------------------

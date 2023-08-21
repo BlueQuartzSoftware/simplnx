@@ -223,7 +223,7 @@ std::string ITKImportImageStack::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImportImageStack::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

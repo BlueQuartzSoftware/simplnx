@@ -31,7 +31,7 @@ std::string CreateAttributeMatrixFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateAttributeMatrixFilter::defaultTags() const
 {
-  return {"Core", "Generation", "AttributeMatrix", "Create"};
+  return {className(), "Core", "Generation", "AttributeMatrix", "Create"};
 }
 
 Parameters CreateAttributeMatrixFilter::parameters() const

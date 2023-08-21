@@ -379,7 +379,7 @@ std::string ImportVolumeGraphicsFileFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportVolumeGraphicsFileFilter::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import", "#CT", "#VolumeGraphics", "#vgi"};
+  return {className(), "#IO", "#Input", "#Read", "#Import", "#CT", "#VolumeGraphics", "#vgi"};
 }
 
 //------------------------------------------------------------------------------

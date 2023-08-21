@@ -56,7 +56,7 @@ std::string ITKBinaryThinningImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKBinaryThinningImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKBinaryThinningImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKBinaryThinningImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

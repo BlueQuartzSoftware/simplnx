@@ -66,7 +66,7 @@ std::string ITKDilateObjectMorphologyImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKDilateObjectMorphologyImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKDilateObjectMorphologyImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKDilateObjectMorphologyImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

@@ -168,7 +168,7 @@ std::string InterpolatePointCloudToRegularGridFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> InterpolatePointCloudToRegularGridFilter::defaultTags() const
 {
-  return {"Geometry", "Gaussian", "Kernel", "Interpolation", "Point Cloud", "Vertex Geometry"};
+  return {className(), "Geometry", "Gaussian", "Kernel", "Interpolation", "Point Cloud", "Vertex Geometry"};
 }
 
 //------------------------------------------------------------------------------

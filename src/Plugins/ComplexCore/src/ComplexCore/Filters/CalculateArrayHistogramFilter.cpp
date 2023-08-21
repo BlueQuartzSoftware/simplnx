@@ -41,7 +41,7 @@ std::string CalculateArrayHistogramFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CalculateArrayHistogramFilter::defaultTags() const
 {
-  return {"Statistics", "Ensemble"};
+  return {className(), "Statistics", "Ensemble"};
 }
 
 //------------------------------------------------------------------------------

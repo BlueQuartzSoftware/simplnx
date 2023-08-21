@@ -45,7 +45,7 @@ std::string GenerateGBCDPoleFigureFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateGBCDPoleFigureFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export", "Pole Figure", "GBCD"};
+  return {className(), "IO", "Output", "Write", "Export", "Pole Figure", "GBCD"};
 }
 
 //------------------------------------------------------------------------------

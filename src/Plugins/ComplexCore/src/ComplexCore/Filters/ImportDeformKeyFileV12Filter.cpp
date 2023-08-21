@@ -61,7 +61,7 @@ std::string ImportDeformKeyFileV12Filter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportDeformKeyFileV12Filter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

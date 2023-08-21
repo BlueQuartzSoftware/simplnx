@@ -44,7 +44,7 @@ std::string CAxisSegmentFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CAxisSegmentFeaturesFilter::defaultTags() const
 {
-  return {"Reconstruction", "Segmentation"};
+  return {className(), "Reconstruction", "Segmentation"};
 }
 
 //------------------------------------------------------------------------------

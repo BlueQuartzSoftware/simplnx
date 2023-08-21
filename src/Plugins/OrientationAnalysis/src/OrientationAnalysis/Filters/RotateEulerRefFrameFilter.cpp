@@ -37,7 +37,7 @@ std::string RotateEulerRefFrameFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RotateEulerRefFrameFilter::defaultTags() const
 {
-  return {"Processing", "Conversion", "Euler", "Angles", "ReferenceFrame"};
+  return {className(), "Processing", "Conversion", "Euler", "Angles", "ReferenceFrame"};
 }
 
 //------------------------------------------------------------------------------

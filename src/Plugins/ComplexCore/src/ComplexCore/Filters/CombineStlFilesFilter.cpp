@@ -45,7 +45,7 @@ std::string CombineStlFilesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CombineStlFilesFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

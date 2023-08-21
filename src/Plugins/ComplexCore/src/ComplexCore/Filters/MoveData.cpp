@@ -41,7 +41,7 @@ std::string MoveData::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MoveData::defaultTags() const
 {
-  return {"Move", "Memory Management", "Data Management", "Data Structure"};
+  return {className(), "Move", "Memory Management", "Data Management", "Data Structure"};
 }
 
 //------------------------------------------------------------------------------

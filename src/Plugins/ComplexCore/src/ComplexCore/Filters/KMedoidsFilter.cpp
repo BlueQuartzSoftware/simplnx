@@ -55,7 +55,7 @@ std::string KMedoidsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> KMedoidsFilter::defaultTags() const
 {
-  return {"DREAM3D Review", "Clustering"};
+  return {className(), "DREAM3D Review", "Clustering"};
 }
 
 //------------------------------------------------------------------------------

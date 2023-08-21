@@ -70,7 +70,7 @@ std::string ITKDiscreteGaussianImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKDiscreteGaussianImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKDiscreteGaussianImage", "ITKSmoothing", "Smoothing"};
+  return {className(), "ITKImageProcessing", "ITKDiscreteGaussianImage", "ITKSmoothing", "Smoothing"};
 }
 
 //------------------------------------------------------------------------------
