@@ -28,6 +28,17 @@ public:
   static inline constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
   static inline constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
 
+  enum ErrorCodes : int64
+  {
+    PathNotFoundError = -178,
+    NonScalarArrayFound = -4001,
+    UnequalTuples = -4002,
+    CustomTrueWithBoolean = -4003,
+    CustomFalseWithBoolean = -4004,
+    CustomTrueOutOfBounds = -4005,
+    CustomFalseOutOfBounds = -4006
+  };
+
   /**
    * @brief
    * @return std::string

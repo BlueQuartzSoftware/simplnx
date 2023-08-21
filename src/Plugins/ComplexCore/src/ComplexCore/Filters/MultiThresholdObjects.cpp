@@ -1,5 +1,6 @@
 #include "MultiThresholdObjects.hpp"
 
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
@@ -16,8 +17,6 @@ namespace complex
 {
 namespace
 {
-constexpr int64 k_PathNotFoundError = -178;
-
 template <typename U>
 class ThresholdFilterHelper
 {
@@ -452,7 +451,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     if(data.getData(path) == nullptr)
     {
       auto errorMessage = fmt::format("Could not find DataArray at path {}.", path.toString());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_PathNotFoundError, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::PathNotFoundError), errorMessage}})};
     }
   }
 
@@ -463,7 +462,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     if(currentDataArray != nullptr && currentDataArray->getNumberOfComponents() != 1)
     {
       auto errorMessage = fmt::format("Data Array is not a Scalar Data Array. Data Arrays must only have a single component. '{}:{}'", dataPath.toString(), currentDataArray->getNumberOfComponents());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4001, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::NonScalarArrayFound), errorMessage}})};
     }
   }
 
@@ -479,7 +478,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     {
       auto errorMessage =
           fmt::format("Data Arrays do not have same equal number of tuples. '{}:{}' and '{}'", firstDataPath.toString(), numTuples, dataPath.toString(), currentDataArray->getNumberOfTuples());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4002, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::UnequalTuples), errorMessage}})};
     }
   }
 
@@ -487,12 +486,12 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
   {
     if(useCustomTrueValue)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4003, "Cannot use custom TRUE value with a boolean Mask Type."}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::CustomTrueWithBoolean), "Cannot use custom TRUE value with a boolean Mask Type."}})};
     }
 
     if(useCustomFalseValue)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4003, "Cannot use custom FALSE value with a boolean Mask Type."}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::CustomFalseWithBoolean), "Cannot use custom FALSE value with a boolean Mask Type."}})};
     }
   }
 
@@ -502,7 +501,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     if(result.invalid())
     {
       auto errorMessage = fmt::format("Custom TRUE value ({}) is outside the bounds of the chosen Mask Type ({}).", customTrueValue, DataTypeToString(maskArrayType));
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4005, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::CustomTrueOutOfBounds), errorMessage}})};
     }
   }
 
@@ -512,7 +511,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     if(result.invalid())
     {
       auto errorMessage = fmt::format("Custom FALSE value ({}) is outside the bounds of the chosen Mask Type ({}).", customFalseValue, DataTypeToString(maskArrayType));
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4006, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::CustomFalseOutOfBounds), errorMessage}})};
     }
   }
 
