@@ -1,5 +1,4 @@
-# Export INL File  #
-
+# Export INL File #
 
 ## Group (Subgroup) ##
 
@@ -9,15 +8,15 @@ IO (Output)
 
 This **Filter** writes out **Cell** data from an **Image Geometry** to a file format used by the Idaho National Laboratory (INL).  The format is columnar and space delimited, with header lines denoted by the "#" character. The columns are the following:
 
-	- phi1 
-	- Phi 
-	- phi2
-	- x Position (Microns)
-	- y Position (Microns)
-	- z Position (Microns)
-	- Feature Id
-	- Phase Id
-	- Symmetry
+- phi1
+- Phi
+- phi2
+- x Position (Microns)
+- y Position (Microns)
+- z Position (Microns)
+- Feature Id
+- Phase Id
+- Symmetry
 
 Some information about the phase is included in the header section of the file in addition to values for the origin, step size, dimensions and number of **Features** in the file.
 
@@ -69,22 +68,22 @@ Some information about the phase is included in the header section of the file i
 
 | Name | Type | Description |
 |------|------|-------------|
-| Output File | File Path | The output .txt file path |
+| Output File | File Path | The output .inl file path |
 
 ## Required Geometry ##
 
-Image 
+Image
 
 ## Required Objects ##
 
 | Kind | Default Name |Type | Component Dimensions | Description |
 |------|--------------|-------------|---------|-----|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Cell Attribute Array** | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| **Cell Attribute Array** | EulerAngles | float | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z) |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| **Cell Attribute Array** | FeatureIds | int32 | (1) | Specifies to which **Feature** each **Cell** belongs |
+| **Cell Attribute Array** | Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
+| **Cell Attribute Array** | EulerAngles | float32 | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z) |
+| **Ensemble Attribute Array** | CrystalStructures | uint32 | (1) | Enumeration representing the crystal structure for each **Ensemble** |
 | **Ensemble Attribute Array** | Material Names | String | (1)  | Name of each **Ensemble** |
-| **Ensemble Attribute Array** | Number of Features | uint32_t | (1) | The number of **Features** per **Ensemble** |
+| **Ensemble Attribute Array** | Number of Features | int32 | (1) | The number of **Features** per **Ensemble** |
 
 ## Created Objects ##
 
@@ -92,7 +91,7 @@ None
 
 ## Example Pipelines ##
 
-+ INL Export
+- INL Export
 
 ## License & Copyright ##
 
@@ -101,5 +100,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
-
-

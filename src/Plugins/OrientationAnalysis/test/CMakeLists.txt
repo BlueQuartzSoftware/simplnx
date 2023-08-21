@@ -43,6 +43,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   GenerateQuaternionConjugateTest.cpp
   ImportH5EspritDataTest.cpp
   ImportH5OimDataTest.cpp
+  INLWriterTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
@@ -137,6 +138,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_read_ang_data.tar.gz SHA512 1777431a1623e2fffdc2daad9be51a72c3bdf6a83a33893827892c98a811991e21f1cf636e036604d0bbc523d8ca0b9d655c28be3d0e89ccafc1486dfa0bd0c7)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_read_ctf_data.tar.gz SHA512 e7ac4706d22574396aaa5d67b2a2b4e32db5005e841d3b6dafad65c74615441c028e4cba0ce0721c8929dace495afd6ef844585e2ce6d3b092582a258befd7c2)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stats_gen_odf_angle_file.tar.gz SHA512 be3f663aae1f78e5b789200421534ed9fe293187ec3514796ac8177128b34ded18bb9a98b8e838bb283f9818ac30dc4b19ec379bdd581b1a98eb36d967cdd319)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME INL_writer.tar.gz SHA512 7d723351e51e84540abfbc38e69a6014852ba34808f9d216a27063a616bcfbd5eb708405305fd83334e48c9ca133d3d0be797c05040e4a115cc612e385d9ada6)
 
 endif()
 
