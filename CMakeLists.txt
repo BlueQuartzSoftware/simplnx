@@ -58,19 +58,8 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATUR
 # --------------------------------------------------------------------------------------------------
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
-# --------------------------------------------------------------------------------------------------
-# This section sets the version numbers for this build.
-# COMPLEX will use the normal semantic versioning system where the version is laid
-# out as MAJOR.MINOR.PATCH
-# --------------------------------------------------------------------------------------------------
-set(COMPLEX_VERSION_MAJOR 0)
-set(COMPLEX_VERSION_MINOR 1)
-set(COMPLEX_VERSION_PATCH 0)
-
-set(COMPLEX_VERSION "${COMPLEX_VERSION_MAJOR}.${COMPLEX_VERSION_MINOR}.${COMPLEX_VERSION_PATCH}")
-
 project(complex
-  VERSION ${COMPLEX_VERSION}
+  VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"
   HOMEPAGE_URL "https://github.com/BlueQuartzSoftware/complex"
   LANGUAGES CXX

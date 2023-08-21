@@ -118,37 +118,34 @@ Result<> INLWriter::operator()()
   fout << "# Y_MAX: " << std::fixed << origin[1] + (static_cast<float64>(dims[1]) * res[1]) << "\n";
   fout << "# Z_MAX: " << std::fixed << origin[2] + (static_cast<float64>(dims[2]) * res[2]) << "\n";
   fout << "#\n";
-  fout << "# X_DIM: " << static_cast<long long unsigned int>(dims[0]) << "\n";
-  fout << "# Y_DIM: " << static_cast<long long unsigned int>(dims[1]) << "\n";
-  fout << "# Z_DIM: " << static_cast<long long unsigned int>(dims[2]) << "\n";
+  fout << "# X_DIM: " << dims[0] << "\n";
+  fout << "# Y_DIM: " << dims[1] << "\n";
+  fout << "# Z_DIM: " << dims[2] << "\n";
   fout << "#\n";
 
-#if 0
-   -------------------------------------------- -
-#Phase_1 : MOX with 30 % Pu
-#Symmetry_1 : 43
-#Features_1 : 4
-#
-#Phase_2 : Brahman
-#Symmetry_2 : 62
-#Features_2 : 6
-#
-#Phase_3 : Void
-#Symmetry_3 : 22
-#Features_3 : 1
-#
-#Total_Features : 11
-  -------------------------------------------- -
-#endif
+  /*
+   * -------------------------------------------- -
+   * #Phase_1 : MOX with 30 % Pu
+   * #Symmetry_1 : 43
+   * #Features_1 : 4
+   * #
+   * #Phase_2 : Brahman
+   * #Symmetry_2 : 62
+   * #Features_2 : 6
+   * #
+   * #Phase_3 : Void
+   * #Symmetry_3 : 22
+   * #Features_3 : 1
+   * #
+   * #Total_Features : 11
+   * -------------------------------------------- -
+   */
 
-  uint32 symmetry;
   auto count = static_cast<int32>(materialNames.getNumberOfTuples());
   for(uint32 i = 1; i < count; ++i)
   {
     fout << "# Phase_" << i << ": " << materialNames[i].c_str() << "\n";
-    symmetry = crystalStructures[i];
-    symmetry = mapCrystalSymmetryToTslSymmetry(symmetry);
-    fout << "# Symmetry_" << i << ": " << symmetry << "\n";
+    fout << "# Symmetry_" << i << ": " << mapCrystalSymmetryToTslSymmetry(crystalStructures[i]) << "\n";
     fout << "# Features_" << i << ": " << numFeatures[i] << "\n";
     fout << "#\n";
   }
@@ -164,28 +161,21 @@ Result<> INLWriter::operator()()
 
   fout << "# phi1 PHI phi2 x y z FeatureId PhaseId Symmetry\n";
 
-  float32 phi1, phi, phi2;
-  float64 xPos, yPos, zPos;
-  int32 featureId;
-  int32 phaseId;
-
-  usize index;
   for(usize z = 0; z < dims[2]; ++z)
   {
     for(usize y = 0; y < dims[1]; ++y)
     {
       for(usize x = 0; x < dims[0]; ++x)
       {
-        index = (z * dims[0] * dims[1]) + (dims[0] * y) + x;
-        phi1 = eulerAngles[index * 3];
-        phi = eulerAngles[index * 3 + 1];
-        phi2 = eulerAngles[index * 3 + 2];
-        xPos = origin[0] + (static_cast<float64>(x) * res[0]);
-        yPos = origin[1] + (static_cast<float64>(y) * res[1]);
-        zPos = origin[2] + (static_cast<float64>(z) * res[2]);
-        featureId = featureIds[index];
-        phaseId = cellPhases[index];
-        symmetry = crystalStructures[phaseId];
+        usize index = (z * dims[0] * dims[1]) + (dims[0] * y) + x;
+        float32 phi1 = eulerAngles[index * 3];
+        float32 phi = eulerAngles[index * 3 + 1];
+        float32 phi2 = eulerAngles[index * 3 + 2];
+        float64 xPos = origin[0] + (static_cast<float64>(x) * res[0]);
+        float64 yPos = origin[1] + (static_cast<float64>(y) * res[1]);
+        float64 zPos = origin[2] + (static_cast<float64>(z) * res[2]);
+        int32 phaseId = cellPhases[index];
+        uint32 symmetry = crystalStructures[phaseId];
         if(phaseId > 0)
         {
           if(symmetry == EbsdLib::CrystalStructure::Cubic_High)
@@ -206,12 +196,10 @@ Result<> INLWriter::operator()()
           symmetry = EbsdLib::Ang::PhaseSymmetry::UnknownSymmetry;
         }
 
-        fout << std::fixed << phi1 << " " << std::fixed << phi << " " << std::fixed << phi2 << " " << std::fixed << xPos << " " << std::fixed << yPos << " " << std::fixed << zPos << " " << featureId
-             << " " << phaseId << " " << symmetry << "\n";
+        fout << std::fixed << phi1 << " " << phi << " " << phi2 << " " << xPos << " " << yPos << " " << zPos << " " << featureIds[index] << " " << phaseId << " " << symmetry << "\n";
       }
     }
   }
-  fout.flush();
 
   return {};
 }

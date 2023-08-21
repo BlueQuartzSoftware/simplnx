@@ -43,22 +43,21 @@ void CompareResults() // compare hash of both file strings
   // ignore versioning
   generatedFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-  char exemplar[128];
-  char generated[128];
+  std::string exemplar = "";
+  std::string generated = "";
   for(usize i = 0; i < 1024; i++)
   {
     if(exemplarFile.eof())
     {
       break;
     }
-    exemplarFile.getline(exemplar, std::numeric_limits<std::streamsize>::max(), '\n');
-    generatedFile.getline(generated, std::numeric_limits<std::streamsize>::max(), '\n');
 
-    std::string cExem(exemplar);
-    std::string exem = cExem.substr(0, cExem.find('\r'));
+    std::getline(exemplarFile, exemplar, '\n');
+    std::getline(generatedFile, generated, '\n');
 
-    std::string cGen(generated);
-    std::string gen = cGen.substr(0, cGen.find('\n'));
+    std::string exem = exemplar.substr(0, exemplar.find('\r'));
+
+    std::string gen = generated.substr(0, generated.find('\n'));
     REQUIRE(exem == gen);
   }
 }
