@@ -47,6 +47,8 @@ Create the package from the `complex` sources
 
 
 ```
+conda config --add channels conda-forge
+conda config --set channel_priority strict
 conda create -n cxpython python=3.8
 conda activate cxpython
 conda install -c bluequartzsoftware complex
