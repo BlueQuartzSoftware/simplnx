@@ -146,7 +146,7 @@
     {
       "args": {
         "cell_euler_angles_array_path": "[Image Geometry]/CellData/Eulers",
-        "cell_ip_fcolors_array_name": "IPFColors",
+        "cell_ipf_colors_array_name": "IPFColors",
         "cell_phases_array_path": "[Image Geometry]/CellData/Phase",
         "crystal_structures_array_path": "[Image Geometry]/CellEnsembleData/CrystalStructures",
         "good_voxels_array_path": "",

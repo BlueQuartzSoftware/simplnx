@@ -265,8 +265,10 @@ target_include_directories(${PLUGIN_NAME}
 
 # ------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
-enable_testing()
-add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+if(COMPLEX_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+endif()
 
 # -----------------------------------------------------------------------
 # Install example pipelines
@@ -279,12 +281,16 @@ if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
                     COMMENT "Copying Pipeline Folder into Binary Directory")
   set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
-  set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
-  install(DIRECTORY
-          "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
-          DESTINATION "${INSTALL_DESTINATION}"
-          COMPONENT Applications
-        )
+  option(${PLUGIN_NAME}_INSTALL_PIPELINES "Enables install of ${PLUGIN_NAME} pipelines" ON)
+
+  if(${PLUGIN_NAME}_INSTALL_PIPELINES)
+    set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
+    install(DIRECTORY
+      "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
+      DESTINATION "${INSTALL_DESTINATION}"
+      COMPONENT Applications
+    )
+  endif()
 endif()
 
 # -----------------------------------------------------------------------
@@ -345,9 +351,23 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
                    COMMENT "Copying ${PLUGIN_NAME}/Small_IN100 data into Binary Directory"
                    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
-                 )                   
-  set_target_properties(Copy_${PLUGIN_NAME}_Small_IN100 PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
+                 )
+
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+    ARCHIVE_NAME 6_6_ImportH5Data.tar.gz
+    SHA512 68cf620d28a515d04040d66c4f8fa9d8d46707c65138b366b47f40d1d56a36c40e2e2cd0c9d35168b68c2cb5b2ce95650fa2a0d4e6ffce980d0dd0654908f40d
+  )
+  add_custom_target(Copy_${PLUGIN_NAME}_H5Data ALL
+    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data.tar.gz"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/EdaxOIMData.h5" "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/H5EspritReaderTest.h5" "${DATA_DEST_DIR}/${PLUGIN_NAME}/"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data"
+    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
+    COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
+    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+  )
+  set_target_properties(Copy_${PLUGIN_NAME}_H5Data PROPERTIES FOLDER ZZ_COPY_FILES)
 endif()
+
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder
 # for this plugin
@@ -358,28 +378,18 @@ add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
   )
 set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
+option(${PLUGIN_NAME}_INSTALL_DATA_FILES "Enables install of ${PLUGIN_NAME} data files" ON)
+
 set(Installed_Data_Files
   ${${PLUGIN_NAME}_SOURCE_DIR}/data/Ensemble.ini
   ${${PLUGIN_NAME}_SOURCE_DIR}/data/fz_quats.raw
   ${${PLUGIN_NAME}_SOURCE_DIR}/data/quats.raw
 )
 
-install(FILES 
-  ${Installed_Data_Files}
-  DESTINATION Data/${PLUGIN_NAME}
-  COMPONENT Applications
-)
-
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
-                    ARCHIVE_NAME 6_6_ImportH5Data.tar.gz 
-                    SHA512 68cf620d28a515d04040d66c4f8fa9d8d46707c65138b366b47f40d1d56a36c40e2e2cd0c9d35168b68c2cb5b2ce95650fa2a0d4e6ffce980d0dd0654908f40d
-                    )
-add_custom_target(Copy_${PLUGIN_NAME}_H5Data ALL
-  COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data.tar.gz" 
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/EdaxOIMData.h5" "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/H5EspritReaderTest.h5" "${DATA_DEST_DIR}/${PLUGIN_NAME}/"
-  COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data"
-  WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
-  COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
-  DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
-)
-set_target_properties(Copy_${PLUGIN_NAME}_H5Data PROPERTIES FOLDER ZZ_COPY_FILES)
+if(${PLUGIN_NAME}_INSTALL_DATA_FILES)
+  install(FILES
+    ${Installed_Data_Files}
+    DESTINATION Data/${PLUGIN_NAME}
+    COMPONENT Applications
+  )
+endif()

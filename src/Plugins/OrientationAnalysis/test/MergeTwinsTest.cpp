@@ -61,7 +61,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
 
   // Read input data
   {
-    constexpr StringLiteral k_ImportFileData = "Import_File_Data";
+    constexpr StringLiteral k_ImportFileData = "import_file_data";
 
     auto filter = filterList->createFilter(k_ImportDream3dFilterHandle);
     REQUIRE(nullptr != filter);

@@ -157,6 +157,147 @@
           "value": "x64-linux-dynamic"
         }
       }
+    },
+    {
+      "name": "conda",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },
+        "COMPLEX_BUILD_TESTS": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "COMPLEX_BUILD_DOCS": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "COMPLEX_BUILD_PYTHON": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "COMPLEX_EMBED_PYTHON": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "COMPLEX_DOWNLOAD_TEST_FILES": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "COMPLEX_CONDA_BUILD": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "COMPLEX_ENABLE_INSTALL": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "COMPLEX_PY_ENABLE_INSTALL": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "COMPLEX_PY_INSTALL_DIR": {
+          "type": "PATH",
+          "value": "$env{SP_DIR}"
+        },
+        "COMPLEX_PY_GENERATE_PYI": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "ITKImageProcessing_USE_JOB_POOL": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "ITKIMAGEPROCESSING_LEAN_AND_MEAN": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "ComplexCore_INSTALL_PIPELINES": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "ITKImageProcessing_INSTALL_PIPELINES": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "OrientationAnalysis_INSTALL_PIPELINES": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "OrientationAnalysis_INSTALL_DATA_FILES": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "span-lite_DIR": {
+          "type": "PATH",
+          "value": "$env{SRC_DIR}/sdk/span-lite/lib/cmake/span-lite"
+        },
+        "expected-lite_DIR": {
+          "type": "PATH",
+          "value": "$env{SRC_DIR}/sdk/expected-lite/lib/cmake/expected-lite"
+        },
+        "H5Support_DIR": {
+          "type": "PATH",
+          "value": "$env{SRC_DIR}/sdk/H5Support/share/H5Support"
+        },
+        "EbsdLib_DIR": {
+          "type": "PATH",
+          "value": "$env{SRC_DIR}/sdk/EbsdLib/share/EbsdLib"
+        },
+        "nod_DIR": {
+          "type": "PATH",
+          "value": "$env{SRC_DIR}/sdk/nod/share/nod"
+        },
+        "HDF5_NO_FIND_PACKAGE_CONFIG_FILE": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "conda-unix",
+      "inherits": "conda",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": {
+          "type": "PATH",
+          "value": "$env{PREFIX}"
+        },
+        "CMAKE_SYSTEM_PREFIX_PATH": {
+          "type": "PATH",
+          "value": "$env{PREFIX}"
+        }
+      }
+    },
+    {
+      "name": "conda-osx",
+      "inherits": "conda-unix",
+      "cacheVariables": {
+        "COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "conda-linux",
+      "inherits": "conda-unix"
+    },
+    {
+      "name": "conda-win",
+      "inherits": "conda",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": {
+          "type": "PATH",
+          "value": "$env{LIBRARY_PREFIX}"
+        },
+        "CMAKE_SYSTEM_PREFIX_PATH": {
+          "type": "PATH",
+          "value": "$env{LIBRARY_PREFIX}"
+        }
+      }
     }
   ],
   "buildPresets": [

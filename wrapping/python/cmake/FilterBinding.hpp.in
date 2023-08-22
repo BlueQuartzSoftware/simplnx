@@ -1,0 +1,8 @@
+#pragma once
+
+#include "CxPybind/CxPybind.hpp"
+
+namespace complex::@PLUGIN_NAME@
+{
+void BindFilters(pybind11::handle scope, const complex::CxPybind::Internals& internals);
+} // namespace complex

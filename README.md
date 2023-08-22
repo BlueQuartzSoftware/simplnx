@@ -39,8 +39,8 @@ This clearance is in effect until 14 SEPT 2025 at which point any new additions 
 | nlohmann-json  | https://github.com/nlohmann/json/  | 3.9.1 |
 | pybind11  | https://github.com/pybind/pybind11.git  | 2.6.2 |
 | span-lite  | https://github.com/martinmoene/span-lite  | 0.10.3 |
-| tbb  | https://github.com/oneapi-src/onetbb  | 2021.5.0 |
-| ebsdlib  | https://www.github.com/bluequartzsoftware/EBSDLib   | 1.0.16 |
+| tbb  | https://github.com/oneapi-src/onetbb  | 2021.10.0 |
+| ebsdlib  | https://www.github.com/bluequartzsoftware/EBSDLib   | 1.0.23 |
 | h5support  | https://www.github.com/bluequartzsoftware/H5Support  | 1.0.8 |
 | nod  |https://github.com/fr00b0/nod.git  | 0.5.2 |
 
@@ -193,3 +193,14 @@ The developer can also turn off the downloading of any test data with the follow
 + `-DCOMPLEX_DOWNLOAD_TEST_FILES=OFF`
 
 
+## Python Bindings
+
+Python bindings are available for complex. To install them, please use an Anaconda virtual environment like the following:
+
+```
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+conda create -n cxpython python=3.8
+conda activate cxpython
+conda install -c bluequartzsoftware complex
+```

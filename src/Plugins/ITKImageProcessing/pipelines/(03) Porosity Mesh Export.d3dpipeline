@@ -107,7 +107,7 @@
     {
       "args": {
         "iteration_steps": 15,
-        "lambda": 0.20000000298023224,
+        "lambda_value": 0.20000000298023224,
         "mu_factor": 0.20000000298023224,
         "quad_point_lambda": 0.10000000149011612,
         "surface_mesh_node_type_array_path": "TriangleDataContainer/Vertex Data/NodeTypes",

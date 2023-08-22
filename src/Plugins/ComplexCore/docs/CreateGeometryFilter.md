@@ -133,6 +133,16 @@ In this above example, the vertex information begins on line 4; thus, line 4 def
  When creating **Geometries**, remember to consider all the various rules for how a **Geometry** is stored and interpreted.  In particular, remeber that **Element** Ids are always zero indexed, mesh-like **Geometries** obey the _right hand rule_ for windings and normal directions, and **Element** lists are by default considered _shared_.  Note that although the storage scheme used by **DREAM.3D** (shared lists) is highly generic, some **Filters** may assume that the **Geometry** is reasonably _well formed_.
  
 ## Parameters ##
+| Geometry Type | Value |
+| --|--|
+| ImageGeometry  |  0 |
+| RectGridGeometry  |  1 |
+| VertexGeometry  |  2 |
+| EdgeGeometry  |  3 |
+| TriangleGeometry  |  4 |
+| QuadGeometry  |  5 |
+| TetGeometry  |  6 |
+| HexGeometry  |  7 |
 
 | Name | Type | Description |
 |------|------|-------------|

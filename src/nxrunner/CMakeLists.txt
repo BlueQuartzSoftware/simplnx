@@ -44,7 +44,7 @@ endif()
 # -----------------------------------------------------------------------
 set(DEST_DIR ".") # Windows we dump everything into the top level dir
 
-if(UNIX AND NOT APPLE) # Linux we obey standard unix layout
+if((UNIX AND NOT APPLE) OR COMPLEX_CONDA_BUILD) # Linux we obey standard unix layout
   set(DEST_DIR "bin") # Apple we have a custom script somewhere
 endif()
 
