@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "triangle_geometry_data_path";
   static inline constexpr StringLiteral k_IterationSteps_Key = "iteration_steps";
-  static inline constexpr StringLiteral k_Lambda_Key = "lambda";
+  static inline constexpr StringLiteral k_Lambda_Key = "lambda_value";
   static inline constexpr StringLiteral k_UseTaubinSmoothing_Key = "use_taubin_smoothing";
   static inline constexpr StringLiteral k_MuFactor_Key = "mu_factor";
   static inline constexpr StringLiteral k_TripleLineLambda_Key = "triple_line_lambda";

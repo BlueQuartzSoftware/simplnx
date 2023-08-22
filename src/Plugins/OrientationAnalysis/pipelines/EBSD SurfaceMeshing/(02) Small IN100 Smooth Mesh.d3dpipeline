@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "Import_File_Data": {
+        "import_file_data": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -77,7 +77,7 @@
     {
       "args": {
         "iteration_steps": 100,
-        "lambda": 0.25,
+        "lambda_value": 0.25,
         "mu_factor": 0.20000000298023224,
         "quad_point_lambda": 0.15000000596046448,
         "surface_mesh_node_type_array_path": "TriangleDataContainer/VertexData/NodeType",

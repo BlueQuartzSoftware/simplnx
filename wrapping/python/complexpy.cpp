@@ -1,3 +1,5 @@
+#include <CxPybind/CxPybind.hpp>
+
 #include <pybind11/pybind11.h>
 
 #include <pybind11/functional.h>
@@ -5,119 +7,10 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
-#include <ComplexCore/ComplexCorePlugin.hpp>
-#include <ComplexCore/Filters/AbaqusHexahedronWriterFilter.hpp>
-#include <ComplexCore/Filters/AddBadDataFilter.hpp>
-#include <ComplexCore/Filters/AlignGeometries.hpp>
-#include <ComplexCore/Filters/AlignSectionsFeatureCentroidFilter.hpp>
-#include <ComplexCore/Filters/AlignSectionsListFilter.hpp>
-#include <ComplexCore/Filters/AppendImageGeometryZSliceFilter.hpp>
-#include <ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp>
-#include <ComplexCore/Filters/ApproximatePointCloudHull.hpp>
-#include <ComplexCore/Filters/ArrayCalculatorFilter.hpp>
-#include <ComplexCore/Filters/AvizoRectilinearCoordinateWriterFilter.hpp>
-#include <ComplexCore/Filters/AvizoUniformCoordinateWriterFilter.hpp>
-#include <ComplexCore/Filters/CalculateArrayHistogramFilter.hpp>
-#include <ComplexCore/Filters/CalculateFeatureSizesFilter.hpp>
-#include <ComplexCore/Filters/CalculateTriangleAreasFilter.hpp>
-#include <ComplexCore/Filters/ChangeAngleRepresentation.hpp>
-#include <ComplexCore/Filters/CombineAttributeArraysFilter.hpp>
-#include <ComplexCore/Filters/CombineStlFilesFilter.hpp>
-#include <ComplexCore/Filters/ComputeFeatureRectFilter.hpp>
-#include <ComplexCore/Filters/ComputeMomentInvariants2DFilter.hpp>
-#include <ComplexCore/Filters/ConditionalSetValue.hpp>
-#include <ComplexCore/Filters/ConvertColorToGrayScaleFilter.hpp>
-#include <ComplexCore/Filters/ConvertDataFilter.hpp>
-#include <ComplexCore/Filters/CopyDataObjectFilter.hpp>
-#include <ComplexCore/Filters/CopyFeatureArrayToElementArray.hpp>
-#include <ComplexCore/Filters/CreateAttributeMatrixFilter.hpp>
-#include <ComplexCore/Filters/CreateDataArray.hpp>
-#include <ComplexCore/Filters/CreateDataGroup.hpp>
-#include <ComplexCore/Filters/CreateFeatureArrayFromElementArray.hpp>
-#include <ComplexCore/Filters/CreateGeometryFilter.hpp>
-#include <ComplexCore/Filters/CreateImageGeometry.hpp>
-#include <ComplexCore/Filters/CropImageGeometry.hpp>
-#include <ComplexCore/Filters/CropVertexGeometry.hpp>
-#include <ComplexCore/Filters/DeleteData.hpp>
-#include <ComplexCore/Filters/ErodeDilateBadDataFilter.hpp>
-#include <ComplexCore/Filters/ErodeDilateCoordinationNumberFilter.hpp>
-#include <ComplexCore/Filters/ErodeDilateMaskFilter.hpp>
-#include <ComplexCore/Filters/ExecuteProcessFilter.hpp>
-#include <ComplexCore/Filters/ExportDREAM3DFilter.hpp>
-#include <ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp>
-#include <ComplexCore/Filters/ExtractInternalSurfacesFromTriangleGeometry.hpp>
-#include <ComplexCore/Filters/ExtractVertexGeometryFilter.hpp>
-#include <ComplexCore/Filters/FeatureDataCSVWriterFilter.hpp>
-#include <ComplexCore/Filters/FillBadDataFilter.hpp>
-#include <ComplexCore/Filters/FindArrayStatisticsFilter.hpp>
-#include <ComplexCore/Filters/FindBiasedFeaturesFilter.hpp>
-#include <ComplexCore/Filters/FindBoundaryCellsFilter.hpp>
-#include <ComplexCore/Filters/FindBoundaryElementFractionsFilter.hpp>
-#include <ComplexCore/Filters/FindDifferencesMap.hpp>
-#include <ComplexCore/Filters/FindEuclideanDistMapFilter.hpp>
-#include <ComplexCore/Filters/FindFeatureCentroidsFilter.hpp>
-#include <ComplexCore/Filters/FindFeatureClusteringFilter.hpp>
-#include <ComplexCore/Filters/FindFeaturePhasesBinaryFilter.hpp>
-#include <ComplexCore/Filters/FindFeaturePhasesFilter.hpp>
-#include <ComplexCore/Filters/FindLargestCrossSectionsFilter.hpp>
-#include <ComplexCore/Filters/FindNeighborListStatistics.hpp>
-#include <ComplexCore/Filters/FindNeighborhoodsFilter.hpp>
-#include <ComplexCore/Filters/FindNeighbors.hpp>
-#include <ComplexCore/Filters/FindNumFeaturesFilter.hpp>
-#include <ComplexCore/Filters/FindSurfaceAreaToVolumeFilter.hpp>
-#include <ComplexCore/Filters/FindSurfaceFeatures.hpp>
-#include <ComplexCore/Filters/FindTriangleGeomCentroidsFilter.hpp>
-#include <ComplexCore/Filters/FindTriangleGeomSizesFilter.hpp>
-#include <ComplexCore/Filters/FindVertexToTriangleDistancesFilter.hpp>
-#include <ComplexCore/Filters/FindVolFractionsFilter.hpp>
-#include <ComplexCore/Filters/GenerateColorTableFilter.hpp>
-#include <ComplexCore/Filters/IdentifySample.hpp>
-#include <ComplexCore/Filters/ImageContouringFilter.hpp>
-#include <ComplexCore/Filters/ImportBinaryCTNorthstarFilter.hpp>
-#include <ComplexCore/Filters/ImportCSVDataFilter.hpp>
-#include <ComplexCore/Filters/ImportDREAM3DFilter.hpp>
-#include <ComplexCore/Filters/ImportHDF5Dataset.hpp>
-#include <ComplexCore/Filters/ImportTextFilter.hpp>
-#include <ComplexCore/Filters/ImportVolumeGraphicsFileFilter.hpp>
-#include <ComplexCore/Filters/InitializeData.hpp>
-#include <ComplexCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp>
-#include <ComplexCore/Filters/IterativeClosestPointFilter.hpp>
-#include <ComplexCore/Filters/LaplacianSmoothingFilter.hpp>
-#include <ComplexCore/Filters/MapPointCloudToRegularGridFilter.hpp>
-#include <ComplexCore/Filters/MinNeighbors.hpp>
-#include <ComplexCore/Filters/MoveData.hpp>
-#include <ComplexCore/Filters/MultiThresholdObjects.hpp>
-#include <ComplexCore/Filters/NearestPointFuseRegularGridsFilter.hpp>
-#include <ComplexCore/Filters/PartitionGeometryFilter.hpp>
-#include <ComplexCore/Filters/PointSampleTriangleGeometryFilter.hpp>
-#include <ComplexCore/Filters/QuickSurfaceMeshFilter.hpp>
-#include <ComplexCore/Filters/RawBinaryReaderFilter.hpp>
-#include <ComplexCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp>
-#include <ComplexCore/Filters/RemoveFlaggedFeaturesFilter.hpp>
-#include <ComplexCore/Filters/RemoveFlaggedVertices.hpp>
-#include <ComplexCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp>
-#include <ComplexCore/Filters/RenameDataObject.hpp>
-#include <ComplexCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp>
-#include <ComplexCore/Filters/ResampleImageGeomFilter.hpp>
-#include <ComplexCore/Filters/ResampleRectGridToImageGeomFilter.hpp>
-#include <ComplexCore/Filters/RobustAutomaticThreshold.hpp>
-#include <ComplexCore/Filters/RotateSampleRefFrameFilter.hpp>
-#include <ComplexCore/Filters/ScalarSegmentFeaturesFilter.hpp>
-#include <ComplexCore/Filters/SetImageGeomOriginScalingFilter.hpp>
-#include <ComplexCore/Filters/SharedFeatureFaceFilter.hpp>
-#include <ComplexCore/Filters/SplitAttributeArrayFilter.hpp>
-#include <ComplexCore/Filters/StlFileReaderFilter.hpp>
-#include <ComplexCore/Filters/TriangleCentroidFilter.hpp>
-#include <ComplexCore/Filters/TriangleDihedralAngleFilter.hpp>
-#include <ComplexCore/Filters/TriangleNormalFilter.hpp>
-#include <ComplexCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp>
-#include <ComplexCore/Filters/VtkRectilinearGridWriterFilter.hpp>
-#include <ComplexCore/Filters/WriteASCIIDataFilter.hpp>
-#include <ComplexCore/Filters/WriteBinaryDataFilter.hpp>
-#include <ComplexCore/Filters/WriteStlFileFilter.hpp>
+#include "ComplexCore/ComplexCoreFilterBinding.hpp"
 
-#include <complex/Common/ScopeGuard.hpp>
-#include <complex/Core/Application.hpp>
+#include <ComplexCore/ComplexCorePlugin.hpp>
+
 #include <complex/DataStructure/AttributeMatrix.hpp>
 #include <complex/DataStructure/DataArray.hpp>
 #include <complex/DataStructure/DataGroup.hpp>
@@ -167,6 +60,7 @@
 #include <complex/Parameters/DataObjectNameParameter.hpp>
 #include <complex/Parameters/DataPathSelectionParameter.hpp>
 #include <complex/Parameters/DataStoreFormatParameter.hpp>
+#include <complex/Parameters/DataTypeParameter.hpp>
 #include <complex/Parameters/Dream3dImportParameter.hpp>
 #include <complex/Parameters/DynamicTableParameter.hpp>
 #include <complex/Parameters/EnsembleInfoParameter.hpp>
@@ -189,15 +83,8 @@
 
 #include <fmt/ranges.h>
 
-#include <boost/mp11/algorithm.hpp>
-#include <boost/mp11/integral.hpp>
-#include <boost/mp11/list.hpp>
-
-#define COMPLEX_PY_BIND_CLASS(scope, className) pybind11::class_<className>(scope, #className)
-#define COMPLEX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
-#define COMPLEX_PY_BIND_PARAMETER(scope, className) COMPLEX_PY_BIND_CLASS_VARIADIC(scope, className, complex::IParameter)
-
 using namespace complex;
+using namespace complex::CxPybind;
 namespace py = pybind11;
 
 using namespace pybind11::literals;
@@ -229,656 +116,6 @@ struct fmt::formatter<complex::Warning>
     return fmt::format_to(ctx.out(), "Warning(code={}, message='{}')", value.code, value.message);
   }
 };
-
-template <class T>
-using CastNameT = std::remove_cv_t<decltype(py::detail::make_caster<T>::name)>;
-
-template <usize N, class... Ts>
-boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>*)
-{
-  return boost::mp11::mp_list<Ts...>{};
-}
-
-template <class T>
-using ParamTypeListT = decltype(ExtractListFromDescr(static_cast<CastNameT<T>*>(nullptr)));
-
-std::string GetFullPythonNameFromType(py::handle type)
-{
-  return type.attr("__module__").cast<std::string>() + "." + type.attr("__qualname__").cast<std::string>();
-}
-
-std::string GetFullPythonNameFromObject(py::handle object)
-{
-  py::handle type = py::type::handle_of(object);
-  if(!type)
-  {
-    return "";
-  }
-  return GetFullPythonNameFromType(type);
-}
-
-template <class T>
-std::string GetRegisteredPythonTypeName()
-{
-  py::handle type = py::type::of<T>();
-  if(!type)
-  {
-    return "";
-  }
-  return GetFullPythonNameFromType(type);
-}
-
-template <class T>
-std::string GetFullPythonName();
-
-template <usize N, class... Ts>
-constexpr bool CheckIfPythonNameNeedsFixup(const py::detail::descr<N, Ts...>& descr) noexcept
-{
-  std::string_view text = descr.text;
-  usize index = text.find("%");
-  return index != std::string_view::npos;
-}
-
-template <class T>
-std::string GetFixedPythonTypeCasterName()
-{
-  using namespace boost::mp11;
-
-  std::string typeName = py::detail::make_caster<T>::name.text;
-  using Types = ParamTypeListT<T>;
-  static constexpr usize N = mp_size<Types>::value;
-  mp_for_each<mp_iota_c<N>>([&](auto I) {
-    using CurrentType = mp_at_c<Types, static_cast<usize>(I)>;
-    usize index = typeName.find("%");
-    if(index == std::string::npos)
-    {
-      return;
-    }
-    typeName.replace(index, 1, GetFullPythonName<CurrentType>());
-  });
-
-  return typeName;
-}
-
-template <class T>
-std::string GetFullPythonName()
-{
-  // Use py::type::of for registered C++ types otherwise use py::detail::type_caster::name
-  if constexpr(std::is_base_of_v<py::detail::type_caster_generic, py::detail::make_caster<T>>)
-  {
-    return GetRegisteredPythonTypeName<T>();
-  }
-  else
-  {
-    return GetFixedPythonTypeCasterName<T>();
-  }
-}
-
-struct PyParameterInfo
-{
-  using ToPyObjectFunc = py::object (*)(const std::any&);
-  using FromPyObjectFunc = std::any (*)(py::handle);
-
-  ToPyObjectFunc toPyObjectFunc = {};
-  FromPyObjectFunc fromPyObjectFunc = {};
-  std::string pythonTypeName;
-
-  template <class T>
-  static PyParameterInfo Create()
-  {
-    std::string pythonTypeName = GetFullPythonName<T>();
-
-    return PyParameterInfo{[](const std::any& value) -> py::object { return py::cast(std::any_cast<T>(value)); }, [](py::handle value) -> std::any { return std::make_any<T>(value.cast<T>()); },
-                           std::move(pythonTypeName)};
-  }
-};
-
-class PythonPlugin;
-
-class Internals
-{
-public:
-  static inline constexpr StringLiteral k_Key = "COMPLEX_INTERNAL";
-
-  Internals()
-  : m_App(Application::GetOrCreateInstance())
-  {
-  }
-
-  static Internals& Instance()
-  {
-    auto* ptr = py::get_shared_data(k_Key);
-    if(ptr == nullptr)
-    {
-      throw std::runtime_error("Unable to acquire complex internals");
-    }
-    return *static_cast<Internals*>(ptr);
-  }
-
-  PyParameterInfo& at(const Uuid& uuid)
-  {
-    if(!contains(uuid))
-    {
-      throw std::runtime_error(fmt::format("complex has not registered the parameter '{}'", uuid.str()));
-    }
-    return m_ParameterConversionMap.at(uuid);
-  }
-
-  const PyParameterInfo& at(const Uuid& uuid) const
-  {
-    if(!contains(uuid))
-    {
-      throw std::runtime_error(fmt::format("complex has not registered the parameter '{}'", uuid.str()));
-    }
-    return m_ParameterConversionMap.at(uuid);
-  }
-
-  bool contains(const Uuid& uuid) const
-  {
-    return m_ParameterConversionMap.count(uuid) > 0;
-  }
-
-  template <class ParameterT>
-  void addConversion()
-  {
-    static_assert(std::is_base_of_v<IParameter, ParameterT>);
-
-    Uuid uuid = ParameterTraits<ParameterT>::uuid;
-    if(m_ParameterConversionMap.count(uuid) > 0)
-    {
-      throw std::invalid_argument("Duplicate uuid");
-    }
-    m_ParameterConversionMap.insert({std::move(uuid), PyParameterInfo::Create<typename ParameterT::ValueType>()});
-  }
-
-  Application* getApp()
-  {
-    return m_App;
-  }
-
-  const Application* getApp() const
-  {
-    return m_App;
-  }
-
-  template <class T>
-  const T* addPlugin()
-  {
-    static_assert(std::is_base_of_v<AbstractPlugin, T>);
-
-    auto plugin = std::make_shared<T>();
-    const T* pluginPtr = plugin.get();
-    FilterList* filterList = m_App->getFilterList();
-    Uuid pluginUuid = plugin->getId();
-    if(filterList->containsPlugin(pluginUuid))
-    {
-      pluginPtr = dynamic_cast<const T*>(filterList->getPlugin(pluginUuid));
-    }
-    else
-    {
-      auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
-      filterList->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
-    }
-
-    return pluginPtr;
-  }
-
-  void registerPluginPyFilters(const AbstractPlugin& plugin)
-  {
-    // Must be called after all types are registered
-    std::vector<py::type> list;
-    for(auto handle : plugin.getFilterHandles())
-    {
-      py::object filter = py::cast(plugin.createFilter(handle.getFilterId()));
-      py::type filterType = py::type::of(filter);
-      list.push_back(filterType);
-    }
-
-    m_PluginFilterMap.insert({plugin.getId(), list});
-  }
-
-  const std::vector<py::type>& getPluginPyFilters(const Uuid& pluginUuid)
-  {
-    return m_PluginFilterMap.at(pluginUuid);
-  }
-
-  void loadPythonPlugin(py::module_& mod);
-
-  PythonPlugin* getPythonPlugin(const Uuid& id)
-  {
-    return m_PythonPlugins.at(id).get();
-  }
-
-  const PythonPlugin* getPythonPlugin(const Uuid& id) const
-  {
-    return m_PythonPlugins.at(id).get();
-  }
-
-  void reloadPythonPlugins();
-
-  std::vector<std::shared_ptr<PythonPlugin>> getPythonPlugins()
-  {
-    std::vector<std::shared_ptr<PythonPlugin>> plugins;
-    for(auto&& [id, plugin] : m_PythonPlugins)
-    {
-      plugins.push_back(plugin);
-    }
-    return plugins;
-  }
-
-private:
-  std::unordered_map<Uuid, PyParameterInfo> m_ParameterConversionMap;
-  std::unordered_map<Uuid, std::vector<py::type>> m_PluginFilterMap;
-  std::unordered_map<Uuid, std::shared_ptr<PythonPlugin>> m_PythonPlugins;
-  Application* m_App;
-};
-
-py::dict ConvertArgsToDict(const Internals& internals, const Parameters& parameters, const Arguments& args)
-{
-  py::dict dict;
-
-  for(const auto& [name, value] : args)
-  {
-    if(!parameters.contains(name))
-    {
-      continue;
-    }
-
-    const AnyParameter& anyParam = parameters.at(name);
-    const IParameter& param = anyParam.getRef();
-    Uuid uuid = param.uuid();
-    py::object object = internals.at(uuid).toPyObjectFunc(value);
-    dict[name.c_str()] = std::move(object);
-  }
-  return dict;
-}
-
-Arguments ConvertDictToArgs(const Internals& internals, const Parameters& parameters, const py::dict& dict)
-{
-  Arguments args;
-
-  for(auto item : dict)
-  {
-    auto name = item.first.cast<std::string>();
-    if(!parameters.contains(name))
-    {
-      continue;
-    }
-
-    const AnyParameter& anyParam = parameters.at(name);
-    const IParameter& param = anyParam.getRef();
-    Uuid uuid = param.uuid();
-    std::any value = internals.at(uuid).fromPyObjectFunc(item.second);
-    args.insert(std::move(name), std::move(value));
-  }
-  return args;
-}
-
-std::string MakePythonParamString(std::string_view variableName, std::string_view typeName)
-{
-  return fmt::format("{}: {}", variableName, typeName);
-}
-
-std::string MakePythonParamStringWithDefaulValue(std::string_view variableName, std::string_view typeName, std::string_view defaultValue)
-{
-  return fmt::format("{}: {} = {}", variableName, typeName, defaultValue);
-}
-
-template <class T>
-std::string MakePythonParamString(const char* variableName)
-{
-  std::string typeName = GetFullPythonName<T>();
-  return MakePythonParamString(variableName, typeName);
-}
-
-std::vector<std::string> MakePythonParamListString(const Parameters& params, const Internals& internals)
-{
-  std::vector<std::string> paramList;
-  paramList.reserve(params.size() + 2);
-  paramList.push_back(MakePythonParamString("data_structure", GetFullPythonName<DataStructure>()));
-  // Indicates that the following parameters are keyword only
-  paramList.push_back("*");
-  for(const auto& [name, p] : params)
-  {
-    const auto& info = internals.at(p->uuid());
-    py::object defaultValue = info.toPyObjectFunc(p->defaultValue());
-    std::string defaultValueString = py::repr(defaultValue).cast<std::string>();
-    paramList.push_back(MakePythonParamStringWithDefaulValue(p->name(), info.pythonTypeName, defaultValueString));
-  }
-  return paramList;
-}
-
-template <class FilterT>
-std::string MakePythonSignature(std::string_view funcName, const Internals& internals)
-{
-  FilterT f;
-
-  std::vector<std::string> paramList = MakePythonParamListString(f.parameters(), internals);
-
-  std::string returnTypeName = GetFullPythonName<IFilter::ExecuteResult>();
-
-  std::string signature = fmt::format("{}({}) -> {}", funcName, fmt::join(paramList, ", "), returnTypeName);
-
-  return signature;
-}
-
-void PyPrintMessage(const IFilter::Message& message)
-{
-  py::print(fmt::format("{}", message.message));
-}
-
-IFilter::MessageHandler CreatePyMessageHandler()
-{
-  return IFilter::MessageHandler{&PyPrintMessage};
-}
-
-template <class FilterT>
-auto BindFilter(py::handle scope, const Internals& internals)
-{
-  py::class_<FilterT, IFilter> filter(scope, FilterTraits<FilterT>::className.c_str());
-  filter.def(py::init<>());
-
-  {
-    py::options options;
-    options.disable_function_signatures();
-
-    std::string executeSig = MakePythonSignature<FilterT>("execute", internals);
-    std::string executeDocString = fmt::format("{}\n\nExecutes the filter\n", executeSig);
-
-    filter.def_static(
-        "execute",
-        [&internals](DataStructure& dataStructure, const py::kwargs& kwargs) {
-          FilterT filter;
-
-          Parameters parameters = filter.parameters();
-
-          for(auto item : kwargs)
-          {
-            auto name = item.first.cast<std::string>();
-            if(!parameters.contains(name))
-            {
-              throw py::type_error(fmt::format("execute2() got an unexpected keyword argument '{}'", name));
-            }
-          }
-
-          Arguments convertedArgs = ConvertDictToArgs(internals, filter.parameters(), kwargs);
-          IFilter::ExecuteResult result = filter.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
-          return result;
-        },
-        "data_structure"_a, executeDocString.c_str());
-
-    // std::string preflightSig = MakePythonSignature<FilterT>("preflight", internals);
-    // std::string preflightDocString = fmt::format("{}\n\nExecutes the filter\n", sig);
-
-    // filter.def_static(
-    //     "preflight",
-    //     [&internals](DataStructure& dataStructure, const py::kwargs& kwargs) {
-    //       FilterT filter;
-
-    //      Parameters parameters = filter.parameters();
-
-    //      for(auto item : kwargs)
-    //      {
-    //        auto name = item.first.cast<std::string>();
-    //        if(!parameters.contains(name))
-    //        {
-    //          throw py::type_error(fmt::format("execute2() got an unexpected keyword argument '{}'", name));
-    //        }
-    //      }
-
-    //      Arguments convertedArgs = ConvertDictToArgs(internals, filter.parameters(), kwargs);
-    //      IFilter::PreflightResult result = filter.preflight(dataStructure, convertedArgs, CreatePyMessageHandler());
-    //      return result;
-    //    },
-    //    "data_structure"_a, preflightDocString.c_str());
-  }
-
-  return filter;
-}
-
-template <class FilterT>
-std::map<std::string, py::object> CreateDefaultArgs(const Internals& internals)
-{
-  FilterT filter;
-  Parameters params = filter.parameters();
-  std::map<std::string, py::object> defaults;
-  for(const auto& [name, param] : params)
-  {
-    defaults.insert({name, internals.at(param->uuid()).toPyObjectFunc(param->defaultValue())});
-  }
-
-  return defaults;
-}
-
-class AtomicBoolProxy
-{
-public:
-  AtomicBoolProxy() = delete;
-
-  AtomicBoolProxy(const std::atomic_bool& atomicBool)
-  : m_Value(&atomicBool)
-  {
-  }
-
-  const std::atomic_bool* get() const
-  {
-    if(!isValid())
-    {
-      throw std::runtime_error("AtomicBoolProxy is invalid");
-    }
-    return m_Value;
-  }
-
-  bool isValid() const noexcept
-  {
-    return m_Value != nullptr;
-  }
-
-  void reset() noexcept
-  {
-    m_Value = nullptr;
-  }
-
-private:
-  const std::atomic_bool* m_Value = nullptr;
-};
-
-auto MakeAtomicBoolProxyGuard(std::shared_ptr<AtomicBoolProxy>& proxy)
-{
-  return MakeScopeGuard([&proxy]() noexcept { proxy->reset(); });
-}
-
-class PyFilter : public IFilter
-{
-public:
-  PyFilter() = delete;
-
-  PyFilter(py::object object)
-  : IFilter()
-  , m_Object(std::move(object))
-  {
-    py::gil_scoped_acquire gil;
-    m_Name = m_Object.attr("name")().cast<std::string>();
-    m_ClassName = m_Object.attr("class_name")().cast<std::string>();
-    m_Uuid = m_Object.attr("uuid")().cast<Uuid>();
-    m_HumanName = m_Object.attr("human_name")().cast<std::string>();
-    m_DefaultTags = m_Object.attr("default_tags")().cast<std::vector<std::string>>();
-    m_Parameters = m_Object.attr("parameters")().cast<Parameters>();
-  }
-
-  ~PyFilter() noexcept
-  {
-    py::gil_scoped_acquire gil;
-    m_Object = {};
-  }
-
-  PyFilter(const PyFilter&) = delete;
-  PyFilter(PyFilter&&) noexcept = delete;
-
-  PyFilter& operator=(const PyFilter&) = delete;
-  PyFilter& operator=(PyFilter&&) noexcept = delete;
-
-  std::string name() const override
-  {
-    return m_Name;
-  }
-
-  std::string className() const override
-  {
-    return m_ClassName;
-  }
-
-  Uuid uuid() const override
-  {
-    return m_Uuid;
-  }
-
-  std::string humanName() const override
-  {
-    return m_HumanName;
-  }
-
-  std::vector<std::string> defaultTags() const override
-  {
-    return m_DefaultTags;
-  }
-
-  Parameters parameters() const override
-  {
-    return m_Parameters;
-  }
-
-  UniquePointer clone() const override
-  {
-    py::gil_scoped_acquire gil;
-    return std::make_unique<PyFilter>(m_Object.attr("clone")());
-  }
-
-protected:
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
-  {
-    try
-    {
-      py::gil_scoped_acquire gil;
-      Parameters params = parameters();
-      auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
-      auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-      auto result = m_Object.attr("preflight_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), messageHandler, shouldCancelProxy).cast<PreflightResult>();
-      return result;
-    } catch(const py::error_already_set& pyException)
-    {
-      return {MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
-    } catch(const std::exception& exception)
-    {
-      return {MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
-    }
-  }
-
-  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
-  {
-    try
-    {
-      py::gil_scoped_acquire gil;
-      Parameters params = parameters();
-      auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
-      auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-      auto result = m_Object.attr("execute_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), /* pipelineNode,*/ messageHandler, shouldCancelProxy).cast<Result<>>();
-      return result;
-    } catch(const py::error_already_set& pyException)
-    {
-      return {MakeErrorResult(-42002, fmt::format("Python exception: {}", pyException.what()))};
-    } catch(const std::exception& exception)
-    {
-      return {MakeErrorResult(-42003, fmt::format("C++ exception: {}", exception.what()))};
-    }
-  }
-
-private:
-  py::object m_Object;
-  std::string m_Name;
-  std::string m_ClassName;
-  Uuid m_Uuid{};
-  std::string m_HumanName;
-  std::vector<std::string> m_DefaultTags;
-  Parameters m_Parameters;
-};
-
-class PythonPlugin : public AbstractPlugin
-{
-public:
-  ~PythonPlugin() noexcept override = default;
-
-  static std::shared_ptr<PythonPlugin> Create(py::module_& mod)
-  {
-    py::gil_scoped_acquire gil;
-
-    py::object object = mod.attr("get_plugin")();
-
-    auto id = object.attr("id")().cast<Uuid>();
-    auto name = object.attr("name")().cast<std::string>();
-    auto description = object.attr("description")().cast<std::string>();
-    auto vendor = object.attr("vendor")().cast<std::string>();
-    auto filters = object.attr("get_filters")().cast<py::list>();
-
-    auto plugin = std::shared_ptr<PythonPlugin>(new PythonPlugin(id, name, description, vendor));
-
-    plugin->m_PythonModule = mod;
-
-    for(py::handle filterTypeHandle : filters)
-    {
-      FilterCreationFunc filterCreationFunc = [filterType = py::reinterpret_borrow<py::object>(filterTypeHandle)]() -> IFilter::UniquePointer {
-        py::gil_scoped_acquire gil;
-        return std::make_unique<PyFilter>(filterType());
-      };
-      plugin->addFilter(std::move(filterCreationFunc));
-    }
-
-    return plugin;
-  }
-
-  std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const override
-  {
-    return {};
-  }
-
-  void reload()
-  {
-    py::gil_scoped_acquire gil;
-    m_PythonModule.reload();
-  }
-
-protected:
-  PythonPlugin(IdType id, const std::string& name, const std::string& description, const std::string& vendor)
-  : AbstractPlugin(id, name, description, vendor)
-  {
-  }
-
-private:
-  py::module_ m_PythonModule;
-};
-
-void Internals::loadPythonPlugin(py::module_& mod)
-{
-  auto plugin = PythonPlugin::Create(mod);
-
-  auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
-
-  m_App->getFilterList()->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
-
-  m_PythonPlugins.insert({plugin->getId(), plugin});
-}
-
-void Internals::reloadPythonPlugins()
-{
-  FilterList* filterList = m_App->getFilterList();
-  for(auto&& [id, plugin] : m_PythonPlugins)
-  {
-    filterList->removePlugin(id);
-    plugin->reload();
-    auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
-    filterList->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
-  }
-}
 
 template <class ParameterT>
 void PyInsertLinkableParameter(Parameters& self, const ParameterT& param)
@@ -964,17 +201,59 @@ auto BindCreateGeometry3DAction(py::handle scope, const char* name)
 #define COMPLEX_PY_BIND_CREATE_GEOMETRY_2D_ACTION(scope, className) BindCreateGeometry2DAction<className>(scope, #className)
 #define COMPLEX_PY_BIND_CREATE_GEOMETRY_3D_ACTION(scope, className) BindCreateGeometry3DAction<className>(scope, #className)
 
-/**
- * @brief Convenience function for binding parameter constructors that folow the standard signature:
- * const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue
- * @tparam T
- * @tparam ...Options
- * @param object
- */
-template <class T, class... Options>
-void BindParameterConstructor(py::class_<T, Options...>& object)
+std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineFilterResult(const PipelineFilter& filter)
 {
-  object.def(py::init<const std::string&, const std::string&, const std::string&, const typename T::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
+  std::vector<Error> filterErrors = filter.getErrors();
+  std::vector<Warning> filterWarnings = filter.getWarnings();
+  return {std::move(filterErrors), std::move(filterWarnings)};
+}
+
+std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(const Pipeline& pipeline)
+{
+  std::vector<Error> errors;
+  std::vector<Warning> warnings;
+  for(usize index = 0; index < pipeline.size(); index++)
+  {
+    const AbstractPipelineNode* node = pipeline.at(index);
+    std::vector<Error> nodeErrors;
+    std::vector<Warning> nodeWarnings;
+    AbstractPipelineNode::NodeType nodeType = node->getType();
+    switch(nodeType)
+    {
+    case AbstractPipelineNode::NodeType::Pipeline: {
+      const auto& subPipeline = dynamic_cast<const Pipeline&>(*node);
+      std::tie(nodeErrors, nodeWarnings) = GetPipelineResult(subPipeline);
+      break;
+    }
+    case AbstractPipelineNode::NodeType::Filter: {
+      const auto& filter = dynamic_cast<const PipelineFilter&>(*node);
+      std::tie(nodeErrors, nodeWarnings) = GetPipelineFilterResult(filter);
+      break;
+    }
+    }
+    errors.insert(errors.end(), nodeErrors.begin(), nodeErrors.end());
+    warnings.insert(warnings.end(), nodeWarnings.begin(), nodeWarnings.end());
+    FaultState faultState = node->getFaultState();
+    if(faultState == FaultState::Errors)
+    {
+      break;
+    }
+  }
+
+  return {std::move(errors), std::move(warnings)};
+}
+
+Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
+{
+  bool success = pipeline.execute(dataStructure, false);
+  auto&& [errors, warnings] = GetPipelineResult(pipeline);
+  Result<> result;
+  if(!success)
+  {
+    result.m_Expected = nonstd::make_unexpected(std::move(errors));
+  }
+  result.m_Warnings = std::move(warnings);
+  return result;
 }
 
 PYBIND11_MODULE(complex, mod)
@@ -1020,10 +299,22 @@ PYBIND11_MODULE(complex, mod)
                return result;
              }),
              "errors"_a = py::none(), "warnings"_a = py::none());
-  result.def_property(
-      "errors", [](Result<>& self) { return self.errors(); }, [](Result<>& self, std::vector<Error> errors) { self.errors() = std::move(errors); });
-  result.def_property(
-      "warnings", [](Result<>& self) { return self.warnings(); }, [](Result<>& self, std::vector<Warning> warnings) { self.warnings() = std::move(warnings); });
+  result.def_property_readonly("errors", [](Result<>& self) {
+    if(self.valid())
+    {
+      return std::vector<Error>{};
+    }
+    return self.errors();
+  });
+  result.def_property_readonly("warnings", [](Result<>& self) { return self.warnings(); });
+  result.def("__repr__", [](const Result<>& self) {
+    std::vector<Error> errors;
+    if(self.invalid())
+    {
+      errors = self.errors();
+    }
+    return fmt::format("<complex.Result(errors={}, warnings={})>", errors, self.warnings());
+  });
 
   py::enum_<NumericType> numericType(mod, "NumericType");
   numericType.value("int8", NumericType::int8);
@@ -1417,6 +708,7 @@ PYBIND11_MODULE(complex, mod)
   auto dataObjectNameParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataObjectNameParameter);
   auto dataPathSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataPathSelectionParameter);
   auto dataStoreFormatParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataStoreFormatParameter);
+  auto dataTypeParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataTypeParameter);
   auto dream3dImportParameter = COMPLEX_PY_BIND_PARAMETER(mod, Dream3dImportParameter);
   auto dynamicTableParameter = COMPLEX_PY_BIND_PARAMETER(mod, DynamicTableParameter);
   auto ensembleInfoParameter = COMPLEX_PY_BIND_PARAMETER(mod, EnsembleInfoParameter);
@@ -1563,6 +855,8 @@ PYBIND11_MODULE(complex, mod)
 
   BindParameterConstructor(dataStoreFormatParameter);
 
+  BindParameterConstructor(dataTypeParameter);
+
   BindParameterConstructor(dream3dImportParameter);
 
   dynamicTableParameter.def(py::init<const std::string&, const std::string&, const std::string&, const DynamicTableParameter::ValueType&, const DynamicTableInfo&>(), "name"_a, "human_name"_a,
@@ -1666,11 +960,15 @@ PYBIND11_MODULE(complex, mod)
   });
   preflightResult.def_readwrite("output_values", &IFilter::PreflightResult::outputValues);
 
-  AnyDataAction foo;
-
   py::class_<IFilter::ExecuteResult> executeResult(filter, "ExecuteResult");
   executeResult.def(py::init<>());
-  executeResult.def_property_readonly("errors", [](const IFilter::ExecuteResult& self) { return self.result.errors(); });
+  executeResult.def_property_readonly("errors", [](const IFilter::ExecuteResult& self) {
+    if(self.result.valid())
+    {
+      return ErrorCollection{};
+    }
+    return self.result.errors();
+  });
   executeResult.def_property_readonly("warnings", [](const IFilter::ExecuteResult& self) { return self.result.warnings(); });
   executeResult.def("__bool__", [](const IFilter::ExecuteResult& self) { return self.result.valid(); });
   executeResult.def("__repr__", [](const IFilter::ExecuteResult& self) {
@@ -1708,14 +1006,28 @@ PYBIND11_MODULE(complex, mod)
         return pipelineResult.value();
       },
       "path"_a);
-  pipeline.def("execute", [](Pipeline& self, DataStructure& dataStructure) { return self.execute(dataStructure, false); });
+  pipeline.def("execute", &ExecutePipeline);
   pipeline.def(
       "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
   pipeline.def("__len__", &Pipeline::size);
+  pipeline.def("size", &Pipeline::size);
   pipeline.def(
       "__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
+  pipeline.def(
+      "insert",
+      [internals](Pipeline& self, Pipeline::index_type index, const IFilter& filter, const py::dict& args) {
+        self.insertAt(index, filter.clone(), ConvertDictToArgs(*internals, filter.parameters(), args));
+      },
+      "index"_a, "filter"_a, "args"_a = py::dict());
+  pipeline.def(
+      "append", [internals](Pipeline& self, const IFilter& filter, const py::dict& args) { self.insertAt(self.size(), filter.clone(), ConvertDictToArgs(*internals, filter.parameters(), args)); },
+      "filter"_a, "args"_a = py::dict());
+  pipeline.def("clear", &Pipeline::clear);
+  pipeline.def("remove", &Pipeline::removeAt, "index"_a);
 
-  pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getFilter()->parameters(), self.getArguments()); });
+  pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
+  pipelineFilter.def(
+      "set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
   pipelineFilter.def(
       "get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
 
@@ -1737,6 +1049,7 @@ PYBIND11_MODULE(complex, mod)
   internals->addConversion<DataObjectNameParameter>();
   internals->addConversion<DataPathSelectionParameter>();
   internals->addConversion<DataStoreFormatParameter>();
+  internals->addConversion<DataTypeParameter>();
   internals->addConversion<Dream3dImportParameter>();
   internals->addConversion<DynamicTableParameter>();
   internals->addConversion<EnsembleInfoParameter>();
@@ -1772,115 +1085,7 @@ PYBIND11_MODULE(complex, mod)
   internals->addConversion<VectorFloat32Parameter>();
   internals->addConversion<VectorFloat64Parameter>();
 
-  auto abaqusHexahedronWriterFilter = BindFilter<AbaqusHexahedronWriterFilter>(mod, *internals);
-  auto addBadDataFilter = BindFilter<AddBadDataFilter>(mod, *internals);
-  auto alignGeometries = BindFilter<AlignGeometries>(mod, *internals);
-  auto alignSectionsFeatureCentroidFilter = BindFilter<AlignSectionsFeatureCentroidFilter>(mod, *internals);
-  auto alignSectionsListFilter = BindFilter<AlignSectionsListFilter>(mod, *internals);
-  auto appendImageGeometryZSliceFilter = BindFilter<AppendImageGeometryZSliceFilter>(mod, *internals);
-  auto applyTransformationToGeometryFilter = BindFilter<ApplyTransformationToGeometryFilter>(mod, *internals);
-  auto approximatePointCloudHull = BindFilter<ApproximatePointCloudHull>(mod, *internals);
-  auto arrayCalculatorFilter = BindFilter<ArrayCalculatorFilter>(mod, *internals);
-  auto avizoRectilinearCoordinateWriterFilter = BindFilter<AvizoRectilinearCoordinateWriterFilter>(mod, *internals);
-  auto avizoUniformCoordinateWriterFilter = BindFilter<AvizoUniformCoordinateWriterFilter>(mod, *internals);
-  auto calculateArrayHistogramFilter = BindFilter<CalculateArrayHistogramFilter>(mod, *internals);
-  auto calculateFeatureSizesFilter = BindFilter<CalculateFeatureSizesFilter>(mod, *internals);
-  auto calculateTriangleAreasFilter = BindFilter<CalculateTriangleAreasFilter>(mod, *internals);
-  auto changeAngleRepresentation = BindFilter<ChangeAngleRepresentation>(mod, *internals);
-  auto combineAttributeArraysFilter = BindFilter<CombineAttributeArraysFilter>(mod, *internals);
-  auto combineStlFilesFilter = BindFilter<CombineStlFilesFilter>(mod, *internals);
-  auto computeFeatureRectFilter = BindFilter<ComputeFeatureRectFilter>(mod, *internals);
-  auto computeMomentInvariants2DFilter = BindFilter<ComputeMomentInvariants2DFilter>(mod, *internals);
-  auto conditionalSetValue = BindFilter<ConditionalSetValue>(mod, *internals);
-  auto convertColorToGrayScaleFilter = BindFilter<ConvertColorToGrayScaleFilter>(mod, *internals);
-  auto convertDataFilter = BindFilter<ConvertDataFilter>(mod, *internals);
-  auto copyDataObjectFilter = BindFilter<CopyDataObjectFilter>(mod, *internals);
-  auto copyFeatureArrayToElementArray = BindFilter<CopyFeatureArrayToElementArray>(mod, *internals);
-  auto createAttributeMatrixFilter = BindFilter<CreateAttributeMatrixFilter>(mod, *internals);
-  auto createDataArray = BindFilter<CreateDataArray>(mod, *internals);
-  auto createDataGroup = BindFilter<CreateDataGroup>(mod, *internals);
-  auto createFeatureArrayFromElementArray = BindFilter<CreateFeatureArrayFromElementArray>(mod, *internals);
-  auto createGeometryFilter = BindFilter<CreateGeometryFilter>(mod, *internals);
-  auto createImageGeometry = BindFilter<CreateImageGeometry>(mod, *internals);
-  auto cropImageGeometry = BindFilter<CropImageGeometry>(mod, *internals);
-  auto cropVertexGeometry = BindFilter<CropVertexGeometry>(mod, *internals);
-  auto deleteData = BindFilter<DeleteData>(mod, *internals);
-  auto erodeDilateBadDataFilter = BindFilter<ErodeDilateBadDataFilter>(mod, *internals);
-  auto erodeDilateCoordinationNumberFilter = BindFilter<ErodeDilateCoordinationNumberFilter>(mod, *internals);
-  auto erodeDilateMaskFilter = BindFilter<ErodeDilateMaskFilter>(mod, *internals);
-  auto executeProcessFilter = BindFilter<ExecuteProcessFilter>(mod, *internals);
-  auto exportDREAM3DFilter = BindFilter<ExportDREAM3DFilter>(mod, *internals);
-  auto extractComponentAsArrayFilter = BindFilter<ExtractComponentAsArrayFilter>(mod, *internals);
-  auto extractInternalSurfacesFromTriangleGeometry = BindFilter<ExtractInternalSurfacesFromTriangleGeometry>(mod, *internals);
-  auto extractVertexGeometryFilter = BindFilter<ExtractVertexGeometryFilter>(mod, *internals);
-  auto featureDataCSVWriterFilter = BindFilter<FeatureDataCSVWriterFilter>(mod, *internals);
-  auto fillBadDataFilter = BindFilter<FillBadDataFilter>(mod, *internals);
-  auto findArrayStatisticsFilter = BindFilter<FindArrayStatisticsFilter>(mod, *internals);
-  auto findBiasedFeaturesFilter = BindFilter<FindBiasedFeaturesFilter>(mod, *internals);
-  auto findBoundaryCellsFilter = BindFilter<FindBoundaryCellsFilter>(mod, *internals);
-  auto findBoundaryElementFractionsFilter = BindFilter<FindBoundaryElementFractionsFilter>(mod, *internals);
-  auto findDifferencesMap = BindFilter<FindDifferencesMap>(mod, *internals);
-  auto findEuclideanDistMapFilter = BindFilter<FindEuclideanDistMapFilter>(mod, *internals);
-  auto findFeatureCentroidsFilter = BindFilter<FindFeatureCentroidsFilter>(mod, *internals);
-  auto findFeatureClusteringFilter = BindFilter<FindFeatureClusteringFilter>(mod, *internals);
-  auto findFeaturePhasesBinaryFilter = BindFilter<FindFeaturePhasesBinaryFilter>(mod, *internals);
-  auto findFeaturePhasesFilter = BindFilter<FindFeaturePhasesFilter>(mod, *internals);
-  auto findLargestCrossSectionsFilter = BindFilter<FindLargestCrossSectionsFilter>(mod, *internals);
-  auto findNeighborhoodsFilter = BindFilter<FindNeighborhoodsFilter>(mod, *internals);
-  auto findNeighborListStatistics = BindFilter<FindNeighborListStatistics>(mod, *internals);
-  auto findNeighbors = BindFilter<FindNeighbors>(mod, *internals);
-  auto findNumFeaturesFilter = BindFilter<FindNumFeaturesFilter>(mod, *internals);
-  auto findSurfaceAreaToVolumeFilter = BindFilter<FindSurfaceAreaToVolumeFilter>(mod, *internals);
-  auto findSurfaceFeatures = BindFilter<FindSurfaceFeatures>(mod, *internals);
-  auto findTriangleGeomCentroidsFilter = BindFilter<FindTriangleGeomCentroidsFilter>(mod, *internals);
-  auto findTriangleGeomSizesFilter = BindFilter<FindTriangleGeomSizesFilter>(mod, *internals);
-  auto findVertexToTriangleDistancesFilter = BindFilter<FindVertexToTriangleDistancesFilter>(mod, *internals);
-  auto findVolFractionsFilter = BindFilter<FindVolFractionsFilter>(mod, *internals);
-  auto generateColorTableFilter = BindFilter<GenerateColorTableFilter>(mod, *internals);
-  auto identifySample = BindFilter<IdentifySample>(mod, *internals);
-  auto imageContouringFilter = BindFilter<ImageContouringFilter>(mod, *internals);
-  auto importBinaryCTNorthstarFilter = BindFilter<ImportBinaryCTNorthstarFilter>(mod, *internals);
-  auto importCSVDataFilter = BindFilter<ImportCSVDataFilter>(mod, *internals);
-  auto importDREAM3DFilter = BindFilter<ImportDREAM3DFilter>(mod, *internals);
-  auto importHDF5Dataset = BindFilter<ImportHDF5Dataset>(mod, *internals);
-  auto importTextFilter = BindFilter<ImportTextFilter>(mod, *internals);
-  auto importVolumeGraphicsFileFilter = BindFilter<ImportVolumeGraphicsFileFilter>(mod, *internals);
-  auto initializeData = BindFilter<InitializeData>(mod, *internals);
-  auto interpolatePointCloudToRegularGridFilter = BindFilter<InterpolatePointCloudToRegularGridFilter>(mod, *internals);
-  auto iterativeClosestPointFilter = BindFilter<IterativeClosestPointFilter>(mod, *internals);
-  auto laplacianSmoothingFilter = BindFilter<LaplacianSmoothingFilter>(mod, *internals);
-  auto mapPointCloudToRegularGridFilter = BindFilter<MapPointCloudToRegularGridFilter>(mod, *internals);
-  auto minNeighbors = BindFilter<MinNeighbors>(mod, *internals);
-  auto moveData = BindFilter<MoveData>(mod, *internals);
-  auto multiThresholdObjects = BindFilter<MultiThresholdObjects>(mod, *internals);
-  auto nearestPointFuseRegularGridsFilter = BindFilter<NearestPointFuseRegularGridsFilter>(mod, *internals);
-  auto partitionGeometryFilter = BindFilter<PartitionGeometryFilter>(mod, *internals);
-  auto pointSampleTriangleGeometryFilter = BindFilter<PointSampleTriangleGeometryFilter>(mod, *internals);
-  auto quickSurfaceMeshFilter = BindFilter<QuickSurfaceMeshFilter>(mod, *internals);
-  auto rawBinaryReaderFilter = BindFilter<RawBinaryReaderFilter>(mod, *internals);
-  auto regularGridSampleSurfaceMeshFilter = BindFilter<RegularGridSampleSurfaceMeshFilter>(mod, *internals);
-  auto removeFlaggedFeaturesFilter = BindFilter<RemoveFlaggedFeaturesFilter>(mod, *internals);
-  auto removeFlaggedVertices = BindFilter<RemoveFlaggedVertices>(mod, *internals);
-  auto removeMinimumSizeFeaturesFilter = BindFilter<RemoveMinimumSizeFeaturesFilter>(mod, *internals);
-  auto renameDataObject = BindFilter<RenameDataObject>(mod, *internals);
-  auto replaceElementAttributesWithNeighborValuesFilter = BindFilter<ReplaceElementAttributesWithNeighborValuesFilter>(mod, *internals);
-  auto resampleImageGeomFilter = BindFilter<ResampleImageGeomFilter>(mod, *internals);
-  auto resampleRectGridToImageGeomFilter = BindFilter<ResampleRectGridToImageGeomFilter>(mod, *internals);
-  auto robustAutomaticThreshold = BindFilter<RobustAutomaticThreshold>(mod, *internals);
-  auto rotateSampleRefFrameFilter = BindFilter<RotateSampleRefFrameFilter>(mod, *internals);
-  auto scalarSegmentFeaturesFilter = BindFilter<ScalarSegmentFeaturesFilter>(mod, *internals);
-  auto setImageGeomOriginScalingFilter = BindFilter<SetImageGeomOriginScalingFilter>(mod, *internals);
-  auto sharedFeatureFaceFilter = BindFilter<SharedFeatureFaceFilter>(mod, *internals);
-  auto splitAttributeArrayFilter = BindFilter<SplitAttributeArrayFilter>(mod, *internals);
-  auto stlFileReaderFilter = BindFilter<StlFileReaderFilter>(mod, *internals);
-  auto triangleCentroidFilter = BindFilter<TriangleCentroidFilter>(mod, *internals);
-  auto triangleDihedralAngleFilter = BindFilter<TriangleDihedralAngleFilter>(mod, *internals);
-  auto triangleNormalFilter = BindFilter<TriangleNormalFilter>(mod, *internals);
-  auto uncertainRegularGridSampleSurfaceMeshFilter = BindFilter<UncertainRegularGridSampleSurfaceMeshFilter>(mod, *internals);
-  auto vtkRectilinearGridWriterFilter = BindFilter<VtkRectilinearGridWriterFilter>(mod, *internals);
-  auto writeASCIIDataFilter = BindFilter<WriteASCIIDataFilter>(mod, *internals);
-  auto writeBinaryDataFilter = BindFilter<WriteBinaryDataFilter>(mod, *internals);
-  auto writeStlFileFilter = BindFilter<WriteStlFileFilter>(mod, *internals);
+  ComplexCore::BindFilters(mod, *internals);
 
   internals->registerPluginPyFilters(*corePlugin);
 

@@ -55,6 +55,10 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_ITKImageProcessing FEATURE
 option(COMPLEX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATURE "ebsd")
 
+option(COMPLEX_CONDA_BUILD "Enables conda-build specific layout" OFF)
+
+option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
+
 # --------------------------------------------------------------------------------------------------
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
@@ -130,8 +134,8 @@ find_package(nod CONFIG REQUIRED)
 # Find HDF5 and get the path to the DLL libraries and put that into a
 # global property for later install, debugging and packaging
 # -----------------------------------------------------------------------
-find_package(HDF5 REQUIRED)
-get_target_property(hdf5_dll_path hdf5::hdf5-shared IMPORTED_LOCATION_RELEASE)
+find_package(HDF5 MODULE REQUIRED)
+get_target_property(hdf5_dll_path hdf5::hdf5 IMPORTED_LOCATION_RELEASE)
 get_filename_component(hdf5_dll_path "${hdf5_dll_path}" DIRECTORY)
 get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
 set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${hdf5_dll_path})
@@ -800,11 +804,13 @@ set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pip
 if(NOT EXISTS "${PIPELINE_DEST_DIR}")
   file(MAKE_DIRECTORY ${PIPELINE_DEST_DIR})
 endif()
+
 set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
 if(NOT EXISTS "${PIPELINE_EXAMPLES_DEST_DIR}")
   file(MAKE_DIRECTORY ${PIPELINE_EXAMPLES_DEST_DIR})
 endif()
-if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
+
+if(COMPLEX_DOWNLOAD_TEST_FILES AND TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
   add_custom_target(Copy_PorosityAnalysis_Pipelines ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/PorosityAnalysis.d3dpipeline"
     COMMENT "Copying Example Pipelines into Binary Directory"
@@ -818,7 +824,7 @@ if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalys
     VERBATIM
   )
   set_target_properties(Copy_CAxis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
-  
+
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293)
   add_custom_target(Copy_CAxis_Data ALL
     COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data.tar.gz" 
@@ -831,7 +837,6 @@ if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalys
   set_target_properties(Copy_CAxis_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 endif()
 
-option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 if(COMPLEX_ENABLE_INSTALL)
   install(TARGETS complex
     EXPORT complexTargets

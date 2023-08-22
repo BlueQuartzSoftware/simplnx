@@ -12,14 +12,15 @@ This **Filter** generates a new orientation representation (see Data Layout Tabl
 #### Data Layout ####
 
 | Orientation Representation | No. of Components | Representation Type | Data Layout |
-|----------------------------|-------------- ----|---------------------|-------------|
+|----------------------------|----------|---------------------|-------------|
 | EulerAngles                | 3 | 0 | phi1, Phi, phi2 |
 | Orientation Matrix         | 9 | 1 | Row Major Format |
 | Quaternions                | 4 | 2 | ( \[x, y, z\], w ) |
 | Axis Angle                 | 4 | 3 | ( \[x, y, z\], Angle) |
 | Rodrigues Vectors          | 4 | 4 | *Internally DREAM.3D keeps a 4th component* |
-| Homochoric                 | 3 | 5 |  |
-| Cubochoric                 | 3 | 6 |  |
+| Homochoric                 | 3 | 5 | \[x, y, z\] |
+| Cubochoric                 | 3 | 6 | \[x, y, z\] |
+| StereoGraphic              | 3 | 7 | \[x, y, z\] |
 
 
 

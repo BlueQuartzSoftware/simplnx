@@ -62,7 +62,8 @@ must have a user entry or the default value _0_ will be used.
 | Set Tuple Dimensions | bool | This allows the user to set the tuple dimensions directly rather than just inheriting them. This option is NOT required if you are creating the Data Array in an Attribute Matrix |
 | Numeric Type | Enumeration | Primitive data type for created array |
 | Number of Components | int32_t | The number of components that each tuple contains. Matrix are row major form within SIMPL|
-| Initialization Value | float | Initialization value for array |
+| Initialization Value | String | Initialization value for array |
+| Data Format | String | This value will specify which data format is used by the array's data store. An empty string results in in-memory data store. |
 
 ## Required Geometry ##
 

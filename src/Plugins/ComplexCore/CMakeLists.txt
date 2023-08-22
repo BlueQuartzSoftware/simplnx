@@ -208,8 +208,10 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 
 #------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
-enable_testing()
-add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+if(COMPLEX_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+endif()
 
 #------------------------------------------------------------------------------
 # If there are additional library packages that need to be found, there is where
@@ -334,12 +336,16 @@ if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
     COMMENT "Copying Pipeline Folder into Binary Directory")
   set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
-  set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
-  install(DIRECTORY
-    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
-    DESTINATION "${INSTALL_DESTINATION}"
-    COMPONENT Applications
-  )
+  option(${PLUGIN_NAME}_INSTALL_PIPELINES "Enables install of ${PLUGIN_NAME} pipelines" ON)
+
+  if(${PLUGIN_NAME}_INSTALL_PIPELINES)
+    set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
+    install(DIRECTORY
+      "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
+      DESTINATION "${INSTALL_DESTINATION}"
+      COMPONENT Applications
+    )
+  endif()
 endif()
 
 # -----------------------------------------------------------------------

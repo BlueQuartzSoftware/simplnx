@@ -82,12 +82,18 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   auto writeXdmf = args.value<bool>(k_WriteXdmf);
 
-  auto pipelinePtr = pipelineNode->getPrecedingPipeline();
-  if(pipelinePtr == nullptr)
+  Pipeline pipeline;
+
+  if(pipelineNode != nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFindPipelineError, "Failed to retrieve pipeline."}})};
+    auto pipelinePtr = pipelineNode->getPrecedingPipeline();
+    if(pipelinePtr == nullptr)
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFindPipelineError, "Failed to retrieve pipeline."}})};
+    }
+
+    pipeline = *pipelinePtr;
   }
-  Pipeline pipeline = *pipelinePtr;
 
   auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
   return results;

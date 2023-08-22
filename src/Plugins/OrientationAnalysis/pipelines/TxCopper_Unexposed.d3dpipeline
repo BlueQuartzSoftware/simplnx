@@ -113,7 +113,7 @@
     {
       "args": {
         "cell_euler_angles_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles",
-        "cell_ip_fcolors_array_name": "IPF_Unexposed_001",
+        "cell_ipf_colors_array_name": "IPF_Unexposed_001",
         "cell_phases_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases",
         "crystal_structures_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures",
         "good_voxels_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",

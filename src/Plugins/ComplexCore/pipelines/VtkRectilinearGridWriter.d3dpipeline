@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "Import_File_Data": {
+        "import_file_data": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -431,7 +431,7 @@
             {
               "args": {
                 "cell_euler_angles_array_path": "DataContainer/CellData/EulerAngles",
-                "cell_ip_fcolors_array_name": "IPFColors",
+                "cell_ipf_colors_array_name": "IPFColors",
                 "cell_phases_array_path": "DataContainer/CellData/Phases",
                 "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
                 "good_voxels_array_path": "DataContainer/CellData/Mask",
