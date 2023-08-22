@@ -8,7 +8,7 @@ ITKDistanceMap (DistanceMap)
 
 ## Description
 
-filter_data.detail_desc=\par Inputs and Outputs
+\par Inputs and Outputs
 This is an image-to-image filter. The dimensionality is arbitrary. The only dimensionality constraint is that the input and output images be of the same dimensions and size. To maintain integer arithmetic within the filter, the default output is the signed squared distance. This implies that the input image should be of type "unsigned int" or "int" whereas the output image is of type "int". Obviously, if the user wishes to utilize the image spacing or to have a filter with the Euclidean distance (as opposed to the squared distance), output image types of float or double should be used.
 
 

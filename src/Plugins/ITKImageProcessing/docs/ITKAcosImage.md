@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-filter_data.detail_desc=This filter is templated over the pixel type of the input image and the pixel type of the output image.
+This filter is templated over the pixel type of the input image and the pixel type of the output image.
 
 The filter walks over all the pixels in the input image, and for each pixel does do the following:
 

@@ -8,7 +8,7 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-filter_data.detail_desc=HConvexImageFilter extract local maxima that are more than h intensity units above the (local) background. This has the effect of extracting objects that are brighter than background by at least h intensity units.
+HConvexImageFilter extract local maxima that are more than h intensity units above the (local) background. This has the effect of extracting objects that are brighter than background by at least h intensity units.
 
 This filter uses the HMaximaImageFilter .
 

@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-filter_data.detail_desc=The computation is performed using std::exp(x).
+The computation is performed using std::exp(x).
 
 ## Parameters
 

@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-filter_data.detail_desc=The computations are performed using std::tan(x).
+The computations are performed using std::tan(x).
 
 ## Parameters
 

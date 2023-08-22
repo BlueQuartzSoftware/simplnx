@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-filter_data.detail_desc=itk::Math::abs() is used to perform the computation.
+itk::Math::abs() is used to perform the computation.
 
 ## Parameters
 

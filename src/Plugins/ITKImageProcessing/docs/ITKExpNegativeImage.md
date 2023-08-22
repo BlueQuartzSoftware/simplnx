@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-filter_data.detail_desc=Every output pixel is equal to std::exp(-K.x ). where x is the intensity of the homologous input pixel, and K is a user-provided constant.
+Every output pixel is equal to std::exp(-K.x ). where x is the intensity of the homologous input pixel, and K is a user-provided constant.
 
 ## Parameters
 

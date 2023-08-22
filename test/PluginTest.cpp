@@ -42,6 +42,9 @@
 #include <catch2/catch.hpp>
 
 #include <string>
+#include <iostream>
+#include <ostream>
+#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace complex;

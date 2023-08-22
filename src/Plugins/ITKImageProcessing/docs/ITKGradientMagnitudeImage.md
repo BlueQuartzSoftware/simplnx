@@ -8,7 +8,7 @@ ITKImageGradient (ImageGradient)
 
 ## Description
 
-filter_data.detail_desc=\see Image 
+\see Image 
 
 
 \see Neighborhood 

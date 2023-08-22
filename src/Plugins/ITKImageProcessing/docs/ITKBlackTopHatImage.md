@@ -8,7 +8,7 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-filter_data.detail_desc=Black top hat extracts local minima that are smaller than the structuring element. It subtracts the background from the input image. The output of the filter transforms the black valleys into white peaks.
+Black top hat extracts local minima that are smaller than the structuring element. It subtracts the background from the input image. The output of the filter transforms the black valleys into white peaks.
 
 Top-hats are described in Chapter 4.5 of Pierre Soille's book "Morphological Image Analysis: Principles and Applications", Second Edition, Springer, 2003.
 

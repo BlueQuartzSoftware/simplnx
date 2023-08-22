@@ -8,7 +8,7 @@ ITKBinaryMathematicalMorphology (BinaryMathematicalMorphology)
 
 ## Description
 
-filter_data.detail_desc=This class is parameterized over the type of the input image and the type of the output image.
+This class is parameterized over the type of the input image and the type of the output image.
 
 The input is assumed to be a binary image. If the foreground pixels of the input image do not have a value of 1, they are rescaled to 1 internally to simplify the computation.
 

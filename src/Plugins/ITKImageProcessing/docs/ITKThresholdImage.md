@@ -8,7 +8,7 @@ ITKThresholding (Thresholding)
 
 ## Description
 
-filter_data.detail_desc=ThresholdImageFilter sets image values to a user-specified "outside" value (by default, "black") if the image values are below, above, or between simple threshold values.
+ThresholdImageFilter sets image values to a user-specified "outside" value (by default, "black") if the image values are below, above, or between simple threshold values.
 
 The available methods are:
 

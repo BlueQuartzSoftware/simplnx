@@ -8,20 +8,20 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-filter_data.detail_desc=A linear transformation is applied first on the argument of the sigmoid function. The resulting total transform is given by
+A linear transformation is applied first on the argument of the sigmoid function. The resulting total transform is given by
 
- \f[ f(x) = (Max-Min) \cdot \frac{1}{\left(1+e^{- \frac{ x - \beta }{\alpha}}\right)} + Min \f] 
+![Images/ITKSigmoidImage_Equation.png](Images/ITKSigmoidImage_Equation.png)
 
 Every output pixel is equal to f(x). Where x is the intensity of the homologous input pixel, and alpha and beta are user-provided constants.
 
 ## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
-| Alpha | float64 |  |
-| Beta | float64 |  |
-| OutputMaximum | float64 |  |
-| OutputMinimum | float64 |  |
+| Name | Type | Description              |
+|------|------|--------------------------|
+| Alpha | float64 | Alpha in the above equation |
+| Beta | float64 | Beta in the abvove equation |
+| OutputMaximum | float64 | The maximum output value |
+| OutputMinimum | float64 | The minimum output value |
 
 ## Required Geometry
 

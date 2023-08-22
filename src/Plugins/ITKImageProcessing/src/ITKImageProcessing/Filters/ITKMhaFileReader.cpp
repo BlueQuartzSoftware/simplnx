@@ -217,7 +217,7 @@ Parameters ITKMhaFileReader::parameters() const
                                       "When true, the transformation matrix found in the image's header metadata will be saved as a data array in the created image geometry.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyImageTransformation, "Apply Image Transformation To Geometry",
                                                                  "When true, the transformation matrix found in the image's header metadata will be applied to the created image geometry.", false));
-  params.insert(std::make_unique<ChoicesParameter>(k_InterpolationTypeKey, "Interpolation Type", "", k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
+  params.insert(std::make_unique<ChoicesParameter>(k_InterpolationTypeKey, "Interpolation Type", "The type of interpolation algorithm that is used. 0=NearestNeighbor, 1=Linear", k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(

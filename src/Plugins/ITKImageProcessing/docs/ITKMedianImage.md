@@ -8,7 +8,7 @@ ITKSmoothing (Smoothing)
 
 ## Description
 
-filter_data.detail_desc=Computes an image where a given pixel is the median value of the the pixels in a neighborhood about the corresponding input pixel.
+Computes an image where a given pixel is the median value of the the pixels in a neighborhood about the corresponding input pixel.
 
 A median filter is one of the family of nonlinear filters. It is used to smooth an image without being biased by outliers or shot noise.
 

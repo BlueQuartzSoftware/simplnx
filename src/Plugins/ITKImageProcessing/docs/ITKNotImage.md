@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-filter_data.detail_desc=This class is templated over the type of an input image and the type of the output image. Numeric conversions (castings) are done by the C++ defaults.
+This class is templated over the type of an input image and the type of the output image. Numeric conversions (castings) are done by the C++ defaults.
 
 Since the logical NOT operation operates only on boolean types, the input type must be implicitly convertible to bool, which is only defined in C++ for integer types, the images passed to this filter must comply with the requirement of using integer pixel type.
 

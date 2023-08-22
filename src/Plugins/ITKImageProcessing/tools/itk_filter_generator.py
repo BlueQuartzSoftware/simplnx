@@ -919,7 +919,7 @@ def write_filter_doc(filter_data: FilterData, output_dir: Path) -> None:
     lines.append(f'{filter_data.itk_module} ({filter_data.itk_group})\n')
 
     lines.append(f'\n## Description\n\n')
-    lines.append(f'filter_data.detail_desc={filter_data.detail_desc}\n')
+    lines.append(f'{filter_data.detail_desc}\n')
 
     # lines.append(f'\n## Misc\n\n')   
     # lines.append(f'filter_data.base_name={filter_data.base_name}\n')
@@ -1014,11 +1014,11 @@ def write_filter_test(filter_data: FilterData, output_dir: Path):
 def write_filter(filter_name: str, json_dir: Path, output_dir: Path, test_output_dir: Path, header_template: Template, source_template: Template, docs_output_dir: Path) -> None:
     filter_data = read_filter_json(json_dir, filter_name)
 
-    write_filter_header(filter_data, header_template, output_dir)
+    # write_filter_header(filter_data, header_template, output_dir)
 
-    write_filter_source(filter_data, source_template, output_dir)
+    # write_filter_source(filter_data, source_template, output_dir)
 
-    write_filter_test(filter_data, test_output_dir)
+    # write_filter_test(filter_data, test_output_dir)
 
     write_filter_doc(filter_data, docs_output_dir)
 
@@ -1039,8 +1039,8 @@ def main(input_args: Optional[List[str]] = None) -> None:
     test_output_dir: Path = args.test_output_dir
     docs_output_dir: Path = args.docs_output_dir
 
-    # filter_output_dir.mkdir(parents=True, exist_ok=True)
-    # test_output_dir.mkdir(parents=True, exist_ok=True)
+    filter_output_dir.mkdir(parents=True, exist_ok=True)
+    test_output_dir.mkdir(parents=True, exist_ok=True)
     # docs_output_dir.mkdir(parents=True, exist_ok=True)
 
     with open(f'{template_dir}/filter.hpp.in', 'r') as header_template_file:

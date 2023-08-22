@@ -8,7 +8,7 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
-filter_data.detail_desc=The computations are performed using std::sin(x).
+The computations are performed using std::sin(x).
 
 ## Parameters
 

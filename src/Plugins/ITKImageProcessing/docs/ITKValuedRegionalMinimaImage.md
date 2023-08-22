@@ -8,7 +8,7 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 ## Description
 
-filter_data.detail_desc=Regional minima are flat zones surrounded by pixels of higher value. A completely flat image will be marked as a regional minima by this filter.
+Regional minima are flat zones surrounded by pixels of higher value. A completely flat image will be marked as a regional minima by this filter.
 
 This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. https://www.insight-journal.org/browse/publication/65 
 
