@@ -51,3 +51,16 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ChangeAngleRepresentation
++ Displayed Name: Convert Angles to Degrees or Radians
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| angles_array_path | Angles | The DataArray containing the angles to be converted. | complex.ArraySelectionParameter |
+| conversion_type | Conversion Type | Tells the Filter which conversion is being made | complex.ChoicesParameter |
+

@@ -44,3 +44,17 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists ##
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: RobustAutomaticThreshold
++ Displayed Name: Robust Automatic Threshold
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| array_to_threshold | Input Array | DataArray to Threshold | complex.ArraySelectionParameter |
+| created_mask_path | Mask | Created mask based on Input Array and Gradient Magnitude | complex.DataObjectNameParameter |
+| gradient_array | Gradient Magnitude Data | The complete path to the Array specifying the gradient magnitude of the Input Array | complex.ArraySelectionParameter |
+

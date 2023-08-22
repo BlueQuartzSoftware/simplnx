@@ -60,3 +60,19 @@ If you need more help with a filter, please consider asking your question on the
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
 
 
+
+
+## Python Filter Arguments
+
++ module: ITKImageProcessing
++ Class Name: ITKRelabelComponentImage
++ Displayed Name: ITK Relabel Component Image Filter
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| input_image_data_path | Input Image Data Array | The image data that will be processed by this filter. | complex.ArraySelectionParameter |
+| minimum_object_size | MinimumObjectSize | Set the minimum size in pixels for an object. All objects smaller than this size will be discarded and will not appear in the output label map. NumberOfObjects will count only the objects whose pixel counts are greater than or equal to the minimum size. Call GetOriginalNumberOfObjects to find out how many objects were present in the original label map. | complex.UInt64Parameter |
+| output_image_data_path | Output Image Data Array | The result of the processing will be stored in this Data Array. | complex.DataObjectNameParameter |
+| selected_image_geom_path | Image Geometry | Select the Image Geometry Group from the DataStructure. | complex.GeometrySelectionParameter |
+| sort_by_object_size | SortByObjectSize | Controls whether the object labels are sorted by size. If false, initial order of labels is kept. | complex.BoolParameter |
+

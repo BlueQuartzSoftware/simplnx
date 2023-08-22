@@ -52,3 +52,21 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: BadDataNeighborOrientationCheckFilter
++ Displayed Name: Neighbor Orientation Comparison (Bad Data)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_phases_array_path | Cell Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each phase | complex.ArraySelectionParameter |
+| good_voxels_array_path | Mask | Used to define Cells as good or bad | complex.ArraySelectionParameter |
+| image_geometry_path | Image Geometry | The target geometry | complex.GeometrySelectionParameter |
+| misorientation_tolerance | Misorientation Tolerance (Degrees) | Angular tolerance used to compare with neighboring Cells | complex.Float32Parameter |
+| number_of_neighbors | Required Number of Neighbors | Minimum number of neighbor Cells that must have orientations within above tolerance to allow Cell to be changed | complex.Int32Parameter |
+| quats_array_path | Quaternions | Specifies the orientation of the Cell in quaternion representation | complex.ArraySelectionParameter |
+

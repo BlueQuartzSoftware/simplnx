@@ -64,3 +64,22 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists ##
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: PointSampleTriangleGeometryFilter
++ Displayed Name: Point Sample Triangle Geometry
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| mask_array_path | Mask | DataPath to the boolean mask array. Values that are true will mark that cell/point as usable. | complex.ArraySelectionParameter |
+| number_of_samples | Number of Sample Points | The number of sample points to use | complex.Int32Parameter |
+| selected_data_array_paths | Face Attribute Arrays to Transfer | The paths to the Face Attribute Arrays to transfer to the created Vertex Geometry where the mask is false, if Use Mask is checked | complex.MultiArraySelectionParameter |
+| triangle_areas_array_path | Face Areas | The complete path to the array specifying the area of each Face | complex.ArraySelectionParameter |
+| triangle_geometry_path | Triangle Geometry to Sample | The complete path to the triangle Geometry from which to sample | complex.DataPathSelectionParameter |
+| use_mask | Use Mask | Specifies whether or not to use a mask array | complex.BoolParameter |
+| vertex_data_group_path | Vertex Data | The complete path to the vertex data arrays for the Vertex Geometry | complex.DataObjectNameParameter |
+| vertex_geometry_path | Vertex Geometry Name | The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points | complex.DataGroupCreationParameter |
+

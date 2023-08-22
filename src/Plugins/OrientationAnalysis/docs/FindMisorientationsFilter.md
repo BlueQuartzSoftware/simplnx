@@ -55,3 +55,21 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: FindMisorientationsFilter
++ Displayed Name: Find Feature Neighbor Misorientations
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| avg_misorientations_array_name | Average Misorientations | The name of the array containing the number weighted average of neighbor misorientations. | complex.DataObjectNameParameter |
+| avg_quats_array_path | Feature Average Quaternions | Defines the average orientation of the Feature in quaternion representation | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| feature_phases_array_path | Feature Phases | Specifies to which Ensemble each Feature belongs | complex.ArraySelectionParameter |
+| find_avg_misors | Find Average Misorientation Per Feature | Specifies if the average of the misorienations with the neighboring Features should be stored for each Feature | complex.BoolParameter |
+| misorientation_list_array_name | Misorientation List | The name of the data object containing the list of the misorientation angles with the contiguous neighboring Features for a given Feature | complex.DataObjectNameParameter |
+| neighbor_list_array_path | Feature Neighbor List | List of the contiguous neighboring Features for a given Feature | complex.NeighborListSelectionParameter |
+

@@ -47,3 +47,17 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: GenerateQuaternionConjugateFilter
++ Displayed Name: Generate Quaternion Conjugate
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| delete_original_data | Delete Original Data | Should the original Data be deleted from the DataStructure | complex.BoolParameter |
+| output_data_array_path | Output Data Array Path | The name of the generated output DataArray | complex.DataObjectNameParameter |
+| quaternion_data_array_path | Quaternions | Specifies the quaternions to convert | complex.ArraySelectionParameter |
+

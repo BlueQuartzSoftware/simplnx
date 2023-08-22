@@ -47,3 +47,21 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: InitializeData
++ Displayed Name: Initialize Data
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_arrays | Cell Arrays | The cell data arrays in which to initialize a sub-volume to zeros | complex.MultiArraySelectionParameter |
+| image_geom_path | Image Geometry | The geometry containing the cell data for which to initialize | complex.GeometrySelectionParameter |
+| init_range | Initialization Range | The initialization range if Random With Range Initialization Type is selected | complex.VectorFloat64Parameter |
+| init_type | Initialization Type | Tells how to initialize the data | complex.ChoicesParameter |
+| init_value | Initialization Value | The initialization value if Manual Initialization Type is selected | complex.Float64Parameter |
+| max_point | Max Point | The maximum x, y, z bound in cells | complex.VectorUInt64Parameter |
+| min_point | Min Point | The minimum x, y, z bound in cells | complex.VectorUInt64Parameter |
+

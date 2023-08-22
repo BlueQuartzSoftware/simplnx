@@ -65,3 +65,25 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: EBSDSegmentFeaturesFilter
++ Displayed Name: Segment Features (Misorientation)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| active_array_name | Active | The name of the array which specifies if the Feature is still in the sample (true if the Feature is in the sample and false if it is not). At the end of the Filter, all Features will be Active | complex.DataObjectNameParameter |
+| cell_feature_attribute_matrix_name | Cell Feature Attribute Matrix | The name of the created cell feature attribute matrix | complex.DataObjectNameParameter |
+| cell_phases_array_path | Phases | Specifies to which Ensemble each cell belongs | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| feature_ids_array_name | Cell Feature Ids | Specifies to which Feature each Cell belongs. | complex.DataObjectNameParameter |
+| good_voxels_array_path | Mask | Path to the data array that specifies if the Cell is to be counted in the algorithm | complex.ArraySelectionParameter |
+| grid_geometry_path | Grid Geometry | DataPath to target Grid Geometry | complex.GeometrySelectionParameter |
+| misorientation_tolerance | Misorientation Tolerance (Degrees) | Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature | complex.Float32Parameter |
+| quats_array_path | Quaternions | Specifies the orientation of the Cell in quaternion representation | complex.ArraySelectionParameter |
+| randomize_features | Randomize Feature IDs | Specifies if feature IDs should be randomized during calculations | complex.BoolParameter |
+| use_good_voxels | Use Mask Array | Specifies whether to use a boolean array to exclude some Cells from the Feature identification process | complex.BoolParameter |
+

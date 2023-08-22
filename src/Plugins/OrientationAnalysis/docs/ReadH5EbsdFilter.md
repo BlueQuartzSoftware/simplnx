@@ -107,3 +107,18 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: ReadH5EbsdFilter
++ Displayed Name: Import H5EBSD File
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_attribute_matrix_name | Created Cell Attribute Matrix | The name of the created cell attribute matrix associated with the imported geometry | complex.DataObjectNameParameter |
+| cell_ensemble_attribute_matrix_name | Created Cell Ensemble Attribute Matrix | The name of the created cell ensemble attribute matrix associated with the imported geometry | complex.DataObjectNameParameter |
+| data_container_name | Created Image Geometry | The complete path to the imported Image Geometry | complex.DataGroupCreationParameter |
+| read_h5_ebsd_filter | Import H5Ebsd File | The input .h5ebsd file path | orientationanalysis.H5EbsdReaderParameter |
+

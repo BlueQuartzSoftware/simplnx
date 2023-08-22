@@ -55,3 +55,17 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: IdentifySample
++ Displayed Name: Isolate Largest Feature (Identify Sample)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| fill_holes | Fill Holes in Largest Feature | Whether to fill holes within sample after it is identified | complex.BoolParameter |
+| good_voxels | Mask | DataPath to the mask array defining what is sample and what is not | complex.ArraySelectionParameter |
+| image_geometry | Image Geometry | DataPath to the target ImageGeom | complex.GeometrySelectionParameter |
+

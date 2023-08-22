@@ -51,3 +51,23 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: FindFeatureReferenceCAxisMisorientationsFilter
++ Displayed Name: Find Feature Reference C-Axis Misalignments
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| avg_c_axes_array_path | Average C-Axes | The direction of the Feature's C-axis in the sample reference frame | complex.ArraySelectionParameter |
+| cell_phases_array_path | Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| feature_avg_c_axis_misorientations_array_name | Average C-Axis Misorientations | Average of the Feature Reference CAxis Misorientation values for all of the Cells that belong to the Feature | complex.DataObjectNameParameter |
+| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| feature_reference_c_axis_misorientations_array_name | Feature Reference C-Axis Misorientations | Misorientation angle (in degrees) between Cell's C-axis and the C-axis of the Feature that owns that Cell | complex.DataObjectNameParameter |
+| feature_stdev_c_axis_misorientations_array_name | Feature Stdev C-Axis Misorientations | Standard deviation of the Feature Reference CAxis Misorientation values for all of the Cells that belong to the Feature | complex.DataObjectNameParameter |
+| image_geometry_path | Image Geometry | The path to the input image geometry | complex.GeometrySelectionParameter |
+| quats_array_path | Quaternions | Specifies the orientation of the Cell in quaternion representation | complex.ArraySelectionParameter |
+

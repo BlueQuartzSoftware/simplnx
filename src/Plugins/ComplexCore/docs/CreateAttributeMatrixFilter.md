@@ -45,3 +45,16 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CreateAttributeMatrixFilter
++ Displayed Name: Create Attribute Matrix
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| Data_Object_Path | DataObject Path | The complete path to the Attribute Matrix being created | complex.DataGroupCreationParameter |
+| tuple_dimensions | Attribute Matrix Dimensions (Slowest to Fastest Dimensions) | Slowest to Fastest Dimensions | complex.DynamicTableParameter |
+

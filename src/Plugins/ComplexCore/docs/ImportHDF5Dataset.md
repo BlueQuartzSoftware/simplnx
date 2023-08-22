@@ -68,3 +68,15 @@ Not Applicable
 Please see the description file distributed with this **Plugin**
 
 ## DREAM.3D Mailing Lists ##
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ImportHDF5Dataset
++ Displayed Name: Import HDF5 Dataset
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| import_hd_f5_file | Select HDF5 File | The HDF5 file data to import | complex.ImportHDF5DatasetParameter |
+

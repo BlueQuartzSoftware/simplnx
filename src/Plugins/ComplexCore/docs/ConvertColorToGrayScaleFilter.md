@@ -64,3 +64,19 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ConvertColorToGrayScaleFilter
++ Displayed Name: Color to GrayScale
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| color_channel | Color Channel | The specific R|G|B channel to use as the GrayScale values | complex.Int32Parameter |
+| color_weights | Color Weighting | The weightings for each R|G|B component when using the luminosity conversion algorithm | complex.VectorFloat32Parameter |
+| conversion_algorithm | Conversion Algorithm | Which method to use when flattening the RGB array | complex.ChoicesParameter |
+| input_data_array_vector | Input Data Arrays | Select all DataArrays that need to be converted to GrayScale | complex.MultiArraySelectionParameter |
+| output_array_prefix | Output Data Array Prefix | This prefix will be added to each array name that is selected for conversion to form the new array name | complex.StringParameter |
+

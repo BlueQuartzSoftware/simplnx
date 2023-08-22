@@ -82,3 +82,24 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 <https://groups.google.com/forum/?hl=en#!forum/dream3d-users>
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: KMedoidsFilter
++ Displayed Name: K Medoids
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| distance_metric | Distance Metric | Distance Metric type to be used for calculations | complex.ChoicesParameter |
+| feature_attribute_matrix_path | Cluster Attribute Matrix | name and path of Attribute Matrix to hold Cluster Data | complex.DataGroupCreationParameter |
+| feature_ids_array_name | Cluster Ids Array Name | name of the ids array to be created in Attribute Array to Cluster's parent group | complex.DataObjectNameParameter |
+| init_clusters | Number of Clusters | This will be the tuple size for Cluster Attribute Matrix and the values within | complex.UInt64Parameter |
+| mask_array_path | Mask | DataPath to the boolean mask array. Values that are true will mark that cell/point as usable. | complex.ArraySelectionParameter |
+| medoids_array_name | Cluster Medoids Array Name | name of the medoids array to be created in Cluster Attribute Matrix | complex.DataObjectNameParameter |
+| seed_value | Seed | The seed fed into the random generator | complex.UInt64Parameter |
+| selected_array_path | Attribute Array to Cluster | The array to find the medoids for | complex.ArraySelectionParameter |
+| use_mask | Use Mask | Specifies whether or not to use a mask array | complex.BoolParameter |
+| use_seed | Use Seed for Random Generation | When true the user will be able to put in a seed for random generation | complex.BoolParameter |
+

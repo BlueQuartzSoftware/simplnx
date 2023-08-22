@@ -68,3 +68,21 @@ If you need more help with a filter, please consider asking your question on the
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
 
 
+
+
+## Python Filter Arguments
+
++ module: ITKImageProcessing
++ Class Name: ITKDiscreteGaussianImage
++ Displayed Name: ITK Discrete Gaussian Image Filter
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| input_image_data_path | Input Image Data Array | The image data that will be processed by this filter. | complex.ArraySelectionParameter |
+| maximum_error | MaximumError | The maximum error for each axis | complex.VectorFloat64Parameter |
+| maximum_kernel_width | MaximumKernelWidth | Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels. | complex.UInt32Parameter |
+| output_image_data_path | Output Image Data Array | The result of the processing will be stored in this Data Array. | complex.DataObjectNameParameter |
+| selected_image_geom_path | Image Geometry | Select the Image Geometry Group from the DataStructure. | complex.GeometrySelectionParameter |
+| use_image_spacing | UseImageSpacing | Set/Get whether or not the filter will use the spacing of the input image in its calculations. Use On to take the image spacing information into account and to specify the Gaussian variance in real world units; use Off to ignore the image spacing and to specify the Gaussian variance in voxel units. Default is On. | complex.BoolParameter |
+| variance | Variance | The value of the input variance for each axis | complex.VectorFloat64Parameter |
+

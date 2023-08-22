@@ -57,3 +57,21 @@ If you need more help with a filter, please consider asking your question on the
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
 
 
+
+
+## Python Filter Arguments
+
++ module: ITKImageProcessing
++ Class Name: ITKErodeObjectMorphologyImage
++ Displayed Name: ITK Erode Object Morphology Image Filter
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| background_value | BackgroundValue | Set the value to be assigned to eroded pixels | complex.Float64Parameter |
+| input_image_data_path | Input Image Data Array | The image data that will be processed by this filter. | complex.ArraySelectionParameter |
+| kernel_radius | KernelRadius | The radius of the kernel structuring element. | complex.VectorUInt32Parameter |
+| kernel_type | KernelType | The shape of the kernel to use. 0=Annulas, 1=Ball, 2=Box, 3=Cross | complex.ChoicesParameter |
+| object_value | ObjectValue |  | complex.Float64Parameter |
+| output_image_data_path | Output Image Data Array | The result of the processing will be stored in this Data Array. | complex.DataObjectNameParameter |
+| selected_image_geom_path | Image Geometry | Select the Image Geometry Group from the DataStructure. | complex.GeometrySelectionParameter |
+

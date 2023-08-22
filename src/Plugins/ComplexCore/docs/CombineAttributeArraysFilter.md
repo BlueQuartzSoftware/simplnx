@@ -75,3 +75,18 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CombineAttributeArraysFilter
++ Displayed Name: Combine Attribute Arrays
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| move_values | Move Data | Whether to remove the original arrays after combining the data | complex.BoolParameter |
+| normalize_data | Normalize Data | Whether to normalize the combine data on the interval [0, 1] | complex.BoolParameter |
+| selected_data_array_paths | Attribute Arrays to Combine | The complete path to each of the Attribute Arrays to combine | complex.MultiArraySelectionParameter |
+| stacked_data_array_name | Created Data Array | This is the name of the created output array of the combined attribute arrays. | complex.DataObjectNameParameter |
+

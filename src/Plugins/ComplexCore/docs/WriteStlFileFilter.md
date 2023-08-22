@@ -39,3 +39,20 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: WriteStlFileFilter
++ Displayed Name: Export STL Files from Triangle Geometry
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| feature_ids_path | Face labels | The triangle feature ids array to order/index files by | complex.ArraySelectionParameter |
+| feature_phases_path | Feature Phases | The feature phases array to further order/index files by | complex.ArraySelectionParameter |
+| group_by_feature | Group by Feature Phases | Further partition the stl files by feature phases | complex.BoolParameter |
+| output_stl_directory | Output STL Directory | Directory to dump the STL file(s) to | complex.FileSystemPathParameter |
+| output_stl_prefix | STL File Prefix | The prefix name of created files (other values will be appended later - including the .stl extension) | complex.StringParameter |
+| triangle_geom_path | Selected Triangle Geometry | The geometry to print | complex.GeometrySelectionParameter |
+

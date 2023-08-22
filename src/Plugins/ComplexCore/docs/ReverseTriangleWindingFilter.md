@@ -35,3 +35,15 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ReverseTriangleWindingFilter
++ Displayed Name: Reverse Triangle Winding
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| triangle_geometry_path | Triangle Geometry | The DataPath to then input Triangle Geometry | complex.GeometrySelectionParameter |
+

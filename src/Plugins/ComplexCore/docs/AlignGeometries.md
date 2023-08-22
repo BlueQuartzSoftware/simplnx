@@ -48,3 +48,16 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: AlignGeometries
++ Displayed Name: Align Geometries
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| alignment_type | Alignment Type | The type of alignment to perform (Origin or Centroid. | complex.ChoicesParameter |
+| moving_geometry | Moving Geometry | The geometry that will be moved. | complex.GeometrySelectionParameter |
+| target_geometry | Fixed Geometry | The geometry that does *not* move. | complex.GeometrySelectionParameter |
+

@@ -54,3 +54,18 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: VtkRectilinearGridWriterFilter
++ Displayed Name: Vtk Rectilinear Grid Exporter
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| image_geometry_path | Image Geometry | The path to the image geometry in which to write out to the vtk file | complex.GeometrySelectionParameter |
+| output_file | Output File | The output vtk file in which the geometry data is written | complex.FileSystemPathParameter |
+| selected_data_array_paths | Cell Data Arrays to Write | The paths to the cell data arrays to write out with the geometry | complex.MultiArraySelectionParameter |
+| write_binary_file | Write Binary File | Whether or not to write the vtk file in binary | complex.BoolParameter |
+

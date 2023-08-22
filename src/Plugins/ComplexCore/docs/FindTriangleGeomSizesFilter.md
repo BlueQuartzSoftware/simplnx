@@ -53,3 +53,18 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindTriangleGeomSizesFilter
++ Displayed Name: Find Feature Volumes from Triangle Geometry
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| face_labels_array_path | Face Labels | The DataPath to the FaceLabels values. | complex.ArraySelectionParameter |
+| feature_attribute_matrix_name | Face Feature Attribute Matrix | The DataPath to the AttributeMatrix that holds feature data for the faces | complex.DataGroupSelectionParameter |
+| triangle_geometry_path | Triangle Geometry | The complete path to the Geometry for which to calculate the normals | complex.GeometrySelectionParameter |
+| volumes_array_name | Calculated Volumes | Calculated volumes data created in the Face Feature Data Attribute Matrix | complex.DataObjectNameParameter |
+

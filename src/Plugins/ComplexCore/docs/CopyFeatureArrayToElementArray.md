@@ -45,3 +45,17 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CopyFeatureArrayToElementArray
++ Displayed Name: Create Element Array from Feature Array
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| created_array_suffix | Created Array Suffix | The suffix to add to the input attribute array name when creating the copied array | complex.StringParameter |
+| feature_ids_path | Feature Ids | Specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| selected_feature_array_path | Feature Data to Copy to Element Data | The DataPath to the feature data that should be copied to the cell level | complex.MultiArraySelectionParameter |
+

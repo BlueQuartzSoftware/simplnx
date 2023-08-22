@@ -91,3 +91,21 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: RawBinaryReaderFilter
++ Displayed Name: Raw Binary Importer
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| created_attribute_array_path | Output Attribute Array | The complete path to the created Attribute Array | complex.ArrayCreationParameter |
+| endian | Endian | The endianness of the data | complex.ChoicesParameter |
+| input_file | Input File | The input binary file path | complex.FileSystemPathParameter |
+| number_of_components | Number of Components | The number of values at each tuple | complex.UInt64Parameter |
+| scalar_type | Scalar Type | Data type of the binary data | complex.NumericTypeParameter |
+| skip_header_bytes | Skip Header Bytes | Number of bytes to skip before reading data | complex.UInt64Parameter |
+| tuple_dimensions | Data Array Dimensions | Slowest to Fastest Dimensions (ZYX for example) | complex.DynamicTableParameter |
+

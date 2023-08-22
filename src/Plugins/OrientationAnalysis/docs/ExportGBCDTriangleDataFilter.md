@@ -63,3 +63,19 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: ExportGBCDTriangleDataFilter
++ Displayed Name: Export GBCD Triangles File
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| feature_euler_angles_array_path | Average Euler Angles | Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z). | complex.ArraySelectionParameter |
+| output_file | Output File | The output GBCD triangle file path | complex.FileSystemPathParameter |
+| surface_mesh_face_areas_array_path | Face Areas | Specifies the area of each Face | complex.ArraySelectionParameter |
+| surface_mesh_face_labels_array_path | Face Labels | Specifies which Features are on either side of each Face | complex.ArraySelectionParameter |
+| surface_mesh_face_normals_array_path | Face Normals | Specifies the normal of each Face | complex.ArraySelectionParameter |
+

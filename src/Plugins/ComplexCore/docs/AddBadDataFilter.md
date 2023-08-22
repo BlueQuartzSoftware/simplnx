@@ -44,3 +44,22 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: AddBadDataFilter
++ Displayed Name: Add Bad Data
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| boundary_noise | Add Boundary Noise | If true the user may set the boundary volume fraction | complex.BoolParameter |
+| boundary_vol_fraction | Volume Fraction of Boundary Noise | A value between 0 and 1 inclusive that is compared against random generation | complex.Float32Parameter |
+| gb_euclidean_distances_array_path | Boundary Euclidean Distances | This is the GB Manhattan Distances array | complex.ArraySelectionParameter |
+| image_geometry_path | Image Geometry | The selected image geometry | complex.GeometrySelectionParameter |
+| poisson_noise | Add Random Noise | If true the user may set the poisson volume fraction | complex.BoolParameter |
+| poisson_vol_fraction | Volume Fraction of Random Noise | A value between 0 and 1 inclusive that is compared against random generation | complex.Float32Parameter |
+| seed_value | Seed | The seed fed into the random generator | complex.UInt64Parameter |
+| use_seed | Use Seed for Random Generation | When true the user will be able to put in a seed for random generation | complex.BoolParameter |
+

@@ -29,3 +29,15 @@ ALL
 ## License & Copyright ##
 
 Please see the description file distributed with this plugin.
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ImportDREAM3DFilter
++ Displayed Name: Read DREAM.3D File
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| Import_File_Data | Import File Path | The HDF5 file path the DataStructure should be imported from. | complex.Dream3dImportParameter |
+

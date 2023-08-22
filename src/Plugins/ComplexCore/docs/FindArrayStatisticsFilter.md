@@ -97,3 +97,44 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists ##
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindArrayStatisticsFilter
++ Displayed Name: Find Attribute Array Statistics
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| compute_by_index | Compute Statistics Per Feature/Ensemble | Whether the statistics should be computed on a Feature/Ensemble basis | complex.BoolParameter |
+| destination_attribute_matrix | Destination Attribute Matrix | Attribute Matrix in which to store the computed statistics | complex.DataGroupCreationParameter |
+| feature_ids_path | Feature Ids | Specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| find_histogram | Find Histogram | Whether to compute the histogram of the input array | complex.BoolParameter |
+| find_length | Find Length | Whether to compute the length of the input array | complex.BoolParameter |
+| find_max | Find Maximum | Whether to compute the maximum of the input array | complex.BoolParameter |
+| find_mean | Find Mean | Whether to compute the arithmetic mean of the input array | complex.BoolParameter |
+| find_median | Find Median | Whether to compute the median of the input array | complex.BoolParameter |
+| find_min | Find Minimum | Whether to compute the minimum of the input array | complex.BoolParameter |
+| find_std_deviation | Find Standard Deviation | Whether to compute the standard deviation of the input array | complex.BoolParameter |
+| find_summation | Find Summation | Whether to compute the summation of the input array | complex.BoolParameter |
+| find_unique_values | Find Number of Unique Values | Whether to compute the number of unique values in the input array | complex.BoolParameter |
+| histogram_array_name | Histogram Array Name | The name of the histogram array | complex.DataObjectNameParameter |
+| length_array_name | Length Array Name | The name of the length array | complex.DataObjectNameParameter |
+| mask_array_path | Mask | DataPath to the boolean mask array. Values that are true will mark that cell/point as usable. | complex.ArraySelectionParameter |
+| max_range | Histogram Max Value | Max cutoff value for histogram | complex.Float64Parameter |
+| maximum_array_name | Maximum Array Name | The name of the maximum array | complex.DataObjectNameParameter |
+| mean_array_name | Mean Array Name | The name of the mean array | complex.DataObjectNameParameter |
+| median_array_name | Median Array Name | The name of the median array | complex.DataObjectNameParameter |
+| min_range | Histogram Min Value | Min cutoff value for histogram | complex.Float64Parameter |
+| minimum_array_name | Minimum Array Name | The name of the minimum array | complex.DataObjectNameParameter |
+| num_bins | Number of Bins | Number of bins in histogram | complex.Int32Parameter |
+| number_unique_values | Number of Unique Values Array Name | The name of the array which stores the calculated number of unique values | complex.DataObjectNameParameter |
+| selected_array_path | Attribute Array to Compute Statistics | Input Attribute Array for which to compute statistics | complex.ArraySelectionParameter |
+| standardize_data | Standardize Data | Should a standardized data array be generated | complex.BoolParameter |
+| standardized_array_name | Standardized Data Array Name | The name of the standardized data array | complex.DataObjectNameParameter |
+| std_deviation_array_name | Standard Deviation Array Name | The name of the standard deviation array | complex.DataObjectNameParameter |
+| summation_array_name | Summation Array Name | The name of the summation array | complex.DataObjectNameParameter |
+| use_full_range | Use Full Range for Histogram | If true, ignore min and max and use min and max from array upon which histogram is computed | complex.BoolParameter |
+| use_mask | Use Mask | Specifies whether or not to use a mask array | complex.BoolParameter |
+

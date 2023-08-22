@@ -44,3 +44,21 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: ITKImageProcessing
++ Class Name: ITKImportImageStack
++ Displayed Name: ITK Import Images (3D Stack)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_data_name | Cell Data Name | The name of the created cell attribute matrix | complex.DataObjectNameParameter |
+| image_data_array_path | Created Image Data | The path to the created image data array | complex.DataObjectNameParameter |
+| image_geometry_path | Created Image Geometry | The path to the created Image Geometry | complex.DataGroupCreationParameter |
+| image_transform_choice | Optional Slice Operations | Operation that is performed on each slice. 0=None, 1=Flip on X, 2=Flip on Y | complex.ChoicesParameter |
+| input_file_list_info | Input File List | The list of 2D image files to be read in to a 3D volume | complex.GeneratedFileListParameter |
+| origin | Origin | The origin of the 3D volume | complex.VectorFloat32Parameter |
+| spacing | Spacing | The spacing of the 3D volume | complex.VectorFloat32Parameter |
+

@@ -80,3 +80,21 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: GenerateIPFColorsFilter
++ Displayed Name: Generate IPF Colors
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_euler_angles_array_path | Euler Angles | Three angles defining the orientation of the Element in Bunge convention (Z-X-Z) | complex.ArraySelectionParameter |
+| cell_ip_fcolors_array_name | IPF Colors | The name of the array containing the RGB colors encoded as unsigned chars for each Element | complex.DataObjectNameParameter |
+| cell_phases_array_path | Phases | Specifies to which Ensemble each cell belongs | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| good_voxels_array_path | Mask | Path to the data array used to define Elements as good or bad. | complex.ArraySelectionParameter |
+| reference_dir | Reference Direction | The reference axis with respect to compute the IPF colors | complex.VectorFloat32Parameter |
+| use_good_voxels | Use Mask Array | Whether to assign a black color to 'bad' Elements | complex.BoolParameter |
+

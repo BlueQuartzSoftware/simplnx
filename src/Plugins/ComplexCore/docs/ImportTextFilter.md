@@ -102,3 +102,25 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ImportTextFilter
++ Displayed Name: Import ASCII Data Array
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| advanced_options | Set Tuple Dimensions [not required if creating inside an Attribute Matrix] | This allows the user to set the tuple dimensions directly rather than just inheriting them 
+
+This option is NOT required if you are creating the Data Array in an Attribute Matrix | complex.BoolParameter |
+| data_format | Data Format | This value will specify which data format is used by the array's data store. An empty string results in in-memory data store. | complex.DataStoreFormatParameter |
+| delimiter_choice | Delimiter | Delimiter for values on a line | complex.ChoicesParameter |
+| input_file | Input File | File path that points to the imported file | complex.FileSystemPathParameter |
+| n_comp | Number of Components | Number of columns | complex.UInt64Parameter |
+| n_skip_lines | Skip Header Lines | Number of lines at the start of the file to skip | complex.UInt64Parameter |
+| n_tuples | Data Array Dimensions (Slowest to Fastest Dimensions) | Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry. | complex.DynamicTableParameter |
+| output_data_array | Created Array Path | DataPath or Name for the underlying Data Array | complex.ArrayCreationParameter |
+| scalar_type | Scalar Type | Data Type to interpret and store data into. | complex.NumericTypeParameter |
+

@@ -55,3 +55,19 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindBoundaryCellsFilter
++ Displayed Name: Find Boundary Cells (Image)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| boundary_cells_array_name | Boundary Cells | The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6 | complex.DataObjectNameParameter |
+| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| ignore_feature_zero | Ignore Feature 0 | Do not use feature 0 | complex.BoolParameter |
+| image_geometry_path | Image Geometry | The selected geometry to which the cells belong | complex.GeometrySelectionParameter |
+| include_volume_boundary | Include Volume Boundary | Include the Cell boundaries | complex.BoolParameter |
+

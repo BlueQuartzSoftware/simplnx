@@ -75,3 +75,19 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: CreateEnsembleInfoFilter
++ Displayed Name: Create Ensemble Info
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_ensemble_attribute_matrix_name | Ensemble Attribute Matrix | The complete path to the attribute matrix in which to store the ensemble phase data arrays | complex.DataGroupCreationParameter |
+| crystal_structures_array_name | Crystal Structures | The name of the data array representing the crystal structure for each Ensemble | complex.DataObjectNameParameter |
+| ensemble | Created Ensemble Info | The values with which to populate the crystal structures, phase types, and phase names data arrays. Each row corresponds to an ensemble phase. | complex.EnsembleInfoParameter |
+| phase_names_array_name | Phase Names | The name of the string array representing the phase names for each Ensemble | complex.DataObjectNameParameter |
+| phase_types_array_name | Phase Types | The name of the data array representing the phase types for each Ensemble | complex.DataObjectNameParameter |
+

@@ -45,3 +45,22 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: MapPointCloudToRegularGridFilter
++ Displayed Name: Map Point Cloud to Regular Grid
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_data_name | Created Cell Data Name | The name of the cell data attribute matrix to be created within the created Image Geometry | complex.DataObjectNameParameter |
+| existing_image_geometry | Existing Image Geometry | Path to the existing Image Geometry | complex.GeometrySelectionParameter |
+| grid_dimensions | Grid Dimensions | Target grid size | complex.VectorInt32Parameter |
+| mask | Mask | DataPath to the boolean mask array. Values that are true will mark that cell/point as usable. | complex.ArraySelectionParameter |
+| new_image_geometry | Created Image Geometry | Path to create the Image Geometry | complex.DataGroupCreationParameter |
+| sampling_grid_type | Sampling Grid Type | Specifies how data is saved or accessed | complex.ChoicesParameter |
+| use_mask | Use Mask | Specifies whether or not to use a mask array | complex.BoolParameter |
+| vertex_geometry | Vertex Geometry | Path to the target Vertex Geometry | complex.GeometrySelectionParameter |
+| voxel_indices | Created Voxel Indices | Path to the created Voxel Indices array | complex.DataObjectNameParameter |
+

@@ -50,3 +50,21 @@ Triangle
 ## License & Copyright ##
 
 Please see the description file distributed with this plugin.
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ExtractInternalSurfacesFromTriangleGeometry
++ Displayed Name: Extract Internal Surfaces From Triangle Geometry
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| copy_triangle_array_paths | Copy Face Arrays | Paths to face-related DataArrays that should be copied to the new geometry | complex.MultiArraySelectionParameter |
+| copy_vertex_array_paths | Copy Vertex Arrays | Paths to vertex-related DataArrays that should be copied to the new geometry | complex.MultiArraySelectionParameter |
+| face_data_name | Face Data Attribute Matrix | Created face data AttributeMatrix name | complex.DataObjectNameParameter |
+| internal_triangle_geom | Created Triangle Geometry Path | Path to create the new Triangle Geometry | complex.DataGroupCreationParameter |
+| node_types | Node Types Array | Path to the Node Types array | complex.ArraySelectionParameter |
+| triangle_geom | Triangle Geometry | Path to the existing Triangle Geometry | complex.GeometrySelectionParameter |
+| vertex_data_name | Vertex Data Attribute Matrix | Created vertex data AttributeMatrix name | complex.DataObjectNameParameter |
+

@@ -53,3 +53,18 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CopyDataObjectFilter
++ Displayed Name: Copy Data Object
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| existing_data_path | Objects to copy | A list of DataPaths to the DataObjects to be copied | complex.MultiPathSelectionParameter |
+| new_data_path | Copied Parent Group | DataPath to parent BaseGroup in which to store the copied DataObject(s) | complex.DataGroupSelectionParameter |
+| new_path_suffix | Copied Object(s) Suffix | Suffix string to be appended to each copied DataObject | complex.StringParameter |
+| use_new_parent | Copy to New Parent | Copy all the DataObjects to a new BaseGroup | complex.BoolParameter |
+

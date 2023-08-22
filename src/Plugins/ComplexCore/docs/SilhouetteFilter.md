@@ -49,3 +49,20 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 <https://groups.google.com/forum/?hl=en#!forum/dream3d-users>
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: SilhouetteFilter
++ Displayed Name: Silhouette
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| distance_metric | Distance Metric | Distance Metric type to be used for calculations | complex.ChoicesParameter |
+| feature_ids_array_path | Cluster Ids | The DataPath to the DataArray that specifies which cluster each point belongs | complex.ArraySelectionParameter |
+| mask_array_path | Mask | DataPath to the boolean mask array. Values that are true will mark that cell/point as usable. | complex.ArraySelectionParameter |
+| selected_array_path | Attribute Array to Silhouette | The DataPath to the input DataArray | complex.ArraySelectionParameter |
+| silhouette_array_path | Silhouette | The DataPath to the calculated output Silhouette array values | complex.ArrayCreationParameter |
+| use_mask | Use Mask | Specifies whether or not to use a mask array | complex.BoolParameter |
+

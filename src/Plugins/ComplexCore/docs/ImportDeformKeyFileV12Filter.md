@@ -38,3 +38,17 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ImportDeformKeyFileV12Filter
++ Displayed Name: Import Deform Key File (v12)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_attribute_matrix_name | Cell Data Name | The name of the created Attribute Matrix for cell data | complex.DataObjectNameParameter |
+| input_file_path | Input File | File path that points to the imported file | complex.FileSystemPathParameter |
+| quad_geom_path | Quad Geometry | The created Quad Geometry from  imported from file | complex.DataGroupCreationParameter |
+| vertex_attribute_matrix_name | Vertex Data Name | The name of the created Attribute Matrix for vertex data | complex.DataObjectNameParameter |
+

@@ -59,3 +59,18 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ExecuteProcessFilter
++ Displayed Name: Execute Process
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| arguments | Command Line Arguments | The complete command to execute. | complex.StringParameter |
+| blocking | Should Block | Whether to block the process while the command executes or not | complex.BoolParameter |
+| output_log_file | Output Log File | The log file where the output from the process will be stored | complex.FileSystemPathParameter |
+| timeout | Timeout (ms) | The amount of time to wait for the command to start/finish when blocking is selected | complex.Int32Parameter |
+

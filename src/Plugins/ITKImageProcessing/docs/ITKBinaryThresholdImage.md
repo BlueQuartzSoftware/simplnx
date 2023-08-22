@@ -58,3 +58,21 @@ If you need more help with a filter, please consider asking your question on the
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
 
 
+
+
+## Python Filter Arguments
+
++ module: ITKImageProcessing
++ Class Name: ITKBinaryThresholdImage
++ Displayed Name: ITK Binary Threshold Image Filter
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| input_image_data_path | Input Image Data Array | The image data that will be processed by this filter. | complex.ArraySelectionParameter |
+| inside_value | InsideValue | Set the 'inside' pixel value. The default value NumericTraits<OutputPixelType>::max() | complex.UInt8Parameter |
+| lower_threshold | LowerThreshold |  | complex.Float64Parameter |
+| output_image_data_path | Output Image Data Array | The result of the processing will be stored in this Data Array. | complex.DataObjectNameParameter |
+| outside_value | OutsideValue | Set the 'outside' pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() . | complex.UInt8Parameter |
+| selected_image_geom_path | Image Geometry | Select the Image Geometry Group from the DataStructure. | complex.GeometrySelectionParameter |
+| upper_threshold | UpperThreshold | Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold. | complex.Float64Parameter |
+

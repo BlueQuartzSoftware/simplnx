@@ -47,3 +47,19 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: GenerateFaceMisorientationColoringFilter
++ Displayed Name: Generate Misorientation Colors (Face)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| avg_quats_array_path | Average Quaternions | Specifies the average orientation of each Feature in quaternion representation | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| feature_phases_array_path | Phases | Specifies to which phase each Feature belongs | complex.ArraySelectionParameter |
+| surface_mesh_face_labels_array_path | Face Labels | Specifies which Features are on either side of each Face | complex.ArraySelectionParameter |
+| surface_mesh_face_misorientation_colors_array_name | Misorientation Colors | A set of RGB color schemes encoded as floats for each Face | complex.DataObjectNameParameter |
+

@@ -43,3 +43,16 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: RotateEulerRefFrameFilter
++ Displayed Name: Rotate Euler Reference Frame
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_euler_angles_array_path | Euler Angles | Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z) | complex.ArraySelectionParameter |
+| rotation_axis | Rotation Axis-Angle [<ijk>w] | Axis-Angle in sample reference frame to rotate about. | complex.VectorFloat32Parameter |
+

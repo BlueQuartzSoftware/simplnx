@@ -66,3 +66,23 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: NeighborOrientationCorrelationFilter
++ Displayed Name: Neighbor Orientation Correlation
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_phases_array_path | Cell Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
+| confidence_index_array_path | Confidence Index | Specifies the confidence in the orientation of the Cell (TSL data) | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| ignored_data_array_paths | Attribute Arrays to Ignore | The list of arrays to ignore | complex.MultiArraySelectionParameter |
+| image_geometry_path | Image Geometry | Path to the target geometry | complex.GeometrySelectionParameter |
+| level | Cleanup Level | Minimum number of neighbor Cells that must have orientations within above tolerance to allow Cell to be changed | complex.Int32Parameter |
+| min_confidence | Minimum Confidence Index | Sets the minimum value of 'confidence' a Cell must have | complex.Float32Parameter |
+| misorientation_tolerance | Misorientation Tolerance (Degrees) | Angular tolerance used to compare with neighboring Cells | complex.Float32Parameter |
+| quats_array_path | Quaternions | Specifies the orientation of the Cell in quaternion representation | complex.ArraySelectionParameter |
+

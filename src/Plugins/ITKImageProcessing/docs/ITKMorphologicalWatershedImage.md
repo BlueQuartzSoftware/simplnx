@@ -59,3 +59,20 @@ If you need more help with a filter, please consider asking your question on the
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
 
 
+
+
+## Python Filter Arguments
+
++ module: ITKImageProcessing
++ Class Name: ITKMorphologicalWatershedImage
++ Displayed Name: ITK Morphological Watershed Image Filter
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| fully_connected | FullyConnected | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn. | complex.BoolParameter |
+| input_image_data_path | Input Image Data Array | The image data that will be processed by this filter. | complex.ArraySelectionParameter |
+| level | Level |  | complex.Float64Parameter |
+| mark_watershed_line | MarkWatershedLine | Set/Get whether the watershed pixel must be marked or not. Default is true. Set it to false do not only avoid writing watershed pixels, it also decrease algorithm complexity. | complex.BoolParameter |
+| output_image_data_path | Output Image Data Array | The result of the processing will be stored in this Data Array. | complex.DataObjectNameParameter |
+| selected_image_geom_path | Image Geometry | Select the Image Geometry Group from the DataStructure. | complex.GeometrySelectionParameter |
+

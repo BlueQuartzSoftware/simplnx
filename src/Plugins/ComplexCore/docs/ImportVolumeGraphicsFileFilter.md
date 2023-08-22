@@ -40,3 +40,18 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists ##
 
 If you need more help with a filter, please consider asking your question on the [DREAM3D Users mailing list](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ImportVolumeGraphicsFileFilter
++ Displayed Name: Import Volume Graphics File (.vgi/.vol)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_attribute_matrix_name | Cell Attribute Matrix | The attribute matrix created as a child of the image geometry | complex.DataObjectNameParameter |
+| density_array_name | Density | The data array created as a child of the attribute matrix | complex.DataObjectNameParameter |
+| new_image_geometry | Image Geometry | Path to create the Image Geometry | complex.DataGroupCreationParameter |
+| vg_header_file | VolumeGraphics .vgi File | The input VolumeGraphics file | complex.FileSystemPathParameter |
+

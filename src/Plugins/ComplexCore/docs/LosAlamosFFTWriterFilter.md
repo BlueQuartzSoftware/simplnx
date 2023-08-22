@@ -76,3 +76,19 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: LosAlamosFFTWriterFilter
++ Displayed Name: Export Los Alamos FFT File
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_euler_angles_array_path | Euler Angles | Data Array containing the three angles defining the orientation for each of the Cell in Bunge convention (Z-X-Z) | complex.ArraySelectionParameter |
+| cell_phases_array_path | Feature Phases | Data Array that specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
+| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| image_geom_path | Parent Image Geometry | The parent image geometry holding the subsequent arrays | complex.GeometrySelectionParameter |
+| output_file | Output File Path | The path to the output file | complex.FileSystemPathParameter |
+

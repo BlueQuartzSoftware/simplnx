@@ -44,3 +44,18 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindTriangleGeomCentroidsFilter
++ Displayed Name: Find Feature Centroids from Triangle Geometry
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| centroids_array_name | Calculated Centroids | Centroid values created in the Face Feature Data | complex.DataObjectNameParameter |
+| face_labels_array_path | Face Labels | The DataPath to the FaceLabels values. | complex.ArraySelectionParameter |
+| feature_attribute_matrix_name | Face Feature Attribute Matrix | The DataPath to the AttributeMatrix that holds feature data for the faces | complex.DataGroupSelectionParameter |
+| triangle_geometry_path | Triangle Geometry | The complete path to the Geometry for which to calculate the normals | complex.GeometrySelectionParameter |
+

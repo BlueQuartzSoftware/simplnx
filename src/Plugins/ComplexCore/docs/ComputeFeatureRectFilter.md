@@ -61,3 +61,17 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists ##
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ComputeFeatureRectFilter
++ Displayed Name: Compute Feature Corners
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| feature_data_attribute_matrix_path | Feature Data Attribute Matrix | The path to the feature data attribute matrix associated with the input feature ids array | complex.DataGroupSelectionParameter |
+| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| feature_rect_array_path | Feature Rect | The feature rect calculated from the feature ids | complex.DataObjectNameParameter |
+

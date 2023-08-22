@@ -58,3 +58,19 @@ If you need more help with a **Filter**, please consider asking your question on
 the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ErodeDilateCoordinationNumberFilter
++ Displayed Name: Erode/Dilate Coordination Number
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| coordination_number | Coordination Number to Consider |  Number of neighboring **Cells** that can be of opposite classification before a **Cell** will be removed | complex.Int32Parameter |
+| feature_ids_path | Cell Feature Ids | Specifies to which Feature each Cell belongs | complex.ArraySelectionParameter |
+| ignored_data_array_paths | Attribute Arrays to Ignore | The list of arrays to ignore when performing the algorithm | complex.MultiArraySelectionParameter |
+| loop | Loop Until Gone | Keep looping until all criteria is met | complex.BoolParameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
+

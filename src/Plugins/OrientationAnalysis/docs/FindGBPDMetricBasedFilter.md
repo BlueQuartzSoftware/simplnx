@@ -76,3 +76,30 @@ Please see the description file distributed with this **Plugin**.
 
 ## DREAM3D Mailing Lists 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: FindGBPDMetricBasedFilter
++ Displayed Name: Find GBPD (Metric-Based Approach)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| dist_output_file | Output Distribution File | The output distribution file path (extension .dat, GMT format) | complex.FileSystemPathParameter |
+| err_output_file | Output Distribution Errors File | The output distribution errors file path (extension .dat, GMT format) | complex.FileSystemPathParameter |
+| exclude_triple_lines | Exclude Triangles Directly Neighboring Triple Lines | If checked, only interiors of Faces are included in GBCD | complex.BoolParameter |
+| feature_euler_angles_array_path | Average Euler Angles | Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z) | complex.ArraySelectionParameter |
+| feature_phases_array_path | Phases | Specifies to which phase each Feature belongs | complex.ArraySelectionParameter |
+| limit_dist | Limiting Distance [deg.] | The max angle from within which mesh segments are selected | complex.Float32Parameter |
+| node_types_array_path | Node Types | Specifies the type of node in the Geometry | complex.ArraySelectionParameter |
+| num_sampl_pts | Number of Sampling Points (on a Hemisphere) | The approximate number of sampling directions | complex.Int32Parameter |
+| phase_of_interest | Phase of Interest | Index of the Ensemble for which to compute GBPD; boundaries having grains of this phase on both its sides will only be taken into account | complex.Int32Parameter |
+| save_relative_err | Save Relative Errors Instead of Their Absolute Values | Whether or not to save the distribution errors as relative (if exceeds 100%, then rounded down) or absolute | complex.BoolParameter |
+| surface_mesh_face_areas_array_path | Face Areas | Specifies the area of each Face | complex.ArraySelectionParameter |
+| surface_mesh_face_labels_array_path | Face Labels | Specifies which Features are on either side of each Face | complex.ArraySelectionParameter |
+| surface_mesh_face_normals_array_path | Face Normals | Specifies the normal of each Face | complex.ArraySelectionParameter |
+| surface_mesh_feature_face_labels_array_path | Feature Face Labels | Specifies which original Features are on either side of each boundary Feature | complex.ArraySelectionParameter |
+| triangle_geometry_path | Triangle Geometry | The complete path to the triangle geometry | complex.GeometrySelectionParameter |
+

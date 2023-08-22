@@ -51,3 +51,20 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FillBadDataFilter
++ Displayed Name: Fill Bad Data
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_phases_array_path | Cell Phases | Specifies to which Ensemble each Cell belongs. | complex.ArraySelectionParameter |
+| feature_ids_path | Cell Feature Ids | Specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| ignored_data_array_paths | Attribute Arrays to Ignore | The list of arrays to ignore when performing the algorithm | complex.MultiArraySelectionParameter |
+| min_allowed_defect_size | Minimum Allowed Defect Size | The size at which a group of bad Cells are left unfilled as a 'defect' | complex.Int32Parameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
+| store_as_new_phase | Store Defects as New Phase | Whether to change the phase of 'defect' larger than the minimum allowed size above | complex.BoolParameter |
+

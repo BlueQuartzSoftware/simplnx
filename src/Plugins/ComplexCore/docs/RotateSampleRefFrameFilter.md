@@ -63,3 +63,21 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: RotateSampleRefFrameFilter
++ Displayed Name: Rotate Sample Reference Frame
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| created_image_geometry | Created Image Geometry | The location of the rotated geometry | complex.DataGroupCreationParameter |
+| remove_original_geometry | Perform In-Place Rotation | Performs the rotation in-place for the given Image Geometry | complex.BoolParameter |
+| rotate_slice_by_slice | Perform Slice By Slice Transform | This option is specific to EBSD Data and is not generally used. | complex.BoolParameter |
+| rotation_axis | Rotation Axis-Angle [<ijk>w] | Axis-Angle in sample reference frame to rotate about. | complex.VectorFloat32Parameter |
+| rotation_matrix | Transformation Matrix | The 4x4 Transformation Matrix | complex.DynamicTableParameter |
+| rotation_representation | Rotation Representation | Which form used to represent rotation (axis angle or rotation matrix) | complex.ChoicesParameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry on which to perform the rotation | complex.GeometrySelectionParameter |
+

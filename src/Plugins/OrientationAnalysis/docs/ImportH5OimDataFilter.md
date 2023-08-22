@@ -102,3 +102,21 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: ImportH5OimDataFilter
++ Displayed Name: Import EDAX OIMAnalysis Data (.h5)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_attribute_matrix_name | Cell Attribute Matrix | The name of the cell data attribute matrix for the created Image Geometry | complex.DataObjectNameParameter |
+| cell_ensemble_attribute_matrix_name | Cell Ensemble Attribute Matrix | The name of the cell ensemble data attribute matrix for the created Image Geometry | complex.DataObjectNameParameter |
+| image_geometry_name | Image Geometry | The path to the created Image Geometry | complex.DataGroupCreationParameter |
+| origin | Origin | The origin of the volume | complex.VectorFloat32Parameter |
+| read_pattern_data | Import Pattern Data | Whether or not to import the pattern data | complex.BoolParameter |
+| selected_scan_names | Scan Names | The name of the scan in the .h5 file. EDAX can store multiple scans in a single file | orientationanalysis.OEMEbsdScanSelectionParameter |
+| z_spacing | Z Spacing (Microns) | The spacing in microns between each layer. | complex.Float32Parameter |
+

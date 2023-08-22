@@ -48,3 +48,19 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+
+## Python Filter Arguments
+
++ module: ITKImageProcessing
++ Class Name: ITKImageWriter
++ Displayed Name: ITK Image Export
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| file_name | Output File | Path to the output file to write. | complex.FileSystemPathParameter |
+| image_array_path | Input Image Data Array | The image data that will be processed by this filter. | complex.ArraySelectionParameter |
+| image_geom_path | Image Geometry | Select the Image Geometry Group from the DataStructure. | complex.GeometrySelectionParameter |
+| index_offset | Index Offset | This is the starting index when writing mulitple images | complex.UInt64Parameter |
+| plane | Plane | Selection for plane normal for writing the images (XY, XZ, or YZ) | complex.ChoicesParameter |
+

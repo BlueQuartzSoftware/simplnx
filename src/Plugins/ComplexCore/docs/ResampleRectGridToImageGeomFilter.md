@@ -44,3 +44,18 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ResampleRectGridToImageGeomFilter
++ Displayed Name: Resample Rectilinear Grid to Image Geom
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| dimensions | Dimensions (Voxels) | The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry | complex.VectorInt32Parameter |
+| image_geom_cell_attribute_matrix | Cell Attribute Matrix | The name of the cell data Attribute Matrix created with the Image Geometry | complex.DataObjectNameParameter |
+| image_geometry_path | Created Image Geometry | Path to the created Image Geometry | complex.DataGroupCreationParameter |
+| rectilinear_grid_path | Input Rectilinear Grid | Path to the RectGrid Geometry to be re-sampled | complex.GeometrySelectionParameter |
+| selected_data_array_paths | Attribute Arrays to Copy | Rectilinear Grid Cell Data to possibly copy | complex.MultiArraySelectionParameter |
+

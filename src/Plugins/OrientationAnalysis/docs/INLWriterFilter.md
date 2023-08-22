@@ -100,3 +100,22 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: INLWriterFilter
++ Displayed Name: Export INL File
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_euler_angles_array_path | Euler Angles | Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z) | complex.ArraySelectionParameter |
+| cell_phases_array_path | Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| feature_ids_array_path | Feature Ids | Specifies to which Feature each Cell belongs | complex.ArraySelectionParameter |
+| image_geom_path | Image Geometry | The selected image geometry | complex.GeometrySelectionParameter |
+| material_name_array_path | Material Names | Name of each Ensemble | complex.DataPathSelectionParameter |
+| num_features_array_path | Number of Features | The number of Features per Ensemble | complex.ArraySelectionParameter |
+| output_file | Output File | The output .inl file path | complex.FileSystemPathParameter |
+

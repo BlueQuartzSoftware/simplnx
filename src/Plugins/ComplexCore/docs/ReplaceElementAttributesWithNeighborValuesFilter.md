@@ -118,3 +118,19 @@ If you need more help with a **Filter**, please consider asking your question on
 the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ReplaceElementAttributesWithNeighborValuesFilter
++ Displayed Name: Replace Element Attributes with Neighbor (Threshold)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| confidence_index_array_path | Input Comparison Array | The DataPath to the input array to use for comparison | complex.ArraySelectionParameter |
+| loop | Loop Until Gone | The algorithm will keep looping until all pixels have been evaluated | complex.BoolParameter |
+| min_confidence | Threshold Value | The value to of the threshold | complex.Float32Parameter |
+| selected_comparison | Comparison Operator | The operator to use for comparisons. 0=Less, 1=Greater Than | complex.ChoicesParameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
+

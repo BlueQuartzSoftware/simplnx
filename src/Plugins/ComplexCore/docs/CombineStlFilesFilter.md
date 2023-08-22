@@ -36,3 +36,18 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CombineStlFilesFilter
++ Displayed Name: Combine STL Files
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| face_attribute_matrix_name | Face Attribute Matrix | The name of the face level attribute matrix to be created with the geometry | complex.DataObjectNameParameter |
+| face_normals_array_name | Face Normals | The name of the data array in which to store the face normals for the created triangle geometry | complex.DataObjectNameParameter |
+| stl_files_path | Path to STL Files | The path to the folder containing all the STL files to be combined | complex.FileSystemPathParameter |
+| triangle_data_container_name | Triangle Geometry | The path to the triangle geometry to be created from the combined STL files | complex.DataGroupCreationParameter |
+| vertex_attribute_matrix_name | Vertex Attribute Matrix | The name of the vertex level attribute matrix to be created with the geometry | complex.DataObjectNameParameter |
+

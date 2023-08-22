@@ -54,3 +54,21 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CalculateFeatureSizesFilter
++ Displayed Name: Find Feature Sizes
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| equivalent_diameters_path | Equivalent Diameters | DataPath to equivalent diameters array | complex.DataObjectNameParameter |
+| feature_attribute_matrix | Feature Attribute Matrix | Feature Attribute Matrix of the selected Feature Ids | complex.AttributeMatrixSelectionParameter |
+| feature_ids_path | Cell Feature Ids | Specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| geometry_path | Target Geometry | DataPath to target geometry | complex.DataPathSelectionParameter |
+| num_elements_path | Number of Elements | DataPath to Num Elements array | complex.DataObjectNameParameter |
+| save_element_sizes | Generate Missing Element Sizes | If checked this will generate and store the element sizes ONLY if the geometry does not already contain them. | complex.BoolParameter |
+| volumes_path | Volumes | DataPath to volumes array | complex.DataObjectNameParameter |
+

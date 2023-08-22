@@ -88,3 +88,22 @@ If you need more help with a Filter, please consider asking your question on
 the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ErodeDilateBadDataFilter
++ Displayed Name: Erode/Dilate Bad Data
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| feature_ids_path | Cell Feature Ids | Specifies to which Feature each Cell belongs | complex.ArraySelectionParameter |
+| ignored_data_array_paths | Attribute Arrays to Ignore | The list of arrays to ignore when performing the algorithm | complex.MultiArraySelectionParameter |
+| num_iterations | Number of Iterations | The number of iterations to use for erosion/dilation | complex.Int32Parameter |
+| operation | Operation | Whether to dilate or erode | complex.ChoicesParameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
+| x_dir_on | X Direction | Whether to erode/dilate in the X direction | complex.BoolParameter |
+| y_dir_on | Y Direction | Whether to erode/dilate in the Y direction | complex.BoolParameter |
+| z_dir_on | Z Direction | Whether to erode/dilate in the Z direction | complex.BoolParameter |
+

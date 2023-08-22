@@ -49,3 +49,17 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ApproximatePointCloudHull
++ Displayed Name: Approximate Point Cloud Hull
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| grid_resolution | Grid Resolution | Geometry resolution | complex.VectorFloat32Parameter |
+| hull_vertex_geometry | Hull Vertex Geometry | Path to create the hull Vertex geometry | complex.DataGroupCreationParameter |
+| min_empty_neighbors | Minimum Number of Empty Neighbors | Minimum number of empty neighbors | complex.UInt64Parameter |
+| vertex_geometry | Vertex Geometry | Path to the target Vertex geometry | complex.DataPathSelectionParameter |
+

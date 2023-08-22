@@ -50,3 +50,17 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists ##
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: RemoveFlaggedVertices
++ Displayed Name: Remove Flagged Vertices
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| mask | Flagged Vertex Array | DataPath to the conditional array that will be used to decide which vertices are removed. | complex.ArraySelectionParameter |
+| reduced_vertex | Reduced Vertex Geometry | Created Vertex Geometry DataPath. This will be created during the filter. | complex.DataGroupCreationParameter |
+| vertex_geom | Vertex Geometry | Path to the target Vertex Geometry | complex.GeometrySelectionParameter |
+

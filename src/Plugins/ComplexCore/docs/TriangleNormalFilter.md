@@ -48,3 +48,16 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: TriangleNormalFilter
++ Displayed Name: Calculate Triangle Normals
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| surface_mesh_triangle_normals_array_path | Created Face Normals | The complete path to the array storing the calculated normals | complex.DataObjectNameParameter |
+| tri_geometry_data_path | Triangle Geometry | The complete path to the Geometry for which to calculate the normals | complex.GeometrySelectionParameter |
+

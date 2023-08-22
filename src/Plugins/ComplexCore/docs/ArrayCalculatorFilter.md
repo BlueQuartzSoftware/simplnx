@@ -166,3 +166,17 @@ Please see the description file distributed with this **Plugin**
 
 ## DREAM.3D Mailing Lists ##
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ArrayCalculatorFilter
++ Displayed Name: Attribute Array Calculator
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| calculated_array | Output Calculated Array | The path to the calculated array | complex.ArrayCreationParameter |
+| infix_equation | Infix Expression | The mathematical expression used to calculate the output array | complex.CalculatorParameter |
+| scalar_type | Output Scalar Type | The data type of the calculated array | complex.NumericTypeParameter |
+

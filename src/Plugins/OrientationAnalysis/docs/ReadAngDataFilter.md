@@ -66,3 +66,18 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: ReadAngDataFilter
++ Displayed Name: Import EDAX EBSD Data (.ang)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_attribute_matrix_name | Created Cell Attribute Matrix | The Attribute Matrix where the scan data is stored. | complex.DataObjectNameParameter |
+| cell_ensemble_attribute_matrix_name | Created Cell Ensemble Attribute Matrix | The Attribute Matrix where the phase information is stored. | complex.DataObjectNameParameter |
+| data_container_name | Created Image Geometry | The complete path to the Geometry being created. | complex.DataGroupCreationParameter |
+| input_file | Input File | The input .ang file path | complex.FileSystemPathParameter |
+

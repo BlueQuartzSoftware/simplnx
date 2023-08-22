@@ -72,3 +72,19 @@ Please see the description file distributed with this plugin.
 ## DREAM3D Mailing Lists ##
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ImportCSVDataFilter
++ Displayed Name: Import CSV Data
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| created_data_group | New Data Group | Store the imported CSV data arrays in a newly created group. | complex.DataGroupCreationParameter |
+| selected_data_group | Existing Data Group | Store the imported CSV data arrays in this existing group. | complex.DataGroupSelectionParameter |
+| tuple_dimensions | CSV Tuple Dimensions | The tuple dimensions for the imported CSV data arrays | complex.DynamicTableParameter |
+| use_existing_group | Use Existing Group | Store the imported CSV data arrays in an existing group. | complex.BoolParameter |
+| wizard_data | CSV Wizard Data | Holds all relevant csv file data collected from the wizard | complex.ImportCSVDataParameter |
+

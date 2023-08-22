@@ -62,3 +62,19 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindSurfaceFeatures
++ Displayed Name: Find Surface Features
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| feature_attribute_matrix_path | Cell Feature Attribute Matrix | The path to the cell feature attribute matrix associated with the input feature ids array | complex.DataGroupSelectionParameter |
+| feature_geometry_path | Feature Geometry | The geometry in which to find surface features | complex.GeometrySelectionParameter |
+| feature_ids_path | Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
+| mark_feature_0_neighbors | Mark Feature 0 Neighbors | Marks features that are neighbors with feature 0.  If this option is off, only features that reside on the edge of the geometry will be marked. | complex.BoolParameter |
+| surface_features_array_path | Surface Features | The created surface features array. Flag of 1 if Feature touches an outer surface or of 0 if it does not | complex.DataObjectNameParameter |
+

@@ -59,3 +59,23 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ScalarSegmentFeaturesFilter
++ Displayed Name: Segment Features (Scalar)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| active_array_path | Active | Created array | complex.DataObjectNameParameter |
+| cell_feature_group_path | Cell Feature Attribute Matrix | Created Cell Feature Attribute Matrix | complex.DataObjectNameParameter |
+| feature_ids_path | Cell Feature IDs | Path to the created Feature IDs path | complex.DataObjectNameParameter |
+| grid_geometry_path | Grid Geometry | DataPath to target Grid Geometry | complex.DataPathSelectionParameter |
+| input_array_path | Scalar Array to Segment | Path to the DataArray to segment | complex.ArraySelectionParameter |
+| mask_path | Mask | Path to the DataArray Mask | complex.ArraySelectionParameter |
+| randomize_features | Randomize Feature IDs | Specifies if feature IDs should be randomized during calculations | complex.BoolParameter |
+| scalar_tolerance | Scalar Tolerance | Tolerance for segmenting input Cell Data | complex.Int32Parameter |
+| use_mask | Use Mask Array | Determines if a mask array is used for segmenting | complex.BoolParameter |
+

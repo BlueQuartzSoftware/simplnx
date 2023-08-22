@@ -48,3 +48,23 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CropImageGeometry
++ Displayed Name: Crop Geometry (Image)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_feature_attribute_matrix | Cell Feature Attribute Matrix | DataPath to the feature Attribute Matrix | complex.AttributeMatrixSelectionParameter |
+| created_image_geometry | Created Image Geometry | The location of the cropped geometry | complex.DataGroupCreationParameter |
+| feature_ids | Feature IDs | DataPath to Cell Feature IDs array | complex.ArraySelectionParameter |
+| max_voxel | Max Voxel [Inclusive] | Upper bound of the volume to crop out | complex.VectorUInt64Parameter |
+| min_voxel | Min Voxel | Lower bound of the volume to crop out | complex.VectorUInt64Parameter |
+| remove_original_geometry | Perform In Place | Removes the original Image Geometry after filter is completed | complex.BoolParameter |
+| renumber_features | Renumber Features | Specifies if the feature IDs should be renumbered | complex.BoolParameter |
+| selected_image_geometry | Selected Image Geometry | DataPath to the target ImageGeom | complex.GeometrySelectionParameter |
+| update_origin | Update Origin | Specifies if the origin should be updated | complex.BoolParameter |
+

@@ -88,3 +88,19 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: EnsembleInfoReaderFilter
++ Displayed Name: Import Ensemble Info File
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_ensemble_attribute_matrix_name | Ensemble Attribute Matrix | The name of the created Ensemble Attribute Matrix | complex.DataObjectNameParameter |
+| crystal_structures_array_name | Crystal Structures | The name of the created array representing the crystal structure for each Ensemble | complex.DataObjectNameParameter |
+| data_container_name | Data Container | The path to the data object in which the ensemble information will be stored | complex.DataGroupSelectionParameter |
+| input_file | Input Ensemble Info File | The path to the ini formatted input file | complex.FileSystemPathParameter |
+| phase_types_array_name | Phase Types | The name of the created array representing the phase type for each Ensemble | complex.DataObjectNameParameter |
+

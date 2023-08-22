@@ -49,3 +49,20 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindSurfaceAreaToVolumeFilter
++ Displayed Name: Find Surface Area to Volume & Sphericity
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| calculate_sphericity | Calculate Sphericity | Whether or not to calculate the sphericity of each Feature | complex.BoolParameter |
+| feature_ids_path | Cell Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
+| num_cells_array_path | Number of Cells | Number of Cells that are owned by the Feature. This value does not place any distinction between Cells that may be of a different size | complex.ArraySelectionParameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
+| sphericity_array_name | Sphericity Array Name | The sphericity of each feature | complex.DataObjectNameParameter |
+| surface_area_volume_ratio_array_name | Surface Area to Volume Ratio | Ratio of surface area to volume for each Feature. The units are inverse length | complex.DataObjectNameParameter |
+

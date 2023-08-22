@@ -78,7 +78,8 @@ Parameters ITKDiscreteGaussianImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_Variance_Key, "Variance", "The value of the input variance for each axis", std::vector<double>(3, 1.0), std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(
+      std::make_unique<VectorFloat64Parameter>(k_Variance_Key, "Variance", "The value of the input variance for each axis", std::vector<double>(3, 1.0), std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(std::make_unique<UInt32Parameter>(k_MaximumKernelWidth_Key, "MaximumKernelWidth",
                                                   "Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels.", 32u));

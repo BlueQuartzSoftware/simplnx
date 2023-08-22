@@ -44,3 +44,18 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindFeatureCentroidsFilter
++ Displayed Name: Find Feature Centroids
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| centroids_array_path | Centroids | DataPath to create the 'Centroids' output array | complex.DataObjectNameParameter |
+| feature_attribute_matrix | Cell Feature Attribute Matrix | The cell feature attribute matrix | complex.AttributeMatrixSelectionParameter |
+| feature_ids_path | Cell Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry whose Features' centroids will be calculated | complex.GeometrySelectionParameter |
+

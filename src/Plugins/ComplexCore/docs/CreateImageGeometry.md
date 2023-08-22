@@ -51,3 +51,19 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CreateImageGeometry
++ Displayed Name: Create Geometry (Image)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_data_name | Cell Data Name | The name of the cell Attribute Matrix to be created | complex.DataObjectNameParameter |
+| dimensions | Dimensions | The number of cells in each of the X, Y, Z directions | complex.VectorUInt64Parameter |
+| geometry_data_path | Geometry Name [Data Group] | The complete path to the Geometry being created | complex.DataGroupCreationParameter |
+| origin | Origin | The origin of each of the axes in X, Y, Z order | complex.VectorFloat32Parameter |
+| spacing | Spacing | The length scale of each voxel/pixel | complex.VectorFloat32Parameter |
+

@@ -51,3 +51,19 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: ExportGBCDGMTFileFilter
++ Displayed Name: Export GBCD Pole Figure (GMT 5)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| g_bc_darray_path | GBCD | 5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere | complex.ArraySelectionParameter |
+| misorientation_rotation | Misorientation Axis-Angle | Axis-Angle pair values for drawing GBCD | complex.VectorFloat32Parameter |
+| output_file | Output GMT File | The output .dat file path | complex.FileSystemPathParameter |
+| phase_of_interest | Phase of Interest | Index of the Ensemble for which to plot the pole figure | complex.Int32Parameter |
+

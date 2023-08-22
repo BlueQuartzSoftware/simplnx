@@ -35,3 +35,18 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindVertexToTriangleDistancesFilter
++ Displayed Name: Find Vertex to Triangle Distances
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| closest_triangle_id_array_path | Closest Triangle Ids Array | The array to store the ID of the closest triangle | complex.DataObjectNameParameter |
+| distances_array_path | Distances Array | The array to store distance between vertex and triangle | complex.DataObjectNameParameter |
+| triangle_data_container | Target Triangle Geometry | The triangle geometry to compare against | complex.GeometrySelectionParameter |
+| triangle_normals_array_path | Triangle Normals | The triangle geometry's normals array | complex.ArraySelectionParameter |
+| vertex_data_container | Source Vertex Geometry | The Vertex Geometry point cloud to map to triangles | complex.GeometrySelectionParameter |
+

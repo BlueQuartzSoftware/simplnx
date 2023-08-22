@@ -43,3 +43,17 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindNumFeaturesFilter
++ Displayed Name: Find Number of Features
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| ensemble_attribute_matrix_path | Ensemble Attribute Matrix | The path to the ensemble attribute matrix where the number of features array will be stored | complex.DataGroupSelectionParameter |
+| feature_phases_array_path | Feature Phases | Array specifying which Ensemble each Feature belongs | complex.ArraySelectionParameter |
+| num_features_array_path | Number of Features | The number of Features that belong to each Ensemble | complex.DataObjectNameParameter |
+

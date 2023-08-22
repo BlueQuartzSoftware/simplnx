@@ -45,3 +45,17 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: ConvertQuaternionFilter
++ Displayed Name: Convert Quaternion Order
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| conversion_type | Conversion Type | The conversion type: To Scalar Vector=0, To Vector Scalar=1 | complex.ChoicesParameter |
+| delete_original_data | Delete Original Data | Should the original quaternions array be deleted from the DataStructure | complex.BoolParameter |
+| output_data_array_path | Output Quaternions | The DataPath to the converted quaternions | complex.DataObjectNameParameter |
+| quaternion_data_array_path | Input Quaternions | Specifies the quaternions to convert | complex.ArraySelectionParameter |
+

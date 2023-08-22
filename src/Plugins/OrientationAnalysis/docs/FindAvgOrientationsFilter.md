@@ -60,3 +60,21 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: FindAvgOrientationsFilter
++ Displayed Name: Find Feature Average Orientations
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| avg_euler_angles_array_path | Average Euler Angles | The name of the array specifying the orientation of each Feature in Bunge convention (Z-X-Z) | complex.DataObjectNameParameter |
+| avg_quats_array_path | Average Quaternions | The name of the array specifying the average orientation of the Feature in quaternion representation | complex.DataObjectNameParameter |
+| cell_feature_attribute_matrix | Cell Feature Attribute Matrix | The path to the cell feature attribute matrix | complex.AttributeMatrixSelectionParameter |
+| cell_feature_ids_array_path | Cell Feature Ids | Specifies to which Feature each Cell belongs. | complex.ArraySelectionParameter |
+| cell_phases_array_path | Cell Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
+| cell_quats_array_path | Cell Quaternions | Specifies the orientation of the Cell in quaternion representation | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+

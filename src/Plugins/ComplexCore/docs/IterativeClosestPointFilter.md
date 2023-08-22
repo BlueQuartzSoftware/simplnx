@@ -55,3 +55,18 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: IterativeClosestPointFilter
++ Displayed Name: Iterative Closest Point
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| apply_transformation | Apply Transformation to Moving Geometry | If checked, geometry will be updated implicitly | complex.BoolParameter |
+| moving_vertex | Moving Vertex Geometry | The geometry to align [mutable] | complex.DataPathSelectionParameter |
+| num_iterations | Number of Iterations | The number of times to run the algorithm [more increases accuracy] | complex.UInt64Parameter |
+| target_vertex | Target Vertex Geometry | The geometry to be matched against [immutable] | complex.DataPathSelectionParameter |
+| transform_array | Output Transform Array | This is the array to store the transform matrix in | complex.ArrayCreationParameter |
+

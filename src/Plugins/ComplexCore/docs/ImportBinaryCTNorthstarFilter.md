@@ -46,3 +46,22 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 [https://groups.google.com/forum/?hl=en#!forum/dream3d-users](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ImportBinaryCTNorthstarFilter
++ Displayed Name: Import North Star Imaging CT (.nsihdr/.nsidat)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_attribute_matrix_name | Cell Attribute Matrix Name | The name used to create the Cell Attribute Matrix. | complex.DataObjectNameParameter |
+| density_array_name | Density Array | The name used to create the Density data array. | complex.DataObjectNameParameter |
+| end_voxel_coord | Ending XYZ Voxel for Subvolume | The ending subvolume voxel (inclusive) | complex.VectorInt32Parameter |
+| image_geometry_path | Image Geometry Path | The path that will be used to create the Image Geometry. | complex.DataGroupCreationParameter |
+| import_subvolume | Import Subvolume | Import a subvolume instead of the entire volume | complex.BoolParameter |
+| input_header_file | Input Header File | The path to the .nsihdr file | complex.FileSystemPathParameter |
+| length_unit | Length Unit | The length unit that will be set into the created image geometry | complex.ChoicesParameter |
+| start_voxel_coord | Starting XYZ Voxel for Subvolume | The starting subvolume voxel | complex.VectorInt32Parameter |
+

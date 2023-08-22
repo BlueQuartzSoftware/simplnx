@@ -36,3 +36,20 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: NearestPointFuseRegularGridsFilter
++ Displayed Name: Fuse Regular Grids (Nearest Point)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| fill_value | Fill Value | This is the value that will appear in the arrays outside the overlap | complex.Float64Parameter |
+| reference_cell_attribute_matrix_path | Reference Cell Attribute Matrix | The attribute matrix for the reference geometry | complex.DataGroupSelectionParameter |
+| reference_geometry_path | Reference Image Geometry | This is the geometry that will store the values from the overlap | complex.GeometrySelectionParameter |
+| sampling_cell_attribute_matrix_path | Sampling Cell Attribute Matrix | The attribute matrix for the sampling geometry | complex.DataGroupSelectionParameter |
+| sampling_geometry_path | Sampling Image Geometry | This is the geometry that will be copied into the reference geometry at the overlap | complex.GeometrySelectionParameter |
+| use_fill | Use Custom Fill Value | If false all copied arrays will be filled with 0 by default | complex.BoolParameter |
+

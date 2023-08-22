@@ -61,3 +61,27 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: FindSchmidsFilter
++ Displayed Name: Find Schmid Factors
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| avg_quats_array_path | Average Quaternions | Specifies the average orienation of each Feature in quaternion representation | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| feature_phases_array_path | Phases | Specifies to which Ensemble each cell belongs | complex.ArraySelectionParameter |
+| lambdas_array_name | Lambdas | The name of the array containing the angle between tensile axis and slip direction. | complex.DataObjectNameParameter |
+| loading_direction | Loading Direction | The loading axis for the sample | complex.VectorFloat32Parameter |
+| override_system | Override Default Slip System | Allows the user to manually input the slip plane and slip direction | complex.BoolParameter |
+| phis_array_name | Phis | The name of the array containing the angle between tensile axis and slip plane normal.  | complex.DataObjectNameParameter |
+| poles_array_name | Poles | The name of the array specifying the crystallographic pole that points along the user defined loading direction | complex.DataObjectNameParameter |
+| schmids_array_name | Schmids | The name of the array containing the value of the Schmid factor for the most favorably oriented slip system (i.e., the one with the highest Schmid factor) | complex.DataObjectNameParameter |
+| slip_direction | Slip Direction | Vector defining the slip direction. | complex.VectorFloat32Parameter |
+| slip_plane | Slip Plane | Vector defining the slip plane normal. | complex.VectorFloat32Parameter |
+| slip_systems_array_name | Slip Systems | The name of the array containing the enumeration of the slip system that has the highest Schmid factor | complex.DataObjectNameParameter |
+| store_angle_components | Store Angle Components of Schmid Factor | Whether to store the angle components for each Feature | complex.BoolParameter |
+

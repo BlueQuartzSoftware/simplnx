@@ -47,3 +47,17 @@ Please see the description file distributed with this plugin.
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: RodriguesConvertorFilter
++ Displayed Name: Rodrigues Convertor
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| delete_original_data | Delete Original Data | Should the original Rodrigues data array be deleted from the DataStructure | complex.BoolParameter |
+| output_data_array_path | Converted Rodrigues Data Array | The DataArray name of the converted Rodrigues vectors | complex.DataObjectNameParameter |
+| rodrigues_data_array_path | Input Rodrigues Vectors | Specifies the Rodrigues data to convert | complex.ArraySelectionParameter |
+

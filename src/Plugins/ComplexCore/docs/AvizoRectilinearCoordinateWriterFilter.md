@@ -67,3 +67,19 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: AvizoRectilinearCoordinateWriterFilter
++ Displayed Name: Avizo Rectilinear Coordinate Exporter
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+| geometry_path | Image Geometry | The path to the input image geometry | complex.GeometrySelectionParameter |
+| output_file | Output File | Amira Mesh .am file created | complex.FileSystemPathParameter |
+| units | Units | The units of the data | complex.StringParameter |
+| write_binary_file | Write Binary File | Whether or not to write the output file as binary | complex.BoolParameter |
+

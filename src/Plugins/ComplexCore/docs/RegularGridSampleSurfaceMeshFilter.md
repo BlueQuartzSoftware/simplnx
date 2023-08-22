@@ -46,3 +46,23 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: RegularGridSampleSurfaceMeshFilter
++ Displayed Name: Sample Triangle Geometry on Regular Grid
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_attribute_matrix_name | Cell Data Name | The name for the cell data Attribute Matrix within the Image geometry | complex.DataObjectNameParameter |
+| dimensions | Dimensions (Voxels) | The dimensions of the created Image geometry | complex.VectorUInt64Parameter |
+| feature_ids_array_name | Feature Ids Name | The name for the feature ids array in cell data Attribute Matrix | complex.DataObjectNameParameter |
+| image_geom_path | Image Geometry | The name and path for the image geometry to be created | complex.DataGroupCreationParameter |
+| length_unit | Length Units (For Description Only) | The units to be displayed below | complex.ChoicesParameter |
+| origin | Origin | The origin of the created Image geometry | complex.VectorFloat32Parameter |
+| spacing | Spacing | The spacing of the created Image geometry | complex.VectorFloat32Parameter |
+| surface_mesh_face_labels_array_path | Face Labels | Array specifying which Features are on either side of each Face | complex.ArraySelectionParameter |
+| triangle_geometry_path | Triangle Geometry | The geometry to be sampled onto grid | complex.GeometrySelectionParameter |
+

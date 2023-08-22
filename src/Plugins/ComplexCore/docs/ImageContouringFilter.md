@@ -41,3 +41,18 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Interaction
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Help Forum!](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ImageContouringFilter
++ Displayed Name: Contour
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| iso_val_geometry | Contour Value | The value to contour on | complex.Float64Parameter |
+| new_triangle_geometry_name | Name of Output Triangle Geometry | This is where the contouring line will be stored | complex.DataObjectNameParameter |
+| selected_data_array | Data Array to Contour | This is the data that will be checked for the contouring iso value | complex.ArraySelectionParameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
+

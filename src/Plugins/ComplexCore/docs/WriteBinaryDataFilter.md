@@ -37,3 +37,17 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: WriteBinaryDataFilter
++ Displayed Name: Export Binary Data
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| endianess | Endianess | Default is little endian | complex.ChoicesParameter |
+| file_extension | File Extension | The file extension for the output file | complex.StringParameter |
+| output_path | Output Path | The output file path | complex.FileSystemPathParameter |
+| selected_data_array_paths | Attribute Arrays to Export | The arrays to be exported to a binary file | complex.MultiArraySelectionParameter |
+

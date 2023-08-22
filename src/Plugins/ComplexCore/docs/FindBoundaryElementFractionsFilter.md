@@ -41,3 +41,18 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: FindBoundaryElementFractionsFilter
++ Displayed Name: Find Feature Boundary Element Fractions
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| boundary_cell_fractions_array_name | Surface Element Fractions | Name of created Data Array containing fraction of Elements belonging to the Feature that are "surface" Elements | complex.DataObjectNameParameter |
+| boundary_cells_array_path | Surface Elements | DataArray containing the number of neighboring Elements of a given Element that belong to a different Feature than itself | complex.ArraySelectionParameter |
+| feature_data_attribute_matrix_path | Feature Data | Parent Attribute Matrix for the Surface Element Fractions Array to be created in | complex.AttributeMatrixSelectionParameter |
+| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
+

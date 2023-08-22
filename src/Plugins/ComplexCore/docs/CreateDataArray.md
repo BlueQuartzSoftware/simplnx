@@ -88,3 +88,23 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CreateDataArray
++ Displayed Name: Create Data Array
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| advanced_options | Set Tuple Dimensions [not required if creating inside an Attribute Matrix] | This allows the user to set the tuple dimensions directly rather than just inheriting them 
+
+This option is NOT required if you are creating the Data Array in an Attribute Matrix | complex.BoolParameter |
+| component_count | Number of Components | Number of components | complex.UInt64Parameter |
+| data_format | Data Format | This value will specify which data format is used by the array's data store. An empty string results in in-memory data store. | complex.DataStoreFormatParameter |
+| initialization_value | Initialization Value | This value will be used to fill the new array | complex.StringParameter |
+| numeric_type | Numeric Type | Numeric Type of data to create | complex.NumericTypeParameter |
+| output_data_array | Created Array | Array storing the data | complex.ArrayCreationParameter |
+| tuple_dimensions | Data Array Dimensions (Slowest to Fastest Dimensions) | Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry. | complex.DynamicTableParameter |
+

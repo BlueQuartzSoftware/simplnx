@@ -47,3 +47,18 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: FindCAxisLocationsFilter
++ Displayed Name: Find C-Axis Locations
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| c_axis_locations_array_name | C-Axis Locations | DataPath to calculated C-Axis locations | complex.DataObjectNameParameter |
+| cell_phases_array_path | Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| quats_array_path | Quaternions | DataPath to input quaternion values | complex.ArraySelectionParameter |
+

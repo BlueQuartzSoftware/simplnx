@@ -46,3 +46,16 @@ Please see the description file distributed with this **Plugin**
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: CalculateTriangleAreasFilter
++ Displayed Name: Calculate Triangle Areas
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| triangle_areas_array_path | Created Face Areas | The complete path to the array storing the calculated face areas | complex.DataObjectNameParameter |
+| triangle_geometry_data_path | Triangle Geometry | The complete path to the Geometry for which to calculate the face areas | complex.GeometrySelectionParameter |
+

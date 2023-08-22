@@ -43,3 +43,16 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: MoveData
++ Displayed Name: Move Data
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| data | Data to Move | The complete paths to the data object(s) to be moved | complex.MultiPathSelectionParameter |
+| new_parent | New Parent | The complete path to the parent data object to which the data will be moved | complex.DataGroupSelectionParameter |
+

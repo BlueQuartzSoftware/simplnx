@@ -50,3 +50,21 @@ Please see the description file distributed with this **Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: FindKernelAvgMisorientationsFilter
++ Displayed Name: Find Kernel Average Misorientations
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_phases_array_path | Cell Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
+| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
+| feature_ids_path | Cell Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
+| kernel_average_misorientations_array_name | Kernel Average Misorientations | The name of the array containing the average  misorientation (in Degrees) for all Cells within the kernel and the central Cell | complex.DataObjectNameParameter |
+| kernel_size | Kernel Radius | Size of the kernel in the X, Y and Z directions (in number of Cells) | complex.VectorInt32Parameter |
+| quats_array_path | Quaternions | Specifies the orientation of the Cell in quaternion representation | complex.ArraySelectionParameter |
+| selected_image_geometry_path | Selected Image Geometry | Path to the target geometry | complex.GeometrySelectionParameter |
+

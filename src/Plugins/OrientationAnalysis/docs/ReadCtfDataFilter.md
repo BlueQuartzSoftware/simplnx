@@ -92,3 +92,20 @@ Please see the description file distributed with this **Plugin**
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
+
+
+## Python Filter Arguments
+
++ module: OrientationAnalysis
++ Class Name: ReadCtfDataFilter
++ Displayed Name: Import Oxford Instr. EBSD Data (.ctf)
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| cell_attribute_matrix_name | Created Cell Attribute Matrix | The Attribute Matrix where the scan data is stored. | complex.DataObjectNameParameter |
+| cell_ensemble_attribute_matrix_name | Created Cell Ensemble Attribute Matrix | The Attribute Matrix where the phase information is stored. | complex.DataObjectNameParameter |
+| data_container_name | Created Image Geometry | The complete path to the Geometry being created. | complex.DataGroupCreationParameter |
+| degrees_to_radians | Convert Euler Angles to Radians | Whether or not to convert the Euler angles to Radians | complex.BoolParameter |
+| edax_hexagonal_alignment | Convert Hexagonal X-Axis to EDAX Standard | Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment | complex.BoolParameter |
+| input_file | Input File | The input .ctf file path | complex.FileSystemPathParameter |
+

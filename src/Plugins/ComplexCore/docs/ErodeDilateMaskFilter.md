@@ -63,3 +63,21 @@ If you need more help with a **Filter**, please consider asking your question on
 the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
 
+
+
+## Python Filter Arguments
+
++ module: complex
++ Class Name: ErodeDilateMaskFilter
++ Displayed Name: Erode/Dilate Mask
+
+| argument key | Human Name | Description | Parameter Type |
+|--------------|------------|-------------|----------------|
+| mask_array_path | Mask Array Path | Boolean array where true voxels are used. False voxels are ignored. | complex.ArraySelectionParameter |
+| num_iterations | Number of Iterations | Number of erode/dilate iterations to perform | complex.Int32Parameter |
+| operation | Operation | Whether to dilate (0) or erode (1) | complex.ChoicesParameter |
+| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
+| x_dir_on | X Direction | Whether to erode/dilate in the X direction | complex.BoolParameter |
+| y_dir_on | Y Direction | Whether to erode/dilate in the Y direction | complex.BoolParameter |
+| z_dir_on | Z Direction | Whether to erode/dilate in the Z direction | complex.BoolParameter |
+
