@@ -7,26 +7,7 @@ ITKImageProcessing (ITKImageProcessing)
 
 ## Description ##
 
-Fast binary dilation.
-
-BinaryDilateImageFilter is a binary dilation morphologic operation. This implementation is based on the papers:
-
-L.Vincent "Morphological transformations of binary images with
-arbitrary structuring elements", and
-
-N.Nikopoulos et al. "An efficient algorithm for 3d binary morphological transformations with 3d structuring elements for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9. No. 3. 2000. pp. 283-286.
-
-Gray scale images can be processed as binary images by selecting a "DilateValue". Pixel values matching the dilate value are considered the "foreground" and all other pixels are "background". This is useful in processing segmented images where all pixels in segment #1 have value 1 and pixels in segment #2 have value 2, etc. A particular "segment number" can be processed. DilateValue defaults to the maximum possible value of the PixelType.
-
-The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel. A reasonable choice of structuring element is itk::BinaryBallStructuringElement .
-
-\see ImageToImageFilter BinaryErodeImageFilter BinaryMorphologyImageFilter
-
-\par Wiki Examples:
-
-\li All Examples
-
-\li Dilate a binary image
+BinaryDilateImageFilter is a binary dilation morphologic operation on the foreground of an image. Only the value designated by the intensity value \"SetForegroundValue()\" (alias as SetDilateValue() ) is considered as foreground, and other intensity values are considered background.\n\nGrayscale images can be processed as binary images by selecting a \"ForegroundValue\" (alias \"DilateValue\"). Pixel values matching the dilate value are considered the \"foreground\" and all other pixels are \"background\". This is useful in processing segmented images where all pixels in segment #1 have value 1 and pixels in segment #2 have value 2, etc. A particular \"segment number\" can be processed. ForegroundValue defaults to the maximum possible value of the PixelType.\n\nThe structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel. A reasonable choice of structuring element is itk::BinaryBallStructuringElement .\n\nThis implementation is based on the papers:\n\nL.Vincent \"Morphological transformations of binary images with\narbitrary structuring elements\", and\n\nN.Nikopoulos et al. \"An efficient algorithm for 3d binary\nmorphological transformations with 3d structuring elements\nfor arbitrary size and shape\". IEEE Transactions on Image Processing. Vol. 9. No. 3. 2000. pp. 283-286.\n\n\\see ImageToImageFilter BinaryErodeImageFilter BinaryMorphologyImageFilter
 
 ## Parameters ##
 
@@ -45,15 +26,15 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None | N/A | (1)  | Array containing input image
+| Kind                     | Default Name | Type | Component Dimensions | Description                  |
+|--------------------------|--------------|------|----------------------|------------------------------|
+| **Cell Attribute Array** | None         | N/A  | (1)                  | Array containing input image |
 
 ## Created Objects ##
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None |  | (1)  | Array containing filtered image
+| **Cell Attribute Array** | None |  | (1)  | Array containing filtered image|
 
 ## References ##
 

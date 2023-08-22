@@ -65,10 +65,10 @@ Parameters FindSlipTransmissionMetricsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_F1ListArrayName_Key, "F1 List", "", "F1 List"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_F1sptListArrayName_Key, "F1spt List", "", "F1spt List"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_F7ListArrayName_Key, "F7 List", "", "F7 List"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_mPrimeListArrayName_Key, "mPrime List", "", "mPrime List"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_F1ListArrayName_Key, "F1 List", "DataArray Name to store the calculated F1s Values", "F1 List"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_F1sptListArrayName_Key, "F1spt List", "DataArray Name to store the calculated F1spts Values", "F1spt List"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_F7ListArrayName_Key, "F7 List", "DataArray Name to store the calculated F7s Values", "F7 List"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_mPrimeListArrayName_Key, "mPrime List", "DataArray Name to store the calculated mPrimes Values", "mPrime List"));
 
   return params;
 }

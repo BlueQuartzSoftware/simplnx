@@ -60,14 +60,14 @@ Parameters ConvertQuaternionFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<BoolParameter>(k_DeleteOriginalData_Key, "Delete Original Data", "", false));
-  params.insert(std::make_unique<ChoicesParameter>(k_ConversionType_Key, "Conversion Type", "", 0, k_Choices));
+  params.insert(std::make_unique<BoolParameter>(k_DeleteOriginalData_Key, "Delete Original Data", "Should the original quaternions array be deleted from the DataStructure", false));
+  params.insert(std::make_unique<ChoicesParameter>(k_ConversionType_Key, "Conversion Type", "The conversion type: To Scalar Vector=0, To Vector Scalar=1", 0, k_Choices));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Input Quaternions", "Specifies the quaternions to convert", DataPath({"CellData", "Quats"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Output Quaternions", "", "Quaternions [Converted]"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Output Quaternions", "The DataPath to the converted quaternions", "Quaternions [Converted]"));
 
   return params;
 }
