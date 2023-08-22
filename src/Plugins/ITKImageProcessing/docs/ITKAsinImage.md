@@ -1,68 +1,67 @@
-# ITK::Asin Image Filter
-
-This filter directly wraps an ITK filter of the same name.
-
-## Group (Subgroup) ##
-
-ITKImageProcessing (ITKImageProcessing)
-
-## Description ##
+# ITK Asin Image Filter (ITKAsinImage)
 
 Computes the sine of each pixel.
 
-This filter is templated over the pixel type of the input image and the pixel type of the output image.
+## Group (Subgroup)
+
+ITKImageIntensity (ImageIntensity)
+
+## Description
+
+filter_data.detail_desc=This filter is templated over the pixel type of the input image and the pixel type of the output image.
 
 The filter walks over all the pixels in the input image, and for each pixel does the following:
 
 
-\li cast the pixel value to double ,
 
-\li apply the std::asin() function to the double value,
+\li cast the pixel value to double , 
 
-\li cast the double value resulting from std::asin() to the pixel type of the output image,
+
+\li apply the std::asin() function to the double value, 
+
+
+\li cast the double value resulting from std::asin() to the pixel type of the output image, 
+
 
 \li store the casted value into the output image.
 
 
+
 The filter expects both images to have the same dimension (e.g. both 2D, or both 3D, or both ND)
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
 
+## Required Geometry
 
-## Required Geometry ##
+Image Geometry
 
-Image
+## Required Objects
 
-## Required Objects ##
+| Name |Type | Description |
+|-----|------|-------------|
+| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
+| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None | N/A | (1)  | Array containing input image
+## Created Objects
 
-## Created Objects ##
+| Name |Type | Description |
+|-----|------|-------------|
+| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None |  | (1)  | Array containing filtered image
-
-## References ##
-
-[1] T.S. Yoo, M. J. Ackerman, W. E. Lorensen, W. Schroeder, V. Chalana, S. Aylward, D. Metaxas, R. Whitaker. Engineering and Algorithm Design for an Image Processing API: A Technical Report on ITK - The Insight Toolkit. In Proc. of Medicine Meets Virtual Reality, J. Westwood, ed., IOS Press Amsterdam pp 586-592 (2002). 
-[2] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Design and Functionality. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-28-3
-[3] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Introduction and Development Guidelines. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-27-6
-
-## Example Pipelines ##
+## Example Pipelines
 
 
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
+
+## DREAM3D Mailing Lists
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+
+
