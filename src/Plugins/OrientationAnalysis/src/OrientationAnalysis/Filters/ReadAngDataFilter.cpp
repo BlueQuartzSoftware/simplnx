@@ -194,6 +194,11 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     resultOutputActions.value().appendAction(std::move(action));
   }
 
+  if(reader.getGrid() == "HexGrid")
+  {
+    return {MakeErrorResult<OutputActions>(-19500, "Ang file has HexGrid. AngReader ONLY knows how to read SquareGrid"), std::move(preflightUpdatedValues)};
+  }
+
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
