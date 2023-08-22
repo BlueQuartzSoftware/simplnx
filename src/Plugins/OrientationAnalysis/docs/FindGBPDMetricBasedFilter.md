@@ -74,9 +74,9 @@ In the case of any questions, suggestions, bugs, etc., please feel free to email
 
 Please see the description file distributed with this **Plugin**.
 
-## DREAM3D Mailing Lists 
+## DREAM3DNX Help
 
-
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 ## Python Filter Arguments
 
