@@ -229,8 +229,8 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Vertex Mask Selection"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VoxelIndices_Key, "Created Voxel Indices", "Path to the created Voxel Indices array", "Voxel Indices"));

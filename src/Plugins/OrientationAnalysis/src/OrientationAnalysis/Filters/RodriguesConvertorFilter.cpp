@@ -61,7 +61,8 @@ Parameters RodriguesConvertorFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_RodriguesDataArrayPath_Key, "Input Rodrigues Vectors", "Specifies the Rodrigues data to convert", DataPath({"CellData", "rodrigues"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Converted Rodrigues Data Array", "The DataArray name of the converted Rodrigues vectors", "rodrigues [Converted]"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Converted Rodrigues Data Array", "The DataArray name of the converted Rodrigues vectors", "rodrigues [Converted]"));
 
   return params;
 }

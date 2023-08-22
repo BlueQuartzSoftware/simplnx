@@ -55,15 +55,19 @@ Parameters SharedFeatureFaceFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{}, ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Created Face Data Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureFaceIdsArrayName_Key, "Feature Face Ids", "The name of the calculated Feature Face Ids DataArray", "SharedFeatureFaceId"));
 
   params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_GrainBoundaryAttributeMatrixName_Key, "Face Feature Attribute Matrix", "The name of the AttributeMatrix that holds the **Feature Face** data", "SharedFeatureFace"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureFaceLabelsArrayName_Key, "Feature Face Labels", "The name of the array that holds the calculated Feature Face Labels", "FaceLabels"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureNumTrianglesArrayName_Key, "Feature Number of Triangles", "The name of the array that holds the calculated number of triangles for each feature face", "NumTriangles"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_GrainBoundaryAttributeMatrixName_Key, "Face Feature Attribute Matrix",
+                                                          "The name of the AttributeMatrix that holds the **Feature Face** data", "SharedFeatureFace"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_FeatureFaceLabelsArrayName_Key, "Feature Face Labels", "The name of the array that holds the calculated Feature Face Labels", "FaceLabels"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureNumTrianglesArrayName_Key, "Feature Number of Triangles",
+                                                          "The name of the array that holds the calculated number of triangles for each feature face", "NumTriangles"));
 
   return params;
 }

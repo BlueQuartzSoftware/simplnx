@@ -53,14 +53,16 @@ Parameters ExtractVertexGeometryFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "Move or Copy input data arrays", 0, ChoicesParameter::Choices{"Move Attribute Arrays", "Copy Attribute Arrays"}));
+  params.insert(
+      std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "Move or Copy input data arrays", 0, ChoicesParameter::Choices{"Move Attribute Arrays", "Copy Attribute Arrays"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_InputGeometryPath_Key, "Input Geometry", "The input Image/RectilinearGrid Geometry to convert", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::ImageGeom, BaseGroup::GroupType::RectGridGeom}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllDataTypes()));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array",
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               complex::GetAllDataTypes()));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Output Vertex Geometry", "The complete path to the vertex geometry that will be created",
                                                              DataPath({"[Vertex Geometry]"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttrMatrixName_Key, "Output Vertex Attribute Matrix Name", "The name of the vertex attribute matrix that will be created",

@@ -58,8 +58,8 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_ConfidenceIndexArrayPath_Key, "Input Comparison Array", "The DataPath to the input array to use for comparison", DataPath{}, complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ConfidenceIndexArrayPath_Key, "Input Comparison Array", "The DataPath to the input array to use for comparison", DataPath{},
+                                                          complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   return params;
 }

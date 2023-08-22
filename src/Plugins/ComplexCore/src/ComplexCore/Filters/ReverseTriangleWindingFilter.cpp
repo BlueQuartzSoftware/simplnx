@@ -85,7 +85,8 @@ Parameters ReverseTriangleWindingFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Geometry"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeomPath_Key, "Triangle Geometry", "The DataPath to then input Triangle Geometry", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeomPath_Key, "Triangle Geometry", "The DataPath to then input Triangle Geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
 
   return params;
 }
