@@ -1039,9 +1039,9 @@ def main(input_args: Optional[List[str]] = None) -> None:
     test_output_dir: Path = args.test_output_dir
     docs_output_dir: Path = args.docs_output_dir
 
-    filter_output_dir.mkdir(parents=True, exist_ok=True)
-    test_output_dir.mkdir(parents=True, exist_ok=True)
-    docs_output_dir.mkdir(parents=True, exist_ok=True)
+    # filter_output_dir.mkdir(parents=True, exist_ok=True)
+    # test_output_dir.mkdir(parents=True, exist_ok=True)
+    # docs_output_dir.mkdir(parents=True, exist_ok=True)
 
     with open(f'{template_dir}/filter.hpp.in', 'r') as header_template_file:
         header_template = Template(header_template_file.read())
@@ -1231,10 +1231,10 @@ def main(input_args: Optional[List[str]] = None) -> None:
         write_filter(filter_name, json_dir, filter_output_dir, test_output_dir, header_template, source_template, docs_output_dir)
     
     # this will print out some code that will need to be included into the ITKImageProcessingPlugin.cpp file
-    for filter_name in FILTERS:
-        if filter_name not in filters_to_process:
-            continue
-        print(f'#include \"ITKImageProcessing/Filters/ITK{filter_name}.hpp\"')
+    # for filter_name in FILTERS:
+    #     if filter_name not in filters_to_process:
+    #         continue
+    #     print(f'#include \"ITKImageProcessing/Filters/ITK{filter_name}.hpp\"')
 
 if __name__ == '__main__':
     sys.exit(main())

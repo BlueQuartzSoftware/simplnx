@@ -1,8 +1,8 @@
 #include "ITKSignedMaurerDistanceMapImage.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
@@ -15,9 +15,9 @@ using namespace complex;
 
 namespace cxITKSignedMaurerDistanceMapImage
 {
-using ArrayOptionsT = ITK::IntegerScalarPixelIdTypeList;
+using ArrayOptionsType = ITK::IntegerScalarPixelIdTypeList;
 template <class PixelT>
-using FilterOutputT = float32;
+using FilterOutputType = float32;
 
 struct ITKSignedMaurerDistanceMapImageFunctor
 {
@@ -29,8 +29,8 @@ struct ITKSignedMaurerDistanceMapImageFunctor
   template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterT = itk::SignedMaurerDistanceMapImageFilter<InputImageT, OutputImageT>;
-    auto filter = FilterT::New();
+    using FilterType = itk::SignedMaurerDistanceMapImageFilter<InputImageT, OutputImageT>;
+    auto filter = FilterType::New();
     filter->SetInsideIsPositive(insideIsPositive);
     filter->SetSquaredDistance(squaredDistance);
     filter->SetUseImageSpacing(useImageSpacing);
@@ -76,12 +76,11 @@ std::vector<std::string> ITKSignedMaurerDistanceMapImage::defaultTags() const
 Parameters ITKSignedMaurerDistanceMapImage::parameters() const
 {
   Parameters params;
-
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_InsideIsPositive_Key, "InsideIsPositive",
                                                 "Set if the inside represents positive values in the signed distance map. By convention ON pixels are treated as inside pixels.", false));
   params.insert(std::make_unique<BoolParameter>(k_SquaredDistance_Key, "SquaredDistance", "Set if the distance should be squared.", true));
-  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing", "Set if image spacing should be used in computing distances", false));
+  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing", "Set if image spacing should be used in computing distances.", false));
   params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set the background value which defines the object. Usually this value is = 0.", 0.0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
@@ -110,14 +109,14 @@ IFilter::PreflightResult ITKSignedMaurerDistanceMapImage::preflightImpl(const Da
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
   auto insideIsPositive = filterArgs.value<bool>(k_InsideIsPositive_Key);
   auto squaredDistance = filterArgs.value<bool>(k_SquaredDistance_Key);
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
-      ITK::DataCheck<cxITKSignedMaurerDistanceMapImage::ArrayOptionsT, cxITKSignedMaurerDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+      ITK::DataCheck<cxITKSignedMaurerDistanceMapImage::ArrayOptionsType, cxITKSignedMaurerDistanceMapImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -136,14 +135,12 @@ Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& dataStructu
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
 
-  cxITKSignedMaurerDistanceMapImage::ITKSignedMaurerDistanceMapImageFunctor itkFunctor = {insideIsPositive, squaredDistance, useImageSpacing, backgroundValue};
+  const cxITKSignedMaurerDistanceMapImage::ITKSignedMaurerDistanceMapImageFunctor itkFunctor = {insideIsPositive, squaredDistance, useImageSpacing, backgroundValue};
 
-  // LINK GEOMETRY OUTPUT START
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
-  // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKSignedMaurerDistanceMapImage::ArrayOptionsT, cxITKSignedMaurerDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
-                                                                                                                          shouldCancel);
+  return ITK::Execute<cxITKSignedMaurerDistanceMapImage::ArrayOptionsType, cxITKSignedMaurerDistanceMapImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                itkFunctor, shouldCancel);
 }
 } // namespace complex

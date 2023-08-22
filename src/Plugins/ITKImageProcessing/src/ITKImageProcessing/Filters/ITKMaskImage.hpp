@@ -56,7 +56,9 @@ public:
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
   static inline constexpr StringLiteral k_OutsideValue_Key = "outside_value";
-  static inline constexpr StringLiteral k_MaskImageDataPath_Key = "mask_image_data_path";
+  static inline constexpr StringLiteral k_MaskingValue_Key = "masking_value";
+  static inline constexpr StringLiteral k_ImageDataPath_Key = "image_data_path";
+  static inline constexpr StringLiteral k_MaskImage_Key = "mask_image";
 
   /**
    * @brief Returns the name of the filter.
@@ -122,7 +124,8 @@ protected:
    * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

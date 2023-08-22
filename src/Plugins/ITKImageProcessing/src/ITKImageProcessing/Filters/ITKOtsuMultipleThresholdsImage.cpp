@@ -3,7 +3,6 @@
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
@@ -17,7 +16,7 @@ using namespace complex;
 namespace cxITKOtsuMultipleThresholdsImage
 {
 using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
-template<class PixelT>
+template <class PixelT>
 using FilterOutputType = uint8;
 
 struct ITKOtsuMultipleThresholdsImageFunctor
@@ -84,14 +83,18 @@ Parameters ITKOtsuMultipleThresholdsImage::parameters() const
   params.insert(std::make_unique<UInt8Parameter>(k_LabelOffset_Key, "LabelOffset", "Set/Get the offset which labels have to start from. Default is 0.", 0u));
   params.insert(std::make_unique<UInt32Parameter>(k_NumberOfHistogramBins_Key, "NumberOfHistogramBins", "Set/Get the number of histogram bins. Default is 128.", 128u));
   params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "ValleyEmphasis", "Set/Get the use of valley emphasis. Default is false.", false));
-  params.insert(std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum.", false));
+  params.insert(
+      std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum.", false));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -104,7 +107,7 @@ IFilter::UniquePointer ITKOtsuMultipleThresholdsImage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKOtsuMultipleThresholdsImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
@@ -116,21 +119,21 @@ IFilter::PreflightResult ITKOtsuMultipleThresholdsImage::preflightImpl(const Dat
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKOtsuMultipleThresholdsImage::ArrayOptionsType, cxITKOtsuMultipleThresholdsImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKOtsuMultipleThresholdsImage::ArrayOptionsType, cxITKOtsuMultipleThresholdsImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKOtsuMultipleThresholdsImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                     const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  
   auto numberOfThresholds = filterArgs.value<uint8>(k_NumberOfThresholds_Key);
   auto labelOffset = filterArgs.value<uint8>(k_LabelOffset_Key);
   auto numberOfHistogramBins = filterArgs.value<uint32>(k_NumberOfHistogramBins_Key);
@@ -140,8 +143,9 @@ Result<> ITKOtsuMultipleThresholdsImage::executeImpl(DataStructure& dataStructur
   const cxITKOtsuMultipleThresholdsImage::ITKOtsuMultipleThresholdsImageFunctor itkFunctor = {numberOfThresholds, labelOffset, numberOfHistogramBins, valleyEmphasis, returnBinMidpoint};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-  
-  return ITK::Execute<cxITKOtsuMultipleThresholdsImage::ArrayOptionsType, cxITKOtsuMultipleThresholdsImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+
+  return ITK::Execute<cxITKOtsuMultipleThresholdsImage::ArrayOptionsType, cxITKOtsuMultipleThresholdsImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                              itkFunctor, shouldCancel);
 }
 } // namespace complex
