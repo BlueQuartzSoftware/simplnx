@@ -53,7 +53,7 @@ void writePointerArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
     dims = {10, 8, 6, (COMPDIMPROD * TUPLEDIMPROD) / 10 / 8 / 6};
   }
 
-  hsize_t tSize =  std::accumulate(std::begin(dims), std::end(dims), 1, std::multiplies<hsize_t>());
+  hsize_t tSize = std::accumulate(std::begin(dims), std::end(dims), 1, std::multiplies<hsize_t>());
   std::vector<T> data(tSize);
   for(hsize_t i = 0; i < tSize; ++i)
   {
