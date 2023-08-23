@@ -40,9 +40,8 @@ float32 GetXCharWidth(int32 imageSize, float32 fontPtSize)
   fonts::Base64Decode(fonts::k_LatoBoldBase64, m_LatoBold);
 
   canvas_ity::canvas tempContext(imageSize, imageSize);
-  const char buf = {'X'};
   tempContext.set_font(m_LatoBold.data(), static_cast<int>(m_LatoBold.size()), fontPtSize);
-  return tempContext.measure_text(&buf);
+  return tempContext.measure_text("X");
 }
 } // namespace
 
@@ -143,14 +142,10 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 {
 
   auto pTitleValue = filterArgs.value<StringParameter::ValueType>(k_Title_Key);
-  auto pGenerationAlgorithmValue = filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key);
-  auto pLambertSizeValue = filterArgs.value<int32>(k_LambertSize_Key);
-  auto pNumColorsValue = filterArgs.value<int32>(k_NumColors_Key);
   auto pImageLayoutValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageLayout_Key);
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   auto pImagePrefixValue = filterArgs.value<StringParameter::ValueType>(k_ImagePrefix_Key);
   auto pImageSizeValue = filterArgs.value<int32>(k_ImageSize_Key);
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseGoodVoxels_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
