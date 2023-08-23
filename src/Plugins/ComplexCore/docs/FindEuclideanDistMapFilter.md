@@ -17,7 +17,7 @@ This **Filter** calculates the distance of each **Cell** from the nearest **Feat
   - Assign a distance of *1* to those **Cells** and list the *0* **Cell** neighbor as their *nearest neighbor*
   - Repeat previous two sub-steps, increasing the distances by *1* each iteration, until no **Cells** remain without a distance and *nearest neighbor* assigned.
 
-	*Note:* the distances calculated at this point are "city-block" distances and not "shortest distance" distances.
+    *Note:* the distances calculated at this point are "city-block" distances and not "shortest distance" distances.
 
 4. If the option *Calculate Manhattan Distance* is *false*, then the "city-block" distances are overwritten with the *Euclidean Distance* from the **Cell** to its *nearest neighbor* **Cell** and stored in a *float* array instead of an *integer* array.
 

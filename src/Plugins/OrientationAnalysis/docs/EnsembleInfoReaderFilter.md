@@ -42,16 +42,16 @@ This **Filter** reads in information about the crystal structure and phase types
 __Phase numbering starts at One (1). Phase Zero (0) is reserved for internal use in DREAM.3D__
 For example, if you have a structure that has 2 phases that consist of a Cubic Primary phase and a Hexagonal Matrix phase the file would be the following:
 
-	[EnsembleInfo]
-	Number_Phases=2
+    [EnsembleInfo]
+    Number_Phases=2
 
-	[1]
-	CrystalStructure=Cubic_High
-	PhaseType=PrimaryPhase
+    [1]
+    CrystalStructure=Cubic_High
+    PhaseType=PrimaryPhase
 
-	[2]
-	CrystalStructure=Hexagonal_High
-	PhaseType=MatrixPhase
+    [2]
+    CrystalStructure=Hexagonal_High
+    PhaseType=MatrixPhase
 
 
 ## Parameters 

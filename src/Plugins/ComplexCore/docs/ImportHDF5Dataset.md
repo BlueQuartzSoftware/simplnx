@@ -17,7 +17,7 @@ The component dimensions are input as a comma-delimited list of dimensional valu
 ### Examples ###
 
 1. Suppose we have a 1D dataset in an HDF5 file with dimension **12,000**.
-	We can input component dimensions of **5, 2, 2** and set the destination attribute matrix tuple dimensions to **35 x 5 x 2 x 2**
+    We can input component dimensions of **5, 2, 2** and set the destination attribute matrix tuple dimensions to **35 x 5 x 2 x 2**
 
 + The total number of elements for the HDF5 dataset is 12,000.
 + The total number of tuples in the destination attribute matrix is 35\*5\*2\*2 = 700.

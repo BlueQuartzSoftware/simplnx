@@ -9,11 +9,11 @@ Statistics (Misc)
 
 This **Filter** calculates the difference between two **Attribute Arrays**. The arrays must have the same _primitive type_ (e.g., float), _component dimensions_ and _number of tuples_. The **Filter** uses the following pseudocode to calculate the difference map:
 
-	for i to all tuples in the arrays
-		for j to number of components of the arrays
-			differenceMap[number of components * i + j] = firstSelectedArray[number of components * i + j] - secondSelectedArray[number of components * i + j]
-		end loop over number of components
-	end loop over all tuples
+    for i to all tuples in the arrays
+        for j to number of components of the arrays
+            differenceMap[number of components * i + j] = firstSelectedArray[number of components * i + j] - secondSelectedArray[number of components * i + j]
+        end loop over number of components
+    end loop over all tuples
 
 Note that in the above algorithm, the difference is taken as the _first selected_ **Attribute Array** minus the _second selected_ **Attribute Array**. The differences are also taken _component by component_. Therefore, two selected scalar arrays will result in a scalar difference map, whereas two selected 3 component vector arrays would result in a 3 component vector difference map, where component values are the scalar differences between the components of the input arrays.
 

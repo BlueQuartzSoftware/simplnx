@@ -8,8 +8,8 @@ Surface Meshing (Misc)
 ## Description ##
 
 This **Filter** computes the area of each **Triangle** in a **Triangle Geometry** by calculating the following: 
-	
-	1/2*|AB||AC|sin(O)
+    
+    1/2*|AB||AC|sin(O)
 
 where _O_ is the angle between |AB| and |AC|.
 

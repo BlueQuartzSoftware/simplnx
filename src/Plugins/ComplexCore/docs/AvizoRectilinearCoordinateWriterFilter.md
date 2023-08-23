@@ -12,25 +12,25 @@ This filter writes out a native Avizo Rectilinear Coordinate data file. Values s
 ### Example Output 
 
 
-	# AmiraMesh BINARY-LITTLE-ENDIAN 2.1
-	# Dimensions in x-, y-, and z-direction
-	define Lattice
-	define Coordinates
-	Parameters {
-	    DREAM3DParams {
-	        Author "DREAM3D",
-	         DateTime "    . M o n   J u n   1   1 0 : 0 1 : 1 4   2 0 1 5   "     
-	    }
-	    Units {
-	          Coordinates "microns"
-	    }
-	     CoordType "rectilinear"
-	}
-	     
-	Lattice { int FeatureIds } = @1
-	Coordinates { float xyz } = @2
-	# Data section follows
-	   .. 
+    # AmiraMesh BINARY-LITTLE-ENDIAN 2.1
+    # Dimensions in x-, y-, and z-direction
+    define Lattice
+    define Coordinates
+    Parameters {
+        DREAM3DParams {
+            Author "DREAM3D",
+             DateTime "    . M o n   J u n   1   1 0 : 0 1 : 1 4   2 0 1 5   "     
+        }
+        Units {
+              Coordinates "microns"
+        }
+         CoordType "rectilinear"
+    }
+         
+    Lattice { int FeatureIds } = @1
+    Coordinates { float xyz } = @2
+    # Data section follows
+       .. 
 
 ## Parameters 
 

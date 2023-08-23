@@ -64,39 +64,39 @@ This **Filter** allows for undefined operations to occur. The return values for 
 ### Using Arrays in Expressions ###
 
 Any **Attribute Array** available in the selected **Attribute Matrix** is eligible to be used in the infix expression and multiple arrays may be used in the same expression, but all arrays in any given expression must have the same number of components.  Arrays may be entered into the infix expression by typing their exact name, or by using the dropdown menus in the interface labeled *Scalars* (for single component arrays) or *Vectors* (for multi-component arrays). Operations on arrays are computed tuple-by-tuple. For example, consider a single component **Attribute Array** named *Foo* that has five tuples, with the values stored being the first 5 prime numbers. The array *Foo* then looks as follows:
-	
-	[2, 3, 5, 7, 11]
-	
+    
+    [2, 3, 5, 7, 11]
+    
 If the user enters the infix expression `Foo + 3`, the result of the **Filter** is a new array with exactly five tuples that contains the values:
 
-	[5, 6, 8, 10, 14]
+    [5, 6, 8, 10, 14]
 
 Now consider another single component array named *Bar* that has the value 4.25 at all tuples.  If the infix expression `(Foo + Bar) * 4` is entered, then the output values are as follows:
 
-	[25, 29, 37, 45, 61]
-	
+    [25, 29, 37, 45, 61]
+    
 If there is a third available array named *Baz* that has three components, it cannot be used in infix expressions with *Foo* or *Bar*. For example, the infix expression `Foo + Baz` is not valid, and a parsing error will be presented. 
 
 #### Using Multi-Component Arrays ####
 
 There are two ways to enter multi-component arrays into the infix expression.  Arrays may be entered without an index for a component. In this case, operations are performed both tuple-by-tuple *and* component-by-component, and the output array will have the same number of components as the input arrays. For example, consider two arrays *Foo* and *Bar* that are each 3-component arrays with two tuples whose values are as follows:
 
-	Foo: [{1, 2, 3}, {4, 5, 6}]
-	Bar: [{-1, -2, -3}, {-4, -5, -6}]
+    Foo: [{1, 2, 3}, {4, 5, 6}]
+    Bar: [{-1, -2, -3}, {-4, -5, -6}]
 
 If the infix expression `Foo + Bar` then the output values are as follows:
 
-	[{0, 0, 0}, {0, 0, 0}]
+    [{0, 0, 0}, {0, 0, 0}]
 
 Alternatively, multi-component arrays may be entered specifying a particular *index*. In this case, operations are performed tuple-by-tuple, but only for the specific component specified in each array, so the output array will always be a scalar value. Indices are specified using `[]` notation after the array name. Additionally, indices are *zero based*.  For example, `Foo[1]` is valid syntax, but `Foo[3]` is not valid. Additionally, indices must be positive integers only.  If any array in the infix expression uses index notation, then all arrays must specify an index.  
 
 Consider the infix expression `Foo[0] + Foo[1] + Foo[2]`. This expression will add all the components of *Foo* for each tuple. The result of this expression is the following:
 
-	[6, 15]
+    [6, 15]
 
 The infix expression `Foo[0] * Bar[2]` multiplies the first component of *Foo* with the third component of *Bar* for each tuple.  The result if this expression is as follows:
 
-	[-3, -24]
+    [-3, -24]
 
 #### Explicit Array Names ####
 
@@ -112,27 +112,27 @@ In most cases, attempting to write equations like these without putting the doub
 
 ## Examples ##
 
-	Confidence Index + 3 / ln(4*Fit)
+    Confidence Index + 3 / ln(4*Fit)
 
 This equation multiplies every tuple in the *Fit* array by *4* and then finds the *natural logarithm* of those results.  Then, it divides *3* by those values and *adds* the results of that to every element in the *Confidence Index* array.
 
-	Array1[0] - Array2[1]
+    Array1[0] - Array2[1]
 
 This equation subtracts the second component in *Array2* from the first component in *Array1* for each tuple. The resulting array will have the same number of tuples as *Array1* and *Array2*, but only one component.
 
-	Array1 + Array2
+    Array1 + Array2
 
 This equation adds every element in *Array2* with every element in *Array1*.  The resulting array will have the same number of tuples and components as *Array1* and *Array2*.
 
-	6 / 3
+    6 / 3
 
 This equation divides *6* by *3* and stores the result in an array with exactly one component and one tuple.
 
-	root(8, 3)
+    root(8, 3)
 
 This equation takes the cube root of *8* and stores the result in an array with exactly one component and one tuple.
 
-	3 ^ Array1
+    3 ^ Array1
 
 This equation raises *3* to the power of the value stored in every component of every tuple in *Array1*.  The resulting array has the same tuple and component size of *Array1*.
 

@@ -35,21 +35,21 @@ This **Filter** is used in a workflow where the user would like to generate a sy
 
 The file written is a simple text file that contains a short comment section and a single _Header_ line of data. All comment lines should come **BEFORE** the actual header line. There is a single header line in the form of "Key:Value" and then the lines of data.
 
-	# All lines starting with '#' are comments and should come before the header.
-	# DREAM.3D StatsGenerator Angles Input File
-	# DREAM.3D Version 6.1.107.0d8bad9
-	# Angle Data is space delimited.
-	# Euler0 Euler1 Euler2 Weight Sigma
-	Angle Count:100
-	0 0 0 1 1
-	3.6 1.8 3.6 1 1
-	7.2 3.6 7.2 1 1
-	10.8 5.4 10.8 1 1
-	14.4 7.2 14.4 1 1
-	
+    # All lines starting with '#' are comments and should come before the header.
+    # DREAM.3D StatsGenerator Angles Input File
+    # DREAM.3D Version 6.1.107.0d8bad9
+    # Angle Data is space delimited.
+    # Euler0 Euler1 Euler2 Weight Sigma
+    Angle Count:100
+    0 0 0 1 1
+    3.6 1.8 3.6 1 1
+    7.2 3.6 7.2 1 1
+    10.8 5.4 10.8 1 1
+    14.4 7.2 14.4 1 1
+    
 The **only** required header line is:
 
-	Angle Count:100
+    Angle Count:100
 
 There are 5 columns of data which are the 3 Euler Angles, the Weight Value and the Sigma Value.
 
