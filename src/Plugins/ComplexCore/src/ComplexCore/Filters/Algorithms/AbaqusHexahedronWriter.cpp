@@ -5,7 +5,11 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include <algorithm>
+#include <filesystem>
+
 namespace fs = std::filesystem;
+
 using namespace complex;
 
 namespace
@@ -67,8 +71,7 @@ int32 writeNodes(AbaqusHexahedronWriter* filter, const std::string& fileName, us
   }
 
   int32 err = 0;
-  FILE* f = nullptr;
-  f = fopen(fileName.c_str(), "wb");
+  FILE* f = fopen(fileName.c_str(), "wb");
   if(nullptr == f)
   {
     return -1;
@@ -129,8 +132,7 @@ int32 writeElems(AbaqusHexahedronWriter* filter, const std::string& fileName, co
   }
 
   int32 err = 0;
-  FILE* f = nullptr;
-  f = fopen(fileName.c_str(), "wb");
+  FILE* f = fopen(fileName.c_str(), "wb");
   if(nullptr == f)
   {
     return -1;
@@ -185,9 +187,7 @@ int32 writeElems(AbaqusHexahedronWriter* filter, const std::string& fileName, co
 int32 writeElset(AbaqusHexahedronWriter* filter, const std::string& fileName, size_t totalPoints, const Int32Array& featureIds, const std::atomic_bool& shouldCancel)
 {
   int32 err = 0;
-
-  FILE* f = nullptr;
-  f = fopen(fileName.c_str(), "wb");
+  FILE* f = fopen(fileName.c_str(), "wb");
   if(nullptr == f)
   {
     return -1;
@@ -199,14 +199,7 @@ int32 writeElset(AbaqusHexahedronWriter* filter, const std::string& fileName, si
   fprintf(f, "**\n** Each Grain is made up of multiple elements\n**");
 
   // find total number of Grain Ids
-  int32 maxGrainId = 0;
-  for(usize i = 0; i < totalPoints; i++) // find number of grainIds
-  {
-    if(featureIds[i] > maxGrainId)
-    {
-      maxGrainId = featureIds[i];
-    }
-  }
+  int32 maxGrainId = *std::max_element(std::begin(featureIds), std::end(featureIds));
 
   auto increment = static_cast<int32>(maxGrainId * 0.1f);
   if(increment == 0) // check to prevent divide by 0
@@ -221,7 +214,7 @@ int32 writeElset(AbaqusHexahedronWriter* filter, const std::string& fileName, si
     usize elementPerLine = 0;
     fprintf(f, "\n*Elset, elset=Grain%d_set\n", voxelId);
 
-    for(usize i = 0; i < totalPoints + 1; i++)
+    for(usize i = 0; i < featureIds.size(); i++)
     {
       if(featureIds[i] == voxelId)
       {
@@ -248,7 +241,7 @@ int32 writeElset(AbaqusHexahedronWriter* filter, const std::string& fileName, si
       {
         std::string percentage = "Writing Element Sets (File 4/5) " + StringUtilities::number(static_cast<int>((float32)(voxelId) / (float32)(maxGrainId)*100)) + "% Completed ";
         float32 timeDiff = ((float32)voxelId / (float32)(milliDiff));
-        int64 estimatedTime = (float32)(maxGrainId - voxelId) / timeDiff;
+        auto estimatedTime = static_cast<int64>((float32)(maxGrainId - voxelId) / timeDiff);
         std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
         filter->sendMessage(percentage + timeRemaining);
         initialTime = std::chrono::steady_clock::now();
@@ -271,8 +264,7 @@ int32 writeElset(AbaqusHexahedronWriter* filter, const std::string& fileName, si
 int32 writeMaster(const std::string& file, const std::string& jobName, const std::string& filePrefix)
 {
   int32 err = 0;
-  FILE* f = nullptr;
-  f = fopen(file.c_str(), "wb");
+  FILE* f = fopen(file.c_str(), "wb");
   if(nullptr == f)
   {
     return -1;
@@ -294,11 +286,10 @@ int32 writeMaster(const std::string& file, const std::string& jobName, const std
   return err;
 }
 
-int32 writeSects(const std::string& file, usize totalPoints, const Int32Array& featureIds, int32 hourglassStiffness)
+int32 writeSects(const std::string& file, const Int32Array& featureIds, int32 hourglassStiffness)
 {
   int32 err = 0;
-  FILE* f = nullptr;
-  f = fopen(file.c_str(), "wb");
+  FILE* f = fopen(file.c_str(), "wb");
   if(nullptr == f)
   {
     return -1;
@@ -306,14 +297,7 @@ int32 writeSects(const std::string& file, usize totalPoints, const Int32Array& f
   fprintf(f, "** ----------------------------------------------------------------\n**\n** Each section is a separate grain\n");
 
   // find total number of Grain Ids
-  int32 maxGrainId = 0;
-  for(usize i = 0; i < totalPoints; i++)
-  {
-    if(featureIds[i] > maxGrainId)
-    {
-      maxGrainId = featureIds[i];
-    }
-  }
+  int32 maxGrainId = *std::max_element(std::begin(featureIds), std::end(featureIds));
 
   // We are now defining the sections, which is for each grain
   int32 grain = 1;
@@ -413,7 +397,7 @@ Result<> AbaqusHexahedronWriter::operator()()
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 2/5) Complete");
 
-  err = writeSects(fileNames[2], totalPoints, featureIds, m_InputValues->HourglassStiffness); // Sections file
+  err = writeSects(fileNames[2], featureIds, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
   {
     return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileNames[2]));
