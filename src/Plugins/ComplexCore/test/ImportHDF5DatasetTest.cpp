@@ -12,9 +12,13 @@
 
 #include <catch2/catch.hpp>
 
+#include <functional>
+
 namespace fs = std::filesystem;
 using namespace complex;
 
+namespace
+{
 constexpr hsize_t COMPDIMPROD = 72;
 constexpr hsize_t TUPLEDIMPROD = 40;
 std::string m_FilePath = unit_test::k_BinaryDir.str() + "/ImportHDF5DatasetTest.h5";
@@ -22,116 +26,56 @@ std::string m_FilePath = unit_test::k_BinaryDir.str() + "/ImportHDF5DatasetTest.
 // -----------------------------------------------------------------------------
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
-template <typename T>
-Result<> writePointer1DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
+template <typename T, uint8 Dims = 1>
+void writePointerArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  // Create the Dimensions
-  std::vector<hsize_t> dims(1);
-  dims[0] = COMPDIMPROD * TUPLEDIMPROD;
+  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
+  std::vector<hsize_t> dims = {};
 
-  /* Make dataset char */
-  hsize_t tSize = dims[0];
+  if constexpr(Dims == 1)
+  {
+    dsetName = "Pointer1DArrayDataset<" + dsetName + ">";
+    dims = {COMPDIMPROD * TUPLEDIMPROD};
+  }
+  if constexpr(Dims == 2)
+  {
+    dsetName = "Pointer2DArrayDataset<" + dsetName + ">";
+    dims = {10, (COMPDIMPROD * TUPLEDIMPROD) / 10};
+  }
+  if constexpr(Dims == 3)
+  {
+    dsetName = "Pointer3DArrayDataset<" + dsetName + ">";
+    dims = {10, 8, (COMPDIMPROD * TUPLEDIMPROD) / 10 / 8};
+  }
+  if constexpr(Dims == 4)
+  {
+    dsetName = "Pointer4DArrayDataset<" + dsetName + ">";
+    dims = {10, 8, 6, (COMPDIMPROD * TUPLEDIMPROD) / 10 / 8 / 6};
+  }
+
+  hsize_t tSize =  std::accumulate(std::begin(dims), std::end(dims), 1, std::multiplies<hsize_t>());
   std::vector<T> data(tSize);
   for(hsize_t i = 0; i < tSize; ++i)
   {
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
-  dsetName = "Pointer1DArrayDataset<" + dsetName + ">";
   complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
   auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   COMPLEX_RESULT_REQUIRE_VALID(result);
-
-  return result;
 }
 
-// -----------------------------------------------------------------------------
-//  Uses Raw Pointers to save data to the data file
-// -----------------------------------------------------------------------------
 template <typename T>
-Result<> writePointer2DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
-{
-  // Create the Dimensions
-  std::vector<hsize_t> dims(2);
-  dims[0] = 10;
-  dims[1] = (COMPDIMPROD * TUPLEDIMPROD) / 10;
+constexpr auto writePointer1DArrayDataset = &writePointerArrayDataset<T, 1>;
 
-  /* Make dataset char */
-  hsize_t tSize = dims[0] * dims[1];
-  std::vector<T> data(tSize);
-  for(hsize_t i = 0; i < tSize; ++i)
-  {
-    data[i] = static_cast<T>(i * 5);
-  }
-
-  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
-  dsetName = "Pointer2DArrayDataset<" + dsetName + ">";
-  complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
-  auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
-  COMPLEX_RESULT_REQUIRE_VALID(result);
-
-  return result;
-}
-
-// -----------------------------------------------------------------------------
-//  Uses Raw Pointers to save data to the data file
-// -----------------------------------------------------------------------------
 template <typename T>
-Result<> writePointer3DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
-{
-  // Create the Dimensions
-  std::vector<hsize_t> dims(3);
-  dims[0] = 10;
-  dims[1] = 8;
-  dims[2] = (COMPDIMPROD * TUPLEDIMPROD) / 10 / 8;
+constexpr auto writePointer2DArrayDataset = &writePointerArrayDataset<T, 2>;
 
-  /* Make dataset char */
-  hsize_t tSize = dims[0] * dims[1] * dims[2];
-  std::vector<T> data(tSize);
-  for(hsize_t i = 0; i < tSize; ++i)
-  {
-    data[i] = static_cast<T>(i * 5);
-  }
-
-  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
-  dsetName = "Pointer3DArrayDataset<" + dsetName + ">";
-  complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
-  auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
-  COMPLEX_RESULT_REQUIRE_VALID(result);
-
-  return result;
-}
-
-// -----------------------------------------------------------------------------
-//  Uses Raw Pointers to save data to the data file
-// -----------------------------------------------------------------------------
 template <typename T>
-Result<> writePointer4DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
-{
-  // Create the Dimensions
-  std::vector<hsize_t> dims(4);
-  dims[0] = 10;
-  dims[1] = 8;
-  dims[2] = 6;
-  dims[3] = (COMPDIMPROD * TUPLEDIMPROD) / 10 / 8 / 6;
+constexpr auto writePointer3DArrayDataset = &writePointerArrayDataset<T, 3>;
 
-  /* Make dataset char */
-  hsize_t tSize = dims[0] * dims[1] * dims[2] * dims[3];
-  std::vector<T> data(tSize);
-  for(hsize_t i = 0; i < tSize; ++i)
-  {
-    data[i] = static_cast<T>(i * 5);
-  }
-
-  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
-  dsetName = "Pointer4DArrayDataset<" + dsetName + ">";
-  complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
-  auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
-  COMPLEX_RESULT_REQUIRE_VALID(result);
-
-  return result;
-}
+template <typename T>
+constexpr auto writePointer4DArrayDataset = &writePointerArrayDataset<T, 4>;
 
 // -----------------------------------------------------------------------------
 void writeHDF5File()
@@ -153,49 +97,49 @@ void writeHDF5File()
   complex::HDF5::GroupWriter ptrGroupWriter = fileWriter.createGroupWriter("Pointer");
   REQUIRE(ptrGroupWriter.isValid());
 
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<int8_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<uint8_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<int16_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<uint16_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<int32_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<uint32_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<int64_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<uint64_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<float32>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<float64>(ptrGroupWriter));
+  writePointer1DArrayDataset<int8_t>(ptrGroupWriter);
+  writePointer1DArrayDataset<uint8_t>(ptrGroupWriter);
+  writePointer1DArrayDataset<int16_t>(ptrGroupWriter);
+  writePointer1DArrayDataset<uint16_t>(ptrGroupWriter);
+  writePointer1DArrayDataset<int32_t>(ptrGroupWriter);
+  writePointer1DArrayDataset<uint32_t>(ptrGroupWriter);
+  writePointer1DArrayDataset<int64_t>(ptrGroupWriter);
+  writePointer1DArrayDataset<uint64_t>(ptrGroupWriter);
+  writePointer1DArrayDataset<float32>(ptrGroupWriter);
+  writePointer1DArrayDataset<float64>(ptrGroupWriter);
 
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<int8_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<uint8_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<int16_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<uint16_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<int32_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<uint32_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<int64_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<uint64_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<float32>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<float64>(ptrGroupWriter));
+  writePointer2DArrayDataset<int8_t>(ptrGroupWriter);
+  writePointer2DArrayDataset<uint8_t>(ptrGroupWriter);
+  writePointer2DArrayDataset<int16_t>(ptrGroupWriter);
+  writePointer2DArrayDataset<uint16_t>(ptrGroupWriter);
+  writePointer2DArrayDataset<int32_t>(ptrGroupWriter);
+  writePointer2DArrayDataset<uint32_t>(ptrGroupWriter);
+  writePointer2DArrayDataset<int64_t>(ptrGroupWriter);
+  writePointer2DArrayDataset<uint64_t>(ptrGroupWriter);
+  writePointer2DArrayDataset<float32>(ptrGroupWriter);
+  writePointer2DArrayDataset<float64>(ptrGroupWriter);
 
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<int8_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<uint8_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<int16_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<uint16_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<int32_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<uint32_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<int64_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<uint64_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<float32>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<float64>(ptrGroupWriter));
+  writePointer3DArrayDataset<int8_t>(ptrGroupWriter);
+  writePointer3DArrayDataset<uint8_t>(ptrGroupWriter);
+  writePointer3DArrayDataset<int16_t>(ptrGroupWriter);
+  writePointer3DArrayDataset<uint16_t>(ptrGroupWriter);
+  writePointer3DArrayDataset<int32_t>(ptrGroupWriter);
+  writePointer3DArrayDataset<uint32_t>(ptrGroupWriter);
+  writePointer3DArrayDataset<int64_t>(ptrGroupWriter);
+  writePointer3DArrayDataset<uint64_t>(ptrGroupWriter);
+  writePointer3DArrayDataset<float32>(ptrGroupWriter);
+  writePointer3DArrayDataset<float64>(ptrGroupWriter);
 
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<int8_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<uint8_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<int16_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<uint16_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<int32_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<uint32_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<int64_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<uint64_t>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<float32>(ptrGroupWriter));
-  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<float64>(ptrGroupWriter));
+  writePointer4DArrayDataset<int8_t>(ptrGroupWriter);
+  writePointer4DArrayDataset<uint8_t>(ptrGroupWriter);
+  writePointer4DArrayDataset<int16_t>(ptrGroupWriter);
+  writePointer4DArrayDataset<uint16_t>(ptrGroupWriter);
+  writePointer4DArrayDataset<int32_t>(ptrGroupWriter);
+  writePointer4DArrayDataset<uint32_t>(ptrGroupWriter);
+  writePointer4DArrayDataset<int64_t>(ptrGroupWriter);
+  writePointer4DArrayDataset<uint64_t>(ptrGroupWriter);
+  writePointer4DArrayDataset<float32>(ptrGroupWriter);
+  writePointer4DArrayDataset<float64>(ptrGroupWriter);
 }
 
 // -----------------------------------------------------------------------------
@@ -336,7 +280,7 @@ std::string createVectorString(std::vector<size_t> vec)
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter::DatasetImportInfo> importInfoList, bool useParentGroup, bool resultsValid)
+void DatasetTest(ImportHDF5Dataset& filter, const std::list<ImportHDF5DatasetParameter::DatasetImportInfo>& importInfoList, bool useParentGroup, bool resultsValid)
 {
   if(importInfoList.empty())
   {
@@ -408,6 +352,7 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
       std::string cDimsStr = info.componentDimensions;
       std::vector<std::string> tokens = StringUtilities::split(cDimsStr, ',');
       std::vector<size_t> cDims;
+      cDims.reserve(tokens.size());
       for(const auto& token : tokens)
       {
         cDims.push_back(std::stoi(token));
@@ -507,10 +452,10 @@ void testFilterExecute(ImportHDF5Dataset& filter)
       info.tupleDimensions = fmt::format("{}", fmt::join(tDims, ", "));
 
       std::vector<std::string> dsetPaths;
-      dsetPaths.push_back("/Pointer/Pointer1DArrayDataset<@TYPE_STRING@>");
-      dsetPaths.push_back("/Pointer/Pointer2DArrayDataset<@TYPE_STRING@>");
-      dsetPaths.push_back("/Pointer/Pointer3DArrayDataset<@TYPE_STRING@>");
-      dsetPaths.push_back("/Pointer/Pointer4DArrayDataset<@TYPE_STRING@>");
+      dsetPaths.emplace_back("/Pointer/Pointer1DArrayDataset<@TYPE_STRING@>");
+      dsetPaths.emplace_back("/Pointer/Pointer2DArrayDataset<@TYPE_STRING@>");
+      dsetPaths.emplace_back("/Pointer/Pointer3DArrayDataset<@TYPE_STRING@>");
+      dsetPaths.emplace_back("/Pointer/Pointer4DArrayDataset<@TYPE_STRING@>");
 
       // Run 1D Array Tests
       info.dataSetPath = dsetPaths[0];
@@ -656,7 +601,7 @@ void testFilterExecute(ImportHDF5Dataset& filter)
     }
   }
 }
-
+} // namespace
 // -----------------------------------------------------------------------------
 TEST_CASE("ComplexCore::ImportHDF5Dataset Filter")
 {
