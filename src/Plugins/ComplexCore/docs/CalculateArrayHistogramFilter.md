@@ -6,7 +6,7 @@ Statistics(Ensemble)
 
 ## Description
 
-This **Filter** accepts **DataArray**(s) as input, creates histogram **DataArray**(s) in specified **DataGroup** from input **DataArray**(s), then calculates histogram values according to user parameters and stores values in created histogram **DataArray**(s).
+This **Filter** accepts **DataArray(s)** as input, creates histogram **DataArray(s)** in specified **DataGroup** from input **DataArray(s)**, then calculates histogram values according to user parameters and stores values in created histogram **DataArray(s)**.
 
 ## Example Data
 
@@ -64,7 +64,7 @@ None
 
 | Kind | Default Name | Type | Description |
 |------|--------------|------|-------------|
-| **DataArray** | DataArray(s) to Histogram | DataArray | Specifies to which **DataArray**(s) to create a histogram from |
+| **DataArray** | DataArray(s) to Histogram | DataArray | Specifies to which **DataArray(s)** to create a histogram from |
 
 ## Created Objects
 

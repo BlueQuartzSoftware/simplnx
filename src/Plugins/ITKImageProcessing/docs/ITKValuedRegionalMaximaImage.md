@@ -18,9 +18,9 @@ This code was contributed in the Insight Journal paper: "Finding regional extrem
 
 ### Related Filters
 
-* ValuedRegionalMinimaImageFilter 
-* ValuedRegionalExtremaImageFilter 
-* HMinimaImageFilter
+- ValuedRegionalMinimaImageFilter 
+- ValuedRegionalExtremaImageFilter 
+- HMinimaImageFilter
 
 ## Parameters
 

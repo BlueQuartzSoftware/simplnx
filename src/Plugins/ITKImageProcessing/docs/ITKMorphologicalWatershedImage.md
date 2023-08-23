@@ -21,7 +21,7 @@ This code was contributed in the Insight Journal paper: "The watershed transform
 
 ### Related Filters
 
-* WatershedImageFilter , MorphologicalWatershedFromMarkersImageFilter
+- WatershedImageFilter , MorphologicalWatershedFromMarkersImageFilter
 
 ## Parameters
 

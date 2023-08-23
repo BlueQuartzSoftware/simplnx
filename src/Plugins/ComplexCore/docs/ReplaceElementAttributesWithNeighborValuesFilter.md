@@ -56,8 +56,8 @@ very large grains being similar most of the fine grains and twins are **NOT** re
 ### Oxford/Bruker (.ctf) File
 
 Oxford Instruments and Bruker CTF data files do not include a "Confidence Index" measure. There are several measures
-such as _Mean Angular Deviation (MAD)_ or _Bands_ but these values are not filled in or are defaulted to 0 (Zero) if the
-scan point was not indexed. By using the _Error_ value from the data file we can get the same effect as the EDAX
+such as _Mean Angular Deviation (MAD)_ or *Bands* but these values are not filled in or are defaulted to 0 (Zero) if the
+scan point was not indexed. By using the *Error* value from the data file we can get the same effect as the EDAX
 _Confidence Index_. The user would use the following input values:
 
 | Filter Parameter | Value                              |

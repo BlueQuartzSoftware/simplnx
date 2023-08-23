@@ -8,14 +8,14 @@ Generic (Spatial)
 
 This **Filter** determines whether a **Feature** touches an outer surface of the sample. This is accomplished by simply querying the **Feature** owners of the **Cells** that sit at either . Any **Feature** that owns one of those **Cells** is said to touch an outer surface and all other **Features** are said to not touch an outer surface of the sample.
 
-This **Filter** determines whether a **Feature** touches an outer _Surface_ of the sample volume. A **Feature** is considered touching the _Surface_ of the sample if either of the following conditions are met:
+This **Filter** determines whether a **Feature** touches an outer *Surface* of the sample volume. A **Feature** is considered touching the *Surface* of the sample if either of the following conditions are met:
 
 + Any cell location is x<sub>min</sub>, x<sub>max</sub>, y<sub>min</sub>, y<sub>max</sub>, z<sub>min</sub> or z<sub>max</sub>
 + Any cell has **Feature ID = 0** as a neighbor.
 
 The output of this filter is a **Feature** level array of booleans where 0=Interior/Not touching and 1=Surface/Touching.
 
-_Note_: If there are voxels within the volume that have **Feature ID=0** then any feature touching those voxels will be considered a _Surface_ feature.
+_Note_: If there are voxels within the volume that have **Feature ID=0** then any feature touching those voxels will be considered a *Surface* feature.
 
 _Note_: The version of this filter in legacy DREAM.3D had two bugs: one that indexed into neighboring features incorrectly (DREAM3D repo issue #988), and another that incorrectly labeled feature 0 as a surface feature when feature 0 exists in the feature ids array (DREAM3D repo issue #989). Both of these bugs have been fixed in this new version.
 

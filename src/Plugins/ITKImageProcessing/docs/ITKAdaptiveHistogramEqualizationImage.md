@@ -20,8 +20,7 @@ By altering alpha, beta and window, a host of equalization and unsharp masking f
 
 The boundary condition ignores the part of the neighborhood outside the image, and over-weights the valid part of the neighborhood.
 
-For detail description, reference "Adaptive Image Contrast
-Enhancement using Generalizations of Histogram Equalization." J.Alex Stark. IEEE Transactions on Image Processing, May 2000.
+For detail description, reference "Adaptive Image Contrast Enhancement using Generalizations of Histogram Equalization." J.Alex Stark. IEEE Transactions on Image Processing, May 2000.
 
 ## Parameters
 

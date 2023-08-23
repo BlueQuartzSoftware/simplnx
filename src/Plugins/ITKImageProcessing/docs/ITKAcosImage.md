@@ -12,10 +12,10 @@ This filter is templated over the pixel type of the input image and the pixel ty
 
 The filter walks over all the pixels in the input image, and for each pixel does do the following:
 
-* cast the pixel value to double , 
-* apply the std::acos() function to the double value 
-* cast the double value resulting from std::acos() to the pixel type of the output image 
-* store the casted value into the output image.
+- cast the pixel value to double , 
+- apply the std::acos() function to the double value 
+- cast the double value resulting from std::acos() to the pixel type of the output image 
+- store the casted value into the output image.
 
 
 

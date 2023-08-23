@@ -6,7 +6,7 @@ Surface Meshing (Connectivity/Arrangement)
 
 ## Description
 
-This **Filter** reverses the _winding_ for each **Triangle** in a **Triangle Geometry**. This will _reverse_ the direction of calculated **Triangle** normals. Some analysis routines require the normals to be pointing "away" from the center of a **Feature**. This **Filter** allows for manipulation of this construct.
+This **Filter** reverses the *winding* for each **Triangle** in a **Triangle Geometry**. This will *reverse* the direction of calculated **Triangle** normals. Some analysis routines require the normals to be pointing "away" from the center of a **Feature**. This **Filter** allows for manipulation of this construct.
 
 ## Parameters
 

@@ -171,7 +171,7 @@
     {
       "args": {
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-        "g_bc_darray_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
+        "gbcd_array_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
         "misorientation_rotation": [
           60.0,
           1.0,

@@ -20,7 +20,7 @@ This code was contributed in the Insight Journal paper: "Binary morphological cl
 
 ### Related Filters
 
-* MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleErodeImageFilter
+- MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleErodeImageFilter
 
 ## Parameters
 

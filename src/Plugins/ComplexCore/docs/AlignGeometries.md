@@ -8,14 +8,14 @@ DREAM3DReview (DREAM3DReview)
 
 This **Filter** will align 2 Geometry objects using 1 of several alignment methods:
 
-* Centroid
-* Origin
-* XY Min Plane
-* XY Max Plane
-* XZ Min Plane
-* XZ Max Plane
-* YZ Min Plane
-* YZ Max Plane
+- Centroid
+- Origin
+- XY Min Plane
+- XY Max Plane
+- XZ Min Plane
+- XZ Max Plane
+- YZ Min Plane
+- YZ Max Plane
 
 The input geometries can be of any type. The *Moving* geometry is moved in space to the *Target* geometry.
 

@@ -7,7 +7,7 @@ Core (Memory/Management)
 
 ## Description ##
 
-This **Filter** copies all the associated **Element** data of a selected **Element Array** to the **Feature** to which the **Elements** belong. The value stored for each **Feature** will be the value of the _last element copied_. 
+This **Filter** copies all the associated **Element** data of a selected **Element Array** to the **Feature** to which the **Elements** belong. The value stored for each **Feature** will be the value of the *last element copied*. 
 
 ## Parameters ##
 

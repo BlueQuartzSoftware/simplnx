@@ -19,7 +19,7 @@ If the user elects to *Use Reference Slice*, then each section's centroid is shi
 
 The user can choose to write the determined shift to an output file by enabling *Write Alignment Shifts File* and providing a file path.  
 
-The user can also decide to remove a _background shift_ present in the sample. The process for this is to fit a line to the X and Y shifts along the Z-direction of the sample.  The individual shifts are then modified to make the slope of the fit line be 0.  Effectively, this process is trying to keep the top and bottom section of the sample fixed.  Some combinations of sample geometry and internal features can result in this algorithm introducing a 'shear' in the sample and the *Linear Background Subtraction* will attempt to correct for this.
+The user can also decide to remove a *background shift* present in the sample. The process for this is to fit a line to the X and Y shifts along the Z-direction of the sample.  The individual shifts are then modified to make the slope of the fit line be 0.  Effectively, this process is trying to keep the top and bottom section of the sample fixed.  Some combinations of sample geometry and internal features can result in this algorithm introducing a 'shear' in the sample and the *Linear Background Subtraction* will attempt to correct for this.
 
 ## Parameters ##
 
@@ -27,7 +27,7 @@ The user can also decide to remove a _background shift_ present in the sample. T
 |------|------| ----------- |
 | Write Alignment Shift File | bool | Whether to write the shifts applied to each section to a file |
 | Alignment File | File Path | The output file path where the user would like the shifts applied to the section to be written. Only needed if *Write Alignment Shifts File* is checked |
-| Linear Background Subtraction | bool | Whether to remove a _background shift_ present in the alignment |
+| Linear Background Subtraction | bool | Whether to remove a *background shift* present in the alignment |
 | Use Refernece Slice | bool | Whether the centroids of each section should be compared to a reference slice instead of their neighboring section |
 | Reference Slice | int32_t | Slice number to use as reference. Only needed if *Use Reference Slice* is checked |
 

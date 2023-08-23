@@ -26,7 +26,7 @@ Not Applicable
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Element Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
-| **Attribute Matrix** | FeatureData | Feature | N/A | **Feature Attribute Matrix** of the selected _Feature Ids_ |
+| **Attribute Matrix** | FeatureData | Feature | N/A | **Feature Attribute Matrix** of the selected *Feature Ids* |
 
 ## Created Objects ##
 

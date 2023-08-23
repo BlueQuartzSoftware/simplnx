@@ -31,7 +31,7 @@ If the data has come from a TSL acquisition system and the settings of the acqui
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Threshold Objects](../MultiThresholdObjects/index.html) **Filter** can be used to define this _mask_ by thresholding on values such as _MAD_ > xx.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Threshold Objects](../MultiThresholdObjects/index.html) **Filter** can be used to define this *mask* by thresholding on values such as *MAD* > xx.
 
 ## Parameters 
 

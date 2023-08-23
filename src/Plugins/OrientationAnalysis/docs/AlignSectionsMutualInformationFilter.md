@@ -7,7 +7,7 @@ Reconstruction (Alignment)
 
 ## Description ##
 
-This **Filter** segments each 2D slice, creating *Feature Ids* that are used when determining the _mutual information_ between neighboring slices. The slices are shifted relative to one another until the position of maximum _mutual information_  is determined for each section.  The *Feature Ids* are temporary, they apply to this **Filter** only and are not related to the *Feature Ids* generated in other **Filters**.  The algorithm of this **Filter** is listed below:
+This **Filter** segments each 2D slice, creating *Feature Ids* that are used when determining the *mutual information* between neighboring slices. The slices are shifted relative to one another until the position of maximum *mutual information*  is determined for each section.  The *Feature Ids* are temporary, they apply to this **Filter** only and are not related to the *Feature Ids* generated in other **Filters**.  The algorithm of this **Filter** is listed below:
 
 1. Segment *Features* on each 'section' of the sample perpendicular to the Z-direction.  This is done using the same algorithm in the [Segment Features (Misorientation)](@ref alignsectionsmisorientation) **Filter** (only in 2D on each section)  
 2. Calculate the *mutual information* between neighboring sections and store that as the misalignment value for that position. *Mutual information* is related to the ratio of joint probability to individual probabilities of variables (i.e., p(x,y)/p(x)p(y) ). Details of the actual *mutual information* calculation can be found in the references below, but can be thought of as the inherent dependence between variables (here the *Feature Ids* on neighboring sections).  
@@ -20,9 +20,9 @@ to three (3) **Cells** to the right, as well as from three (3) **Cells** up to t
 
 **Note that this is similar to a downhill simplex and can get caught in a local minimum!**
 
-The user choses the level of _misorientation tolerance_ by which to align **Cells**, where here the tolerance means the _misorientation_ cannot exceed a given value. If the rotation angle is below the tolerance, then the **Cell** is grouped with other **Cells** that satisfy the criterion.
+The user choses the level of *misorientation tolerance* by which to align **Cells**, where here the tolerance means the *misorientation* cannot exceed a given value. If the rotation angle is below the tolerance, then the **Cell** is grouped with other **Cells** that satisfy the criterion.
 
-The approach used in this **Filter** is to group neighboring **Cells** on a slice that have a _misorientation_ below the tolerance the user entered. _Misorientation_ here means the minimum rotation angle of one **Cell's** crystal axis needed to coincide with another **Cell's** crystal axis. When the **Features** in the slices are defined, they are moved until _disks_ in neighboring slices align with each other.
+The approach used in this **Filter** is to group neighboring **Cells** on a slice that have a *misorientation* below the tolerance the user entered. *Misorientation* here means the minimum rotation angle of one **Cell's** crystal axis needed to coincide with another **Cell's** crystal axis. When the **Features** in the slices are defined, they are moved until *disks* in neighboring slices align with each other.
 
 If the user elects to use a mask array, the **Cells** flagged as *false* in the mask array will not be considered during the alignment process.  
 
@@ -59,7 +59,7 @@ None
 
 [Scholar Pedia](http://www.scholarpedia.org/article/Mutual_information)
 
-Journal articles on _Mutual Information_ that are useful:
+Journal articles on *Mutual Information* that are useful:
 
 + _Elements of information theory_. John Wiley & Sons, New York, NY.Gray, R.M. (1990). 
 + _Entropy and Information Theory_. Springer-Verlag, New York, NY. Nirenberg, S. and Latham, P.E. (2003). 

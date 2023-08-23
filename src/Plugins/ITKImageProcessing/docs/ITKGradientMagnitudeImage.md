@@ -7,9 +7,9 @@ Computes the gradient magnitude of an image region at each pixel.
 ITKImageGradient (ImageGradient)
 
 ## Description* Image 
-* Neighborhood 
-* NeighborhoodOperator 
-* NeighborhoodIterator
+- Neighborhood 
+- NeighborhoodOperator 
+- NeighborhoodIterator
 
 ## Parameters
 

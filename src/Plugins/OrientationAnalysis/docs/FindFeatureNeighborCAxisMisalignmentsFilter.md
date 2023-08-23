@@ -37,7 +37,7 @@ Not Applicable
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Feature Attribute Array** | CAxisMisalignmentList | List of float | (1) | List of the C-axis misalignment angles (in degrees) with the contiguous neighboring **Features** for a given **Feature** |
-| **Feature Attribute Array** | AvgCAxisMisalignments | float | (1) | Number weighted average of neighbor C-axis misalignments. Only created if _Find Average Misalignment Per Feature_ is checked |
+| **Feature Attribute Array** | AvgCAxisMisalignments | float | (1) | Number weighted average of neighbor C-axis misalignments. Only created if *Find Average Misalignment Per Feature* is checked |
 
 
 ## Example Pipelines 

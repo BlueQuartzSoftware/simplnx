@@ -6,7 +6,7 @@ Processing (OrientationAnalysis)
 
 ## Description ##
 
-This filter will generate the transpose of a [1x4] _Quaternion_ laid out in memory such that < x, y, z >, w. This can be
+This filter will generate the transpose of a [1x4] *Quaternion* laid out in memory such that < x, y, z >, w. This can be
 handy when the user wants to convert the orientation transformation to an opposite effect. The algorihtm will calculate
 the conjugate of each quaternion in the array of input quaternions
 

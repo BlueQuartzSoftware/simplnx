@@ -6,7 +6,7 @@ AMProcessMonitoring (AMProcessMonitoring)
 
 ## Description 
 
-This **Filter** combines all of the STL files from a given directory into a single triangle geometry. This filter will make use of the [Import STL File](../StlFileReaderFilter/index.html) **Filter** to read in each stl file in the given directory and then will proceed to combine each of the imported files into a single triangle geometry.
+This **Filter** combines all of the STL files from a given directory into a single triangle geometry. This filter will make use of the **Import STL File Filter** to read in each stl file in the given directory and then will proceed to combine each of the imported files into a single triangle geometry.
 
 ## Parameters 
 | Name | Type | Description |

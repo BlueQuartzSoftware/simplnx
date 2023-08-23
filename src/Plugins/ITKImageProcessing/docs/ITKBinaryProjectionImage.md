@@ -16,14 +16,14 @@ This class was contributed to the Insight Journal by Gaetan Lehmann. The origina
 
 ### Related Filters
 
-* ProjectionImageFilter 
-* MedianProjectionImageFilter 
-* MeanProjectionImageFilter 
-* MeanProjectionImageFilter 
-* MaximumProjectionImageFilter 
-* MinimumProjectionImageFilter 
-* StandardDeviationProjectionImageFilter 
-* SumProjectionImageFilter
+- ProjectionImageFilter 
+- MedianProjectionImageFilter 
+- MeanProjectionImageFilter 
+- MeanProjectionImageFilter 
+- MaximumProjectionImageFilter 
+- MinimumProjectionImageFilter 
+- StandardDeviationProjectionImageFilter 
+- SumProjectionImageFilter
 
 ## Parameters
 

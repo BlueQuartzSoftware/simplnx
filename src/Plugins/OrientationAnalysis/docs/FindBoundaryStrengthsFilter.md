@@ -7,7 +7,7 @@ Statistics (Crystallographic)
 
 ## Description
 
-This **Filter** calculates the same metrics as in the [Find Neighbor Slip Transmission Metrics](FindSlipTransmissionMetrics.html "") **Filter**.  However, this **Filter** stores the values in the **Face Attribute Matrix** of a **Triangle Geometry**.  The algorithm the **Filter** uses is as follows:
+This **Filter** calculates the same metrics as in the Find Neighbor Slip Transmission Metrics **Filter**.  However, this **Filter** stores the values in the **Face Attribute Matrix** of a **Triangle Geometry**.  The algorithm the **Filter** uses is as follows:
 
 1. Find the two **Features** that are separated by a **Face** in the **Triangle Geometry**
 2. Get the average orientation of both of the **Features**

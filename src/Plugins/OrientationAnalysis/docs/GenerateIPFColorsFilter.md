@@ -7,16 +7,16 @@ Processing (Crystallography)
 
 ## Description ##
 
-This **Filter** will generate _inverse pole figure_ (IPF) colors for cubic, hexagonal or trigonal crystal structures. The user can enter the _Reference Direction_, which defaults to [001]. The **Filter** also has the option to apply a black color to all "bad" **Elements**, as defined by a boolean _mask_ array, which can be generated using the [Threshold Objects](@ref multithresholdobjects) **Filter**.
+This **Filter** will generate *inverse pole figure* (IPF) colors for cubic, hexagonal or trigonal crystal structures. The user can enter the *Reference Direction*, which defaults to [001]. The **Filter** also has the option to apply a black color to all "bad" **Elements**, as defined by a boolean *mask* array, which can be generated using the Threshold Objects **Filter**.
 
 ### Originating Data Notes ###
 
 + TSL (.ang file)
     - If the data originates from a TSL .ang file, then **Elements** that the TSL software could not reliably identify the Euler angles for will have a "Fit of Solution" = 180 and/or an "Image Quality" = 0.0.
-    - This means that when the user runs some sort of [threshold](@ref multithresholdobjects) **Filter** the _mask_ will be those **Elements** that have an Image Quality > 0 and/or Fit < 180.0
+    - This means that when the user runs some sort of threshold **Filter** the *mask* will be those **Elements** that have an Image Quality > 0 and/or Fit < 180.0
 + HKL (.ctf file)
     - If the data originates from an HKL (or Bruker) system (.ctf file) then bad voxels can typically be found by setting "Error" > 0
-    - This means that when the user runs some sort of [threshold](@ref multithresholdobjects) **Filter** the _mask_ will be those **Elements** that have an Error = 0
+    - This means that when the user runs some sort of threshold **Filter** the *mask* will be those **Elements** that have an Error = 0
 
 
 -----

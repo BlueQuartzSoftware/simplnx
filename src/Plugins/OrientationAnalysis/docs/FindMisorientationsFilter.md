@@ -39,7 +39,7 @@ Not Applicable
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Feature Attribute Array** | MisorientationLists | List of float | (1) | List of the misorientation angles with the contiguous neighboring **Features** for a given **Feature** |
-| **Feature Attribute Array** | AvgMisorientation | float | (1) | Number weighted average of neighbor misorientations. Only created if _Find Average Misorientation Per Feature_ is checked |
+| **Feature Attribute Array** | AvgMisorientation | float | (1) | Number weighted average of neighbor misorientations. Only created if *Find Average Misorientation Per Feature* is checked |
 
 
 ## Example Pipelines ##

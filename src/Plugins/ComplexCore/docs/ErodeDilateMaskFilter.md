@@ -13,7 +13,7 @@ an iterative sequence for a user defined number of iterations. During the *erode
 *false* **Cells** is changed to *true* if one of its neighbors is *true*. The **Filter** also offers the option(s) to
 turn on/off the erosion or dilation in specific directions (X, Y or Z).
 
-This filter will ONLY change the _Mask_ data array and not any of the other data arrays in the same attribute matrix.
+This filter will ONLY change the *Mask* data array and not any of the other data arrays in the same attribute matrix.
 
 
 The example images below were generated **AFTER** the execution of the filter and essentially any black pixel is where the **Mask** was false and any other color is where the **Mask** is true. (The colors are the typical IPF Colors using a <001> reference direction)

@@ -9,7 +9,7 @@ Core (Generation)
 
 This **Filter** creates a new **DataGroup**.
 
-Unlike _AttributeMatrix_, _DataGroup_s are capable of holding any _DataObject_ of any size.
+Unlike _AttributeMatrix_, _DataGroup_s are capable of holding any *DataObject* of any size.
 
 ## Parameters ##
 

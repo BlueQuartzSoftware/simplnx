@@ -18,7 +18,7 @@ Geodesic morphology and the H-Maxima algorithm is described in Chapter 6 of Pier
 Principles and Applications", Second Edition, Springer, 2003.
 
 The height parameter is set using SetHeight.* ReconstructionByDilationImageFilter , HMinimaImageFilter , HConvexImageFilter 
-* MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+- MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
 ## Parameters
 

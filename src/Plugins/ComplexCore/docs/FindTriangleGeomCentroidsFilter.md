@@ -27,7 +27,7 @@ Triangle
 | Kind                     | Default Name    | Type         | Component Dimensions | Description                                                      |
 |--------------------------|-----------------|--------------|----------------------|------------------------------------------------------------------|
 | **Face Attribute Array** | FaceLabels      | int32_t      | (2)                  | Specifies which **Features** are on either side of each **Face** |
-| **Attribute Matrix**     | FaceFeatureData | Face Feature | N/A                  | **Feature Attribute Matrix** of the selected _Face Labels_       |
+| **Attribute Matrix**     | FaceFeatureData | Face Feature | N/A                  | **Feature Attribute Matrix** of the selected *Face Labels*       |
 
 ## Created Objects
 

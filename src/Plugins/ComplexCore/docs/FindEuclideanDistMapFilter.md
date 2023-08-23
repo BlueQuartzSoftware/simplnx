@@ -47,10 +47,10 @@ Image
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | GBEuclideanDistances | float | (1) | Distance the **Cells** are from the *boundary* of the **Feature** they belong to. Only created if _Calculate Distance to Boundaries_ is checked |
-| **Cell Attribute Array** | TJEuclideanDistances | float | (1) | Distance the **Cells** are from a *triple junction* of **Features**. Only created if _Calculate Distance to Triple Lines_ is checked |
-| **Cell Attribute Array** | QPEuclideanDistances | float | (1) | Distance the **Cells** are from a *quadruple point* of **Features**. Only created if _Calculate Distance to Quadruple Points_ is checked |
-| **Cell Attribute Array** | NearestNeighbors | int32_t | (3) | Indices of the closest **Cell** that touches a boundary, triple and quadruple point for each **Cell**. Only created if _Store the Nearest Boundary Cells_ is checked |
+| **Cell Attribute Array** | GBEuclideanDistances | float | (1) | Distance the **Cells** are from the *boundary* of the **Feature** they belong to. Only created if *Calculate Distance to Boundaries* is checked |
+| **Cell Attribute Array** | TJEuclideanDistances | float | (1) | Distance the **Cells** are from a *triple junction* of **Features**. Only created if *Calculate Distance to Triple Lines* is checked |
+| **Cell Attribute Array** | QPEuclideanDistances | float | (1) | Distance the **Cells** are from a *quadruple point* of **Features**. Only created if *Calculate Distance to Quadruple Points* is checked |
+| **Cell Attribute Array** | NearestNeighbors | int32_t | (3) | Indices of the closest **Cell** that touches a boundary, triple and quadruple point for each **Cell**. Only created if *Store the Nearest Boundary Cells* is checked |
 
 
 ## Example Pipelines ##

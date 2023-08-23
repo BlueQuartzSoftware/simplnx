@@ -7,7 +7,7 @@ IO (Output)
 
 ## Description ##
 
-This **Filter** creates a .dat file that can be used in conjunction with [GMT](http://gmt.soest.hawaii.edu/) to generate a grain boundary character distribution (GBCD) pole figure. The user must select the relevant phase for which to write the pole figure by entering the _phase index_. 
+This **Filter** creates a .dat file that can be used in conjunction with [GMT](http://gmt.soest.hawaii.edu/) to generate a grain boundary character distribution (GBCD) pole figure. The user must select the relevant phase for which to write the pole figure by entering the *phase index*. 
 
 -----
 
@@ -59,7 +59,7 @@ Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/Blu
 | argument key | Human Name | Description | Parameter Type |
 |--------------|------------|-------------|----------------|
 | crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| g_bc_darray_path | GBCD | 5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere | complex.ArraySelectionParameter |
+| gbcd_array_path | GBCD | 5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere | complex.ArraySelectionParameter |
 | misorientation_rotation | Misorientation Axis-Angle | Axis-Angle pair values for drawing GBCD | complex.VectorFloat32Parameter |
 | output_file | Output GMT File | The output .dat file path | complex.FileSystemPathParameter |
 | phase_of_interest | Phase of Interest | Index of the Ensemble for which to plot the pole figure | complex.Int32Parameter |

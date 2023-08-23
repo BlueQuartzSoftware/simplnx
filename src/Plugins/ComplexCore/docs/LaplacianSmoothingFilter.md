@@ -44,7 +44,7 @@ One of the options for the filter allows the user to apply Taubin's Lambda-Mu va
 
 ### Algorithm Usage and Memory Requirements ###
 
-Currently, if you lock the _Default Lambda_ value to zero (0), the triple lines and quadruple points will not be able to move because none of their neighbors can move. The user may want to consider allowing a small value of &lambda; for the default nodes which will allow some movement of the triple lines and/or quadruple Points. 
+Currently, if you lock the *Default Lambda* value to zero (0), the triple lines and quadruple points will not be able to move because none of their neighbors can move. The user may want to consider allowing a small value of &lambda; for the default nodes which will allow some movement of the triple lines and/or quadruple Points. 
 
 This **Filter** will create additional internal arrays in order to facilitate the calculations. These arrays are
 
@@ -55,7 +55,7 @@ This **Filter** will create additional internal arrays in order to facilitate th
 - 64 bit float for delta values (3x size of nodes array)
 
 Due to these array allocations this **Filter** can consume large amounts of memory if the starting mesh has a large number of nodes. 
-The values for the _Node Type_ array can take one of the following values.
+The values for the *Node Type* array can take one of the following values.
 
     namespace SurfaceMesh {
       namespace NodeType {
@@ -69,7 +69,7 @@ The values for the _Node Type_ array can take one of the following values.
       }
     }
 
-For more information on surface meshing, visit the [tutorial](@ref tutorialsurfacemeshingtutorial).
+For more information on surface meshing, visit the tutorial.
 
 
 ## Parameters ##

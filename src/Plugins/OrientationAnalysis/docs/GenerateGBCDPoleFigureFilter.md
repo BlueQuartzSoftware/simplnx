@@ -7,7 +7,7 @@ IO (Output)
 
 ## Description ##
 
-This **Filter** creates a pole figure from the Grain Boundary Character Distribution (GBCD) data. The user must select the relevant phase for which to generate the pole figure by entering the _phase index_.
+This **Filter** creates a pole figure from the Grain Boundary Character Distribution (GBCD) data. The user must select the relevant phase for which to generate the pole figure by entering the *phase index*.
 
 -----
 

@@ -23,7 +23,7 @@ Applications", Second Edition, Springer, 2003.
 
 ### Related Filters
 
-* GrayscaleMorphologicalOpeningImageFilter
+- GrayscaleMorphologicalOpeningImageFilter
 
 ## Parameters
 

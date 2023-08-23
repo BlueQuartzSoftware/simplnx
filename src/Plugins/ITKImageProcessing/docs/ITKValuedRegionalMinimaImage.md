@@ -18,8 +18,8 @@ This code was contributed in the Insight Journal paper: "Finding regional extrem
 
 ### Related Filters
 
-* ValuedRegionalMaximaImageFilter , ValuedRegionalExtremaImageFilter , 
-* HMinimaImageFilter
+- ValuedRegionalMaximaImageFilter , ValuedRegionalExtremaImageFilter , 
+- HMinimaImageFilter
 
 ## Parameters
 

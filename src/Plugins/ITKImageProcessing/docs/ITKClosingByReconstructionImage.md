@@ -23,7 +23,7 @@ Applications", Second Edition, Springer, 2003.
 
 ### Related Filters
 
-* GrayscaleMorphologicalClosingImageFilter
+- GrayscaleMorphologicalClosingImageFilter
 
 ## Parameters
 

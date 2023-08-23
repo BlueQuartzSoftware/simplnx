@@ -16,7 +16,7 @@ InvertIntensityImageFilter inverts intensity of pixels by subtracting pixel valu
 
 ### Related Filters
 
-* IntensityWindowingImageFilter ShiftScaleImageFilter
+- IntensityWindowingImageFilter ShiftScaleImageFilter
 
 ## Parameters
 

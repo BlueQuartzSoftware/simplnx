@@ -15,10 +15,10 @@ This class is templated over the types of the input image type, the mask image t
 The pixel type of the input 2 image must have a valid definition of the operator != with zero. This condition is required because internally this filter will perform the operation
 
 ```
-*        if pixel_from_mask_image != masking_value
-*             pixel_output_image = pixel_input_image
-*        else
-*             pixel_output_image = outside_value
+-        if pixel_from_mask_image != masking_value
+-             pixel_output_image = pixel_input_image
+-        else
+-             pixel_output_image = outside_value
 *
 ```
 

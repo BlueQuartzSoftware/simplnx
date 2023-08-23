@@ -7,7 +7,7 @@ Orientation Analysis (Conversion)
 
 ## Description ##
 
-This **Filter** generates a new orientation representation (see Data Layout Table below) for each **Element**, given the _Input Orientation Representation_ for the **Element**. The following table lists the various orientation representations that are supported. DREAM3D is capable of converting between any representation with some caveats.
+This **Filter** generates a new orientation representation (see Data Layout Table below) for each **Element**, given the *Input Orientation Representation* for the **Element**. The following table lists the various orientation representations that are supported. DREAM3D is capable of converting between any representation with some caveats.
 
 #### Data Layout ####
 
@@ -63,7 +63,7 @@ Not Applicable
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|-------------|---------|-------------------|
-| Any **Data Array** | _Output Orientations_ | float | See above table | Converted orientation representation |
+| Any **Data Array** | *Output Orientations* | float | See above table | Converted orientation representation |
 
 
 ## Example Pipelines ##

@@ -11,7 +11,7 @@ This **Filter** computes the area of each **Triangle** in a **Triangle Geometry*
     
     1/2*|AB||AC|sin(O)
 
-where _O_ is the angle between |AB| and |AC|.
+where *O* is the angle between |AB| and |AC|.
 
 ## Parameters ##
 

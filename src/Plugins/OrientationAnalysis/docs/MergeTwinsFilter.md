@@ -38,10 +38,10 @@ Not Applicable
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | ParentIds | int32_t | (1) | Specifies to which _parent_ each **Element** belongs |
+| **Element Attribute Array** | ParentIds | int32_t | (1) | Specifies to which *parent* each **Element** belongs |
 | **Attribute Matrix** | NewFeatureData | Feature | N/A | Created **Feature Attribute Matrix** name |
-| **Feature Attribute Array** | ParentIds | int32_t | (1) | Specifies to which _parent_ each **Feature** belongs |
-| **Feature Attribute Array** | Active | bool | (1) | Specifies if the **Feature** is still in the sample (*true* if the **Feature** is in the sample and *false* if it is not). At the end of the **Filter**, all **Features** will be _Active_ |
+| **Feature Attribute Array** | ParentIds | int32_t | (1) | Specifies to which *parent* each **Feature** belongs |
+| **Feature Attribute Array** | Active | bool | (1) | Specifies if the **Feature** is still in the sample (*true* if the **Feature** is in the sample and *false* if it is not). At the end of the **Filter**, all **Features** will be *Active* |
 
 
 ## Example Pipelines ##

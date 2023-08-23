@@ -13,11 +13,11 @@ This **Filter** performs calculations on **Attribute Arrays** using the mathemat
 
 The user may enter any valid mathematical expression that uses numbers, operators and/or available **Attribute Arrays**.  This expression may be typed into the **Filter** or entered using the available calculator interface. The **Filter** automatically determines how many tuples and component dimensions the output array requires.  Should the entered expression use arrays, computations performed by the **Filter** are performed per tuple, i.e. each tuple has the same expression performed. Therefore, any **Attribute Arrays** used in the entered expression must have the same number of tuples. To help prevent most cases of tuple incompatibilities, the user must select an **Attribute Matrix** to serve as the source for arrays to be used in the expression. Additionally, the output array will have the same number of tuples as the arrays used in the infix expression, and must be placed in an **Attribute Matrix** that has the same number of tuples as the source **Attribute Matrix**.
 
-All items in the entered infix expression, including values within arrays, will be cast to doubles for computation, and the resulting output will be stored as doubles. If the output array needs to be a different type for use as input to another **Filter**, consider using the [Convert Attribute Data Type](@ref convertdata) **Filter**.
+All items in the entered infix expression, including values within arrays, will be cast to doubles for computation, and the resulting output will be stored as doubles. If the output array needs to be a different type for use as input to another **Filter**, consider using the Convert Attribute Data Type **Filter**.
 
 ### Expressions Without Arrays ###
 
-It is possible to enter an infix expression that does not contain any **Attribute Array**, similar to a standard calculator. In this case, the output array is simply a single numeric value that is stored in a single component, one tuple array. Because the output array will only have one tuple, it must be placed in an **Attribute Matrix** that has exactly one tuple.  If such an **Attribute Matrix** is not available in the data structure, it can be created using the [Create Attribute Matrix](@ref createattributematrix) **Filter**. 
+It is possible to enter an infix expression that does not contain any **Attribute Array**, similar to a standard calculator. In this case, the output array is simply a single numeric value that is stored in a single component, one tuple array. Because the output array will only have one tuple, it must be placed in an **Attribute Matrix** that has exactly one tuple.  If such an **Attribute Matrix** is not available in the data structure, it can be created using the Create Attribute Matrix **Filter**. 
 
 ### Operators ###
 
@@ -55,7 +55,7 @@ There are several mathematical operators available for usage in an infix express
 
 #### Trigonometric Operators and Degrees/Radians ####
 
-The direct trigonometric operators (**sin**, **cos** and **tan**) can operate on either radians or degrees, which can be selected by the user from the **Filter** interface.  Similarly, the inverse trigonometric operators (**asin**, **acos** and **atan**) will return either radians or degrees depending on the selection in the **Filter** interface. Note that by default, DREAM.3D **Filters** generally assume angle values are in radians. The [Convert Angles to Degrees or Radians](@ref changeanglerepresentation) can be used to convert arrays from radians to degrees and vice versa.
+The direct trigonometric operators (**sin**, **cos** and **tan**) can operate on either radians or degrees, which can be selected by the user from the **Filter** interface.  Similarly, the inverse trigonometric operators (**asin**, **acos** and **atan**) will return either radians or degrees depending on the selection in the **Filter** interface. Note that by default, DREAM.3D **Filters** generally assume angle values are in radians. The Convert Angles to Degrees or Radians can be used to convert arrays from radians to degrees and vice versa.
 
 #### Undefined Operations and Operators Out-Of-Range ####
 

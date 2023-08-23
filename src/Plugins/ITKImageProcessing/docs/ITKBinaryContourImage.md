@@ -20,7 +20,7 @@ https://www.insight-journal.org/browse/publication/217
 
 ### Related Filters
 
-* LabelContourImageFilter BinaryErodeImageFilter SimpleContourExtractorImageFilter
+- LabelContourImageFilter BinaryErodeImageFilter SimpleContourExtractorImageFilter
 
 ## Parameters
 
