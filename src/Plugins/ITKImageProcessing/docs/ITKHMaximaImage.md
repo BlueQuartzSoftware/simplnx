@@ -17,12 +17,8 @@ This filter uses the ReconstructionByDilationImageFilter . It provides its own i
 Geodesic morphology and the H-Maxima algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
 Principles and Applications", Second Edition, Springer, 2003.
 
-The height parameter is set using SetHeight.
-
-\see ReconstructionByDilationImageFilter , HMinimaImageFilter , HConvexImageFilter 
-
-
-\see MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+The height parameter is set using SetHeight.* ReconstructionByDilationImageFilter , HMinimaImageFilter , HConvexImageFilter 
+* MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
 ## Parameters
 

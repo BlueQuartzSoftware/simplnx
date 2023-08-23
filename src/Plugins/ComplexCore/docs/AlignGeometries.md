@@ -6,7 +6,7 @@ DREAM3DReview (DREAM3DReview)
 
 ## Description ##
 
-This **Filter** does will align 2 Geometry objects using 1 of several alignment methods:
+This **Filter** will align 2 Geometry objects using 1 of several alignment methods:
 
 * Centroid
 * Origin

@@ -18,9 +18,7 @@ This filter is a sequential thinning algorithm and known to be computational tim
 
 Rafael C. Gonzales and Richard E. Woods. Digital Image Processing. Addison Wesley, 491-494, (1993).
 
-To do: Make this filter ND.
-
-\see MorphologyImageFilter
+To do: Make this filter ND.* MorphologyImageFilter
 
 ## Parameters
 

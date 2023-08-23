@@ -18,9 +18,7 @@ Once all the objects are relabeled, the application can query the number of obje
 
 If user sets a minimum object size, all objects with fewer pixels than the minimum will be discarded, so that the number of objects reported will be only those remaining. The GetOriginalNumberOfObjects method can be called to find out how many objects were present before the small ones were discarded.
 
-RelabelComponentImageFilter can be run as an "in place" filter, where it will overwrite its output. The default is run out of place (or generate a separate output). "In place" operation can be controlled via methods in the superclass, InPlaceImageFilter::InPlaceOn() and InPlaceImageFilter::InPlaceOff().
-
-\see ConnectedComponentImageFilter , BinaryThresholdImageFilter , ThresholdImageFilter
+RelabelComponentImageFilter can be run as an "in place" filter, where it will overwrite its output. The default is run out of place (or generate a separate output). "In place" operation can be controlled via methods in the superclass, InPlaceImageFilter::InPlaceOn() and InPlaceImageFilter::InPlaceOff().* ConnectedComponentImageFilter , BinaryThresholdImageFilter , ThresholdImageFilter
 
 ## Parameters
 

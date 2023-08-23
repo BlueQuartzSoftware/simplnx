@@ -14,16 +14,19 @@ The connectivity can be changed to minimum or maximum connectivity with SetFully
 
 https://www.insight-journal.org/browse/publication/217 
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+### Author
 
+ Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see BinaryContourImageFilter
+### Related Filters
+
+* BinaryContourImageFilter
 
 ## Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. \note For objects that are 1 pixel wide, use FullyConnectedOn. |
+| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. *Note* For objects that are 1 pixel wide, use FullyConnectedOn. |
 | BackgroundValue | float64 | Set/Get the background value used to identify the objects and mark the pixels not on the border of the objects. |
 
 ## Required Geometry

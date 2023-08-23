@@ -17,10 +17,13 @@ Opening by reconstruction not only removes structures destroyed by the erosion, 
 Opening by reconstruction is described in Chapter 6.3.9 of Pierre Soille's book "Morphological Image Analysis: Principles and
 Applications", Second Edition, Springer, 2003.
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+### Author
 
+ Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see GrayscaleMorphologicalOpeningImageFilter
+### Related Filters
+
+* GrayscaleMorphologicalOpeningImageFilter
 
 ## Parameters
 

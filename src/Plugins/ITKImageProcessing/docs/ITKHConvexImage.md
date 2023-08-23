@@ -13,12 +13,8 @@ HConvexImageFilter extract local maxima that are more than h intensity units abo
 This filter uses the HMaximaImageFilter .
 
 Geodesic morphology and the H-Convex algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
-Principles and Applications", Second Edition, Springer, 2003.
-
-\see GrayscaleGeodesicDilateImageFilter , HMinimaImageFilter 
-
-
-\see MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter , HMinimaImageFilter 
+* MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
 ## Parameters
 

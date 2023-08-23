@@ -14,10 +14,13 @@ The connectivity can be changed to minimum or maximum connectivity with SetFully
 
 https://www.insight-journal.org/browse/publication/217 
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+### Author
 
+ Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see LabelContourImageFilter BinaryErodeImageFilter SimpleContourExtractorImageFilter
+### Related Filters
+
+* LabelContourImageFilter BinaryErodeImageFilter SimpleContourExtractorImageFilter
 
 ## Parameters
 

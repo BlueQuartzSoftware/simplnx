@@ -12,18 +12,10 @@ This filter is templated over the pixel type of the input image and the pixel ty
 
 The filter walks over all the pixels in the input image, and for each pixel does the following:
 
-
-
-\li cast the pixel value to double , 
-
-
-\li apply the std::atan() function to the double value, 
-
-
-\li cast the double value resulting from std::atan() to the pixel type of the output image, 
-
-
-\li store the cast value into the output image.
+* cast the pixel value to double , 
+* apply the std::atan() function to the double value, 
+* cast the double value resulting from std::atan() to the pixel type of the output image, 
+* store the cast value into the output image.
 
 ## Parameters
 

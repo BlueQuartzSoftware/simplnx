@@ -12,7 +12,12 @@ Black top hat extracts local minima that are smaller than the structuring elemen
 
 Top-hats are described in Chapter 4.5 of Pierre Soille's book "Morphological Image Analysis: Principles and Applications", Second Edition, Springer, 2003.
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+### Author
+
+ Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+
+### Related Filters
+
 
 ## Parameters
 

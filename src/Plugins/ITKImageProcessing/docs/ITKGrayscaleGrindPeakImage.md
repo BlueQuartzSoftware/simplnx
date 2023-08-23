@@ -17,12 +17,8 @@ This filter uses the GrayscaleGeodesicDilateImageFilter . It provides its own in
 This filter is the dual to the GrayscaleFillholeImageFilter which implements the Fillhole algorithm. Since it is a dual, it is somewhat superfluous but is provided as a convenience.
 
 Geodesic morphology and the Fillhole algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
-Principles and Applications", Second Edition, Springer, 2003.
-
-\see GrayscaleGeodesicDilateImageFilter 
-
-
-\see MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter 
+* MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
 ## Parameters
 

@@ -14,7 +14,7 @@ Since the logical NOT operation operates only on boolean types, the input type m
 
 The total operation over one pixel will be
 
-\code
+```
 if( !A )
 
  {
@@ -25,7 +25,7 @@ if( !A )
 
 return this->m_BackgroundValue;
 
-\endcode
+```
 
 
 Where "!" is the unary Logical NOT operator in C++.

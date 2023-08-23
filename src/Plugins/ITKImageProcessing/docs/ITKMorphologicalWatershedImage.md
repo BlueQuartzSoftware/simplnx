@@ -15,10 +15,13 @@ Principles and Applications", Second Edition, Springer, 2003.
 
 This code was contributed in the Insight Journal paper: "The watershed transform in ITK - discussion and new developments" by Beare R., Lehmann G. https://www.insight-journal.org/browse/publication/92 
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+### Author
 
+ Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see WatershedImageFilter , MorphologicalWatershedFromMarkersImageFilter
+### Related Filters
+
+* WatershedImageFilter , MorphologicalWatershedFromMarkersImageFilter
 
 ## Parameters
 

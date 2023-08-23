@@ -12,21 +12,11 @@ The Gaussian operator used here was described by Tony Lindeberg (Discrete Scale-
 
 The variance or standard deviation (sigma) will be evaluated as pixel units if SetUseImageSpacing is off (false) or as physical units if SetUseImageSpacing is on (true, default). The variance can be set independently in each dimension.
 
-When the Gaussian kernel is small, this filter tends to run faster than itk::RecursiveGaussianImageFilter .
-
-\see GaussianOperator 
-
-
-\see Image 
-
-
-\see Neighborhood 
-
-
-\see NeighborhoodOperator 
-
-
-\see RecursiveGaussianImageFilter
+When the Gaussian kernel is small, this filter tends to run faster than itk::RecursiveGaussianImageFilter .* GaussianOperator 
+* Image 
+* Neighborhood 
+* NeighborhoodOperator 
+* RecursiveGaussianImageFilter
 
 ## Parameters
 

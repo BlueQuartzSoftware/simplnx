@@ -12,15 +12,14 @@ RescaleIntensityImageFilter applies pixel-wise a linear transformation to the in
 
 The following equation gives the mapping of the intensity values
 
-\par 
+
+ 
  \f[ outputPixel = ( inputPixel - inputMin) \cdot \frac{(outputMax - outputMin )}{(inputMax - inputMin)} + outputMin \f] 
 
 
 All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.
 
-NOTE: In this filter the minimum and maximum values of the input image are computed internally using the MinimumMaximumImageCalculator . Users are not supposed to set those values in this filter. If you need a filter where you can set the minimum and maximum values of the input, please use the IntensityWindowingImageFilter . If you want a filter that can use a user-defined linear transformation for the intensity, then please use the ShiftScaleImageFilter .
-
-\see IntensityWindowingImageFilter
+NOTE: In this filter the minimum and maximum values of the input image are computed internally using the MinimumMaximumImageCalculator . Users are not supposed to set those values in this filter. If you need a filter where you can set the minimum and maximum values of the input, please use the IntensityWindowingImageFilter . If you want a filter that can use a user-defined linear transformation for the intensity, then please use the ShiftScaleImageFilter .* IntensityWindowingImageFilter
 
 ## Parameters
 

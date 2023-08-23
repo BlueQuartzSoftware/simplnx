@@ -12,16 +12,15 @@ Regional maxima are flat zones surrounded by pixels of lower value. A completely
 
 This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. https://www.insight-journal.org/browse/publication/65 
 
-\author Richard Beare. Department of Medicine, Monash University, Melbourne, Australia.
+### Author
 
+ Richard Beare. Department of Medicine, Monash University, Melbourne, Australia.
 
-\see ValuedRegionalMinimaImageFilter 
+### Related Filters
 
-
-\see ValuedRegionalExtremaImageFilter 
-
-
-\see HMinimaImageFilter
+* ValuedRegionalMinimaImageFilter 
+* ValuedRegionalExtremaImageFilter 
+* HMinimaImageFilter
 
 ## Parameters
 

@@ -14,10 +14,13 @@ The structuring element is assumed to be composed of binary values (zero or one)
 
 This code was contributed in the Insight Journal paper: "Binary morphological closing and opening image filters" by Lehmann G. https://www.insight-journal.org/browse/publication/58 
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+### Author
 
+ Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleErodeImageFilter
+### Related Filters
+
+* MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleErodeImageFilter
 
 ## Parameters
 
