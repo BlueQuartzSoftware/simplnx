@@ -193,8 +193,17 @@ void NeighborList<T>::initializeWithZeros()
 template <typename T>
 int32 NeighborList<T>::resizeTotalElements(usize size)
 {
+  usize old = m_Array.size();
   m_Array.resize(size);
   setNumberOfTuples(size);
+  if(size >= old)
+  {
+    // Initialize with zero length Vectors
+    for(usize i = old; i < m_Array.size(); ++i)
+    {
+      m_Array[i] = SharedVectorType(new VectorType);
+    }
+  }
   if(size == 0)
   {
     m_IsAllocated = false;
