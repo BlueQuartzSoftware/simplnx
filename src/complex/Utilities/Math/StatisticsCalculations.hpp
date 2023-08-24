@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace StaticicsCalculations
+namespace StatisticsCalculations
 {
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
@@ -126,6 +126,45 @@ float findMedian(const C<T, Ts...>& source)
     medVal = (tmpList[idxLow] + tmpList[idxHigh]) * 0.5f;
   }
   return medVal;
+}
+
+// -----------------------------------------------------------------------------
+template <class Container, typename T>
+std::vector<T> computeMode(const Container& source)
+{
+  std::map<T, uint64_t> modalMap;
+  for(const auto val : source)
+  {
+    modalMap[val]++;
+  }
+
+  // Find the maximum occurrence
+  auto pr = std::max_element(modalMap.begin(), modalMap.end(), [](const auto& x, const auto& y) { return x.second < y.second; });
+  int maxCount = pr->second;
+
+  // Store all values that have this maximum occurrence under the proper feature id
+  std::vector<T> modes;
+  for(const auto& modalPair : modalMap)
+  {
+    if(modalPair.second == maxCount)
+    {
+      modes.push_back(modalPair.first);
+    }
+  }
+
+  return modes;
+}
+
+// -----------------------------------------------------------------------------
+template <template <typename, typename...> class C, typename T, typename... Ts>
+std::vector<T> findModes(const C<T, Ts...>& source)
+{
+  if(source.empty())
+  {
+    return {};
+  }
+
+  return computeMode<C<T, Ts...>, T>(source);
 }
 
 // -----------------------------------------------------------------------------
@@ -249,4 +288,4 @@ std::vector<float> findHistogram(const C<T, Ts...>& source, float histmin, float
 
   return histogram;
 }
-} // namespace StaticicsCalculations
+} // namespace StatisticsCalculations

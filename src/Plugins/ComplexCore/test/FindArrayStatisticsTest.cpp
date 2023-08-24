@@ -10,13 +10,22 @@
 using namespace complex;
 using namespace complex::Constants;
 
+namespace
+{
+template <typename T>
+bool VectorContains(const std::vector<T>& vector, T value)
+{
+  return (std::find(vector.begin(), vector.end(), value) != vector.end());
+}
+} // namespace
+
 TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCore][FindArrayStatisticsFilter]")
 {
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
   DataPath statsDataPath({"TestData", "Statistics"});
   DataPath inputArrayPath({"TestData", "InputArray"});
-  Int32Array* testInputArray = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "InputArray", {10}, {1}, topLevelGroup->getId());
+  Int32Array* testInputArray = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "InputArray", {11}, {1}, topLevelGroup->getId());
   auto& testInputDataStore = testInputArray->getDataStoreRef();
   testInputDataStore[0] = 1;
   testInputDataStore[1] = 20;
@@ -28,7 +37,8 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
   testInputDataStore[7] = 22;
   testInputDataStore[8] = 9;
   testInputDataStore[9] = 10;
-  BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {10}, {1}, topLevelGroup->getId());
+  testInputDataStore[10] = 1;
+  BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {11}, {1}, topLevelGroup->getId());
   auto& maskDataStore = maskArray->getDataStoreRef();
   maskDataStore[0] = true;
   maskDataStore[1] = true;
@@ -40,6 +50,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
   maskDataStore[7] = true;
   maskDataStore[8] = true;
   maskDataStore[9] = true;
+  maskDataStore[10] = true;
 
   const std::string histogram = "Histogram";
   const std::string length = "Length";
@@ -47,6 +58,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
   const std::string max = "Maximum";
   const std::string mean = "Mean";
   const std::string median = "Median";
+  const std::string mode = "Mode";
   const std::string std = "Standard Deviation";
   const std::string sum = "Summation";
   const std::string standardization = "Standardization";
@@ -66,6 +78,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
@@ -82,6 +95,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MeanArrayName_Key, std::make_any<std::string>(mean));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MedianArrayName_Key, std::make_any<std::string>(median));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_ModeArrayName_Key, std::make_any<std::string>(mode));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
     args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
@@ -112,13 +126,15 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     REQUIRE(meanArray != nullptr);
     auto* medianArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(median));
     REQUIRE(medianArray != nullptr);
+    auto* modeArray = dataStructure.getDataAs<NeighborList<int32>>(statsDataPath.createChildPath(mode));
+    REQUIRE(modeArray != nullptr);
     auto* stdArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(std));
     REQUIRE(stdArray != nullptr);
     auto* sumArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(sum));
     REQUIRE(sumArray != nullptr);
     auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.getParent().createChildPath(standardization));
     REQUIRE(standardizeArray != nullptr);
-    REQUIRE(standardizeArray->getNumberOfTuples() == 10);
+    REQUIRE(standardizeArray->getNumberOfTuples() == 11);
     auto* histArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(histogram));
     REQUIRE(histArray != nullptr);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
@@ -128,19 +144,22 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     auto minVal = (*minArray)[0];
     auto maxVal = (*maxArray)[0];
     auto meanVal = (*meanArray)[0];
-    auto meadianVal = (*medianArray)[0];
+    auto medianVal = (*medianArray)[0];
+    auto modeVals = (*modeArray).getListReference(0);
     auto stdVal = (*stdArray)[0];
     stdVal = std::ceil(stdVal * 100.0f) / 100.0f; // round value to 2 decimal places
     auto sumVal = (*sumArray)[0];
     auto numUnique = (*numUniqueValuesArray)[0];
 
-    REQUIRE(lengthVal == 8);
+    REQUIRE(lengthVal == 9);
     REQUIRE(minVal == 1);
     REQUIRE(maxVal == 45);
-    REQUIRE(std::fabs(meanVal - 16.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meadianVal - 13.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 12.87f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(sumVal - 128.0f) < UnitTest::EPSILON);
+    REQUIRE(modeVals.size() == 1);
+    REQUIRE(modeVals[0] == 1);
+    REQUIRE(std::fabs(meanVal - 14.3333f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(medianVal - 10.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stdVal - 13.02f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 129.0f) < UnitTest::EPSILON);
     REQUIRE(numUnique == 8);
 
     const auto& standardizeDataStore = standardizeArray->getIDataStoreRefAs<AbstractDataStore<float32>>();
@@ -154,17 +173,17 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     auto stand7 = std::ceil(standardizeDataStore[7] * 100.0f) / 100.0f;
     auto stand8 = std::ceil(standardizeDataStore[8] * 100.0f) / 100.0f;
     auto stand9 = std::ceil(standardizeDataStore[9] * 100.0f) / 100.0f;
-    REQUIRE(std::fabs(stand0 - -1.16f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand1 - 0.32f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand0 - -1.01999f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand1 - 0.43999f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand2 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand3 - 2.26f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand4 - -0.85f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand5 - 0.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand3 - 2.35999f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand4 - -0.70999f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand5 - 0.12999f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand6 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand7 - .47f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand8 - -.54f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand9 - -.46f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs((*histArray)[0] - 3.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand7 - .58999f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand8 - -.4f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand9 - -.33f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs((*histArray)[0] - 4.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs((*histArray)[1] - 2.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs((*histArray)[2] - 2.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs((*histArray)[3] - 0.0f) < UnitTest::EPSILON);
@@ -178,19 +197,21 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
   DataPath statsDataPath({"TestData", "Statistics"});
   DataPath inputArrayPath({"TestData", "InputArray"});
-  Int32Array* testInputArray = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "InputArray", {10}, {1}, topLevelGroup->getId());
+  Int32Array* testInputArray = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "InputArray", {12}, {1}, topLevelGroup->getId());
   auto& testInputDataStore = testInputArray->getDataStoreRef();
   testInputDataStore[0] = 1;
   testInputDataStore[1] = 20;
   testInputDataStore[2] = 13;
-  testInputDataStore[3] = 45;
+  testInputDataStore[3] = 20;
   testInputDataStore[4] = 5;
   testInputDataStore[5] = 16;
   testInputDataStore[6] = 73;
   testInputDataStore[7] = 22;
-  testInputDataStore[8] = 9;
+  testInputDataStore[8] = 22;
   testInputDataStore[9] = 10;
-  BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {10}, {1}, topLevelGroup->getId());
+  testInputDataStore[10] = 10;
+  testInputDataStore[11] = 22;
+  BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {12}, {1}, topLevelGroup->getId());
   auto& maskDataStore = maskArray->getDataStoreRef();
   maskDataStore[0] = true;
   maskDataStore[1] = true;
@@ -198,22 +219,26 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
   maskDataStore[3] = true;
   maskDataStore[4] = true;
   maskDataStore[5] = true;
-  maskDataStore[6] = false;
-  maskDataStore[7] = true;
+  maskDataStore[6] = true;
+  maskDataStore[7] = false;
   maskDataStore[8] = true;
   maskDataStore[9] = true;
-  Int32Array* testFeatIdsArray = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {10}, {1}, topLevelGroup->getId());
+  maskDataStore[10] = true;
+  maskDataStore[11] = true;
+  Int32Array* testFeatIdsArray = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {12}, {1}, topLevelGroup->getId());
   auto& testFeatIdsDataStore = testFeatIdsArray->getDataStoreRef();
   testFeatIdsDataStore[0] = 0;
   testFeatIdsDataStore[1] = 1;
   testFeatIdsDataStore[2] = 1;
   testFeatIdsDataStore[3] = 1;
   testFeatIdsDataStore[4] = 1;
-  testFeatIdsDataStore[5] = 0;
-  testFeatIdsDataStore[6] = 2;
+  testFeatIdsDataStore[5] = 1;
+  testFeatIdsDataStore[6] = 0;
   testFeatIdsDataStore[7] = 2;
   testFeatIdsDataStore[8] = 2;
   testFeatIdsDataStore[9] = 2;
+  testFeatIdsDataStore[10] = 2;
+  testFeatIdsDataStore[11] = 2;
 
   const std::string histogram = "Histogram";
   const std::string length = "Length";
@@ -221,6 +246,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
   const std::string max = "Maximum";
   const std::string mean = "Mean";
   const std::string median = "Median";
+  const std::string mode = "Mode";
   const std::string std = "Standard Deviation";
   const std::string sum = "Summation";
   const std::string standardization = "Standardization";
@@ -240,6 +266,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
@@ -256,6 +283,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MeanArrayName_Key, std::make_any<std::string>(mean));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MedianArrayName_Key, std::make_any<std::string>(median));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_ModeArrayName_Key, std::make_any<std::string>(mode));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
     args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
@@ -291,6 +319,9 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto* medianArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(median));
     REQUIRE(medianArray != nullptr);
     REQUIRE(medianArray->getNumberOfTuples() == 3);
+    auto* modeArray = dataStructure.getDataAs<NeighborList<int32>>(statsDataPath.createChildPath(mode));
+    REQUIRE(modeArray != nullptr);
+    REQUIRE(modeArray->getNumberOfLists() == 3);
     auto* stdArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(std));
     REQUIRE(stdArray != nullptr);
     REQUIRE(stdArray->getNumberOfTuples() == 3);
@@ -299,7 +330,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     REQUIRE(sumArray->getNumberOfTuples() == 3);
     auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.getParent().createChildPath(standardization));
     REQUIRE(standardizeArray != nullptr);
-    REQUIRE(standardizeArray->getNumberOfTuples() == 10);
+    REQUIRE(standardizeArray->getNumberOfTuples() == 12);
     auto* histArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(histogram));
     REQUIRE(histArray != nullptr);
     REQUIRE(histArray->getNumberOfTuples() == 3);
@@ -320,9 +351,12 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto meanVal1 = (*meanArray)[0];
     auto meanVal2 = (*meanArray)[1];
     auto meanVal3 = (*meanArray)[2];
-    auto meadianVal1 = (*medianArray)[0];
-    auto meadianVal2 = (*medianArray)[1];
-    auto meadianVal3 = (*medianArray)[2];
+    auto medianVal1 = (*medianArray)[0];
+    auto medianVal2 = (*medianArray)[1];
+    auto medianVal3 = (*medianArray)[2];
+    auto modes0 = (*modeArray).getListReference(0);
+    auto modes1 = (*modeArray).getListReference(1);
+    auto modes2 = (*modeArray).getListReference(2);
     auto stdVal1 = (*stdArray)[0];
     auto stdVal2 = (*stdArray)[1];
     auto stdVal3 = (*stdArray)[2];
@@ -335,28 +369,36 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
 
     REQUIRE(lengthVal1 == 2);
     REQUIRE(minVal1 == 1);
-    REQUIRE(maxVal1 == 16);
-    REQUIRE(std::fabs(meanVal1 - 8.5f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meadianVal1 - 8.5f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal1 - 7.5f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(sumVal1 - 17.0f) < UnitTest::EPSILON);
+    REQUIRE(maxVal1 == 73);
+    REQUIRE(std::fabs(meanVal1 - 37.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(medianVal1 - 37.0f) < UnitTest::EPSILON);
+    REQUIRE(modes0.size() == 2);
+    REQUIRE(VectorContains(modes0, 1) == true);
+    REQUIRE(VectorContains(modes0, 73) == true);
+    REQUIRE(std::fabs(stdVal1 - 36.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal1 - 74.0f) < UnitTest::EPSILON);
     REQUIRE(numUnique1 == 2);
-    REQUIRE(lengthVal2 == 3);
+    REQUIRE(lengthVal2 == 4);
     REQUIRE(minVal2 == 5);
-    REQUIRE(maxVal2 == 45);
-    REQUIRE(std::fabs(meanVal2 - 23.33333f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meadianVal2 - 20.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal2 - 16.49916f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(sumVal2 - 70.0f) < UnitTest::EPSILON);
+    REQUIRE(maxVal2 == 20);
+    REQUIRE(std::fabs(meanVal2 - 15.25f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(medianVal2 - 18.0f) < UnitTest::EPSILON);
+    REQUIRE(modes1.size() == 1);
+    REQUIRE(VectorContains(modes1, 20) == true);
+    REQUIRE(std::fabs(stdVal2 - 6.139014) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal2 - 61.0f) < UnitTest::EPSILON);
     REQUIRE(numUnique2 == 3);
-    REQUIRE(lengthVal3 == 3);
-    REQUIRE(minVal3 == 9);
+    REQUIRE(lengthVal3 == 4);
+    REQUIRE(minVal3 == 10);
     REQUIRE(maxVal3 == 22);
-    REQUIRE(std::fabs(meanVal3 - 13.66667f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meadianVal3 - 10.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal3 - 5.906682f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(sumVal3 - 41.0f) < UnitTest::EPSILON);
-    REQUIRE(numUnique3 == 3);
+    REQUIRE(std::fabs(meanVal3 - 16.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(medianVal3 - 16.0f) < UnitTest::EPSILON);
+    REQUIRE(modes2.size() == 2);
+    REQUIRE(VectorContains(modes2, 10) == true);
+    REQUIRE(VectorContains(modes2, 22) == true);
+    REQUIRE(std::fabs(stdVal3 - 6.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal3 - 64.0f) < UnitTest::EPSILON);
+    REQUIRE(numUnique3 == 2);
 
     const auto& standardizeDataStore = standardizeArray->getIDataStoreRefAs<AbstractDataStore<float32>>();
     auto stand0 = standardizeDataStore[0];
@@ -386,29 +428,29 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto hist3_5 = (*histArray)[14];
 
     REQUIRE(std::fabs(stand0 - -1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand1 - -0.20203f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand1 - 0.773739f) < UnitTest::EPSILON);
     REQUIRE(stand2 == 0.0f);
-    REQUIRE(std::fabs(stand3 - 1.313198f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand4 - -1.111167f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand5 - 1.0f) < UnitTest::EPSILON);
-    REQUIRE(stand6 == 0.0f);
-    REQUIRE(std::fabs(stand7 - 1.41083f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand8 - -0.790065f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stand9 - -0.6207659f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand3 - 0.773739f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand4 - -1.669649f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand5 - 0.122169f) < UnitTest::EPSILON);
+    REQUIRE(stand6 == 1.0f);
+    REQUIRE(std::fabs(stand7 - 0.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand8 - 1.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(stand9 - -1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist1_1 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist1_2 - 0.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist1_3 - 0.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist1_4 - 0.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist1_5 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist2_1 - 1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist2_2 - 1.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(hist2_2 - 0.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist2_3 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist2_4 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist2_5 - 1.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(hist2_4 - 1.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(hist2_5 - 2.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist3_1 - 2.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist3_2 - 0.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist3_3 - 0.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(hist3_4 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist3_5 - 1.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(hist3_5 - 2.0f) < UnitTest::EPSILON);
   }
 }

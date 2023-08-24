@@ -25,6 +25,7 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
   bool FindMax;
   bool FindMean;
   bool FindMedian;
+  bool FindMode;
   bool FindStdDeviation;
   bool FindSummation;
   bool UseMask;
@@ -36,11 +37,13 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
   DataPath MaskArrayPath;
   DataPath DestinationAttributeMatrix;
   DataPath HistogramArrayName;
+  DataPath FeatureHasDataArrayName;
   DataPath LengthArrayName;
   DataPath MinimumArrayName;
   DataPath MaximumArrayName;
   DataPath MeanArrayName;
   DataPath MedianArrayName;
+  DataPath ModeArrayName;
   DataPath StdDeviationArrayName;
   DataPath SummationArrayName;
   DataPath StandardizedArrayName;
@@ -56,7 +59,7 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
 class COMPLEXCORE_EXPORT FindArrayStatistics
 {
 public:
-  FindArrayStatistics(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindArrayStatisticsInputValues* inputValues);
+  FindArrayStatistics(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, FindArrayStatisticsInputValues* inputValues);
   ~FindArrayStatistics() noexcept;
 
   FindArrayStatistics(const FindArrayStatistics&) = delete;
