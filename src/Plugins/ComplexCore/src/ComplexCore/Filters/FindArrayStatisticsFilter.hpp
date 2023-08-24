@@ -35,6 +35,7 @@ public:
   static inline constexpr StringLiteral k_FindMax_Key = "find_max";
   static inline constexpr StringLiteral k_FindMean_Key = "find_mean";
   static inline constexpr StringLiteral k_FindMedian_Key = "find_median";
+  static inline constexpr StringLiteral k_FindMode_Key = "find_mode";
   static inline constexpr StringLiteral k_FindStdDeviation_Key = "find_std_deviation";
   static inline constexpr StringLiteral k_FindSummation_Key = "find_summation";
   static inline constexpr StringLiteral k_FindUniqueValues_Key = "find_unique_values";
@@ -43,6 +44,7 @@ public:
   static inline constexpr StringLiteral k_StandardizeData_Key = "standardize_data";
   static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeatureHasDataArrayName_Key = "feature_has_data_array_name";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_DestinationAttributeMatrix_Key = "destination_attribute_matrix";
   static inline constexpr StringLiteral k_HistogramArrayName_Key = "histogram_array_name";
@@ -51,6 +53,7 @@ public:
   static inline constexpr StringLiteral k_MaximumArrayName_Key = "maximum_array_name";
   static inline constexpr StringLiteral k_MeanArrayName_Key = "mean_array_name";
   static inline constexpr StringLiteral k_MedianArrayName_Key = "median_array_name";
+  static inline constexpr StringLiteral k_ModeArrayName_Key = "mode_array_name";
   static inline constexpr StringLiteral k_StdDeviationArrayName_Key = "std_deviation_array_name";
   static inline constexpr StringLiteral k_SummationArrayName_Key = "summation_array_name";
   static inline constexpr StringLiteral k_StandardizedArrayName_Key = "standardized_array_name";
@@ -99,8 +102,6 @@ public:
   UniquePointer clone() const override;
 
 protected:
-  OutputActions createCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins, std::vector<usize> tupleDims) const;
-
   /**
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.

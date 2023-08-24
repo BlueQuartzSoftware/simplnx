@@ -7,37 +7,45 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
 
 using namespace complex;
 
-namespace complex
+namespace
 {
-OutputActions FindArrayStatisticsFilter::createCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins, std::vector<usize> tupleDims) const
+struct IsIntegerType
 {
-  auto findLength = args.value<bool>(k_FindLength_Key);
-  auto findMin = args.value<bool>(k_FindMin_Key);
-  auto findMax = args.value<bool>(k_FindMax_Key);
-  auto findMean = args.value<bool>(k_FindMean_Key);
-  auto findMedian = args.value<bool>(k_FindMedian_Key);
-  auto findStdDeviation = args.value<bool>(k_FindStdDeviation_Key);
-  auto findSummation = args.value<bool>(k_FindSummation_Key);
-  auto findHistogramValue = args.value<bool>(k_FindHistogram_Key);
-  auto pFindNumUniqueValuesValue = args.value<bool>(k_FindUniqueValues_Key);
-  auto minRangeValue = args.value<float64>(k_MinRange_Key);
-  auto maxRangeValue = args.value<float64>(k_MaxRange_Key);
-  auto useFullRangeValue = args.value<bool>(k_UseFullRange_Key);
-  auto computeByIndexValue = args.value<bool>(k_ComputeByIndex_Key);
-  auto standardizeDataValue = args.value<bool>(k_StandardizeData_Key);
-  auto inputArrayPath = args.value<DataPath>(k_SelectedArrayPath_Key);
+  template <typename T>
+  bool operator()()
+  {
+    return std::is_integral_v<T> && !std::is_same_v<T, bool>;
+  }
+};
+
+OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins, std::vector<usize> tupleDims)
+{
+  auto findLength = args.value<bool>(FindArrayStatisticsFilter::k_FindLength_Key);
+  auto findMin = args.value<bool>(FindArrayStatisticsFilter::k_FindMin_Key);
+  auto findMax = args.value<bool>(FindArrayStatisticsFilter::k_FindMax_Key);
+  auto findMean = args.value<bool>(FindArrayStatisticsFilter::k_FindMean_Key);
+  auto findMedian = args.value<bool>(FindArrayStatisticsFilter::k_FindMedian_Key);
+  auto findMode = args.value<bool>(FindArrayStatisticsFilter::k_FindMode_Key);
+  auto findStdDeviation = args.value<bool>(FindArrayStatisticsFilter::k_FindStdDeviation_Key);
+  auto findSummation = args.value<bool>(FindArrayStatisticsFilter::k_FindSummation_Key);
+  auto findHistogramValue = args.value<bool>(FindArrayStatisticsFilter::k_FindHistogram_Key);
+  auto pFindNumUniqueValuesValue = args.value<bool>(FindArrayStatisticsFilter::k_FindUniqueValues_Key);
+  auto computeByIndexValue = args.value<bool>(FindArrayStatisticsFilter::k_ComputeByIndex_Key);
+  auto standardizeDataValue = args.value<bool>(FindArrayStatisticsFilter::k_StandardizeData_Key);
+  auto inputArrayPath = args.value<DataPath>(FindArrayStatisticsFilter::k_SelectedArrayPath_Key);
   auto* inputArray = data.getDataAs<IDataArray>(inputArrayPath);
-  auto destinationAttributeMatrixValue = args.value<DataPath>(k_DestinationAttributeMatrix_Key);
+  auto destinationAttributeMatrixValue = args.value<DataPath>(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key);
   DataType dataType = inputArray->getDataType();
 
   OutputActions actions;
@@ -45,64 +53,78 @@ OutputActions FindArrayStatisticsFilter::createCompatibleArrays(const DataStruct
   auto amAction = std::make_unique<CreateAttributeMatrixAction>(destinationAttributeMatrixValue, tupleDims);
   actions.appendAction(std::move(amAction));
 
+  if(computeByIndexValue)
+  {
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_FeatureHasDataArrayName_Key);
+    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+    actions.appendAction(std::move(action));
+  }
+
   if(findLength)
   {
-    auto arrayPath = args.value<std::string>(k_LengthArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_LengthArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMin)
   {
-    auto arrayPath = args.value<std::string>(k_MinimumArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MinimumArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMax)
   {
-    auto arrayPath = args.value<std::string>(k_MaximumArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MaximumArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMean)
   {
-    auto arrayPath = args.value<std::string>(k_MeanArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MeanArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMedian)
   {
-    auto arrayPath = args.value<std::string>(k_MedianArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MedianArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+    actions.appendAction(std::move(action));
+  }
+  if(findMode)
+  {
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_ModeArrayName_Key);
+    size_t tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
+    auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findStdDeviation)
   {
-    auto arrayPath = args.value<std::string>(k_StdDeviationArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findSummation)
   {
-    auto arrayPath = args.value<std::string>(k_SummationArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_SummationArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findHistogramValue)
   {
-    auto arrayPath = args.value<std::string>(k_HistogramArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_HistogramArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{numBins}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(standardizeDataValue)
   {
-    auto arrayPath = args.value<std::string>(k_StandardizedArrayName_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_StandardizedArrayName_Key);
     auto action =
         std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, inputArrayPath.getParent().createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(pFindNumUniqueValuesValue)
   {
-    auto arrayPath = args.value<std::string>(k_NumUniqueValues_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_NumUniqueValues_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
@@ -110,6 +132,10 @@ OutputActions FindArrayStatisticsFilter::createCompatibleArrays(const DataStruct
   return std::move(actions);
 }
 
+} // namespace
+
+namespace complex
+{
 //------------------------------------------------------------------------------
 std::string FindArrayStatisticsFilter::name() const
 {
@@ -159,7 +185,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(
       std::make_unique<BoolParameter>(k_UseFullRange_Key, "Use Full Range for Histogram", "If true, ignore min and max and use min and max from array upon which histogram is computed", false));
   params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 0));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Historgram"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Histogram"));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
@@ -174,6 +200,10 @@ Parameters FindArrayStatisticsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Calculated Output Arrays"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureHasDataArrayName_Key, "Feature-Has-Data Array Name",
+                                                          "The name of the boolean array that indicates whether or not each feature contains any data.  This array is especially useful to help "
+                                                          "determine whether or not the outputted statistics are actually valid or not for a given feature.",
+                                                          "FeatureHasData"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Whether to compute the length of the input array", false));
   params.insert(std::make_unique<DataObjectNameParameter>(k_LengthArrayName_Key, "Length Array Name", "The name of the length array", "Length"));
 
@@ -188,6 +218,9 @@ Parameters FindArrayStatisticsFilter::parameters() const
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMedian_Key, "Find Median", "Whether to compute the median of the input array", false));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MedianArrayName_Key, "Median Array Name", "The name of the median array", "Median"));
+
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMode_Key, "Find Mode", "Whether to compute the mode of the input array", false));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ModeArrayName_Key, "Mode Array Name", "The name of the mode array", "Mode"));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindStdDeviation_Key, "Find Standard Deviation", "Whether to compute the standard deviation of the input array", false));
   params.insert(std::make_unique<DataObjectNameParameter>(k_StdDeviationArrayName_Key, "Standard Deviation Array Name", "The name of the standard deviation array", "StandardDeviation"));
@@ -213,10 +246,12 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.linkParameters(k_FindMax_Key, k_MaximumArrayName_Key, true);
   params.linkParameters(k_FindMean_Key, k_MeanArrayName_Key, true);
   params.linkParameters(k_FindMedian_Key, k_MedianArrayName_Key, true);
+  params.linkParameters(k_FindMode_Key, k_ModeArrayName_Key, true);
   params.linkParameters(k_FindStdDeviation_Key, k_StdDeviationArrayName_Key, true);
   params.linkParameters(k_FindSummation_Key, k_SummationArrayName_Key, true);
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
   params.linkParameters(k_ComputeByIndex_Key, k_CellFeatureIdsArrayPath_Key, true);
+  params.linkParameters(k_ComputeByIndex_Key, k_FeatureHasDataArrayName_Key, true);
   params.linkParameters(k_StandardizeData_Key, k_StandardizedArrayName_Key, true);
   params.linkParameters(k_FindUniqueValues_Key, k_NumUniqueValues_Key, true);
 
@@ -240,6 +275,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
   auto pFindMaxValue = filterArgs.value<bool>(k_FindMax_Key);
   auto pFindMeanValue = filterArgs.value<bool>(k_FindMean_Key);
   auto pFindMedianValue = filterArgs.value<bool>(k_FindMedian_Key);
+  auto pFindModeValue = filterArgs.value<bool>(k_FindMode_Key);
   auto pFindStdDeviationValue = filterArgs.value<bool>(k_FindStdDeviation_Key);
   auto pFindSummationValue = filterArgs.value<bool>(k_FindSummation_Key);
   auto pFindNumUniqueValuesValue = filterArgs.value<bool>(k_FindUniqueValues_Key);
@@ -254,7 +290,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(!pFindHistogramValue && !pFindMinValue && !pFindMaxValue && !pFindMeanValue && !pFindMedianValue && !pFindStdDeviationValue && !pFindSummationValue && !pFindLengthValue &&
+  if(!pFindHistogramValue && !pFindMinValue && !pFindMaxValue && !pFindMeanValue && !pFindMedianValue && !pFindModeValue && !pFindStdDeviationValue && !pFindSummationValue && !pFindLengthValue &&
      !pFindNumUniqueValuesValue)
   {
     return {ConvertResultTo<OutputActions>(MakeWarningVoidResult(-57200, "No statistics have been selected, so this filter will perform no operations"), {})};
@@ -316,16 +352,22 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
   {
     if(!pFindMeanValue || !pFindStdDeviationValue)
     {
-      return {MakeErrorResult<OutputActions>(-57208, fmt::format("To standardize data, the \"Find Mean\" and \"Find Standard Deviation\" options must also be checked")), {}};
+      return {MakeErrorResult<OutputActions>(-57208, fmt::format(R"(To standardize data, the "Find Mean" and "Find Standard Deviation" options must also be checked)")), {}};
     }
+  }
+
+  if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
+  {
+    std::string msg = "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).";
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-57209, msg}})};
   }
 
   if(!dataStructure.validateNumberOfTuples(inputDataArrayPaths))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-57209, "Input arrays do not have matching tuple counts."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-57210, "Input arrays do not have matching tuple counts."}})};
   }
 
-  resultOutputActions.value().actions = createCompatibleArrays(dataStructure, filterArgs, numBins, tupleDims).actions;
+  resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, numBins, tupleDims).actions;
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -346,6 +388,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.FindMax = filterArgs.value<bool>(k_FindMax_Key);
   inputValues.FindMean = filterArgs.value<bool>(k_FindMean_Key);
   inputValues.FindMedian = filterArgs.value<bool>(k_FindMedian_Key);
+  inputValues.FindMode = filterArgs.value<bool>(k_FindMode_Key);
   inputValues.FindStdDeviation = filterArgs.value<bool>(k_FindStdDeviation_Key);
   inputValues.FindSummation = filterArgs.value<bool>(k_FindSummation_Key);
   inputValues.FindNumUniqueValues = filterArgs.value<bool>(k_FindUniqueValues_Key);
@@ -356,12 +399,14 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrix_Key);
+  inputValues.FeatureHasDataArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureHasDataArrayName_Key));
   inputValues.HistogramArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistogramArrayName_Key));
   inputValues.LengthArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_LengthArrayName_Key));
   inputValues.MinimumArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MinimumArrayName_Key));
   inputValues.MaximumArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MaximumArrayName_Key));
   inputValues.MeanArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MeanArrayName_Key));
   inputValues.MedianArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MedianArrayName_Key));
+  inputValues.ModeArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_ModeArrayName_Key));
   inputValues.StdDeviationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_StdDeviationArrayName_Key));
   inputValues.SummationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_SummationArrayName_Key));
   inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
