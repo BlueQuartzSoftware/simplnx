@@ -120,7 +120,7 @@ private:
       }
       BoundsType bound;
       std::stringstream path;
-      path << m_InputValues->inputFilePath.parent_path().string() << fs::path::preferred_separator << tokens[0];
+      path << m_InputValues->inputFilePath.parent_path().string() << "/" << tokens[0];
       bound.Filepath = fs::path(path.str());
 
       std::string coords = StringUtilities::trimmed(tokens[2]);

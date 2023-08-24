@@ -40,7 +40,7 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
   Arguments args;
 
   std::stringstream path;
-  path << k_SmallZeissZenDir << fs::path::preferred_separator << "TileConfiguration.registered.txt";
+  path << k_SmallZeissZenDir << "/TileConfiguration.registered.txt";
   const fs::path smallInputFile = fs::path(path.str());
 
   args.insertOrAssign(ITKImportFijiMontageFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(smallInputFile));
