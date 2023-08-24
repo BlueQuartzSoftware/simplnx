@@ -101,32 +101,32 @@ public:
       }
       if(m_Min)
       {
-        T val = StaticicsCalculations::findMin(tmpList);
+        T val = StatisticsCalculations::findMin(tmpList);
         array1->initializeTuple(i, val);
       }
       if(m_Max)
       {
-        T val = StaticicsCalculations::findMax(tmpList);
+        T val = StatisticsCalculations::findMax(tmpList);
         array2->initializeTuple(i, val);
       }
       if(m_Mean)
       {
-        float val = StaticicsCalculations::findMean(tmpList);
+        float val = StatisticsCalculations::findMean(tmpList);
         array3->initializeTuple(i, val);
       }
       if(m_Median)
       {
-        float val = StaticicsCalculations::findMedian(tmpList);
+        float val = StatisticsCalculations::findMedian(tmpList);
         array4->initializeTuple(i, val);
       }
       if(m_StdDeviation)
       {
-        float val = StaticicsCalculations::findStdDeviation(tmpList);
+        float val = StatisticsCalculations::findStdDeviation(tmpList);
         array5->initializeTuple(i, val);
       }
       if(m_Summation)
       {
-        float val = StaticicsCalculations::findSummation(tmpList);
+        float val = StatisticsCalculations::findSummation(tmpList);
         array6->initializeTuple(i, val);
       }
     }
