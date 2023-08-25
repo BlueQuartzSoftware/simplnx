@@ -579,7 +579,14 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
                                                         inputValues->UseFullRange, inputValues->NumBins, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr,
                                                         meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histArrayPtr, filter),
                       simplePartitioner);
+#else
+    auto impl = FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation,
+                                                  inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange, inputValues->NumBins,
+                                                  mask, featureIds, source, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr,
+                                                  histArrayPtr, filter);
+    impl.compute(0, numFeatures);
 #endif
+
     if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
     {
       filter->sendThreadSafeInfoMessage("Starting Median Calculation..");
