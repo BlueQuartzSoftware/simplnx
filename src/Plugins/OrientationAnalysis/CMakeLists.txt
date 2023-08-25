@@ -392,4 +392,11 @@ if(${PLUGIN_NAME}_INSTALL_DATA_FILES)
     DESTINATION Data/${PLUGIN_NAME}
     COMPONENT Applications
   )
+  install(DIRECTORY
+    ${${PLUGIN_NAME}_SOURCE_DIR}/data/IPF_Legend
+    DESTINATION Data/${PLUGIN_NAME}
+    COMPONENT Applications
+  )
 endif()
+
+

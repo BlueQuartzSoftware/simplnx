@@ -11,6 +11,10 @@
 
 using namespace complex;
 using namespace complex::UnitTest;
+namespace
+{
+inline const std::string k_MaterialName("MaterialName");
+}
 
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[OrientationAnalysis][ReadH5Ebsd]")
 {
@@ -72,6 +76,10 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
 
     for(const auto& arrayPath : selectedArrays)
     {
+      if(arrayPath.getTargetName() == ::k_MaterialName)
+      {
+        continue;
+      }
       const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(arrayPath);
       DataType type = generatedDataArray.getDataType();
       auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(arrayPath);

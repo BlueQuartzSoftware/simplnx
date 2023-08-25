@@ -7,6 +7,7 @@
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -91,6 +92,9 @@ complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* mInputValues, c
   latticData.getIDataStore()->resizeTuples(tDims);
 
   // Reshape the Material Names here also.
+  complex::DataPath matNamesDataath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::MaterialName);
+  complex::StringArray& matNameData = mDataStructure.getDataRefAs<complex::StringArray>(matNamesDataath);
+  matNameData.resizeTuples(tDims);
 
   // Initialize the zero'th element to unknowns. The other elements will
   // be filled in based on values from the data file
@@ -107,7 +111,7 @@ complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* mInputValues, c
   {
     int32_t phaseID = phases[i]->getPhaseIndex();
     xtalData[phaseID] = phases[i]->determineLaueGroup();
-    // materialNames[phaseID] = phases[i]->getMaterialName();
+    matNameData[phaseID] = phases[i]->getMaterialName();
     std::vector<float> latticeConstant = phases[i]->getLatticeConstants();
 
     latticData[phaseID * 6ULL] = latticeConstant[0];
