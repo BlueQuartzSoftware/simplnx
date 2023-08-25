@@ -184,7 +184,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Histogram Max Value", "Max cutoff value for histogram", 0.0));
   params.insert(
       std::make_unique<BoolParameter>(k_UseFullRange_Key, "Use Full Range for Histogram", "If true, ignore min and max and use min and max from array upon which histogram is computed", false));
-  params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 0));
+  params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 1));
   params.insert(std::make_unique<DataObjectNameParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Histogram"));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
@@ -296,12 +296,11 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     return {ConvertResultTo<OutputActions>(MakeWarningVoidResult(-57200, "No statistics have been selected, so this filter will perform no operations"), {})};
   }
 
-  usize numBins = 0;
-  if(pNumBinsValue < 0)
+  if(pNumBinsValue < 1)
   {
-    resultOutputActions.warnings().push_back({-57201, "Value entered for number of bins is beyond the representable range for a 32 bit integer. The filter will use the default value of 0."});
+    return {MakeErrorResult<OutputActions>(-57201, "Value entered for number of bins must be a non-zero, positive value."), {}};
   }
-  numBins = static_cast<usize>(pNumBinsValue);
+  usize numBins = static_cast<usize>(pNumBinsValue);
 
   std::vector<DataPath> inputDataArrayPaths;
 
