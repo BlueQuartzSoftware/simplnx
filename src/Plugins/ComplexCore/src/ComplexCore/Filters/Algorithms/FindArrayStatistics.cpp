@@ -215,7 +215,7 @@ public:
           const float32 increment = (histMax - histMin) / (m_NumBins);
           if(std::fabs(increment) < 1E-10)
           {
-            histogram = {static_cast<float32>(length[localFeatureIndex])};
+            histogram[0] = static_cast<float32>(length[localFeatureIndex]);
           }
           else
           {

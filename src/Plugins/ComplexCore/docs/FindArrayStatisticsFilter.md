@@ -30,6 +30,8 @@ The user must select a destination **Attribute Matrix** in which the computed st
 
 Special operations occur for certain statistics if the supplied array is of type _bool_ (for example, a mask array produced [when thresholding](@ref multithresholdobjects)).  The length, minimum, maximum, median, mode, and summation are computed as normal (although the resulting values may be platform dependent).  The mean and standard deviation for a boolean array will be true if there are more instances of true in the array than false.  If _Standardize Data_ is chosen for a boolean array, no actual modifications will be made to the input.  These operations for boolean inputs are chosen as a basic convention, and are not intended be representative of true boolean logic.
 
+**Note**: If *Find Histogram* is on AND *Compute Statistics Per Feature/Ensemble* is on, then any features that have the exact same value throughout the entire feature will have its first histogram bin set to the total count of feature values.  All other bins will be 0.
+
 ## Parameters ##
 
 | Name                                    | Type | Description                                                                                                                                                       |
