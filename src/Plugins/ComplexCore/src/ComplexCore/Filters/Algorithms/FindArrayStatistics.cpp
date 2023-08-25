@@ -112,7 +112,7 @@ public:
       now = std::chrono::steady_clock::now();
       if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
       {
-        m_Filter->sendThreadSafeInfoMessage(fmt::format("Min/Max/Summation/Mode/Length Feature/Ensemble [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float>(i) / static_cast<float>(numTuples)));
+        m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating FeatureHasData Array [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float>(i) / static_cast<float>(numTuples)));
         progressCount = 0;
         initialTime = std::chrono::steady_clock::now();
       }
@@ -253,7 +253,7 @@ public:
       now = std::chrono::steady_clock::now();
       if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
       {
-        m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, start, end));
+        m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, j, end));
         progressCount = 0;
         initialTime = std::chrono::steady_clock::now();
       }
