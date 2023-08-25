@@ -297,7 +297,7 @@ int32 writeSects(const std::string& file, const Int32Array& featureIds, int32 ho
   fprintf(f, "** ----------------------------------------------------------------\n**\n** Each section is a separate grain\n");
 
   // find total number of Grain Ids
-  int32 maxGrainId = *std::max_element(std::begin(featureIds), std::end(featureIds));
+  int32 maxGrainId = *std::max_element(featureIds.cbegin(), featureIds.cend());
 
   // We are now defining the sections, which is for each grain
   int32 grain = 1;
