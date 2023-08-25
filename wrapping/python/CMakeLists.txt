@@ -237,3 +237,8 @@ endif()
 if(COMPLEX_ENABLE_OrientationAnalysis)
   complex_add_python_plugin(PLUGIN_NAME OrientationAnalysis)
 endif()
+
+#------------------------------------------------------------------------------
+# Create the Sphinx based Documentation
+#------------------------------------------------------------------------------
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs ${complex_BINARY_DIR}/sphinx_docs)
