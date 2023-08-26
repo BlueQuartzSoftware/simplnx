@@ -208,8 +208,6 @@ Result<> SurfaceNets::operator()()
     surfaceNet.relax(m_relaxAttrs);
   }
 
-  // ExportObjFiles(&surfaceNet);
-
   auto* cellMap = surfaceNet.getCellMap();
   int nodeCount = cellMap->numVertices();
 
@@ -229,29 +227,18 @@ Result<> SurfaceNets::operator()()
 
   Point3D<float32> position = {0.0f, 0.0f, 0.0f};
 
-  //  std::string filename = fmt::format("/tmp/surface_mash_verts.csv");
-  //  std::cout << "Export file nodes to file: " << filename << std::endl;
-  //  std::ofstream stream(filename, std::ios_base::binary);
   std::array<int, 3> vertCellIndex = {0, 0, 0};
   for(int32 vertIndex = 0; vertIndex < nodeCount; vertIndex++)
   {
     cellMap->getVertexPosition(vertIndex, position.data());
-    // Relocated the vertex correctly based on the origin of the ImageGeometry
+    // Relocate the vertex correctly based on the origin of the ImageGeometry
     position = position + origin - Point3Df(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[1]);
 
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
     cellMap->getVertexCellIndex(vertIndex, vertCellIndex.data());
     MMCellMap::Cell* currentCellPtr = cellMap->getCell(vertCellIndex.data());
-    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<uint8>(currentCellPtr->flag.numJunctions());
-
-    //    MMCellMap::Cell* pCell = cellMap->getCell(vertIndex);
-    //
-    //    stream << position[0] << "," << position[1] << "," << position[2] << "," << pCell->label << "," << pCell->flag.getBitFlag() << "," << pCell->vertexIndex << ","
-    //           << static_cast<uint32>(pCell->flag.vertexType()) << std::endl;
-  }
-  //  stream.close();
-
-  //  std::vector<::MMQuad> m_quads;
+    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
+  };
   usize triangleCount = 0;
   // First Pass through to just count the number of triangles:
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
@@ -264,7 +251,14 @@ Result<> SurfaceNets::operator()()
       {
         for(auto& vertIndex : vertexIndices)
         {
-          nodeTypes[static_cast<usize>(vertIndex)] += 10;
+          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
+          {
+            nodeTypes[static_cast<usize>(vertIndex)] += 10;
+          }
+          else
+          {
+            nodeTypes[static_cast<usize>(vertIndex)] += 1;
+          }
         }
       }
       triangleCount += 2;
@@ -275,7 +269,14 @@ Result<> SurfaceNets::operator()()
       {
         for(auto& vertIndex : vertexIndices)
         {
-          nodeTypes[static_cast<usize>(vertIndex)] += 10;
+          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
+          {
+            nodeTypes[static_cast<usize>(vertIndex)] += 10;
+          }
+          else
+          {
+            nodeTypes[static_cast<usize>(vertIndex)] += 1;
+          }
         }
       }
       triangleCount += 2;
@@ -286,7 +287,14 @@ Result<> SurfaceNets::operator()()
       {
         for(auto& vertIndex : vertexIndices)
         {
-          nodeTypes[static_cast<usize>(vertIndex)] += 10;
+          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
+          {
+            nodeTypes[static_cast<usize>(vertIndex)] += 10;
+          }
+          else
+          {
+            nodeTypes[static_cast<usize>(vertIndex)] += 1;
+          }
         }
       }
       triangleCount += 2;
@@ -347,11 +355,6 @@ Result<> SurfaceNets::operator()()
       faceLabels[faceIndex * 2] = quadLabels[0];
       faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
-
-      //      for(usize i = 0; i < 6; i++)
-      //      {
-      //        nodeTypes[static_cast<usize>(triangleVtxIDs[i])] = static_cast<uint8>(cellMap->getCell(triangleVtxIDs[i])->flag.numJunctions());
-      //      }
     }
 
     // Left-bottom edge
@@ -385,11 +388,6 @@ Result<> SurfaceNets::operator()()
       faceLabels[faceIndex * 2] = quadLabels[0];
       faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
-
-      //      for(usize i = 0; i < 6; i++)
-      //      {
-      //        nodeTypes[static_cast<usize>(triangleVtxIDs[i])] = static_cast<uint8>(cellMap->getCell(triangleVtxIDs[i])->flag.numJunctions());
-      //      }
     }
 
     // Left-back edge
@@ -423,13 +421,21 @@ Result<> SurfaceNets::operator()()
       faceLabels[faceIndex * 2] = quadLabels[0];
       faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
-      //      for(usize i = 0; i < 6; i++)
-      //      {
-      //        nodeTypes[static_cast<usize>(triangleVtxIDs[i])] = static_cast<uint8>(cellMap->getCell(triangleVtxIDs[i])->flag.numJunctions());
-      //      }
     }
   }
 
-  // Now Extract the Triangles from the SurfaceNets object.
+  // Now correct the FaceLabels to always have the smaller label value in component[0];
+  auto& faceLabelsDataStore = faceLabels.getDataStoreRef();
+  size_t numElements = faceLabelsDataStore.getSize();
+  for(size_t idx = 0; idx < numElements; idx = idx + 2)
+  {
+    if(faceLabelsDataStore[idx] > faceLabelsDataStore[idx + 1])
+    {
+      int32 temp = faceLabelsDataStore[idx];
+      faceLabelsDataStore[idx] = faceLabelsDataStore[idx + 1];
+      faceLabelsDataStore[idx + 1] = temp;
+    }
+  }
+
   return {};
 }

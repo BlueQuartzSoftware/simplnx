@@ -1,5 +1,4 @@
-SurfaceNets Filter
-============
+# SurfaceNets Filter #
 
 ## Group (Subgroup) ##
 
@@ -7,7 +6,34 @@ Surface Meshing (Generation)
 
 ## Description ##
 
+This filter uses the algorithm from {1} to produce a triangle surface mesh. The code is directly based on the sample code from the paper but has been modified to
+work with the complex library classes.
+
+This filter will ensure that the smaller of the 2 **FaceLabel** values will always be in the first component (component[0]). This will allow assumptions made in
+downstream filters to continue to work correctly.
+
+---------------
+
+![Example SurfaceNets Output](Images/SurfaceNets_Output.png)
+
+SurfaceNets without the built in smoothing applied
+
+---------------
+
+![Example SurfaceNets Output](Images/SurfaceNets_Smooth_Output.png)
+
+SurfaceNets output **with** the built in smoothing operation applied.
+
+---------------
+
 ## Parameters ##
+
+| Human Name | Description | Parameter Type |
+|--------------|-------------|----------------|
+| Apply Smoothing Operation | This will enable the built-in smoothing from the SurfaceNets algorithm | complex.BoolParameter |
+| Relaxation Iterations | The number of smoothing iterations to perform | complex.Int32Parameter |
+| Max Distance from Voxel | The maximum allowable distance that a node can move from the voxel center  | complex.Float32Parameter |
+| Relaxation Factor | How far a node can move during each smoothing operation | complex.Float32Parameter |
 
 ## Required Geometry ##
 
@@ -34,7 +60,10 @@ Image/RectGrid
 
 ## Example Pipelines ##
 
-+ (01) SmallIN100 Quick Mesh
+
+## Citations ##
+
+{1}[SurfaceNets for Multi-Label Segmentations with Preservation of Sharp Boundaries](https://jcgt.org/published/0011/01/03/paper.pdf)
 
 ## License & Copyright ##
 
