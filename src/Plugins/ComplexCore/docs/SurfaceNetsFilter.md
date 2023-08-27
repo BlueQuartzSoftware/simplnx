@@ -7,22 +7,31 @@ Surface Meshing (Generation)
 ## Description ##
 
 This filter uses the algorithm from {1} to produce a triangle surface mesh. The code is directly based on the sample code from the paper but has been modified to
-work with the complex library classes.
+work with the complex library classes. This filter uses a different algorithm that aims to produce a mush that keeps sharp edges
+while still producing a mesh superior to marching cubes or QuickMesh.
 
-This filter will ensure that the smaller of the 2 **FaceLabel** values will always be in the first component (component[0]). This will allow assumptions made in
+From the abstract of the paper:
+
+        We extend 3D SurfaceNets to generate surfaces of segmented 3D medical images composed
+        of multiple materials represented as indexed labels. Our extension generates smooth, high-
+        quality triangle meshes suitable for rendering and tetrahedralization, preserves topology and
+        sharp boundaries between materials, guarantees a user-specified accuracy, and is fast enough
+        that users can interactively explore the trade-off between accuracy and surface smoothness.
+
+This filter will ensure that the smallest of the 2 **FaceLabel** values will always be in the first component (component[0]). This will allow assumptions made in
 downstream filters to continue to work correctly.
 
 ---------------
 
 ![Example SurfaceNets Output](Images/SurfaceNets_Output.png)
 
-SurfaceNets without the built in smoothing applied
+SurfaceNets without the built-in smoothing applied
 
 ---------------
 
 ![Example SurfaceNets Output](Images/SurfaceNets_Smooth_Output.png)
 
-SurfaceNets output **with** the built in smoothing operation applied.
+SurfaceNets output **with** the built-in smoothing operation applied.
 
 ---------------
 
@@ -48,15 +57,15 @@ Image/RectGrid
 
 ## Created Objects ##
 
-| Kind                         | Default Name          | Type         | Component Dimensions | Description                                                      |
-|------------------------------|-----------------------|--------------|----------------------|------------------------------------------------------------------|
-| **Data Container**           | TriangleDataContainer | N/A          | N/A                  | Created **Data Container** name with a **Triangle Geometry**     |
-| **Attribute Matrix**         | VertexData            | Vertex       | N/A                  | Created **Vertex Attribute Matrix** name                         |
-| **Vertex Attribute Array**   | NodeTypes             | int8_t       | (1)                  | Specifies the type of node in the **Geometry**                   |
-| **Attribute Matrix**         | FaceData              | Face         | N/A                  | Created **Face Attribute Matrix** name                           |
-| **Face Attribute Array**     | FaceLabels            | int32_t      | (2)                  | Specifies which **Features** are on either side of each **Face** |
-| **Attribute Matrix**         | FaceFeatureData       | Face Feature | N/A                  | **Feature Attribute Matrix** of the created _Face Labels_        |
-| Any **Face Attribute Array** | None                  | Any          | Any                  | The set of transferred **Cell Attribute Arrays**                 |
+| Kind                         | Default Name          | Type             | Component Dimensions | Description                                                      |
+|------------------------------|-----------------------|------------------|----------------------|------------------------------------------------------------------|
+| **Data Container**           | TriangleDataContainer | N/A              | N/A                  | Created **Data Container** name with a **Triangle Geometry**     |
+| **Attribute Matrix**         | VertexData            | Vertex           | N/A                  | Created **Vertex Attribute Matrix** name                         |
+| **Vertex Attribute Array**   | NodeTypes             | int8_t           | (1)                  | Specifies the type of node in the **Geometry**                   |
+| **Attribute Matrix**         | FaceData              | Face             | N/A                  | Created **Face Attribute Matrix** name                           |
+| **Face Attribute Array**     | FaceLabels            | int32_t          | (2)                  | Specifies which **Features** are on either side of each **Face** |
+| **Attribute Matrix**         | FaceFeatureData       | Face Feature     | N/A                  | **Feature Attribute Matrix** of the created _Face Labels_        |
+| Any **Face Attribute Array** | None                  | List of DataPath | Any                  | The set of transferred **Cell Attribute Arrays**                 |
 
 ## Example Pipelines ##
 

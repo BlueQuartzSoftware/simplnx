@@ -1,4 +1,5 @@
 #include "SurfaceNets.hpp"
+#include "TupleTransfer.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -238,7 +239,7 @@ Result<> SurfaceNets::operator()()
     cellMap->getVertexCellIndex(vertIndex, vertCellIndex.data());
     MMCellMap::Cell* currentCellPtr = cellMap->getCell(vertCellIndex.data());
     nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
-  };
+  }
   usize triangleCount = 0;
   // First Pass through to just count the number of triangles:
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
@@ -309,13 +310,22 @@ Result<> SurfaceNets::operator()()
   Int32Array& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath);
   linkedGeometryData.addFaceData(m_InputValues->FaceLabelsDataPath);
 
+  // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays
+  std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
+  for(size_t i = 0; i < m_InputValues->SelectedDataArrayPaths.size(); i++)
+  {
+    // Associate these arrays with the Triangle Face Data.
+    linkedGeometryData.addFaceData(m_InputValues->SelectedDataArrayPaths[i]);
+    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+  }
+
   usize faceIndex = 0;
   //   Create temporary storage for cell quads which are constructed around edges
   //   crossed by the surface. Handle 3 edges per cell. The other 9 cell edges will
   //   be handled when neighboring cells that share edges with this cell are visited.
-  std::array<usize, 3> t1;
-  std::array<usize, 3> t2;
-  std::array<int, 6> triangleVtxIDs;
+  std::array<usize, 3> t1 = {0, 0, 0};
+  std::array<usize, 3> t2 = {0, 0, 0};
+  std::array<int, 6> triangleVtxIDs = {0, 0, 0, 0, 0, 0};
   std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
   std::array<LabelType, 2> quadLabels = {0, 0};
   bool isQuadFrontFacing = false;
@@ -347,13 +357,40 @@ Result<> SurfaceNets::operator()()
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
       triangleGeom.setFacePointIds(faceIndex, t1);
-      faceLabels[faceIndex * 2] = quadLabels[0];
-      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      if(quadLabels[0] < quadLabels[1])
+      {
+        faceLabels[faceIndex * 2] = quadLabels[0];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      }
+      else
+      {
+        faceLabels[faceIndex * 2] = quadLabels[1];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[0];
+      }
+      // Copy any Cell Data to the Triangle Mesh
+      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      {
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+      }
+
       faceIndex++;
 
       triangleGeom.setFacePointIds(faceIndex, t2);
-      faceLabels[faceIndex * 2] = quadLabels[0];
-      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      if(quadLabels[0] < quadLabels[1])
+      {
+        faceLabels[faceIndex * 2] = quadLabels[0];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      }
+      else
+      {
+        faceLabels[faceIndex * 2] = quadLabels[1];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[0];
+      }
+      // Copy any Cell Data to the Triangle Mesh
+      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      {
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+      }
       faceIndex++;
     }
 
@@ -380,13 +417,39 @@ Result<> SurfaceNets::operator()()
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
       triangleGeom.setFacePointIds(faceIndex, t1);
-      faceLabels[faceIndex * 2] = quadLabels[0];
-      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      if(quadLabels[0] < quadLabels[1])
+      {
+        faceLabels[faceIndex * 2] = quadLabels[0];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      }
+      else
+      {
+        faceLabels[faceIndex * 2] = quadLabels[1];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[0];
+      }
+      // Copy any Cell Data to the Triangle Mesh
+      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      {
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+      }
       faceIndex++;
 
       triangleGeom.setFacePointIds(faceIndex, t2);
-      faceLabels[faceIndex * 2] = quadLabels[0];
-      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      if(quadLabels[0] < quadLabels[1])
+      {
+        faceLabels[faceIndex * 2] = quadLabels[0];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      }
+      else
+      {
+        faceLabels[faceIndex * 2] = quadLabels[1];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[0];
+      }
+      // Copy any Cell Data to the Triangle Mesh
+      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      {
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+      }
       faceIndex++;
     }
 
@@ -413,29 +476,55 @@ Result<> SurfaceNets::operator()()
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
       triangleGeom.setFacePointIds(faceIndex, t1);
-      faceLabels[faceIndex * 2] = quadLabels[0];
-      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      if(quadLabels[0] < quadLabels[1])
+      {
+        faceLabels[faceIndex * 2] = quadLabels[0];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      }
+      else
+      {
+        faceLabels[faceIndex * 2] = quadLabels[1];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[0];
+      }
+      // Copy any Cell Data to the Triangle Mesh
+      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      {
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+      }
       faceIndex++;
 
       triangleGeom.setFacePointIds(faceIndex, t2);
-      faceLabels[faceIndex * 2] = quadLabels[0];
-      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      if(quadLabels[0] < quadLabels[1])
+      {
+        faceLabels[faceIndex * 2] = quadLabels[0];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[1];
+      }
+      else
+      {
+        faceLabels[faceIndex * 2] = quadLabels[1];
+        faceLabels[faceIndex * 2 + 1] = quadLabels[0];
+      }
+      // Copy any Cell Data to the Triangle Mesh
+      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      {
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+      }
       faceIndex++;
     }
   }
 
-  // Now correct the FaceLabels to always have the smaller label value in component[0];
-  auto& faceLabelsDataStore = faceLabels.getDataStoreRef();
-  size_t numElements = faceLabelsDataStore.getSize();
-  for(size_t idx = 0; idx < numElements; idx = idx + 2)
-  {
-    if(faceLabelsDataStore[idx] > faceLabelsDataStore[idx + 1])
-    {
-      int32 temp = faceLabelsDataStore[idx];
-      faceLabelsDataStore[idx] = faceLabelsDataStore[idx + 1];
-      faceLabelsDataStore[idx + 1] = temp;
-    }
-  }
+  //  // Now correct the FaceLabels to always have the smaller label value in component[0];
+  //  auto& faceLabelsDataStore = faceLabels.getDataStoreRef();
+  //  size_t numElements = faceLabelsDataStore.getSize();
+  //  for(size_t idx = 0; idx < numElements; idx = idx + 2)
+  //  {
+  //    if(faceLabelsDataStore[idx] > faceLabelsDataStore[idx + 1])
+  //    {
+  //      int32 temp = faceLabelsDataStore[idx];
+  //      faceLabelsDataStore[idx] = faceLabelsDataStore[idx + 1];
+  //      faceLabelsDataStore[idx + 1] = temp;
+  //    }
+  //  }
 
   return {};
 }

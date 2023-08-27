@@ -16,9 +16,13 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT SurfaceNetsInputValues
 {
+  bool ApplySmoothing;
+  int32 SmoothingIterations;
+  float32 MaxDistanceFromVoxel;
+  float32 RelaxationFactor;
+
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;
-
   MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
   DataPath TriangleGeometryPath;
   DataPath VertexGroupDataPath;
@@ -26,11 +30,6 @@ struct COMPLEXCORE_EXPORT SurfaceNetsInputValues
   DataPath FaceGroupDataPath;
   DataPath FaceLabelsDataPath;
   MultiArraySelectionParameter::ValueType CreatedDataArrayPaths;
-
-  bool ApplySmoothing;
-  int32 SmoothingIterations;
-  float32 MaxDistanceFromVoxel;
-  float32 RelaxationFactor;
 };
 
 /**

@@ -61,13 +61,13 @@ Parameters SurfaceNetsFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "", false));
 
   params.insertSeparator(Parameters::Separator{"Smoothing Values"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "", false));
   params.insert(std::make_unique<Int32Parameter>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));
-
-  params.insert(std::make_unique<Float32Parameter>(k_MaxDistanceFromVoxelCenter_Key, "Max Distance from Voxel Center", "", 1.0F));
-  params.insert(std::make_unique<Float32Parameter>(k_RelaxationFactor_Key, "Relaxation Factor", "", 0.5F));
+  params.insert(
+      std::make_unique<Float32Parameter>(k_MaxDistanceFromVoxelCenter_Key, "Max Distance from Voxel Center", "The maximum allowable distance that a node can move from the voxel center", 1.0F));
+  params.insert(std::make_unique<Float32Parameter>(k_RelaxationFactor_Key, "Relaxation Factor", "The factor used to determine how far a node can move in each smoothing iteration", 0.5F));
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
   params.insert(
@@ -85,15 +85,13 @@ Parameters SurfaceNetsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NodeTypesArrayName_Key, "NodeType", "The complete path to the Array specifying the type of node in the Triangle Geometry",
-                                                         DataPath({"TriangleDataContainer", INodeGeometry0D::k_VertexDataName, "NodeTypes"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NodeTypesArrayName_Key, "NodeType", "The complete path to the Array specifying the type of node in the Triangle Geometry", "NodeTypes"));
 
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataGroupName_Key, "Face Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
-                                                         "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry",
-                                                         DataPath({"TriangleDataContainer", INodeGeometry2D::k_FaceDataName, "FaceLabels"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
+                                                          "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry", "FaceLabels"));
   params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceFeatureAttributeMatrixName_Key, "Face Feature Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Feature Data will be stored.", INodeGeometry1D::k_FaceFeatureAttributeMatrix));
@@ -119,28 +117,19 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   auto pGridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryName_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
-  auto pNodeTypesDataPath = filterArgs.value<DataPath>(k_NodeTypesArrayName_Key);
+  auto pNodeTypesName = filterArgs.value<std::string>(k_NodeTypesArrayName_Key);
   auto pFaceGroupDataName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
-  auto pFaceLabelsDataPath = filterArgs.value<DataPath>(k_FaceLabelsArrayName_Key);
+  auto pFaceLabelsName = filterArgs.value<std::string>(k_FaceLabelsArrayName_Key);
 
   DataPath pVertexGroupDataPath = pTriangleGeometryPath.createChildPath(pVertexGroupDataName);
   DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
 
   PreflightResult preflightResult;
-
   complex::Result<OutputActions> resultOutputActions;
-
   std::vector<PreflightValue> preflightUpdatedValues;
-
-  // DataPath geometryDataPath = pParentDataGroupPath.createChildPath(pTriangleGeometryPath);
-
-  // Assign the outputAction to the Result<OutputActions>::actions vector via a push_back
-  // Assuming this filter did make some structural changes to the DataStructure then store
-  // the outputAction into the resultOutputActions object via a std::move().
-  // NOTE: That using std::move() means that you can *NOT* use the outputAction variable
-  // past this point, we are going to scope each section so that we don't accidentally introduce bugs
 
   const auto* gridGeom = dataStructure.getDataAs<IGridGeometry>(pGridGeomDataPath);
   if(gridGeom == nullptr)
@@ -148,6 +137,10 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(-76530, fmt::format("Could not find find selected grid geometry at path '{}'", pGridGeomDataPath.toString()))};
   }
   auto numElements = gridGeom->getNumberOfCells();
+
+  // Use FeatureIds DataStore format for created DataArrays
+  const auto* featureIdsArrayPtr = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
+  const std::string dataStoreFormat = featureIdsArrayPtr->getDataFormat();
 
   // Create the Triangle Geometry action and store it
   {
@@ -157,19 +150,26 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   }
   // Create the face NodesType DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int8, std::vector<usize>{1}, std::vector<usize>{1}, pNodeTypesDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int8, std::vector<usize>{1}, std::vector<usize>{1},
+                                                                 pTriangleGeometryPath.createChildPath(pVertexGroupDataName).createChildPath(pNodeTypesName), dataStoreFormat);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the face Labels DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2}, pFaceLabelsDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2},
+                                                                 pTriangleGeometryPath.createChildPath(pFaceGroupDataName).createChildPath(pFaceLabelsName), dataStoreFormat);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
     DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
-    auto createArrayAction = std::make_unique<CopyArrayInstanceAction>(selectedDataPath, createdDataPath);
+    const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+    auto compShape = iDataArray.getComponentShape();
+    // Double the size of the DataArray because we need the value from both sides of the triangle.
+    compShape.insert(compShape.begin(), 2);
+
+    auto createArrayAction = std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, createdDataPath, dataStoreFormat);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -180,11 +180,6 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
     resultOutputActions.value().appendAction(std::move(createFeatureGroupAction));
   }
 
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -194,19 +189,19 @@ Result<> SurfaceNetsFilter::executeImpl(DataStructure& dataStructure, const Argu
 {
   SurfaceNetsInputValues inputValues;
 
+  inputValues.ApplySmoothing = filterArgs.value<bool>(k_ApplySmoothing_Key);
+  inputValues.SmoothingIterations = filterArgs.value<int32>(k_SmoothingIterations_Key);
+  inputValues.MaxDistanceFromVoxel = filterArgs.value<float32>(k_MaxDistanceFromVoxelCenter_Key);
+  inputValues.RelaxationFactor = filterArgs.value<float32>(k_RelaxationFactor_Key);
+
   inputValues.GridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryName_Key);
   inputValues.VertexGroupDataPath = inputValues.TriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_VertexDataGroupName_Key));
-  inputValues.NodeTypesDataPath = filterArgs.value<DataPath>(k_NodeTypesArrayName_Key);
+  inputValues.NodeTypesDataPath = inputValues.VertexGroupDataPath.createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key));
   inputValues.FaceGroupDataPath = inputValues.TriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_FaceDataGroupName_Key));
-  inputValues.FaceLabelsDataPath = filterArgs.value<DataPath>(k_FaceLabelsArrayName_Key);
-
-  inputValues.ApplySmoothing = filterArgs.value<bool>(k_ApplySmoothing_Key);
-  inputValues.SmoothingIterations = filterArgs.value<int32>(k_SmoothingIterations_Key);
-  inputValues.MaxDistanceFromVoxel = filterArgs.value<float32>(k_MaxDistanceFromVoxelCenter_Key);
-  inputValues.RelaxationFactor = filterArgs.value<float32>(k_RelaxationFactor_Key);
+  inputValues.FaceLabelsDataPath = inputValues.FaceGroupDataPath.createChildPath(filterArgs.value<std::string>(k_FaceLabelsArrayName_Key));
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
   for(const auto& selectedDataPath : inputValues.SelectedDataArrayPaths)

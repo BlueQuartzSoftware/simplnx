@@ -35,6 +35,8 @@ public:
 
   virtual void transfer(size_t faceIndex, size_t firstcIndex) = 0;
 
+  virtual void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, DataArray<int32>& faceLabels) = 0;
+
 protected:
   AbstractTupleTransfer() = default;
 
@@ -63,9 +65,8 @@ public:
     m_SourceDataPath = selectedDataPath;
     m_DestinationDataPath = createdArrayPath;
 
-    IDataArray* cellArray = dataStructure.template getDataAs<IDataArray>(m_SourceDataPath);
-
-    m_NumComps = cellArray->getNumberOfComponents();
+    IDataArray* cellArrayPtr = dataStructure.template getDataAs<IDataArray>(m_SourceDataPath);
+    m_NumComps = cellArrayPtr->getNumberOfComponents();
   }
 
   ~TransferTuple() = default;
@@ -85,7 +86,7 @@ public:
   {
     for(size_t i = 0; i < m_NumComps; i++)
     {
-      m_FaceRef[faceIndex + i] = m_CellRef[firstcIndex + i];
+      m_FaceRef[faceIndex * m_NumComps + i] = m_CellRef[firstcIndex * m_NumComps + i];
     }
 
     if(!forceSecondToZero)
@@ -102,6 +103,27 @@ public:
     for(size_t i = 0; i < m_NumComps; i++)
     {
       m_FaceRef[faceIndex + i] = m_CellRef[firstcIndex + i];
+    }
+  }
+
+  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, DataArray<int32>& faceLabels) override
+  {
+    // Only copy the data if the FaceLabel is NOT -1, indicating that the data is NOT on the exterior
+    if(faceLabels[faceIndex * 2] != -1)
+    {
+      for(size_t i = 0; i < m_NumComps; i++)
+      {
+        m_FaceRef[faceIndex * m_NumComps * 2 + i] = m_CellRef[firstcIndex * m_NumComps + i];
+      }
+    }
+
+    if(faceLabels[faceIndex * 2 + 1] != -1)
+    {
+      for(size_t i = 0; i < m_NumComps; i++)
+      {
+        size_t index = (faceIndex * m_NumComps * 2) + m_NumComps + i;
+        m_FaceRef[index] = m_CellRef[secondcIndex * m_NumComps + i];
+      }
     }
   }
 
