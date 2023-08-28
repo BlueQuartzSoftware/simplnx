@@ -9,27 +9,14 @@
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  RemoveFlaggedTrianglesInputValues inputValues;
-
-  inputValues.TriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.RegionIDsArrayPath = filterArgs.value<DataPath>(k_RegionIDsArrayPath_Key);
-  inputValues.ReducedTriangleGeometry = filterArgs.value<StringParameter::ValueType>(k_ReducedTriangleGeometry_Key);
-
-  return RemoveFlaggedTriangles(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
-
 struct COMPLEXCORE_EXPORT RemoveFlaggedTrianglesInputValues
 {
   DataPath TriangleGeometry;
   DataPath MaskArrayPath;
   DataPath RegionIDsArrayPath;
-  StringParameter::ValueType ReducedTriangleGeometry;
+  DataPath ReducedTriangleGeometry;
 };
 
 /**
@@ -59,5 +46,4 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
-
 } // namespace complex
