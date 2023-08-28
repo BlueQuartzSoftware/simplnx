@@ -45,6 +45,15 @@ target_compile_options(complexpy
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
+#-------------------------------------------------------------------------------
+# FUNCTION: complex_generate_filter_bindings
+# ARGS:
+#   One Value:
+#      CPP_PLUGIN_NAME:
+#      PYTHON_MODULE_NAME:
+#   Multi Value:
+#      FILTER_LIST
+#-------------------------------------------------------------------------------
 function(complex_generate_filter_bindings)
   set(options)
   set(oneValueArgs CPP_PLUGIN_NAME PYTHON_MODULE_NAME)
@@ -80,6 +89,15 @@ function(complex_generate_filter_bindings)
   )
 endfunction()
 
+#-------------------------------------------------------------------------------
+# FUNCTION: complex_create_pyi
+# ARGS:
+#   One Value:
+#      PYTHON_MODULE_NAME:
+#      PYTHON_TARGET:
+#   Multi Value:
+#      
+#-------------------------------------------------------------------------------
 function(complex_create_pyi)
   set(options)
   set(oneValueArgs PYTHON_MODULE_NAME PYTHON_TARGET)
@@ -99,6 +117,14 @@ function(complex_create_pyi)
   add_dependencies(${PYI_TARGET_NAME} ${ARGS_PYTHON_TARGET})
 endfunction()
 
+#-------------------------------------------------------------------------------
+# FUNCTION: complex_create_plugin_pyi
+# ARGS:
+#   One Value:
+#      PLUGIN_NAME:
+#   Multi Value:
+#      
+#-------------------------------------------------------------------------------
 function(complex_create_plugin_pyi)
   set(options)
   set(oneValueArgs PLUGIN_NAME)
@@ -110,6 +136,7 @@ function(complex_create_plugin_pyi)
   complex_create_pyi(PYTHON_MODULE_NAME ${PLUGIN_NAME_LOWER} PYTHON_TARGET ${PLUGIN_NAME_LOWER})
   add_dependencies(${PLUGIN_NAME_LOWER} complexpy)
 endfunction()
+
 
 get_property(COMPLEX_CORE_FILTER_LIST TARGET ComplexCore PROPERTY COMPLEX_FILTER_LIST)
 
@@ -162,6 +189,15 @@ if(COMPLEX_PY_ENABLE_INSTALL)
   endif()
 endif()
 
+
+#-------------------------------------------------------------------------------
+# FUNCTION: complex_add_python_plugin
+# ARGS:
+#   One Value:
+#      PLUGIN_NAME:
+#   Multi Value:
+#      
+#-------------------------------------------------------------------------------
 function(complex_add_python_plugin)
   set(options)
   set(oneValueArgs PLUGIN_NAME)
