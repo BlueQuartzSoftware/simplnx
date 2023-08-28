@@ -22,6 +22,15 @@ target_compile_definitions(generate_sphinx_docs
 )
 
 #------------------------------------------------------------------------------
+# Add dependencies to generate_sphinx_docs to ensure it will not run until
+# after all targets are compiled.
+#------------------------------------------------------------------------------
+get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+foreach(d3dPlugin ${ComplexPluginTargets})
+  add_dependencies(generate_sphinx_docs ${d3dPlugin})
+endforeach()
+
+#------------------------------------------------------------------------------
 # Execute the sphinx rst plugin generation tool
 #------------------------------------------------------------------------------
 add_custom_target(sphinx_generate_plugin_rst ALL
