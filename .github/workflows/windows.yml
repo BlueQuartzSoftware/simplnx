@@ -47,6 +47,9 @@ jobs:
           `vcpkg fetch nuget | tail -n 1` \
           setapikey "${{secrets.GITHUB_TOKEN}}" \
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
+      - name: Install Sphinx
+        run: |
+          sudo pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme
       - name: Configure
         run: |
           cmake --preset ci-windows-${{matrix.toolset}} ${{github.workspace}} -T ${{matrix.toolset}}
