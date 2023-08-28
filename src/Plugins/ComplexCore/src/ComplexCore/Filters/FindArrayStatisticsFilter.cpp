@@ -250,6 +250,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.linkParameters(k_FindHistogram_Key, k_NumBins_Key, true);
   params.linkParameters(k_FindHistogram_Key, k_MinRange_Key, true);
   params.linkParameters(k_FindHistogram_Key, k_MaxRange_Key, true);
+  params.linkParameters(k_FindHistogram_Key, k_MostPopulatedBinArrayName_Key, true);
   params.linkParameters(k_FindLength_Key, k_LengthArrayName_Key, true);
   params.linkParameters(k_FindMin_Key, k_MinimumArrayName_Key, true);
   params.linkParameters(k_FindMax_Key, k_MaximumArrayName_Key, true);
