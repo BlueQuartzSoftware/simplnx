@@ -3578,12 +3578,12 @@ complex
 
       :param complex.DataObjectNameParameter face_data_group_name: The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created
       :param complex.DataObjectNameParameter face_feature_attribute_matrix_name: The complete path to the DataGroup where the Feature Data will be stored.
-      :param complex.DataObjectNameParameter face_labels_array_name: The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry
+      :param complex.DataObjectNameParameter face_labels_array_name: The name of the Array specifying which Features are on either side of each Face in the Triangle Geometry
       :param complex.ArraySelectionParameter feature_ids_path: The complete path to the Array specifying which Feature each Cell belongs to
       :param complex.BoolParameter fix_problem_voxels: See help page.
       :param complex.BoolParameter generate_triple_lines: Experimental feature. May not work.
       :param complex.GeometrySelectionParameter grid_geometry_data_path: The complete path to the Grid Geometry from which to create a Triangle Geometry
-      :param complex.DataObjectNameParameter node_types_array_name: The complete path to the Array specifying the type of node in the Triangle Geometry
+      :param complex.DataObjectNameParameter node_types_array_name: The name of the Array specifying the type of node in the Triangle Geometry
       :param complex.MultiArraySelectionParameter selected_data_array_paths: The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry
       :param complex.DataGroupCreationParameter triangle_geometry_name: The name of the created Triangle Geometry
       :param complex.DataObjectNameParameter vertex_data_group_name: The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created
@@ -4246,36 +4246,33 @@ NOTE: a '-' will automatically be added between the prefix and number
 
    Mapping of UI display to python named argument
 
-   +----------------------------+-----------------------+
-   | UI Display                 | Python Named Argument |
-   +============================+=======================+
-   | Face Matrix Name           | face_matrix           |
-   +----------------------------+-----------------------+
-   | Geometry Name [Data Group] | geometry_data_path    |
-   +----------------------------+-----------------------+
-   | Scale Factor               | scale_factor          |
-   +----------------------------+-----------------------+
-   | Scale Output Geometry      | scale_output          |
-   +----------------------------+-----------------------+
-   | Shared Face Matrix Name    | shared_face_matrix    |
-   +----------------------------+-----------------------+
-   | Shared Vertex Matrix Name  | shared_vertex_matrix  |
-   +----------------------------+-----------------------+
-   | STL File                   | stl_file_path         |
-   +----------------------------+-----------------------+
-   | Vertex Matrix Name         | vertex_matrix         |
-   +----------------------------+-----------------------+
+   +-------------------------------+-------------------------+
+   | UI Display                    | Python Named Argument   |
+   +===============================+=========================+
+   | Face Data [AttributeMatrix]   | face_attribute_matrix   |
+   +-------------------------------+-------------------------+
+   | Face Labels                   | face_normals_data_path  |
+   +-------------------------------+-------------------------+
+   | Scale Factor                  | scale_factor            |
+   +-------------------------------+-------------------------+
+   | Scale Output Geometry         | scale_output            |
+   +-------------------------------+-------------------------+
+   | STL File                      | stl_file_path           |
+   +-------------------------------+-------------------------+
+   | Created Triangle Geometry     | triangle_geometry_name  |
+   +-------------------------------+-------------------------+
+   | Vertex Data [AttributeMatrix] | vertex_attribute_matrix |
+   +-------------------------------+-------------------------+
 
-   .. py:method:: Execute(face_matrix, geometry_data_path, scale_factor, scale_output, shared_face_matrix, shared_vertex_matrix, stl_file_path, vertex_matrix)
+   .. py:method:: Execute(face_attribute_matrix, face_normals_data_path, scale_factor, scale_output, stl_file_path, triangle_geometry_name, vertex_attribute_matrix)
 
-      :param complex.StringParameter face_matrix: Name of the created Face Attribute Matrix
-      :param complex.DataGroupCreationParameter geometry_data_path: The complete path to the DataGroup containing the created Geometry data
+      :param complex.DataObjectNameParameter face_attribute_matrix: The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created
+      :param complex.DataObjectNameParameter face_normals_data_path: The name of the triangle normals data array
       :param complex.Float32Parameter scale_factor: The factor by which to scale the geometry
       :param complex.BoolParameter scale_output: Scale the output Triangle Geometry by the Scaling Factor
-      :param complex.StringParameter shared_face_matrix: Name of the created Shared Face Attribute Matrix
-      :param complex.StringParameter shared_vertex_matrix: Name of the created Shared Vertex Attribute Matrix
       :param complex.FileSystemPathParameter stl_file_path: Input STL File
-      :param complex.StringParameter vertex_matrix: Name of the created Vertex Attribute Matrix
+      :param complex.DataGroupCreationParameter triangle_geometry_name: The name of the created Triangle Geometry
+      :param complex.DataObjectNameParameter vertex_attribute_matrix: The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created
       :return: Returns a complex.Result object that holds any warnings and/or errors that were encountered during execution.
       :rtype: complex.Result
 

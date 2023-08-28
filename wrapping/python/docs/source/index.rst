@@ -15,6 +15,7 @@ DREAM3D Python Docs
    DataObjects
    Geometry
    Python_Introduction
+   API
    Reference_Frame_Notes
    complex
    ITKImageProcessing
