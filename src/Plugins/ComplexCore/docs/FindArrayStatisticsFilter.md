@@ -8,19 +8,19 @@ DREAM3D Review (Statistics)
 
 This **Filter** computes a variety of statistics for a given scalar array.  The currently available statistics are array length, minimum, maximum, (arithmetic) mean, median, mode, standard deviation, and summation; any combination of these statistics may be computed by this **Filter**.  Any scalar array, of any primitive type, may be used as input.  The type of the output arrays depends on the kind of statistic computed:
 
-| Statistic               | Primitive Type                     |
-|-------------------------|------------------------------------|
-| Histogram               | float (of user set component size) |
-| Length                  | signed 64-bit integer              |
-| Minimum                 | same type as input                 |
-| Maximum                 | same type as input                 |
-| Mean                    | double                             |
-| Median                  | double                             |
-| Mode                    | same type as input                 |
-| Standard Deviation      | double                             |
-| Summation               | double                             |
-| Standardized            | double                             |
-| Number of Unique Values | signed 32-bit integer              |
+| Statistic               | Primitive Type                      |
+|-------------------------|-------------------------------------|
+| Histogram               | uint64 (of user set component size) |
+| Length                  | signed 64-bit integer               |
+| Minimum                 | same type as input                  |
+| Maximum                 | same type as input                  |
+| Mean                    | double                              |
+| Median                  | double                              |
+| Mode                    | same type as input                  |
+| Standard Deviation      | double                              |
+| Summation               | double                              |
+| Standardized            | double                              |
+| Number of Unique Values | signed 32-bit integer               |
 
 The user may optionally use a mask to specify points to be ignored when computing the statistics; only points where the supplied mask is _true_ will be considered when computing statistics.  Additionally, the user may select to have the statistics computed per **Feature** or **Ensemble** by supplying an Ids array.  For example, if the user opts to compute statistics per **Feature** and selects an array that has 10 unique **Feature** Ids, then this **Filter** will compute 10 sets of statistics (e.g., find the mean of the supplied array for each **Feature**, find the total number of points in each **Feature** (the length), etc.).  
 
@@ -72,7 +72,8 @@ None
 | Kind                | Default Name            | Type                              | Component Dimensions | Description                                                                                                                                                                                                                                                                                            |
 |---------------------|-------------------------|-----------------------------------|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Attribute Array** | Feature-Has-Data        | bool                              | (1)                  | Indicates, for each feature, whether or not the feature actually contains any data (only usable when *Compute Statistics Per Feature/Ensemble* is turned on). This array is especially useful to help determine whether or not the outputted statistics are actually valid or not for a given feature. |
-| **Attribute Array** | Histogram               | float                             | (Number of Bins)     | Histogram of the input array, if _Find Histogram_ is checked                                                                                                                                                                                                                                           |
+| **Attribute Array** | Histogram               | uint64                            | (Number of Bins)     | Histogram of the input array, if _Find Histogram_ is checked                                                                                                                                                                                                                                           |
+| **Attribute Array** | Most Populated Bin      | uint64                            | (2)                  | Most populated bin from the histogram of the input array, if _Find Histogram_ is checked.  First component is the bin index (0-based), second component is the number of values in the bin.                                                                                                            |
 | **Attribute Array** | Length                  | int64_t                           | (1)                  | Length of the input array, if _Find Length_ is checked                                                                                                                                                                                                                                                 |
 | **Attribute Array** | Minimum                 | same as input **Attribute Array** | (1)                  | Minimum of the input array, if _Find Minimum_ is checked                                                                                                                                                                                                                                               |
 | **Attribute Array** | Maximum                 | same as input **Attribute Array** | (1)                  | Maximum of the input array, if _Find Maximum_ is checked                                                                                                                                                                                                                                               |

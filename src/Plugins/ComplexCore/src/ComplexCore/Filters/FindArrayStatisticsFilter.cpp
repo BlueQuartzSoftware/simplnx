@@ -48,6 +48,8 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
   auto destinationAttributeMatrixValue = args.value<DataPath>(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key);
   DataType dataType = inputArray->getDataType();
 
+  size_t tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
+
   OutputActions actions;
 
   auto amAction = std::make_unique<CreateAttributeMatrixAction>(destinationAttributeMatrixValue, tupleDims);
@@ -93,7 +95,6 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
   if(findMode)
   {
     auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_ModeArrayName_Key);
-    size_t tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
     auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
@@ -111,9 +112,16 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
   }
   if(findHistogramValue)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_HistogramArrayName_Key);
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{numBins}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    {
+      auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_HistogramArrayName_Key);
+      auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{numBins}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
+    {
+      auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key);
+      auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{2}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
   }
   if(standardizeDataValue)
   {
@@ -186,6 +194,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
       std::make_unique<BoolParameter>(k_UseFullRange_Key, "Use Full Range for Histogram", "If true, ignore min and max and use min and max from array upon which histogram is computed", false));
   params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 1));
   params.insert(std::make_unique<DataObjectNameParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Histogram"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MostPopulatedBinArrayName_Key, "Most Populated Bin Array Name", "The name of the Most Populated Bin array", "Most Populated Bin"));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
@@ -400,6 +409,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrix_Key);
   inputValues.FeatureHasDataArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureHasDataArrayName_Key));
   inputValues.HistogramArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistogramArrayName_Key));
+  inputValues.MostPopulatedBinArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MostPopulatedBinArrayName_Key));
   inputValues.LengthArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_LengthArrayName_Key));
   inputValues.MinimumArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MinimumArrayName_Key));
   inputValues.MaximumArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MaximumArrayName_Key));

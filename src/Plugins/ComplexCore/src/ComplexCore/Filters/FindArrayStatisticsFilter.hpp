@@ -48,6 +48,7 @@ public:
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_DestinationAttributeMatrix_Key = "destination_attribute_matrix";
   static inline constexpr StringLiteral k_HistogramArrayName_Key = "histogram_array_name";
+  static inline constexpr StringLiteral k_MostPopulatedBinArrayName_Key = "most_populated_bin_array_name";
   static inline constexpr StringLiteral k_LengthArrayName_Key = "length_array_name";
   static inline constexpr StringLiteral k_MinimumArrayName_Key = "minimum_array_name";
   static inline constexpr StringLiteral k_MaximumArrayName_Key = "maximum_array_name";
