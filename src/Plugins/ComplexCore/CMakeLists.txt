@@ -97,6 +97,7 @@ set(FilterList
   ReadVolumeGraphicsFileFilter
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
+  RemoveFlaggedTrianglesFilter
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
@@ -183,6 +184,7 @@ set(AlgorithmList
   ReadVolumeGraphicsFile
   RegularGridSampleSurfaceMesh
   RemoveFlaggedFeatures
+  RemoveFlaggedTriangles
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
   ResampleRectGridToImageGeom
