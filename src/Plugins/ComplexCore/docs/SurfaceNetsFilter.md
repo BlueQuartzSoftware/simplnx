@@ -69,6 +69,7 @@ Image/RectGrid
 
 ## Example Pipelines ##
 
+        Pipelines/ComplexCore/SurfaceNets_Demo.d3dpipeline
 
 ## Citations ##
 
