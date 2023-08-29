@@ -128,7 +128,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
     int64_t triId = m_TriangleIds[i];
     FindNRingNeighborsInputValues inputs;
-    inputs.TriangleGeom = m_TrianglesPtr;
+    inputs.TriangleGeomPtr = m_TrianglesPtr;
     inputs.TriangleId = triId;
     inputs.RegionId0 = feature0;
     inputs.RegionId1 = feature1;

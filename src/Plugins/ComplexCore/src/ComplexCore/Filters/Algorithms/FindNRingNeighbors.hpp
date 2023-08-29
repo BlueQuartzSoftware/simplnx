@@ -16,7 +16,7 @@ class TriangleGeom;
 
 struct COMPLEXCORE_EXPORT FindNRingNeighborsInputValues
 {
-  TriangleGeom* TriangleGeom = nullptr;
+  TriangleGeom* TriangleGeomPtr = nullptr;
   int64 TriangleId = {-1};
   int32 RegionId0 = {0};
   int32 RegionId1 = {0};

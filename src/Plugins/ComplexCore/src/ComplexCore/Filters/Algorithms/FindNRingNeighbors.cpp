@@ -21,7 +21,7 @@ FindNRingNeighbors::~FindNRingNeighbors() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel)
 {
-  auto* triangleGeom = m_InputValues->TriangleGeom;
+  auto* triangleGeom = m_InputValues->TriangleGeomPtr;
   auto& triangleId = m_InputValues->TriangleId;
 
   auto* trianglesArray = triangleGeom->getFaces();
