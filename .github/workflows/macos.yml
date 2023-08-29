@@ -32,7 +32,7 @@ jobs:
           brew install ninja
       - name: Install Sphinx
         run: |
-          sudo pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme
+          sudo pip3 install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme
       - name: Setup NuGet Credentials
         shell: bash
         run: |
