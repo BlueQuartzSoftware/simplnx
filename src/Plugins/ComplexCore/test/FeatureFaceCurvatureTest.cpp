@@ -34,7 +34,7 @@ TEST_CASE("ComplexCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFa
 {
   DataPath triangleGeomPath({"TriangleDataContainer"});
   DataPath faceAttribMatrixPath = triangleGeomPath.createChildPath("FaceData");
-  
+
   DataPath k_PrincipalCurvature1_Path = faceAttribMatrixPath.createChildPath("PrincipalCurvature1_D3D-2");
   DataPath k_PrincipalCurvature2_Path = faceAttribMatrixPath.createChildPath("PrincipalCurvature2_D3D-2");
   DataPath k_PrincipalDirection1_Path = faceAttribMatrixPath.createChildPath("PrincipalDirection1_D3D-2");
