@@ -37,6 +37,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
   auto findMean = args.value<bool>(FindArrayStatisticsFilter::k_FindMean_Key);
   auto findMedian = args.value<bool>(FindArrayStatisticsFilter::k_FindMedian_Key);
   auto findMode = args.value<bool>(FindArrayStatisticsFilter::k_FindMode_Key);
+  auto findModalBinRanges = args.value<bool>(FindArrayStatisticsFilter::k_FindModalBinRanges_Key);
   auto findStdDeviation = args.value<bool>(FindArrayStatisticsFilter::k_FindStdDeviation_Key);
   auto findSummation = args.value<bool>(FindArrayStatisticsFilter::k_FindSummation_Key);
   auto findHistogramValue = args.value<bool>(FindArrayStatisticsFilter::k_FindHistogram_Key);
@@ -122,6 +123,12 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
       auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{2}, destinationAttributeMatrixValue.createChildPath(arrayPath));
       actions.appendAction(std::move(action));
     }
+    if(findModalBinRanges)
+    {
+      auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_ModalBinArrayName_Key);
+      auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
   }
   if(standardizeDataValue)
   {
@@ -195,6 +202,11 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 1));
   params.insert(std::make_unique<DataObjectNameParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Histogram"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MostPopulatedBinArrayName_Key, "Most Populated Bin Array Name", "The name of the Most Populated Bin array", "Most Populated Bin"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindModalBinRanges_Key, "Find Modal Histogram Bin Ranges",
+                                                                 "Whether to compute the histogram bin ranges that contain the mode values.  This option requires that \" Find Mode \" is turned on.",
+                                                                 false));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ModalBinArrayName_Key, "Modal Histogram Bin Ranges Array Name",
+                                                          "The name of the array that stores the histogram bin range(s) that contain the mode(s) of the data.", "Modal Histogram Bin Ranges"));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
@@ -286,6 +298,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
   auto pFindMeanValue = filterArgs.value<bool>(k_FindMean_Key);
   auto pFindMedianValue = filterArgs.value<bool>(k_FindMedian_Key);
   auto pFindModeValue = filterArgs.value<bool>(k_FindMode_Key);
+  auto pFindModalBinRanges = filterArgs.value<bool>(k_FindModalBinRanges_Key);
   auto pFindStdDeviationValue = filterArgs.value<bool>(k_FindStdDeviation_Key);
   auto pFindSummationValue = filterArgs.value<bool>(k_FindSummation_Key);
   auto pFindNumUniqueValuesValue = filterArgs.value<bool>(k_FindUniqueValues_Key);
@@ -365,6 +378,11 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     }
   }
 
+  if(pFindHistogramValue && pFindModalBinRanges && !pFindModeValue)
+  {
+    return {MakeErrorResult<OutputActions>(-57209, fmt::format(R"(To calculate the modal histogram bin ranges, the "Find Mode" option must also be turned on.)")), {}};
+  }
+
   if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
   {
     std::string msg = "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).";
@@ -398,6 +416,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.FindMean = filterArgs.value<bool>(k_FindMean_Key);
   inputValues.FindMedian = filterArgs.value<bool>(k_FindMedian_Key);
   inputValues.FindMode = filterArgs.value<bool>(k_FindMode_Key);
+  inputValues.FindModalBinRanges = filterArgs.value<bool>(k_FindModalBinRanges_Key);
   inputValues.FindStdDeviation = filterArgs.value<bool>(k_FindStdDeviation_Key);
   inputValues.FindSummation = filterArgs.value<bool>(k_FindSummation_Key);
   inputValues.FindNumUniqueValues = filterArgs.value<bool>(k_FindUniqueValues_Key);
@@ -411,6 +430,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.FeatureHasDataArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureHasDataArrayName_Key));
   inputValues.HistogramArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistogramArrayName_Key));
   inputValues.MostPopulatedBinArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MostPopulatedBinArrayName_Key));
+  inputValues.ModalBinArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_ModalBinArrayName_Key));
   inputValues.LengthArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_LengthArrayName_Key));
   inputValues.MinimumArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MinimumArrayName_Key));
   inputValues.MaximumArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MaximumArrayName_Key));

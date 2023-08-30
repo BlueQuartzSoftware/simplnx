@@ -236,13 +236,8 @@ size_t findNumUniqueValues(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-std::vector<uint64_t> findHistogram(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
+std::pair<float, float> findHistogramRange(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange)
 {
-  if(source.empty())
-  {
-    return std::vector<uint64_t>(numBins, 0);
-  }
-
   float min = 0.0f;
   float max = 0.0f;
 
@@ -256,6 +251,22 @@ std::vector<uint64_t> findHistogram(const C<T, Ts...>& source, float histmin, fl
     min = histmin;
     max = histmax;
   }
+
+  return {min, max};
+}
+
+// -----------------------------------------------------------------------------
+template <template <typename, typename...> class C, typename T, typename... Ts>
+std::vector<uint64_t> findHistogram(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
+{
+  if(source.empty())
+  {
+    return std::vector<uint64_t>(numBins, 0);
+  }
+
+  auto range = findHistogramRange(source, histmin, histmax, histfullrange);
+  float min = range.first;
+  float max = range.second;
 
   const float increment = (max - min) / (numBins);
   if(std::abs(increment) < 1E-10)
@@ -273,9 +284,9 @@ std::vector<uint64_t> findHistogram(const C<T, Ts...>& source, float histmin, fl
   {
     for(const auto s : source)
     {
-      float value = static_cast<float>(s);
-      const size_t bin = static_cast<size_t>((value - min) / increment); // find bin for this input array value
-      if((bin >= 0) && (bin < numBins))                                  // make certain bin is in range
+      auto value = static_cast<float>(s);
+      const auto bin = static_cast<size_t>((value - min) / increment); // find bin for this input array value
+      if((bin >= 0) && (bin < numBins))                                // make certain bin is in range
       {
         histogram[bin]++; // increment histogram element corresponding to this input array value
       }
@@ -287,5 +298,28 @@ std::vector<uint64_t> findHistogram(const C<T, Ts...>& source, float histmin, fl
   }
 
   return histogram;
+}
+
+// -----------------------------------------------------------------------------
+template <template <typename, typename...> class C, typename T, typename... Ts>
+std::pair<float, float> findModalBinRange(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins, const T& mode)
+{
+  if(source.empty())
+  {
+    return {0.0f, 0.0f};
+  }
+
+  auto range = findHistogramRange(source, histmin, histmax, histfullrange);
+  float min = range.first;
+  float max = range.second;
+
+  const float increment = (max - min) / static_cast<float>(numBins);
+  if(std::abs(increment) < 1E-10)
+  {
+    return {min, max};
+  }
+
+  const auto bin = static_cast<size_t>((mode - min) / increment); // find bin for this input array value
+  return {bin * increment, (bin + 1) * increment};
 }
 } // namespace StatisticsCalculations

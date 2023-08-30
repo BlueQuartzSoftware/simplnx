@@ -36,6 +36,7 @@ public:
   static inline constexpr StringLiteral k_FindMean_Key = "find_mean";
   static inline constexpr StringLiteral k_FindMedian_Key = "find_median";
   static inline constexpr StringLiteral k_FindMode_Key = "find_mode";
+  static inline constexpr StringLiteral k_FindModalBinRanges_Key = "find_modal_bin_ranges";
   static inline constexpr StringLiteral k_FindStdDeviation_Key = "find_std_deviation";
   static inline constexpr StringLiteral k_FindSummation_Key = "find_summation";
   static inline constexpr StringLiteral k_FindUniqueValues_Key = "find_unique_values";
@@ -49,6 +50,7 @@ public:
   static inline constexpr StringLiteral k_DestinationAttributeMatrix_Key = "destination_attribute_matrix";
   static inline constexpr StringLiteral k_HistogramArrayName_Key = "histogram_array_name";
   static inline constexpr StringLiteral k_MostPopulatedBinArrayName_Key = "most_populated_bin_array_name";
+  static inline constexpr StringLiteral k_ModalBinArrayName_Key = "modal_bin_array_name";
   static inline constexpr StringLiteral k_LengthArrayName_Key = "length_array_name";
   static inline constexpr StringLiteral k_MinimumArrayName_Key = "minimum_array_name";
   static inline constexpr StringLiteral k_MaximumArrayName_Key = "maximum_array_name";
