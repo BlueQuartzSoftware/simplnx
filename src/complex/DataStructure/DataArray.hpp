@@ -324,9 +324,9 @@ public:
     for(usize i = 0; i < numComponents; i++)
     {
       usize fromCompIndex = from * numComponents + i;
-      auto value = (*m_DataStore)[fromCompIndex];
+      auto value = m_DataStore->getValue(fromCompIndex);
       usize toCompIndex = to * numComponents + i;
-      (*m_DataStore)[toCompIndex] = value;
+      m_DataStore->setValue(toCompIndex, value);
     }
   }
 
@@ -376,7 +376,24 @@ public:
       throw std::runtime_error("DataArray::operator[] requires a valid DataStore");
     }
 
-    return (*m_DataStore.get())[index];
+    return m_DataStore->getValue(index);
+  }
+
+  const_reference getComponent(usize tupleIndex, usize componentIndex)
+  {
+    const usize index = tupleIndex * getNumberOfComponents() + componentIndex;
+    return m_DataStore->getValue(index);
+  }
+
+  void setComponent(usize tupleIndex, usize componentIndex, value_type value)
+  {
+    const usize index = tupleIndex * getNumberOfComponents() + componentIndex;
+    m_DataStore->setValue(index, value);
+  }
+
+  void setValue(usize index, value_type value)
+  {
+    m_DataStore->setValue(index, value);
   }
 
   /**

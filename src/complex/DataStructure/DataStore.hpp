@@ -242,7 +242,7 @@ public:
     auto data = new value_type[newSize];
     for(usize i = 0; i < newSize && i < oldSize; i++)
     {
-      data[i] = m_Data[i];
+      data[i] = m_Data.get()[i];
     }
     m_Data.reset(data);
   }
@@ -253,9 +253,9 @@ public:
    * @param index
    * @return value_type
    */
-  value_type getValue(usize index) const override
+  const_reference getValue(usize index) const override
   {
-    return m_Data[index];
+    return m_Data.get()[index];
   }
 
   /**
@@ -265,7 +265,7 @@ public:
    */
   void setValue(usize index, value_type value) override
   {
-    m_Data[index] = value;
+    m_Data.get()[index] = value;
   }
 
   /**
@@ -302,7 +302,7 @@ public:
     {
       throw std::runtime_error("");
     }
-    return m_Data[index];
+    return m_Data.get()[index];
   }
 
   /**
