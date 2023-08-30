@@ -57,41 +57,6 @@ private:
   const std::vector<usize>& m_NewTrianglesIndex;
   const std::vector<usize>& m_NewVerticesIndex;
 };
-
-/**
- * @brief The LocateTriangleIndexImpl class implements a threaded algorithm that updates a mask with
- * bool for if the value should be removed
- */
-class LocateTriangleIndexImpl
-{
-public:
-  LocateTriangleIndexImpl(const DataArray<bool>& IDsMask, const DataArray<int32>& regionIDs, std::vector<bool>& allocatedIndexMask)
-  : m_IDsMask(IDsMask)
-  , m_RegionIDs(regionIDs)
-  , m_AllocatedIndexMask(allocatedIndexMask)
-  {
-  }
-  virtual ~LocateTriangleIndexImpl() = default;
-
-  void generate(usize start, usize end) const
-  {
-    for(usize index = start; index < end; index++)
-    {
-      usize regionId = m_RegionIDs[index];
-      m_AllocatedIndexMask[index] = m_IDsMask[regionId];
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    generate(range.min(), range.max());
-  }
-
-private:
-  const DataArray<bool>& m_IDsMask;
-  const DataArray<int32>& m_RegionIDs;
-  std::vector<bool>& m_AllocatedIndexMask;
-};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -119,24 +84,17 @@ Result<> RemoveFlaggedTriangles::operator()()
   // Remove Triangles from reduced according to removeTrianglesIndex
   auto& originalTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometry);
   auto& reducedTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->ReducedTriangleGeometry);
+  auto& mask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath);
 
   // Set up allocated masks
   auto size = originalTriangle.getNumberOfFaces();
-  std::vector<bool> maskTriangles;
   std::vector<usize> newTrianglesIndexList;
-  maskTriangles.resize(size, false);
   newTrianglesIndexList.reserve(size);
-
-  // Parse all the triangles and create a remove list !!!!! true will be removed !!!!!
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, size);
-  dataAlg.execute(
-      LocateTriangleIndexImpl(m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath), m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->RegionIDsArrayPath), maskTriangles));
 
   // parse mask Triangles list and load a list of indices for triangles to keep
   for(usize index = 0; index < size; index++)
   {
-    if(!maskTriangles[index])
+    if(!mask[index])
     {
       newTrianglesIndexList.push_back(index);
     }
@@ -199,6 +157,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   reducedTriangle.resizeFaceList(size); // resize accordingly
 
   // parse triangles and reassign indexes to match new vertex list
+  ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, size);
   dataAlg.execute(PopulateReducedGeometryTrianglesImpl(originalTriangle, reducedTriangle, newTrianglesIndexList, pseudoVertexList));
 

@@ -15,7 +15,6 @@ struct COMPLEXCORE_EXPORT RemoveFlaggedTrianglesInputValues
 {
   DataPath TriangleGeometry;
   DataPath MaskArrayPath;
-  DataPath RegionIDsArrayPath;
   DataPath ReducedTriangleGeometry;
 };
 
