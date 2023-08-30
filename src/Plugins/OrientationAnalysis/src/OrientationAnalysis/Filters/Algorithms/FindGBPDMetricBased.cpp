@@ -578,7 +578,7 @@ Result<> FindGBPDMetricBased::operator()()
 #ifdef COMPLEX_ENABLE_MULTICORE
   tbb::concurrent_vector<gbpd_metric_based::TriAreaAndNormals> selectedTriangles(0);
 #else
-  std::vector<GBPDMetricBased::TriAreaAndNormals> selectedTriangles(0);
+  std::vector<gbpd_metric_based::TriAreaAndNormals> selectedTriangles(0);
 #endif
 
   usize triChunkSize = 50000;

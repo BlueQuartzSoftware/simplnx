@@ -236,11 +236,11 @@ size_t findNumUniqueValues(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-std::vector<float> findHistogram(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
+std::vector<uint64_t> findHistogram(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
 {
   if(source.empty())
   {
-    return std::vector<float>(numBins, 0);
+    return std::vector<uint64_t>(numBins, 0);
   }
 
   float min = 0.0f;
@@ -263,11 +263,11 @@ std::vector<float> findHistogram(const C<T, Ts...>& source, float histmin, float
     numBins = 1;
   }
 
-  std::vector<float> histogram(numBins, 0);
+  std::vector<uint64_t> histogram(numBins, 0);
 
   if(numBins == 1) // if one bin, just set the first element to total number of points
   {
-    histogram[0] = static_cast<float>(source.size());
+    histogram[0] = static_cast<uint64_t>(source.size());
   }
   else
   {

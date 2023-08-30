@@ -53,6 +53,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
   maskDataStore[10] = true;
 
   const std::string histogram = "Histogram";
+  const std::string mostPopulatedBin = "Most Populated Bin";
   const std::string length = "Length";
   const std::string min = "Minimum";
   const std::string max = "Maximum";
@@ -90,6 +91,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
     args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(statsDataPath));
     args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
     args.insertOrAssign(FindArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
@@ -135,8 +137,10 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.getParent().createChildPath(standardization));
     REQUIRE(standardizeArray != nullptr);
     REQUIRE(standardizeArray->getNumberOfTuples() == 11);
-    auto* histArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(histogram));
+    auto* histArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(histogram));
     REQUIRE(histArray != nullptr);
+    auto* mostPopulatedBinArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(mostPopulatedBin));
+    REQUIRE(mostPopulatedBinArray != nullptr);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
     REQUIRE(numUniqueValuesArray != nullptr);
 
@@ -183,11 +187,13 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     REQUIRE(std::fabs(stand7 - .58999f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand8 - -.4f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -.33f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs((*histArray)[0] - 4.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs((*histArray)[1] - 2.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs((*histArray)[2] - 2.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs((*histArray)[3] - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs((*histArray)[4] - 1.0f) < UnitTest::EPSILON);
+    REQUIRE((*histArray)[0] == 4);
+    REQUIRE((*histArray)[1] == 2);
+    REQUIRE((*histArray)[2] == 2);
+    REQUIRE((*histArray)[3] == 0);
+    REQUIRE((*histArray)[4] == 1);
+    REQUIRE((*mostPopulatedBinArray)[0] == 0);
+    REQUIRE((*mostPopulatedBinArray)[1] == 4);
   }
 }
 
@@ -241,6 +247,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
   testFeatIdsDataStore[11] = 2;
 
   const std::string histogram = "Histogram";
+  const std::string mostPopulatedBin = "Most Populated Bin";
   const std::string length = "Length";
   const std::string min = "Minimum";
   const std::string max = "Maximum";
@@ -278,6 +285,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
     args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(statsDataPath));
     args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
     args.insertOrAssign(FindArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
@@ -331,10 +339,13 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.getParent().createChildPath(standardization));
     REQUIRE(standardizeArray != nullptr);
     REQUIRE(standardizeArray->getNumberOfTuples() == 12);
-    auto* histArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(histogram));
+    auto* histArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(histogram));
     REQUIRE(histArray != nullptr);
     REQUIRE(histArray->getNumberOfTuples() == 3);
     REQUIRE(histArray->getNumberOfComponents() == 5);
+    auto* mostPopulatedBinArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(mostPopulatedBin));
+    REQUIRE(mostPopulatedBinArray != nullptr);
+    REQUIRE(mostPopulatedBinArray->getNumberOfTuples() == 3);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
     REQUIRE(numUniqueValuesArray != nullptr);
     REQUIRE(numUniqueValuesArray->getNumberOfTuples() == 3);
@@ -437,20 +448,26 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     REQUIRE(std::fabs(stand7 - 0.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand8 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist1_1 - 1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist1_2 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist1_3 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist1_4 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist1_5 - 1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist2_1 - 1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist2_2 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist2_3 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist2_4 - 1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist2_5 - 2.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist3_1 - 2.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist3_2 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist3_3 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist3_4 - 0.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(hist3_5 - 2.0f) < UnitTest::EPSILON);
+    REQUIRE(hist1_1 == 1);
+    REQUIRE(hist1_2 == 0);
+    REQUIRE(hist1_3 == 0);
+    REQUIRE(hist1_4 == 0);
+    REQUIRE(hist1_5 == 1);
+    REQUIRE(hist2_1 == 1);
+    REQUIRE(hist2_2 == 0);
+    REQUIRE(hist2_3 == 0);
+    REQUIRE(hist2_4 == 1);
+    REQUIRE(hist2_5 == 2);
+    REQUIRE(hist3_1 == 2);
+    REQUIRE(hist3_2 == 0);
+    REQUIRE(hist3_3 == 0);
+    REQUIRE(hist3_4 == 0);
+    REQUIRE(hist3_5 == 2);
+    REQUIRE((*mostPopulatedBinArray)[0] == 0);
+    REQUIRE((*mostPopulatedBinArray)[1] == 1);
+    REQUIRE((*mostPopulatedBinArray)[2] == 4);
+    REQUIRE((*mostPopulatedBinArray)[3] == 2);
+    REQUIRE((*mostPopulatedBinArray)[4] == 0);
+    REQUIRE((*mostPopulatedBinArray)[5] == 2);
   }
 }

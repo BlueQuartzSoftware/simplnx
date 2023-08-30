@@ -37,6 +37,7 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
   DataPath MaskArrayPath;
   DataPath DestinationAttributeMatrix;
   DataPath HistogramArrayName;
+  DataPath MostPopulatedBinArrayName;
   DataPath FeatureHasDataArrayName;
   DataPath LengthArrayName;
   DataPath MinimumArrayName;
