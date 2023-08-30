@@ -49,6 +49,7 @@ set(FilterList
   ExtractInternalSurfacesFromTriangleGeometry
   ExtractVertexGeometryFilter
   FeatureDataCSVWriterFilter
+  FeatureFaceCurvatureFilter
   FillBadDataFilter
   FindArrayStatisticsFilter
   FindBiasedFeaturesFilter
@@ -139,6 +140,7 @@ set(AlgorithmList
   AvizoRectilinearCoordinateWriter
   AvizoUniformCoordinateWriter
   CalculateArrayHistogram
+  CalculateTriangleGroupCurvatures
   CombineAttributeArrays
   CombineStlFiles
   ComputeMomentInvariants2D
@@ -160,6 +162,7 @@ set(AlgorithmList
   FindFeatureClustering
   FindLargestCrossSections
   FindNeighborhoods
+  FindNRingNeighbors
   FindSurfaceAreaToVolume
   FindTriangleGeomCentroids
   FindTriangleGeomSizes

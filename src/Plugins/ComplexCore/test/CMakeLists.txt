@@ -48,6 +48,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
   FeatureDataCSVWriterTest.cpp
+  FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
   FindArrayStatisticsTest.cpp
   FindBiasedFeaturesTest.cpp
@@ -77,7 +78,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ImageGeomTest.cpp
   ImportBinaryCTNorthstarTest.cpp
   ImportCSVDataTest.cpp
-#  ImportDeformKeyFileV12Test.cpp
+
+  # ImportDeformKeyFileV12Test.cpp
   ImportHDF5DatasetTest.cpp
   ImportTextTest.cpp
   ImportVolumeGraphicsFileTest.cpp
@@ -166,6 +168,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
   endif()
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_test_data_1.tar.gz SHA512 6e21118a882c6a0cc54341eec8928b89ee84ac3a41b1d5b534193f4fabcb49c363db22028055622ad777787be0163cf5525e6c548c11c2c369748feb23031651)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_Goldfeather.tar.gz SHA512 3ad4a8f2bd578d81ce1ca67213ec846b7de4394e0c0e7796077bac51f7b58ae36340e2abd315665d9ee5fe745315458d5c1559766765e20dbe2c35eb693e8e26)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_align_sections_feature_centroid.tar.gz SHA512 e79a4c8e59bc856d40e91daf4cdce8b82c2e5ccfa6de51e23a0b8c6628282b03701bd5b5d7ddde76c4378142e3d9fe7c1cd6db261360c91751cf7c63747b054b)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_align_sections_feature_centroids.tar.gz SHA512 96ca08eca2ac3839a1d7ded6287c138cac49140d1b80713d747f6143a90b75335b351cd291e2e438621cdfb32bcb5f0ec5bf2f59ec0e0d61250e423f289bdad8)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_apply_transformation_to_geometry.tar.gz SHA512 d3510e4744de49cf98db295b6b338bd5b3199b817f7153212622292b772b7fee4f914017243845b2181d70194d618ac0582d209f96b1a0127e75b976d04f1634)

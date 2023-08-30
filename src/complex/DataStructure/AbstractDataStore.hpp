@@ -637,9 +637,9 @@ public:
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index
-   * @return value_type
+   * @return const_reference
    */
-  virtual value_type getValue(usize index) const = 0;
+  virtual const_reference getValue(usize index) const = 0;
 
   /**
    * @brief Sets the value stored at the specified index.
