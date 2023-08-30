@@ -1569,6 +1569,84 @@ complex
       :rtype: complex.Result
 
 
+.. _FeatureFaceCurvatureFilter:
+.. py:class:: FeatureFaceCurvatureFilter
+
+   **UI Display Name:** *Fill Bad Data*
+
+   This **Filter** calculates _principal direction vectors_ and the _principal curvatures_, and optionally the _mean_ and _Gaussian_ curvature, for each **Triangle** in a **Triangle Geometry** using the technique in [1]. The groups of **Triangles** over which to compute the curvatures is determines by the **Features** they are associated, denoted by their _Face Labels_. The curvature information will be stored in a **Face Attribute Matrix**.
+
+   `Link to the full online documentation for FeatureFaceCurvatureFilter <http://www.dream3d.io/nx_reference_manual/Filters/FeatureFaceCurvatureFilter>`_ 
+
+   Mapping of UI display to python named argument
+
+   +-------------------------------------+-----------------------------+
+   | UI Display                          | Python Named Argument       |
+   +=====================================+=============================+
+   | Compute Gaussian Curvature          | compute_gaussian_curvature  |
+   +-------------------------------------+-----------------------------+
+   | Compute Mean Curvature              | compute_mean_curvature      |
+   +-------------------------------------+-----------------------------+
+   | Compute Principal Direction Vectors | compute_principal_direction |
+   +-------------------------------------+-----------------------------+
+   | Compute Weingarten Matrix           | compute_weingarten_matrix   |
+   +-------------------------------------+-----------------------------+
+   | Face Attribute Matrix               | face_attribute_matrix       |
+   +-------------------------------------+-----------------------------+
+   | Face Centroids                      | face_centroids              |
+   +-------------------------------------+-----------------------------+
+   | Face Labels                         | face_labels                 |
+   +-------------------------------------+-----------------------------+
+   | Feature Normals                     | face_normals                |
+   +-------------------------------------+-----------------------------+
+   | Feature Face IDs                    | feature_face_ids            |
+   +-------------------------------------+-----------------------------+
+   | Guassian Curvature                  | gaussian_curvature          |
+   +-------------------------------------+-----------------------------+
+   | Mean Curvature                      | mean_curvature              |
+   +-------------------------------------+-----------------------------+
+   | Neighborhood Ring Count             | neighborhood_ring           |
+   +-------------------------------------+-----------------------------+
+   | Principal Curvature 1               | principal_curvature_1       |
+   +-------------------------------------+-----------------------------+
+   | Principal Curvature 2               | principal_curvature_2       |
+   +-------------------------------------+-----------------------------+
+   | Principal Direction 1               | principal_direction_1       |
+   +-------------------------------------+-----------------------------+
+   | Principal Direction 2               | principal_direction_2       |
+   +-------------------------------------+-----------------------------+
+   | Triangle Geometry                   | triangle_geom               |
+   +-------------------------------------+-----------------------------+
+   | Use Face Normals for Curve Fitting  | use_normals                 |
+   +-------------------------------------+-----------------------------+
+   | Weingarten Matrix                   | weingarten_matrix           |
+   +-------------------------------------+-----------------------------+
+
+   .. py:method:: Execute(compute_gaussian_curvature, compute_mean_curvature, compute_principal_direction, compute_weingarten_matrix, face_attribute_matrix, face_centroids, face_labels, face_normals, feature_face_ids, gaussian_curvature, mean_curvature, neighborhood_ring, principal_curvature_1, principal_curvature_2, principal_direction_1, principal_direction_2, triangle_geom, use_normals, weingarten_matrix)
+
+      :param complex.BoolParameter compute_gaussian_curvature: 
+      :param complex.BoolParameter compute_mean_curvature: 
+      :param complex.BoolParameter compute_principal_direction: 
+      :param complex.BoolParameter compute_weingarten_matrix: 
+      :param complex.AttributeMatrixSelectionParameter face_attribute_matrix: 
+      :param complex.ArraySelectionParameter face_centroids: 
+      :param complex.ArraySelectionParameter face_labels: 
+      :param complex.ArraySelectionParameter face_normals: 
+      :param complex.ArraySelectionParameter feature_face_ids: 
+      :param complex.ArrayCreationParameter gaussian_curvature: 
+      :param complex.ArrayCreationParameter mean_curvature: 
+      :param complex.Int32Parameter neighborhood_ring: 
+      :param complex.ArrayCreationParameter principal_curvature_1: 
+      :param complex.ArrayCreationParameter principal_curvature_2: 
+      :param complex.ArrayCreationParameter principal_direction_1: 
+      :param complex.ArrayCreationParameter principal_direction_2: 
+      :param complex.GeometrySelectionParameter triangle_geom: 
+      :param complex.BoolParameter use_normals: 
+      :param complex.ArrayCreationParameter weingarten_matrix: 
+      :return: Returns a complex.Result object that holds any warnings and/or errors that were encountered during execution.
+      :rtype: complex.Result
+
+
 .. _FillBadDataFilter:
 .. py:class:: FillBadDataFilter
 
@@ -1619,77 +1697,79 @@ complex
 
    Mapping of UI display to python named argument
 
-   +-----------------------------------------+------------------------------+
-   | UI Display                              | Python Named Argument        |
-   +=========================================+==============================+
-   | Compute Statistics Per Feature/Ensemble | compute_by_index             |
-   +-----------------------------------------+------------------------------+
-   | Destination Attribute Matrix            | destination_attribute_matrix |
-   +-----------------------------------------+------------------------------+
-   | Feature-Has-Data Array Name             | feature_has_data_array_name  |
-   +-----------------------------------------+------------------------------+
-   | Feature Ids                             | feature_ids_path             |
-   +-----------------------------------------+------------------------------+
-   | Find Histogram                          | find_histogram               |
-   +-----------------------------------------+------------------------------+
-   | Find Length                             | find_length                  |
-   +-----------------------------------------+------------------------------+
-   | Find Maximum                            | find_max                     |
-   +-----------------------------------------+------------------------------+
-   | Find Mean                               | find_mean                    |
-   +-----------------------------------------+------------------------------+
-   | Find Median                             | find_median                  |
-   +-----------------------------------------+------------------------------+
-   | Find Minimum                            | find_min                     |
-   +-----------------------------------------+------------------------------+
-   | Find Mode                               | find_mode                    |
-   +-----------------------------------------+------------------------------+
-   | Find Standard Deviation                 | find_std_deviation           |
-   +-----------------------------------------+------------------------------+
-   | Find Summation                          | find_summation               |
-   +-----------------------------------------+------------------------------+
-   | Find Number of Unique Values            | find_unique_values           |
-   +-----------------------------------------+------------------------------+
-   | Histogram Array Name                    | histogram_array_name         |
-   +-----------------------------------------+------------------------------+
-   | Length Array Name                       | length_array_name            |
-   +-----------------------------------------+------------------------------+
-   | Mask                                    | mask_array_path              |
-   +-----------------------------------------+------------------------------+
-   | Histogram Max Value                     | max_range                    |
-   +-----------------------------------------+------------------------------+
-   | Maximum Array Name                      | maximum_array_name           |
-   +-----------------------------------------+------------------------------+
-   | Mean Array Name                         | mean_array_name              |
-   +-----------------------------------------+------------------------------+
-   | Median Array Name                       | median_array_name            |
-   +-----------------------------------------+------------------------------+
-   | Histogram Min Value                     | min_range                    |
-   +-----------------------------------------+------------------------------+
-   | Minimum Array Name                      | minimum_array_name           |
-   +-----------------------------------------+------------------------------+
-   | Mode Array Name                         | mode_array_name              |
-   +-----------------------------------------+------------------------------+
-   | Number of Bins                          | num_bins                     |
-   +-----------------------------------------+------------------------------+
-   | Number of Unique Values Array Name      | number_unique_values         |
-   +-----------------------------------------+------------------------------+
-   | Attribute Array to Compute Statistics   | selected_array_path          |
-   +-----------------------------------------+------------------------------+
-   | Standardize Data                        | standardize_data             |
-   +-----------------------------------------+------------------------------+
-   | Standardized Data Array Name            | standardized_array_name      |
-   +-----------------------------------------+------------------------------+
-   | Standard Deviation Array Name           | std_deviation_array_name     |
-   +-----------------------------------------+------------------------------+
-   | Summation Array Name                    | summation_array_name         |
-   +-----------------------------------------+------------------------------+
-   | Use Full Range for Histogram            | use_full_range               |
-   +-----------------------------------------+------------------------------+
-   | Use Mask                                | use_mask                     |
-   +-----------------------------------------+------------------------------+
+   +-----------------------------------------+-------------------------------+
+   | UI Display                              | Python Named Argument         |
+   +=========================================+===============================+
+   | Compute Statistics Per Feature/Ensemble | compute_by_index              |
+   +-----------------------------------------+-------------------------------+
+   | Destination Attribute Matrix            | destination_attribute_matrix  |
+   +-----------------------------------------+-------------------------------+
+   | Feature-Has-Data Array Name             | feature_has_data_array_name   |
+   +-----------------------------------------+-------------------------------+
+   | Feature Ids                             | feature_ids_path              |
+   +-----------------------------------------+-------------------------------+
+   | Find Histogram                          | find_histogram                |
+   +-----------------------------------------+-------------------------------+
+   | Find Length                             | find_length                   |
+   +-----------------------------------------+-------------------------------+
+   | Find Maximum                            | find_max                      |
+   +-----------------------------------------+-------------------------------+
+   | Find Mean                               | find_mean                     |
+   +-----------------------------------------+-------------------------------+
+   | Find Median                             | find_median                   |
+   +-----------------------------------------+-------------------------------+
+   | Find Minimum                            | find_min                      |
+   +-----------------------------------------+-------------------------------+
+   | Find Mode                               | find_mode                     |
+   +-----------------------------------------+-------------------------------+
+   | Find Standard Deviation                 | find_std_deviation            |
+   +-----------------------------------------+-------------------------------+
+   | Find Summation                          | find_summation                |
+   +-----------------------------------------+-------------------------------+
+   | Find Number of Unique Values            | find_unique_values            |
+   +-----------------------------------------+-------------------------------+
+   | Histogram Array Name                    | histogram_array_name          |
+   +-----------------------------------------+-------------------------------+
+   | Length Array Name                       | length_array_name             |
+   +-----------------------------------------+-------------------------------+
+   | Mask                                    | mask_array_path               |
+   +-----------------------------------------+-------------------------------+
+   | Histogram Max Value                     | max_range                     |
+   +-----------------------------------------+-------------------------------+
+   | Maximum Array Name                      | maximum_array_name            |
+   +-----------------------------------------+-------------------------------+
+   | Mean Array Name                         | mean_array_name               |
+   +-----------------------------------------+-------------------------------+
+   | Median Array Name                       | median_array_name             |
+   +-----------------------------------------+-------------------------------+
+   | Histogram Min Value                     | min_range                     |
+   +-----------------------------------------+-------------------------------+
+   | Minimum Array Name                      | minimum_array_name            |
+   +-----------------------------------------+-------------------------------+
+   | Mode Array Name                         | mode_array_name               |
+   +-----------------------------------------+-------------------------------+
+   | Most Populated Bin Array Name           | most_populated_bin_array_name |
+   +-----------------------------------------+-------------------------------+
+   | Number of Bins                          | num_bins                      |
+   +-----------------------------------------+-------------------------------+
+   | Number of Unique Values Array Name      | number_unique_values          |
+   +-----------------------------------------+-------------------------------+
+   | Attribute Array to Compute Statistics   | selected_array_path           |
+   +-----------------------------------------+-------------------------------+
+   | Standardize Data                        | standardize_data              |
+   +-----------------------------------------+-------------------------------+
+   | Standardized Data Array Name            | standardized_array_name       |
+   +-----------------------------------------+-------------------------------+
+   | Standard Deviation Array Name           | std_deviation_array_name      |
+   +-----------------------------------------+-------------------------------+
+   | Summation Array Name                    | summation_array_name          |
+   +-----------------------------------------+-------------------------------+
+   | Use Full Range for Histogram            | use_full_range                |
+   +-----------------------------------------+-------------------------------+
+   | Use Mask                                | use_mask                      |
+   +-----------------------------------------+-------------------------------+
 
-   .. py:method:: Execute(compute_by_index, destination_attribute_matrix, feature_has_data_array_name, feature_ids_path, find_histogram, find_length, find_max, find_mean, find_median, find_min, find_mode, find_std_deviation, find_summation, find_unique_values, histogram_array_name, length_array_name, mask_array_path, max_range, maximum_array_name, mean_array_name, median_array_name, min_range, minimum_array_name, mode_array_name, num_bins, number_unique_values, selected_array_path, standardize_data, standardized_array_name, std_deviation_array_name, summation_array_name, use_full_range, use_mask)
+   .. py:method:: Execute(compute_by_index, destination_attribute_matrix, feature_has_data_array_name, feature_ids_path, find_histogram, find_length, find_max, find_mean, find_median, find_min, find_mode, find_std_deviation, find_summation, find_unique_values, histogram_array_name, length_array_name, mask_array_path, max_range, maximum_array_name, mean_array_name, median_array_name, min_range, minimum_array_name, mode_array_name, most_populated_bin_array_name, num_bins, number_unique_values, selected_array_path, standardize_data, standardized_array_name, std_deviation_array_name, summation_array_name, use_full_range, use_mask)
 
       :param complex.BoolParameter compute_by_index: Whether the statistics should be computed on a Feature/Ensemble basis
       :param complex.DataGroupCreationParameter destination_attribute_matrix: Attribute Matrix in which to store the computed statistics
@@ -1715,6 +1795,7 @@ complex
       :param complex.Float64Parameter min_range: Min cutoff value for histogram
       :param complex.DataObjectNameParameter minimum_array_name: The name of the minimum array
       :param complex.DataObjectNameParameter mode_array_name: The name of the mode array
+      :param complex.DataObjectNameParameter most_populated_bin_array_name: The name of the Most Populated Bin array
       :param complex.Int32Parameter num_bins: Number of bins in histogram
       :param complex.DataObjectNameParameter number_unique_values: The name of the array which stores the calculated number of unique values
       :param complex.ArraySelectionParameter selected_array_path: Input Attribute Array for which to compute statistics
@@ -3578,12 +3659,12 @@ complex
 
       :param complex.DataObjectNameParameter face_data_group_name: The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created
       :param complex.DataObjectNameParameter face_feature_attribute_matrix_name: The complete path to the DataGroup where the Feature Data will be stored.
-      :param complex.DataObjectNameParameter face_labels_array_name: The name of the Array specifying which Features are on either side of each Face in the Triangle Geometry
+      :param complex.DataObjectNameParameter face_labels_array_name: The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry
       :param complex.ArraySelectionParameter feature_ids_path: The complete path to the Array specifying which Feature each Cell belongs to
       :param complex.BoolParameter fix_problem_voxels: See help page.
       :param complex.BoolParameter generate_triple_lines: Experimental feature. May not work.
       :param complex.GeometrySelectionParameter grid_geometry_data_path: The complete path to the Grid Geometry from which to create a Triangle Geometry
-      :param complex.DataObjectNameParameter node_types_array_name: The name of the Array specifying the type of node in the Triangle Geometry
+      :param complex.DataObjectNameParameter node_types_array_name: The complete path to the Array specifying the type of node in the Triangle Geometry
       :param complex.MultiArraySelectionParameter selected_data_array_paths: The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry
       :param complex.DataGroupCreationParameter triangle_geometry_name: The name of the created Triangle Geometry
       :param complex.DataObjectNameParameter vertex_data_group_name: The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created
@@ -4246,33 +4327,36 @@ NOTE: a '-' will automatically be added between the prefix and number
 
    Mapping of UI display to python named argument
 
-   +-------------------------------+-------------------------+
-   | UI Display                    | Python Named Argument   |
-   +===============================+=========================+
-   | Face Data [AttributeMatrix]   | face_attribute_matrix   |
-   +-------------------------------+-------------------------+
-   | Face Labels                   | face_normals_data_path  |
-   +-------------------------------+-------------------------+
-   | Scale Factor                  | scale_factor            |
-   +-------------------------------+-------------------------+
-   | Scale Output Geometry         | scale_output            |
-   +-------------------------------+-------------------------+
-   | STL File                      | stl_file_path           |
-   +-------------------------------+-------------------------+
-   | Created Triangle Geometry     | triangle_geometry_name  |
-   +-------------------------------+-------------------------+
-   | Vertex Data [AttributeMatrix] | vertex_attribute_matrix |
-   +-------------------------------+-------------------------+
+   +----------------------------+-----------------------+
+   | UI Display                 | Python Named Argument |
+   +============================+=======================+
+   | Face Matrix Name           | face_matrix           |
+   +----------------------------+-----------------------+
+   | Geometry Name [Data Group] | geometry_data_path    |
+   +----------------------------+-----------------------+
+   | Scale Factor               | scale_factor          |
+   +----------------------------+-----------------------+
+   | Scale Output Geometry      | scale_output          |
+   +----------------------------+-----------------------+
+   | Shared Face Matrix Name    | shared_face_matrix    |
+   +----------------------------+-----------------------+
+   | Shared Vertex Matrix Name  | shared_vertex_matrix  |
+   +----------------------------+-----------------------+
+   | STL File                   | stl_file_path         |
+   +----------------------------+-----------------------+
+   | Vertex Matrix Name         | vertex_matrix         |
+   +----------------------------+-----------------------+
 
-   .. py:method:: Execute(face_attribute_matrix, face_normals_data_path, scale_factor, scale_output, stl_file_path, triangle_geometry_name, vertex_attribute_matrix)
+   .. py:method:: Execute(face_matrix, geometry_data_path, scale_factor, scale_output, shared_face_matrix, shared_vertex_matrix, stl_file_path, vertex_matrix)
 
-      :param complex.DataObjectNameParameter face_attribute_matrix: The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created
-      :param complex.DataObjectNameParameter face_normals_data_path: The name of the triangle normals data array
+      :param complex.StringParameter face_matrix: Name of the created Face Attribute Matrix
+      :param complex.DataGroupCreationParameter geometry_data_path: The complete path to the DataGroup containing the created Geometry data
       :param complex.Float32Parameter scale_factor: The factor by which to scale the geometry
       :param complex.BoolParameter scale_output: Scale the output Triangle Geometry by the Scaling Factor
+      :param complex.StringParameter shared_face_matrix: Name of the created Shared Face Attribute Matrix
+      :param complex.StringParameter shared_vertex_matrix: Name of the created Shared Vertex Attribute Matrix
       :param complex.FileSystemPathParameter stl_file_path: Input STL File
-      :param complex.DataGroupCreationParameter triangle_geometry_name: The name of the created Triangle Geometry
-      :param complex.DataObjectNameParameter vertex_attribute_matrix: The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created
+      :param complex.StringParameter vertex_matrix: Name of the created Vertex Attribute Matrix
       :return: Returns a complex.Result object that holds any warnings and/or errors that were encountered during execution.
       :rtype: complex.Result
 
