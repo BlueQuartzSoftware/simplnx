@@ -320,6 +320,20 @@ std::pair<float, float> findModalBinRange(const C<T, Ts...>& source, float histm
   }
 
   const auto bin = static_cast<size_t>((mode - min) / increment); // find bin for this input array value
-  return {bin * increment, (bin + 1) * increment};
+
+  float minBinValue = 0.0f;
+  float maxBinValue = 0.0f;
+  if((bin >= 0) && (bin < numBins)) // make certain bin is in range
+  {
+    minBinValue = static_cast<float>(min + (bin * increment));
+    maxBinValue = static_cast<float>(min + ((bin + 1) * increment));
+  }
+  else if(mode == max)
+  {
+    minBinValue = static_cast<float>(min + ((bin - 1) * increment));
+    maxBinValue = static_cast<float>(min + (bin * increment));
+  }
+
+  return {minBinValue, maxBinValue};
 }
 } // namespace StatisticsCalculations
