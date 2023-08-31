@@ -56,11 +56,11 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   std::vector<DataPath> generatedGroup = GetAllChildDataPaths(dataStructure, k_DataGroupPath, DataObject::Type::ImageGeom).value();
   std::vector<DataPath> exemplarGroup = GetAllChildDataPaths(exemplarDataStructure, k_DataGroupPath, DataObject::Type::ImageGeom).value();
