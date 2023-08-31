@@ -72,12 +72,12 @@ Parameters StlFileReaderFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrix_Key, "Vertex Data [AttributeMatrix]",
-                                                          "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexDataName));
+                                                          "The name of the AttributeMatrix where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexDataName));
 
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrix_Key, "Face Data [AttributeMatrix]",
-                                                          "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsName_Key, "Face Labels", "The name of the triangle normals data array", "FaceLabels"));
+                                                          "The name of the AttributeMatrix where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsName_Key, "Face Labels", "The name of the triangle normals data array", "Face Normals"));
 
   //  params.insert(std::make_unique<StringParameter>(k_SharedVertexMatrix_Key, "Shared Vertex Matrix Name", "Name of the created Shared Vertex Attribute Matrix",
   //                                                  CreateTriangleGeometryAction::k_DefaultVerticesName));
