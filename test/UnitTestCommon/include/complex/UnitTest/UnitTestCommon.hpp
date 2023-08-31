@@ -373,6 +373,19 @@ inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom*
 }
 
 /**
+ * @brief Compares two IGeometries (HELPER FUNCTION)
+ * @param geom1
+ * @param geom2
+ * @returns bool true if equivalent
+ */
+inline bool CompareIGeometry(const IGeometry* geom1, const IGeometry* geom2)
+{
+  return (geom1->getGeomType() == geom2->getGeomType()) && (geom1->getSpatialDimensionality() == geom2->getSpatialDimensionality()) &&
+         (geom1->getUnitDimensionality() == geom2->getUnitDimensionality()) && (geom1->getNumberOfCells() == geom2->getNumberOfCells()) &&
+         (geom1->findAllChildrenOfType<IArray>().size() == geom2->findAllChildrenOfType<IArray>().size()) && (geom1->getParametricCenter() == geom2->getParametricCenter());
+}
+
+/**
  * @brief Compares two Montages
  * @param exemplar
  * @param generated
@@ -388,28 +401,13 @@ inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontag
     bool exists = false;
     for(usize i = 0; i < generatedGeometries.size(); i++)
     {
-      if(exGeom->getGeomType() == generatedGeometries[i]->getGeomType())
+      if(CompareIGeometry(exGeom, generatedGeometries[i]))
       {
-        if(exGeom->getSpatialDimensionality() == generatedGeometries[i]->getSpatialDimensionality())
+        if(std::find(usedIndicies.begin(), usedIndicies.end(), i) == usedIndicies.end())
         {
-          if(exGeom->getUnitDimensionality() == generatedGeometries[i]->getUnitDimensionality())
-          {
-            if(exGeom->getNumberOfCells() == generatedGeometries[i]->getNumberOfCells())
-            {
-              if(exGeom->findAllChildrenOfType<IArray>().size() == generatedGeometries[i]->findAllChildrenOfType<IArray>().size())
-              {
-                if(exGeom->getParametricCenter() == generatedGeometries[i]->getParametricCenter())
-                {
-                  if(std::find(usedIndicies.begin(), usedIndicies.end(), i) == usedIndicies.end())
-                  {
-                    usedIndicies.push_back(i);
-                    exists = true;
-                    break;
-                  }
-                }
-              }
-            }
-          }
+          usedIndicies.push_back(i);
+          exists = true;
+          break;
         }
       }
     }
