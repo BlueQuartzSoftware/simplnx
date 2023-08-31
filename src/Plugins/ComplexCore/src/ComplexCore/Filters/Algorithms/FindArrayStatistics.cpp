@@ -610,7 +610,7 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
       }
 
       auto* array11Ptr = dynamic_cast<NeighborList<float32>*>(arrays[11]);
-      if(array10Ptr == nullptr)
+      if(array11Ptr == nullptr)
       {
         throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Modal Bin Ranges' array to needed type. Check input array selection.");
       }
