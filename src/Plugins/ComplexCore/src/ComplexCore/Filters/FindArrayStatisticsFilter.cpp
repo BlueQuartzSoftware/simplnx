@@ -202,9 +202,8 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 1));
   params.insert(std::make_unique<DataObjectNameParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Histogram"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MostPopulatedBinArrayName_Key, "Most Populated Bin Array Name", "The name of the Most Populated Bin array", "Most Populated Bin"));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindModalBinRanges_Key, "Find Modal Histogram Bin Ranges",
-                                                                 "Whether to compute the histogram bin ranges that contain the mode values.  This option requires that \" Find Mode \" is turned on.",
-                                                                 false));
+  params.insert(std::make_unique<BoolParameter>(k_FindModalBinRanges_Key, "Find Modal Histogram Bin Ranges",
+                                                "Whether to compute the histogram bin ranges that contain the mode values.  This option requires that \" Find Mode \" is turned on.", false));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ModalBinArrayName_Key, "Modal Histogram Bin Ranges Array Name",
                                                           "The name of the array that stores the histogram bin range(s) that contain the mode(s) of the data.", "Modal Histogram Bin Ranges"));
 
@@ -263,6 +262,8 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.linkParameters(k_FindHistogram_Key, k_MinRange_Key, true);
   params.linkParameters(k_FindHistogram_Key, k_MaxRange_Key, true);
   params.linkParameters(k_FindHistogram_Key, k_MostPopulatedBinArrayName_Key, true);
+  params.linkParameters(k_FindHistogram_Key, k_FindModalBinRanges_Key, true);
+  params.linkParameters(k_FindHistogram_Key, k_ModalBinArrayName_Key, true);
   params.linkParameters(k_FindLength_Key, k_LengthArrayName_Key, true);
   params.linkParameters(k_FindMin_Key, k_MinimumArrayName_Key, true);
   params.linkParameters(k_FindMax_Key, k_MaximumArrayName_Key, true);
