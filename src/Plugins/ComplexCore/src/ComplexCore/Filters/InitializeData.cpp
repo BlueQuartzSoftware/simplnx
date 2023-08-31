@@ -330,7 +330,7 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   {
     auto& iDataArray = data.getDataRefAs<IDataArray>(path);
 
-    ExecuteNeighborFunction(InitializeArrayFunctor{}, iDataArray.getDataType(), iDataArray, dims, xMin, xMax, yMin, yMax, zMin, zMin, initType, initValue, initRange); // NO BOOL
+    ExecuteNeighborFunction(InitializeArrayFunctor{}, iDataArray.getDataType(), iDataArray, dims, xMin, xMax, yMin, yMax, zMin, zMax, initType, initValue, initRange); // NO BOOL
 
     // Delay the execution by 1 second to avoid the exact same seeding for each array
     {

@@ -18,7 +18,7 @@ const DataPath k_ImageGeomPath{{"ImageGeom"}};
 const DataPath k_Int32ArrayPath = k_ImageGeomPath.createChildPath("Int32Array");
 const DataPath k_Float32ArrayPath = k_ImageGeomPath.createChildPath("Float32Array");
 
-const std::vector<usize> k_ImageDims = {25, 25, 25};
+const std::vector<usize> k_ImageDims = {23, 24, 25};
 const std::vector<usize> k_ArrayDims(k_ImageDims.crbegin(), k_ImageDims.crend());
 const std::vector<usize> k_ComponentDims = {3};
 
@@ -61,9 +61,12 @@ DataStructure CreateDataStructure()
 }
 
 template <class T, class PredicateT>
-bool DoesRangeSatisfyCondition(const IDataStore& dataStore, const std::array<usize, 3>& dims, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax, PredicateT&& predicate)
+bool DoesRangeSatisfyCondition(const IDataStore& dataStore, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax, PredicateT&& predicate)
 {
   auto& dataStoreTyped = dynamic_cast<const AbstractDataStore<T>&>(dataStore);
+  // Z Y X
+  auto dims = dataStoreTyped.getTupleShape();
+  usize numComps = dataStoreTyped.getNumberOfComponents();
 
   for(uint64 k = zMin; k < zMax + 1; k++)
   {
@@ -71,11 +74,14 @@ bool DoesRangeSatisfyCondition(const IDataStore& dataStore, const std::array<usi
     {
       for(uint64 i = xMin; i < xMax + 1; i++)
       {
-        usize index = (k * dims[0] * dims[1]) + (j * dims[0]) + i;
-        T value = dataStoreTyped[index];
-        if(!predicate(value))
+        usize tuple = (k * dims[1] * dims[2]) + (j * dims[2]) + i;
+        for(usize c = 0; c < numComps; c++)
         {
-          return false;
+          T value = dataStoreTyped.getComponentValue(tuple, c);
+          if(!predicate(value))
+          {
+            return false;
+          }
         }
       }
     }
@@ -85,16 +91,15 @@ bool DoesRangeSatisfyCondition(const IDataStore& dataStore, const std::array<usi
 }
 
 template <class T>
-bool DoesRangeEqualValue(const IDataStore& dataStore, const std::array<usize, 3>& dims, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax, float64 expectedValue)
+bool DoesRangeEqualValue(const IDataStore& dataStore, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, float64 expectedValue)
 {
-  return DoesRangeSatisfyCondition<T>(dataStore, dims, xMin, yMin, zMin, xMax, yMax, zMax, [expectedValue](T value) { return value == expectedValue; });
+  return DoesRangeSatisfyCondition<T>(dataStore, xMin, yMin, zMin, xMax, yMax, zMax, [expectedValue](T value) { return value == expectedValue; });
 }
 
 template <class T>
-bool IsDataWithinInclusiveRange(const IDataStore& dataStore, const std::array<usize, 3>& dims, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax,
-                                std::pair<float64, float64> range)
+bool IsDataWithinInclusiveRange(const IDataStore& dataStore, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, std::pair<float64, float64> range)
 {
-  return DoesRangeSatisfyCondition<T>(dataStore, dims, xMin, yMin, zMin, xMax, yMax, zMax, [range](T value) { return value >= range.first && value <= range.second; });
+  return DoesRangeSatisfyCondition<T>(dataStore, xMin, yMin, zMin, xMax, yMax, zMax, [range](T value) { return value >= range.first && value <= range.second; });
 }
 } // namespace
 
@@ -103,12 +108,12 @@ TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]"
   InitializeData filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 5;
-  constexpr uint64 yMin = 5;
-  constexpr uint64 zMin = 5;
-  constexpr uint64 xMax = 15;
-  constexpr uint64 yMax = 15;
-  constexpr uint64 zMax = 15;
+  constexpr uint64 xMin = 3;
+  constexpr uint64 yMin = 4;
+  constexpr uint64 zMin = 0;
+  constexpr uint64 xMax = 13;
+  constexpr uint64 yMax = 14;
+  constexpr uint64 zMax = 24;
   constexpr float64 initValue = 42.0;
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::Manual, initValue, {0.0, 0.0});
@@ -118,8 +123,6 @@ TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]"
 
   auto result = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
-
-  std::array<usize, 3> imageDims = {k_ImageDims.at(0), k_ImageDims.at(1), k_ImageDims.at(2)};
 
   for(const auto& path : cellArrayPaths)
   {
@@ -133,63 +136,63 @@ TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]"
     switch(type)
     {
     case DataType::int8: {
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<int8>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<int8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int16: {
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<int16>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<int16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int32: {
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<int32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<int32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int64: {
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<int64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<int64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint8: {
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint16: {
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint32: {
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint64: {
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::float32: {
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<float32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<float32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<float32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::float64: {
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<float64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<float64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
+      REQUIRE(DoesRangeEqualValue<float64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     default: {
@@ -204,12 +207,12 @@ TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]"
   InitializeData filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 5;
-  constexpr uint64 yMin = 5;
-  constexpr uint64 zMin = 5;
-  constexpr uint64 xMax = 15;
-  constexpr uint64 yMax = 15;
-  constexpr uint64 zMax = 15;
+  constexpr uint64 xMin = 3;
+  constexpr uint64 yMin = 4;
+  constexpr uint64 zMin = 0;
+  constexpr uint64 xMax = 13;
+  constexpr uint64 yMax = 14;
+  constexpr uint64 zMax = 24;
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::Random, 0.0, {0.0, 0.0});
 
@@ -218,8 +221,6 @@ TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]"
 
   auto result = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
-
-  std::array<usize, 3> imageDims = {k_ImageDims.at(0), k_ImageDims.at(1), k_ImageDims.at(2)};
 
   for(const auto& path : cellArrayPaths)
   {
@@ -234,53 +235,53 @@ TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]"
     switch(type)
     {
     case DataType::int8: {
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<int8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int16: {
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<int16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int32: {
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<int32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int64: {
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<int64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint8: {
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint16: {
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint32: {
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint64: {
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::float32: {
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<float32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<float32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::float64: {
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<float64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(DoesRangeEqualValue<float64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     default: {
@@ -295,12 +296,12 @@ TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][Initial
   InitializeData filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 5;
-  constexpr uint64 yMin = 5;
-  constexpr uint64 zMin = 5;
-  constexpr uint64 xMax = 15;
-  constexpr uint64 yMax = 15;
-  constexpr uint64 zMax = 15;
+  constexpr uint64 xMin = 3;
+  constexpr uint64 yMin = 4;
+  constexpr uint64 zMin = 0;
+  constexpr uint64 xMax = 13;
+  constexpr uint64 yMax = 14;
+  constexpr uint64 zMax = 24;
   constexpr std::pair<float64, float64> initRange = {1.0, 25.0};
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::RandomWithRange, 0.0, initRange);
@@ -310,8 +311,6 @@ TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][Initial
 
   auto result = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
-
-  std::array<usize, 3> imageDims = {k_ImageDims.at(0), k_ImageDims.at(1), k_ImageDims.at(2)};
 
   for(const auto& path : cellArrayPaths)
   {
@@ -325,63 +324,63 @@ TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][Initial
     switch(type)
     {
     case DataType::int8: {
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<int8>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<int8>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<int8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int16: {
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<int16>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<int16>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<int16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int32: {
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<int32>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<int32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<int32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::int64: {
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<int64>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<int64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<int64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<int64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint8: {
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<uint8>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<uint8>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint16: {
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<uint16>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<uint16>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint32: {
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<uint32>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<uint32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::uint64: {
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<uint64>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<uint64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::float32: {
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<float32>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<float32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<float32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<float32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     case DataType::float64: {
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<float64>(dataStore, imageDims, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, imageDims, xMax + 1, imageDims[0], yMax + 1, imageDims[1], zMax + 1, imageDims[2], 0.0));
+      REQUIRE(DoesRangeEqualValue<float64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
+      REQUIRE(IsDataWithinInclusiveRange<float64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
+      REQUIRE(DoesRangeEqualValue<float64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
       break;
     }
     default: {
