@@ -148,6 +148,12 @@ struct COMPLEX_EXPORT OutputActions
   Result<> applyAll(DataStructure& dataStructure, IDataAction::Mode mode) const;
 };
 
+/**
+ * @brief Merges two OutputActions into one.
+ * @param first OutputActions
+ * @param second OutputActions
+ * @return OutputActions a new OutputActions created from the two input OutputActions
+ */
 inline OutputActions MergeOutputActions(OutputActions first, OutputActions second)
 {
   OutputActions outputActions = {};
@@ -177,9 +183,9 @@ inline OutputActions MergeOutputActions(OutputActions first, OutputActions secon
 
 /**
  * @brief Merges two Result<OutputActions> into one.
- * @param first
- * @param second
- * @return
+ * @param first Result<OutputActions>
+ * @param second Result<OutputActions>
+ * @return Result<OutputActions> a new result created from the two input results
  */
 inline Result<OutputActions> MergeOutputActionResults(Result<OutputActions> first, Result<OutputActions> second)
 {

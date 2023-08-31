@@ -148,7 +148,7 @@ private:
     for(auto& bound : m_Cache.bounds)
     {
       std::stringstream dcNameStream;
-      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string().substr(0, bound.Filepath.filename().string().find(bound.Filepath.extension().string()));
+      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.stem();
       bound.ImageName = dcNameStream.str();
 
       {
@@ -182,11 +182,7 @@ private:
     Result<> outputResult = {};
 
     auto* filterListPtr = Application::Instance()->getFilterList();
-    auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
-    if(nullptr == imageImportFilter.get())
-    {
-      return MakeErrorResult(-18544, "Unable to create ITKImageReader filter");
-    }
+    auto imageImportFilter = ITKImageReader();
 
     for(const auto& bound : m_Cache.bounds)
     {
@@ -212,7 +208,7 @@ private:
         imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
         imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataProxy));
 
-        auto result = imageImportFilter->execute(m_DataStructure, imageImportArgs).result;
+        auto result = imageImportFilter.execute(m_DataStructure, imageImportArgs).result;
         if(result.invalid())
         {
           outputResult = MergeResults(outputResult, result);

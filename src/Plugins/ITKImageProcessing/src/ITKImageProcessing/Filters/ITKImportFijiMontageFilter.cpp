@@ -157,11 +157,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   auto* filterListPtr = Application::Instance()->getFilterList();
   for(const auto& bound : s_HeaderCache[m_InstanceId].bounds)
   {
-    auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
-    if(nullptr == imageImportFilter.get())
-    {
-      continue;
-    }
+    auto imageImportFilter = ITKImageReader();
 
     DataPath imageDataProxy = {};
     if(pParentDataGroupValue)
@@ -179,7 +175,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
     imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataProxy));
 
-    auto result = imageImportFilter->preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
+    auto result = imageImportFilter.preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
     if(result.outputActions.invalid())
     {
       return result;
