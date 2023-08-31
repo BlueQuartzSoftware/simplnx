@@ -36,7 +36,7 @@ public:
   , m_Cache(m_Filter->getCache())
   {
   }
-  ~IOHandler() = default;
+  ~IOHandler() noexcept = default;
 
   IOHandler(const IOHandler&) = delete;
   IOHandler(IOHandler&&) noexcept = delete;
@@ -119,9 +119,7 @@ private:
         continue;
       }
       BoundsType bound;
-      std::stringstream path;
-      path << m_InputValues->inputFilePath.parent_path().string() << "/" << tokens[0];
-      bound.Filepath = fs::path(path.str());
+      bound.Filepath = m_InputValues->inputFilePath.parent_path() / tokens[0];
 
       std::string coords = StringUtilities::trimmed(tokens[2]);
       coords = StringUtilities::replace(coords, "(", "");

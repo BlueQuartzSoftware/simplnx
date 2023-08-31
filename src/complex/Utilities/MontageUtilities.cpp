@@ -3,7 +3,7 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-std::map<int32, std::vector<usize>> MontageUtilities::Burn(int32 tolerance, std::vector<int32>& input)
+std::map<int32, std::vector<usize>> MontageUtilities::Burn(int32 tolerance, const std::vector<int32>& input)
 {
   int32 halfTol = tolerance / 2;
   usize count = input.size();
