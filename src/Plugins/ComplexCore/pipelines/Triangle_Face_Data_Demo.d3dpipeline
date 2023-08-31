@@ -31,7 +31,7 @@
     },
     {
       "args": {
-        "surface_mesh_triangle_normals_array_path": "Face Normals",
+        "surface_mesh_triangle_normals_array_path": "Face Normals (Calculated)",
         "tri_geometry_data_path": "[Triangle Geometry]"
       },
       "comments": "",
