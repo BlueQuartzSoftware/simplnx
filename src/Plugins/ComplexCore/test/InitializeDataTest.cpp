@@ -18,7 +18,7 @@ const DataPath k_ImageGeomPath{{"ImageGeom"}};
 const DataPath k_Int32ArrayPath = k_ImageGeomPath.createChildPath("Int32Array");
 const DataPath k_Float32ArrayPath = k_ImageGeomPath.createChildPath("Float32Array");
 
-const std::vector<usize> k_ImageDims = {25, 25, 25};
+const std::vector<usize> k_ImageDims = {23, 24, 25};
 const std::vector<usize> k_ArrayDims(k_ImageDims.crbegin(), k_ImageDims.crend());
 const std::vector<usize> k_ComponentDims = {3};
 
@@ -108,12 +108,12 @@ TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]"
   InitializeData filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 5;
-  constexpr uint64 yMin = 5;
-  constexpr uint64 zMin = 5;
-  constexpr uint64 xMax = 15;
-  constexpr uint64 yMax = 15;
-  constexpr uint64 zMax = 15;
+  constexpr uint64 xMin = 3;
+  constexpr uint64 yMin = 4;
+  constexpr uint64 zMin = 0;
+  constexpr uint64 xMax = 13;
+  constexpr uint64 yMax = 14;
+  constexpr uint64 zMax = 24;
   constexpr float64 initValue = 42.0;
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::Manual, initValue, {0.0, 0.0});
@@ -207,12 +207,12 @@ TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]"
   InitializeData filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 5;
-  constexpr uint64 yMin = 5;
-  constexpr uint64 zMin = 5;
-  constexpr uint64 xMax = 15;
-  constexpr uint64 yMax = 15;
-  constexpr uint64 zMax = 15;
+  constexpr uint64 xMin = 3;
+  constexpr uint64 yMin = 4;
+  constexpr uint64 zMin = 0;
+  constexpr uint64 xMax = 13;
+  constexpr uint64 yMax = 14;
+  constexpr uint64 zMax = 24;
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::Random, 0.0, {0.0, 0.0});
 
@@ -296,12 +296,12 @@ TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][Initial
   InitializeData filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 5;
-  constexpr uint64 yMin = 5;
-  constexpr uint64 zMin = 5;
-  constexpr uint64 xMax = 15;
-  constexpr uint64 yMax = 15;
-  constexpr uint64 zMax = 15;
+  constexpr uint64 xMin = 3;
+  constexpr uint64 yMin = 4;
+  constexpr uint64 zMin = 0;
+  constexpr uint64 xMax = 13;
+  constexpr uint64 yMax = 14;
+  constexpr uint64 zMax = 24;
   constexpr std::pair<float64, float64> initRange = {1.0, 25.0};
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::RandomWithRange, 0.0, initRange);
