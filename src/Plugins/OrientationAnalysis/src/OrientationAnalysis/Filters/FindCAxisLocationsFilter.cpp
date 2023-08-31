@@ -80,12 +80,10 @@ IFilter::PreflightResult FindCAxisLocationsFilter::preflightImpl(const DataStruc
   std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<DataPath> dataPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue};
-  if(!dataStructure.validateNumberOfTuples(dataPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(
-        -3520, fmt::format("The quaternions cell data array '{}' and the phases cell data array '{}' have mismatching number of tuples. Make sure these arrays are both located in the "
-                           "cell data attribute matrix for the selected geometry.",
-                           pQuatsArrayPathValue.toString(), pCellPhasesArrayPathValue.toString()));
+    return {MakeErrorResult<OutputActions>(-3520, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   {

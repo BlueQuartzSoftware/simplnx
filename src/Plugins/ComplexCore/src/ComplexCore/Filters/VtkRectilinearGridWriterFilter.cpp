@@ -87,10 +87,10 @@ IFilter::PreflightResult VtkRectilinearGridWriterFilter::preflightImpl(const Dat
     return MakePreflightErrorResult(-2070, "No cell data arrays are selected. You must select at least one array.");
   }
 
-  if(!dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(
-        -2071, "One or more of the selected cell data arrays have mismatching numbers of tuples. Make sure that all of the selected arrays come from the same cell level attribute matrix.");
+    return {MakeErrorResult<OutputActions>(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   usize numTuples = dataStructure.getDataRefAs<IDataArray>(pSelectedDataArrayPathsValue[0]).getNumberOfTuples();

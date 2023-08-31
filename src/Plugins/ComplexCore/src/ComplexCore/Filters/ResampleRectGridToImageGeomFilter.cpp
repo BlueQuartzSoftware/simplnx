@@ -100,9 +100,10 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
     return MakePreflightErrorResult(-7360, "At least one attribute array must be selected");
   }
 
-  if(!dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(-7361, "One or more of the selected attribute arrays have mismatching numbers of tuples. All selected attribute arrays must come from the same attribute matrix.");
+    return {MakeErrorResult<OutputActions>(-7361, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   if(pDimensionsValue[0] < 0)

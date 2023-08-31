@@ -16,6 +16,7 @@ namespace
 {
 constexpr int64 k_TupleCountInvalidError = -250;
 constexpr int64 k_MissingFeaturePhasesError = -251;
+constexpr int32 k_InconsistentTupleCount = -252;
 
 void assignBadPoints(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
@@ -348,7 +349,7 @@ IFilter::UniquePointer MinNeighbors::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
   auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
@@ -361,14 +362,14 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& data, 
   std::vector<DataPath> dataArrayPaths;
 
   std::vector<usize> cDims = {1};
-  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
-  auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
+  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
   dataArrayPaths.push_back(numNeighborsPath);
 
   if(applyToSinglePhase)
   {
-    auto* featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
+    auto* featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
     if(featurePhasesArray == nullptr)
     {
       std::string ss = fmt::format("Could not find Feature Phases array at path '{}'", featurePhasesPath.toString());
@@ -378,10 +379,11 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& data, 
     dataArrayPaths.push_back(featurePhasesPath);
   }
 
-  if(!data.validateNumberOfTuples(dataArrayPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!numTupleCheckResult.first)
   {
-    std::string ss = fmt::format("DataArrays do not have matching tuple count");
-    return {MakeErrorResult<OutputActions>(k_TupleCountInvalidError, ss)};
+    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
+                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   OutputActions actions;

@@ -95,11 +95,11 @@ IFilter::PreflightResult FindBiasedFeaturesFilter::preflightImpl(const DataStruc
   {
     cellFeatureArrayDataPaths.push_back(pPhasesArrayPathValue);
   }
-  if(!dataStructure.validateNumberOfTuples(cellFeatureArrayDataPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(cellFeatureArrayDataPaths);
+  if(!numTupleCheckResult.first)
   {
-    return {MakeErrorResult<OutputActions>(-7460, fmt::format("The selected input cell feature arrays have mismatching number of tuples. Make sure the selected centroids, surface features (and "
-                                                              "phases) are created from the same geometry's cell data attribute matrix."))};
-  }
+    return {MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+  };
 
   auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue).getTupleShape(), std::vector<usize>{1},
                                                     pCentroidsArrayPathValue.getParent().createChildPath(pBiasedFeaturesArrayNameValue));

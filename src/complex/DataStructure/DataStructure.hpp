@@ -650,7 +650,7 @@ public:
    * @param dataPaths
    * @return bool
    */
-  bool validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
+  std::pair<bool, std::string> validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
 
   /**
    * @brief Resets DataObject IDs starting at the provided value.

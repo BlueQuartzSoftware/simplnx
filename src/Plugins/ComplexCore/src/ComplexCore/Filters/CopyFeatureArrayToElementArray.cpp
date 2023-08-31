@@ -142,9 +142,10 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
     return MakePreflightErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, "You must select at least one feature data array to copy to an element data array.");
   }
 
-  if(!dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(-3020, "One or more of the selected feature arrays do not have a matching number of tuples. Make sure to select arrays from the feature level attribute matrix.");
+    return {MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);

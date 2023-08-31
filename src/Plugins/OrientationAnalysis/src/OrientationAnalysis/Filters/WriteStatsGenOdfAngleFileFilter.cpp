@@ -120,11 +120,10 @@ IFilter::PreflightResult WriteStatsGenOdfAngleFileFilter::preflightImpl(const Da
   {
     dataArrays.push_back(pGoodVoxelsArrayPathValue);
   }
-  if(!dataStructure.validateNumberOfTuples(dataArrays))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataArrays);
+  if(!numTupleCheckResult.first)
   {
-    MakePreflightErrorResult(
-        -9402,
-        "One or more of the input arrays (euler angles, phases, and mask) does not have matching numbers of tuples. Make sure you are selecting cell level arrays from the same attribute matrix.");
+    return {MakeErrorResult<OutputActions>(-9402, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

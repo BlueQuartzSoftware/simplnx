@@ -389,9 +389,10 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     return {nonstd::make_unexpected(std::vector<Error>{Error{-57209, msg}})};
   }
 
-  if(!dataStructure.validateNumberOfTuples(inputDataArrayPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(inputDataArrayPaths);
+  if(!numTupleCheckResult.first)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-57210, "Input arrays do not have matching tuple counts."}})};
+    return {MakeErrorResult<OutputActions>(-57210, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, numBins, tupleDims).actions;

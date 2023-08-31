@@ -88,10 +88,10 @@ IFilter::PreflightResult GenerateFaceMisorientationColoringFilter::preflightImpl
 
   // make sure all the cell data has same number of tuples (i.e. they should all be coming from the same Image Geometry)
   std::vector<DataPath> imageArrayPaths = {pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue};
-  if(!dataStructure.validateNumberOfTuples(imageArrayPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(imageArrayPaths);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(
-        -98410, "The input image geometry cell feature data arrays have inconsistent numbers of tuples.  Make sure the average quaternions and phases arrays all have the same number of tuples.");
+    return {MakeErrorResult<OutputActions>(-98410, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   const auto faceLabels = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);

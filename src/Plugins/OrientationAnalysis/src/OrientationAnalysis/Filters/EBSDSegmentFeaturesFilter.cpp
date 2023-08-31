@@ -170,9 +170,10 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
     dataPaths.push_back(goodVoxelsPath);
   }
 
-  if(!dataStructure.validateNumberOfTuples(dataPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!numTupleCheckResult.first)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-651, fmt::format("Input arrays do have matching tuple counts.")}})};
+    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   // Create output DataStructure Items

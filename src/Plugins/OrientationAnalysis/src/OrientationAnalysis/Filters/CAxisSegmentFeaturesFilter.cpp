@@ -118,11 +118,10 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
 
   const auto& imageGeo = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath);
   const auto* cellDataAM = imageGeo.getCellData();
-  if(!dataStructure.validateNumberOfTuples(dataPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(-8360, fmt::format("One or more of the cell data arrays (quaternions, phases, and mask) have mismatching number of tuples. Make sure these arrays are located in "
-                                                       "the cell data attribute matrix '{}' in the selected image geometry '{}'",
-                                                       cellDataAM->getName(), imageGeo.getName()));
+    return {MakeErrorResult<OutputActions>(-8630, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   {

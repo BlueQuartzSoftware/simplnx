@@ -94,11 +94,10 @@ IFilter::PreflightResult ExportGBCDTriangleDataFilter::preflightImpl(const DataS
 
   // make sure all the face data has same number of tuples (i.e. they should all be coming from the same Triangle Geometry)
   std::vector<DataPath> triangleArrayPaths = {pSurfaceMeshFaceLabelsArrayPathValue, pSurfaceMeshFaceNormalsArrayPathValue, pSurfaceMeshFaceAreasArrayPathValue};
-  if(!dataStructure.validateNumberOfTuples(triangleArrayPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(triangleArrayPaths);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(
-        -48320,
-        "The input triangle geometry face data arrays have inconsistent numbers of tuples.  Make sure the face labels, face normals, and face areas arrays all have the same number of tuples.");
+    return {MakeErrorResult<OutputActions>(-48320, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

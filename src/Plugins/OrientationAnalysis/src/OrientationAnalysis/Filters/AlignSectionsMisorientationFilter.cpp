@@ -24,7 +24,8 @@ constexpr complex::int32 k_InputRepresentationTypeError = -68001;
 constexpr complex::int32 k_OutputRepresentationTypeError = -68002;
 constexpr complex::int32 k_InputComponentDimensionError = -68003;
 constexpr complex::int32 k_InputComponentCountError = -68004;
-constexpr complex::int32 k_IncorrectInputArrayType = -68063;
+constexpr complex::int32 k_InconsistentTupleCount = -68063;
+constexpr complex::int32 k_OutputFilePathEmpty = -68063;
 
 } // namespace
 
@@ -144,9 +145,11 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
     dataPaths.push_back(pGoodVoxelsArrayPath);
   }
   // Ensure all DataArrays have the same number of Tuples
-  if(!dataStructure.validateNumberOfTuples(dataPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!numTupleCheckResult.first)
   {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "All input arrays must have the same number of tuples")};
+    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
+                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   const auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
@@ -162,7 +165,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   // Ensure the file path is not blank if they user wants to write the alignment shifts.
   if(pWriteAlignmentShifts && pAlignmentShiftFileName.empty())
   {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Write Alignment Shifts is TRUE but the output file path is empty. Please ensure the file path is set for the alignment file.")};
+    return {MakeErrorResult<OutputActions>(k_OutputFilePathEmpty, "Write Alignment Shifts is TRUE but the output file path is empty. Please ensure the file path is set for the alignment file.")};
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

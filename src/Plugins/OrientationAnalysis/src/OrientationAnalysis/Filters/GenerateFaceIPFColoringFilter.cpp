@@ -91,10 +91,10 @@ IFilter::PreflightResult GenerateFaceIPFColoringFilter::preflightImpl(const Data
 
   // make sure all the face data has same number of tuples (i.e. they should all be coming from the same Triangle Geometry)
   std::vector<DataPath> triangleArrayPaths = {pSurfaceMeshFaceLabelsArrayPathValue, pSurfaceMeshFaceNormalsArrayPathValue};
-  if(!dataStructure.validateNumberOfTuples(triangleArrayPaths))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(triangleArrayPaths);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(
-        -2430, "The input triangle geometry face data arrays have inconsistent numbers of tuples.  Make sure the face labels and face normals arrays all have the same number of tuples.");
+    return {MakeErrorResult<OutputActions>(-2430, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   const auto faceLabels = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
@@ -105,10 +105,10 @@ IFilter::PreflightResult GenerateFaceIPFColoringFilter::preflightImpl(const Data
 
   // make sure all the cell data has same number of tuples (i.e. they should all be coming from the same Image Geometry)
   std::vector<DataPath> imageArrayPaths = {pFeatureEulerAnglesArrayPathValue, pFeaturePhasesArrayPathValue};
-  if(!dataStructure.validateNumberOfTuples(imageArrayPaths))
+  numTupleCheckResult = dataStructure.validateNumberOfTuples(imageArrayPaths);
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(
-        -2432, "The input image geometry cell feature data arrays have inconsistent numbers of tuples.  Make sure the euler angles and phases arrays all have the same number of tuples.");
+    return {MakeErrorResult<OutputActions>(-2432, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   DataPath faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshFaceIPFColorsArrayNameValue);

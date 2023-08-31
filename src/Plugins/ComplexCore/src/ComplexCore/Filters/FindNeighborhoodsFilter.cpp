@@ -101,10 +101,10 @@ IFilter::PreflightResult FindNeighborhoodsFilter::preflightImpl(const DataStruct
   complex::Result<OutputActions> resultOutputActions;
 
   // Get the Feature Phases Array and get its TupleShape
-  if(!dataStructure.validateNumberOfTuples({pEquivalentDiametersArrayPathValue, pFeaturePhasesArrayPathValue, pCentroidsArrayPathValue}))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples({pEquivalentDiametersArrayPathValue, pFeaturePhasesArrayPathValue, pCentroidsArrayPathValue});
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(-5730, fmt::format("One or more of the selected input feature data arrays (equivalent diameters, phases, and centroids) has mismatching tuples. Make sure you "
-                                                       "select the input arrays from the cell feature attribute matrix."));
+    return {MakeErrorResult<OutputActions>(-5730, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
   const auto* cellFeatureData = dataStructure.getDataAs<AttributeMatrix>(pFeaturePhasesArrayPathValue.getParent());
   if(cellFeatureData == nullptr)

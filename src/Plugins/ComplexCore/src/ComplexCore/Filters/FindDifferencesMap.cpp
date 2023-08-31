@@ -16,7 +16,7 @@ namespace
 {
 constexpr int32 k_MissingInputArray = -567;
 constexpr int32 k_ComponentCountMismatchError = -90003;
-constexpr int32 k_TupleCountMismatchError = -90004;
+constexpr int32 k_InvalidNumTuples = -90004;
 
 IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std::vector<DataPath>& dataPaths)
 {
@@ -178,7 +178,7 @@ IFilter::UniquePointer FindDifferencesMap::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
   auto secondInputArrayPath = args.value<DataPath>(k_SecondInputArrayPath_Key);
@@ -186,7 +186,7 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
 
   std::vector<DataPath> dataArrayPaths;
 
-  auto* firstInputArray = data.getDataAs<IDataArray>(firstInputArrayPath);
+  auto* firstInputArray = dataStructure.getDataAs<IDataArray>(firstInputArrayPath);
   if(firstInputArray == nullptr)
   {
     std::string ss = fmt::format("Could not find input array at path {}", firstInputArrayPath.toString());
@@ -195,7 +195,7 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
 
   dataArrayPaths.push_back(firstInputArrayPath);
 
-  auto* secondInputArray = data.getDataAs<IDataArray>(secondInputArrayPath);
+  auto* secondInputArray = dataStructure.getDataAs<IDataArray>(secondInputArrayPath);
   if(secondInputArray == nullptr)
   {
     std::string ss = fmt::format("Could not find input array at path {}", secondInputArrayPath.toString());
@@ -205,7 +205,7 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
 
   if(!dataArrayPaths.empty())
   {
-    auto result = validateArrayTypes(data, dataArrayPaths);
+    auto result = validateArrayTypes(dataStructure, dataArrayPaths);
     if(result.outputActions.invalid())
     {
       return result;
@@ -215,7 +215,7 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
   WarningCollection warnings;
   if(!dataArrayPaths.empty())
   {
-    warnings = warnOnUnsignedTypes(data, dataArrayPaths);
+    warnings = warnOnUnsignedTypes(dataStructure, dataArrayPaths);
   }
 
   // Safe to check array component dimensions since we won't get here if the pointers are null
@@ -225,10 +225,12 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
     return {nonstd::make_unexpected(std::vector<Error>{Error{complex::k_ComponentCountMismatchError, ss}})};
   }
 
-  if(!data.validateNumberOfTuples(dataArrayPaths))
+  // validate the number of tuples
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!numTupleCheckResult.first)
   {
-    std::string ss = fmt::format("Tuple count not consistent between input arrays.");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{complex::k_TupleCountMismatchError, ss}})};
+    return {
+        MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   // At this point we have two valid arrays of the same type and component dimensions, so we

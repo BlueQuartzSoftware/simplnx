@@ -100,11 +100,10 @@ IFilter::PreflightResult FindFeatureReferenceCAxisMisorientationsFilter::preflig
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(!dataStructure.validateNumberOfTuples({pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}))
+  auto numTupleCheckResult = dataStructure.validateNumberOfTuples({pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue});
+  if(!numTupleCheckResult.first)
   {
-    return MakePreflightErrorResult(-9800, fmt::format("The quaternions cell data array '{}', feature ids cell data array '{}' and cell phases data array '{}' have mismatching number of tuples. Make "
-                                                       "sure these arrays are all located in the cell data attribute matrix for the selected geometry.",
-                                                       pQuatsArrayPathValue.toString(), pFeatureIdsArrayPathValue.toString(), pCellPhasesArrayPathValue.toString()));
+    return {MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
   }
 
   std::vector<usize> tupleShape = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape();
