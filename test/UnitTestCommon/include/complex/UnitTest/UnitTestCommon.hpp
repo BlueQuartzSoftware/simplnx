@@ -11,6 +11,7 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "complex/DataStructure/Montage/AbstractMontage.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -345,6 +346,73 @@ inline void CompareImageGeometry(const DataStructure& dataStructure, const DataP
   const auto exemplarOrigin = exemplarGeom->getOrigin();
   const auto computedOrigin = computedGeom->getOrigin();
   REQUIRE(exemplarOrigin == computedOrigin);
+}
+
+/**
+ * @brief Compares two Image Geometries
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom* computedGeom)
+{
+  REQUIRE(exemplarGeom != nullptr);
+  REQUIRE(computedGeom != nullptr);
+
+  const auto exemplarDims = exemplarGeom->getDimensions();
+  const auto computedDims = computedGeom->getDimensions();
+  REQUIRE(exemplarDims == computedDims);
+
+  const auto exemplarSpacing = exemplarGeom->getSpacing();
+  const auto computedSpacing = computedGeom->getSpacing();
+  REQUIRE(exemplarSpacing == computedSpacing);
+
+  const auto exemplarOrigin = exemplarGeom->getOrigin();
+  const auto computedOrigin = computedGeom->getOrigin();
+  REQUIRE(exemplarOrigin == computedOrigin);
+}
+
+/**
+ * @brief Compares two IGeometries (HELPER FUNCTION)
+ * @param geom1
+ * @param geom2
+ * @returns bool true if equivalent
+ */
+inline bool CompareIGeometry(const IGeometry* geom1, const IGeometry* geom2)
+{
+  return (geom1->getGeomType() == geom2->getGeomType()) && (geom1->getSpatialDimensionality() == geom2->getSpatialDimensionality()) &&
+         (geom1->getUnitDimensionality() == geom2->getUnitDimensionality()) && (geom1->getNumberOfCells() == geom2->getNumberOfCells()) &&
+         (geom1->findAllChildrenOfType<IArray>().size() == geom2->findAllChildrenOfType<IArray>().size()) && (geom1->getParametricCenter() == geom2->getParametricCenter());
+}
+
+/**
+ * @brief Compares two Montages
+ * @param exemplar
+ * @param generated
+ */
+inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontage& generated)
+{
+  REQUIRE(exemplar.getTileCount() == generated.getTileCount());
+  const AbstractMontage::CollectionType exemplarGeometries = exemplar.getGeometries();
+  const AbstractMontage::CollectionType generatedGeometries = generated.getGeometries();
+  for(const auto* exGeom : exemplarGeometries)
+  {
+    std::vector<usize> usedIndicies(exemplarGeometries.size());
+    bool exists = false;
+    for(usize i = 0; i < generatedGeometries.size(); i++)
+    {
+      if(CompareIGeometry(exGeom, generatedGeometries[i]))
+      {
+        if(std::find(usedIndicies.begin(), usedIndicies.end(), i) == usedIndicies.end())
+        {
+          usedIndicies.push_back(i);
+          exists = true;
+          break;
+        }
+      }
+    }
+    REQUIRE(exists);
+  }
 }
 
 /**

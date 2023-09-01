@@ -136,7 +136,7 @@ public:
    * @param depth
    * @return GridTileIndex
    */
-  GridTileIndex getTileIndex(usize row, usize col, usize depth) const;
+  GridTileIndex getTileIndex(usize row, usize col, usize depth = 0) const;
 
   /**
    * @brief Returns a GridTileIndex pointing at the specified 3D tile index.

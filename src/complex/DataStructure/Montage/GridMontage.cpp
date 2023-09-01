@@ -212,7 +212,7 @@ void GridMontage::setGeometry(const SizeVec3& position, IGeometry* geom)
 
 TooltipGenerator GridMontage::getTooltipGenerator() const
 {
-  throw std::runtime_error("");
+  throw std::runtime_error("TooltipGenerator not implemented");
 }
 
 GridMontage::DimensionsType GridMontage::getDimensions() const
@@ -222,7 +222,7 @@ GridMontage::DimensionsType GridMontage::getDimensions() const
 
 GridMontage::BoundsType GridMontage::getBounds() const
 {
-  throw std::runtime_error("");
+  throw std::runtime_error("Get Bounds not implemented");
 }
 
 SizeVec3 GridMontage::getTilePosFromOffset(usize offset) const
