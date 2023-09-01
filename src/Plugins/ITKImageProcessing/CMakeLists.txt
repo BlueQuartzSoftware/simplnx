@@ -71,6 +71,9 @@ set(FilterList
   ITKMedianImage
   ITKMhaFileReader
   ITKRescaleIntensityImage
+  )
+    
+set(AlgorithmList
 )
 
 # ------------------------------------------------------------------------------
@@ -111,6 +114,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKHMinimaImage
     ITKIntensityWindowingImage
     ITKInvertIntensityImage
+    ITKImportFijiMontageFilter
     ITKLabelContourImage
     ITKLog10Image
     ITKLogImage
@@ -196,7 +200,6 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     #  CalcDewarpParameters # MISSING 1 or more Parameter Implementations
     #  ImportVectorImageStack # MISSING 1 or more Parameter Implementations
     #  ITKRefineTileCoordinates # MISSING 1 or more Parameter Implementations
-    #  ITKImportFijiMontage
     #  ITKImportRoboMetMontage
     #  ITKPCMTileRegistration
     #  ITKProxTVImage
@@ -221,6 +224,10 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     #  ITKCastImage # Dream3DArraySwitchOutputComponentMacro
     #  ITKVectorRescaleIntensityImage # Dream3DArraySwitchOutputComponentMacro
   )
+
+set(AlgorithmList
+    ITKImportFijiMontage
+  )
 endif()
 
 # -----------------------------------------------------------------------------
@@ -229,6 +236,7 @@ endif()
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
+  ALGORITHM_LIST ${AlgorithmList}
   DESCRIPTION "${PLUGIN_NAME} Plugin"
   VERSION "0.1.0"
   DOC_CHECK

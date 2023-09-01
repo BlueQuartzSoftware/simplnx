@@ -40,10 +40,8 @@ public:
 
     BaseGroup = 3,
 
-    AbstractMontage = 4,
+    AttributeMatrix = 4,
     DataGroup = 5,
-
-    AttributeMatrix = 12341,
 
     IDataArray = 6,
     DataArray = 7,
@@ -72,6 +70,9 @@ public:
     NeighborList = 23,
 
     StringArray = 24,
+
+    AbstractMontage = 25,
+    GridMontage = 26,
 
     Unknown = 999,
     Any = 4294967295U

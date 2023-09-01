@@ -112,8 +112,8 @@ private:
  */
 struct COMPLEX_EXPORT OutputActions
 {
-  std::vector<AnyDataAction> actions;
-  std::vector<AnyDataAction> deferredActions;
+  std::vector<AnyDataAction> actions = {};
+  std::vector<AnyDataAction> deferredActions = {};
 
   OutputActions() = default;
 
@@ -147,4 +147,50 @@ struct COMPLEX_EXPORT OutputActions
 
   Result<> applyAll(DataStructure& dataStructure, IDataAction::Mode mode) const;
 };
+
+/**
+ * @brief Merges two OutputActions into one.
+ * @param first OutputActions
+ * @param second OutputActions
+ * @return OutputActions a new OutputActions created from the two input OutputActions
+ */
+inline OutputActions MergeOutputActions(OutputActions first, OutputActions second)
+{
+  OutputActions outputActions = {};
+
+  outputActions.actions.reserve(first.actions.size() + second.actions.size());
+  for(auto&& action : first.actions)
+  {
+    outputActions.actions.push_back(std::move(action));
+  }
+  for(auto&& action : second.actions)
+  {
+    outputActions.actions.push_back(std::move(action));
+  }
+
+  outputActions.deferredActions.reserve(first.deferredActions.size() + second.deferredActions.size());
+  for(auto&& deferredAction : first.deferredActions)
+  {
+    outputActions.deferredActions.push_back(std::move(deferredAction));
+  }
+  for(auto&& deferredAction : second.deferredActions)
+  {
+    outputActions.deferredActions.push_back(std::move(deferredAction));
+  }
+
+  return outputActions;
+}
+
+/**
+ * @brief Merges two Result<OutputActions> into one.
+ * @param first Result<OutputActions>
+ * @param second Result<OutputActions>
+ * @return Result<OutputActions> a new result created from the two input results
+ */
+inline Result<OutputActions> MergeOutputActionResults(Result<OutputActions> first, Result<OutputActions> second)
+{
+  Result<OutputActions> result = MergeResults(first, second);
+  result.value() = MergeOutputActions(first.value(), second.value());
+  return result;
+}
 } // namespace complex

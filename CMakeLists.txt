@@ -428,6 +428,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.hpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.hpp
@@ -478,6 +479,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/FlyingEdges.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/KUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
@@ -625,6 +627,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.cpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.cpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.cpp
@@ -669,6 +672,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 
