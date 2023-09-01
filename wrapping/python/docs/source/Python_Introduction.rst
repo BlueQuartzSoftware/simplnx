@@ -104,8 +104,7 @@ In order to import a .dream3d file, we need to tell **complex** which data to im
 
 .. code:: python
 
-    # Create the DataStructure object and define the dimensions of the geometry
-    data_structure = cx.DataStructure()
+    # Create the DataStructure object    data_structure = cx.DataStructure()
     # Create a cx.Dream3dImportParameter.ImportData object and set its values
     import_data = cx.Dream3dImportParameter.ImportData()
     # Set the path to the file on the file system
@@ -170,8 +169,7 @@ Here is an example of creating the simplest of Geometries, the Image Geometry
 
 .. code:: python
 
-    # Create the DataStructure object and define the dimensions of the geometry
-    data_structure = cx.DataStructure()
+    # Create the DataStructure object    data_structure = cx.DataStructure()
     ig_dims = [10, 20, 30] # <===== NOTE: These are in XYZ order
     result = cx.CreateGeometryFilter.execute(  data_structure=data_structure,
         array_handling= 0,  # This does not matter for Image Geometry

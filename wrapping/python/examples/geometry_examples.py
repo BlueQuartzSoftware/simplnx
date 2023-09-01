@@ -11,7 +11,7 @@ source code repository. It will up to the programmer to correctly set the paths
 to the files before running this example.
 
 """
-# Create the DataStructure object and define the dimensions of the geometry
+# Create the DataStructure object
 data_structure = cx.DataStructure()
 ig_dims = [10, 20, 30] # NOTE: These are in XYZ order
 result = cx.CreateGeometryFilter.execute(  data_structure=data_structure,

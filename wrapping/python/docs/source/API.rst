@@ -1,7 +1,6 @@
 Complex Python API Docs
 =======================
 
-.. py:module:: complex
 
 .. _DataPath:
 .. py:class:: DataPath
@@ -54,20 +53,6 @@ Complex Python API Docs
 
   :ivar thresholds: List of ArrayThreshold_ objects
 
-.. _ImportData:
-.. py:class:: ImportData
-
-  This class holds the information necessary to import a .dream3d file.
-
-  :ivar file_path: Path to the .dream3d file on the file system
-  :ivar data_paths: List of DataPath_ objects. Use the python 'None' value to indicate that you want to read **ALL** the data from file.
-
-  .. code:: python
-
-    import_data = cx.Dream3dImportParameter.ImportData()
-    import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
-    import_data.data_paths = None
-
 
 Parameters 
 ----------
@@ -114,7 +99,7 @@ Parameters
 .. _CalculatorParameter:
 .. py:class:: CalculatorParameter
 
-    This parameter does....    
+    ===============> TODO   
 
 .. _ChoicesParameter:
 .. py:class:: ChoicesParameter
@@ -126,7 +111,7 @@ Parameters
 .. _DataGroupCreationParameter:
 .. py:class:: DataGroupCreationParameter
 
-   This parameter holds a DataPath_ value that points to the location within the DataStructure of a DataGroup_ that will be created
+   This parameter holds a DataPath_ value that points to the location within the DataStructure of a :ref:`DataGroup<DataGroup>` that will be created
    by the filter.
 
   .. code:: python
@@ -136,7 +121,7 @@ Parameters
 .. _DataGroupSelectionParameter:
 .. py:class:: DataGroupSelectionParameter
 
-   This parameter holds a DataPath_ value that points to the location within the DataStructure of a DataGroup_ that will be used in the filter.
+   This parameter holds a DataPath_ value that points to the location within the DataStructure of a :ref:`DataGroup<DataGroup>` that will be used in the filter.
 
   .. code:: python
 
@@ -154,7 +139,7 @@ Parameters
 .. _DataPathSelectionParameter:
 .. py:class:: DataPathSelectionParameter
 
-   This parameter holds a DataPath_ object that represents an object within the DataStructure_.
+   This parameter holds a DataPath_ object that represents an object within the :ref:`DataStructure<DataStructure>`.
 
   .. code:: python
 
@@ -163,9 +148,9 @@ Parameters
 .. _DataStoreFormatParameter:
 .. py:class:: DataStoreFormatParameter
 
-   This parameter holds a **string** value that represents the kind of DataStore_ that will be used
+   This parameter holds a **string** value that represents the kind of  :ref:`DataStore<DataStore>` that will be used
    to store the data. Depending on the version of complex being used, there can be
-   both in-core and out-of-core DataStore_ objects available.
+   both in-core and out-of-core  :ref:`DataStore<DataStore>` objects available.
 
 
 .. _DataTypeParameter:
@@ -190,7 +175,23 @@ Parameters
 .. _Dream3dImportParameter:
 .. py:class:: Dream3dImportParameter
 
-   This parameter holds a ImportData_ object.
+   This class holds the information necessary to import a .dream3d file through the ImportData object.
+
+   :ivar ValueType: ImportData
+
+   .. py:class:: Dream3dImportParameter.ValueType
+   
+      The ImportData object has 2 member variables that can be set.
+
+   :ivar file_path: Path to the .dream3d file on the file system
+   :ivar data_paths: List of DataPath_ objects. Use the python 'None' value to indicate that you want to read **ALL** the data from file.
+
+.. code:: python
+
+   import_data = cx.Dream3dImportParameter.ImportData()
+   import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
+   import_data.data_paths = None
+   result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
 
 .. _DynamicTableParameter:
 .. py:class:: DynamicTableParameter
@@ -260,7 +261,7 @@ Parameters
 .. _GenerateColorTableParameter:
 .. py:class:: GenerateColorTableParameter
 
-   This parameter will 
+   ===============> TODO 
 
 .. _GeneratedFileListParameter:
 .. py:class:: GeneratedFileListParameter
@@ -334,18 +335,119 @@ Parameters
 .. _ImportCSVDataParameter:
 .. py:class:: ImportCSVDataParameter
 
-   This parameter will 
+   This parameter is used for the :ref:`complex.ImportCSVDataFilter() <ImportCSVDataFilter>` and holds
+   the information to import a file formatted as table data where each 
+   column of data is a single array. 
+   
+   + The file can be comma, space, tab or semicolon separated.
+   + The file optionally can have a line of headers. The user can specify what line the headers are on
+   + The import can start at a user specified line number but will continue to the end of the file.
+
+   The primary python object that will hold the information to pass to the filter is the CSVWizardData class described below.
+
+   :ivar ValueType: CSVWizardData
+
+   .. py:class:: ImportCSVDataParameter.CSVWizardData
+
+      The CSVWizardData class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are 
+      a number of member variables that need to be set correctly before the filter will execute
+      correctly.
+
+   :ivar input_file_path: "PathLike"  The path to the input file on the file syatem.
+   :ivar begin_index: Int  What line number does the data start on. 1 Based numbering scheme.
+   :ivar comma_as_delimiter: Bool Are the values comma separated
+   :ivar semicolon_as_delimiter: Bool Are the values semicolon separated
+   :ivar space_as_delimiter: Bool Are the values space separated
+   :ivar tab_as_delimiter: Bool Are the values tab separated
+   :ivar consecutive_delimiters: Bool Should consectutive delimiters be counted as a single delimiter. Bool
+   :ivar data_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of ecah of the created  :ref:`DataArray<DataArray>`
+   :ivar data_types: List[cx.DataType]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`
+   :ivar delimiters: List[string]. The actual delimiter to use. If you specified a comma above, then [","] would be used. The list should have a single value.
+   :ivar header_line: Int. The line number of the headers
+   :ivar header_mode: 'cx.CSVWizardData.HeaderMode.'. Can be one of 'cx.CSVWizardData.HeaderMode.Line' or 'cx.CSVWizardData.HeaderMode.Custom'
+   :ivar number_of_lines: Int. Total lines in the file.
+
+
+.. code:: python
+
+   import_csv_wizard_data = cx.CSVWizardData()
+   import_csv_wizard_data.input_file_path = "/tmp/test_csv_data.csv"
+   import_csv_wizard_data.begin_index = 2
+   import_csv_wizard_data.comma_as_delimiter = True
+   import_csv_wizard_data.semicolon_as_delimiter = False
+   import_csv_wizard_data.space_as_delimiter = False
+   import_csv_wizard_data.tab_as_delimiter = False
+   import_csv_wizard_data.consecutive_delimiters = False
+   import_csv_wizard_data.data_headers = []
+   import_csv_wizard_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
+   import_csv_wizard_data.delimiters = [","]
+   import_csv_wizard_data.header_line = 1
+   import_csv_wizard_data.header_mode = cx.CSVWizardData.HeaderMode.Line
+   import_csv_wizard_data.number_of_lines = 37990
+   
+   result = cx.ImportCSVDataFilter.execute(data_structure=data_structure, 
+                                          # This will store the imported arrays into a newly generated DataGroup
+                                          created_data_group=cx.DataPath(["Imported Data"]),  
+                                          # We are not using this parameter but it still needs a value
+                                          selected_data_group=cx.DataPath(),  
+                                          # The dimensions of the tuples. Can be 1-N dimensions
+                                          tuple_dimensions=[[37989]], 
+                                          # Use an existing DataGroup or AttributeMatrix. If an AttributemMatrix is used, the total number of tuples must match
+                                          use_existing_group=False,   
+                                          # The CSVWizardData object with all member variables set.
+                                          wizard_data=import_csv_wizard_data # The CSVWizardData object with all member variables set.
+                                          )
+
 
 .. _ImportHDF5DatasetParameter:
 .. py:class:: ImportHDF5DatasetParameter
 
-   This parameter will 
+   This parameter is used for the :ref:`complex.ImportHDF5Dataset<ImportHDF5Dataset>` and holds the information
+   to import specific data sets from within the HDF5 file into DREAM3D/complex
+
+   .. py:class:: ImportHDF5DatasetParameter.ValueType
+
+      This holds the main parameter values which consist of the following data members
+
+      :ivar input_file: A "PathLike" value to the HDF5 file on the file system
+      :ivar datasets: list[ImportHDF5DatasetParameter.DatasetImportInfo, ....]
+      :ivar parent: Optional: The DataPath_ object to a parente group to create the DataArray_ into. If left blank the DataArray_ will be created at the top level of the DataStructure_
+
+   .. py:class:: ImportHDF5DatasetParameter.DatasetImportInfo
+
+      The DatasetImportInfo class has 3 data members that hold information on a specific data set
+      inside the HDF5 file that the programmer wants to import.
+
+   :ivar dataset_path: string. The internal HDF5 path to the data set expressed as a path like string "/foo/bar/dataset"
+   :ivar tuple_dims: string. A comma separated list of the tuple dimensions from **SLOWEST** to **FASTEST** dimensions ("117,201,189")
+   :ivar component_dims: string. A comma separated list of the component dimensions from **SLOWEST** to **FASTEST** dimensions ("1")
+
+   .. code:: python
+
+      dataset1 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
+      dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
+      dataset1.tuple_dims = "117,201,189"
+      dataset1.component_dims = "1"
+
+      dataset2 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
+      dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
+      dataset2.tuple_dims = "117,201,189"
+      dataset2.component_dims = "3"
+
+      import_hdf5_param = cx.ImportHDF5DatasetParameter.ValueType()
+      import_hdf5_param.input_file = "SmallIN100_Final.dream3d"
+      import_hdf5_param.datasets = [dataset1, dataset2]
+      # import_hdf5_param.parent = cx.DataPath(["Imported Data"])
+      result = cx.ImportHDF5Dataset.execute(data_structure=data_structure,
+                                          import_hd_f5_file=import_hdf5_param
+                                          )
+
 
 .. _MultiArraySelectionParameter:
 .. py:class:: MultiArraySelectionParameter
 
    This parameter represents a list of DataPath_ objects where each DataPath_ object
-   points to a DataArray_
+   points to a  :ref:`DataArray<DataArray>`
 
    .. code:: python
 
@@ -355,7 +457,7 @@ Parameters
 .. py:class:: MultiPathSelectionParameter
 
    This parameter represents a list of DataPath_ objects. The end point of each DataPath_
-   object can be any object in the DataStructure_
+   object can be any object in the  :ref:`DataStructure<DataStructure>`
 
    .. code:: python
 
@@ -364,7 +466,7 @@ Parameters
 .. _NeighborListSelectionParameter:
 .. py:class:: NeighborListSelectionParameter
 
-   This parameter represents a DataPath_ object that has an end point of a cx.NeighborList object
+   This parameter represents a DataPath_ object that has an end point of a 'cx.NeighborList' object
 
 .. _NumericTypeParameter:
 .. py:class:: NumericTypeParameter

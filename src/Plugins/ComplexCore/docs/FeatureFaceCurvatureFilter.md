@@ -1,5 +1,4 @@
-# Find Feature Face Curvature  #
-
+# Find Feature Face Curvature #
 
 ## Group (Subgroup) ##
 
@@ -7,7 +6,7 @@ Surface Meshing (Curvature)
 
 ## Description ##
 
-This **Filter** calculates _principal direction vectors_ and the _principal curvatures_, and optionally the _mean_ and _Gaussian_ curvature, for each **Triangle** in a **Triangle Geometry** using the technique in [1]. The groups of **Triangles** over which to compute the curvatures is determines by the **Features** they are associated, denoted by their _Face Labels_. The curvature information will be stored in a **Face Attribute Matrix**.
+This **Filter** calculates *principal direction vectors* and the *principal curvatures*, and optionally the *mean* and *Gaussian* curvature, for each **Triangle** in a **Triangle Geometry** using the technique in [1]. The groups of **Triangles** over which to compute the curvatures is determines by the **Features** they are associated, denoted by their **Face Labels**. The curvature information will be stored in a **Face Attribute Matrix**.
 
 Principal Curvatures 1 and 2 are the &kappa; <sub>1 </sub> and &kappa; <sub>2 </sub> from [1] and are the eigenvalues from the Wiengarten matrix. The Principal Directions 1 and 2 are the eigenvectors from the solution to the least squares fit algorithm. The Mean Curvature is (&kappa; <sub>1 </sub > + &kappa; <sub>2 </sub> ) / 2, while the Gaussian curvature is (&kappa; <sub>1 </sub> *
 &kappa; <sub>2 </sub>).
@@ -32,7 +31,6 @@ Principal Curvatures 1 and 2 are the &kappa; <sub>1 </sub> and &kappa; <sub>2 </
 | Compute Weingarten Matrix | bool | Whether to compute the weingarten matrix values |
 | Use Face Normals for Curve Fitting | bool | Whether to use the **Face** normals to improve the least squares fit |
 
-
 ## Required Geometry ##
 
 Triangle
@@ -51,21 +49,19 @@ Triangle
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 | ------ | -------------- | ------------ - | -------- - | ---- - |
-|**Face Attribute Array**| PrincipalCurvature1 | double | (1) | First set eigenvalues of the Wiengarten matrix (&kappa;<sub>1</sub>). Only created if _Compute Principal Direction Vectors_ is checked |
-|**Face Attribute Array**| PrincipalCurvature2 | double | (1) | Second set eigenvalues of the Wiengarten matrix (&kappa;<sub>2</sub>). Only created if _Compute Principal Direction Vectors_ is checked |
-|**Face Attribute Array**| PrincipalDirection1 | double | (3) | First set of eigenvectors. Only created if _Compute Principal Direction Vectors_ is checked |
-|**Face Attribute Array**| PrincipalDirection2 | double | (3) | Second set of eigenvectors. Only created if _Compute Principal Direction Vectors_ is checked |
-|**Face Attribute Array**| MeanCurvatures      | double | (1) | Mean curvature values. Only created if _Compute Mean Curvature_ is checked |
-|**Face Attribute Array**| GaussianCurvatures  | double | (1) | Gaussian curvature values. Only created if _Compute Gaussian Curvature_ is checked |
-|**Face Attribute Array**| WeingartenMatrix  | double | (4) | Weingarten matrix values. Only created if _Compute Weingarten Matrix_ is checked |
+|**Face Attribute Array**| PrincipalCurvature1 | double | (1) | First set eigenvalues of the Wiengarten matrix (&kappa;<sub>1</sub>). Only created if *Compute Principal Direction Vectors*is checked |
+|**Face Attribute Array**| PrincipalCurvature2 | double | (1) | Second set eigenvalues of the Wiengarten matrix (&kappa;<sub>2</sub>). Only created if *Compute Principal Direction Vectors*is checked |
+|**Face Attribute Array**| PrincipalDirection1 | double | (3) | First set of eigenvectors. Only created if *Compute Principal Direction Vectors*is checked |
+|**Face Attribute Array**| PrincipalDirection2 | double | (3) | Second set of eigenvectors. Only created if *Compute Principal Direction Vectors*is checked |
+|**Face Attribute Array**| MeanCurvatures      | double | (1) | Mean curvature values. Only created if *Compute Mean Curvature*is checked |
+|**Face Attribute Array**| GaussianCurvatures  | double | (1) | Gaussian curvature values. Only created if *Compute Gaussian Curvature*is checked |
+|**Face Attribute Array**| WeingartenMatrix  | double | (4) | Weingarten matrix values. Only created if *Compute Weingarten Matrix*is checked |
 
 ## References ##
 
 [1] J. Goldfeather, V. Interrante, "A Novel Cubic-Order Algorithm for Approximating Principal Direction Vectors", ACM Transactions on Graphics 2004, 23(1), pp. 45 - 63.
 
 ## Example Pipelines ##
-
-
 
 ## License & Copyright ##
 
@@ -74,4 +70,3 @@ Please see the description file distributed with this**Plugin**
 ## DREAM.3D Mailing Lists ##
 
 If you need more help with a**Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
-

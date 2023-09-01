@@ -83,6 +83,16 @@ in the example.
                                         output_data_array=cx.DataPath(["2D Array"]), 
                                         tuple_dimensions=[[4, 5]])
 
+.. _DataStore:
+
+DataStore
+----------
+
+The DataStore is the C++ object that actually allocates the memory necessary to store
+data in complex/DREAM3D. The Python API is intentially limited to getting a Numpy.View()
+so that python developers can have a consistent well known interace to the DataArray_.
+
+
 AttributeMatrix
 ----------------
 

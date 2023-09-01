@@ -1574,7 +1574,7 @@ complex
 
    **UI Display Name:** *Fill Bad Data*
 
-   This **Filter** calculates _principal direction vectors_ and the _principal curvatures_, and optionally the _mean_ and _Gaussian_ curvature, for each **Triangle** in a **Triangle Geometry** using the technique in [1]. The groups of **Triangles** over which to compute the curvatures is determines by the **Features** they are associated, denoted by their _Face Labels_. The curvature information will be stored in a **Face Attribute Matrix**.
+   This **Filter** calculates *principal direction vectors* and the *principal curvatures*, and optionally the *mean* and *Gaussian* curvature, for each **Triangle** in a **Triangle Geometry** using the technique in [1]. The groups of **Triangles** over which to compute the curvatures is determines by the **Features** they are associated, denoted by their **Face Labels**. The curvature information will be stored in a **Face Attribute Matrix**.
 
    `Link to the full online documentation for FeatureFaceCurvatureFilter <http://www.dream3d.io/nx_reference_manual/Filters/FeatureFaceCurvatureFilter>`_ 
 
