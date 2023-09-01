@@ -274,7 +274,7 @@ endif()
 # Install example pipelines
 # -----------------------------------------------------------------------
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
-  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
+  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/pipelines/${PLUGIN_NAME}")
   add_custom_target(Copy_${PLUGIN_NAME}_Pipeline_Folder ALL
                     COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
                     ${PIPELINE_DEST_DIR}
@@ -297,7 +297,7 @@ endif()
 # Download Example Data Files
 # -----------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
-set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/Data")
 
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 

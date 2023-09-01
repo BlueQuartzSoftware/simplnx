@@ -808,17 +808,10 @@ set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 #------------------------------------------------------------------------------
 # Install the appropriate example pipelines based on which plugins are loaded
 #------------------------------------------------------------------------------
-set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/Data")
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
-set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines")
-if(NOT EXISTS "${PIPELINE_DEST_DIR}")
-  file(MAKE_DIRECTORY ${PIPELINE_DEST_DIR})
-endif()
-
+set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/pipelines")
 set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
-if(NOT EXISTS "${PIPELINE_EXAMPLES_DEST_DIR}")
-  file(MAKE_DIRECTORY ${PIPELINE_EXAMPLES_DEST_DIR})
-endif()
 
 if(COMPLEX_DOWNLOAD_TEST_FILES AND TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
   add_custom_target(Copy_PorosityAnalysis_Pipelines ALL

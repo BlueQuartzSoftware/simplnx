@@ -110,8 +110,7 @@ function(download_test_data)
   # Create the custom CMake File for this archive file
   #----------------------------------------------------------------------------
   set(fetch_data_file "${test_files_dir}/${ARGS_ARCHIVE_NAME}.cmake")
-  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
-  file(MAKE_DIRECTORY "${DATA_DEST_DIR}")
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/Data")
   # Strip off the .tar.gz extension
   string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
 
@@ -126,8 +125,6 @@ function(download_test_data)
   file(REMOVE "${fetch_data_file}") # Remove the temporary file
 
   if(ARGS_COPY_DATA)
-    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
-
     configure_file(${complex_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
                    ${fetch_data_file}
                    @ONLY
@@ -146,7 +143,6 @@ function(download_test_data)
   if(ARGS_INSTALL)
     # If we did NOT already copy the data, then do that now during the build
     if(NOT ARGS_COPY_DATA)
-      set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
       configure_file(${complex_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
                     ${fetch_data_file}
                     @ONLY
@@ -183,7 +179,7 @@ function(create_data_copy_rules)
   endif()
 
 
-  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/Data/")
   if(EXISTS "${ARGS_DREAM3D_DATA_DIR}/Data")
     add_custom_target(DataFolderCopy ALL
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARGS_DREAM3D_DATA_DIR}/Data ${DATA_DEST_DIR}

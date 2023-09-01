@@ -187,7 +187,7 @@ function(add_pipeline_test)
   if(WIN32)
     set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/%CONFIG_DIR%/")
   else()
-    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/")
+    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/")
   endif()
 
   foreach ( f ${ARGS_DELETE_FILE_LIST})
