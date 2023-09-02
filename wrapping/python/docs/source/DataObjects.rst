@@ -13,6 +13,11 @@ a yellow box at the right side of the user interface.
    :height: 809
    :scale: 45
 
+.. code:: python
+
+   data_structure = cx.DataStructure()
+
+
 .. _DataObject:
 
 DataObject
@@ -30,7 +35,13 @@ DataGroup
 The DataStructure_ is a flexible heirarchy that stores all **complex** :ref:`DataObjects <DataObject>`
 that are created. A basic :ref:`DataObject` that can be created is a :ref:`DataGroup` which is a 
 simple grouping mechanism that can be thought of as similar in concept to a folder or directory that 
-is created on the file system.
+is created on the file system. The programmer can use the :ref:`CreateDataGroup<CreateDataGroup>` filter to create
+any needed DataGroups.
+
+.. code:: python
+
+   result = cx.CreateDataGroup.execute(data_structure=data_structure,
+                                    Data_Object_Path=cx.DataPath(['Group']))
 
 .. _DataPath:
 
@@ -90,7 +101,16 @@ DataStore
 
 The DataStore is the C++ object that actually allocates the memory necessary to store
 data in complex/DREAM3D. The Python API is intentially limited to getting a Numpy.View()
-so that python developers can have a consistent well known interace to the DataArray_.
+so that python developers can have a consistent well known interace to the DataArray_. The
+programmer will never need to create from scratch a DataStore object. They should be fetched
+from a created DataArray_
+
+.. code:: python
+
+   # First get the array from the DataStructure
+   data_array = data_structure[output_array_path]
+   # Get the underlying DataStore object
+   data_store = data_array.store
 
 .. _AttributeMatrix:
 
@@ -104,9 +124,9 @@ inserting into the AttributeMatrix:
 2) All :ref:`DataArray` objects that are inserted into the AttributeMatrix **must** have the same number of tuples.
 
 The predominant use of an AttributeMatrix is to group together :ref:`DataArray` objects that represent DataArrays that
-all appear on a specific **Geometry**. For example if you have an **Image Geometry** that is 10 voxels wide (X) by 20
-voxels tall (Y) by 30 voxels deep (Z), the AttributeMatrix that holds the various DataArrays will have the same dimensions, 
-(but expressed in reverse order). This ensures that the arrays that represent that data are all fully allocated and accessible. This
+all appear on a specific **Geometry**. For example if you have an **Image Geometry** that is 189 voxels wide (X) by 201
+voxels tall (Y) by 117 voxels deep (Z), the AttributeMatrix that holds the various DataArrays will have the same dimensions, 
+(but expressed in reverse order, slowest dimension to fastest changing dimension). This ensures that the arrays that represent that data are all fully allocated and accessible. This
 concept can be summarized in the figure below.
 
 .. image:: Images/AttributeMatrix_CellData_Figure.png
@@ -117,5 +137,11 @@ concept can be summarized in the figure below.
 In the figure a 2D EBSD data set has been collected. The data set was collected on a regular grid (Image Geometry)
 and has 9 different DataArrays. So for each **Scan Point** the index of that scan point can be computed, this index value
 represents the tuple index into any given DataArray. That can be used to access a specific value of the DataArray
-that represents the value of the Array, Euler Angles for instance, at that tuple index.
+that represents the value of the Array, Euler Angles for instance, at that tuple index. In the code below note how
+the dimensions are listed as slowest changing (Z) to fastest changing (X) order.
 
+.. code:: python 
+
+   result = cx.CreateAttributeMatrixFilter.execute(data_structure=data_structure, 
+                                                data_object_path=cx.DataPath(["New Attribute Matrix"]), 
+                                                tuple_dimensions = [[117., 201., 189.]])

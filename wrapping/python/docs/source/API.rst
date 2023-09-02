@@ -1,6 +1,5 @@
-Complex Python API Docs
-=======================
-
+compl API Docs
+================
 
 .. _DataPath:
 .. py:class:: DataPath
@@ -11,7 +10,6 @@ Complex Python API Docs
   .. code:: python
 
     data_path = cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
-
 
 Parameters 
 ----------

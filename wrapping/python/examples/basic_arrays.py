@@ -102,3 +102,12 @@ data_store = data_array.store
 npdata = data_store.npview()
 print(npdata)
 
+result = cx.CreateAttributeMatrixFilter.execute(data_structure=data_structure, 
+                                                data_object_path=cx.DataPath(["New Attribute Matrix"]), 
+                                                tuple_dimensions = [[100., 200., 300.]])
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running CreateAttributeMatrixFilter filter")
+    

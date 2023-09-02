@@ -1,6 +1,16 @@
-Python Introduction
-===================
+Python Example Usage
+====================
 
+
+Executing Filters (Immediate and Delayed)
+-------------------------------------------
+
+In the **complex** python API, the programmer can execute any filter immediately by 
+simply calling the *Execute()* function of the filter. The programmer simply needs to find the appropriate filter for their
+needs and use the API accordingly. Another option is to build up the filters and
+then execute each filter instance one after another. The programmer should note that
+if this is the design they are selecting to use then *none* of the :ref:`DataStructure<DataStructure>` objects will
+be ready to use until the **Execute()** method is run on each filter.
 
 
 Basic Import Statements
@@ -149,17 +159,6 @@ The filter will write the **complete** contents of the DataStructure to the HDF5
     else:
         print("No errors running the filter")
 
-
-Executing Filters (Immediate and Delayed)
--------------------------------------------
-
-In the **complex** python API, the programmer can execute any filter immediately by 
-simply calling the *Execute()* function of the filter. This has been shown
-in the above sections. The programmer simply needs to find the appropriate filter for their
-needs and use the API accordingly. Another option is to build up the filters and
-then execute each filter instance one after another. The programmer should note that
-if this is the design they are selecting to use none of the Data Structure objects will
-be ready to use until the **Execute()** method is run.
 
 Creating Geometries in Complex
 ------------------------------

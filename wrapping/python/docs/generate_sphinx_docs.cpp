@@ -320,8 +320,12 @@ void GenerateRstFilterDocs()
       return;
     }
 
-    rstStream << plugName << "\n";
-    rstStream << GenerateUnderline(plugName.size(), '=') << "\n\n";
+    rstStream << plugName << " Filter API"
+              << "\n";
+    rstStream << GenerateUnderline(plugName.size(), '=') << "============="
+              << "\n\n";
+
+    rstStream << "   This is the documentation for all filters included in the " << plugName << " module\n\n";
 
     rstStream << ".. py:module:: " << plugName << "\n\n";
 
@@ -369,6 +373,15 @@ void GenerateRstFilterDocs()
       for(const auto& parameter : parameters)
       {
         auto const& p = parameter.second;
+
+        for(const auto& c : p->name())
+        {
+          if(::isupper(c))
+          {
+            std::cout << filter->name() << "::" << p->name() << " HAS CAPS. Should be lower snake case\n";
+            break;
+          }
+        }
 
         rstStream << "   |" << CreateFilledString(p->humanName(), columnWidths[0], ' ') << "|" << CreateFilledString(p->name(), columnWidths[1], ' ') << "|\n";
         rstStream << "   +" << std::string(columnWidths[0], '-') << "+" << std::string(columnWidths[1], '-') << "+\n";
