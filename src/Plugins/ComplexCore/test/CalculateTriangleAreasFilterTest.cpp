@@ -36,7 +36,7 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
 
     // Create default Parameters for the filter.
     args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-    args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
+    args.insertOrAssign(StlFileReaderFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
