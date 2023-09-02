@@ -28,7 +28,7 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
-  std::string normalsDataArrayName = "FaceNormals";
+  std::string normalsDataArrayName = "Face Normals";
 
   DataStructure dataStructure;
 
@@ -44,7 +44,7 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
 
     // Create default Parameters for the filter.
     args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-    args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
+    args.insertOrAssign(StlFileReaderFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -62,7 +62,7 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
   {
     TriangleNormalFilter filter;
     Arguments args;
-    std::string triangleNormalsName = "Triangle Normals";
+    std::string triangleNormalsName = "Face Normals (computed)";
 
     DataPath geometryPath = DataPath({triangleGeometryName});
 
@@ -72,11 +72,11 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
     DataPath triangleNormalsDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleNormalsName);
 

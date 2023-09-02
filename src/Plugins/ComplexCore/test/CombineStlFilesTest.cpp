@@ -40,7 +40,7 @@ TEST_CASE("ComplexCore::CombineStlFilesFilter: Valid Filter Execution", "[Comple
   args.insertOrAssign(CombineStlFilesFilter::k_StlFilesPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputStlDir)));
   args.insertOrAssign(CombineStlFilesFilter::k_TriangleDataContainerName_Key, std::make_any<DataPath>(k_ComputedTriangleDataContainerName));
   args.insertOrAssign(CombineStlFilesFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(k_FaceData));
-  args.insertOrAssign(CombineStlFilesFilter::k_FaceNormalsArrayName_Key, std::make_any<std::string>(k_FaceNormals));
+  args.insertOrAssign(CombineStlFilesFilter::k_FaceNormalsArrayName_Key, std::make_any<std::string>("Face Normals"));
   args.insertOrAssign(CombineStlFilesFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(k_VertexData));
 
   // Preflight the filter and check result
@@ -58,7 +58,7 @@ TEST_CASE("ComplexCore::CombineStlFilesFilter: Valid Filter Execution", "[Comple
   REQUIRE(computedTriangleGeom.getFaceAttributeMatrix()->getShape() == exemplarTriangleGeom.getFaceAttributeMatrix()->getShape());
 
   UnitTest::CompareArrays<float64>(dataStructure, k_ExemplarTriangleDataContainerName.createChildPath(k_FaceData).createChildPath(k_FaceNormals),
-                                   k_ComputedTriangleDataContainerName.createChildPath(k_FaceData).createChildPath(k_FaceNormals));
+                                   k_ComputedTriangleDataContainerName.createChildPath(k_FaceData).createChildPath("Face Normals"));
 }
 
 TEST_CASE("ComplexCore::CombineStlFilesFilter: InValid Filter Execution")

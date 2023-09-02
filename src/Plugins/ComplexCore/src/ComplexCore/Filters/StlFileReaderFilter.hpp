@@ -26,19 +26,16 @@ public:
   StlFileReaderFilter& operator=(StlFileReaderFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_StlFilePath_Key = "stl_file_path";
-  static inline constexpr StringLiteral k_GeometryDataPath_Key = "geometry_data_path";
-
-  static inline constexpr StringLiteral k_FaceGroupDataPath_Key = "face_data_path";
-  static inline constexpr StringLiteral k_FaceNormalsDataPath_Key = "face_normals_data_path";
   static inline constexpr StringLiteral k_ScaleOutput = "scale_output";
   static inline constexpr StringLiteral k_ScaleFactor = "scale_factor";
-  static inline constexpr StringLiteral k_VertexMatrix_Key = "vertex_matrix";
-  static inline constexpr StringLiteral k_FaceMatrix_Key = "face_matrix";
-  static inline constexpr StringLiteral k_SharedVertexMatrix_Key = "shared_vertex_matrix";
-  static inline constexpr StringLiteral k_SharedFaceMatrix_Key = "shared_face_matrix";
+  static inline constexpr StringLiteral k_StlFilePath_Key = "stl_file_path";
 
-  static inline constexpr StringLiteral k_FaceNormals = "FaceNormals";
+  static inline constexpr StringLiteral k_TriangleGeometryName_Key = "triangle_geometry_name";
+
+  static inline constexpr StringLiteral k_VertexAttributeMatrix_Key = "vertex_attribute_matrix";
+  static inline constexpr StringLiteral k_FaceAttributeMatrix_Key = "face_attribute_matrix";
+
+  static inline constexpr StringLiteral k_FaceNormalsName_Key = "face_normals_data_path";
 
   /**
    * @brief Returns the name of the filter.

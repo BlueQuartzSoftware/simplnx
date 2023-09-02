@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "geometry_data_path": "[Triangle Geometry]",
+        "triangle_geometry_name": "[Triangle Geometry]",
         "scale_factor": 1.0,
         "scale_output": false,
         "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
@@ -31,7 +31,7 @@
     },
     {
       "args": {
-        "surface_mesh_triangle_normals_array_path": "Face Normals",
+        "surface_mesh_triangle_normals_array_path": "Face Normals (Calculated)",
         "tri_geometry_data_path": "[Triangle Geometry]"
       },
       "comments": "",

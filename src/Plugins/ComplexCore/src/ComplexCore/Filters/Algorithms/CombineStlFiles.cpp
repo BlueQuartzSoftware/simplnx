@@ -94,7 +94,7 @@ Result<> CombineStlFiles::operator()()
       StlFileReaderFilter stlFileReader;
       Arguments args;
       args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(stlFilePath));
-      args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(DataPath({stlFilePath.stem().string()})));
+      args.insertOrAssign(StlFileReaderFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(DataPath({stlFilePath.stem().string()})));
       auto executeResult = stlFileReader.execute(tempDataStructure, args);
       if(executeResult.result.invalid())
       {
@@ -151,7 +151,7 @@ Result<> CombineStlFiles::operator()()
     }
     triCounter += geom->getNumberOfVertices();
     INodeGeometry0D::SharedVertexList& curVertices = geom->getVerticesRef();
-    auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64Array>(geom->getFaceAttributeMatrixDataPath().createChildPath(StlFileReaderFilter::k_FaceNormals));
+    auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64Array>(geom->getFaceAttributeMatrixDataPath().createChildPath("Face Normals"));
 
     taskRunner.execute(CombineStlImpl{triangles, vertices, combinedFaceNormals, curTriangles, curVertices, curFaceNormals, triOffset, vertexOffset, faceNormalsOffset});
 

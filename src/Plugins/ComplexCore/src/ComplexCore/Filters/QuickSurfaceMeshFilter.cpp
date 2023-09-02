@@ -77,13 +77,13 @@ Parameters QuickSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexDataName));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NodeTypesArrayName_Key, "NodeType", "The complete path to the Array specifying the type of node in the Triangle Geometry", "NodeTypes"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NodeTypesArrayName_Key, "NodeType", "The name of the Array specifying the type of node in the Triangle Geometry", "NodeTypes"));
 
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataGroupName_Key, "Face Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
-                                                          "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry", "FaceLabels"));
+                                                          "The name of the Array specifying which Features are on either side of each Face in the Triangle Geometry", "FaceLabels"));
   params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceFeatureAttributeMatrixName_Key, "Face Feature Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Feature Data will be stored.", INodeGeometry1D::k_FaceFeatureAttributeMatrix));
