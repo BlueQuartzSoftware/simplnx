@@ -17,9 +17,9 @@ class FindArrayStatisticsByIndexImpl
 {
 public:
   FindArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, bool hist, float64 histmin, float64 histmax, bool histfullrange,
-                                 int32 numBins, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, BoolArray* featureHasDataArray,
+                                 int32 numBins, bool modalBinRanges, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, BoolArray* featureHasDataArray,
                                  UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray,
-                                 Float32Array* summationArray, UInt64Array* histArray, UInt64Array* mostPopulatedBinArray, FindArrayStatistics* filter)
+                                 Float32Array* summationArray, UInt64Array* histArray, UInt64Array* mostPopulatedBinArray, NeighborList<float32>* modalBinRangesArray, FindArrayStatistics* filter)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -32,6 +32,7 @@ public:
   , m_HistMax(histmax)
   , m_HistFullRange(histfullrange)
   , m_NumBins(numBins)
+  , m_ModalBinRanges(modalBinRanges)
   , m_Mask(mask)
   , m_FeatureIds(featureIds)
   , m_Source(source)
@@ -45,6 +46,7 @@ public:
   , m_SummationArray(summationArray)
   , m_HistArray(histArray)
   , m_MostPopulatedBinArray(mostPopulatedBinArray)
+  , m_ModalBinRangesArray(modalBinRangesArray)
   , m_Filter(filter)
   {
   }
@@ -252,7 +254,39 @@ public:
               }
             } // end of numTuples loop
           }   // end of increment else
-        }     // end of length if
+
+          if(m_ModalBinRanges)
+          {
+            if(std::fabs(increment) < 1E-10)
+            {
+              m_ModalBinRangesArray->addEntry(j, histMin);
+              m_ModalBinRangesArray->addEntry(j, histMax);
+            }
+            else
+            {
+              auto modeList = m_ModeArray->getList(j);
+              for(int i = 0; i < modeList->size(); i++)
+              {
+                const float32 mode = modeList->at(i);
+                const auto modalBin = static_cast<int32>((mode - histMin) / increment);
+                float32 minBinValue = 0.0f;
+                float32 maxBinValue = 0.0f;
+                if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
+                {
+                  minBinValue = static_cast<float32>(histMin + (modalBin * increment));
+                  maxBinValue = static_cast<float32>(histMin + ((modalBin + 1) * increment));
+                }
+                else if(mode == histMax)
+                {
+                  minBinValue = static_cast<float32>(histMin + ((modalBin - 1) * increment));
+                  maxBinValue = static_cast<float32>(histMin + (modalBin * increment));
+                }
+                m_ModalBinRangesArray->addEntry(j, minBinValue);
+                m_ModalBinRangesArray->addEntry(j, maxBinValue);
+              }
+            }
+          }
+        } // end of length if
 
         histDataStorePtr->setTuple(j, histogram);
 
@@ -335,6 +369,7 @@ private:
   bool m_StdDeviation;
   bool m_Summation;
   bool m_Histogram;
+  bool m_ModalBinRanges;
   float64 m_HistMin;
   float64 m_HistMax;
   bool m_HistFullRange;
@@ -352,6 +387,7 @@ private:
   Float32Array* m_SummationArray = nullptr;
   UInt64Array* m_HistArray = nullptr;
   UInt64Array* m_MostPopulatedBinArray = nullptr;
+  NeighborList<float32>* m_ModalBinRangesArray = nullptr;
   FindArrayStatistics* m_Filter = nullptr;
 };
 
@@ -564,6 +600,28 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
       arr10DataStorePtr->setComponent(0, 0, index);
       arr10DataStorePtr->setComponent(0, 1, values[index]);
     }
+
+    if(inputValues->FindModalBinRanges)
+    {
+      auto* array5Ptr = dynamic_cast<NeighborList<T>*>(arrays[5]);
+      if(array5Ptr == nullptr)
+      {
+        throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Mode' array to needed type. Check input array selection.");
+      }
+
+      auto* array11Ptr = dynamic_cast<NeighborList<float32>*>(arrays[11]);
+      if(array11Ptr == nullptr)
+      {
+        throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Modal Bin Ranges' array to needed type. Check input array selection.");
+      }
+
+      for(const T& mode : array5Ptr->at(0))
+      {
+        std::pair<float32, float32> range = StatisticsCalculations::findModalBinRange(data, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange, inputValues->NumBins, mode);
+        array11Ptr->addEntry(0, range.first);
+        array11Ptr->addEntry(0, range.second);
+      }
+    }
   }
 
   if(inputValues->FindNumUniqueValues)
@@ -594,7 +652,8 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* summationArrayPtr = dynamic_cast<Float32Array*>(arrays[7]);
     auto* histArrayPtr = dynamic_cast<UInt64Array*>(arrays[8]);
     auto* mostPopulatedBinPtr = dynamic_cast<UInt64Array*>(arrays[10]);
-    auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[11]);
+    auto* modalBinsArrayPtr = dynamic_cast<NeighborList<float32>*>(arrays[11]);
+    auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[12]);
 
 #ifdef COMPLEX_ENABLE_MULTICORE
     const tbb::simple_partitioner simplePartitioner;
@@ -603,8 +662,9 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     tbb::parallel_for(tbbRange,
                       FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
                                                         inputValues->FindStdDeviation, inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
-                                                        inputValues->UseFullRange, inputValues->NumBins, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr,
-                                                        meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histArrayPtr, mostPopulatedBinPtr, filter),
+                                                        inputValues->UseFullRange, inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr,
+                                                        minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr,
+                                                        filter),
                       simplePartitioner);
 #else
     auto impl = FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation,
@@ -879,7 +939,7 @@ Result<> FindArrayStatistics::operator()()
     return {};
   }
 
-  std::vector<IArray*> arrays(11, nullptr);
+  std::vector<IArray*> arrays(12, nullptr);
 
   if(m_InputValues->FindLength)
   {
@@ -918,6 +978,10 @@ Result<> FindArrayStatistics::operator()()
     arrays[8] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->HistogramArrayName);
     arrays[10] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MostPopulatedBinArrayName);
   }
+  if(m_InputValues->FindModalBinRanges)
+  {
+    arrays[11] = m_DataStructure.getDataAs<INeighborList>(m_InputValues->ModalBinArrayName);
+  }
   if(m_InputValues->FindNumUniqueValues)
   {
     arrays[9] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NumUniqueValuesName);
@@ -926,8 +990,8 @@ Result<> FindArrayStatistics::operator()()
   usize numFeatures = 0;
   if(m_InputValues->ComputeByIndex)
   {
-    arrays.resize(12);
-    arrays[11] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureHasDataArrayName);
+    arrays.resize(13);
+    arrays[12] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureHasDataArrayName);
 
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
     numFeatures = findNumFeatures(featureIds);

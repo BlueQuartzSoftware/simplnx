@@ -54,6 +54,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
 
   const std::string histogram = "Histogram";
   const std::string mostPopulatedBin = "Most Populated Bin";
+  const std::string modalBinRanges = "Modal Bin Ranges";
   const std::string length = "Length";
   const std::string min = "Minimum";
   const std::string max = "Maximum";
@@ -80,6 +81,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_FindModalBinRanges_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
@@ -92,6 +94,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(statsDataPath));
     args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
     args.insertOrAssign(FindArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
@@ -141,6 +144,8 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     REQUIRE(histArray != nullptr);
     auto* mostPopulatedBinArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(mostPopulatedBin));
     REQUIRE(mostPopulatedBinArray != nullptr);
+    auto* modalBinRangesArray = dataStructure.getDataAs<NeighborList<float32>>(statsDataPath.createChildPath(modalBinRanges));
+    REQUIRE(modalBinRangesArray != nullptr);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
     REQUIRE(numUniqueValuesArray != nullptr);
 
@@ -150,6 +155,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     auto meanVal = (*meanArray)[0];
     auto medianVal = (*medianArray)[0];
     auto modeVals = (*modeArray).getListReference(0);
+    auto modalBinRangesVals = (*modalBinRangesArray).getListReference(0);
     auto stdVal = (*stdArray)[0];
     stdVal = std::ceil(stdVal * 100.0f) / 100.0f; // round value to 2 decimal places
     auto sumVal = (*sumArray)[0];
@@ -160,6 +166,9 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     REQUIRE(maxVal == 45);
     REQUIRE(modeVals.size() == 1);
     REQUIRE(modeVals[0] == 1);
+    REQUIRE(modalBinRangesVals.size() == 2);
+    REQUIRE(std::fabs(modalBinRangesVals[0] - 1.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRangesVals[1] - 9.8f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(meanVal - 14.3333f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(medianVal - 10.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stdVal - 13.02f) < UnitTest::EPSILON);
@@ -248,6 +257,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
 
   const std::string histogram = "Histogram";
   const std::string mostPopulatedBin = "Most Populated Bin";
+  const std::string modalBinRanges = "Modal Bin Ranges";
   const std::string length = "Length";
   const std::string min = "Minimum";
   const std::string max = "Maximum";
@@ -274,6 +284,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_FindModalBinRanges_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
@@ -286,6 +297,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(statsDataPath));
     args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
     args.insertOrAssign(FindArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
@@ -346,6 +358,9 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto* mostPopulatedBinArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(mostPopulatedBin));
     REQUIRE(mostPopulatedBinArray != nullptr);
     REQUIRE(mostPopulatedBinArray->getNumberOfTuples() == 3);
+    auto* modalBinRangesArray = dataStructure.getDataAs<NeighborList<float32>>(statsDataPath.createChildPath(modalBinRanges));
+    REQUIRE(modalBinRangesArray != nullptr);
+    REQUIRE(modalBinRangesArray->getNumberOfTuples() == 3);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
     REQUIRE(numUniqueValuesArray != nullptr);
     REQUIRE(numUniqueValuesArray->getNumberOfTuples() == 3);
@@ -368,6 +383,9 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto modes0 = (*modeArray).getListReference(0);
     auto modes1 = (*modeArray).getListReference(1);
     auto modes2 = (*modeArray).getListReference(2);
+    auto modalBinRange0 = (*modalBinRangesArray).getListReference(0);
+    auto modalBinRange1 = (*modalBinRangesArray).getListReference(1);
+    auto modalBinRange2 = (*modalBinRangesArray).getListReference(2);
     auto stdVal1 = (*stdArray)[0];
     auto stdVal2 = (*stdArray)[1];
     auto stdVal3 = (*stdArray)[2];
@@ -469,5 +487,15 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     REQUIRE((*mostPopulatedBinArray)[3] == 2);
     REQUIRE((*mostPopulatedBinArray)[4] == 0);
     REQUIRE((*mostPopulatedBinArray)[5] == 2);
+    REQUIRE(std::fabs(modalBinRange0[0] - 1.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange0[1] - 15.4f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange0[2] - 58.6f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange0[3] - 73.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange1[0] - 17.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange1[1] - 20.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange2[0] - 10.0f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange2[1] - 12.4f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange2[2] - 19.6f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(modalBinRange2[3] - 22.0f) < UnitTest::EPSILON);
   }
 }

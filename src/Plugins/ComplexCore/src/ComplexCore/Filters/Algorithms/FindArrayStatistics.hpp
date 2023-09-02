@@ -26,6 +26,7 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
   bool FindMean;
   bool FindMedian;
   bool FindMode;
+  bool FindModalBinRanges;
   bool FindStdDeviation;
   bool FindSummation;
   bool UseMask;
@@ -38,6 +39,7 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
   DataPath DestinationAttributeMatrix;
   DataPath HistogramArrayName;
   DataPath MostPopulatedBinArrayName;
+  DataPath ModalBinArrayName;
   DataPath FeatureHasDataArrayName;
   DataPath LengthArrayName;
   DataPath MinimumArrayName;
