@@ -229,7 +229,7 @@
     },
     {
       "args": {
-        "rgb_array_path": "Feature Ids (Color)",
+        "output_rgb_array_name": "Feature Ids (Color)",
         "selected_data_array_path": "DataContainer/CellData/FeatureIds",
         "selected_preset": {
           "ColorSpace": "RGB",

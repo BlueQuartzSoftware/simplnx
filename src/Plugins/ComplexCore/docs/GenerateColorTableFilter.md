@@ -47,7 +47,7 @@ Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/Blu
 
 | argument key | Human Name | Description | Parameter Type |
 |--------------|------------|-------------|----------------|
-| rgb_array_path | Output RGB Array | The rgb array created by normalizing each element of the input array and converting to a color based on the selected preset color scheme | complex.DataObjectNameParameter |
+| output_rgb_array_name | Output RGB Array | The rgb array created by normalizing each element of the input array and converting to a color based on the selected preset color scheme | complex.DataObjectNameParameter |
 | selected_data_array_path | Data Array | The complete path to the data array from which to create the rgb array by applying the selected preset color scheme | complex.ArraySelectionParameter |
 | selected_preset | Select Preset... | Select a preset color scheme to apply to the created array | complex.GenerateColorTableParameter |
 
