@@ -153,7 +153,7 @@ Pipeline CreateExportPipeline()
   Pipeline pipeline("Export DREAM3D Pipeline 1");
   {
     Arguments args;
-    args.insert("Data_Object_Path", DataPath({DataNames::k_Group1Name}));
+    args.insert("data_object_path", DataPath({DataNames::k_Group1Name}));
     pipeline.push_back(k_CreateDataGroupHandle, args);
   }
   {
@@ -204,7 +204,7 @@ void CreateMultiExportFiles()
     Pipeline pipeline("Export Multi DREAM3D Pipeline 1");
     {
       Arguments args;
-      args.insert("Data_Object_Path", DataPath({DataNames::k_Group1Name}));
+      args.insert("data_object_path", DataPath({DataNames::k_Group1Name}));
       pipeline.push_back(k_CreateDataGroupHandle, args);
     }
     {
@@ -220,7 +220,7 @@ void CreateMultiExportFiles()
     Pipeline pipeline("Export Multi DREAM3D Pipeline 2");
     {
       Arguments args;
-      args.insert("Data_Object_Path", DataPath({DataNames::k_Group2Name}));
+      args.insert("data_object_path", DataPath({DataNames::k_Group2Name}));
       pipeline.push_back(k_CreateDataGroupHandle, args);
     }
     {

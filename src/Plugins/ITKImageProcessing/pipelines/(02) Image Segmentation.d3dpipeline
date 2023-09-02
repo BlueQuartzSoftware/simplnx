@@ -181,7 +181,7 @@
     },
     {
       "args": {
-        "Data_Object_Path": "ImageDataContainer/Ensemble AttributeMatrix",
+        "data_object_path": "ImageDataContainer/Ensemble AttributeMatrix",
         "tuple_dimensions": [
           [
             3.0

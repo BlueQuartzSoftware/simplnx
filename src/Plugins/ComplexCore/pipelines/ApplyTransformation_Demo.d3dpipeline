@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "Data_Object_Path": "Group 1"
+        "data_object_path": "Group 1"
       },
       "comments": "",
       "filter": {
@@ -16,7 +16,7 @@
     },
     {
       "args": {
-        "Data_Object_Path": "Group 1/Group 2"
+        "data_object_path": "Group 1/Group 2"
       },
       "comments": "",
       "filter": {

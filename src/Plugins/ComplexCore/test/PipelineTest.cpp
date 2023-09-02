@@ -281,10 +281,10 @@ TEST_CASE("PipelineTest:Rename Output")
   std::string group2Name = "Bar";
 
   Arguments args1;
-  args1.insert("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name})));
+  args1.insert("data_object_path", std::make_any<DataPath>(DataPath({group1Name})));
 
   Arguments args2;
-  args2.insert("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name, group2Name})));
+  args2.insert("data_object_path", std::make_any<DataPath>(DataPath({group1Name, group2Name})));
 
   Pipeline pipeline("Rename Test Pipeline");
   REQUIRE(pipeline.push_back(k_CreateDataGroupHandle, args1));
@@ -295,7 +295,7 @@ TEST_CASE("PipelineTest:Rename Output")
   // Update arguments to test renaming
   {
     group1Name = "Bizz";
-    args1.insertOrAssign("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name})));
+    args1.insertOrAssign("data_object_path", std::make_any<DataPath>(DataPath({group1Name})));
 
     auto* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
     REQUIRE(filterNode != nullptr);
@@ -309,7 +309,7 @@ TEST_CASE("PipelineTest:Rename Output")
     auto* filterNode2 = dynamic_cast<PipelineFilter*>(pipeline.at(1));
     REQUIRE(filterNode2 != nullptr);
     auto args2Alt = filterNode2->getArguments();
-    const auto& inPath = std::any_cast<DataPath>(args2Alt.at("Data_Object_Path"));
+    const auto& inPath = std::any_cast<DataPath>(args2Alt.at("data_object_path"));
     DataPath targetPath({group1Name, group2Name});
     REQUIRE(inPath == targetPath);
   }
@@ -324,10 +324,10 @@ TEST_CASE("PipelineTest:Not Renaming")
   std::string group2Name = "Bar";
 
   Arguments args1;
-  args1.insert("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name})));
+  args1.insert("data_object_path", std::make_any<DataPath>(DataPath({group1Name})));
 
   Arguments args2;
-  args2.insert("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name, group2Name})));
+  args2.insert("data_object_path", std::make_any<DataPath>(DataPath({group1Name, group2Name})));
 
   Pipeline pipeline("Rename Test Pipeline");
   REQUIRE(pipeline.push_back(k_CreateDataGroupHandle, args1));
@@ -338,7 +338,7 @@ TEST_CASE("PipelineTest:Not Renaming")
   // Update arguments to test renaming
   {
     group1Name = "Bizz";
-    args1.insertOrAssign("Data_Object_Path", std::make_any<DataPath>(DataPath({group1Name})));
+    args1.insertOrAssign("data_object_path", std::make_any<DataPath>(DataPath({group1Name})));
 
     auto* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
     REQUIRE(filterNode != nullptr);
@@ -352,7 +352,7 @@ TEST_CASE("PipelineTest:Not Renaming")
     auto* filterNode2 = dynamic_cast<PipelineFilter*>(pipeline.at(1));
     REQUIRE(filterNode2 != nullptr);
     auto args2Alt = filterNode2->getArguments();
-    const auto& inPath = std::any_cast<DataPath>(args2Alt.at("Data_Object_Path"));
+    const auto& inPath = std::any_cast<DataPath>(args2Alt.at("data_object_path"));
     DataPath targetPath({group1Name, group2Name});
     REQUIRE(inPath != targetPath);
   }
