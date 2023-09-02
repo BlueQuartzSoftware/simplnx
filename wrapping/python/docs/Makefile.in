@@ -5,7 +5,7 @@
 # from the environment for the first two.
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= ${SPHINX_EXECUTABLE}
-SOURCEDIR     = ${complex_SOURCE_DIR}/wrapping/python/docs/source
+SOURCEDIR     = ${complex_BINARY_DIR}/wrapping/python/docs/source
 BUILDDIR      = ${complex_BINARY_DIR}/wrapping/python/docs/build
 
 # Put it first so that "make" without argument is like "make help".

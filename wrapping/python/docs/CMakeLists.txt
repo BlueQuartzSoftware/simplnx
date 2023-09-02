@@ -30,12 +30,20 @@ foreach(d3dPlugin ${ComplexPluginTargets})
   add_dependencies(generate_sphinx_docs ${d3dPlugin})
 endforeach()
 
+add_custom_target(sphinx_copy_sources ALL
+  DEPENDS generate_sphinx_docs
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/source" "${complex_BINARY_DIR}/wrapping/python/docs/source"
+  COMMENT "SPHINX: Copying static doc files to build directory at ${complex_BINARY_DIR}/wrapping/python/docs/"
+)
+
+
 #------------------------------------------------------------------------------
 # Execute the sphinx rst plugin generation tool
 #------------------------------------------------------------------------------
 add_custom_target(sphinx_generate_plugin_rst ALL
-  DEPENDS generate_sphinx_docs
+  DEPENDS sphinx_copy_sources
   COMMAND "$<TARGET_FILE:generate_sphinx_docs>"
+  COMMENT "SPHINX: Generated Plugin .rst docs file"
 )
 
 #------------------------------------------------------------------------------
@@ -71,11 +79,13 @@ endif()
 
 FILE(MAKE_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs")
 
+
+
 if(WIN32)
   add_custom_target(sphinx_docs_generation ALL
     DEPENDS sphinx_generate_plugin_rst
     COMMAND "${complex_BINARY_DIR}/wrapping/python/docs/make.bat"
-    COMMENT "Sphinx: Generating Python HTML Documentation"
+    COMMENT "SPHINX: Generating Python HTML Documentation"
     WORKING_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs"
   )
 else()
@@ -83,7 +93,7 @@ else()
     DEPENDS sphinx_generate_plugin_rst
     COMMAND "/usr/bin/make" clean
     COMMAND "/usr/bin/make" html
-    COMMENT "Sphinx: Generating Python HTML Documentation"
+    COMMENT "SPHINX: Generating Python HTML Documentation"
     WORKING_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs"
   )
 endif()

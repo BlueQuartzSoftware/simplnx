@@ -310,7 +310,7 @@ void GenerateRstFilterDocs()
     }
 
     // const std::filesystem::path rstFilePath = fmt::format("{}/sphinx_docs/source/{}.rst", COMPLEX_BUILD_DIR, plugName);
-    const std::filesystem::path rstFilePath = fmt::format("{}/wrapping/python/docs/source/{}.rst", COMPLEX_SOURCE_DIR, plugName);
+    const std::filesystem::path rstFilePath = fmt::format("{}/wrapping/python/docs/source/{}.rst", COMPLEX_BUILD_DIR, plugName);
 
     const Result<> createDirectoriesResult = complex::CreateOutputDirectories(rstFilePath.parent_path());
     std::ofstream rstStream = std::ofstream(rstFilePath, std::ios_base::binary | std::ios_base::trunc);
