@@ -389,10 +389,10 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     return {nonstd::make_unexpected(std::vector<Error>{Error{-57209, msg}})};
   }
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(inputDataArrayPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(inputDataArrayPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-57210, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-57210, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, numBins, tupleDims).actions;

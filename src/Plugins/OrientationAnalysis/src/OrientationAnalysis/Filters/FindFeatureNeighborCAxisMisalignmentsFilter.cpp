@@ -96,10 +96,10 @@ IFilter::PreflightResult FindFeatureNeighborCAxisMisalignmentsFilter::preflightI
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples({pNeighborListArrayPathValue, pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue});
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pNeighborListArrayPathValue, pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue});
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-1560, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-1560, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);

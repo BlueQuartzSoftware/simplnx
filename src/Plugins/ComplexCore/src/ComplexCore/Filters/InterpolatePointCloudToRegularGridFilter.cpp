@@ -317,10 +317,10 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     dataArrays.push_back(args.value<DataPath>(k_Mask_Key));
   }
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataArrays);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-11003, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-11003, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // Create the neighbor list array for storing the kernel distances

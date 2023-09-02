@@ -379,11 +379,11 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataSt
     dataArrayPaths.push_back(featurePhasesPath);
   }
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataArrayPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!tupleValidityCheck)
   {
     return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
-                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   OutputActions actions;

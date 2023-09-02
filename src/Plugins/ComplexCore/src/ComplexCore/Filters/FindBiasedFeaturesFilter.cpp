@@ -95,10 +95,10 @@ IFilter::PreflightResult FindBiasedFeaturesFilter::preflightImpl(const DataStruc
   {
     cellFeatureArrayDataPaths.push_back(pPhasesArrayPathValue);
   }
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(cellFeatureArrayDataPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(cellFeatureArrayDataPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   };
 
   auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue).getTupleShape(), std::vector<usize>{1},

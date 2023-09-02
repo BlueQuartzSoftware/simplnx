@@ -142,10 +142,10 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
     return MakePreflightErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, "You must select at least one feature data array to copy to an element data array.");
   }
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);

@@ -80,10 +80,10 @@ IFilter::PreflightResult FindCAxisLocationsFilter::preflightImpl(const DataStruc
   std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<DataPath> dataPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue};
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-3520, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-3520, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   {

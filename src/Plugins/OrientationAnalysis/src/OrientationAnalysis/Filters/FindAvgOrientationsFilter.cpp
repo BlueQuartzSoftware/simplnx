@@ -135,10 +135,10 @@ IFilter::PreflightResult FindAvgOrientationsFilter::preflightImpl(const DataStru
   dataPaths.push_back(pCellFeatureIdsArrayPathValue);
 
   // Make sure all the arrays have the same number of Tuples
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto* cellFeatAttMatrix = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);

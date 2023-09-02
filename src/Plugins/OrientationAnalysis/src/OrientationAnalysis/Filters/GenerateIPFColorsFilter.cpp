@@ -152,10 +152,10 @@ IFilter::PreflightResult GenerateIPFColorsFilter::preflightImpl(const DataStruct
     dataPaths.push_back(goodVoxelsPath);
   }
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // Get the number of tuples

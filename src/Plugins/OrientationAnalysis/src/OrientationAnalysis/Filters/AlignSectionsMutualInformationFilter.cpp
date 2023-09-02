@@ -125,10 +125,10 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   }
 
   std::vector<DataPath> dataArrayPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pGoodVoxelsArrayPathValue};
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataArrayPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-3542, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-3542, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

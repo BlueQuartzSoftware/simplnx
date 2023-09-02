@@ -172,11 +172,11 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
   std::vector<usize> tupleDims = {inputArray.getTupleShape()};
   usize numComponents = inputArray.getNumberOfComponents();
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!tupleValidityCheck)
   {
     return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
-                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{numComponents}, createdMaskPath, inputArray.getDataFormat());

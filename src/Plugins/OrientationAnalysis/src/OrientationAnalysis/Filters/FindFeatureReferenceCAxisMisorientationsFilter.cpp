@@ -100,10 +100,10 @@ IFilter::PreflightResult FindFeatureReferenceCAxisMisorientationsFilter::preflig
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples({pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue});
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue});
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   std::vector<usize> tupleShape = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape();

@@ -120,10 +120,10 @@ IFilter::PreflightResult WriteStatsGenOdfAngleFileFilter::preflightImpl(const Da
   {
     dataArrays.push_back(pGoodVoxelsArrayPathValue);
   }
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataArrays);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-9402, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-9402, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

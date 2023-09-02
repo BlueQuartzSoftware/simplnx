@@ -122,10 +122,10 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
     featureDataArrays.push_back(filterArgs.value<DataPath>(k_BiasedFeaturesArrayPath_Key));
   }
 
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(featureDataArrays);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(featureDataArrays);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-9750, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-9750, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& cellEnsembleAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixNameValue);

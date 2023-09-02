@@ -776,11 +776,11 @@ void DataStructure::applyAllDataStructure()
   m_RootGroup.setDataStructure(this);
 }
 
-std::pair<bool, std::string> DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
+nonstd::expected<bool, std::string> DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
 {
   if(dataPaths.empty())
   {
-    return {};
+    return true;
   }
 
   std::stringstream message;
@@ -800,13 +800,13 @@ std::pair<bool, std::string> DataStructure::validateNumberOfTuples(const std::ve
     else // We can only check DataObject subclasses that hold items that can be expressed as getNumberOfTuples();
     {
       message << "Only NeighborList, StringArray and DataArray can be validated for tuple counts\n";
-      return {false, message.str()};
+      return {nonstd::make_unexpected(message.str())};
     }
 
     auto parentPaths = dataObject->getDataPaths();
     for(const auto& path : parentPaths)
     {
-      message << path.toString() << " Tuple Count: " << numTuples << "\n";
+      message << "DataPath: " << path.toString() << "    | Tuple Count: " << numTuples << "\n";
     }
 
     // Check equality if not first item
@@ -816,10 +816,10 @@ std::pair<bool, std::string> DataStructure::validateNumberOfTuples(const std::ve
     }
     else if(tupleCount != numTuples)
     {
-      return {false, message.str()};
+      return {nonstd::make_unexpected(message.str())};
     }
   }
-  return {true, message.str()};
+  return true;
 }
 
 void DataStructure::resetIds(DataObject::IdType startingId)

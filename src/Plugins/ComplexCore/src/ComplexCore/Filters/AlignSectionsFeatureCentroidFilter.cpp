@@ -119,11 +119,11 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   dataPaths.push_back(pGoodVoxelsArrayPath);
 
   // Ensure all DataArrays have the same number of Tuples
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(dataPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!tupleValidityCheck)
   {
     return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
-                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // Ensure the file path is not blank if they user wants to write the alignment shifts.

@@ -88,10 +88,10 @@ IFilter::PreflightResult GenerateFaceMisorientationColoringFilter::preflightImpl
 
   // make sure all the cell data has same number of tuples (i.e. they should all be coming from the same Image Geometry)
   std::vector<DataPath> imageArrayPaths = {pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue};
-  auto numTupleCheckResult = dataStructure.validateNumberOfTuples(imageArrayPaths);
-  if(!numTupleCheckResult.first)
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(imageArrayPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-98410, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", numTupleCheckResult.second))};
+    return {MakeErrorResult<OutputActions>(-98410, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto faceLabels = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
