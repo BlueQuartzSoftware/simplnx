@@ -18,7 +18,7 @@ dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
 dataset2.tuple_dims = "117,201,189"
 dataset2.component_dims = "3"
 
-import_hdf5_param = cx.ImportHDF5DatasetParameter()
+import_hdf5_param = cx.ImportHDF5DatasetParameter.ValueType()
 import_hdf5_param.input_file = "/Users/mjackson/DREAM3DNXData/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_hdf5_param.datasets = [dataset1, dataset2]
 # import_hdf5_param.parent = cx.DataPath(["Imported Data"])
@@ -31,3 +31,4 @@ if len(result.errors) != 0:
     print('Warnings: {}', result.warnings)
 else:
     print("No errors running the ImportHDF5DatasetParameter filter")
+

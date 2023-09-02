@@ -92,6 +92,7 @@ The DataStore is the C++ object that actually allocates the memory necessary to 
 data in complex/DREAM3D. The Python API is intentially limited to getting a Numpy.View()
 so that python developers can have a consistent well known interace to the DataArray_.
 
+.. _AttributeMatrix:
 
 AttributeMatrix
 ----------------

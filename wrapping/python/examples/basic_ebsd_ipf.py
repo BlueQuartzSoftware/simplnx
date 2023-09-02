@@ -7,7 +7,9 @@ import orientationanalysis as cxor
 import numpy as np
 import matplotlib.pyplot as plt
 
+#------------------------------------------------------------------------------
 # Create a Data Structure
+#------------------------------------------------------------------------------
 data_structure = cx.DataStructure()
 
 # Import an EBSD Data file
@@ -21,7 +23,6 @@ if len(result.errors) != 0:
     print('Warnings: {}', result.warnings)
 else:
     print("No errors running the ReadAngDataFilter")
-
 
 #------------------------------------------------------------------------------
 # Rotate the Euler Reference Frame
@@ -81,7 +82,6 @@ if len(result.errors) != 0:
 else:
     print("No errors running the MultiThresholdObjects")
 
-
 #------------------------------------------------------------------------------
 # Generate the IPF Colors for the <001> direction
 #------------------------------------------------------------------------------
@@ -135,6 +135,20 @@ else:
 
 
 #------------------------------------------------------------------------------
+# Generate a Colorized Version of the Confidence Index
+#------------------------------------------------------------------------------
+color_control_points = cx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
+result = cx.GenerateColorTableFilter.execute(data_structure=data_structure,
+                                              rgb_array_path="CI Color", 
+                                              selected_data_array_path=cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
+                                              selected_preset=color_control_points)
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running the GenerateColorTableFilter")
+
+#------------------------------------------------------------------------------
 # Create a Pole Figure
 #------------------------------------------------------------------------------
 prefix = "Small_IN100_"
@@ -151,7 +165,7 @@ result = cxor.WritePoleFigureFilter.execute(data_structure=data_structure,
                                             lambert_size=64, 
                                             material_name_array_path=cx.DataPath(["Small IN100", "Phase Data", "MaterialName"]), 
                                             num_colors=32, 
-                                            output_path="/tmp/small_in100_pole_figure", 
+                                            output_path="small_in100_pole_figure", 
                                             save_as_image_geometry=True, 
                                             title="Small IN100 Slice 1", 
                                             use_good_voxels=True, 

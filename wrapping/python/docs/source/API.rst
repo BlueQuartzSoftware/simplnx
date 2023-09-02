@@ -12,47 +12,6 @@ Complex Python API Docs
 
     data_path = cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
 
-.. _ArrayThreshold:
-.. py:class:: ArrayThreshold
-
-  This class holds the values that are used for comparison in the :ref:`complex.MultiThresholdObjects() <MultiThresholdObjects>` filter.
-
-  .. code:: python
-
-    threshold_1 = cx.ArrayThreshold()
-    threshold_1.array_path = cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
-    threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-    threshold_1.value = 0.1
-
-
-  :ivar array_path: The DataPath_ to the array to use for this ArrayThreshold
-  :ivar comparison: The comparison operator to use. 0:">", 1:"<", 2:"=", 3:"!="
-  :ivar value: The value for the comparison
-
-
-.. _ArrayThresholdSet:
-.. py:class:: ArrayThresholdSet
-
-  This class holds a list of ArrayThreshold_ objects and eventually used as an argument
-  for the :ref:`complex.MultiThresholdObjects() <MultiThresholdObjects>` filter.
-
-  .. code:: python
-
-    threshold_1 = cx.ArrayThreshold()
-    threshold_1.array_path = cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
-    threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-    threshold_1.value = 0.1
-
-    threshold_2 = cx.ArrayThreshold()
-    threshold_2.array_path = cx.DataPath(["Small IN100", "Scan Data", "Image Quality"])
-    threshold_2.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-    threshold_2.value = 120
-
-    threshold_set = cx.ArrayThresholdSet()
-    threshold_set.thresholds = [threshold_1, threshold_2]
-
-  :ivar thresholds: List of ArrayThreshold_ objects
-
 
 Parameters 
 ----------
@@ -80,7 +39,48 @@ Parameters
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
 
-   This parameter holds a ArrayThresholdSet_ object.
+   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`complex.MultiThresholdObjects() <MultiThresholdObjects>` filter.
+   This parameter should not be directly invoked but instead it's ArrayThresholdSet_ is invoked and used.
+
+ 
+.. _ArrayThresholdSet:
+.. py:class:: ArrayThresholdSet
+
+  This class holds a list of ArrayThreshold_ objects.
+
+  :ivar thresholds: List[ArrayThreshold_] objects
+
+.. _ArrayThreshold:
+.. py:class:: ArrayThresholdSet.ArrayThreshold
+
+  This class holds the values that are used for comparison in the :ref:`complex.MultiThresholdObjects() <MultiThresholdObjects>` filter.
+
+  :ivar array_path: The DataPath_ to the array to use for this ArrayThreshold
+  :ivar comparison: Int. The comparison operator to use. 0=">", 1="<", 2="=", 3="!="
+  :ivar value: Numerical Value. The value for the comparison
+
+   The below code will create an ArrayThresholdSet_ that is used to create a "Mask" output array of type boolean that will mark
+   each value in its output array as "True" if **both** of the ArrayThreshold Objects evaluate to True. Specifically, the "Confidence Index" and "Image Quality"
+   array MUST have the same number of Tuples and the output "Mask" array will also have the same number of tuples.
+
+  .. code:: python
+
+   threshold_1 = cx.ArrayThreshold()
+   threshold_1.array_path = cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
+   threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
+   threshold_1.value = 0.1
+
+   threshold_2 = cx.ArrayThreshold()
+   threshold_2.array_path = cx.DataPath(["Small IN100", "Scan Data", "Image Quality"])
+   threshold_2.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
+   threshold_2.value = 120
+
+   threshold_set = cx.ArrayThresholdSet()
+   threshold_set.thresholds = [threshold_1, threshold_2]
+   result = cx.MultiThresholdObjects.execute(data_structure=data_structure,
+                                       array_thresholds=threshold_set, 
+                                       created_data_path="Mask",
+                                       created_mask_type=cx.DataType.boolean)
 
 .. _AttributeMatrixSelectionParameter:
 .. py:class:: AttributeMatrixSelectionParameter
@@ -99,7 +99,25 @@ Parameters
 .. _CalculatorParameter:
 .. py:class:: CalculatorParameter
 
-    ===============> TODO   
+   This parameter has a single member type "ValueType" that can be constructed with the necessary values.
+
+   .. py:class::    CalculatorParameter.ValueType
+
+   :ivar selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray<DataArray>` that will be used in the equations
+   :ivar equation: String. The equation that will be evaluated
+   :ivar units: cx.CalculatorParameter.AngleUnits.Radians or cx.CalculatorParameter.AngleUnits.Degrees
+
+.. code:: python
+
+   selected_group = cx.DataPath(["Small IN100","Scan Data"])
+   infix_equation = "Confidence Index * 10"
+   calc_param = cx.CalculatorParameter.ValueType( selected_group, infix_equation, cx.CalculatorParameter.AngleUnits.Radians)
+   result = cx.ArrayCalculatorFilter.execute(data_structure = data_structure,
+                                             calculated_array=cx.DataPath(["Small IN100","Scan Data","Calulated CI"]), 
+                                           infix_equation = calc_param, 
+                                           scalar_type=cx.NumericType.float32)
+
+
 
 .. _ChoicesParameter:
 .. py:class:: ChoicesParameter
@@ -236,7 +254,7 @@ Parameters
 
   The user can define their own phase names.
 
-  This is used in combination with the  :ref:`OrientationAnalysis.CreateEnsembleInfoFilter() <CreateEnsembleInfoFilter>` filter.
+  This is used in combination with the :ref:`OrientationAnalysis.CreateEnsembleInfoFilter() <CreateEnsembleInfoFilter>` filter.
 
   .. code:: python
 
@@ -261,7 +279,22 @@ Parameters
 .. _GenerateColorTableParameter:
 .. py:class:: GenerateColorTableParameter
 
-   ===============> TODO 
+   **NOTE: THIS API IS GOING TO CHANGE IN A FUTURE UPDATE**
+   
+   This parameter is used specifically for the  :ref:`complex.GenerateColorTableFilter() <GenerateColorTableFilter>` filter. The parameter has 
+   a single member variable 'default_value' that is of type 'complex.Json'. 
+
+   .. py:class:: complex.Json
+   
+   This class encapsulates a string that represents well formed JSON. It can be constructed on-the-fly as follows:
+
+   .. code:: python
+
+      color_control_points = cx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
+      result = cx.GenerateColorTableFilter.execute(data_structure=data_structure,
+                                              rgb_array_path="CI Color", 
+                                              selected_data_array_path=cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
+                                              selected_preset=color_control_points)      
 
 .. _GeneratedFileListParameter:
 .. py:class:: GeneratedFileListParameter
@@ -411,7 +444,7 @@ Parameters
 
       :ivar input_file: A "PathLike" value to the HDF5 file on the file system
       :ivar datasets: list[ImportHDF5DatasetParameter.DatasetImportInfo, ....]
-      :ivar parent: Optional: The DataPath_ object to a parente group to create the DataArray_ into. If left blank the DataArray_ will be created at the top level of the DataStructure_
+      :ivar parent: Optional: The DataPath_ object to a parente group to create the :ref:`DataArray<DataArray>` into. If left blank the :ref:`DataArray<DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`
 
    .. py:class:: ImportHDF5DatasetParameter.DatasetImportInfo
 
@@ -462,6 +495,7 @@ Parameters
    .. code:: python
 
     path_list = [cx.DataPath(["Group 1", "Array"]), cx.DataPath(["Group 1", "Array 2"])]   
+
 
 .. _NeighborListSelectionParameter:
 .. py:class:: NeighborListSelectionParameter
