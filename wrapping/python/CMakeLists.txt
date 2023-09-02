@@ -277,4 +277,6 @@ endif()
 #------------------------------------------------------------------------------
 # Create the Sphinx based Documentation
 #------------------------------------------------------------------------------
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs ${complex_BINARY_DIR}/sphinx_docs)
+if(COMPLEX_ENABLE_SPHINX_DOCS)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs ${complex_BINARY_DIR}/sphinx_docs)
+endif()
