@@ -1248,6 +1248,60 @@ ITKImageProcessing
       :rtype: complex.Result
 
 
+.. _ITKImportFijiMontageFilter:
+.. py:class:: ITKImportFijiMontageFilter
+
+   **UI Display Name:** *ITK Import Fiji Montage*
+
+   Imports multiple images for the purpose of montage assembly. Each image is stored in it's own *DataContaner/AttributeMatrix/AttributeArray* where the name of the *DataContainer* is based off the row & column index of the montage. The filter assumes that the Configuration File is in the same folder as the images. The created *AttributeMatrix* and *AttributeArray* will have the same name. The image files **MUST** be located in the same directory as the Fiji Configuration File.
+
+   `Link to the full online documentation for ITKImportFijiMontageFilter <http://www.dream3d.io/nx_reference_manual/Filters/ITKImportFijiMontageFilter>`_ 
+
+   Mapping of UI display to python named argument
+
+   +------------------------------------------+----------------------------+
+   | UI Display                               | Python Named Argument      |
+   +==========================================+============================+
+   | Cell Attribute Matrix Name               | cell_attribute_matrix_name |
+   +------------------------------------------+----------------------------+
+   | Change Origin                            | change_origin              |
+   +------------------------------------------+----------------------------+
+   | Color Weighting                          | color_weights              |
+   +------------------------------------------+----------------------------+
+   | Convert To GrayScale                     | convert_to_gray_scale      |
+   +------------------------------------------+----------------------------+
+   | Image Geometry Prefix                    | data_container_path        |
+   +------------------------------------------+----------------------------+
+   | Name of Created DataGroup                | data_group_name            |
+   +------------------------------------------+----------------------------+
+   | Image DataArray Name                     | image_data_array_name      |
+   +------------------------------------------+----------------------------+
+   | Fiji Configuration File                  | input_file                 |
+   +------------------------------------------+----------------------------+
+   | Length Unit                              | length_unit                |
+   +------------------------------------------+----------------------------+
+   | Origin                                   | origin                     |
+   +------------------------------------------+----------------------------+
+   | Parent Imported Images Under a DataGroup | parent_data_group          |
+   +------------------------------------------+----------------------------+
+
+   .. py:method:: Execute(cell_attribute_matrix_name, change_origin, color_weights, convert_to_gray_scale, data_container_path, data_group_name, image_data_array_name, input_file, length_unit, origin, parent_data_group)
+
+      :param complex.StringParameter cell_attribute_matrix_name: The name of the Cell Attribute Matrix
+      :param complex.BoolParameter change_origin: Set the origin of the mosaic to a user defined value
+      :param complex.VectorFloat32Parameter color_weights: The luminosity values for the conversion
+      :param complex.BoolParameter convert_to_gray_scale: The filter will show an error if the images are already in grayscale format
+      :param complex.StringParameter data_container_path: A prefix that can be used for each Image Geometry
+      :param complex.StringParameter data_group_name: Name of the overarching parent DataGroup
+      :param complex.StringParameter image_data_array_name: The name of the import image data
+      :param complex.FileSystemPathParameter input_file: This is the configuration file in the same directory as all of the identified geometries
+      :param complex.ChoicesParameter length_unit: The length unit that will be set into the created image geometry
+      :param complex.VectorFloat32Parameter origin: The new origin of the mosaic
+      :param complex.BoolParameter parent_data_group: Create a new DataGroup to hold the  imported images
+      :return: Returns a complex.Result object that holds any warnings and/or errors that were encountered during execution.
+      :rtype: complex.Result
+
+
 .. _ITKImportImageStack:
 .. py:class:: ITKImportImageStack
 
