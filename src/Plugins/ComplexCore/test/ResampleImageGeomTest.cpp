@@ -1,6 +1,7 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ResampleImageGeomFilter.hpp"
 
+#include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
@@ -13,6 +14,13 @@
 namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::UnitTest;
+
+namespace
+{
+const ChoicesParameter::ValueType k_SpacingModeIndex = 0;
+const ChoicesParameter::ValueType k_ScalingModeIndex = 1;
+const ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
+} // namespace
 
 struct CompareDataArrayFunctor
 {
@@ -42,8 +50,23 @@ TEST_CASE("ComplexCore::ResampleImageGeom: Invalid Parameters", "[ComplexCore][R
   DataPath destNewGrainDataPath = destGeomPath.createChildPath("NewGrain Data");
   DataPath destPhaseDataPath = destGeomPath.createChildPath("Phase Data");
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
+  int errCode;
+  SECTION("Spacing")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
+    errCode = -11502;
+  }
+  SECTION("Scaling")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
+    errCode = -11500;
+  }
+
+  // We do not need to test the "Exact Dimensions" resampling mode because the parameter type "VectorUInt64Parameter" automatically keeps the input values in range
+
+  // Assign values to the filter parameters
   args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(true));
   args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(srcGeomPath));
@@ -55,7 +78,7 @@ TEST_CASE("ComplexCore::ResampleImageGeom: Invalid Parameters", "[ComplexCore][R
   auto preflightResult = filter.preflight(dataStructure, args);
   auto preflightErrors = preflightResult.outputActions.errors();
   REQUIRE(preflightErrors.size() == 1);
-  REQUIRE(preflightErrors[0].code == -11500);
+  REQUIRE(preflightErrors[0].code == errCode);
 }
 
 TEST_CASE("ComplexCore::ResampleImageGeom: 3D In Place", "[ComplexCore][ResampleImageGeom]")
@@ -78,7 +101,25 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 3D In Place", "[ComplexCore][Resample
   DataPath destPhaseDataPath = destGeomPath.createChildPath("Phase Data");
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+  DataPath exemplarGeoPath;
+  SECTION("Spacing")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+    exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom"});
+  }
+  SECTION("Scaling")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{25, 25, 25}));
+    exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom"});
+  }
+  SECTION("Exact Dimensions")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{47, 50, 1}));
+    exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom_ExactDimensions"});
+  }
   args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(true));
   args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(srcGeomPath));
@@ -94,7 +135,6 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 3D In Place", "[ComplexCore][Resample
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  DataPath exemplarGeoPath({"Resampled_3D_ImageGeom"});
   DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(Constants::k_EbsdScanData);
   DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_FeatureGroupName);
 
@@ -201,12 +241,27 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 3D Save Geometry", "[ComplexCore][Res
   DataPath destCellFeatureDataPath = destGeomPath.createChildPath(Constants::k_FeatureGroupName);
   DataPath destNewGrainDataPath = destGeomPath.createChildPath("NewGrain Data");
   DataPath destPhaseDataPath = destGeomPath.createChildPath("Phase Data");
-  DataPath exemplarGeoPath({"Resampled_3D_ImageGeom"});
-  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_FeatureGroupName);
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+  DataPath exemplarGeoPath;
+  SECTION("Spacing")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+    exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom"});
+  }
+  SECTION("Scaling")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{25, 25, 25}));
+    exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom"});
+  }
+  SECTION("Exact Dimensions")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{47, 50, 1}));
+    exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom_ExactDimensions"});
+  }
   args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(true));
   args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
   args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(srcGeomPath));
@@ -221,6 +276,9 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 3D Save Geometry", "[ComplexCore][Res
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(Constants::k_EbsdScanData);
+  DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_FeatureGroupName);
 
   // check that the geometry(s) and the attribute matrix are all there
   const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
@@ -320,11 +378,27 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 2D In Place", "[ComplexCore][Resample
   DataPath cellDataPath = srcGeomPath.createChildPath("Cell Data");
   DataPath destGeomPath({srcGeomPath.getTargetName()});
   DataPath destCellDataPath = destGeomPath.createChildPath(cellDataPath.getTargetName());
-  DataPath exemplarGeoPath({"Resampled_2D_ImageGeom"});
-  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(cellDataPath.getTargetName());
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+  DataPath exemplarGeoPath;
+  SECTION("Spacing")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+    exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom"});
+  }
+  SECTION("Scaling")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{150, 150, 50}));
+    exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom"});
+  }
+  SECTION("Exact Dimensions")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{15, 15, 1}));
+    exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom_ExactDimensions"});
+  }
   args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(srcGeomPath));
@@ -339,6 +413,8 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 2D In Place", "[ComplexCore][Resample
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(cellDataPath.getTargetName());
 
   // check that the geometry(s) and the attribute matrixes are all there
   const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
@@ -389,16 +465,32 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 2D Save Geometry", "[ComplexCore][Res
   ResampleImageGeomFilter filter;
   Arguments args;
 
-  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar_test.dream3d", unit_test::k_TestFilesDir)));
   DataPath srcGeomPath({"Image2dDataContainer"});
   DataPath cellDataPath = srcGeomPath.createChildPath("Cell Data");
   DataPath destGeomPath({srcGeomPath.getTargetName() + "_RESAMPLED"});
   DataPath destCellDataPath = destGeomPath.createChildPath(cellDataPath.getTargetName());
-  DataPath exemplarGeoPath({"Resampled_2D_ImageGeom"});
-  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(cellDataPath.getTargetName());
+  DataPath exemplarGeoPath;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+  SECTION("Spacing")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+    exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom"});
+  }
+  SECTION("Scaling")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{150, 150, 50}));
+    exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom"});
+  }
+  SECTION("Exact Dimensions")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{15, 15, 1}));
+    exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom_ExactDimensions"});
+  }
   args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
   args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(srcGeomPath));
@@ -415,6 +507,7 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 2D Save Geometry", "[ComplexCore][Res
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // check that the geometry(s) and the attribute matrixes are all there
+  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(cellDataPath.getTargetName());
   const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
   const auto destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
   const auto destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);

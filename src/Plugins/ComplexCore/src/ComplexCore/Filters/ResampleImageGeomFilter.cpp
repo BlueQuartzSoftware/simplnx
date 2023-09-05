@@ -159,14 +159,6 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   }
   else if(pResamplingModeValue == k_ExactDimensionsModeIndex)
   {
-    // The resampling mode is exact dimensions, calculate the spacing
-    //    if(std::any_of(pExactDimensionsValue.begin(), pExactDimensionsValue.end(), [](float x) { return x <= 0; }))
-    //    {
-    //      // Exact Dimensions has a non-positive value
-    //      const std::string errMsg = fmt::format("Exact Dimensions has a non-positive value. {}, {}, {}", pExactDimensionsValue[0], pExactDimensionsValue[1], pExactDimensionsValue[2]);
-    //      return {MakeErrorResult<OutputActions>(-11501, errMsg)};
-    //    }
-
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
     const auto srcSpacing = imageGeom.getSpacing();
     const auto srcDims = imageGeom.getDimensions();
