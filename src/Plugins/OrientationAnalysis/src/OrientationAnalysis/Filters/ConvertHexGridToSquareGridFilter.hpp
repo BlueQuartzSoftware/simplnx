@@ -24,17 +24,12 @@ public:
   ConvertHexGridToSquareGridFilter& operator=(ConvertHexGridToSquareGridFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FileExtension_Key = "file_extension";
-  static inline constexpr StringLiteral k_FileSuffix_Key = "file_suffix";
-  static inline constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
+  static inline constexpr StringLiteral k_MultipleFiles_Key = "multiple_files";
   static inline constexpr StringLiteral k_OutputPrefix_Key = "output_prefix";
   static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
   static inline constexpr StringLiteral k_InputPath_Key = "input_path";
-  static inline constexpr StringLiteral k_PaddingDigits_Key = "padding_digits";
-  static inline constexpr StringLiteral k_YResolution_Key = "y_resolution";
-  static inline constexpr StringLiteral k_XResolution_Key = "x_resolution";
-  static inline constexpr StringLiteral k_ZEndIndex_Key = "z_end_index";
-  static inline constexpr StringLiteral k_ZStartIndex_Key = "z_start_index";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_GeneratedFileList_Key = "generated_file_list";
 
   /**
    * @brief Returns the name of the filter.
