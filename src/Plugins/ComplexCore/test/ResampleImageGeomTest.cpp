@@ -33,13 +33,13 @@ struct CompareDataArrayFunctor
 
 TEST_CASE("ComplexCore::ResampleImageGeom: Invalid Parameters", "[ComplexCore][ResampleImageGeom]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
                                                              "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
 
-  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
   DataPath srcGeomPath({Constants::k_SmallIN100});
   DataPath cellDataPath = srcGeomPath.createChildPath(Constants::k_EbsdScanData);
   DataPath cellFeatureDataPath = srcGeomPath.createChildPath(Constants::k_FeatureGroupName);
@@ -83,13 +83,13 @@ TEST_CASE("ComplexCore::ResampleImageGeom: Invalid Parameters", "[ComplexCore][R
 
 TEST_CASE("ComplexCore::ResampleImageGeom: 3D In Place", "[ComplexCore][ResampleImageGeom]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
                                                              "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
 
-  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
   DataPath srcGeomPath({Constants::k_SmallIN100});
   DataPath cellDataPath = srcGeomPath.createChildPath(Constants::k_EbsdScanData);
   DataPath cellFeatureDataPath = srcGeomPath.createChildPath(Constants::k_FeatureGroupName);
@@ -225,13 +225,13 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 3D In Place", "[ComplexCore][Resample
 
 TEST_CASE("ComplexCore::ResampleImageGeom: 3D Save Geometry", "[ComplexCore][ResampleImageGeom]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
                                                              "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
 
-  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
   DataPath srcGeomPath({Constants::k_SmallIN100});
   DataPath cellDataPath = srcGeomPath.createChildPath(Constants::k_EbsdScanData);
   DataPath cellFeatureDataPath = srcGeomPath.createChildPath(Constants::k_FeatureGroupName);
@@ -367,13 +367,13 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 3D Save Geometry", "[ComplexCore][Res
 
 TEST_CASE("ComplexCore::ResampleImageGeom: 2D In Place", "[ComplexCore][ResampleImageGeom]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
                                                              "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
 
-  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
   DataPath srcGeomPath({"Image2dDataContainer"});
   DataPath cellDataPath = srcGeomPath.createChildPath("Cell Data");
   DataPath destGeomPath({srcGeomPath.getTargetName()});
@@ -459,13 +459,13 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 2D In Place", "[ComplexCore][Resample
 
 TEST_CASE("ComplexCore::ResampleImageGeom: 2D Save Geometry", "[ComplexCore][ResampleImageGeom]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
                                                              "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
 
-  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar_test.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
   DataPath srcGeomPath({"Image2dDataContainer"});
   DataPath cellDataPath = srcGeomPath.createChildPath("Cell Data");
   DataPath destGeomPath({srcGeomPath.getTargetName() + "_RESAMPLED"});
