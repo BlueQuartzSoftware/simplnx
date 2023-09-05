@@ -416,7 +416,7 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 2D In Place", "[ComplexCore][Resample
 
   DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(cellDataPath.getTargetName());
 
-  // check that the geometry(s) and the attribute matrixes are all there
+  // check that the geometry(s) and the attribute matrices are all there
   const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
   const auto destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
   const auto destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
@@ -506,7 +506,7 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 2D Save Geometry", "[ComplexCore][Res
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  // check that the geometry(s) and the attribute matrixes are all there
+  // check that the geometry(s) and the attribute matrices are all there
   DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(cellDataPath.getTargetName());
   const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
   const auto destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);

@@ -178,7 +178,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
 
   complex::SizeVec3 srcDimensions = srcImageGeom->getDimensions();
   complex::FloatVec3 srcSpacing = srcImageGeom->getSpacing();
-  std::vector<float32> srcOrigin = srcImageGeom->getOrigin().toContainer<std::vector<float>>();
+  auto srcOrigin = srcImageGeom->getOrigin().toContainer<std::vector<float>>();
 
   // This section ensures that if the spacing is set in such a way that we have at
   // least 1 for the value of the dimension
@@ -344,7 +344,7 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   if(filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key) == k_ScalingModeIndex)
   {
-    std::vector<float32> scalingFactor = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
+    auto scalingFactor = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
     auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.SelectedImageGeometryPath);
     auto spacing = imageGeom.getSpacing();
 
@@ -352,7 +352,7 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
   }
   else if(filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key) == k_ExactDimensionsModeIndex)
   {
-    std::vector<uint64> exactDimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactDimensions_Key);
+    auto exactDimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactDimensions_Key);
     auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.SelectedImageGeometryPath);
     auto spacing = imageGeom.getSpacing();
     auto dims = imageGeom.getDimensions();

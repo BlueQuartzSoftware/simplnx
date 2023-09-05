@@ -33,7 +33,7 @@ struct COMPLEXCORE_EXPORT ResampleImageGeomInputValues
 class COMPLEXCORE_EXPORT ResampleImageGeom
 {
 public:
-  ResampleImageGeom(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ResampleImageGeomInputValues* inputValues);
+  ResampleImageGeom(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ResampleImageGeomInputValues* inputValues);
   ~ResampleImageGeom() noexcept;
 
   ResampleImageGeom(const ResampleImageGeom&) = delete;
