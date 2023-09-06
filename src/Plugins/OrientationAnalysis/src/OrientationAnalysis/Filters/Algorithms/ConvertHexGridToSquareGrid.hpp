@@ -12,7 +12,6 @@
 
 namespace complex
 {
-
 struct ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGridInputValues
 {
   DataPath QuaternionDataArrayPath;
