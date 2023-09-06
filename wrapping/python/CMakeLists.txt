@@ -10,7 +10,7 @@ target_link_libraries(CxPybind
     pybind11::headers
 )
 
-pybind11_add_module(complexpy complexpy.cpp)
+pybind11_add_module(complexpy "${ComplexCore_SOURCE_DIR}/wrapping/python/complexpy.cpp")
 
 target_compile_definitions(complexpy PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)
 
@@ -200,13 +200,15 @@ endif()
 #-------------------------------------------------------------------------------
 function(complex_add_python_plugin)
   set(options)
-  set(oneValueArgs PLUGIN_NAME)
+  set(oneValueArgs PLUGIN_NAME PYTHON_MODULE_NAME)
   set(multiValueArgs)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  string(TOLOWER ${ARGS_PLUGIN_NAME} PYTHON_MODULE_NAME)
+  #string(TOLOWER ${ARGS_PLUGIN_NAME} PYTHON_MODULE_NAME)
+  set(PYTHON_MODULE_NAME ${ARGS_PYTHON_MODULE_NAME})
+  set(PYTHON_WRAPPING_DIR "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}/wrapping/python/")
 
-  pybind11_add_module(${PYTHON_MODULE_NAME} ${PYTHON_MODULE_NAME}.cpp)
+  pybind11_add_module(${PYTHON_MODULE_NAME} ${PYTHON_WRAPPING_DIR}/${PYTHON_MODULE_NAME}.cpp)
 
   get_property(FILTER_LIST TARGET ${ARGS_PLUGIN_NAME} PROPERTY COMPLEX_FILTER_LIST)
 
@@ -243,13 +245,13 @@ function(complex_add_python_plugin)
   set_property(TARGET ${PYTHON_MODULE_NAME} PROPERTY FOLDER "Python")
 
   if(COMPLEX_PY_GENERATE_PYI)
-    # complex_create_plugin_pyi(PLUGIN_NAME ${ARGS_PLUGIN_NAME})
+    complex_create_plugin_pyi(PLUGIN_NAME ${ARGS_PLUGIN_NAME})
 
     if(COMPLEX_PY_ENABLE_INSTALL)
       # install(FILES $<TARGET_FILE_DIR:complex>/${PYTHON_MODULE_NAME}.pyi
       #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
       # )
-      install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${PYTHON_MODULE_NAME}.pyi
+      install(FILES ${PYTHON_WRAPPING_DIR}/${PYTHON_MODULE_NAME}.pyi
         DESTINATION ${COMPLEX_PY_INSTALL_DIR}
       )
     endif()
@@ -266,13 +268,19 @@ function(complex_add_python_plugin)
   endif()
 endfunction()
 
-if(COMPLEX_ENABLE_ITKImageProcessing)
-  complex_add_python_plugin(PLUGIN_NAME ITKImageProcessing)
-endif()
+set(COMPLEX_PY_GENERATE_PYI ON)
+get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+foreach(d3dPlugin ${ComplexPluginTargets})
+  string(TOLOWER ${d3dPlugin} python_module_name)
+  if(NOT "${d3dPlugin}" STREQUAL "ComplexCore")
+    if(COMPLEX_ENABLE_${d3dPlugin})
+      message(STATUS "PYTHON: Wrapping ${d3dPlugin}")
+      complex_add_python_plugin(PLUGIN_NAME ${d3dPlugin} PYTHON_MODULE_NAME ${python_module_name})
+    endif()
+  endif()
 
-if(COMPLEX_ENABLE_OrientationAnalysis)
-  complex_add_python_plugin(PLUGIN_NAME OrientationAnalysis)
-endif()
+endforeach()
+
 
 #------------------------------------------------------------------------------
 # Create the Sphinx based Documentation
