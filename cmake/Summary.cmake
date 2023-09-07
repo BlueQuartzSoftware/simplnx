@@ -56,6 +56,9 @@ message(STATUS "* reproc++ (${reproc_VERSION}) ${reproc++_DIR}")
 
 message(STATUS "* -------------- Complex Configuration Options -------------------------------------")
 message(STATUS "* COMPLEX_BUILD_PYTHON: ${COMPLEX_BUILD_PYTHON}")
+message(STATUS "* Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+message(STATUS "* MKDOCS_EXECUTABLE: ${MKDOCS_EXECUTABLE}")
+
 message(STATUS "* COMPLEX_EMBED_PYTHON: ${COMPLEX_EMBED_PYTHON}")
 message(STATUS "* COMPLEX_BUILD_TESTS: ${COMPLEX_BUILD_TESTS}")
 message(STATUS "* COMPLEX_ENABLE_MULTICORE: ${COMPLEX_ENABLE_MULTICORE}")

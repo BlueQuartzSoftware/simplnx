@@ -57,37 +57,37 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "", DataPath(), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insert(std::make_unique<Int32Parameter>(k_NeighborhoodRing_Key, "Neighborhood Ring Count", "", 1));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "The input Triangle Geometry to compute the curvature values", DataPath(), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+  params.insert(std::make_unique<Int32Parameter>(k_NeighborhoodRing_Key, "Neighborhood Ring Count", "The number of ring neighbors to use", 1));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputePrincipalDirection_Key, "Compute Principal Direction Vectors", "", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputePrincipalDirection_Key, "Compute Principal Direction Vectors", "Compute the Principal Direction Vectors", true));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeGaussianCurvature_Key, "Compute Gaussian Curvature", "", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeGaussianCurvature_Key, "Compute Gaussian Curvature", "Compute the Gaussian Curvature values", true));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeMeanCurvature_Key, "Compute Mean Curvature", "", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeMeanCurvature_Key, "Compute Mean Curvature", "Compute the Mean Curvature values", true));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeWeingartenMatrix_Key, "Compute Weingarten Matrix", "", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeWeingartenMatrix_Key, "Compute Weingarten Matrix", "Compute the Weingarten Matrix values", true));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseFaceNormals_Key, "Use Face Normals for Curve Fitting", "", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseFaceNormals_Key, "Use Face Normals for Curve Fitting", "Use the face normals for curve fitting.", true));
 
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FaceAttribMatrix_Key, "Face Attribute Matrix", "", DataPath()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabels_Key, "Face Labels", "", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int32},
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FaceAttribMatrix_Key, "Face Attribute Matrix", "The AttributeMatrix that holds the triangle face data.", DataPath()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabels_Key, "Face Labels", "The DataPath to the 'Face Labels' DataArray", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIds_Key, "Feature Face IDs", "", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int32},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIds_Key, "Feature Face IDs", "The DataPath to the 'FeatureIds' DataArray", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormals_Key, "Feature Normals", "", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float64},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormals_Key, "Face Normals", "The DataPath to the 'Feature Normals' DataArray", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceCentroids_Key, "Face Centroids", "", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float64},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceCentroids_Key, "Face Centroids", "The DataPath to the 'Face Centroids' DataArray", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
 
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature1_Key, "Principal Curvature 1", "", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature2_Key, "Principal Curvature 2", "", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalDirection1_Key, "Principal Direction 1", "", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalDirection2_Key, "Principal Direction 2", "", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_GaussianCurvature_Key, "Guassian Curvature", "", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_MeanCurvature_Key, "Mean Curvature", "", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_WeingartenMatrix_Key, "Weingarten Matrix", "", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature1_Key, "Principal Curvature 1", "Output DataPath to hold the 'Principal Curvature 1' values", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature2_Key, "Principal Curvature 2", "Output DataPath to hold the 'Principal Curvature 2' values", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalDirection1_Key, "Principal Direction 1", "Output DataPath to hold the 'Principal Direction 1' values", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalDirection2_Key, "Principal Direction 2", "Output DataPath to hold the 'Principal Direction 2' values", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_GaussianCurvature_Key, "Gaussian Curvature", "Output DataPath to hold the 'Gaussian Curvature' values", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_MeanCurvature_Key, "Mean Curvature", "Output DataPath to hold the 'Mean Curvature' values", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_WeingartenMatrix_Key, "Weingarten Matrix", "Output DataPath to hold the 'Weingarten Matrix' values", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ComputePrincipalDirection_Key, k_PrincipalCurvature1_Key, true);

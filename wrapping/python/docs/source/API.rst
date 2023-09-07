@@ -1,4 +1,4 @@
-compl API Docs
+complex API Docs
 ================
 
 .. _DataPath:

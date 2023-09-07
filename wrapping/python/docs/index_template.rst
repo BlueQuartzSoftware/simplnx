@@ -16,13 +16,13 @@ DREAM3D Python Docs
    Python_Introduction
    API
    Reference_Frame_Notes
-   complex
-   ITKImageProcessing
-   OrientationAnalysis
-   
+@PLUGIN_LIST@
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+

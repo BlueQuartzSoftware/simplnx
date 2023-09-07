@@ -110,6 +110,7 @@ function(complex_create_pyi)
 
   add_custom_target(${PYI_TARGET_NAME} ALL
     COMMAND ${MYPY_STUBGEN_EXE} -m ${ARGS_PYTHON_MODULE_NAME} -o $<TARGET_FILE_DIR:complex>
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py --input_file "$<TARGET_FILE_DIR:complex>/${ARGS_PYTHON_MODULE_NAME}.pyi"
     COMMENT "${ARGS_PYTHON_MODULE_NAME}: Generating .pyi files"
     WORKING_DIRECTORY $<TARGET_FILE_DIR:complex>
   )
@@ -149,7 +150,7 @@ set_property(TARGET complexpy PROPERTY FOLDER "Python")
 
 option(COMPLEX_PY_GENERATE_PYI "Generate .pyi files for python bindings" OFF)
 if(COMPLEX_PY_GENERATE_PYI)
-  #complex_create_pyi(PYTHON_MODULE_NAME complex PYTHON_TARGET complexpy)
+  complex_create_pyi(PYTHON_MODULE_NAME complex PYTHON_TARGET complexpy)
 endif()
 
 option(COMPLEX_PY_ENABLE_DOCS "Generate python documentation using sphinx" OFF)
@@ -180,12 +181,12 @@ if(COMPLEX_PY_ENABLE_INSTALL)
       DESTINATION ${COMPLEX_PY_INSTALL_DIR}
   )
   if(COMPLEX_PY_GENERATE_PYI)
-    # install(FILES $<TARGET_FILE_DIR:complex>/complex.pyi
-    #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
-    # )
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/complex.pyi
+    install(FILES $<TARGET_FILE_DIR:complex>/complex.pyi
       DESTINATION ${COMPLEX_PY_INSTALL_DIR}
     )
+    # install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/complex.pyi
+    #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+    # )
   endif()
 endif()
 
@@ -248,12 +249,12 @@ function(complex_add_python_plugin)
     complex_create_plugin_pyi(PLUGIN_NAME ${ARGS_PLUGIN_NAME})
 
     if(COMPLEX_PY_ENABLE_INSTALL)
-      # install(FILES $<TARGET_FILE_DIR:complex>/${PYTHON_MODULE_NAME}.pyi
-      #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
-      # )
-      install(FILES ${PYTHON_WRAPPING_DIR}/${PYTHON_MODULE_NAME}.pyi
+      install(FILES $<TARGET_FILE_DIR:complex>/${PYTHON_MODULE_NAME}.pyi
         DESTINATION ${COMPLEX_PY_INSTALL_DIR}
       )
+      # install(FILES ${PYTHON_WRAPPING_DIR}/${PYTHON_MODULE_NAME}.pyi
+      #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+      # )
     endif()
   endif()
 
@@ -268,7 +269,7 @@ function(complex_add_python_plugin)
   endif()
 endfunction()
 
-set(COMPLEX_PY_GENERATE_PYI ON)
+
 get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
 foreach(d3dPlugin ${ComplexPluginTargets})
   string(TOLOWER ${d3dPlugin} python_module_name)

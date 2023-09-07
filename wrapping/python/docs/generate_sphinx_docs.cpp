@@ -4,13 +4,15 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include "plugin_source_dirs.hpp"
+
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <regex>
 #include <sstream>
 #include <string>
-#include <vector>
 
 using namespace complex;
 
@@ -293,10 +295,11 @@ std::vector<int32_t> FindTableColumnWidths(const Parameters& parameters)
   return {maxUIDisplay, maxPythonArg};
 }
 
+/**
+ * @brief
+ */
 void GenerateRstFilterDocs()
 {
-  const std::string pluginRootDir = fmt::format("{}/src/Plugins", COMPLEX_SOURCE_DIR);
-
   auto* filterListPtr = Application::Instance()->getFilterList();
 
   // Loop over each plugin and create a .rst file
@@ -304,6 +307,8 @@ void GenerateRstFilterDocs()
   for(const auto& plugin : pluginListPtr)
   {
     std::string plugName = plugin->getName();
+    const std::string pluginRootDir = fmt::format("{}", s_PluginDirMap[plugName]);
+
     if(plugName == "ComplexCore")
     {
       plugName = "complex";
@@ -351,7 +356,7 @@ void GenerateRstFilterDocs()
       rstStream << "   **UI Display Name:** *" << filter->humanName() << "*\n\n";
 
       // Extract out the first paragraph of the Filter's markdown documentation after the ## Description section marker
-      const std::filesystem::path docFilePath = fmt::format("{}/{}/docs/{}.md", pluginRootDir, plugin->getName(), filterClassName);
+      const std::filesystem::path docFilePath = fmt::format("{}/docs/{}.md", pluginRootDir, filterClassName);
       std::string rstDescription = ExtractRstFilterSummary(docFilePath);
       rstStream << "   " << rstDescription << "\n\n";
 
@@ -372,18 +377,21 @@ void GenerateRstFilterDocs()
       rstStream << "   +" << std::string(columnWidths[0], '=') << "+" << std::string(columnWidths[1], '=') << "+\n";
       for(const auto& parameter : parameters)
       {
-        auto const& p = parameter.second;
-
-        for(const auto& c : p->name())
+        auto const& paramValue = parameter.second;
+        if(paramValue->helpText().empty())
         {
-          if(::isupper(c))
+          std::cout << filter->name() << "::" << paramValue->name() << " HELP Text is empty\n";
+        }
+        for(const auto& letter : paramValue->name())
+        {
+          if(::isupper(letter) != 0)
           {
-            std::cout << filter->name() << "::" << p->name() << " HAS CAPS. Should be lower snake case\n";
+            std::cout << filter->name() << "::" << paramValue->name() << " HAS CAPS. Should be lower snake case\n";
             break;
           }
         }
 
-        rstStream << "   |" << CreateFilledString(p->humanName(), columnWidths[0], ' ') << "|" << CreateFilledString(p->name(), columnWidths[1], ' ') << "|\n";
+        rstStream << "   |" << CreateFilledString(paramValue->humanName(), columnWidths[0], ' ') << "|" << CreateFilledString(paramValue->name(), columnWidths[1], ' ') << "|\n";
         rstStream << "   +" << std::string(columnWidths[0], '-') << "+" << std::string(columnWidths[1], '-') << "+\n";
       }
       rstStream << '\n';
@@ -415,6 +423,73 @@ void GenerateRstFilterDocs()
   }
 }
 
+/**
+ * @brief This will read the index template file in order to fill in the plugins that are being
+ * used.
+ * @param path The path to the index template file
+ * @return
+ */
+std::string ReadIndexTemplateFile(const std::filesystem::path& path)
+{
+  std::ifstream file(path);
+
+  if(!file.is_open())
+  {
+    throw std::runtime_error("Failed to open file: " + path.string());
+  }
+
+  // Read the entire content of the file into a string
+  const std::string content(std::istreambuf_iterator<char>(file), {});
+
+  return content;
+}
+
+/**
+ * @brief Generates the index.rst file for the sphinx docs
+ */
+void GenerateIndexRstFile()
+{
+  std::string indexTemplate;
+  {
+    const std::filesystem::path rstIndexTemplatePath = fmt::format("{}/wrapping/python/docs/index_template.rst", COMPLEX_SOURCE_DIR);
+    indexTemplate = ReadIndexTemplateFile(rstIndexTemplatePath);
+  }
+
+  // Loop over each plugin and fill in the list
+  const auto pluginListPtr = Application::Instance()->getPluginList();
+
+  std::stringstream pluginList;
+
+  for(const auto& plugin : pluginListPtr)
+  {
+    std::string plugName = plugin->getName();
+    const std::string pluginRootDir = fmt::format("{}", s_PluginDirMap[plugName]);
+
+    if(plugName == "ComplexCore")
+    {
+      plugName = "complex";
+    }
+    pluginList << "   " << plugName << "\n";
+  }
+
+  indexTemplate = complex::StringUtilities::replace(indexTemplate, "@PLUGIN_LIST@", pluginList.str());
+
+  const std::filesystem::path rstFilePath = fmt::format("{}/wrapping/python/docs/source/index.rst", COMPLEX_BUILD_DIR);
+  std::ofstream rstStream = std::ofstream(rstFilePath, std::ios_base::binary | std::ios_base::trunc);
+  if(!rstStream.is_open())
+  {
+    std::cout << "ERROR:" << rstFilePath << "\n";
+    return;
+  }
+  rstStream << indexTemplate;
+}
+
+/**
+ * @brief Main point of entry into this utility program.
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int32_t argc, char** argv)
 {
   try
@@ -425,6 +500,7 @@ int main(int32_t argc, char** argv)
     app.loadPlugins(COMPLEX_BIN_DIR, true);
 
     GenerateRstFilterDocs();
+    GenerateIndexRstFile();
   } catch(const std::exception& except)
   {
     std::cout << "RST Doc Generator threw a runtime exception which should NOT happen" << std::endl;
