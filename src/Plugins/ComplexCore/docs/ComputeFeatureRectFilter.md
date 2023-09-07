@@ -62,15 +62,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ComputeFeatureRectFilter
-+ Displayed Name: Compute Feature Corners
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| feature_data_attribute_matrix_path | Feature Data Attribute Matrix | The path to the feature data attribute matrix associated with the input feature ids array | complex.DataGroupSelectionParameter |
-| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
-| feature_rect_array_path | Feature Rect | The feature rect calculated from the feature ids | complex.DataObjectNameParameter |
 

@@ -68,19 +68,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: SharedFeatureFaceFilter
-+ Displayed Name: Generate Triangle Face Ids
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| face_labels_array_path | Face Labels | The DataPath to the FaceLabels values. | complex.ArraySelectionParameter |
-| feature_face_ids_array_name | Feature Face Ids | The name of the calculated Feature Face Ids DataArray | complex.DataObjectNameParameter |
-| feature_face_labels_array_name | Feature Face Labels | The name of the array that holds the calculated Feature Face Labels | complex.DataObjectNameParameter |
-| feature_num_triangles_array_name | Feature Number of Triangles | The name of the array that holds the calculated number of triangles for each feature face | complex.DataObjectNameParameter |
-| grain_boundary_attribute_matrix_name | Face Feature Attribute Matrix | The name of the AttributeMatrix that holds the **Feature Face** data | complex.DataObjectNameParameter |
-| randomize_features | Randomize Face IDs | Specifies if feature IDs should be randomized. Can be helpful when visualizing the faces. | complex.BoolParameter |
-| triangle_geometry_path | Triangle Geometry | The complete path to the Geometry for which to calculate the normals | complex.GeometrySelectionParameter |
 

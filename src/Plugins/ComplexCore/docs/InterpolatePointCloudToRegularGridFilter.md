@@ -54,25 +54,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: InterpolatePointCloudToRegularGridFilter
-+ Displayed Name: Interpolate Point Cloud to Regular Grid
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| copy_arrays | Attribute Arrays to Copy | DataPaths to copy | complex.MultiArraySelectionParameter |
-| guassian_sigmas | Gaussian Sigmas | Specifies the Gaussian sigmas | complex.VectorFloat32Parameter |
-| image_geom | Interpolated Image Geometry | DataPath to interpolated geometry | complex.GeometrySelectionParameter |
-| interpolate_arrays | Attribute Arrays to Interpolate | DataPaths to interpolate | complex.MultiArraySelectionParameter |
-| interpolated_group | Interpolated Group | DataPath to created DataGroup for interpolated data | complex.DataObjectNameParameter |
-| interpolation_technique | Interpolation Technique | Selected Interpolation Technique | complex.ChoicesParameter |
-| kernel_distances_array | Kernel Distances Group | DataPath to created DataGroup for kernel distances data | complex.DataObjectNameParameter |
-| kernel_size | Kernel Size | Specifies the kernel size | complex.VectorFloat32Parameter |
-| mask | Mask | DataPath to the boolean mask array. Values that are true will mark that cell/point as usable. | complex.ArraySelectionParameter |
-| store_kernel_distances | Store Kernel Distances | Specifies whether or not to store kernel distances | complex.BoolParameter |
-| use_mask | Use Mask | Specifies whether or not to use a mask array | complex.BoolParameter |
-| vertex_geom | Vertex Geometry to Interpolate | DataPath to geometry to interpolate | complex.GeometrySelectionParameter |
-| voxel_indices | Voxel Indices | DataPath to voxel indices | complex.ArraySelectionParameter |
 

@@ -54,17 +54,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindBoundaryCellsFilter
-+ Displayed Name: Find Boundary Cells (Image)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| boundary_cells_array_name | Boundary Cells | The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6 | complex.DataObjectNameParameter |
-| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
-| ignore_feature_zero | Ignore Feature 0 | Do not use feature 0 | complex.BoolParameter |
-| image_geometry_path | Image Geometry | The selected geometry to which the cells belong | complex.GeometrySelectionParameter |
-| include_volume_boundary | Include Volume Boundary | Include the Cell boundaries | complex.BoolParameter |
 

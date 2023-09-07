@@ -142,18 +142,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: AbaqusHexahedronWriterFilter
-+ Displayed Name: Abaqus Hexahedron Exporter
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
-| file_prefix | Output File Prefix | The prefix to use for each output file. | complex.StringParameter |
-| hourglass_stiffness | Hourglass Stiffness Value | The value to use for the Hourglass Stiffness | complex.Int32Parameter |
-| image_geometry_path | Selected Image Geometry | The input Image Geometry that will be written. | complex.GeometrySelectionParameter |
-| job_name | Job Name | The name of the job | complex.StringParameter |
-| output_path | Output Path | The output file path | complex.FileSystemPathParameter |
 

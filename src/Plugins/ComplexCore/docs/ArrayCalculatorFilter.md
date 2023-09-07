@@ -168,15 +168,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ArrayCalculatorFilter
-+ Displayed Name: Attribute Array Calculator
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| calculated_array | Output Calculated Array | The path to the calculated array | complex.ArrayCreationParameter |
-| infix_equation | Infix Expression | The mathematical expression used to calculate the output array | complex.CalculatorParameter |
-| scalar_type | Output Scalar Type | The data type of the calculated array | complex.NumericTypeParameter |
 

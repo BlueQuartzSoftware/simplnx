@@ -82,18 +82,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: GenerateFZQuaternions
-+ Displayed Name: Reduce Orientations to Fundamental Zone
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_phases_array_path | Input Phases | The phases of the data. The data should be the indices into the Crystal Structures Data Array. | complex.ArraySelectionParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| f_zquats_array_path | Created FZ Quaternions | The name of the array containing the Quaternion that represents an orientation within the fundamental zone for each Element | complex.DataObjectNameParameter |
-| good_voxels_array_path | Input Mask [Optional] | Optional Mask array where valid data is TRUE or 1. | complex.ArraySelectionParameter |
-| quats_array_path | Input Quaternions | The input quaternions to convert. | complex.ArraySelectionParameter |
-| use_good_voxels | Apply to Good Elements Only (Bad Elements Will Be Black) | Whether to assign a black color to 'bad' Elements | complex.BoolParameter |
 

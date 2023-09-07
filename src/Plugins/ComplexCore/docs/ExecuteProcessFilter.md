@@ -59,16 +59,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ExecuteProcessFilter
-+ Displayed Name: Execute Process
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| arguments | Command Line Arguments | The complete command to execute. | complex.StringParameter |
-| blocking | Should Block | Whether to block the process while the command executes or not | complex.BoolParameter |
-| output_log_file | Output Log File | The log file where the output from the process will be stored | complex.FileSystemPathParameter |
-| timeout | Timeout (ms) | The amount of time to wait for the command to start/finish when blocking is selected | complex.Int32Parameter |
 

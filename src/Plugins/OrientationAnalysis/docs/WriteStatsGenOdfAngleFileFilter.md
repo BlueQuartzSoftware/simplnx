@@ -101,21 +101,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: WriteStatsGenOdfAngleFileFilter
-+ Displayed Name: Export StatsGenerator ODF Angle File
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_euler_angles_array_path | Euler Angles | Three angles defining the orientation of the Element in Bunge convention (Z-X-Z) | complex.ArraySelectionParameter |
-| cell_phases_array_path | Phases | Specifies to which Ensemble each Element belongs | complex.ArraySelectionParameter |
-| convert_to_degrees | Convert to Degrees | Whether to convert the Euler angles from radians to degrees. If the Euler angles are already in degrees, this option will 'convert' the data again, resulting in garbage orientations! | complex.BoolParameter |
-| delimiter | Delimiter | The delimiter separating the data | complex.ChoicesParameter |
-| good_voxels_array_path | Mask | Used to define Elements as good or bad. Only required if Only Write Good Elements is checked | complex.ArraySelectionParameter |
-| output_file | Output File | The output angles file path | complex.FileSystemPathParameter |
-| sigma | Default Sigma | This value will be used for the Sigma column | complex.Int32Parameter |
-| use_good_voxels | Only Write Good Elements | Whether to only write the Euler angles for those elements denoted as true in the supplied mask array | complex.BoolParameter |
-| weight | Default Weight | This value will be used for the Weight column | complex.Float32Parameter |
 

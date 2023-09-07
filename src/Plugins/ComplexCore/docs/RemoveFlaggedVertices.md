@@ -51,15 +51,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: RemoveFlaggedVertices
-+ Displayed Name: Remove Flagged Vertices
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| mask | Flagged Vertex Array | DataPath to the conditional array that will be used to decide which vertices are removed. | complex.ArraySelectionParameter |
-| reduced_vertex | Reduced Vertex Geometry | Created Vertex Geometry DataPath. This will be created during the filter. | complex.DataGroupCreationParameter |
-| vertex_geom | Vertex Geometry | Path to the target Vertex Geometry | complex.GeometrySelectionParameter |
 

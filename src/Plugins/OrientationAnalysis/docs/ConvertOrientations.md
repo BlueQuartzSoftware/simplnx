@@ -85,16 +85,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: ConvertOrientations
-+ Displayed Name: Convert Orientation Representation
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| input_orientation_array_path | Input Orientations | The complete path to the incoming orientation representation data array | complex.ArraySelectionParameter |
-| input_type | Input Orientation Type | Specifies the incoming orientation representation | complex.ChoicesParameter |
-| output_orientation_array_name | Output Orientations | The name of the data array with the converted orientation representation | complex.DataObjectNameParameter |
-| output_type | Output Orientation Type | Specifies to which orientation representation to convert the incoming data | complex.ChoicesParameter |
 

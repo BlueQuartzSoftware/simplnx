@@ -52,18 +52,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: GenerateFaceIPFColoringFilter
-+ Displayed Name: Generate IPF Colors (Face)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| feature_euler_angles_array_path | Average Euler Angles | Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z) | complex.ArraySelectionParameter |
-| feature_phases_array_path | Phases | Specifies to which phase each Feature belongs | complex.ArraySelectionParameter |
-| surface_mesh_face_ipf_colors_array_name | IPF Colors | A set of two RGB color schemes encoded as unsigned chars for each Face | complex.DataObjectNameParameter |
-| surface_mesh_face_labels_array_path | Face Labels | Specifies which Features are on either side of each Face | complex.ArraySelectionParameter |
-| surface_mesh_face_normals_array_path | Face Normals | Specifies the normal of each Face | complex.ArraySelectionParameter |
 

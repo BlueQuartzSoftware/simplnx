@@ -73,17 +73,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ImportCSVDataFilter
-+ Displayed Name: Import CSV Data
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| created_data_group | New Data Group | Store the imported CSV data arrays in a newly created group. | complex.DataGroupCreationParameter |
-| selected_data_group | Existing Data Group | Store the imported CSV data arrays in this existing group. | complex.DataGroupSelectionParameter |
-| tuple_dimensions | CSV Tuple Dimensions | The tuple dimensions for the imported CSV data arrays | complex.DynamicTableParameter |
-| use_existing_group | Use Existing Group | Store the imported CSV data arrays in an existing group. | complex.BoolParameter |
-| wizard_data | CSV Wizard Data | Holds all relevant csv file data collected from the wizard | complex.ImportCSVDataParameter |
 

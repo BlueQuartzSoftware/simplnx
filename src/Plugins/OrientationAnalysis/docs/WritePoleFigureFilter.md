@@ -80,29 +80,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: WritePoleFigureFilter
-+ Displayed Name: Generate Pole Figure Images
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_euler_angles_array_path | Euler Angles | Three angles defining the orientation of the Element in Bunge convention (Z-X-Z) | complex.ArraySelectionParameter |
-| cell_phases_array_path | Phases | Specifies to which Ensemble each cell belongs | complex.ArraySelectionParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| generation_algorithm | Pole Figure Type | The type of pole figure generated. 0=Color, 1=Discrete | complex.ChoicesParameter |
-| good_voxels_array_path | Mask | DataPath to the input Mask DataArray | complex.ArraySelectionParameter |
-| image_geometry_path | Created Image Geometry | The path to the created Image Geometry | complex.DataGroupCreationParameter |
-| image_layout | Image Layout | How to layout the 3 pole figures. 0=Horizontal, 1=Vertical, 2=Square | complex.ChoicesParameter |
-| image_prefix | Pole Figure File Prefix | The prefix to apply to each generated pole figure. Each Phase will have its own pole figure. | complex.StringParameter |
-| image_size | Image Size (Square Pixels) | The number of pixels that define the height and width of **each** output pole figure | complex.Int32Parameter |
-| lambert_size | Lambert Image Size (Pixels) | The height/width of the internal Lambert Square that is used for interpolation | complex.Int32Parameter |
-| material_name_array_path | Material Name | DataPath to the input DataArray that holds the material names | complex.DataPathSelectionParameter |
-| num_colors | Number of Colors | The number of colors to use for the Color Intensity pole figures | complex.Int32Parameter |
-| output_path | Output Directory Path | This is the path to the directory where the pole figures will be created. One file for each phase. | complex.FileSystemPathParameter |
-| save_as_image_geometry | Save Output as Image Geometry | Save the generated pole figure as an ImageGeometry | complex.BoolParameter |
-| title | Figure Title | The title to place at the top of the Pole Figure | complex.StringParameter |
-| use_good_voxels | Use Mask Array | Should the algorithm use a mask array to remove non-indexed points | complex.BoolParameter |
-| write_image_to_disk | Write Pole Figure as Image | Should the filter write the pole figure plots to a file. | complex.BoolParameter |
 

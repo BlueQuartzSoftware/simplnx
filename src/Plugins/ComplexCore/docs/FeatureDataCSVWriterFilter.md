@@ -76,17 +76,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FeatureDataCSVWriterFilter
-+ Displayed Name: Export Feature Data as CSV File
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_feature_attribute_matrix_path | Feature Attribute Matrix | Input Feature Attribute Matrix | complex.DataGroupSelectionParameter |
-| delimiter_choice_int | Delimiter | Default Delimiter is Comma | complex.ChoicesParameter |
-| feature_data_file | Output File | Path to the output file to write. | complex.FileSystemPathParameter |
-| write_neighborlist_data | Write Neighbor Data | Should the neighbor list data be written to the file | complex.BoolParameter |
-| write_num_features_line | Write Number of Features Line | Should the number of features be written to the file. | complex.BoolParameter |
 

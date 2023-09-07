@@ -48,15 +48,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: AlignGeometries
-+ Displayed Name: Align Geometries
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| alignment_type | Alignment Type | The type of alignment to perform (Origin or Centroid. | complex.ChoicesParameter |
-| moving_geometry | Moving Geometry | The geometry that will be moved. | complex.GeometrySelectionParameter |
-| target_geometry | Fixed Geometry | The geometry that does *not* move. | complex.GeometrySelectionParameter |
 

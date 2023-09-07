@@ -50,14 +50,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ChangeAngleRepresentation
-+ Displayed Name: Convert Angles to Degrees or Radians
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| angles_array_path | Angles | The DataArray containing the angles to be converted. | complex.ArraySelectionParameter |
-| conversion_type | Conversion Type | Tells the Filter which conversion is being made | complex.ChoicesParameter |
 

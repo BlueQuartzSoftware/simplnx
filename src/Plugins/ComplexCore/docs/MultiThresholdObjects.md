@@ -56,15 +56,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: MultiThresholdObjects
-+ Displayed Name: Multi-Threshold Objects
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| array_thresholds | Data Thresholds | DataArray thresholds to mask | complex.ArrayThresholdsParameter |
-| created_data_path | Mask Array | DataPath to the created Mask Array | complex.DataObjectNameParameter |
-| created_mask_type | Mask Type | DataType used for the created Mask Array | complex.DataTypeParameter |
 

@@ -138,30 +138,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: PartitionGeometryFilter
-+ Displayed Name: Partition Geometry
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| existing_partitioning_scheme_path | Existing Partition Grid | This is an existing Image Geometry that defines the partition grid that will be used. | complex.GeometrySelectionParameter |
-| feature_attr_matrix_name | Feature Attribute Matrix | The name of the feature attribute matrix that will be created as a child of the input geometry. | complex.DataObjectNameParameter |
-| geometry_to_partition | Input Geometry to Partition | The input geometry that will be partitioned | complex.GeometrySelectionParameter |
-| length_per_partition | Cell Length (Physical Units) | The length in physical units for each cell in the partition grid. The physical units are automatically set by the input geometry. | complex.VectorFloat32Parameter |
-| lower_left_coord | Minimum Grid Coordinate | Minimum grid coordinate used to create the partition grid | complex.VectorFloat32Parameter |
-| number_of_partitions_per_axis | Number Of Cells Per Axis | The number of cells along each axis of the partition grid | complex.VectorInt32Parameter |
-| out_of_bounds_value | Out-Of-Bounds Feature ID | The value used as the feature id for voxels/nodes that are outside the bounds of the partition grid. | complex.Int32Parameter |
-| partition_ids_array_name | Partition Ids | The name of the partition ids output array stored in the input cell attribute matrix | complex.DataObjectNameParameter |
-| partitioning_mode | Select the partitioning mode | Mode can be 'Basic (0)', 'Advanced (1)', 'Bounding Box (2)', 'Existing Partition Grid (3)' | complex.ChoicesParameter |
-| partitioning_scheme_origin | Partition Grid Origin | The origin of the generated partition geometry | complex.VectorFloat32Parameter |
-| ps_attribute_matrix_path | Input Geometry Cell Attribute Matrix  | The attribute matrix that represents the cell data for the geometry.(Vertex=>Node Geometry, Cell=>Image/Rectilinear) | complex.AttributeMatrixSelectionParameter |
-| ps_geometry | Partition Grid Geometry | The complete path to the created partition grid geometry | complex.DataGroupCreationParameter |
-| ps_geometry_am_name | Cell Attribute Matrix | The name of the cell attribute matrix that will contain the partition grid's cell data arrays. | complex.DataObjectNameParameter |
-| ps_geometry_data_name | Feature Ids | The name of the feature ids array that will contain the feature ids of the generated partition grid. | complex.DataObjectNameParameter |
-| starting_partition_id | Starting Feature ID | The value to start the partition grid's feature ids at. | complex.Int32Parameter |
-| upper_right_coord | Maximum Grid Coordinate | Maximum grid coordinate used to create the partition grid | complex.VectorFloat32Parameter |
-| use_vertex_mask | Use Vertex Mask (Node Geometries Only) | Feature ID values will only be placed on vertices that have a 'true' mask value. All others will have the Out-Of-Bounds Feature ID value used instead | complex.BoolParameter |
-| vertex_mask_path | Vertex Mask | The complete path to the vertex mask array. | complex.ArraySelectionParameter |
 

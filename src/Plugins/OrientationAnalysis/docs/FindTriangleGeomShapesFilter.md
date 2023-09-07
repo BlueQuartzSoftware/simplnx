@@ -80,21 +80,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: FindTriangleGeomShapesFilter
-+ Displayed Name: Find Feature Shapes from Triangle Geometry
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| aspect_ratios_array_name | Aspect Ratios | The name of the DataArray that holds the calculated Aspect Ratios values | complex.DataObjectNameParameter |
-| axis_euler_angles_array_name | Axis Euler Angles | The name of the DataArray that holds the calculated Axis Euler Angles values | complex.DataObjectNameParameter |
-| axis_lengths_array_name | Axis Lengths | The name of the DataArray that holds the calculated Axis Lengths values | complex.DataObjectNameParameter |
-| centroids_array_path | Face Feature Centroids | Input DataPath to the **Feature Centroids** for the face data | complex.ArraySelectionParameter |
-| face_labels_array_path | Face Labels | The DataPath to the FaceLabels values. | complex.ArraySelectionParameter |
-| feature_attribute_matrix_name | Face Feature Attribute Matrix | The DataPath to the AttributeMatrix that holds feature data for the faces | complex.DataGroupSelectionParameter |
-| omega3s_array_name | Omega3s | The name of the DataArray that holds the calculated Omega3 values | complex.DataObjectNameParameter |
-| triangle_geometry_path | Triangle Geometry | The complete path to the Geometry for which to calculate the normals | complex.GeometrySelectionParameter |
-| volumes_array_path | Face Feature Volumes | Input DataPath to the **Feature Volumes** for the face data | complex.ArraySelectionParameter |
 

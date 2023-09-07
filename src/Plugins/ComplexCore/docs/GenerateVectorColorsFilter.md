@@ -44,16 +44,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: GenerateVectorColorsFilter
-+ Displayed Name: Generate Vector Colors
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_vector_colors_array_name | Vector Colors | RGB colors | complex.DataObjectNameParameter |
-| good_voxels_array_path | Mask | Used to define Elements as good or bad  | complex.ArraySelectionParameter |
-| use_good_voxels | Apply to Good Voxels Only (Bad Voxels Will Be Black) | Whether or not to assign colors to bad voxels or leave them black | complex.BoolParameter |
-| vectors_array_path | Vector Attribute Array | Vectors the colors will represent | complex.ArraySelectionParameter |
 

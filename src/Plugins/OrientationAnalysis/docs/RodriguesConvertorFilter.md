@@ -47,15 +47,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: RodriguesConvertorFilter
-+ Displayed Name: Rodrigues Convertor
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| delete_original_data | Delete Original Data | Should the original Rodrigues data array be deleted from the DataStructure | complex.BoolParameter |
-| output_data_array_path | Converted Rodrigues Data Array | The DataArray name of the converted Rodrigues vectors | complex.DataObjectNameParameter |
-| rodrigues_data_array_path | Input Rodrigues Vectors | Specifies the Rodrigues data to convert | complex.ArraySelectionParameter |
 

@@ -45,18 +45,4 @@ Please see the description file distributed with this plugin.
 
 
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: CropVertexGeometry
-+ Displayed Name: Crop Geometry (Vertex)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cropped_geom | Cropped Vertex Geometry | Created VertexGeom path | complex.DataGroupCreationParameter |
-| max_pos | Max Pos | Maximum vertex position | complex.VectorFloat32Parameter |
-| min_pos | Min Pos | Minimum vertex position | complex.VectorFloat32Parameter |
-| target_arrays | Vertex Data Arrays to crop | The complete path to all the vertex data arrays to crop | complex.MultiArraySelectionParameter |
-| vertex_data_name | Vertex Data Name | Name of the vertex data AttributeMatrix | complex.DataObjectNameParameter |
-| vertex_geom | Vertex Geometry to Crop | DataPath to target VertexGeom | complex.GeometrySelectionParameter |
 

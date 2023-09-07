@@ -45,14 +45,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: CalculateTriangleAreasFilter
-+ Displayed Name: Calculate Triangle Areas
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| triangle_areas_array_path | Created Face Areas | The complete path to the array storing the calculated face areas | complex.DataObjectNameParameter |
-| triangle_geometry_data_path | Triangle Geometry | The complete path to the Geometry for which to calculate the face areas | complex.GeometrySelectionParameter |
 

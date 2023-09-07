@@ -50,19 +50,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ResampleImageGeomFilter
-+ Displayed Name: Resample Data (Image Geometry)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_feature_attribute_matrix_path | Cell Feature Attribute Matrix | DataPath to the feature Attribute Matrix | complex.AttributeMatrixSelectionParameter |
-| feature_ids_path | Feature IDs | DataPath to Cell Feature IDs array | complex.ArraySelectionParameter |
-| new_data_container_path | Created Image Geometry | The location of the resampled geometry | complex.DataGroupCreationParameter |
-| remove_original_geometry | Perform In Place | Removes the original Image Geometry after filter is completed | complex.BoolParameter |
-| renumber_features | Renumber Features | Specifies if the feature IDs should be renumbered | complex.BoolParameter |
-| selected_image_geometry | Selected Image Geometry | The target geometry to resample | complex.GeometrySelectionParameter |
-| spacing | New Spacing | The new spacing values (dx, dy, dz). Larger spacing will cause less voxels, smaller spacing will cause more voxels. | complex.VectorFloat32Parameter |
 

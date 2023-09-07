@@ -56,20 +56,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: GenerateGBCDPoleFigureFilter
-+ Displayed Name: Generate GBCD Pole Figure
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_attribute_matrix_name | Cell Attribute Matrix Name | The name of the cell attribute matrix for the created image geometry | complex.DataObjectNameParameter |
-| cell_intensity_array_name | Cell MRD Array Name | The name of the created cell intensity data array | complex.DataObjectNameParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| gbcd_array_path | Input GBCD | 5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere | complex.ArraySelectionParameter |
-| image_geometry_name | Image Geometry | The path to the created image geometry | complex.DataGroupCreationParameter |
-| misorientation_rotation | Misorientation Angle-Axis | Angle-Axis values for drawing GBCD | complex.VectorFloat32Parameter |
-| output_image_dimension | Output Image Dimension | The value to use for the dimensions for the image geometry | complex.Int32Parameter |
-| phase_of_interest | Phase of Interest | Index of the Ensemble for which to plot the pole figure | complex.Int32Parameter |
 

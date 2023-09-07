@@ -92,19 +92,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: RawBinaryReaderFilter
-+ Displayed Name: Raw Binary Importer
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| created_attribute_array_path | Output Attribute Array | The complete path to the created Attribute Array | complex.ArrayCreationParameter |
-| endian | Endian | The endianness of the data | complex.ChoicesParameter |
-| input_file | Input File | The input binary file path | complex.FileSystemPathParameter |
-| number_of_components | Number of Components | The number of values at each tuple | complex.UInt64Parameter |
-| scalar_type | Scalar Type | Data type of the binary data | complex.NumericTypeParameter |
-| skip_header_bytes | Skip Header Bytes | Number of bytes to skip before reading data | complex.UInt64Parameter |
-| tuple_dimensions | Data Array Dimensions | Slowest to Fastest Dimensions (ZYX for example) | complex.DynamicTableParameter |
 

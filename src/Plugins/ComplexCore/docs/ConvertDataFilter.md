@@ -60,15 +60,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ConvertDataFilter
-+ Displayed Name: Convert AttributeArray DataType
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| array_to_convert | Data Array to Convert | The complete path to the Data Array to Convert | complex.ArraySelectionParameter |
-| converted_array | Converted Data Array | The name of the converted Data Array | complex.DataObjectNameParameter |
-| scalar_type | Scalar Type | Convert to this data type | complex.ChoicesParameter |
 

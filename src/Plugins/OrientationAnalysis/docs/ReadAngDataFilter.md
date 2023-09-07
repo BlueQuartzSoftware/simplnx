@@ -65,16 +65,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: ReadAngDataFilter
-+ Displayed Name: Import EDAX EBSD Data (.ang)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_attribute_matrix_name | Created Cell Attribute Matrix | The Attribute Matrix where the scan data is stored. | complex.DataObjectNameParameter |
-| cell_ensemble_attribute_matrix_name | Created Cell Ensemble Attribute Matrix | The Attribute Matrix where the phase information is stored. | complex.DataObjectNameParameter |
-| data_container_name | Created Image Geometry | The complete path to the Geometry being created. | complex.DataGroupCreationParameter |
-| input_file | Input File | The input .ang file path | complex.FileSystemPathParameter |
 

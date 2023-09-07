@@ -53,20 +53,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: FindSlipTransmissionMetricsFilter
-+ Displayed Name: Find Neighbor Slip Transmission Metrics
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| avg_quats_array_path | Average Quaternions | Data Array that specifies the average orientation of each Feature in quaternion representation | complex.ArraySelectionParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each phase | complex.ArraySelectionParameter |
-| f1_list_array_name | F1 List | DataArray Name to store the calculated F1s Values | complex.DataObjectNameParameter |
-| f1spt_list_array_name | F1spt List | DataArray Name to store the calculated F1spts Values | complex.DataObjectNameParameter |
-| f7_list_array_name | F7 List | DataArray Name to store the calculated F7s Values | complex.DataObjectNameParameter |
-| feature_phases_array_path | Phases | Data Array that specifies to which Ensemble each Feature belongs | complex.ArraySelectionParameter |
-| m_prime_list_array_name | mPrime List | DataArray Name to store the calculated mPrimes Values | complex.DataObjectNameParameter |
-| neighbor_list_array_path | Neighbor List | List of the contiguous neighboring Features for a given Feature | complex.NeighborListSelectionParameter |
 

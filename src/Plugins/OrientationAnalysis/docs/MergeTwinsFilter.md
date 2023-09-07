@@ -57,25 +57,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: MergeTwinsFilter
-+ Displayed Name: Merge Twins
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| active_array_name | Active | The name of the array specifying if the Feature is still in the sample (true if the Feature is in the sample and false if it is not). At the end of the Filter, all Features will be Active | complex.DataObjectNameParameter |
-| angle_tolerance | Angle Tolerance (Degrees) | Tolerance allowed when comparing the angle part of the axis-angle representation of the misorientation | complex.Float32Parameter |
-| avg_quats_array_path | Average Quaternions | Specifies the average orientation of each Feature in quaternion representation | complex.ArraySelectionParameter |
-| axis_tolerance | Axis Tolerance (Degrees) | Tolerance allowed when comparing the axis part of the axis-angle representation of the misorientation | complex.Float32Parameter |
-| cell_parent_ids_array_name | Parent Ids | The name of the array specifying to which parent each cell belongs | complex.DataObjectNameParameter |
-| contiguous_neighbor_list_array_path | Contiguous Neighbor List | List of contiguous neighbors for each Feature. | complex.NeighborListSelectionParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| feature_ids_path | Cell Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
-| feature_parent_ids_array_name | Parent Ids | The name of the array specifying to which parent each Feature belongs | complex.DataObjectNameParameter |
-| feature_phases_array_path | Phases | Specifies to which Ensemble each cell belongs | complex.ArraySelectionParameter |
-| new_cell_feature_attribute_matrix_name | Feature Attribute Matrix | The name of the created cell feature attribute matrix | complex.DataObjectNameParameter |
-| non_contiguous_neighbor_list_array_path | Non-Contiguous Neighbor List | List of non-contiguous neighbors for each Feature. | complex.NeighborListSelectionParameter |
-| use_non_contiguous_neighbors | Use Non-Contiguous Neighbors | Whether to use a list of non-contiguous or contiguous neighbors for each feature when merging | complex.BoolParameter |
 

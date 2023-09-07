@@ -45,20 +45,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: AddBadDataFilter
-+ Displayed Name: Add Bad Data
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| boundary_noise | Add Boundary Noise | If true the user may set the boundary volume fraction | complex.BoolParameter |
-| boundary_vol_fraction | Volume Fraction of Boundary Noise | A value between 0 and 1 inclusive that is compared against random generation | complex.Float32Parameter |
-| gb_euclidean_distances_array_path | Boundary Euclidean Distances | This is the GB Manhattan Distances array | complex.ArraySelectionParameter |
-| image_geometry_path | Image Geometry | The selected image geometry | complex.GeometrySelectionParameter |
-| poisson_noise | Add Random Noise | If true the user may set the poisson volume fraction | complex.BoolParameter |
-| poisson_vol_fraction | Volume Fraction of Random Noise | A value between 0 and 1 inclusive that is compared against random generation | complex.Float32Parameter |
-| seed_value | Seed | The seed fed into the random generator | complex.UInt64Parameter |
-| use_seed | Use Seed for Random Generation | When true the user will be able to put in a seed for random generation | complex.BoolParameter |
 

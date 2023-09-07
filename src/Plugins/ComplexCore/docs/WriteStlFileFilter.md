@@ -40,18 +40,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: WriteStlFileFilter
-+ Displayed Name: Export STL Files from Triangle Geometry
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| feature_ids_path | Face labels | The triangle feature ids array to order/index files by | complex.ArraySelectionParameter |
-| feature_phases_path | Feature Phases | The feature phases array to further order/index files by | complex.ArraySelectionParameter |
-| group_by_feature | Group by Feature Phases | Further partition the stl files by feature phases | complex.BoolParameter |
-| output_stl_directory | Output STL Directory | Directory to dump the STL file(s) to | complex.FileSystemPathParameter |
-| output_stl_prefix | STL File Prefix | The prefix name of created files (other values will be appended later - including the .stl extension) | complex.StringParameter |
-| triangle_geom_path | Selected Triangle Geometry | The geometry to print | complex.GeometrySelectionParameter |
 

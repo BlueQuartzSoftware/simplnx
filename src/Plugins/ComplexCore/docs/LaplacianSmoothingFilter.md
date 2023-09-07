@@ -120,23 +120,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: LaplacianSmoothingFilter
-+ Displayed Name: Laplacian Smoothing
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| iteration_steps | Iteration Steps | Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. Increasing this number too high may cause collapse of points! | complex.Int32Parameter |
-| lambda | Default Lambda | Value of λ to apply to general internal nodes that are not triple lines, quadruple points or on the surface of the volume | complex.Float32Parameter |
-| mu_factor | Mu Factor | A value that is multiplied by Lambda the result of which is the mu in Taubin's paper. The value should be a negative value. | complex.Float32Parameter |
-| quad_point_lambda | Quadruple Points Lambda | Value of λ to apply to nodes designated as quadruple points. | complex.Float32Parameter |
-| surface_mesh_node_type_array_path | Node Type | The complete path to the array specifying the type of node in the Geometry | complex.ArraySelectionParameter |
-| surface_point_lambda | Outer Points Lambda | The value of λ to apply to nodes that lie on the outer surface of the volume | complex.Float32Parameter |
-| surface_quad_point_lambda | Outer Quadruple Points Lambda | Value of λ for the quadruple Points that lie on the outer surface of the volume. | complex.Float32Parameter |
-| surface_triple_line_lambda | Outer Triple Line Lambda | Value of λ for triple lines that lie on the outer surface of the volume | complex.Float32Parameter |
-| triangle_geometry_data_path | Triangle Geometry | The complete path to the surface mesh Geometry for which to apply Laplacian smoothing | complex.GeometrySelectionParameter |
-| triple_line_lambda | Triple Line Lambda | Value of λ to apply to nodes designated as triple line nodes. | complex.Float32Parameter |
-| use_taubin_smoothing | Use Taubin Smoothing | Use Taubin's Lambda-Mu algorithm. | complex.BoolParameter |
 

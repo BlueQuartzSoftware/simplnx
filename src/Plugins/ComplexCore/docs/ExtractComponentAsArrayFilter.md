@@ -50,17 +50,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ExtractComponentAsArrayFilter
-+ Displayed Name: Extract/Remove Components
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| comp_number | Component Index to Extract | The index of the component in each tuple to be removed | complex.Int32Parameter |
-| move_components_to_new_array | Move Extracted Components to New Array | If true the extracted components will be placed in a new array | complex.BoolParameter |
-| new_array_path | Scalar Attribute Array | The DataArray to store the extracted components | complex.DataObjectNameParameter |
-| remove_components_from_array | Remove Extracted Components from Old Array | If true the extracted components will be deleted | complex.BoolParameter |
-| selected_array_path | Multicomponent Attribute Array | The array to extract componenets from | complex.ArraySelectionParameter |
 

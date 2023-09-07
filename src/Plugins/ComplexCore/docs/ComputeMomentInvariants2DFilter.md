@@ -72,21 +72,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ComputeMomentInvariants2DFilter
-+ Displayed Name: Compute Moment Invariants (2D)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| central_moments_array_path | Central Moments | Central Moments value | complex.DataObjectNameParameter |
-| feature_attribute_matrix_path | Cell Feature Attribute Matrix | The path to the cell feature attribute matrix where the created data arrays will be stored | complex.AttributeMatrixSelectionParameter |
-| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
-| feature_rect_array_path | Feature Rect | Array holding the min xy and max xy pixel coordinates of each feature id | complex.ArraySelectionParameter |
-| image_geometry_path | 2D Image Geometry | The path to the 2D image geometry to be used as input | complex.GeometrySelectionParameter |
-| normalize_moment_invariants | Normalize Moment Invariants | Should the algorithm normalize the results to unit circle. | complex.BoolParameter |
-| omega1_array_path | Omega 1 | Omega1 value | complex.DataObjectNameParameter |
-| omega2_array_path | Omega 2 | Omega2 value | complex.DataObjectNameParameter |
-| save_central_moments | Save Central Moments | Write the Central Moments to a new Data Array | complex.BoolParameter |
 

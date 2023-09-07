@@ -60,18 +60,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ConditionalSetValue
-+ Displayed Name: Replace Value in Array (Conditional)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| conditional_array_path | Conditional Array | The complete path to the conditional array that will determine which values/entries will be replaced if index is TRUE | complex.ArraySelectionParameter |
-| invert_mask | Invert Mask | This makes the filter replace values that are marked FALSE in the conditional array | complex.BoolParameter |
-| remove_value | Value To Replace | The numerical value that will be replaced in the array | complex.StringParameter |
-| replace_value | New Value | The value that will be used as the replacement value | complex.StringParameter |
-| selected_array_path | Attribute Array | The complete path to array that will have values replaced | complex.ArraySelectionParameter |
-| use_conditional | Use Conditional Mask | Whether to use a boolean mask array to replace values marked TRUE | complex.BoolParameter |
 

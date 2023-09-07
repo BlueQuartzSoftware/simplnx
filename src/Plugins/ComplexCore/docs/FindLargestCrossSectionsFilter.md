@@ -44,17 +44,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindLargestCrossSectionsFilter
-+ Displayed Name: Find Feature Largest Cross-Section Areas
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_feature_attribute_matrix_path | Cell Feature Attribute Matrix | The path to the cell feature attribute matrix | complex.AttributeMatrixSelectionParameter |
-| feature_ids_array_path | Feature Ids | Data Array that specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
-| image_geometry_path | Image Geometry | The complete path to the input image geometry | complex.GeometrySelectionParameter |
-| largest_cross_sections_array_path | Largest Cross Sections | Area of largest cross-section for Feature perpendicular to the user specified direction | complex.DataObjectNameParameter |
-| plane | Plane of Interest | Specifies which plane to consider when determining the maximum cross-section for each Feature | complex.ChoicesParameter |
 

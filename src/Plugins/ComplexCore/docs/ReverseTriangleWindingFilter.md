@@ -36,13 +36,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ReverseTriangleWindingFilter
-+ Displayed Name: Reverse Triangle Winding
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| triangle_geometry_path | Triangle Geometry | The DataPath to then input Triangle Geometry | complex.GeometrySelectionParameter |
 

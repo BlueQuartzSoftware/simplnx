@@ -52,22 +52,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: FindFeatureReferenceMisorientationsFilter
-+ Displayed Name: Find Feature Reference Misorientations
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| avg_quats_array_path | Average Quaternions | Specifies the average orientation of the Feature in quaternion representation (, w). Only required if the reference orientation is selected to be the average of the Feature | complex.ArraySelectionParameter |
-| cell_feature_attribute_matrix_path | Cell Feature Attribute Matrix | The path to the cell feature attribute matrix | complex.AttributeMatrixSelectionParameter |
-| cell_phases_array_path | Cell Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| feature_avg_misorientations_array_name | Average Misorientations | The name of the array containing the average of the Feature reference misorientation values for all of the Cells that belong to the Feature | complex.DataObjectNameParameter |
-| feature_ids_path | Cell Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
-| feature_reference_misorientations_array_name | Feature Reference Misorientations | The name of the array containing the misorientation angle (in degrees) between Cell's orientation and the reference orientation of the Feature that owns that Cell | complex.DataObjectNameParameter |
-| g_beuclidean_distances_array_path | Boundary Euclidean Distances | Distance the Cells are from the boundary of the Feature they belong to. Only required if the reference orientation is selected to be the orientation at the Feature centroid | complex.ArraySelectionParameter |
-| quats_array_path | Quaternions | Specifies the orientation of the Cell in quaternion representation | complex.ArraySelectionParameter |
-| reference_orientation | Reference Orientation | Specifies the reference orientation to use when comparing to each Cell | complex.ChoicesParameter |
 

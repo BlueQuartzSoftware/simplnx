@@ -60,26 +60,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindFeatureClusteringFilter
-+ Displayed Name: Find Feature Clustering
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| biased_features_array_path | Biased Features | Specifies which features are biased and therefor should be removed if the Remove Biased Features option is on | complex.ArraySelectionParameter |
-| cell_ensemble_attribute_matrix_name | Cell Ensemble Attribute Matrix | The path to the cell ensemble attribute matrix where the RDF and RDF min and max distance arrays will be stored | complex.AttributeMatrixSelectionParameter |
-| centroids_array_path | Centroids | X, Y, Z coordinates of Feature center of mass | complex.ArraySelectionParameter |
-| clustering_list_array_name | Clustering List | Distance of each Features's centroid to ever other Features's centroid | complex.DataObjectNameParameter |
-| equivalent_diameters_array_path | Equivalent Diameters | Diameter of a sphere with the same volume as the Feature | complex.ArraySelectionParameter |
-| feature_phases_array_path | Phases | Specifies to which Ensemble each Feature belongs | complex.ArraySelectionParameter |
-| max_min_array_name | Max and Min Separation Distances | The max and min distance found between Features | complex.DataObjectNameParameter |
-| number_of_bins | Number of Bins for RDF | Number of bins to split the RDF | complex.Int32Parameter |
-| phase_number | Phase Index | Ensemble number for which to calculate the RDF and clustering list | complex.Int32Parameter |
-| rdf_array_name | Radial Distribution Function | A histogram of the normalized frequency at each bin | complex.DataObjectNameParameter |
-| remove_biased_features | Remove Biased Features | Remove the biased features | complex.BoolParameter |
-| seed_value | Seed Value | The seed value used to randomly generate the points in the RDF | complex.UInt64Parameter |
-| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
-| set_random_seed | Set Random Seed | When checked, allows the user to set the seed value used to randomly generate the points in the RDF | complex.BoolParameter |
 

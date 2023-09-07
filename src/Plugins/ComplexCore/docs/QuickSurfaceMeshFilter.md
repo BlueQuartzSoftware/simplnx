@@ -58,23 +58,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: QuickSurfaceMeshFilter
-+ Displayed Name: Quick Surface Mesh
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| face_data_group_name | Face Data [AttributeMatrix] | The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created | complex.DataObjectNameParameter |
-| face_feature_attribute_matrix_name | Face Feature Data [AttributeMatrix] | The complete path to the DataGroup where the Feature Data will be stored. | complex.DataObjectNameParameter |
-| face_labels_array_name | Face Labels | The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry | complex.DataObjectNameParameter |
-| feature_ids_path | Feature Ids | The complete path to the Array specifying which Feature each Cell belongs to | complex.ArraySelectionParameter |
-| fix_problem_voxels | Attempt to Fix Problem Voxels | See help page. | complex.BoolParameter |
-| generate_triple_lines | Generate Triple Lines | Experimental feature. May not work. | complex.BoolParameter |
-| grid_geometry_data_path | Grid Geometry | The complete path to the Grid Geometry from which to create a Triangle Geometry | complex.GeometrySelectionParameter |
-| node_types_array_name | NodeType | The complete path to the Array specifying the type of node in the Triangle Geometry | complex.DataObjectNameParameter |
-| selected_data_array_paths | Attribute Arrays to Transfer | The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry | complex.MultiArraySelectionParameter |
-| triangle_geometry_name | Created Triangle Geometry | The name of the created Triangle Geometry | complex.DataGroupCreationParameter |
-| vertex_data_group_name | Vertex Data [AttributeMatrix] | The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created | complex.DataObjectNameParameter |
 

@@ -59,18 +59,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: ITKImageProcessing
-+ Class Name: ITKThresholdImage
-+ Displayed Name: ITK Threshold Image Filter
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| input_image_data_path | Input Image Data Array | The image data that will be processed by this filter. | complex.ArraySelectionParameter |
-| lower | Lower | Set/Get methods to set the lower threshold. | complex.Float64Parameter |
-| output_image_data_path | Output Image Data Array | The result of the processing will be stored in this Data Array. | complex.DataObjectNameParameter |
-| outside_value | OutsideValue | The pixel type must support comparison operators. Set the 'outside' pixel value. The default value NumericTraits<PixelType>::ZeroValue() . | complex.Float64Parameter |
-| selected_image_geom_path | Image Geometry | Select the Image Geometry Group from the DataStructure. | complex.GeometrySelectionParameter |
-| upper | Upper | Set/Get methods to set the upper threshold. | complex.Float64Parameter |
 

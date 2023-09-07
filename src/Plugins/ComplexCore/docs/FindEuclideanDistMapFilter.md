@@ -65,23 +65,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindEuclideanDistMapFilter
-+ Displayed Name: Find Euclidean Distance Map
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| calc_manhattan_dist | Output arrays are Manhattan distance (int32) | If Manhattan distance is used then results are stored as int32 otherwise results are stored as float32 | complex.BoolParameter |
-| do_boundaries | Calculate Distance to Boundaries | Whether the distance of each Cell to a Feature boundary is calculated | complex.BoolParameter |
-| do_quad_points | Calculate Distance to Quadruple Points | Whether the distance of each Cell to a quadruple point between Features is calculated | complex.BoolParameter |
-| do_triple_lines | Calculate Distance to Triple Lines | Whether the distance of each Cell to a triple line between Features is calculated | complex.BoolParameter |
-| feature_ids_path | Cell Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
-| g_bdistances_array_name | Boundary Distances | The name of the array with the distance the cells are from the boundary of the Feature they belong to. | complex.DataObjectNameParameter |
-| nearest_neighbors_array_name | Nearest Boundary Cells | The name of the array with the indices of the closest cell that touches a boundary, triple and quadruple point for each cell. | complex.DataObjectNameParameter |
-| q_pdistances_array_name | Quadruple Point Distances | The name of the array with the distance the cells are from a quadruple point of Features. | complex.DataObjectNameParameter |
-| save_nearest_neighbors | Store the Nearest Boundary Cells | Whether to store the nearest neighbors of Cell | complex.BoolParameter |
-| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
-| t_jdistances_array_name | Triple Line Distances | The name of the array with the distance the cells are from a triple junction of Features. | complex.DataObjectNameParameter |
 

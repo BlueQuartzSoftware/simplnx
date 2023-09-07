@@ -63,20 +63,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: StlFileReaderFilter
-+ Displayed Name: Import STL File
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| face_matrix | Face Matrix Name | Name of the created Face Attribute Matrix | complex.StringParameter |
-| geometry_data_path | Geometry Name [Data Group] | The complete path to the DataGroup containing the created Geometry data | complex.DataGroupCreationParameter |
-| scale_factor | Scale Factor | The factor by which to scale the geometry | complex.Float32Parameter |
-| scale_output | Scale Output Geometry | Scale the output Triangle Geometry by the Scaling Factor | complex.BoolParameter |
-| shared_face_matrix | Shared Face Matrix Name | Name of the created Shared Face Attribute Matrix | complex.StringParameter |
-| shared_vertex_matrix | Shared Vertex Matrix Name | Name of the created Shared Vertex Attribute Matrix | complex.StringParameter |
-| stl_file_path | STL File | Input STL File | complex.FileSystemPathParameter |
-| vertex_matrix | Vertex Matrix Name | Name of the created Vertex Attribute Matrix | complex.StringParameter |
 

@@ -87,23 +87,7 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
 
-+ module: complex
-+ Class Name: CalculateArrayHistogramFilter
-+ Displayed Name: Calculate Frequency Histogram
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| data_group_name | Output DataGroup Path | The complete path to the DataGroup in which to store the calculated histogram(s) | complex.DataGroupSelectionParameter |
-| histogram_suffix | Suffix for created Histograms | String appended to the end of the histogram array names | complex.StringParameter |
-| max_range | Max Value | Specifies the upper bound of the histogram. | complex.Float64Parameter |
-| min_range | Min Value | Specifies the lower bound of the histogram. | complex.Float64Parameter |
-| new_data_group | Create New DataGroup for Histograms | Whether or not to store the calculated histogram(s) in a new DataGroup | complex.BoolParameter |
-| new_data_group_name | New DataGroup Path | The path to the new DataGroup in which to store the calculated histogram(s) | complex.DataGroupCreationParameter |
-| number_of_bins | Number of Bins | Specifies number of histogram bins (greater than zero) | complex.Int32Parameter |
-| selected_array_paths | Input Data Arrays | The list of arrays to calculate histogram(s) for | complex.MultiArraySelectionParameter |
-| user_defined_range | Use Custom Min & Max Range | Whether the user can set the min and max values to consider for the histogram | complex.BoolParameter |
 
 ### Example Data (Raw)
 

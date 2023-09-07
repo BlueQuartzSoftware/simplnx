@@ -58,21 +58,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ScalarSegmentFeaturesFilter
-+ Displayed Name: Segment Features (Scalar)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| active_array_path | Active | Created array | complex.DataObjectNameParameter |
-| cell_feature_group_path | Cell Feature Attribute Matrix | Created Cell Feature Attribute Matrix | complex.DataObjectNameParameter |
-| feature_ids_path | Cell Feature IDs | Path to the created Feature IDs path | complex.DataObjectNameParameter |
-| grid_geometry_path | Grid Geometry | DataPath to target Grid Geometry | complex.DataPathSelectionParameter |
-| input_array_path | Scalar Array to Segment | Path to the DataArray to segment | complex.ArraySelectionParameter |
-| mask_path | Mask | Path to the DataArray Mask | complex.ArraySelectionParameter |
-| randomize_features | Randomize Feature IDs | Specifies if feature IDs should be randomized during calculations | complex.BoolParameter |
-| scalar_tolerance | Scalar Tolerance | Tolerance for segmenting input Cell Data | complex.Int32Parameter |
-| use_mask | Use Mask Array | Determines if a mask array is used for segmenting | complex.BoolParameter |
 

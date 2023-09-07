@@ -59,18 +59,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindBiasedFeaturesFilter
-+ Displayed Name: Find Biased Features (Bounding Box)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| biased_features_array_name | Biased Features | Flag of 1 if Feature is biased or of 0 if it is not | complex.DataObjectNameParameter |
-| calc_by_phase | Apply Phase by Phase | Whether to apply the biased Features algorithm per Ensemble | complex.BoolParameter |
-| centroids_array_path | Centroids | X, Y, Z coordinates of Feature center of mass | complex.ArraySelectionParameter |
-| image_geometry_path | Image Geometry | The selected geometry in which to the (biased) features belong | complex.GeometrySelectionParameter |
-| phases_array_path | Phases | Specifies to which Ensemble each Feature belongs. Only required if Apply Phase by Phase is checked | complex.ArraySelectionParameter |
-| surface_features_array_path | Surface Features | Flag of 1 if Feature touches an outer surface or of 0 if it does not | complex.ArraySelectionParameter |
 

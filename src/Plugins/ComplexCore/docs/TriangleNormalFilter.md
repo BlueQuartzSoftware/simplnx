@@ -49,14 +49,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: TriangleNormalFilter
-+ Displayed Name: Calculate Triangle Normals
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| surface_mesh_triangle_normals_array_path | Created Face Normals | The complete path to the array storing the calculated normals | complex.DataObjectNameParameter |
-| tri_geometry_data_path | Triangle Geometry | The complete path to the Geometry for which to calculate the normals | complex.GeometrySelectionParameter |
 

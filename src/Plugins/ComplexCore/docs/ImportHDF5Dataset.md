@@ -71,13 +71,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ImportHDF5Dataset
-+ Displayed Name: Import HDF5 Dataset
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| import_hd_f5_file | Select HDF5 File | The HDF5 file data to import | complex.ImportHDF5DatasetParameter |
 

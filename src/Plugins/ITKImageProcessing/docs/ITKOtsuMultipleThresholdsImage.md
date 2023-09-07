@@ -53,20 +53,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: ITKImageProcessing
-+ Class Name: ITKOtsuMultipleThresholdsImage
-+ Displayed Name: ITK Otsu Multiple Thresholds Image Filter
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| input_image_data_path | Input Image Data Array | The image data that will be processed by this filter. | complex.ArraySelectionParameter |
-| label_offset | LabelOffset | Set/Get the offset which labels have to start from. Default is 0. | complex.UInt8Parameter |
-| number_of_histogram_bins | NumberOfHistogramBins | Set/Get the number of histogram bins. Default is 128. | complex.UInt32Parameter |
-| number_of_thresholds | NumberOfThresholds | Set/Get the number of thresholds. Default is 1. | complex.UInt8Parameter |
-| output_image_data_path | Output Image Data Array | The result of the processing will be stored in this Data Array. | complex.DataObjectNameParameter |
-| return_bin_midpoint | ReturnBinMidpoint | Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum. | complex.BoolParameter |
-| selected_image_geom_path | Image Geometry | Select the Image Geometry Group from the DataStructure. | complex.GeometrySelectionParameter |
-| valley_emphasis | ValleyEmphasis | Set/Get the use of valley emphasis. Default is false. | complex.BoolParameter |
 

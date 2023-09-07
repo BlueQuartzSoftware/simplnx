@@ -104,17 +104,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: EbsdToH5EbsdFilter
-+ Displayed Name: Import Orientation File(s) to H5EBSD
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| input_file_list_info | Input File List | The values that are used to generate the input file list. See GeneratedFileListParameter for more information. | complex.GeneratedFileListParameter |
-| output_file_path | Output H5Ebsd File | The path to the generated .h5ebsd file | complex.FileSystemPathParameter |
-| reference_frame | Reference Frame Options | The reference frame transformation. 0=EDAX(.ang), 1=Oxford(.ctf), 2=No/Unknown Transformation, 3=HEDM-IceNine | complex.ChoicesParameter |
-| stacking_order | Stacking Order | The order the files should be placed into the  | complex.ChoicesParameter |
-| z_spacing | Z Spacing (Microns) | The spacing between each slice of data | complex.Float32Parameter |
 

@@ -64,22 +64,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindNeighbors
-+ Displayed Name: Find Feature Neighbors
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| boundary_cells | Boundary Cells | The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6. Only created if Store Boundary Cells Array is checked | complex.DataObjectNameParameter |
-| cell_feature_arrays | Cell Feature AttributeMatrix | Feature Attribute Matrix of the selected Feature Ids | complex.AttributeMatrixSelectionParameter |
-| feature_ids | Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
-| image_geometry | Image Geometry | The geometry in which to identify feature neighbors | complex.GeometrySelectionParameter |
-| neighbor_list | Neighbor List | List of the contiguous neighboring Features for a given Feature | complex.DataObjectNameParameter |
-| number_of_neighbors | Number of Neighbors | Number of contiguous neighboring Features for a given Feature | complex.DataObjectNameParameter |
-| shared_surface_area_list | Shared Surface Area List | List of the shared surface area for each of the contiguous neighboring Features for a given Feature | complex.DataObjectNameParameter |
-| store_boundary_cells | Store Boundary Cells Array | Whether to store the boundary Cells array | complex.BoolParameter |
-| store_surface_features | Store Surface Features Array | Whether to store the surface Features array | complex.BoolParameter |
-| surface_features | Surface Features | The name of the surface features data array. Flag equal to 1 if the Feature touches an outer surface of the sample and equal to 0 if it does not. Only created if Store Surface Features Array is checked | complex.DataObjectNameParameter |
 

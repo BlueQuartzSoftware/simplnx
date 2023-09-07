@@ -39,16 +39,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: WriteBinaryDataFilter
-+ Displayed Name: Export Binary Data
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| endianess | Endianess | Default is little endian | complex.ChoicesParameter |
-| file_extension | File Extension | The file extension for the output file | complex.StringParameter |
-| output_path | Output Path | The output file path | complex.FileSystemPathParameter |
-| selected_data_array_paths | Attribute Arrays to Export | The arrays to be exported to a binary file | complex.MultiArraySelectionParameter |
 

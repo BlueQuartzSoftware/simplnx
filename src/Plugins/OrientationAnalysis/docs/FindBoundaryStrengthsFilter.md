@@ -55,21 +55,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: FindBoundaryStrengthsFilter
-+ Displayed Name: Find Feature Boundary Strength Metrics
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| avg_quats_array_path | Average Quaternions | Data Array that specifies the average orientation of each Feature in quaternion representation | complex.ArraySelectionParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each phase | complex.ArraySelectionParameter |
-| feature_phases_array_path | Phases | Data Array that specifies to which Ensemble each Feature belongs | complex.ArraySelectionParameter |
-| loading | Loading Direction (XYZ) | The loading axis for the sample | complex.VectorFloat64Parameter |
-| surface_mesh_f1s_array_name | F1s | DataArray Name to store the calculated F1s Values | complex.DataObjectNameParameter |
-| surface_mesh_f1spts_array_name | F1spts | DataArray Name to store the calculated F1spts Values | complex.DataObjectNameParameter |
-| surface_mesh_f7s_array_name | F7s | DataArray Name to store the calculated F7s Values | complex.DataObjectNameParameter |
-| surface_mesh_face_labels_array_path | Face Labels | Data Array that specifies which Features are on either side of each Face | complex.ArraySelectionParameter |
-| surface_meshm_primes_array_name | mPrimes | DataArray Name to store the calculated mPrimes Values | complex.DataObjectNameParameter |
 

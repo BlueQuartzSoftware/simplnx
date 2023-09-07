@@ -44,15 +44,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: CopyFeatureArrayToElementArray
-+ Displayed Name: Create Element Array from Feature Array
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| created_array_suffix | Created Array Suffix | The suffix to add to the input attribute array name when creating the copied array | complex.StringParameter |
-| feature_ids_path | Feature Ids | Specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
-| selected_feature_array_path | Feature Data to Copy to Element Data | The DataPath to the feature data that should be copied to the cell level | complex.MultiArraySelectionParameter |
 

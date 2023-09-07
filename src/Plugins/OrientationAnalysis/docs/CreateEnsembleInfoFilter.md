@@ -74,17 +74,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: CreateEnsembleInfoFilter
-+ Displayed Name: Create Ensemble Info
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_ensemble_attribute_matrix_name | Ensemble Attribute Matrix | The complete path to the attribute matrix in which to store the ensemble phase data arrays | complex.DataGroupCreationParameter |
-| crystal_structures_array_name | Crystal Structures | The name of the data array representing the crystal structure for each Ensemble | complex.DataObjectNameParameter |
-| ensemble | Created Ensemble Info | The values with which to populate the crystal structures, phase types, and phase names data arrays. Each row corresponds to an ensemble phase. | complex.EnsembleInfoParameter |
-| phase_names_array_name | Phase Names | The name of the string array representing the phase names for each Ensemble | complex.DataObjectNameParameter |
-| phase_types_array_name | Phase Types | The name of the data array representing the phase types for each Ensemble | complex.DataObjectNameParameter |
 

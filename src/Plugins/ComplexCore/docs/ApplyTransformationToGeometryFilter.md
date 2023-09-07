@@ -106,22 +106,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ApplyTransformationToGeometryFilter
-+ Displayed Name: Apply Transformation to Geometry
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_attribute_matrix_path | Cell Attribute Matrix | The path to the Cell level data that should be interpolated | complex.AttributeMatrixSelectionParameter |
-| computed_transformation_matrix | Precomputed Transformation Matrix Path | A precomputed 4x4 transformation matrix | complex.ArraySelectionParameter |
-| interpolation_type | Resampling or Interpolation | Select the type of interpolation algorithm | complex.ChoicesParameter |
-| manual_transformation_matrix | Transformation Matrix | The 4x4 Transformation Matrix | complex.DynamicTableParameter |
-| rotation | Rotation Axis-Angle | <xyz> w (w in degrees) | complex.VectorFloat32Parameter |
-| scale | Scale | 0>= value < 1: Shrink, value = 1: No transform, value > 1.0 enlarge | complex.VectorFloat32Parameter |
-| selected_image_geometry | Selected Geometry | The target geometry on which to perform the transformation | complex.GeometrySelectionParameter |
-| transformation_type | Transformation Type | The type of transformation to perform. | complex.ChoicesParameter |
-| translate_geometry_to_global_origin | Translate Geometry To Global Origin Before Transformation | Specifies whether to translate the geometry to (0, 0, 0), apply the transformation, and then translate the geometry back to its original origin. | complex.BoolParameter |
-| translation | Translation | A pure translation vector | complex.VectorFloat32Parameter |
 

@@ -57,17 +57,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: SplitAttributeArrayFilter
-+ Displayed Name: Split Multicomponent Attribute Array
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| components_to_extract | Components to Extract | The components from the input array to be extracted into separate arrays | complex.DynamicTableParameter |
-| delete_original_array | Remove Original Array | Whether or not to remove the original multicomponent array after splitting | complex.BoolParameter |
-| multicomponent_array | Multicomponent Attribute Array | The multicomponent Attribute Array to split | complex.ArraySelectionParameter |
-| postfix | Postfix | Postfix to add to the end of the split Attribute Arrays | complex.StringParameter |
-| select_components_to_extract | Select Specific Components to Extract | Whether or not to specify only certain components to be extracted | complex.BoolParameter |
 

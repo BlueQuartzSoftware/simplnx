@@ -41,15 +41,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindVolFractionsFilter
-+ Displayed Name: Find Volume Fractions of Ensembles
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_ensemble_attribute_matrix_path | Cell Ensemble Attribute Matrix | The path to the cell ensemble attribute matrix where the output volume fractions array will be stored | complex.DataGroupSelectionParameter |
-| cell_phases_array_path | Cell Phases | Array specifying which Ensemble each Cell belong | complex.ArraySelectionParameter |
-| vol_fractions_array_path | Volume Fractions | Fraction of volume that belongs to each Ensemble | complex.DataObjectNameParameter |
 

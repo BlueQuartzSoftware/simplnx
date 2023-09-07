@@ -52,21 +52,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: MinNeighbors
-+ Displayed Name: Minimum Number of Neighbors
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| apply_to_single_phase | Apply to Single Phase Only | Whether to apply minimum to single ensemble or all ensembles | complex.BoolParameter |
-| cell_attribute_matrix | Cell Attribute Matrix | The cell data attribute matrix in which to apply the minimum neighbors algorithm | complex.AttributeMatrixSelectionParameter |
-| feature_ids | Feature Ids | Specifies to which Feature each Element belongs | complex.ArraySelectionParameter |
-| feature_phases | Feature Phases | Specifies to which Ensemble each Feature belongs. Only required if Apply to Single Phase Only is checked | complex.ArraySelectionParameter |
-| ignored_voxel_arrays | Cell Arrays to Ignore | The arrays to ignore when applying the minimum neighbors algorithm | complex.MultiArraySelectionParameter |
-| image_geom | Image Geometry | The target geometry | complex.GeometrySelectionParameter |
-| min_num_neighbors | Minimum Number Neighbors | Number of neighbors a Feature must have to remain as a Feature | complex.UInt64Parameter |
-| num_neighbors | Number of Neighbors | Number of contiguous neighboring Features for each Feature | complex.ArraySelectionParameter |
-| phase_number | Phase Index | Which Ensemble to apply minimum to. Only needed if Apply to Single Phase Only is checked | complex.UInt64Parameter |
 

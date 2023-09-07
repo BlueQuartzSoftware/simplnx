@@ -58,19 +58,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: AlignSectionsFeatureCentroidFilter
-+ Displayed Name: Align Sections (Feature Centroid)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| alignment_shift_file_name | Alignment File Path | The output file path where the user would like the shifts applied to the section to be written. | complex.FileSystemPathParameter |
-| good_voxels_array_path | Mask | Path to the DataArray Mask | complex.ArraySelectionParameter |
-| reference_slice | Reference Slice | Slice number to use as reference | complex.Int32Parameter |
-| selected_cell_data_path | Cell Data Attribute Matrix | Cell Data Attribute Matrix | complex.AttributeMatrixSelectionParameter |
-| selected_image_geometry_path | Selected Image Geometry | The target geometry on which to perform the alignment | complex.GeometrySelectionParameter |
-| use_reference_slice | Use Reference Slice | Whether the centroids of each section should be compared to a reference slice instead of their neighboring section | complex.BoolParameter |
-| write_alignment_shifts | Write Alignment Shift File | Whether to write the shifts applied to each section to a file | complex.BoolParameter |
 

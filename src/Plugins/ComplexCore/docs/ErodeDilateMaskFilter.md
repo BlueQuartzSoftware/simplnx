@@ -61,19 +61,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ErodeDilateMaskFilter
-+ Displayed Name: Erode/Dilate Mask
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| mask_array_path | Mask Array Path | Boolean array where true voxels are used. False voxels are ignored. | complex.ArraySelectionParameter |
-| num_iterations | Number of Iterations | Number of erode/dilate iterations to perform | complex.Int32Parameter |
-| operation | Operation | Whether to dilate (0) or erode (1) | complex.ChoicesParameter |
-| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
-| x_dir_on | X Direction | Whether to erode/dilate in the X direction | complex.BoolParameter |
-| y_dir_on | Y Direction | Whether to erode/dilate in the Y direction | complex.BoolParameter |
-| z_dir_on | Z Direction | Whether to erode/dilate in the Z direction | complex.BoolParameter |
 

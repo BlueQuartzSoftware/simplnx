@@ -68,27 +68,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindNeighborListStatistics
-+ Displayed Name: Find Neighbor List Statistics
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| find_length | Find Length | Specifies whether or not the filter creates the Length array during calculations | complex.BoolParameter |
-| find_maximum | Find Maximum | Specifies whether or not the filter creates the Maximum array during calculations | complex.BoolParameter |
-| find_mean | Find Mean | Specifies whether or not the filter creates the Mean array during calculations | complex.BoolParameter |
-| find_median | Find Median | Specifies whether or not the filter creates the Median array during calculations | complex.BoolParameter |
-| find_minimum | Find Minimum | Specifies whether or not the filter creates the Minimum array during calculations | complex.BoolParameter |
-| find_standard_deviation | Find Standard Deviation | Specifies whether or not the filter creates the Standard Deviation array during calculations | complex.BoolParameter |
-| find_summation | Find Summation | Specifies whether or not the filter creates the Summation array during calculations | complex.BoolParameter |
-| input_array | NeighborList to Compute Statistics | Input Data Array to compute statistics | complex.NeighborListSelectionParameter |
-| length | Length | Path to create the Length array during calculations | complex.DataObjectNameParameter |
-| maximum | Maximum | Path to create the Maximum array during calculations | complex.DataObjectNameParameter |
-| mean | Mean | Path to create the Mean array during calculations | complex.DataObjectNameParameter |
-| median | Median | Path to create the Median array during calculations | complex.DataObjectNameParameter |
-| minimum | Minimum | Path to create the Minimum array during calculations | complex.DataObjectNameParameter |
-| standard_deviation | Standard Deviation | Path to create the Standard Deviation array during calculations | complex.DataObjectNameParameter |
-| summation | Summation | Path to create the Summation array during calculations | complex.DataObjectNameParameter |
 

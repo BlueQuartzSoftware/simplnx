@@ -46,16 +46,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: FindCAxisLocationsFilter
-+ Displayed Name: Find C-Axis Locations
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| c_axis_locations_array_name | C-Axis Locations | DataPath to calculated C-Axis locations | complex.DataObjectNameParameter |
-| cell_phases_array_path | Phases | Specifies to which Ensemble each Cell belongs | complex.ArraySelectionParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| quats_array_path | Quaternions | DataPath to input quaternion values | complex.ArraySelectionParameter |
 

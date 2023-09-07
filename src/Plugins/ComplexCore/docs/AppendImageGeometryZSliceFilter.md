@@ -51,17 +51,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: AppendImageGeometryZSliceFilter
-+ Displayed Name: Append Z Slice (Image Geometry)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| check_resolution | Check Spacing | Checks to make sure the spacing for the input geometry and destination geometry match | complex.BoolParameter |
-| destination_geometry | Destination Image Geometry | The destination image geometry (cell data) that is the final location for the appended data. | complex.GeometrySelectionParameter |
-| input_geometry | Input Image Geometry | The incoming image geometry (cell data) that is to be appended. | complex.GeometrySelectionParameter |
-| new_geometry | New Image Geometry | The path to the new geometry with the combined data from the input & destination geometry | complex.DataGroupCreationParameter |
-| save_as_new_geometry | Save as new geometry | Save the combined data as a new geometry instead of appending the input data to the destination geometry | complex.BoolParameter |
 

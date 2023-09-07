@@ -56,15 +56,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: IdentifySample
-+ Displayed Name: Isolate Largest Feature (Identify Sample)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| fill_holes | Fill Holes in Largest Feature | Whether to fill holes within sample after it is identified | complex.BoolParameter |
-| good_voxels | Mask | DataPath to the mask array defining what is sample and what is not | complex.ArraySelectionParameter |
-| image_geometry | Image Geometry | DataPath to the target ImageGeom | complex.GeometrySelectionParameter |
 

@@ -52,15 +52,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindDifferencesMap
-+ Displayed Name: Find Differences Map
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| difference_map_array_path | Difference Map | DataPath for created Difference Map DataArray | complex.ArrayCreationParameter |
-| first_input_array_path | First Input Array | DataPath to the first input DataArray | complex.DataPathSelectionParameter |
-| second_input_array_path | Second Input Array | DataPath to the second input DataArray | complex.DataPathSelectionParameter |
 

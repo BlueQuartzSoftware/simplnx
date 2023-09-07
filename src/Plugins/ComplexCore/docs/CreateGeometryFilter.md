@@ -186,33 +186,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: CreateGeometryFilter
-+ Displayed Name: Create Geometry
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| array_handling | Array Handling | Determines if the arrays that make up the geometry primitives should be Moved or Copied to the created Geometry object. | complex.ChoicesParameter |
-| cell_attribute_matrix_name | Cell Attribute Matrix | The name of the cell attribute matrix to be created with the geometry | complex.DataObjectNameParameter |
-| dimensions | Dimensions | The number of cells in each of the X, Y, Z directions | complex.VectorUInt64Parameter |
-| edge_attribute_matrix_name | Edge Attribute Matrix | The name of the edge attribute matrix to be created with the geometry | complex.DataObjectNameParameter |
-| edge_list_name | Edge List | The complete path to the data array defining the edges for the geometry | complex.ArraySelectionParameter |
-| face_attribute_matrix_name | Face Attribute Matrix | The name of the face attribute matrix to be created with the geometry | complex.DataObjectNameParameter |
-| geometry_name | Geometry Name | The complete path to the geometry to be created | complex.DataGroupCreationParameter |
-| geometry_type | Geometry Type | The type of Geometry to create | complex.ChoicesParameter |
-| hexahedral_list_name | Hexahedral List | The complete path to the data array defining the hexahedral elements for the geometry | complex.ArraySelectionParameter |
-| length_unit_type | Length Unit | The length unit to be used in the geometry | complex.ChoicesParameter |
-| origin | Origin | The origin of each of the axes in X, Y, Z order | complex.VectorFloat32Parameter |
-| quadrilateral_list_name | Quadrilateral List | The complete path to the data array defining the (quad) faces for the geometry | complex.ArraySelectionParameter |
-| spacing | Spacing | The length scale of each voxel/pixel | complex.VectorFloat32Parameter |
-| tetrahedral_list_name | Tetrahedral List | The complete path to the data array defining the tetrahedral elements for the geometry | complex.ArraySelectionParameter |
-| triangle_list_name | Triangle List | The complete path to the data array defining the (triangular) faces for the geometry | complex.ArraySelectionParameter |
-| vertex_attribute_matrix_name | Vertex Attribute Matrix | The name of the vertex attribute matrix to be created with the geometry | complex.DataObjectNameParameter |
-| vertex_list_name | Shared Vertex List | The complete path to the data array defining the point coordinates for the geometry | complex.ArraySelectionParameter |
-| warnings_as_errors | Treat Geometry Warnings as Errors | Whether run time warnings for Geometries should be treated as errors | complex.BoolParameter |
-| x_bounds | X Bounds | The spatial locations of the planes along the x direction | complex.ArraySelectionParameter |
-| y_bounds | Y Bounds | The spatial locations of the planes along the y direction | complex.ArraySelectionParameter |
-| z_bounds | Z Bounds | The spatial locations of the planes along the z direction | complex.ArraySelectionParameter |
 

@@ -67,20 +67,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: FindShapesFilter
-+ Displayed Name: Find Feature Shapes
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| aspect_ratios_array_name | Aspect Ratios | Ratio of semi-axis lengths (b/a and c/a) for best-fit ellipsoid to Feature | complex.DataObjectNameParameter |
-| axis_euler_angles_array_name | Axis Euler Angles | Euler angles (in radians) necessary to rotate the sample reference frame to the reference frame of the Feature, where the principal axes of the best-fit ellipsoid are (X, Y, Z) | complex.DataObjectNameParameter |
-| axis_lengths_array_name | Axis Lengths | Semi-axis lengths (a, b, c) for best-fit ellipsoid to Feature | complex.DataObjectNameParameter |
-| centroids_array_path | Feature Centroids | X, Y, Z coordinates of Feature center of mass | complex.ArraySelectionParameter |
-| feature_ids_path | Cell Feature Ids | Specifies to which Feature each Cell belongs | complex.ArraySelectionParameter |
-| omega3s_array_name | Omega3s | 3rd invariant of the second-order moment matrix for the Feature, does not assume a shape type (i.e., ellipsoid) | complex.DataObjectNameParameter |
-| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
-| volumes_array_name | Volumes | The volume of each Feature | complex.DataObjectNameParameter |
 

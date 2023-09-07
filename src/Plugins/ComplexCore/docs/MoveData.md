@@ -43,14 +43,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: MoveData
-+ Displayed Name: Move Data
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| data | Data to Move | The complete paths to the data object(s) to be moved | complex.MultiPathSelectionParameter |
-| new_parent | New Parent | The complete path to the parent data object to which the data will be moved | complex.DataGroupSelectionParameter |
 

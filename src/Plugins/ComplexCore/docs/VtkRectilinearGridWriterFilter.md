@@ -53,16 +53,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: VtkRectilinearGridWriterFilter
-+ Displayed Name: Vtk Rectilinear Grid Exporter
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| image_geometry_path | Image Geometry | The path to the image geometry in which to write out to the vtk file | complex.GeometrySelectionParameter |
-| output_file | Output File | The output vtk file in which the geometry data is written | complex.FileSystemPathParameter |
-| selected_data_array_paths | Cell Data Arrays to Write | The paths to the cell data arrays to write out with the geometry | complex.MultiArraySelectionParameter |
-| write_binary_file | Write Binary File | Whether or not to write the vtk file in binary | complex.BoolParameter |
 

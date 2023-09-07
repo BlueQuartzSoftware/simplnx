@@ -49,16 +49,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ApproximatePointCloudHull
-+ Displayed Name: Approximate Point Cloud Hull
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| grid_resolution | Grid Resolution | Geometry resolution | complex.VectorFloat32Parameter |
-| hull_vertex_geometry | Hull Vertex Geometry | Path to create the hull Vertex geometry | complex.DataGroupCreationParameter |
-| min_empty_neighbors | Minimum Number of Empty Neighbors | Minimum number of empty neighbors | complex.UInt64Parameter |
-| vertex_geometry | Vertex Geometry | Path to the target Vertex geometry | complex.DataPathSelectionParameter |
 

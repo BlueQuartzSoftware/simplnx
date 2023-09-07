@@ -41,16 +41,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ImportVolumeGraphicsFileFilter
-+ Displayed Name: Import Volume Graphics File (.vgi/.vol)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| cell_attribute_matrix_name | Cell Attribute Matrix | The attribute matrix created as a child of the image geometry | complex.DataObjectNameParameter |
-| density_array_name | Density | The data array created as a child of the attribute matrix | complex.DataObjectNameParameter |
-| new_image_geometry | Image Geometry | Path to create the Image Geometry | complex.DataGroupCreationParameter |
-| vg_header_file | VolumeGraphics .vgi File | The input VolumeGraphics file | complex.FileSystemPathParameter |
 

@@ -65,21 +65,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: AlignSectionsMisorientationFilter
-+ Displayed Name: Align Sections (Misorientation)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| alignment_shift_file_name | Alignment File Path | The output file path where the user would like the shifts applied to the section to be written. | complex.FileSystemPathParameter |
-| cell_phases_array_path | Phases | Specifies to which Ensemble each cell belongs | complex.ArraySelectionParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| good_voxels_array_path | Mask | Path to the DataArray Mask | complex.ArraySelectionParameter |
-| misorientation_tolerance | Misorientation Tolerance (Degrees) | Tolerance used to decide if Cells above/below one another should be considered to be the same. The value selected should be similar to the tolerance one would use to define Features (i.e., 2-10 degrees) | complex.Float32Parameter |
-| quats_array_path | Quaternions | Specifies the orientation of the Cell in quaternion representation | complex.ArraySelectionParameter |
-| selected_image_geometry_path | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
-| use_good_voxels | Use Mask Array | Whether to remove some Cells from consideration in the alignment process | complex.BoolParameter |
-| write_alignment_shifts | Write Alignment Shift File | Whether to write the shifts applied to each section to a file | complex.BoolParameter |
 

@@ -57,7 +57,8 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "The input Triangle Geometry to compute the curvature values", DataPath(), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "The input Triangle Geometry to compute the curvature values", DataPath(),
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<Int32Parameter>(k_NeighborhoodRing_Key, "Neighborhood Ring Count", "The number of ring neighbors to use", 1));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputePrincipalDirection_Key, "Compute Principal Direction Vectors", "Compute the Principal Direction Vectors", true));
@@ -72,14 +73,14 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FaceAttribMatrix_Key, "Face Attribute Matrix", "The AttributeMatrix that holds the triangle face data.", DataPath()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabels_Key, "Face Labels", "The DataPath to the 'Face Labels' DataArray", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIds_Key, "Feature Face IDs", "The DataPath to the 'FeatureIds' DataArray", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormals_Key, "Face Normals", "The DataPath to the 'Feature Normals' DataArray", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float64},
-                                                          ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceCentroids_Key, "Face Centroids", "The DataPath to the 'Face Centroids' DataArray", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float64},
-                                                          ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabels_Key, "Face Labels", "The DataPath to the 'Face Labels' DataArray", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIds_Key, "Feature Face IDs", "The DataPath to the 'FeatureIds' DataArray", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormals_Key, "Face Normals", "The DataPath to the 'Feature Normals' DataArray", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceCentroids_Key, "Face Centroids", "The DataPath to the 'Face Centroids' DataArray", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
 
   params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature1_Key, "Principal Curvature 1", "Output DataPath to hold the 'Principal Curvature 1' values", DataPath()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature2_Key, "Principal Curvature 2", "Output DataPath to hold the 'Principal Curvature 2' values", DataPath()));

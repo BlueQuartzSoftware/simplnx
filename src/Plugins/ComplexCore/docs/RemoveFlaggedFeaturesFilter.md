@@ -40,21 +40,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: RemoveFlaggedFeaturesFilter
-+ Displayed Name: Extract/Remove Flagged Features
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| created_image_geometry_prefix | Created Image Geometry Prefix | The prefix name for each of new cropped (extracted) geometry 
-
-NOTE: a '-' will automatically be added between the prefix and number | complex.StringParameter |
-| feature_ids_path | Cell Feature Ids | Specifies to which Feature each cell belongs | complex.ArraySelectionParameter |
-| fill_removed_features | Fill-in Removed Features | Whether or not to fill in the gaps left by the removed Features | complex.BoolParameter |
-| flagged_features_array_path | Flagged Features | Specifies whether the Feature will remain in the structure or not | complex.ArraySelectionParameter |
-| functionality | Selected Operation | Whether to extract features into new geometry or remove or extract then remove | complex.ChoicesParameter |
-| ignored_data_array_paths | Attribute Arrays to Ignore | The list of arrays to ignore when removing flagged features | complex.MultiArraySelectionParameter |
-| image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
 

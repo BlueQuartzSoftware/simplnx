@@ -40,14 +40,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: RenameDataObject
-+ Displayed Name: Rename DataObject
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| data_object | DataObject to Rename | DataPath pointing to the target DataObject | complex.DataPathSelectionParameter |
-| new_name | New Name | Target DataObject name | complex.StringParameter |
 

@@ -45,15 +45,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: RobustAutomaticThreshold
-+ Displayed Name: Robust Automatic Threshold
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| array_to_threshold | Input Array | DataArray to Threshold | complex.ArraySelectionParameter |
-| created_mask_path | Mask | Created mask based on Input Array and Gradient Magnitude | complex.DataObjectNameParameter |
-| gradient_array | Gradient Magnitude Data | The complete path to the Array specifying the gradient magnitude of the Input Array | complex.ArraySelectionParameter |
 

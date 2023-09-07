@@ -52,19 +52,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: FindNeighborhoodsFilter
-+ Displayed Name: Find Feature Neighborhoods
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| centroids_array_path | Centroids | Path to the array specifying the X, Y, Z coordinates of Feature center of mass | complex.ArraySelectionParameter |
-| equivalent_diameters_array_path | Equivalent Diameters | Path to the array specifying the diameter of a sphere with the same volume as the Feature | complex.ArraySelectionParameter |
-| feature_phases_array_path | Phases | Path to the array specifying to which Ensemble each Feature belongs | complex.ArraySelectionParameter |
-| multiples_of_average | Multiples of Average Diameter | Defines the search radius to use when looking for 'neighboring' Features | complex.Float32Parameter |
-| neighborhood_list_array_name | NeighborhoodList | List of the Features whose centroids are within the user specified multiple of equivalent sphere diameter from each Feature | complex.DataObjectNameParameter |
-| neighborhoods_array_name | Neighborhoods | Number of Features that have their centroid within the user specified multiple of equivalent sphere diameters from each Feature | complex.DataObjectNameParameter |
-| selected_image_geometry_path | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
 

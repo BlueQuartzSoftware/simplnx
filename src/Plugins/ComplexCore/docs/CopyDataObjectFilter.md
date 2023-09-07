@@ -54,16 +54,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: CopyDataObjectFilter
-+ Displayed Name: Copy Data Object
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| existing_data_path | Objects to copy | A list of DataPaths to the DataObjects to be copied | complex.MultiPathSelectionParameter |
-| new_data_path | Copied Parent Group | DataPath to parent BaseGroup in which to store the copied DataObject(s) | complex.DataGroupSelectionParameter |
-| new_path_suffix | Copied Object(s) Suffix | Suffix string to be appended to each copied DataObject | complex.StringParameter |
-| use_new_parent | Copy to New Parent | Copy all the DataObjects to a new BaseGroup | complex.BoolParameter |
 

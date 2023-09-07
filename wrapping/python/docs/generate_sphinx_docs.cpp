@@ -88,7 +88,7 @@ void GenerateParameterList()
   ADD_PARAMETER_TRAIT(complex.ArrayCreationParameter, "ab047a7d-f81b-4e6f-99b5-610e7b69fc5b")
 }
 
-std::vector<std::string> ReadFile(const std::filesystem::path& filePath)
+std::vector<std::string> ReadFile(const std::filesystem::path& filePath, bool trimLine)
 {
   std::ifstream file = std::ifstream(filePath);
   std::vector<std::string> lines;
@@ -102,7 +102,10 @@ std::vector<std::string> ReadFile(const std::filesystem::path& filePath)
   std::string line;
   while(std::getline(file, line))
   {
-    line = complex::StringUtilities::trimmed(line);
+    if(trimLine)
+    {
+      line = complex::StringUtilities::trimmed(line);
+    }
     lines.push_back(line);
   }
 
@@ -235,9 +238,9 @@ std::string MarkdownToRst(const std::string& markDown)
 
 std::string ExtractRstFilterSummary(const std::filesystem::path& docFilePath)
 {
-  //     Open the existing doc file
+  // Open the existing doc file
   // Extract out the first paragraph of the Filter's markdown documentation after the ## Description section marker
-  std::vector<std::string> const mdLines = ReadFile(docFilePath);
+  std::vector<std::string> mdLines = ReadFile(docFilePath, true);
   std::stringstream mdStream;
   bool extractLines = false;
   int emptyLine = 0;

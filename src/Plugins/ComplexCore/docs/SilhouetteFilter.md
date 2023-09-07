@@ -49,18 +49,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: SilhouetteFilter
-+ Displayed Name: Silhouette
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| distance_metric | Distance Metric | Distance Metric type to be used for calculations | complex.ChoicesParameter |
-| feature_ids_array_path | Cluster Ids | The DataPath to the DataArray that specifies which cluster each point belongs | complex.ArraySelectionParameter |
-| mask_array_path | Mask | DataPath to the boolean mask array. Values that are true will mark that cell/point as usable. | complex.ArraySelectionParameter |
-| selected_array_path | Attribute Array to Silhouette | The DataPath to the input DataArray | complex.ArraySelectionParameter |
-| silhouette_array_path | Silhouette | The DataPath to the calculated output Silhouette array values | complex.ArrayCreationParameter |
-| use_mask | Use Mask | Specifies whether or not to use a mask array | complex.BoolParameter |
 

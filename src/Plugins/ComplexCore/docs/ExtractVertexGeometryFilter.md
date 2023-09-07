@@ -39,20 +39,4 @@ Please see the description file distributed with this plugin.
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ExtractVertexGeometryFilter
-+ Displayed Name: Extract Vertex Geometry
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| array_handling | Array Handling | Move or Copy input data arrays | complex.ChoicesParameter |
-| included_data_array_paths | Included Attribute Arrays | The arrays to copy/move to the vertex array | complex.MultiArraySelectionParameter |
-| input_geometry_path | Input Geometry | The input Image/RectilinearGrid Geometry to convert | complex.DataGroupSelectionParameter |
-| mask_array_path | Mask | DataPath to the boolean mask array. Values that are true will mark that cell/point as usable. | complex.ArraySelectionParameter |
-| shared_vertex_list_name | Output Shared Vertex List Name | The name of the shared vertex list that will be created | complex.DataObjectNameParameter |
-| use_mask | Use Mask | Specifies whether or not to use a mask array | complex.BoolParameter |
-| vertex_attr_matrix_name | Output Vertex Attribute Matrix Name | The name of the vertex attribute matrix that will be created | complex.DataObjectNameParameter |
-| vertex_geometry_path | Output Vertex Geometry | The complete path to the vertex geometry that will be created | complex.DataGroupCreationParameter |
 

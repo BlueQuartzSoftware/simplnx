@@ -86,20 +86,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: ErodeDilateBadDataFilter
-+ Displayed Name: Erode/Dilate Bad Data
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| feature_ids_path | Cell Feature Ids | Specifies to which Feature each Cell belongs | complex.ArraySelectionParameter |
-| ignored_data_array_paths | Attribute Arrays to Ignore | The list of arrays to ignore when performing the algorithm | complex.MultiArraySelectionParameter |
-| num_iterations | Number of Iterations | The number of iterations to use for erosion/dilation | complex.Int32Parameter |
-| operation | Operation | Whether to dilate or erode | complex.ChoicesParameter |
-| selected_image_geometry | Selected Image Geometry | The target geometry | complex.GeometrySelectionParameter |
-| x_dir_on | X Direction | Whether to erode/dilate in the X direction | complex.BoolParameter |
-| y_dir_on | Y Direction | Whether to erode/dilate in the Y direction | complex.BoolParameter |
-| z_dir_on | Z Direction | Whether to erode/dilate in the Z direction | complex.BoolParameter |
 

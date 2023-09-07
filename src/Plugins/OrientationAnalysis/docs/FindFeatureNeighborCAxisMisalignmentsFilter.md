@@ -52,19 +52,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: OrientationAnalysis
-+ Class Name: FindFeatureNeighborCAxisMisalignmentsFilter
-+ Displayed Name: Find Feature Neighbor C-Axis Misalignments
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| avg_c_axis_misalignments_array_name | Average C-Axis Misalignments | Number weighted average of neighbor C-axis misalignments. Only created if Find Average Misalignment Per Feature is checked | complex.DataObjectNameParameter |
-| avg_quats_array_path | Average Quaternions | Defines the average orientation of the Feature in quaternion representation | complex.ArraySelectionParameter |
-| c_axis_misalignment_list_array_name | C-Axis Misalignment List | List of the C-axis misalignment angles (in degrees) with the contiguous neighboring Features for a given Feature | complex.DataObjectNameParameter |
-| crystal_structures_array_path | Crystal Structures | Enumeration representing the crystal structure for each Ensemble | complex.ArraySelectionParameter |
-| feature_phases_array_path | Phases | Specifies to which Ensemble each **Feature** belongs | complex.ArraySelectionParameter |
-| find_avg_misals | Find Average Misalignment Per Feature | Whether the average of the C-axis misalignments with the neighboring Features should be stored for each Feature | complex.BoolParameter |
-| neighbor_list_array_path | Neighbor List | List of the contiguous neighboring Features for a given Feature | complex.NeighborListSelectionParameter |
 

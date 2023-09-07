@@ -48,17 +48,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: SetImageGeomOriginScalingFilter
-+ Displayed Name: Set Origin & Spacing (Image Geom)
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| change_origin | Change Origin | Specifies if the origin should be changed | complex.BoolParameter |
-| change_resolution | Change Spacing | Specifies if the spacing should be changed | complex.BoolParameter |
-| image_geom | Image Geometry | Path to the target ImageGeom | complex.GeometrySelectionParameter |
-| origin | Origin | Specifies the new origin values | complex.VectorFloat64Parameter |
-| spacing | Spacing | Specifies the new spacing values | complex.VectorFloat64Parameter |
 

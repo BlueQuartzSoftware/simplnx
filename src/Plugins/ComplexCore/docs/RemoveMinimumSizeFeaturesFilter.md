@@ -52,19 +52,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: RemoveMinimumSizeFeaturesFilter
-+ Displayed Name: Remove Minimum Size Features
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| apply_single_phase | Apply to Single Phase | Apply to Single Phase | complex.BoolParameter |
-| feature_ids_path | FeatureIds Array | DataPath to FeatureIds DataArray | complex.ArraySelectionParameter |
-| feature_phases_path | Phases Array | DataPath to Feature Phases DataArray | complex.ArraySelectionParameter |
-| image_geom_path | Image Geometry | DataPath to Image Geometry | complex.DataPathSelectionParameter |
-| min_allowed_features_size | Minimum Allowed Features Size | Minimum allowed features size | complex.Int64Parameter |
-| num_cells_path | Num Cells Array | DataPath to NumCells DataArray | complex.ArraySelectionParameter |
-| phase_number | Phase Index | Target phase to remove | complex.Int64Parameter |
 

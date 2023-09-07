@@ -41,14 +41,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: TriangleDihedralAngleFilter
-+ Displayed Name: Calculate Triangle Minimum Dihedral Angle
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| surface_mesh_triangle_dihedral_angles_array_name | Created Dihedral Angles | The name of the array storing the calculated dihedral angles | complex.DataObjectNameParameter |
-| tri_geometry_data_path | Triangle Geometry | The complete path to the Geometry for which to calculate the dihedral angles | complex.GeometrySelectionParameter |
 

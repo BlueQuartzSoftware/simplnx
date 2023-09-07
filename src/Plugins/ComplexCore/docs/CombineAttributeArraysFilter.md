@@ -75,16 +75,4 @@ Please see the description file distributed with this **Plugin**
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Python Filter Arguments
-
-+ module: complex
-+ Class Name: CombineAttributeArraysFilter
-+ Displayed Name: Combine Attribute Arrays
-
-| argument key | Human Name | Description | Parameter Type |
-|--------------|------------|-------------|----------------|
-| move_values | Move Data | Whether to remove the original arrays after combining the data | complex.BoolParameter |
-| normalize_data | Normalize Data | Whether to normalize the combine data on the interval [0, 1] | complex.BoolParameter |
-| selected_data_array_paths | Attribute Arrays to Combine | The complete path to each of the Attribute Arrays to combine | complex.MultiArraySelectionParameter |
-| stacked_data_array_name | Created Data Array | This is the name of the created output array of the combined attribute arrays. | complex.DataObjectNameParameter |
 
