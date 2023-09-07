@@ -4,7 +4,6 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Utilities/FilePathGenerator.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include "EbsdLib/IO/HKL/CtfConstants.h"
@@ -174,6 +173,8 @@ public:
     {
       return MakeErrorResult(-44600, "The file extension was not detected correctly");
     }
+
+    return {};
   }
 
 private:
@@ -295,18 +296,16 @@ const std::atomic_bool& ConvertHexGridToSquareGrid::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertHexGridToSquareGrid::operator()()
 {
-  bool hasMissingFiles = false;
-  bool stackLowToHigh = true;
-  int increment = 1;
-
   // Now generate all the file names the user is asking for and populate the table
   std::vector<std::string> fileList =
-      FilePathGenerator::GenerateFileList(m_ZStartIndex, m_ZEndIndex, increment, hasMissingFiles, stackLowToHigh, m_InputPath, m_FilePrefix, m_FileSuffix, m_FileExtension, m_PaddingDigits);
+      FilePathGenerator::GenerateFileList(m_InputValues->InputFileListInfo.startIndex, m_InputValues->InputFileListInfo.endIndex, m_InputValues->InputFileListInfo.incrementIndex,
+                                          m_InputValues->InputFileListInfo.ordering, m_InputValues->InputPath.string(), m_InputValues->InputFileListInfo.filePrefix,
+                                          m_InputValues->InputFileListInfo.fileSuffix, m_InputValues->InputFileListInfo.fileExtension, m_InputValues->InputFileListInfo.paddingDigits);
 
   // Loop on Each EBSD File
-  auto total = static_cast<float32>(m_ZEndIndex - m_ZStartIndex);
-  int32 progress = 0;
-  int64 z = m_ZStartIndex;
+  auto total = static_cast<float32>(m_InputValues->InputFileListInfo.endIndex - m_InputValues->InputFileListInfo.startIndex);
+  int32 progress;
+  int64 z = m_InputValues->InputFileListInfo.startIndex;
   /* There is a frailness about the z index and the file list. The programmer
    * using this code MUST ensure that the list of files that is sent into this
    * class is in the appropriate order to match up with the z index (slice index)
@@ -333,10 +332,11 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   for(auto& filepath : fileList)
   {
     {
-      progress = static_cast<int32>(z - m_ZStartIndex);
+      z++;
+      progress = static_cast<int32>(z - m_InputValues->InputFileListInfo.startIndex);
       progress = static_cast<int32>(100.0f * static_cast<float32>(progress) / total);
       std::string msg = "Converted File: " + filepath;
-      notifyStatusMessage(msg);
+      m_MessageHandler(IFilter::Message::Type::Progress, msg, progress);
     }
 
     if(getCancel())

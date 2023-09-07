@@ -9,15 +9,16 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/GeneratedFileListParameter.hpp"
 
 namespace complex
 {
 struct ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGridInputValues
 {
-  DataPath QuaternionDataArrayPath;
-  DataPath OutputDataArrayPath;
-  bool DeleteOriginalData;
-  ChoicesParameter::ValueType ConversionType;
+  FileSystemPathParameter::ValueType InputPath;
+  FileSystemPathParameter::ValueType OutputPath;
+  GeneratedFileListParameter::ValueType InputFileListInfo;
 };
 
 /**
