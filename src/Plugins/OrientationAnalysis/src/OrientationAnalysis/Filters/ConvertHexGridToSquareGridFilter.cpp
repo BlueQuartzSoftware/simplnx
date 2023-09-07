@@ -6,9 +6,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
 
 #include <filesystem>
 
@@ -58,10 +58,11 @@ Parameters ConvertHexGridToSquareGridFilter::parameters() const
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing", "Specifies the new spacing values", std::vector<float64>{1, 1}, std::vector<std::string>{"X", "Y"}));
   params.insert(
       std::make_unique<FileSystemPathParameter>(k_InputPath_Key, "Input File", "", fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile, true));
-  params.insert(std::make_unique<GeneratedFileListParameter>(k_GeneratedFileList_Key,"Generated File List", "", GeneratedFileListParameter::ValueType{}));
+  params.insert(std::make_unique<GeneratedFileListParameter>(k_GeneratedFileList_Key, "Generated File List", "", GeneratedFileListParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Directory", "", fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
+  params.insert(
+      std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Directory", "", fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_OutputPrefix_Key, "Output Prefix", "", "Sqr_"));
 
   // Link Parameters
@@ -81,11 +82,21 @@ IFilter::UniquePointer ConvertHexGridToSquareGridFilter::clone() const
 IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                          const std::atomic_bool& shouldCancel) const
 {
-//  auto pQuaternionDataArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-//  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayPath_Key));
+  auto pUseMultipleFilesValue = filterArgs.value<bool>(k_MultipleFiles_Key);
+  auto pInputFileListInfoValue = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);
 
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  if(pUseMultipleFilesValue)
+  {
+    std::vector<std::string> files = pInputFileListInfoValue.generate();
+
+    if(files.empty())
+    {
+      return {MakeErrorResult<OutputActions>(-1, "GeneratedFileList must not be empty")};
+    }
+  }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -97,10 +108,19 @@ Result<> ConvertHexGridToSquareGridFilter::executeImpl(DataStructure& dataStruct
 {
   ConvertHexGridToSquareGridInputValues inputValues;
 
-//  inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-//  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayPath_Key));
-//  inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
-//  inputValues.ConversionType = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
+  inputValues.MultiFile = filterArgs.value<bool>(k_MultipleFiles_Key);
+  inputValues.XYSpacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
+  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.OutputFilePrefix = filterArgs.value<std::string>(k_OutputPrefix_Key);
+  inputValues.InputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);
+  if(inputValues.MultiFile)
+  {
+    inputValues.InputPath = fs::path(inputValues.InputFileListInfo.inputPath);
+  }
+  else
+  {
+    inputValues.InputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputPath_Key);
+  }
 
   return ConvertHexGridToSquareGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

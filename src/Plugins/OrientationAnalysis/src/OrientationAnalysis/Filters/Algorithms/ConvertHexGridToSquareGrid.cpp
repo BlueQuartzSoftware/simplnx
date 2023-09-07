@@ -23,25 +23,27 @@ constexpr ChoicesParameter::ValueType k_ToVectorScalar = 1;
 class Converter
 {
 public:
-  Converter(const Float32Array& inputQuat, Float32Array& outputQuat, ChoicesParameter::ValueType conversionType, const std::atomic_bool& shouldCancel)
-  : m_Input(inputQuat)
-  , m_Output(outputQuat)
-  , m_ConversionType(conversionType)
-  , m_ShouldCancel(shouldCancel)
+  Converter(const std::atomic_bool& shouldCancel, const fs::path& inputPath, const fs::path& outputDirPath, const std::string& outputFilePrefix, const std::vector<float64>& spacingXY)
+  : m_ShouldCancel(shouldCancel)
+  , m_InputPath(inputPath)
+  , m_OutputPath(outputDirPath)
+  , m_FilePrefix(outputFilePrefix)
+  , m_XResolution(spacingXY.at(0))
+  , m_YResolution(spacingXY.at(1))
   {
   }
-  virtual ~Converter() = default;
+  ~Converter() noexcept = default;
 
-  Converter(const Converter&) = default;           // Copy Constructor Default Implemented
+  Converter(const Converter&) = delete;            // Copy Constructor Default Implemented
   Converter(Converter&&) = delete;                 // Move Constructor Not Implemented
   Converter& operator=(const Converter&) = delete; // Copy Assignment Not Implemented
   Converter& operator=(Converter&&) = delete;      // Move Assignment Not Implemented
 
-  Result<> convert()
+  Result<> operator()()
   {
     // Write the Manufacturer of the OIM file here
     // This list will grow to be the number of EBSD file formats we support
-    if(m_InputPath.extension() == EbsdLib::Ang::FileExt)
+    if(m_InputPath.extension() == ("." + EbsdLib::Ang::FileExt))
     {
       AngReader reader;
       reader.setFileName(m_InputPath.string());
@@ -121,8 +123,8 @@ public:
         }
         for(int32 i = 0; i < m_NumCols; i++)
         {
-          xSqr = static_cast<float32>(i) * m_XResolution;
-          ySqr = static_cast<float32>(j) * m_YResolution;
+          xSqr = static_cast<float32>(static_cast<float32>(i) * m_XResolution);
+          ySqr = static_cast<float32>(static_cast<float32>(j) * m_YResolution);
           row1 = static_cast<int32>(ySqr / (HexYStep));
           yHex1 = static_cast<float32>(row1) * HexYStep;
           row2 = row1 + 1;
@@ -165,7 +167,7 @@ public:
         return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
       }
     }
-    else if(m_InputPath.extension() == EbsdLib::Ctf::FileExt)
+    else if(m_InputPath.extension() == ("." + EbsdLib::Ctf::FileExt))
     {
       return MakeErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
     }
@@ -178,25 +180,16 @@ public:
   }
 
 private:
-  const Float32Array& m_Input;
-  Float32Array& m_Output;
-  ChoicesParameter::ValueType m_ConversionType = 0;
   const std::atomic_bool& m_ShouldCancel;
-  int64 m_ZStartIndex = {0};
-  int64 m_ZEndIndex = {0};
-  float32 m_XResolution = {1.0f};
-  float32 m_YResolution = {1.0f};
-  fs::path m_InputPath;
-  std::string m_OutputPath;
-  std::string m_OutputPrefix = {"Sqr_"};
-  std::string m_FilePrefix;
-  std::string m_FileSuffix;
-  std::string m_FileExtension = {"ang"};
-  int32 m_PaddingDigits = {1};
-  int32 m_NumCols = {0};
-  int32 m_NumRows = {0};
-  bool m_HeaderIsComplete = {false};
-  int32 m_HexGridStack = {0};
+  const fs::path& m_InputPath;
+  const fs::path& m_OutputPath;
+  const std::string& m_FilePrefix;
+  const float64 m_XResolution;
+  const float64 m_YResolution;
+
+  int32 m_NumCols = 0;
+  int32 m_NumRows = 0;
+  bool m_HeaderIsComplete = false;
 
   // -----------------------------------------------------------------------------
   std::string modifyAngHeaderLine(std::string& buf)
@@ -296,16 +289,17 @@ const std::atomic_bool& ConvertHexGridToSquareGrid::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertHexGridToSquareGrid::operator()()
 {
+  if(!m_InputValues->MultiFile)
+  {
+    return ::Converter(getCancel(), m_InputValues->InputPath, m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing)();
+  }
+
   // Now generate all the file names the user is asking for and populate the table
   std::vector<std::string> fileList =
       FilePathGenerator::GenerateFileList(m_InputValues->InputFileListInfo.startIndex, m_InputValues->InputFileListInfo.endIndex, m_InputValues->InputFileListInfo.incrementIndex,
                                           m_InputValues->InputFileListInfo.ordering, m_InputValues->InputPath.string(), m_InputValues->InputFileListInfo.filePrefix,
                                           m_InputValues->InputFileListInfo.fileSuffix, m_InputValues->InputFileListInfo.fileExtension, m_InputValues->InputFileListInfo.paddingDigits);
 
-  // Loop on Each EBSD File
-  auto total = static_cast<float32>(m_InputValues->InputFileListInfo.endIndex - m_InputValues->InputFileListInfo.startIndex);
-  int32 progress;
-  int64 z = m_InputValues->InputFileListInfo.startIndex;
   /* There is a frailness about the z index and the file list. The programmer
    * using this code MUST ensure that the list of files that is sent into this
    * class is in the appropriate order to match up with the z index (slice index)
@@ -329,11 +323,21 @@ Result<> ConvertHexGridToSquareGrid::operator()()
    * which is going to cause problems because the data is going to be placed
    * into the HDF5 file at the wrong index. YOU HAVE BEEN WARNED.
    */
-  for(auto& filepath : fileList)
+  // Loop on Each EBSD File
+  auto total = static_cast<float32>(m_InputValues->InputFileListInfo.endIndex - m_InputValues->InputFileListInfo.startIndex);
+  int32 progress;
+  int64 z = m_InputValues->InputFileListInfo.startIndex;
+
+  auto result = Result<>{};
+  for(const auto& filepath : fileList)
   {
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Now Processing: {}", filepath));
+
+    result = MergeResults(::Converter(getCancel(), fs::path(filepath), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing)(), result);
+
     {
       z++;
-      progress = static_cast<int32>(z - m_InputValues->InputFileListInfo.startIndex);
+      progress = static_cast<int32>(z - m_InputValues->InputFileListInfo.startIndex - 1);
       progress = static_cast<int32>(100.0f * static_cast<float32>(progress) / total);
       std::string msg = "Converted File: " + filepath;
       m_MessageHandler(IFilter::Message::Type::Progress, msg, progress);
@@ -341,9 +345,10 @@ Result<> ConvertHexGridToSquareGrid::operator()()
 
     if(getCancel())
     {
-      return {};
+      result = MergeResults(MakeErrorResult(-00010, "Run Terminated Early"), result);
+      return result;
     }
   }
 
-  return {};
+  return result;
 }

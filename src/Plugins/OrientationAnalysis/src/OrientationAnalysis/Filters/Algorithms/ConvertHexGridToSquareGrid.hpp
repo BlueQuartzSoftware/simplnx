@@ -11,14 +11,18 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
+#include "complex/Parameters/VectorParameter.hpp"
 
 namespace complex
 {
 struct ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGridInputValues
 {
+  bool MultiFile;
+  VectorFloat64Parameter::ValueType XYSpacing;
   FileSystemPathParameter::ValueType InputPath;
   FileSystemPathParameter::ValueType OutputPath;
   GeneratedFileListParameter::ValueType InputFileListInfo;
+  std::string OutputFilePrefix;
 };
 
 /**
