@@ -46,7 +46,7 @@ requirements:
     - ninja
     - git
   host:
-    - python
+    - "python {{ python }}"
     - mypy
     - numpy >=1.16
     - boost_mp11
