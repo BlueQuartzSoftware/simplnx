@@ -202,7 +202,6 @@ function(complex_add_python_plugin)
   set(multiValueArgs)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  #string(TOLOWER ${ARGS_PLUGIN_NAME} PYTHON_MODULE_NAME)
   set(PYTHON_MODULE_NAME ${ARGS_PYTHON_MODULE_NAME})
   set(PYTHON_WRAPPING_DIR "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}/wrapping/python")
 
