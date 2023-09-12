@@ -27,7 +27,7 @@ public:
   static inline constexpr StringLiteral k_PhaseOfInterest_Key = "phase_of_interest";
   static inline constexpr StringLiteral k_MisorientationRotation_Key = "misorientation_rotation";
   static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
-  static inline constexpr StringLiteral k_GBCDArrayPath_Key = "g_bc_darray_path";
+  static inline constexpr StringLiteral k_GBCDArrayPath_Key = "gbcd_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
   /**

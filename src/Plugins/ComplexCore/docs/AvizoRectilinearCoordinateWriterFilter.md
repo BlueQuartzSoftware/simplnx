@@ -12,25 +12,25 @@ This filter writes out a native Avizo Rectilinear Coordinate data file. Values s
 ### Example Output 
 
 
-	# AmiraMesh BINARY-LITTLE-ENDIAN 2.1
-	# Dimensions in x-, y-, and z-direction
-	define Lattice
-	define Coordinates
-	Parameters {
-	    DREAM3DParams {
-	        Author "DREAM3D",
-	         DateTime "    . M o n   J u n   1   1 0 : 0 1 : 1 4   2 0 1 5   "     
-	    }
-	    Units {
-	          Coordinates "microns"
-	    }
-	     CoordType "rectilinear"
-	}
-	     
-	Lattice { int FeatureIds } = @1
-	Coordinates { float xyz } = @2
-	# Data section follows
-	   .. 
+    # AmiraMesh BINARY-LITTLE-ENDIAN 2.1
+    # Dimensions in x-, y-, and z-direction
+    define Lattice
+    define Coordinates
+    Parameters {
+        DREAM3DParams {
+            Author "DREAM3D",
+             DateTime "    . M o n   J u n   1   1 0 : 0 1 : 1 4   2 0 1 5   "     
+        }
+        Units {
+              Coordinates "microns"
+        }
+         CoordType "rectilinear"
+    }
+         
+    Lattice { int FeatureIds } = @1
+    Coordinates { float xyz } = @2
+    # Data section follows
+       .. 
 
 ## Parameters 
 
@@ -62,8 +62,8 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists 
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

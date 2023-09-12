@@ -6,7 +6,7 @@ IO (Input)
 
 ## Description ##
 
-This **Filter** reads from the .h5ebsd file that was generated with the [Import Orientation File(s) to H5EBSD](ebsdtoh5ebsd.html) **Filter**. 
+This **Filter** reads from the .h5ebsd file that was generated with the *Import Orientation File(s) to H5EBSD* **Filter**. 
 
 -----
 
@@ -15,7 +15,7 @@ This **Filter** reads from the .h5ebsd file that was generated with the [Import 
 -----
 
 
-+ The user can use the checkboxes under the _Data Arrays to Read_ section to select which specific data arrays they are interested in importing.
++ The user can use the checkboxes under the *Data Arrays to Read* section to select which specific data arrays they are interested in importing.
 + The user can select a subset of the slices if they do not wish to import the entire volume.
 + The type of transformations that are recommended based on the manufacturer of the data are also listed with a checkbox that allows the user to toggle the recommended transformations on and off.
 + The user should select the Euler angle representation. (This is **only** available if the **Use Recommended Transformations** is turned **on**.)
@@ -49,7 +49,7 @@ An excellant reference for this is the following PDF file:
 + Caution: it appears that the axis alignment is a choice that must be made when installing TSL software so determination of which convention is in use must be made on a case-by-case basis. It is fixed to the y-convention in the HKL software.
 + The main clue that something is wrong in a conversion is that either the 2110 & 1010 pole figures are transposed, or that a peak in the inverse pole figure that should be present at 2110 has shifted over to 1010.
 + DREAM.3D uses the TSL/EDAX convention.
-+ **The result of this is that the filter will _AUTOMATICALLY_ add 30   to phi2 when reading Oxford Instr (.ctf) files or .h5ebsd files denoted with the HKL manufacturer ID. There is no way to turn off this behavior. **
++ **The result of this is that the filter will *AUTOMATICALLY* add 30   to phi2 when reading Oxford Instr (.ctf) files or .h5ebsd files denoted with the HKL manufacturer ID. There is no way to turn off this behavior. **
 
 ![Figure 1 showing TSL \& Oxford Instr. conventions.](Images/Hexagonal_Axis_Alignment.png)
 
@@ -80,7 +80,7 @@ None
 | **Attribute Matrix** | CellData | Cell | N/A | Created **Cell Attribute Matrix** name |
 | **Attribute Matrix** | CellEnsembleData | Cell Ensemble | N/A | Created **Cell Ensemble Attribute Matrix** name |
 
-An array for each of the arrays selected in the _Data Arrays to Read_ section will also be created.
+An array for each of the arrays selected in the *Data Arrays to Read* section will also be created.
 
 ## Example Pipelines ##
 
@@ -103,7 +103,8 @@ Please see the description file distributed with this **Plugin**
 [2] Rollett, A.D. Lecture Slides located at [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)
 
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
 

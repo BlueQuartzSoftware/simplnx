@@ -59,7 +59,7 @@ None
 | **Attribute Matrix** | EnsembleAttributeMatrix | Ensemble | N/A | Created **Ensemble Attribute Matrix** name |
 | **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
 | **Ensemble Attribute Array** | PhaseTypes        | uint32_t | (1) | Enumeration representing the phase type for each **Ensemble** |
-| **String Data Array** 	   | PhaseNames        | String | (1)   | The phase names for each **Ensemble** |
+| **String Data Array**        | PhaseNames        | String | (1)   | The phase names for each **Ensemble** |
 
 
 ## Example Pipelines ##
@@ -70,8 +70,8 @@ Import_ASCII
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

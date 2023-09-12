@@ -14,7 +14,7 @@ namespace complex
  * BinaryDilateImageFilter is a binary dilation morphologic operation on the foreground of an image. Only the value designated by the intensity value "SetForegroundValue()" (alias as SetDilateValue()
  * ) is considered as foreground, and other intensity values are considered background.
  *
- * Gray scale images can be processed as binary images by selecting a "ForegroundValue" (alias "DilateValue"). Pixel values matching the dilate value are considered the "foreground" and all other
+ * Grayscale images can be processed as binary images by selecting a "ForegroundValue" (alias "DilateValue"). Pixel values matching the dilate value are considered the "foreground" and all other
  * pixels are "background". This is useful in processing segmented images where all pixels in segment #1 have value 1 and pixels in segment #2 have value 2, etc. A particular "segment number" can be
  * processed. ForegroundValue defaults to the maximum possible value of the PixelType.
  *
@@ -26,8 +26,9 @@ namespace complex
  * L.Vincent "Morphological transformations of binary images with
  * arbitrary structuring elements", and
  *
- * N.Nikopoulos et al. "An efficient algorithm for 3d binary morphological transformations with 3d structuring elements for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9.
- * No. 3. 2000. pp. 283-286.
+ * N.Nikopoulos et al. "An efficient algorithm for 3d binary
+ * morphological transformations with 3d structuring elements
+ * for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9. No. 3. 2000. pp. 283-286.
  *
  * @see ImageToImageFilter BinaryErodeImageFilter BinaryMorphologyImageFilter
  *

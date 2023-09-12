@@ -1,8 +1,8 @@
 #include "ITKInvertIntensityImage.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -14,7 +14,7 @@ using namespace complex;
 
 namespace cxITKInvertIntensityImage
 {
-using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
+using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
 // VectorPixelIDTypeList;
 
 struct ITKInvertIntensityImageFunctor
@@ -24,8 +24,8 @@ struct ITKInvertIntensityImageFunctor
   template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterT = itk::InvertIntensityImageFilter<InputImageT, OutputImageT>;
-    auto filter = FilterT::New();
+    using FilterType = itk::InvertIntensityImageFilter<InputImageT, OutputImageT>;
+    auto filter = FilterType::New();
     filter->SetMaximum(maximum);
     return filter;
   }
@@ -68,9 +68,8 @@ std::vector<std::string> ITKInvertIntensityImage::defaultTags() const
 Parameters ITKInvertIntensityImage::parameters() const
 {
   Parameters params;
-
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_Maximum_Key, "Maximum", "The maximum intensity value for the inversion.", 255));
+  params.insert(std::make_unique<Float64Parameter>(k_Maximum_Key, "Maximum", "Set/Get the maximum intensity value for the inversion.", 255));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -98,10 +97,10 @@ IFilter::PreflightResult ITKInvertIntensityImage::preflightImpl(const DataStruct
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
   auto maximum = filterArgs.value<float64>(k_Maximum_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKInvertIntensityImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKInvertIntensityImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -117,13 +116,11 @@ Result<> ITKInvertIntensityImage::executeImpl(DataStructure& dataStructure, cons
 
   auto maximum = filterArgs.value<float64>(k_Maximum_Key);
 
-  cxITKInvertIntensityImage::ITKInvertIntensityImageFunctor itkFunctor = {maximum};
+  const cxITKInvertIntensityImage::ITKInvertIntensityImageFunctor itkFunctor = {maximum};
 
-  // LINK GEOMETRY OUTPUT START
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
-  // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKInvertIntensityImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKInvertIntensityImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex

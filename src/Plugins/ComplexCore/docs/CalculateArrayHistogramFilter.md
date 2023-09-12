@@ -6,7 +6,7 @@ Statistics(Ensemble)
 
 ## Description
 
-This **Filter** accepts **DataArray**(s) as input, creates histogram **DataArray**(s) in specified **DataGroup** from input **DataArray**(s), then calculates histogram values according to user parameters and stores values in created histogram **DataArray**(s).
+This **Filter** accepts **DataArray(s)** as input, creates histogram **DataArray(s)** in specified **DataGroup** from input **DataArray(s)**, then calculates histogram values according to user parameters and stores values in created histogram **DataArray(s)**.
 
 ## Example Data
 
@@ -64,7 +64,7 @@ None
 
 | Kind | Default Name | Type | Description |
 |------|--------------|------|-------------|
-| **DataArray** | DataArray(s) to Histogram | DataArray | Specifies to which **DataArray**(s) to create a histogram from |
+| **DataArray** | DataArray(s) to Histogram | DataArray | Specifies to which **DataArray(s)** to create a histogram from |
 
 ## Created Objects
 
@@ -83,11 +83,11 @@ the histogram will be generated based on **DataArray** specified in *DataArray(s
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
-## Appendix
+
 
 ### Example Data (Raw)
 

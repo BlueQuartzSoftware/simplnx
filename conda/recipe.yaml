@@ -1,5 +1,5 @@
 context:
-  version: "0.1.4"
+  version: "1.0.0"
   name: complex
 
 package:
@@ -9,15 +9,11 @@ package:
 source:
   - path: ../
     folder: complex
-  # - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
-  #   git_rev: v1.0.22
-  #   folder: EbsdLib
-  - path: ../../EbsdLib
+  - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
+    git_rev: v1.0.25
     folder: EbsdLib
-  # - git_url: https://github.com/BlueQuartzSoftware/H5Support
-  #   git_rev: v1.0.10
-  #   folder: H5Support
-  - path: ../../H5Support
+  - git_url: https://github.com/BlueQuartzSoftware/H5Support
+    git_rev: v1.0.13
     folder: H5Support
   - git_url: https://github.com/martinmoene/expected-lite
     git_rev: v0.5.0
@@ -46,7 +42,7 @@ requirements:
     - ninja
     - git
   host:
-    - python
+    - "python {{ python }}"
     - mypy
     - numpy >=1.16
     - boost_mp11

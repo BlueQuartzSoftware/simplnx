@@ -56,8 +56,8 @@ very large grains being similar most of the fine grains and twins are **NOT** re
 ### Oxford/Bruker (.ctf) File
 
 Oxford Instruments and Bruker CTF data files do not include a "Confidence Index" measure. There are several measures
-such as _Mean Angular Deviation (MAD)_ or _Bands_ but these values are not filled in or are defaulted to 0 (Zero) if the
-scan point was not indexed. By using the _Error_ value from the data file we can get the same effect as the EDAX
+such as _Mean Angular Deviation (MAD)_ or *Bands* but these values are not filled in or are defaulted to 0 (Zero) if the
+scan point was not indexed. By using the *Error* value from the data file we can get the same effect as the EDAX
 _Confidence Index_. The user would use the following input values:
 
 | Filter Parameter | Value                              |
@@ -112,9 +112,8 @@ The example pipeline (pipelines/Examples/ReplaceElementAttributesWithNeighbor.d3
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on
-the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

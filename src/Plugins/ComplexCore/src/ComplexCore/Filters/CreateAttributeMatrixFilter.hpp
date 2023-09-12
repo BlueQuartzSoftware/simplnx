@@ -23,7 +23,7 @@ public:
   CreateAttributeMatrixFilter& operator=(CreateAttributeMatrixFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataObjectPath = "Data_Object_Path";
+  static inline constexpr StringLiteral k_DataObjectPath = "data_object_path";
   static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
 
   /**

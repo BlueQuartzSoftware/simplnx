@@ -7,7 +7,7 @@ Statistics (Statistics)
 
 ## Description 
 
-This **Filter** computes the 2D Omega-1 and Omega 2 values from the _Central Moments_ matrix and optionally will normalize the values to a unit circle and also optionally save the _Central Moments_ matrix as a DataArray to the *Cell Feature Attribute Matrix*. Based off the paper by MacSleyne et. al [1], the algorithm will calculate the 2D central moments for each feature starting at *feature id = 1*. Because *feature id 0* is of special significance and typically is a matrix or background it is ignored in this filter. If any feature id has a Z Delta of > 1, the feature will be skipped. This algorithm works strictly in the XY plane and is meant to be applied to a 2D image. Using the research from the cited paper certain shapes can be detected using the Omega-1 and Omega-2 values. An example usage is finding elliptical shapes in an image:
+This **Filter** computes the 2D Omega-1 and Omega 2 values from the *Central Moments* matrix and optionally will normalize the values to a unit circle and also optionally save the *Central Moments* matrix as a DataArray to the *Cell Feature Attribute Matrix*. Based off the paper by MacSleyne et. al [1], the algorithm will calculate the 2D central moments for each feature starting at *feature id = 1*. Because *feature id 0* is of special significance and typically is a matrix or background it is ignored in this filter. If any feature id has a Z Delta of > 1, the feature will be skipped. This algorithm works strictly in the XY plane and is meant to be applied to a 2D image. Using the research from the cited paper certain shapes can be detected using the Omega-1 and Omega-2 values. An example usage is finding elliptical shapes in an image:
 
 
 See below figure from [1] that can help the user classify objects.
@@ -68,6 +68,8 @@ The authors would like to thank Dr. Marc De Graef from Carnegie Mellon Universit
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists 
+## DREAM3DNX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

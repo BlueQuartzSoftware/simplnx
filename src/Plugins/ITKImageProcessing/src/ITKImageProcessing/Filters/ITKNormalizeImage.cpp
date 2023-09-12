@@ -1,8 +1,8 @@
 #include "ITKNormalizeImage.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -13,18 +13,18 @@ using namespace complex;
 
 namespace cxITKNormalizeImage
 {
-using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
-
+using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
+// VectorPixelIDTypeList;
 template <class PixelT>
-using FilterOutputT = typename itk::NumericTraits<PixelT>::RealType;
+using FilterOutputType = double;
 
 struct ITKNormalizeImageFunctor
 {
   template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterT = itk::NormalizeImageFilter<InputImageT, OutputImageT>;
-    auto filter = FilterT::New();
+    using FilterType = itk::NormalizeImageFilter<InputImageT, OutputImageT>;
+    auto filter = FilterType::New();
     return filter;
   }
 };
@@ -67,13 +67,13 @@ Parameters ITKNormalizeImage::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
-                                                          complex::GetAllDataTypes()));
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
@@ -95,7 +95,8 @@ IFilter::PreflightResult ITKNormalizeImage::preflightImpl(const DataStructure& d
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKNormalizeImage::ArrayOptionsT, cxITKNormalizeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKNormalizeImage::ArrayOptionsType, cxITKNormalizeImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -109,11 +110,11 @@ Result<> ITKNormalizeImage::executeImpl(DataStructure& dataStructure, const Argu
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  cxITKNormalizeImage::ITKNormalizeImageFunctor itkFunctor = {};
+  const cxITKNormalizeImage::ITKNormalizeImageFunctor itkFunctor = {};
 
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<cxITKNormalizeImage::ArrayOptionsT, cxITKNormalizeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKNormalizeImage::ArrayOptionsType, cxITKNormalizeImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex

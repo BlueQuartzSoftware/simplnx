@@ -7,7 +7,7 @@ IO (Input)
 
 ## Description ##
 
-This **Filter** will read a single .ang file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and **Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be undefined or simply **wrong**. In order to bring the [crystal reference frame](@ref rotateeulerrefframe) and [sample reference frame](@ref rotatesamplerefframe) into coincidence, rotations will need to be applied to the data.
+This **Filter** will read a single .ang file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and **Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be undefined or simply **wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data.
 
 ### Default TSL Transformations ###
 
@@ -16,7 +16,7 @@ If the data has come from a TSL acquisition system and the settings of the acqui
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Threshold Objects](@ref multithresholdobjects) **Filter** can be used to define this _mask_ by thresholding on values such as _Confidence Index_ > 0.1 or _Image Quality_ > desired quality.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The Threshold Objects **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > 0.1 or *Image Quality* > desired quality.
 
 ## Parameters ##
 
@@ -61,8 +61,8 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

@@ -12,7 +12,7 @@ This **Filter** writes out **CellData** from an **Image Geometry** to a file tha
 
 The format of the file is an ASCII text file with the following space delimited information:
 
-	Phi1   Phi   Phi2  X  Y   Z  Feature_ID   Phase_ID
+    Phi1   Phi   Phi2  X  Y   Z  Feature_ID   Phase_ID
 
 The Euler angles are in degrees. X, Y, Z are integer indices into the **Image** geometry. Feature ID & Phase ID are the integer values for the feature and phase **Starting at One (1)**.
 
@@ -20,26 +20,26 @@ The Euler angles are in degrees. X, Y, Z are integer indices into the **Image** 
 
 The output file:     
 
-	90.000 0.000 0.000 1 1 1 0 1
-	90.000 0.000 0.000 2 1 1 0 1 
-	90.000 0.000 0.000 3 1 1 0 1  
-	90.000 0.000 0.000 4 1 1 0 1
-	90.000 0.000 0.000 5 1 1 0 1  
-	90.000 0.000 0.000 6 1 1 0 1
-	90.000 0.000 0.000 7 1 1 0 1
-	90.000 0.000 0.000 8 1 1 0 1
-	90.000 0.000 0.000 9 1 1 0 1  
-	90.000 0.000 0.000 10 1 1 0 1
-	90.000 0.000 0.000 11 1 1 0 1 
-	90.000 0.000 0.000 12 1 1 0 1  
-	90.000 0.000 0.000 13 1 1 0 1
-	90.000 0.000 0.000 14 1 1 0 1  
-	90.000 0.000 0.000 15 1 1 0 1
-	90.000 0.000 0.000 16 1 1 0 1
-	90.000 0.000 0.000 17 1 1 0 1
-	135.009 55.304 295.274 18 1 1 1742 1 
-	90.000 0.000 0.000 19 1 1 0 1 
-	   ..  
+    90.000 0.000 0.000 1 1 1 0 1
+    90.000 0.000 0.000 2 1 1 0 1 
+    90.000 0.000 0.000 3 1 1 0 1  
+    90.000 0.000 0.000 4 1 1 0 1
+    90.000 0.000 0.000 5 1 1 0 1  
+    90.000 0.000 0.000 6 1 1 0 1
+    90.000 0.000 0.000 7 1 1 0 1
+    90.000 0.000 0.000 8 1 1 0 1
+    90.000 0.000 0.000 9 1 1 0 1  
+    90.000 0.000 0.000 10 1 1 0 1
+    90.000 0.000 0.000 11 1 1 0 1 
+    90.000 0.000 0.000 12 1 1 0 1  
+    90.000 0.000 0.000 13 1 1 0 1
+    90.000 0.000 0.000 14 1 1 0 1  
+    90.000 0.000 0.000 15 1 1 0 1
+    90.000 0.000 0.000 16 1 1 0 1
+    90.000 0.000 0.000 17 1 1 0 1
+    135.009 55.304 295.274 18 1 1 1742 1 
+    90.000 0.000 0.000 19 1 1 0 1 
+       ..  
 
 ## Parameters
 
@@ -73,6 +73,8 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

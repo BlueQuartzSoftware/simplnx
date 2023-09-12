@@ -6,7 +6,7 @@ AMProcessMonitoring (AMProcessMonitoring)
 
 ## Description 
 
-This **Filter** combines all of the STL files from a given directory into a single triangle geometry. This filter will make use of the [Import STL File](../StlFileReaderFilter/index.html) **Filter** to read in each stl file in the given directory and then will proceed to combine each of the imported files into a single triangle geometry.
+This **Filter** combines all of the STL files from a given directory into a single triangle geometry. This filter will make use of the **Import STL File Filter** to read in each stl file in the given directory and then will proceed to combine each of the imported files into a single triangle geometry.
 
 ## Parameters 
 | Name | Type | Description |
@@ -32,7 +32,8 @@ CombineStlFiles
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists 
+## DREAM3DNX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

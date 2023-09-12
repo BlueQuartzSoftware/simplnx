@@ -28,7 +28,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedPreset_Key = "selected_preset";
   static inline constexpr StringLiteral k_SelectedDataArrayPath_Key = "selected_data_array_path";
-  static inline constexpr StringLiteral k_RgbArrayPath_Key = "rgb_array_path";
+  static inline constexpr StringLiteral k_RgbArrayPath_Key = "output_rgb_array_name";
 
   /**
    * @brief Returns the name of the filter.

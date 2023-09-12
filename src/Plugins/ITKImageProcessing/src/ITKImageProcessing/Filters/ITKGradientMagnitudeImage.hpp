@@ -13,9 +13,12 @@ namespace complex
  *
  * @see Image
  *
+ *
  * @see Neighborhood
  *
+ *
  * @see NeighborhoodOperator
+ *
  *
  * @see NeighborhoodIterator
  *
@@ -104,7 +107,8 @@ protected:
    * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

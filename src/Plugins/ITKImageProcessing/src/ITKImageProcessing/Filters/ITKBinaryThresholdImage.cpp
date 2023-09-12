@@ -1,8 +1,8 @@
 #include "ITKBinaryThresholdImage.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -14,10 +14,9 @@ using namespace complex;
 
 namespace cxITKBinaryThresholdImage
 {
-using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
-
+using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
 template <class PixelT>
-using FilterOutputT = uint8;
+using FilterOutputType = uint8;
 
 struct ITKBinaryThresholdImageFunctor
 {
@@ -29,8 +28,8 @@ struct ITKBinaryThresholdImageFunctor
   template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterT = itk::BinaryThresholdImageFilter<InputImageT, OutputImageT>;
-    auto filter = FilterT::New();
+    using FilterType = itk::BinaryThresholdImageFilter<InputImageT, OutputImageT>;
+    auto filter = FilterType::New();
     filter->SetLowerThreshold(lowerThreshold);
     filter->SetUpperThreshold(upperThreshold);
     filter->SetInsideValue(insideValue);
@@ -76,20 +75,22 @@ std::vector<std::string> ITKBinaryThresholdImage::defaultTags() const
 Parameters ITKBinaryThresholdImage::parameters() const
 {
   Parameters params;
-
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_LowerThreshold_Key, "LowerThreshold", "Set the lower threshold. Must be lower than the upper threshold.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_UpperThreshold_Key, "UpperThreshold", "Set the upper threshold.", 255.0));
-  params.insert(std::make_unique<UInt8Parameter>(k_InsideValue_Key, "InsideValue", "Set the 'inside' pixel value", 1u));
-  params.insert(std::make_unique<UInt8Parameter>(k_OutsideValue_Key, "OutsideValue", "Set the 'outside' pixel value", 0u));
+  params.insert(std::make_unique<Float64Parameter>(k_LowerThreshold_Key, "LowerThreshold", "", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_UpperThreshold_Key, "UpperThreshold",
+                                                   "Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is "
+                                                   "NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.",
+                                                   255.0));
+  params.insert(std::make_unique<UInt8Parameter>(k_InsideValue_Key, "InsideValue", "Set the 'inside' pixel value. The default value NumericTraits<OutputPixelType>::max()", 1u));
+  params.insert(std::make_unique<UInt8Parameter>(k_OutsideValue_Key, "OutsideValue", "Set the 'outside' pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() .", 0u));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
-                                                          complex::GetAllDataTypes()));
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
@@ -109,14 +110,14 @@ IFilter::PreflightResult ITKBinaryThresholdImage::preflightImpl(const DataStruct
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
   auto lowerThreshold = filterArgs.value<float64>(k_LowerThreshold_Key);
   auto upperThreshold = filterArgs.value<float64>(k_UpperThreshold_Key);
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
-      ITK::DataCheck<cxITKBinaryThresholdImage::ArrayOptionsT, cxITKBinaryThresholdImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+      ITK::DataCheck<cxITKBinaryThresholdImage::ArrayOptionsType, cxITKBinaryThresholdImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -129,16 +130,18 @@ Result<> ITKBinaryThresholdImage::executeImpl(DataStructure& dataStructure, cons
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+
   auto lowerThreshold = filterArgs.value<float64>(k_LowerThreshold_Key);
   auto upperThreshold = filterArgs.value<float64>(k_UpperThreshold_Key);
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  cxITKBinaryThresholdImage::ITKBinaryThresholdImageFunctor itkFunctor = {lowerThreshold, upperThreshold, insideValue, outsideValue};
+  const cxITKBinaryThresholdImage::ITKBinaryThresholdImageFunctor itkFunctor = {lowerThreshold, upperThreshold, insideValue, outsideValue};
 
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<cxITKBinaryThresholdImage::ArrayOptionsT, cxITKBinaryThresholdImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKBinaryThresholdImage::ArrayOptionsType, cxITKBinaryThresholdImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
+                                                                                                                shouldCancel);
 }
 } // namespace complex

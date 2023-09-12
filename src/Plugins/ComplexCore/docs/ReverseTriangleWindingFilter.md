@@ -6,7 +6,7 @@ Surface Meshing (Connectivity/Arrangement)
 
 ## Description
 
-This **Filter** reverses the _winding_ for each **Triangle** in a **Triangle Geometry**. This will _reverse_ the direction of calculated **Triangle** normals. Some analysis routines require the normals to be pointing "away" from the center of a **Feature**. This **Filter** allows for manipulation of this construct.
+This **Filter** reverses the *winding* for each **Triangle** in a **Triangle Geometry**. This will *reverse* the direction of calculated **Triangle** normals. Some analysis routines require the normals to be pointing "away" from the center of a **Feature**. This **Filter** allows for manipulation of this construct.
 
 ## Parameters
 
@@ -32,6 +32,8 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

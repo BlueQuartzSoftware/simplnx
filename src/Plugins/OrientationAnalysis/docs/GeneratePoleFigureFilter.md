@@ -1,16 +1,15 @@
-# Export Pole Figure Images  #
+# Export Pole Figure Images
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 IO (Output)
 
-## Description ##
+## Description
 
-This **Filter** creates a standard pole figure image for each **Ensemble** in a selected **Data Container** with an **Image Geometry**. The **Filter** uses Euler angles in radians and requires the crystal structures for each **Ensemble** array and the corresponding **Ensemble** Ids on the **Cells**. The **Filter** also requires a _mask_ array to determine which **Cells** are valid for the pole figure computation.
+This **Filter** creates a standard pole figure image for each **Ensemble** in a selected **Data Container** with an **Image Geometry**. The **Filter** uses Euler angles in radians and requires the crystal structures for each **Ensemble** array and the corresponding **Ensemble** Ids on the **Cells**. The **Filter** also requires a *mask* array to determine which **Cells** are valid for the pole figure computation.
 
 ### Algorithm Choice ###
-1: The pole figure algorithm uses a _modified Lambert square_ to perform the interpolations onto the circle. This is an alternate type of interpolation that the EBSD OEMs do not perform which may make the output from DREAM.3D look slightly different than output obtained from the OEM programs.
+1: The pole figure algorithm uses a *modified Lambert square* to perform the interpolations onto the circle. This is an alternate type of interpolation that the EBSD OEMs do not perform which may make the output from DREAM.3D look slightly different than output obtained from the OEM programs.
 
 **Only an advanced user with intimate knowledge of the modified Lambert projection should attempt to change the value for the "Lambert Image Size (Pixels)" input parameter.**
 
@@ -24,7 +23,7 @@ This **Filter** creates a standard pole figure image for each **Ensemble** in a 
 
 -----
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
 |------|------| ----------- |
@@ -36,13 +35,13 @@ This **Filter** creates a standard pole figure image for each **Ensemble** in a 
 | Image Prefix | String | Prefix the prepend each pole figure file with |
 | Output Path | File Path | Output directory path for images |
 | Image Size (Square Pixels) | int32_t | Size of the output image in square pixels |
-| Use Mask Array | bool | Specifies whether to use a boolean array to exclude some **Cells**. Only those cells that have a _Mask Array_ value of 1 will be used. |
+| Use Mask Array | bool | Specifies whether to use a boolean array to exclude some **Cells**. Only those cells that have a *Mask Array* value of 1 will be used. |
 
-## Required Geometry ##
+## Required Geometry
 
 NONE
 
-## Required Objects ##
+## Required Objects
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
@@ -51,21 +50,20 @@ NONE
 | **Cell Attribute Array** | Mask | bool | (1) | Used to define **Cells** as *good* or *bad* |
 | **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
 
-## Created Objects ##
+## Created Objects
 
 None
 
 
-## Example Pipelines ##
+## Example Pipelines
 
 + TxCopper_Exposed
 + TxCopper_Unexposed
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
-
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.

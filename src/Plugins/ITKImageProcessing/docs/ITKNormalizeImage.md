@@ -1,64 +1,49 @@
-# ITK::Normalize Image Filter
-
-This filter directly wraps an ITK filter of the same name.
-
-## Group (Subgroup) ##
-
-ITKImageProcessing (ITKImageProcessing)
-
-## Description ##
+# ITK Normalize Image Filter (ITKNormalizeImage)
 
 Normalize an image by setting its mean to zero and variance to one.
 
+## Group (Subgroup)
+
+ITKImageIntensity (ImageIntensity)
+
+## Description
+
 NormalizeImageFilter shifts and scales an image so that the pixels in the image have a zero mean and unit variance. This filter uses StatisticsImageFilter to compute the mean and variance of the input and then applies ShiftScaleImageFilter to shift and scale the pixels.
 
-NB: since this filter normalizes the data to lie within -1 to 1, integral types will produce an image that DOES NOT HAVE a unit variance.
+NB: since this filter normalizes the data such that the mean is at 0, and \f$-\sigma\f$ to \f$+\sigma\f$ is mapped to -1.0 to 1.0, output image integral types will produce an image that DOES NOT HAVE a unit variance due to 68% of the intensity values being mapped to the real number range of -1.0 to 1.0 and then cast to the output integral value.* NormalizeToConstantImageFilter
 
-\see NormalizeToConstantImageFilter
-
-\par Wiki Examples:
-
-\li All Examples
-
-\li Normalize an image
-
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
 
+## Required Geometry
 
-## Required Geometry ##
+Image Geometry
 
-Image
+## Required Objects
 
-## Required Objects ##
+| Name |Type | Description |
+|-----|------|-------------|
+| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
+| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None | N/A | (1)  | Array containing input image
+## Created Objects
 
-## Created Objects ##
+| Name |Type | Description |
+|-----|------|-------------|
+| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None | typename itk::NumericTraits<typename InputImageType::PixelType>::RealType | (1)  | Array containing filtered image
-
-## References ##
-
-[1] T.S. Yoo, M. J. Ackerman, W. E. Lorensen, W. Schroeder, V. Chalana, S. Aylward, D. Metaxas, R. Whitaker. Engineering and Algorithm Design for an Image Processing API: A Technical Report on ITK - The Insight Toolkit. In Proc. of Medicine Meets Virtual Reality, J. Westwood, ed., IOS Press Amsterdam pp 586-592 (2002). 
-[2] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Design and Functionality. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-28-3
-[3] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Introduction and Development Guidelines. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-27-6
-
-## Example Pipelines ##
+## Example Pipelines
 
 
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+## DREAM3DNX Help
+
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

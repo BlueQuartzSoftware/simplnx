@@ -50,39 +50,39 @@ std::vector<std::string> DynamicTableExample::defaultTags() const
 Parameters DynamicTableExample::parameters() const
 {
   Parameters params;
-  params.insertSeparator({"Fixed Columns | Fixed Rows"});
+  params.insertSeparator({"Fixed Columns - Fixed Rows"});
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Col 1", "Col 2"}));
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Row 1", "Row 2"}));
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
-    params.insert(std::make_unique<DynamicTableParameter>(k_Param1, "Fixed Columns | Fixed Rows", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_Param1, "Fixed Columns - Fixed Rows", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
-  params.insertSeparator({"Fixed Column | Dynamic Row"});
+  params.insertSeparator({"Fixed Column - Dynamic Row"});
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Col 1", "Col 2"}));
     tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Row {}"));
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
-    params.insert(std::make_unique<DynamicTableParameter>(k_Param2, "Fixed Columns | Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_Param2, "Fixed Columns - Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
 
-  params.insertSeparator({"Dynamic Column | Fixed Row"});
+  params.insertSeparator({"Dynamic Column - Fixed Row"});
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Row 1", "Row 2"}));
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
-    params.insert(std::make_unique<DynamicTableParameter>(k_Param3, "Dynamic Columns | Fixed Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_Param3, "Dynamic Columns - Fixed Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
 
-  params.insertSeparator({"Dynamic Column | Dynamic Row"});
+  params.insertSeparator({"Dynamic Column - Dynamic Row"});
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));
     tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Row {}"));
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
-    params.insert(std::make_unique<DynamicTableParameter>(k_Param4, "Dynamic Columns | Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_Param4, "Dynamic Columns - Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
   return params;
 }

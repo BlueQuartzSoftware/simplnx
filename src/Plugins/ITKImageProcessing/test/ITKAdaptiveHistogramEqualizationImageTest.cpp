@@ -103,7 +103,7 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defau
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Alpha_Key, std::make_any<Float32Parameter::ValueType>(0.5f));
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Beta_Key, std::make_any<Float32Parameter::ValueType>(0.5f));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorFloat32Parameter::ValueType>({10.0F, 19.0F, 10.0F}));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{10, 19, 10}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -149,9 +149,9 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorFloat32Parameter::ValueType>({10.0F, 10.0F, 10.0F}));
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Alpha_Key, std::make_any<Float32Parameter::ValueType>(1.0f));
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Beta_Key, std::make_any<Float32Parameter::ValueType>(0.25f));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{10, 10, 10}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

@@ -53,7 +53,8 @@ Parameters FindFeaturePhasesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesAttributeMatrixPath_Key, "Cell Features Attribute Matrix", "", DataPath({"CellFeaturesData"})));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesAttributeMatrixPath_Key, "Cell Feature Attribute Matrix",
+                                                                    "The AttributeMatrix that stores the feature data for the input **Feature Ids**.", DataPath({"CellFeatureData"})));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(

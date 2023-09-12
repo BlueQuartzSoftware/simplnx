@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# Create the DataStructure object and define the dimensions of the geometry
+# Create the DataStructure object
 data_structure = cx.DataStructure()
 
 import_data = cx.Dream3dImportParameter.ImportData()

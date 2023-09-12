@@ -107,7 +107,8 @@ Parameters CopyFeatureArrayToElementArray::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFeatureArrayPath_Key, "Feature Data to Copy to Element Data", "", MultiArraySelectionParameter::ValueType{},
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFeatureArrayPath_Key, "Feature Data to Copy to Element Data",
+                                                               "The DataPath to the feature data that should be copied to the cell level", MultiArraySelectionParameter::ValueType{},
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data Data"});

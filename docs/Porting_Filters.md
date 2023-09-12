@@ -119,7 +119,7 @@ Instead the developer should use:
 AbstractGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());
 ```
 
-Note the use of a _Reference Variable_ instead of the pointer. The developer can still use
+Note the use of a *Reference Variable* instead of the pointer. The developer can still use
 code such as `vertex[index]` to get/set a value but the code `vertex = i` to move a pointer
 **will not work**.
 
@@ -183,8 +183,8 @@ and
 If you have a filter that needs to create an array in something like a cell attribute matrix or
 a feature attribute matrix then the following filters have examples.
 
-* TriangleNormalFilter
-* CalculateFeatureSizesFilter
+- TriangleNormalFilter
+- CalculateFeatureSizesFilter
 
 ## Replace EXECUTE_FUNCTION_TEMPLATE
 

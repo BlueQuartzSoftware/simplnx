@@ -261,7 +261,8 @@ Parameters PartitionGeometryFilter::parameters() const
                                                  "The value used as the feature id for voxels/nodes that are outside the bounds of the partition grid.", 0));
   params.insert(std::make_unique<VectorInt32Parameter>(k_NumberOfCellsPerAxis_Key, "Number Of Cells Per Axis", "The number of cells along each axis of the partition grid",
                                                        std::vector<int32>({5, 5, 5}), std::vector<std::string>({"X", "Y", "Z"})));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_PartitionGridOrigin_Key, "Partition Grid Origin", "", std::vector<float32>({0.0F, 0.0F, 0.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_PartitionGridOrigin_Key, "Partition Grid Origin", "The origin of the generated partition geometry", std::vector<float32>({0.0F, 0.0F, 0.0F}),
+                                                         std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_CellLength_Key, "Cell Length (Physical Units)",
                                                          "The length in physical units for each cell in the partition grid. The physical units are automatically set by the input geometry.",
                                                          std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));

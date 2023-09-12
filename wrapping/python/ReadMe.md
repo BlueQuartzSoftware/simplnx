@@ -5,7 +5,7 @@
 
 ### MacOS: Use Mamba
 
-* install mamba-forge
+- install mamba-forge
 
 [https://mamba.readthedocs.io/en/latest/mamba-installation.html](https://mamba.readthedocs.io/en/latest/mamba-installation.html)
 [https://github.com/conda-forge/miniforge#mambaforge](https://github.com/conda-forge/miniforge#mambaforge)

@@ -85,9 +85,9 @@ Parameters ExampleFilter1::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_Param3, "Int32Parameter", "The 1st parameter", 0));
 
   params.insertSeparator({"Vector Parameters"});
-  params.insert(std::make_unique<VectorInt32Parameter>("Vec2_Key", "Vect<int,2>", "Example int32 vector help text", std::vector<int32_t>{10, 20}, std::vector<std::string>{"X"s, "Y"s}));
+  params.insert(std::make_unique<VectorInt32Parameter>("vec2_key", "Vect<int,2>", "Example int32 vector help text", std::vector<int32_t>{10, 20}, std::vector<std::string>{"X"s, "Y"s}));
   //  params.insert(std::make_unique<VectorInt32Parameter>("Vec3_Key", "3D Dimensions", "", std::vector<int32_t>{-19, -100, 456}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
-  params.insert(std::make_unique<VectorUInt8Parameter>("Vec4_Key", "RGBA", "Example uint8 vector help text", std::vector<uint8_t>{0, 255, 128, 255}, std::vector<std::string>{"R"s, "G"s, "B"s, "A"s}));
+  params.insert(std::make_unique<VectorUInt8Parameter>("vec4_key", "RGBA", "Example uint8 vector help text", std::vector<uint8_t>{0, 255, 128, 255}, std::vector<std::string>{"R"s, "G"s, "B"s, "A"s}));
   //  params.insert(std::make_unique<VectorFloat32Parameter>("Vec4F_Key", "Quaternion", "", std::vector<float>{0.0F, 84.98F, 234.12F, 985.98F}, std::vector<std::string>{"U"s, "V"s, "W"s, "X"s}));
   //  params.insert(std::make_unique<VectorFloat32Parameter>("Vec6F_Key", "Tensor?", "", std::vector<float>(6), std::vector<std::string>{"U"s, "V"s, "W"s, "X"s, "B"s, "A"s}));
 

@@ -21,11 +21,11 @@ that store the following information:
 1. The number of triangles in each unique boundary
 2. The pair of Face Label values that made up the unique boundary.
 
-### Generated Feature Boundaries _with_ Randomization
+### Generated Feature Boundaries *with* Randomization
 
 ![Example Surface Mesh Coloring By Feature Face Id](Images/SharedFeaturFace_1.png)
 
-### Generated Feature Boundaries _without_ Randomization
+### Generated Feature Boundaries *without* Randomization
 
 ![Example Surface Mesh Coloring By Feature Face Id](Images/SharedFeaturFace_2.png)
 
@@ -53,7 +53,7 @@ Triangle
 |-----------------------------|-----------------|--------------|----------------------|--------------------------------------------------------------------------------------|
 | **Face Attribute Array**    | FeatureFaceId   | int32_t      | (1)                  | Specifies to which **Feature** each **Face** belongs                                 |
 | **Attribute Matrix**        | FaceFeatureData | Face Feature | N/A                  | Created **Feature Attribute Matrix** name                                            |
-| **Feature Attribute Array** | FaceLabels      | int32_t      | (2)                  | Specifies which _original_ **Features** are on either side of each _new_ **Feature** |
+| **Feature Attribute Array** | FaceLabels      | int32_t      | (2)                  | Specifies which *original* **Features** are on either side of each *new* **Feature** |
 | **Feature Attribute Array** | NumTriangles    | int32_t      | (1)                  | Number of **Triangles** in each **Feature**                                          |
 
 ## Example Pipelines
@@ -64,9 +64,8 @@ Triangle
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on
-the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

@@ -87,11 +87,13 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Rotation_Key, "Rotation Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0F, 0.0F, 1.0F, 90.0F},
                                                          std::vector<std::string>{"x", "y", "z", "w (Deg)"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Translation_Key, "Translation", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(
+      std::make_unique<VectorFloat32Parameter>(k_Translation_Key, "Translation", "A pure translation vector", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Scale_Key, "Scale", "0>= value < 1: Shrink, value = 1: No transform, value > 1.0 enlarge", std::vector<float32>{1.0F, 1.0F, 1.0F},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Precomputed Transformation Matrix Path", "A precomputed 4x4 transformation matrix", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
   params.insert(std::make_unique<BoolParameter>(k_TranslateGeometryToGlobalOrigin_Key, "Translate Geometry To Global Origin Before Transformation",
                                                 "Specifies whether to translate the geometry to (0, 0, 0), apply the transformation, and then translate the geometry back to its original origin.",
@@ -102,7 +104,8 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
                                                              IGeometry::GetAllGeomTypes()));
 
   params.insertSeparator(Parameters::Separator{"Image Geometry Resampling/Interpolation"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Resampling or Interpolation", "", k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Resampling or Interpolation", "Select the type of interpolation algorithm",
+                                                                    k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
 
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix", "The path to the Cell level data that should be interpolated", DataPath{}));
 

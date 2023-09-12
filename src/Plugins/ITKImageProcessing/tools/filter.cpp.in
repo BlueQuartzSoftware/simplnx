@@ -45,7 +45,7 @@ std::string ${FILTER_NAME}::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ${FILTER_NAME}::defaultTags() const
 {
-  return {${DEFAULT_TAGS}};
+  return {className(), ${DEFAULT_TAGS}};
 }
 
 //------------------------------------------------------------------------------

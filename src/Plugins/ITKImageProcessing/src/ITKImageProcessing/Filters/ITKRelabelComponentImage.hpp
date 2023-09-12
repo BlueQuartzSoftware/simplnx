@@ -18,7 +18,7 @@ namespace complex
  * Label #0 is assumed to be the background and is left unaltered by the relabeling.
  *
  * RelabelComponentImageFilter is typically used on the output of the ConnectedComponentImageFilter for those applications that want to extract the largest object or the "k" largest objects. Any
- * particular object can be extracted from the relabeled output using a BinaryThresholdImageFilter . A group of objects can be extracted from the relabled output using a ThresholdImageFilter .
+ * particular object can be extracted from the relabeled output using a BinaryThresholdImageFilter . A group of objects can be extracted from the relabeled output using a ThresholdImageFilter .
  *
  * Once all the objects are relabeled, the application can query the number of objects and the size of each object. Object sizes are returned in a vector. The size of the background is not calculated.
  * So the size of object #1 is GetSizeOfObjectsInPixels() [0], the size of object #2 is GetSizeOfObjectsInPixels() [1], etc.
@@ -27,7 +27,7 @@ namespace complex
  * GetOriginalNumberOfObjects method can be called to find out how many objects were present before the small ones were discarded.
  *
  * RelabelComponentImageFilter can be run as an "in place" filter, where it will overwrite its output. The default is run out of place (or generate a separate output). "In place" operation can be
- * controlled via methods in the superclass, InPlaceImageFilter::InPlaceOn() and InPlaceImageFilter::InPlaceOff() .
+ * controlled via methods in the superclass, InPlaceImageFilter::InPlaceOn() and InPlaceImageFilter::InPlaceOff().
  *
  * @see ConnectedComponentImageFilter , BinaryThresholdImageFilter , ThresholdImageFilter
  *

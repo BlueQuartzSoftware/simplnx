@@ -1,8 +1,8 @@
 #include "ITKMedianImage.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -14,20 +14,26 @@ using namespace complex;
 
 namespace cxITKMedianImage
 {
-using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
+using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
+// VectorPixelIDTypeList;
 
 struct ITKMedianImageFunctor
 {
-  std::vector<uint64> radius = std::vector<uint64>(3, 1);
+  using RadiusInputRadiusType = std::vector<uint32>;
+  RadiusInputRadiusType radius = std::vector<unsigned int>(3, 1);
 
   template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterT = itk::MedianImageFilter<InputImageT, OutputImageT>;
-    auto filter = FilterT::New();
-    using RadiusType = typename FilterT::RadiusType;
-    auto convertedRadius = ITK::CastVec3ToITK<RadiusType, typename RadiusType::SizeValueType>(radius, RadiusType::Dimension);
-    filter->SetRadius(convertedRadius);
+    using FilterType = itk::MedianImageFilter<InputImageT, OutputImageT>;
+    auto filter = FilterType::New();
+    // Set the Radius Filter Property
+    {
+      using RadiusType = typename FilterType::RadiusType;
+      auto convertedRadius = ITK::CastVec3ToITK<RadiusType, typename RadiusType::SizeValueType>(radius, RadiusType::Dimension);
+      filter->SetRadius(convertedRadius);
+    }
+
     return filter;
   }
 };
@@ -69,15 +75,14 @@ std::vector<std::string> ITKMedianImage::defaultTags() const
 Parameters ITKMedianImage::parameters() const
 {
   Parameters params;
-
-  params.insertSeparator(Parameters::Separator{"Parameters"});
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_Radius_Key, "Radius", "", std::vector<uint64>(3, 1), std::vector<std::string>(3)));
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<VectorUInt32Parameter>(k_Radius_Key, "Radius", "Radius Dimensions XYZ", std::vector<unsigned int>(3, 1), std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
-                                                          complex::GetAllDataTypes()));
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
@@ -99,10 +104,11 @@ IFilter::PreflightResult ITKMedianImage::preflightImpl(const DataStructure& data
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
-  auto radius = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Radius_Key);
+  auto radius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_Radius_Key);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKMedianImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKMedianImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -115,15 +121,14 @@ Result<> ITKMedianImage::executeImpl(DataStructure& dataStructure, const Argumen
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
-  auto radius = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Radius_Key);
 
-  cxITKMedianImage::ITKMedianImageFunctor itkFunctor = {radius};
+  auto radius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_Radius_Key);
 
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const cxITKMedianImage::ITKMedianImageFunctor itkFunctor = {radius};
+
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  itk::ProgressObserver::Pointer progressObs = itk::ProgressObserver::New(messageHandler);
-  progressObs->setMessagePrefix("Processing Median Image");
-  return ITK::Execute<cxITKMedianImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel, progressObs);
+  return ITK::Execute<cxITKMedianImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex

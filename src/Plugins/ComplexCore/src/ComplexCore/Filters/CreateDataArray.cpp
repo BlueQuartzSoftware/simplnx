@@ -80,7 +80,7 @@ Parameters CreateDataArray::parameters() const
   params.insertSeparator(Parameters::Separator{"Tuple Handling"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
       k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an Attribute Matrix]",
-      "This allows the user to set the tuple dimensions directly rather than just inheriting them \n\nThis option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
+      "This allows the user to set the tuple dimensions directly rather than just inheriting them. This option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
   DynamicTableInfo tableInfo;
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "DIM {}"));
