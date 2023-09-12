@@ -87,7 +87,8 @@ file(MAKE_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs")
 if(WIN32)
   add_custom_target(sphinx_docs_generation ALL
     DEPENDS sphinx_generate_plugin_rst
-    COMMAND "${complex_BINARY_DIR}/wrapping/python/docs/make.bat"
+    COMMAND "${complex_BINARY_DIR}/wrapping/python/docs/make.bat" clean
+    COMMAND "${complex_BINARY_DIR}/wrapping/python/docs/make.bat" html
     COMMENT "SPHINX: Generating Python HTML Documentation"
     WORKING_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs"
   )
