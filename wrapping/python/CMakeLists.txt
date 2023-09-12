@@ -138,7 +138,6 @@ function(complex_create_plugin_pyi)
   add_dependencies(${PLUGIN_NAME_LOWER} complexpy)
 endfunction()
 
-
 get_property(COMPLEX_CORE_FILTER_LIST TARGET ComplexCore PROPERTY COMPLEX_FILTER_LIST)
 
 complex_generate_filter_bindings(CPP_PLUGIN_NAME ComplexCore
@@ -269,7 +268,6 @@ function(complex_add_python_plugin)
   endif()
 endfunction()
 
-
 get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
 foreach(d3dPlugin ${ComplexPluginTargets})
   string(TOLOWER ${d3dPlugin} python_module_name)
@@ -279,9 +277,7 @@ foreach(d3dPlugin ${ComplexPluginTargets})
       complex_add_python_plugin(PLUGIN_NAME ${d3dPlugin} PYTHON_MODULE_NAME ${python_module_name})
     endif()
   endif()
-
 endforeach()
-
 
 #------------------------------------------------------------------------------
 # Create the Sphinx based Documentation

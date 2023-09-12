@@ -14,13 +14,12 @@ target_sources(generate_sphinx_docs
 )
 target_link_libraries(generate_sphinx_docs PRIVATE complex::complex)
 target_compile_definitions(generate_sphinx_docs
-                           PRIVATE
-                           COMPLEX_BIN_DIR="$<TARGET_FILE_DIR:generate_sphinx_docs>"
-                           COMPLEX_BUILD_DIR="${complex_BINARY_DIR}"
-                           COMPLEX_PLUGIN_COUNT=${COMPLEX_PLUGIN_COUNT}
-                           COMPLEX_SOURCE_DIR="${complex_SOURCE_DIR}"
+  PRIVATE
+    COMPLEX_BIN_DIR="$<TARGET_FILE_DIR:generate_sphinx_docs>"
+    COMPLEX_BUILD_DIR="${complex_BINARY_DIR}"
+    COMPLEX_PLUGIN_COUNT=${COMPLEX_PLUGIN_COUNT}
+    COMPLEX_SOURCE_DIR="${complex_SOURCE_DIR}"
 )
-
 
 target_include_directories(generate_sphinx_docs PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -39,7 +38,7 @@ file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/plugin_source_dirs.hpp" "};\n")
 
 target_sources(generate_sphinx_docs
   PRIVATE
-  "${CMAKE_CURRENT_BINARY_DIR}/plugin_source_dirs.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/plugin_source_dirs.hpp"
 )
 
 #------------------------------------------------------------------------------
@@ -52,7 +51,6 @@ add_custom_target(sphinx_copy_sources ALL
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/source" "${complex_BINARY_DIR}/wrapping/python/docs/source"
   COMMENT "SPHINX: Copying static doc files to build directory at ${complex_BINARY_DIR}/wrapping/python/docs/"
 )
-
 
 #------------------------------------------------------------------------------
 # Execute the sphinx rst plugin generation tool
@@ -91,21 +89,21 @@ endif()
 #------------------------------------------------------------------------------
 # Ensure this directory is created
 #------------------------------------------------------------------------------
-FILE(MAKE_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs")
+file(MAKE_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs")
 
 #------------------------------------------------------------------------------
 # Configure the make files for either windows or unix
 #------------------------------------------------------------------------------
 if(WIN32)
-  configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/make.bat.in" "${complex_BINARY_DIR}/wrapping/python/docs/make.bat")
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/make.bat.in" "${complex_BINARY_DIR}/wrapping/python/docs/make.bat")
 else()
-  configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/Makefile.in" "${complex_BINARY_DIR}/wrapping/python/docs/Makefile")
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Makefile.in" "${complex_BINARY_DIR}/wrapping/python/docs/Makefile")
 endif()
 
 #------------------------------------------------------------------------------
 # Add the custom target to run sphinx-build and create the documentation
 #------------------------------------------------------------------------------
-FILE(MAKE_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs")
+file(MAKE_DIRECTORY "${complex_BINARY_DIR}/wrapping/python/docs")
 if(WIN32)
   add_custom_target(sphinx_docs_generation ALL
     DEPENDS sphinx_generate_plugin_rst
