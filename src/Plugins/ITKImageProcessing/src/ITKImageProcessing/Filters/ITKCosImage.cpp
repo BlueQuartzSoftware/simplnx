@@ -1,7 +1,8 @@
 #include "ITKCosImage.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -12,7 +13,7 @@ using namespace complex;
 
 namespace cxITKCosImage
 {
-using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
+using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
 // VectorPixelIDTypeList;
 
 struct ITKCosImageFunctor
@@ -20,8 +21,8 @@ struct ITKCosImageFunctor
   template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterT = itk::CosImageFilter<InputImageT, OutputImageT>;
-    auto filter = FilterT::New();
+    using FilterType = itk::CosImageFilter<InputImageT, OutputImageT>;
+    auto filter = FilterType::New();
     return filter;
   }
 };
@@ -91,7 +92,7 @@ IFilter::PreflightResult ITKCosImage::preflightImpl(const DataStructure& dataStr
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKCosImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKCosImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -105,13 +106,11 @@ Result<> ITKCosImage::executeImpl(DataStructure& dataStructure, const Arguments&
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  cxITKCosImage::ITKCosImageFunctor itkFunctor = {};
+  const cxITKCosImage::ITKCosImageFunctor itkFunctor = {};
 
-  // LINK GEOMETRY OUTPUT START
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
-  // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKCosImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKCosImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex

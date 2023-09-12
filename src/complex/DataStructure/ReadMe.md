@@ -7,8 +7,8 @@ When adding DataObject types, additional IDataFactories need to be created for e
 complex comes with HDF5 readers and writers by default. To add additional IO formats, the plugin developer will require additional classes to tell complex how to read and write the DataObjects using the specified format.
 
 Required subclasses:
-* IDataFactory for each concrete DataObject type
-* IDataIOManager for the format
+- IDataFactory for each concrete DataObject type
+- IDataIOManager for the format
   * Add IDataFactory subclasses to the IO Manager
 
 In addition, a DataStructure reader and writer should be provided for the new format for easy IO.

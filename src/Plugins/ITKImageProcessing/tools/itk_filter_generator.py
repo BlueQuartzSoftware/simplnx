@@ -909,6 +909,62 @@ def get_test_case(filter_data: FilterData, test: TestData) -> List[str]:
 
     return lines
 
+def write_filter_doc(filter_data: FilterData, output_dir: Path) -> None:
+    lines: List[str] = []
+
+    lines.append(f'# {filter_data.human_name} ({filter_data.filter_name})\n\n')
+    lines.append(f'{filter_data.brief_desc}\n')
+
+    lines.append(f'\n## Group (Subgroup)\n\n')
+    lines.append(f'{filter_data.itk_module} ({filter_data.itk_group})\n')
+
+    lines.append(f'\n## Description\n\n')
+    lines.append(f'{filter_data.detail_desc}\n')
+
+    # lines.append(f'\n## Misc\n\n')   
+    # lines.append(f'filter_data.base_name={filter_data.base_name}\n')
+    # lines.append(f'filter_data.default_tag={filter_data.default_tags}\n')
+    # lines.append(f'filter_data.filter_name=\n')
+    # lines.append(f'filter_data.filter_type={filter_data.filter_type}\n')
+    # lines.append(f'filter_data.name={filter_data.name}\n')
+    # lines.append(f'filter_data.output_pixel_type={filter_data.output_pixel_type}\n')
+
+    lines.append(f'\n## Parameters\n\n')
+
+    lines.append(f'| Name | Type | Description |\n')
+    lines.append(f'|------|------|-------------|\n')
+    for i, item in enumerate(filter_data.members):
+        lines.append(f'| {item.name} | {item.type} | {item.detaileddescriptionSet} |\n')
+
+    lines.append(f'\n## Required Geometry\n\n')
+    lines.append(f'Image Geometry\n')
+
+    lines.append(f'\n## Required Objects\n\n')
+    lines.append(f'| Name |Type | Description |\n')
+    lines.append(f'|-----|------|-------------|\n')
+    lines.append(f'| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |\n')
+    lines.append(f'| Input Image Data Array | DataPath | Path to input image with pixel type matching {filter_data.pixel_types} |\n')
+
+    lines.append(f'\n## Created Objects\n\n')
+    lines.append(f'| Name |Type | Description |\n')
+    lines.append(f'|-----|------|-------------|\n')
+    lines.append(f'| Output Image Data Array | DataPath | Path to output image with pixel type matching {filter_data.pixel_types} |\n')
+
+
+    lines.append(f'\n## Example Pipelines\n\n')
+
+    lines.append(f'\n## License & Copyright\n\n')
+    lines.append(f'Please see the description file distributed with this plugin.\n\n')
+
+    lines.append(f'\n## DREAM3D Mailing Lists\n\n')
+    lines.append(f'If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:\n')
+    lines.append(f'https://groups.google.com/forum/?hl=en#!forum/dream3d-users\n\n')
+
+    lines.append('\n')
+
+    with open(f'{output_dir}/{filter_data.filter_name}.md', 'w') as output_file:
+        output_file.writelines(lines)
+
 def write_filter_test(filter_data: FilterData, output_dir: Path):
     output_lines: List[str] = []
 
@@ -955,14 +1011,16 @@ def write_filter_test(filter_data: FilterData, output_dir: Path):
     with open(f'{output_dir}/{filter_data.filter_name}Test.cpp', 'w') as output_file:
         output_file.writelines(output_lines)
 
-def write_filter(filter_name: str, json_dir: Path, output_dir: Path, test_output_dir: Path, header_template: Template, source_template: Template) -> None:
+def write_filter(filter_name: str, json_dir: Path, output_dir: Path, test_output_dir: Path, header_template: Template, source_template: Template, docs_output_dir: Path) -> None:
     filter_data = read_filter_json(json_dir, filter_name)
 
-    write_filter_header(filter_data, header_template, output_dir)
+    # write_filter_header(filter_data, header_template, output_dir)
 
-    write_filter_source(filter_data, source_template, output_dir)
+    # write_filter_source(filter_data, source_template, output_dir)
 
-    write_filter_test(filter_data, test_output_dir)
+    # write_filter_test(filter_data, test_output_dir)
+
+    write_filter_doc(filter_data, docs_output_dir)
 
 def main(input_args: Optional[List[str]] = None) -> None:
     parser = argparse.ArgumentParser()
@@ -971,6 +1029,7 @@ def main(input_args: Optional[List[str]] = None) -> None:
     parser.add_argument('json_dir', type=Path)
     parser.add_argument('filter_output_dir', type=Path)
     parser.add_argument('test_output_dir', type=Path)
+    parser.add_argument('docs_output_dir', type=Path)
 
     args = parser.parse_args(input_args)
 
@@ -978,9 +1037,11 @@ def main(input_args: Optional[List[str]] = None) -> None:
     json_dir: Path = args.json_dir
     filter_output_dir: Path = args.filter_output_dir
     test_output_dir: Path = args.test_output_dir
+    docs_output_dir: Path = args.docs_output_dir
 
     filter_output_dir.mkdir(parents=True, exist_ok=True)
     test_output_dir.mkdir(parents=True, exist_ok=True)
+    # docs_output_dir.mkdir(parents=True, exist_ok=True)
 
     with open(f'{template_dir}/filter.hpp.in', 'r') as header_template_file:
         header_template = Template(header_template_file.read())
@@ -989,7 +1050,67 @@ def main(input_args: Optional[List[str]] = None) -> None:
         source_template = Template(source_template_file.read())
 
     filters_to_process: List[str] = [
-        
+        'DiscreteGaussianImage',
+        'ImageReader',
+        'ImageWriter',
+        'ImportImageStack',
+        'MedianImage',
+        'MhaFileReader',
+        'RescaleIntensityImage',
+        'AbsImage',
+        'AcosImage',
+        'AdaptiveHistogramEqualizationImage',
+        'AsinImage',
+        'AtanImage',
+        'BinaryContourImage',
+        'BinaryDilateImage',
+        'BinaryErodeImage',
+        'BinaryMorphologicalClosingImage',
+        'BinaryMorphologicalOpeningImage',
+        'BinaryOpeningByReconstructionImage',
+        'BinaryProjectionImage',
+        'BinaryThinningImage',
+        'BinaryThresholdImage',
+        'BlackTopHatImage',
+        'ClosingByReconstructionImage',
+        'CosImage',
+        'DilateObjectMorphologyImage',
+        'ErodeObjectMorphologyImage',
+        'ExpImage',
+        'ExpNegativeImage',
+        'GradientMagnitudeImage',
+        'GrayscaleDilateImage',
+        'GrayscaleErodeImage',
+        'GrayscaleFillholeImage',
+        'GrayscaleGrindPeakImage',
+        'GrayscaleMorphologicalClosingImage',
+        'GrayscaleMorphologicalOpeningImage',
+        'HConvexImage',
+        'HMaximaImage',
+        'HMinimaImage',
+        'IntensityWindowingImage',
+        'InvertIntensityImage',
+        'LabelContourImage',
+        'Log10Image',
+        'LogImage',
+        'MaskImage',
+        'MorphologicalGradientImage',
+        'MorphologicalWatershedImage',
+        'NormalizeImage',
+        'NotImage',
+        'OpeningByReconstructionImage',
+        'OtsuMultipleThresholdsImage',
+        'RelabelComponentImage',
+        'SigmoidImage',
+        'SignedMaurerDistanceMapImage',
+        'SinImage',
+        'SqrtImage',
+        'SquareImage',
+        'TanImage',
+        'ThresholdImage',
+        'ValuedRegionalMaximaImage',
+        'ValuedRegionalMinimaImage',
+        'WhiteTopHatImage'
     ]
 
     filters_to_skip: List[str] = [
@@ -1107,13 +1228,13 @@ def main(input_args: Optional[List[str]] = None) -> None:
         if filter_name not in filters_to_process:
             continue
         #print(f'cp /Users/mjackson/DREAM3D-Dev/DREAM3D_Plugins/ITKImageProcessing/Documentation/ITKImageProcessingFilters/ITK{filter_name}.md /Users/mjackson/Workspace1/complex/src/Plugins/ITKImageProcessing/docs/.')
-        write_filter(filter_name, json_dir, filter_output_dir, test_output_dir, header_template, source_template)
+        write_filter(filter_name, json_dir, filter_output_dir, test_output_dir, header_template, source_template, docs_output_dir)
     
     # this will print out some code that will need to be included into the ITKImageProcessingPlugin.cpp file
-    for filter_name in FILTERS:
-        if filter_name not in filters_to_process:
-            continue
-        print(f'#include \"ITKImageProcessing/Filters/ITK{filter_name}.hpp\"')
+    # for filter_name in FILTERS:
+    #     if filter_name not in filters_to_process:
+    #         continue
+    #     print(f'#include \"ITKImageProcessing/Filters/ITK{filter_name}.hpp\"')
 
 if __name__ == '__main__':
     sys.exit(main())

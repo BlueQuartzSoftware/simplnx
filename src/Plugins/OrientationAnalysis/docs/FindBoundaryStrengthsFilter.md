@@ -7,7 +7,7 @@ Statistics (Crystallographic)
 
 ## Description
 
-This **Filter** calculates the same metrics as in the [Find Neighbor Slip Transmission Metrics](FindSlipTransmissionMetrics.html "") **Filter**.  However, this **Filter** stores the values in the **Face Attribute Matrix** of a **Triangle Geometry**.  The algorithm the **Filter** uses is as follows:
+This **Filter** calculates the same metrics as in the Find Neighbor Slip Transmission Metrics **Filter**.  However, this **Filter** stores the values in the **Face Attribute Matrix** of a **Triangle Geometry**.  The algorithm the **Filter** uses is as follows:
 
 1. Find the two **Features** that are separated by a **Face** in the **Triangle Geometry**
 2. Get the average orientation of both of the **Features**
@@ -51,6 +51,8 @@ Image + Triangle
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

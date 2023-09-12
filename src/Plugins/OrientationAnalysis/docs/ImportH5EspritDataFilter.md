@@ -31,7 +31,7 @@ If the data has come from a TSL acquisition system and the settings of the acqui
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Threshold Objects](../MultiThresholdObjects/index.html) **Filter** can be used to define this _mask_ by thresholding on values such as _MAD_ > xx.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Threshold Objects](../MultiThresholdObjects/index.html) **Filter** can be used to define this *mask* by thresholding on values such as *MAD* > xx.
 
 ## Parameters 
 
@@ -105,8 +105,8 @@ These arrays will **most likely** be created but is not guaranteed. Additional a
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists 
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

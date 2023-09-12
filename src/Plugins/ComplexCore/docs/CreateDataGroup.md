@@ -9,7 +9,7 @@ Core (Generation)
 
 This **Filter** creates a new **DataGroup**.
 
-Unlike _AttributeMatrix_, _DataGroup_s are capable of holding any _DataObject_ of any size.
+Unlike _AttributeMatrix_, _DataGroup_s are capable of holding any *DataObject* of any size.
 
 ## Parameters ##
 
@@ -38,6 +38,8 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

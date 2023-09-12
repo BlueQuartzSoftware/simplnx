@@ -106,10 +106,9 @@ IFilter::PreflightResult ITKHConvexImage::preflightImpl(const DataStructure& dat
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
-
   auto height = filterArgs.value<float64>(k_Height_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKHConvexImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 

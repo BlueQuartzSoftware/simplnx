@@ -37,7 +37,7 @@ Not Applicable
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Feature Attribute Array** | CAxisMisalignmentList | List of float | (1) | List of the C-axis misalignment angles (in degrees) with the contiguous neighboring **Features** for a given **Feature** |
-| **Feature Attribute Array** | AvgCAxisMisalignments | float | (1) | Number weighted average of neighbor C-axis misalignments. Only created if _Find Average Misalignment Per Feature_ is checked |
+| **Feature Attribute Array** | AvgCAxisMisalignments | float | (1) | Number weighted average of neighbor C-axis misalignments. Only created if *Find Average Misalignment Per Feature* is checked |
 
 
 ## Example Pipelines 
@@ -48,8 +48,8 @@ Combo-EBSD-osc_r0c0
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists 
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

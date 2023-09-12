@@ -2,14 +2,12 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <string>
 
-namespace fs = std::filesystem;
 using namespace complex;
 
 namespace
@@ -21,6 +19,7 @@ const FilterHandle k_TestFilterHandle(k_TestFilterId, k_TestOnePluginId);
 constexpr Uuid k_TestTwoPluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f33ce1854e");
 constexpr Uuid k_Test2FilterId = *Uuid::FromString("ad9cf22b-bc5e-41d6-b02e-bb49ffd12c04");
 const FilterHandle k_Test2FilterHandle(k_Test2FilterId, k_TestTwoPluginId);
+
 } // namespace
 
 TEST_CASE("Test Loading Plugins")

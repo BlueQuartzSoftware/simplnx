@@ -12,7 +12,7 @@ This **Filter** creates a new **Attribute Matrix**.
 
 ### Example Usage ###
 
-If you wanted to create an **Attribute Matrix** to represent a 3D volume where the dimensions of the 3 orthogonal axesare X=3, y=4 and Z=5, then the _Tuple Dimensions_ would have a value of (3, 4, 5).
+If you wanted to create an **Attribute Matrix** to represent a 3D volume where the dimensions of the 3 orthogonal axesare X=3, y=4 and Z=5, then the *Tuple Dimensions* would have a value of (3, 4, 5).
 
 ## Parameters ##
 
@@ -44,4 +44,7 @@ Not Applicable
 ## License & Copyright ##
 
 Please see the description file distributed with this **Plugin**
+
+
+
 

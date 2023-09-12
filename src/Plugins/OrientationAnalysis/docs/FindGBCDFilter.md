@@ -7,7 +7,7 @@ Statistics (Crystallographic)
 
 ## Description ##
 
-This **Filter** computes the 5D grain boundary character distribution (GBCD) for a **Triangle Geometry**, which is the relative area of grain boundary for a given misorientation and normal. The GBCD can be visualized by using either the [Write GBCD Pole Figure (GMT)](@ref visualizegbcdgmt) or the [Write GBCD Pole Figure (VTK)](@ref visualizegbcdpolefigure) **Filters**.
+This **Filter** computes the 5D grain boundary character distribution (GBCD) for a **Triangle Geometry**, which is the relative area of grain boundary for a given misorientation and normal. The GBCD can be visualized by using either the **Write GBCD Pole Figure (GMT)** or the **Write GBCD Pole Figure (VTK)** **Filters**.
 
 ## Parameters ##
 
@@ -50,8 +50,8 @@ Image + Triangle
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

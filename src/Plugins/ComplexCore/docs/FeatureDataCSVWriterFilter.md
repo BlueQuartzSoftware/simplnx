@@ -12,7 +12,7 @@ This **Filter** writes the data associated with each **Feature** to a file name 
 ### Example Output ###
 
 The *CSV* file:     
-	 
+     
     5414
     Feature_ID,Active,AvgEuler_0,AvgEuler_1,AvgEuler_2,AvgQuats_0,AvgQuats_1,AvgQuats_2,AvgQuats_3,NumNeighbors2,Phases
     1,1,4.7367158,0.40832964,1.1398145,-0.045759138,0.19751814,0.19773535,0.95905864,6,1
@@ -72,6 +72,8 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

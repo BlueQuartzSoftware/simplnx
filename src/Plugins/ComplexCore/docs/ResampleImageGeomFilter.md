@@ -10,7 +10,7 @@ This **Filter** changes the **Cell** spacing/resolution based on inputs from the
 
 A new grid of **Cells** is created and "overlaid" on the existing grid of **Cells**.  There is currently no *interpolation* performed, rather the attributes of the old **Cell** that is closest to each new **Cell's** is assigned to that new **Cell**. 
 
-*Note:* Present **Features** may disappear when down-sampling to coarse resolutions. If _Renumber Features_ is checked, the **Filter** will check if this is the case and resize the corresponding **Feature Attribute Matrix** to comply with any changes. Additionally, the **Filter** will renumber **Features** such that they remain contiguous. 
+*Note:* Present **Features** may disappear when down-sampling to coarse resolutions. If *Renumber Features* is checked, the **Filter** will check if this is the case and resize the corresponding **Feature Attribute Matrix** to comply with any changes. Additionally, the **Filter** will renumber **Features** such that they remain contiguous. 
 
 ## Parameters ##
 
@@ -29,8 +29,8 @@ Image
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Attribute Matrix** | CellData | Cell | N/A | **Cell Attribute Matrix** that holds data for resolution change |
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. Only required if _Renumber Features_ is checked |
-| **Attribute Matrix** | CellFeatureData | Cell Feature | N/A | **Feature Attribute Matrix** that corresponds to the **Feature** data for the selected _Feature Ids_. Only required if _Renumber Features_ is checked |
+| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. Only required if *Renumber Features* is checked |
+| **Attribute Matrix** | CellFeatureData | Cell Feature | N/A | **Feature Attribute Matrix** that corresponds to the **Feature** data for the selected _Feature Ids_. Only required if *Renumber Features* is checked |
 
 ## Created Objects ##
 
@@ -46,8 +46,8 @@ Image
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

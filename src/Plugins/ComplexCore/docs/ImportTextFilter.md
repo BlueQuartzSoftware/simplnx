@@ -10,28 +10,28 @@ Core (IO/Read)
 
 This **Filter** allows the user to import a plain text file containing the contents of a single Attribute Array. The delimeters can be one of the following:
 
-	+ comma
-	+ semicolon
-	+ space
-	+ colon
-	+ tab
+    + comma
+    + semicolon
+    + space
+    + colon
+    + tab
 
 The filter does not care about how many values per line but only about reading the proper number of values from the file. If you are trying to read an array into DREAM.3D and there is no existing DataContainer or anything else to hold the data then the user will need to insert the following filters **BEFORE** using this filter:
 
-	+ Create DataContainer: Give the DataContainer a name
-	+ Create AttributeMatrix: Give the AttributeMatrix a name and set the tuple dimensions to match the number of values in the input file.
-	+ OPTIONAL: If the data exists as a regular set of data on a grid then the user can also use the "Create Geometry (Image)" filter before importing the data.
+    + Create DataContainer: Give the DataContainer a name
+    + Create AttributeMatrix: Give the AttributeMatrix a name and set the tuple dimensions to match the number of values in the input file.
+    + OPTIONAL: If the data exists as a regular set of data on a grid then the user can also use the "Create Geometry (Image)" filter before importing the data.
 
 ### Example Data ###
 
 The example data below has 50 elements. This means that it could successfully be read into an array that has 10 Tuples and 5 Componenets or 50 Tuples and 1 Component. The AttributeMatrix would need to have dimensions such that mulplying all the dimensions together yields 50. For example the AttributeMatrix could have X=5, Y=5 and Z=2 or X=10, Y=5 and Z=1. This filter does not require any type of Geometry as the filter is reading data directly into an array.
 
 
-	0	1	2	3	4	5	6	7	8	9
-	10	11	12	13	14	15	16	17	18	19
-	20	21	22	23	24	25	26	27	28	29
-	30	31	32	33	34	35	36	37	38	39
-	40	41	42	43	44	45	46	47	48	49
+    0    1    2    3    4    5    6    7    8    9
+    10    11    12    13    14    15    16    17    18    19
+    20    21    22    23    24    25    26    27    28    29
+    30    31    32    33    34    35    36    37    38    39
+    40    41    42    43    44    45    46    47    48    49
 
 ![](Images/ImportAsciDataArray_ui.png)
 
@@ -97,8 +97,8 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

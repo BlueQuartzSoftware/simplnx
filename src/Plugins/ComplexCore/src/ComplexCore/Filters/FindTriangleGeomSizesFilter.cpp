@@ -53,9 +53,11 @@ Parameters FindTriangleGeomSizesFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Required Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Required Face Feature Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixName_Key, "Face Feature Attribute Matrix", "", DataPath({"TriangleDataContainer", "FaceFeatureData"}),
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixName_Key, "Face Feature Attribute Matrix",
+                                                              "The DataPath to the AttributeMatrix that holds feature data for the faces", DataPath({"TriangleDataContainer", "FaceFeatureData"}),
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
   params.insertSeparator(Parameters::Separator{"Created Face Feature Data Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesArrayName_Key, "Calculated Volumes", "Calculated volumes data created in the Face Feature Data Attribute Matrix", "Volumes"));

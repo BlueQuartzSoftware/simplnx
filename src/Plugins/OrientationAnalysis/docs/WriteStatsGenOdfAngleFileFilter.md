@@ -28,28 +28,28 @@ This **Filter** is used in a workflow where the user would like to generate a sy
 
 + A separate file is written for each phase
 + Spaces are the default as the delimiters between values. The user can select another value
-+ Default values of 1.0 are used for both the _weight_ and _sigma_. **If the user needs a stronger texture due to a low number of angles then larger values should be used such as 10, 100 or even 1000.**
++ Default values of 1.0 are used for both the *weight* and _sigma_. **If the user needs a stronger texture due to a low number of angles then larger values should be used such as 10, 100 or even 1000.**
 + The user has the option to convert the supplied Euler angles to degrees. **StatsGenerator** is able to import Euler angles as either degrees or radians based on user input, so the output type from this **Filter** could remain as radians or be converted to degrees. The user should remain cognizant of what representation their angles are in so that the correct option is chosen during the import process in **StatsGenerator**
 
 ## Example File 
 
-The file written is a simple text file that contains a short comment section and a single _Header_ line of data. All comment lines should come **BEFORE** the actual header line. There is a single header line in the form of "Key:Value" and then the lines of data.
+The file written is a simple text file that contains a short comment section and a single *Header* line of data. All comment lines should come **BEFORE** the actual header line. There is a single header line in the form of "Key:Value" and then the lines of data.
 
-	# All lines starting with '#' are comments and should come before the header.
-	# DREAM.3D StatsGenerator Angles Input File
-	# DREAM.3D Version 6.1.107.0d8bad9
-	# Angle Data is space delimited.
-	# Euler0 Euler1 Euler2 Weight Sigma
-	Angle Count:100
-	0 0 0 1 1
-	3.6 1.8 3.6 1 1
-	7.2 3.6 7.2 1 1
-	10.8 5.4 10.8 1 1
-	14.4 7.2 14.4 1 1
-	
+    # All lines starting with '#' are comments and should come before the header.
+    # DREAM.3D StatsGenerator Angles Input File
+    # DREAM.3D Version 6.1.107.0d8bad9
+    # Angle Data is space delimited.
+    # Euler0 Euler1 Euler2 Weight Sigma
+    Angle Count:100
+    0 0 0 1 1
+    3.6 1.8 3.6 1 1
+    7.2 3.6 7.2 1 1
+    10.8 5.4 10.8 1 1
+    14.4 7.2 14.4 1 1
+    
 The **only** required header line is:
 
-	Angle Count:100
+    Angle Count:100
 
 There are 5 columns of data which are the 3 Euler Angles, the Weight Value and the Sigma Value.
 
@@ -83,7 +83,7 @@ Choice of delimiter is as follows:
 |-------|---------------------|--------|---------------------------------|-----------------|
 | **Element Attribute Array** | EulerAngles | float | (3) | Three angles defining the orientation of the **Element** in Bunge convention (Z-X-Z) |
 | **Element Attribute Array** | Phases | int32_t | (1) |  Specifies to which **Ensemble** each **Element** belongs |
-| **Element Attribute Array** | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if _Only Write Good Elements_ is checked |
+| **Element Attribute Array** | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if *Only Write Good Elements* is checked |
 
 ## Created Objects 
 
@@ -97,7 +97,8 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists 
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
 

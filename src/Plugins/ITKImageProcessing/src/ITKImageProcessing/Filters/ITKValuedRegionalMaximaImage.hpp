@@ -13,8 +13,7 @@ namespace complex
  *
  * Regional maxima are flat zones surrounded by pixels of lower value. A completely flat image will be marked as a regional maxima by this filter.
  *
- * This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. https://hdl.handle.net/1926/153 http://www.insight-
- * journal.org/browse/publication/65
+ * This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. https://www.insight-journal.org/browse/publication/65
  *
  * @author Richard Beare. Department of Medicine, Monash University, Melbourne, Australia.
  *

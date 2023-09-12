@@ -18,7 +18,7 @@ Labels_ array. The volume of any generic polyhedron can be computed using the fo
 4. Compute the signed volume of each tetrahedron
 5. Sum the signed tetrahedra volumes to obtain the volume of the enclosing polyhedron
 
-This computation is _not_ the same as the Find Feature Sizes for **Triangle Geometries**, which computes the sum of the
+This computation is *not* the same as the Find Feature Sizes for **Triangle Geometries**, which computes the sum of the
 unit element sizes for a set of **Features** (thus, the Find Feature Sizes would compute the _area_
 of **Features** in a **Triangle Geometry**, whereas this **Filter** is specialized to compute the enclosed volumes of **
 Features** in a surface mesh).
@@ -50,6 +50,8 @@ Triangle
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists
+## DREAM3DNX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

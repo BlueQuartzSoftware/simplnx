@@ -16,7 +16,7 @@ namespace complex
  *
  * The connectivity can be changed to minimum or maximum connectivity with SetFullyConnected() . Full connectivity produces thicker contours.
  *
- * https://hdl.handle.net/1926/1352
+ * https://www.insight-journal.org/browse/publication/217
  *
  * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
  *
@@ -110,7 +110,8 @@ protected:
    * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

@@ -7,7 +7,7 @@ Core (Memory/Management)
 
 ## Description ##
 
-This **Filter** copies all the associated **Element** data of a selected **Element Array** to the **Feature** to which the **Elements** belong. The value stored for each **Feature** will be the value of the _last element copied_. 
+This **Filter** copies all the associated **Element** data of a selected **Element Array** to the **Feature** to which the **Elements** belong. The value stored for each **Feature** will be the value of the *last element copied*. 
 
 ## Parameters ##
 
@@ -41,8 +41,8 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
 
 

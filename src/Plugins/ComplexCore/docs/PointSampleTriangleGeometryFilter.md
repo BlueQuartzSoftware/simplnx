@@ -32,8 +32,8 @@ The user may opt to use a mask to prevent certain **Triangles** from being sampl
 | Name | Type | Description |
 |------|------|-------------|
 | Source for Number of Samples | Enumeration | Whether to input the number of samples manually or use another **Geometry** to determine the number of samples |
-| Number of Sample Points | int32_t | Number of sample points to use, if _Manual_ is selected for _Source for Number of Samples_ |
-| Use Mask | bool | Whether to use a boolean mask array to ignore certain **Trianlges** flagged as _false_ from the sampling algorithm |
+| Number of Sample Points | int32_t | Number of sample points to use, if *Manual* is selected for *Source for Number of Samples* |
+| Use Mask | bool | Whether to use a boolean mask array to ignore certain **Trianlges** flagged as *false* from the sampling algorithm |
 
 ## Required Geometry ###
 
@@ -44,9 +44,9 @@ Triangle
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Data Container** | TriangleDataContainer | N/A | N/A | **Data Container** holding the **Triangle Geometry** to sample |
-| **Data Container** | None | N/A | N/A | **Data Container** holding the **Geometry** used to determine the number of samples, if _Other Geometry_ is selected for _Source for Number of Samples_ |
+| **Data Container** | None | N/A | N/A | **Data Container** holding the **Geometry** used to determine the number of samples, if *Other Geometry* is selected for *Source for Number of Samples* |
 | **Face Attribute Array**  | FaceAreas | double | (1) | Specifies the area of each **Face** |
-| **Face Attribute Array** | Mask | bool | (1) | Specifies if the **Face** can be sampled, if _Use Mask_ is checked |
+| **Face Attribute Array** | Mask | bool | (1) | Specifies if the **Face** can be sampled, if *Use Mask* is checked |
 
 ## Created Objects ##
 
@@ -61,6 +61,8 @@ Triangle
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

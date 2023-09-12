@@ -12,7 +12,7 @@ This **Filter** accepts DataArray(s) as input, extracts the data, creates the fi
 ## Parameters ##
 
 | Name | Type | Decision |
-|-------|---------------|------------|-----------------|----------------|----------|
+|-------|------|----------|
 | Endianess | Endianess enum class | Determines underlying ordering of binary, if unsure, use Little (most universal) |
 | Output Path | Filesystem::path | Directory to store printed array files |
 | File Extension | string | The file extension used for generated files |
@@ -23,8 +23,9 @@ None
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-**DataArray** | Attribute Arrays to Export | DataArray | any | any | Specifies **DataArray** to have their values printed |
+| Kind          | Default Name | Type | Component Dimensions | Description |
+|---------------|-------|------|------|-----------------------------------------------------|
+| **DataArray** | Attribute Arrays to Export | DataArray | any | Specifies **DataArray** to have their values printed |
 
 ## Created Objects ##
 
@@ -34,6 +35,8 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

@@ -1,2 +1,7 @@
 cxx_compiler:
   - vs2019 # [win]
+
+python:
+    - 3.10
+    - 3.9
+    - 3.8

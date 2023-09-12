@@ -57,7 +57,7 @@ Parameters FindBoundaryCellsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Image Geometry", "The selected geometry to which the cells belong", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Cell belongs.", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_BoundaryCellsArrayName_Key, "Boundary Cells",

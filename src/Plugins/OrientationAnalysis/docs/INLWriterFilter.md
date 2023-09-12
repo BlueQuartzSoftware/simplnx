@@ -22,47 +22,47 @@ Some information about the phase is included in the header section of the file i
 
 ## Example Output ##
 
-	# File written from DREAM3DLib Version 5.2.1789.6419a8d
-	# DateTime: Fri Jun 19 10:13:25 2015
-	# X_STEP: 0.250000
-	# Y_STEP: 0.250000
-	# Z_STEP: 0.250000
-	#
+    # File written from DREAM3DLib Version 5.2.1789.6419a8d
+    # DateTime: Fri Jun 19 10:13:25 2015
+    # X_STEP: 0.250000
+    # Y_STEP: 0.250000
+    # Z_STEP: 0.250000
+    #
 
-	# X_MIN: -36.750004
-	# Y_MIN: 10.250000
-	# Z_MIN: -29.000000
-	#
+    # X_MIN: -36.750004
+    # Y_MIN: 10.250000
+    # Z_MIN: -29.000000
+    #
 
-	# X_MAX: -11.750004
-	# Y_MAX: 35.250000
-	# Z_MAX: -4.000000
-	#
+    # X_MAX: -11.750004
+    # Y_MAX: 35.250000
+    # Z_MAX: -4.000000
+    #
 
-	# X_DIM: 100
-	# Y_DIM: 100
-	# Z_DIM: 100
-	#
+    # X_DIM: 100
+    # Y_DIM: 100
+    # Z_DIM: 100
+    #
 
-	# Phase_1: Nickel 
-	# Symmetry_1: 43
-	# Features_1: 796
-	#
+    # Phase_1: Nickel 
+    # Symmetry_1: 43
+    # Features_1: 796
+    #
 
-	# Num_Features: 796 
-	#
+    # Num_Features: 796 
+    #
 
-	# phi1 PHI phi2 x y z FeatureId PhaseId Symmetry
-	0.266984 0.696910 4.434039 -36.750004 10.250000 -29.000000 639 1 43
-	0.266984 0.696910 4.434039 -36.500004 10.250000 -29.000000 639 1 43
-	0.266984 0.696910 4.434039 -36.250004 10.250000 -29.000000 639 1 43
-	0.266984 0.696910 4.434039 -36.000004 10.250000 -29.000000 639 1 43
-	0.267274 0.697210 4.432979 -35.750004 10.250000 -29.000000 639 1 43
-	0.266984 0.696910 4.434039 -35.500004 10.250000 -29.000000 639 1 43
-	0.266984 0.696910 4.434039 -35.250004 10.250000 -29.000000 639 1 43
-	0.266984 0.696910 4.434039 -35.000004 10.250000 -29.000000 639 1 43
-	0.266234 0.697020 4.434729 -34.750004 10.250000 -29.000000 639 1 43
-	0.266234 0.697020 4.434729 -34.500004 10.250000 -29.000000 639 1 43
+    # phi1 PHI phi2 x y z FeatureId PhaseId Symmetry
+    0.266984 0.696910 4.434039 -36.750004 10.250000 -29.000000 639 1 43
+    0.266984 0.696910 4.434039 -36.500004 10.250000 -29.000000 639 1 43
+    0.266984 0.696910 4.434039 -36.250004 10.250000 -29.000000 639 1 43
+    0.266984 0.696910 4.434039 -36.000004 10.250000 -29.000000 639 1 43
+    0.267274 0.697210 4.432979 -35.750004 10.250000 -29.000000 639 1 43
+    0.266984 0.696910 4.434039 -35.500004 10.250000 -29.000000 639 1 43
+    0.266984 0.696910 4.434039 -35.250004 10.250000 -29.000000 639 1 43
+    0.266984 0.696910 4.434039 -35.000004 10.250000 -29.000000 639 1 43
+    0.266234 0.697020 4.434729 -34.750004 10.250000 -29.000000 639 1 43
+    0.266234 0.697020 4.434729 -34.500004 10.250000 -29.000000 639 1 43
 
 ## Parameters ##
 
@@ -97,6 +97,8 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

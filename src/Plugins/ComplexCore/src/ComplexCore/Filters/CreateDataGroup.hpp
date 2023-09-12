@@ -23,7 +23,7 @@ public:
   CreateDataGroup& operator=(CreateDataGroup&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataObjectPath = "Data_Object_Path";
+  static inline constexpr StringLiteral k_DataObjectPath = "data_object_path";
 
   /**
    * @brief Returns the name of the filter.

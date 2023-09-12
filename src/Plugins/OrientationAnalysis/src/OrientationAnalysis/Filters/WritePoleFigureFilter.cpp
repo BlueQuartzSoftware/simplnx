@@ -84,12 +84,14 @@ Parameters WritePoleFigureFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<StringParameter>(k_Title_Key, "Figure Title", "The title to place at the top of the Pole Figure", "Figure Title"));
-  params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "", 512));
-  params.insert(std::make_unique<ChoicesParameter>(k_ImageLayout_Key, "Image Layout", "", 0, ChoicesParameter::Choices{"Horizontal", "Vertical", "Square"}));
+  params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "The number of pixels that define the height and width of **each** output pole figure", 512));
+  params.insert(std::make_unique<ChoicesParameter>(k_ImageLayout_Key, "Image Layout", "How to layout the 3 pole figures. 0=Horizontal, 1=Vertical, 2=Square", 0,
+                                                   ChoicesParameter::Choices{"Horizontal", "Vertical", "Square"}));
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "", 0, ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
-  params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "", 64));
-  params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "", 32));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "The type of pole figure generated. 0=Color, 1=Discrete", 0,
+                                                                    ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
+  params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
+  params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
@@ -97,24 +99,25 @@ Parameters WritePoleFigureFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Use Mask Array", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "Path to the DataArray Mask", DataPath({"Mask"}),
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Use Mask Array", "Should the algorithm use a mask array to remove non-indexed points", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "DataPath to the input Mask DataArray", DataPath({"Mask"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Required Input Cell Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_MaterialNameArrayPath_Key, "Material Name", "", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_MaterialNameArrayPath_Key, "Material Name", "DataPath to the input DataArray that holds the material names", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Created Objects/Output File Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteImageToDisk, "Write Pole Figure as Image", "", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteImageToDisk, "Write Pole Figure as Image", "Should the filter write the pole figure plots to a file.", true));
 
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Directory Path",
                                                           "This is the path to the directory where the pole figures will be created. One file for each phase.", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
-  params.insert(std::make_unique<StringParameter>(k_ImagePrefix_Key, "Pole Figure File Prefix", "", "Phase_"));
+  params.insert(
+      std::make_unique<StringParameter>(k_ImagePrefix_Key, "Pole Figure File Prefix", "The prefix to apply to each generated pole figure. Each Phase will have its own pole figure.", "Phase_"));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsImageGeometry_Key, "Save Output as Image Geometry", "", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsImageGeometry_Key, "Save Output as Image Geometry", "Save the generated pole figure as an ImageGeometry", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"PoleFigure"})));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control

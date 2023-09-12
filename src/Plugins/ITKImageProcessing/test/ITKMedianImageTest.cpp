@@ -72,7 +72,7 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing
   args.insertOrAssign(ITKMedianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKMedianImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   // 0 should be unused
-  args.insertOrAssign(ITKMedianImage::k_Radius_Key, std::make_any<VectorUInt64Parameter::ValueType>(VectorUInt64Parameter::ValueType{2, 3, 0}));
+  args.insertOrAssign(ITKMedianImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{2, 3, 0}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

@@ -21,7 +21,7 @@ The user must specificy a postfix string to add to the newly created arrays. For
 
 There is an alternative option which allows the user to select a subset of components to extract instead of extracting all the components by entering the components to be extracted.  The components should be specified starting with the first componet as 0.  So if the original array has 3 components and the user wanted the first and second components, the unput to the component table should be 0 and 1 respectively.
 
-This **Filter** is the opposite operation of the [Combine Attribute Arrays](@ref combineattributearrays) **Filter**, and the generalized version of the [Extract Component as Attribute Array](@ref extractcomponentasarray) **Filter**.
+This **Filter** is the opposite operation of the Combine Attribute Arrays **Filter**, and the generalized version of the Extract Component as Attribute Array **Filter**.
 
 ## Parameters ##
 
@@ -43,7 +43,7 @@ None
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Attribute Arrays** | Input array name + _Postfix_ + component number | Same as input array | (1)| The set of scalar **Attribute Arrays**, equal to the number of components of the input **Attribute Array** |
+| **Attribute Arrays** | Input array name + *Postfix* + component number | Same as input array | (1)| The set of scalar **Attribute Arrays**, equal to the number of components of the input **Attribute Array** |
 
 ## Example Pipelines ##
 
@@ -53,6 +53,8 @@ None
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

@@ -9,9 +9,9 @@ Core (Generation)
 
 This **Filter** deep copies one or more DataObjects.
 
-**In the case of copying _DataObject_s that inherit from _BaseGroup_**, such as _DataGroup_ or _AttributeMatrix_, **it will copy all of the child objects recursively**, that is to say all of an object's children and childrens' children and so on will be copied if applicable.
+**In the case of copying _DataObject_s that inherit from _BaseGroup_**, such as *DataGroup* or _AttributeMatrix_, **it will copy all of the child objects recursively**, that is to say all of an object's children and childrens' children and so on will be copied if applicable.
 
-Commonly used _BaseGroup_ children:
+Commonly used *BaseGroup* children:
 - **_ALL_** Geometries
 - _DataGroup_
 - _AttributeMatrix_
@@ -19,7 +19,7 @@ Commonly used _BaseGroup_ children:
 
 See the DataStructure section of the reference manual for a complete hierarchy.
 
-When the _Copy to New Parent_ is toggled true a new parameter will appear. This parameter, _Copied Parent Group_, allows for the selected arrays to all be copied into whatever data container you place here.
+When the *Copy to New Parent* is toggled true a new parameter will appear. This parameter, _Copied Parent Group_, allows for the selected arrays to all be copied into whatever data container you place here.
 
 ## Parameters ##
 
@@ -50,6 +50,8 @@ A deep copy of the DataObjects selected in the input.
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

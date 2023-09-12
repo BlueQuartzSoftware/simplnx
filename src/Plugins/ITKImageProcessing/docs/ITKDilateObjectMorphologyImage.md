@@ -1,62 +1,53 @@
-# ITK::Dilate Object Morphology Image Filter (KW)  #
-
-
-## Group (Subgroup) ##
-
-ITKImageProcessing (ITKImageProcessing)
-
-## Description ##
+# ITK Dilate Object Morphology Image Filter (ITKDilateObjectMorphologyImage)
 
 dilation of an object in an image
 
+## Group (Subgroup)
+
+ITKBinaryMathematicalMorphology (BinaryMathematicalMorphology)
+
+## Description
+
 Dilate an image using binary morphology. Pixel values matching the object value are considered the "foreground" and all other pixels are "background". This is useful in processing mask images containing only one object.
 
-If a pixel's value is equal to the object value and the pixel is adjacent to a non-object valued pixel, then the kernel is centered on the object-value pixel and neighboring pixels covered by the kernel are assigned the object value. The structuring element is assumed to be composed of binary values (zero or one).
+If a pixel's value is equal to the object value and the pixel is adjacent to a non-object valued pixel, then the kernel is centered on the object-value pixel and neighboring pixels covered by the kernel are assigned the object value. The structuring element is assumed to be composed of binary values (zero or one).* ObjectMorphologyImageFilter , ErodeObjectMorphologyImageFilter 
+- BinaryDilateImageFilter
 
-\see ObjectMorphologyImageFilter , ErodeObjectMorphologyImageFilter
-
-\see BinaryDilateImageFilter
-
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| ObjectValue | double| N/A |
-| KernelRadius | FloatVec3_t| N/A |
-| KernelType | int| N/A |
+| KernelRadius | uint32 | Set the radius of the kernel structuring element. |
+| KernelType | KernelEnum | Set the kernel or structuring element used for the morphology. |
+| ObjectValue | float64 |  |
+
+## Required Geometry
+
+Image Geometry
+
+## Required Objects
+
+| Name |Type | Description |
+|-----|------|-------------|
+| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
+| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
+
+## Created Objects
+
+| Name |Type | Description |
+|-----|------|-------------|
+| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+
+## Example Pipelines
 
 
-## Required Geometry ##
-
-Image
-
-## Required Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None | N/A | (1)  | Array containing input image
-
-## Created Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None |  | (1)  | Array containing filtered image
-
-## References ##
-
-[1] T.S. Yoo, M. J. Ackerman, W. E. Lorensen, W. Schroeder, V. Chalana, S. Aylward, D. Metaxas, R. Whitaker. Engineering and Algorithm Design for an Image Processing API: A Technical Report on ITK - The Insight Toolkit. In Proc. of Medicine Meets Virtual Reality, J. Westwood, ed., IOS Press Amsterdam pp 586-592 (2002). 
-[2] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Design and Functionality. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-28-3
-[3] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Introduction and Development Guidelines. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-27-6
-
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+## DREAM3DNX Help
+
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

@@ -27,7 +27,7 @@ Triangle
 | Kind                     | Default Name    | Type         | Component Dimensions | Description                                                      |
 |--------------------------|-----------------|--------------|----------------------|------------------------------------------------------------------|
 | **Face Attribute Array** | FaceLabels      | int32_t      | (2)                  | Specifies which **Features** are on either side of each **Face** |
-| **Attribute Matrix**     | FaceFeatureData | Face Feature | N/A                  | **Feature Attribute Matrix** of the selected _Face Labels_       |
+| **Attribute Matrix**     | FaceFeatureData | Face Feature | N/A                  | **Feature Attribute Matrix** of the selected *Face Labels*       |
 
 ## Created Objects
 
@@ -41,6 +41,8 @@ Triangle
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists
+## DREAM3DNX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

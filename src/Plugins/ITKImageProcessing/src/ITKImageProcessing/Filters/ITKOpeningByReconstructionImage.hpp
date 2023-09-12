@@ -14,7 +14,7 @@ namespace complex
  * This filter preserves regions, in the foreground, that can completely contain the structuring element. At the same time, this filter eliminates all other regions of foreground pixels. Contrary to
  * the morphological opening, the opening by reconstruction preserves the shape of the components that are not removed by erosion. The opening by reconstruction of an image "f" is defined as:
  *
- * OpeningByReconstruction(f) = DilationByRecontruction(f, Erosion(f)).
+ * OpeningByReconstruction(f) = DilationByReconstruction(f, Erosion(f)).
  *
  * Opening by reconstruction not only removes structures destroyed by the erosion, but also levels down the contrast of the brightest regions. If PreserveIntensities is on, a subsequent reconstruction
  * by dilation using a marker image that is the original image for all unaffected pixels.
@@ -115,7 +115,8 @@ protected:
    * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

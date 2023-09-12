@@ -6,16 +6,16 @@ DREAM3DReview (DREAM3DReview)
 
 ## Description ##
 
-This **Filter** does will align 2 Geometry objects using 1 of several alignment methods:
+This **Filter** will align 2 Geometry objects using 1 of several alignment methods:
 
-* Centroid
-* Origin
-* XY Min Plane
-* XY Max Plane
-* XZ Min Plane
-* XZ Max Plane
-* YZ Min Plane
-* YZ Max Plane
+- Centroid
+- Origin
+- XY Min Plane
+- XY Max Plane
+- XZ Min Plane
+- XZ Max Plane
+- YZ Min Plane
+- YZ Max Plane
 
 The input geometries can be of any type. The *Moving* geometry is moved in space to the *Target* geometry.
 
@@ -44,7 +44,8 @@ None. The operation is done in place
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

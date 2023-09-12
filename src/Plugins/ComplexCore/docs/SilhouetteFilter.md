@@ -10,16 +10,16 @@ This **Filter** computes the silhouette for a clustered **Attribute Array**.  Th
 
 \f[ s_{i} = \frac{b_{i} - a_{i}}{\max\{a_{i},b_{i}\}} \f]
 
-where \f$ a \f$ is the average distance between point \f$ i \f$ and all other points in the cluster point \f$ i \f$ belongs to, \f$ b \f$ is the _next closest_ average distance among all other clusters, and \f$ s \f$ is the silhouette value.  Using this definition, \f$ s \f$ exists on the interval \f$ [-1, 1] \f$, where 1 indicates that the point strongly belongs to its current cluster and -1 indicates that the point does not belong well to its current cluster.  The user may select from a variety of options to use as the distance metric.  Additionally, the user may opt to use a mask array to ignore points in the silhouette; these points will contain a silhouette value of 0.
+where \f$ a \f$ is the average distance between point \f$ i \f$ and all other points in the cluster point \f$ i \f$ belongs to, \f$ b \f$ is the *next closest* average distance among all other clusters, and \f$ s \f$ is the silhouette value.  Using this definition, \f$ s \f$ exists on the interval \f$ [-1, 1] \f$, where 1 indicates that the point strongly belongs to its current cluster and -1 indicates that the point does not belong well to its current cluster.  The user may select from a variety of options to use as the distance metric.  Additionally, the user may opt to use a mask array to ignore points in the silhouette; these points will contain a silhouette value of 0.
 
-The silhouette can be used to determine how well a particular clustering has performed, such as [k means](@ref kmeans) or [k medoids](@ref kmedoids).
+The silhouette can be used to determine how well a particular clustering has performed, such as k means or k medoids.
 
 ## Parameters ##
 
 | Name | Type | Description |
 |------|------|-------------|
 | Distance Metric | Enumeration | The metric used to determine the distances between points |
-| Use Mask | bool | Whether to use a boolean mask array to ignore certain points flagged as _false_ from the algorithm |
+| Use Mask | bool | Whether to use a boolean mask array to ignore certain points flagged as *false* from the algorithm |
 
 ## Required Geometry ###
 
@@ -31,7 +31,7 @@ None
 |------|--------------|------|----------------------|-------------|
 | Any **Attribute Array** | None | Any| Any | The **Attribute Array** to silhouette |
 | **Attribute Array** | ClusterIds | int32_t | (1) | Specifies to which cluster each point belongs |
-| **Attribute Array** | Mask | bool | (1) | Specifies if the point is to be counted in the algorithm, if _Use Mask_ is checked |
+| **Attribute Array** | Mask | bool | (1) | Specifies if the point is to be counted in the algorithm, if *Use Mask* is checked |
 
 ## Created Objects ##
 
@@ -45,7 +45,8 @@ None
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
+## DREAM3DNX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-<https://groups.google.com/forum/?hl=en#!forum/dream3d-users>
+Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+
+

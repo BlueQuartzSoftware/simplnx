@@ -69,10 +69,10 @@ Parameters FindBoundaryStrengthsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Face Data Arrays"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshF1sArrayName_Key, "F1s", "", "F1s"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshF1sptsArrayName_Key, "F1spts", "", "F1s points"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshF7sArrayName_Key, "F7s", "", "F7s"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshmPrimesArrayName_Key, "mPrimes", "", "mPrimes"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshF1sArrayName_Key, "F1s", "DataArray Name to store the calculated F1s Values", "F1s"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshF1sptsArrayName_Key, "F1spts", "DataArray Name to store the calculated F1spts Values", "F1s points"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshF7sArrayName_Key, "F7s", "DataArray Name to store the calculated F7s Values", "F7s"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshmPrimesArrayName_Key, "mPrimes", "DataArray Name to store the calculated mPrimes Values", "mPrimes"));
 
   return params;
 }

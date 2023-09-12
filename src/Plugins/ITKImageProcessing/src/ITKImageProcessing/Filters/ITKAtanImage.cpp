@@ -1,8 +1,8 @@
 #include "ITKAtanImage.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -13,7 +13,7 @@ using namespace complex;
 
 namespace cxITKAtanImage
 {
-using ArrayOptionsT = ITK::ScalarPixelIdTypeList;
+using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
 // VectorPixelIDTypeList;
 
 struct ITKAtanImageFunctor
@@ -21,8 +21,8 @@ struct ITKAtanImageFunctor
   template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterT = itk::AtanImageFilter<InputImageT, OutputImageT>;
-    auto filter = FilterT::New();
+    using FilterType = itk::AtanImageFilter<InputImageT, OutputImageT>;
+    auto filter = FilterType::New();
     return filter;
   }
 };
@@ -92,7 +92,7 @@ IFilter::PreflightResult ITKAtanImage::preflightImpl(const DataStructure& dataSt
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKAtanImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKAtanImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
@@ -106,13 +106,11 @@ Result<> ITKAtanImage::executeImpl(DataStructure& dataStructure, const Arguments
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  cxITKAtanImage::ITKAtanImageFunctor itkFunctor = {};
+  const cxITKAtanImage::ITKAtanImageFunctor itkFunctor = {};
 
-  // LINK GEOMETRY OUTPUT START
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
-  // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKAtanImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKAtanImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex

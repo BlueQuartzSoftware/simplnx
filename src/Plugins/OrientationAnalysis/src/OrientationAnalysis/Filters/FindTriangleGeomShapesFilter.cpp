@@ -51,21 +51,24 @@ Parameters FindTriangleGeomShapesFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Required Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Required Face Feature Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixName_Key, "Face Feature Attribute Matrix", "", DataPath({"TriangleDataContainer", "FaceFeatureData"}),
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixName_Key, "Face Feature Attribute Matrix",
+                                                              "The DataPath to the AttributeMatrix that holds feature data for the faces", DataPath({"TriangleDataContainer", "FaceFeatureData"}),
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Face Feature Centroids", "", DataPath({"FaceFeatureData", "Centroids"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VolumesArrayPath_Key, "Face Feature Volumes", "", DataPath({"FaceFeatureData", "Volumes"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Face Feature Centroids", "Input DataPath to the **Feature Centroids** for the face data",
+                                                          DataPath({"FaceFeatureData", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_VolumesArrayPath_Key, "Face Feature Volumes", "Input DataPath to the **Feature Volumes** for the face data",
+                                                          DataPath({"FaceFeatureData", "Volumes"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
   params.insertSeparator(Parameters::Separator{"Created Face Feature Data Arrays"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s", "", "Omega3s"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AxisLengthsArrayName_Key, "Axis Lengths", "", "AxisLengths"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AxisEulerAnglesArrayName_Key, "Axis Euler Angles", "", "AxisEulerAngles"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AspectRatiosArrayName_Key, "Aspect Ratios", "", "AspectRatios"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s", "The name of the DataArray that holds the calculated Omega3 values", "Omega3s"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AxisLengthsArrayName_Key, "Axis Lengths", "The name of the DataArray that holds the calculated Axis Lengths values", "AxisLengths"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AxisEulerAnglesArrayName_Key, "Axis Euler Angles", "The name of the DataArray that holds the calculated Axis Euler Angles values",
+                                                          "AxisEulerAngles"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AspectRatiosArrayName_Key, "Aspect Ratios", "The name of the DataArray that holds the calculated Aspect Ratios values", "AspectRatios"));
 
   return params;
 }

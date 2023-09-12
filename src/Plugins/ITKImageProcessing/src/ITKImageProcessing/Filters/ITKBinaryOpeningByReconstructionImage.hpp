@@ -18,7 +18,7 @@ namespace complex
  * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
  *
  *
- * This implementation was taken from the Insight Journal paper: https://hdl.handle.net/1926/584 or http://www.insight-journal.org/browse/publication/176
+ * This implementation was taken from the Insight Journal paper: https://www.insight-journal.org/browse/publication/176
  *
  * @see MorphologyImageFilter , OpeningByReconstructionImageFilter , BinaryClosingByReconstructionImageFilter
  *
