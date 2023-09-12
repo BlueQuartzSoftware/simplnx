@@ -152,23 +152,24 @@ if(COMPLEX_PY_GENERATE_PYI)
   complex_create_pyi(PYTHON_MODULE_NAME complex PYTHON_TARGET complexpy)
 endif()
 
-option(COMPLEX_PY_ENABLE_DOCS "Generate python documentation using sphinx" OFF)
-if(COMPLEX_PY_ENABLE_DOCS)
-  find_package(Sphinx REQUIRED)
+# Disabled due to auto generation not fully working
+# option(COMPLEX_PY_ENABLE_DOCS "Generate python documentation using sphinx" OFF)
+# if(COMPLEX_PY_ENABLE_DOCS)
+#   find_package(Sphinx REQUIRED)
 
-  set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/docs)
-  set(SPHINX_BUILD ${PROJECT_BINARY_DIR}/docs/python)
+#   set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/docs)
+#   set(SPHINX_BUILD ${PROJECT_BINARY_DIR}/docs/python)
 
-  add_custom_target(complexpy_docs
-    COMMAND
-      ${CMAKE_COMMAND} -E env "PYTHONPATH=$<TARGET_FILE_DIR:complex>"
-      ${SPHINX_EXECUTABLE} -b html ${SPHINX_SOURCE} ${SPHINX_BUILD}
-    WORKING_DIRECTORY $<TARGET_FILE_DIR:complex>
-    COMMENT "Generating complexpy docs with Sphinx"
-    VERBATIM
-  )
-  add_dependencies(complexpy_docs complexCreateStubFile)
-endif()
+#   add_custom_target(complexpy_docs
+#     COMMAND
+#       ${CMAKE_COMMAND} -E env "PYTHONPATH=$<TARGET_FILE_DIR:complex>"
+#       ${SPHINX_EXECUTABLE} -b html ${SPHINX_SOURCE} ${SPHINX_BUILD}
+#     WORKING_DIRECTORY $<TARGET_FILE_DIR:complex>
+#     COMMENT "Generating complexpy docs with Sphinx"
+#     VERBATIM
+#   )
+#   add_dependencies(complexpy_docs complexCreateStubFile)
+# endif()
 
 option(COMPLEX_PY_ENABLE_INSTALL "Enables install complexpy" OFF)
 if(COMPLEX_PY_ENABLE_INSTALL)
@@ -255,9 +256,6 @@ function(complex_add_python_plugin)
       #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
       # )
     endif()
-  endif()
-
-  if(COMPLEX_PY_ENABLE_DOCS)
   endif()
 
   if(COMPLEX_PY_ENABLE_INSTALL)
