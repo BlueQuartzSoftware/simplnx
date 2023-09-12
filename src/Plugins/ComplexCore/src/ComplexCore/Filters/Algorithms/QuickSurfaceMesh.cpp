@@ -9,7 +9,6 @@
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include <array>
-#include <random>
 #include <unordered_map>
 
 using namespace complex;
@@ -17,6 +16,13 @@ using namespace complex;
 // -----------------------------------------------------------------------------
 namespace
 {
+constexpr double k_RangeMin = 0.0;
+constexpr double k_RangeMax = 1.0;
+std::random_device k_RandomDevice;             // Will be used to obtain a seed for the random number engine
+std::mt19937_64 k_Generator(k_RandomDevice()); // Standard mersenne_twister_engine seeded with rd()
+std::mt19937_64::result_type k_Seed = 3412341234123412;
+std::uniform_real_distribution<> k_Distribution(k_RangeMin, k_RangeMax);
+
 template <class T>
 inline void hashCombine(size_t& seed, const T& obj)
 {
@@ -94,13 +100,13 @@ struct GenerateTripleLinesImpl
           neigh2 = point + (xP * yP) + 1;
           neigh3 = point + (xP * yP);
 
-          VertexType p0 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+          VertexType const p0 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-          VertexType p1 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+          VertexType const p1 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-          VertexType p2 = {{origin[0] + static_cast<float>(i) * res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+          VertexType const p2 = {{origin[0] + static_cast<float>(i) * res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-          VertexType p3 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2]}};
+          VertexType const p3 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2]}};
 
           uFeatures.clear();
           uFeatures.insert(featureIds[point]);
@@ -123,7 +129,7 @@ struct GenerateTripleLinesImpl
             MeshIndexType i0 = vertexMap[p0];
             MeshIndexType i1 = vertexMap[p1];
 
-            EdgeType tmpEdge = {{i0, i1}};
+            const EdgeType tmpEdge = {{i0, i1}};
             auto eiter = edgeMap.find(tmpEdge);
             if(eiter == edgeMap.end())
             {
@@ -157,7 +163,7 @@ struct GenerateTripleLinesImpl
             MeshIndexType i0 = vertexMap[p0];
             MeshIndexType i2 = vertexMap[p2];
 
-            EdgeType tmpEdge = {{i0, i2}};
+            const EdgeType tmpEdge = {{i0, i2}};
             auto eiter = edgeMap.find(tmpEdge);
             if(eiter == edgeMap.end())
             {
@@ -191,7 +197,7 @@ struct GenerateTripleLinesImpl
             MeshIndexType i0 = vertexMap[p0];
             MeshIndexType i3 = vertexMap[p3];
 
-            EdgeType tmpEdge = {{i0, i3}};
+            const EdgeType tmpEdge = {{i0, i3}};
             auto eiter = edgeMap.find(tmpEdge);
             if(eiter == edgeMap.end())
             {
@@ -232,6 +238,7 @@ QuickSurfaceMesh::QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMes
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
+  k_Generator.seed(k_Seed);
 }
 
 // -----------------------------------------------------------------------------
@@ -367,15 +374,7 @@ void QuickSurfaceMesh::getGridCoordinates(const IGridGeometry* grid, size_t x, s
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::flipProblemVoxelCase1(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4, MeshIndexType v5, MeshIndexType v6) const
 {
-  double rangeMin = 0.0;
-  double rangeMax = 1.0;
-  std::random_device randomDevice;                      // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice());            // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937_64::result_type seed = 3412341234123412; // static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  generator.seed(seed);
-  std::uniform_real_distribution<> distribution(rangeMin, rangeMax);
-
-  float val = static_cast<float>(distribution(generator)); // Random remaining position.
+  float val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
   if(val < 0.25f)
   {
@@ -398,15 +397,7 @@ void QuickSurfaceMesh::flipProblemVoxelCase1(Int32AbstractDataStore& featureIds,
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::flipProblemVoxelCase2(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4) const
 {
-  double rangeMin = 0.0;
-  double rangeMax = 1.0;
-  std::random_device randomDevice;                      // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice());            // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937_64::result_type seed = 3412341234123412; // static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  generator.seed(seed);
-  std::uniform_real_distribution<> distribution(rangeMin, rangeMax);
-
-  float val = static_cast<float>(distribution(generator)); // Random remaining position.
+  float val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
   if(val < 0.125f)
   {
@@ -445,15 +436,7 @@ void QuickSurfaceMesh::flipProblemVoxelCase2(Int32AbstractDataStore& featureIds,
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::flipProblemVoxelCase3(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3) const
 {
-  double rangeMin = 0.0;
-  double rangeMax = 1.0;
-  std::random_device randomDevice;                      // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice());            // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937_64::result_type seed = 3412341234123412; // static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  generator.seed(seed);
-  std::uniform_real_distribution<> distribution(rangeMin, rangeMax);
-
-  float val = static_cast<float>(distribution(generator)); // Random remaining position.
+  float val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
   if(val < 0.5f)
   {
@@ -987,10 +970,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath);
   linkedGeometryData.addFaceData(m_InputValues->FaceLabelsDataPath);
 
-  // Remove and then insert a properly sized int8 for the NodeTypes
-  m_DataStructure.removeData(m_InputValues->NodeTypesDataPath);
-  Result<> nodeTypeResult = complex::CreateArray<int8_t>(m_DataStructure, {nodeCount}, {1}, m_InputValues->NodeTypesDataPath, IDataAction::Mode::Execute);
-  Int32Array& nodeTypes = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath);
+  // Resize the NodeTypes array
+  auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath);
+  nodeTypes.resizeTuples({nodeCount});
   linkedGeometryData.addVertexData(m_InputValues->NodeTypesDataPath);
 
   IGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());

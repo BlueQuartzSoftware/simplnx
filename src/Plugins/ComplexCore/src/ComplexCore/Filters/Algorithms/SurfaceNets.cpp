@@ -3,7 +3,6 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
@@ -24,83 +23,71 @@ class MMQuad
 {
 public:
   MMQuad()
-  : m_vertexIndices{-1, -1, -1, -1}
-  , m_labels{0, 0}
+  : m_VertexIndices{-1, -1, -1, -1}
+  , m_Labels{0, 0}
   {
   }
   MMQuad(std::array<int32, 4> vi, std::array<int32, 2> labels)
-  : m_vertexIndices{vi[0], vi[1], vi[2], vi[3]}
-  , m_labels{labels[0], labels[1]}
+  : m_VertexIndices{vi[0], vi[1], vi[2], vi[3]}
+  , m_Labels{labels[0], labels[1]}
   {
   }
 
-  void getVertexIndices(int vertexIndices[4])
+  void getVertexIndices(std::array<int32, 4>& vertexIndices)
   {
-    for(int i = 0; i < 4; i++)
-      vertexIndices[i] = m_vertexIndices[i];
+    std::copy(m_VertexIndices.begin(), m_VertexIndices.end(), vertexIndices.begin());
   }
-  void getLabels(int32_t labels[2])
+  void getLabels(std::array<int32, 2>& labels)
   {
-    for(int i = 0; i < 2; i++)
-      labels[i] = m_labels[i];
+    std::copy(m_Labels.begin(), m_Labels.end(), labels.begin());
   }
-  //  void setVertexIndices(int vertexIndices[4])
-  //  {
-  //    for(int i = 0; i < 4; i++)
-  //      m_vertexIndices[i] = vertexIndices[i];
-  //  }
-  //  void setLabels(int32_t labels[2])
-  //  {
-  //    for(int i = 0; i < 2; i++)
-  //      m_labels[i] = labels[i];
-  //}
 
 private:
-  int m_vertexIndices[4];
-  int32_t m_labels[2];
+  std::array<int32, 4> m_VertexIndices;
+  std::array<int32, 2> m_Labels;
 };
 
-struct vtxData
+struct VertexData
 {
-  int vID;
-  float position[3];
+  int VertexId;
+  std::array<float32, 3> Position;
 };
 
-void crossProduct(float v0[3], float v1[3], float result[3])
+void crossProduct(const std::array<float32, 3>& vert0, const std::array<float32, 3> vert1, std::array<float32, 3> result)
 {
   // Cross product of vectors v0 and v1
-  result[0] = v0[1] * v1[2] - v0[2] * v1[1];
-  result[1] = v0[2] * v1[0] - v0[0] * v1[2];
-  result[2] = v0[0] * v1[1] - v0[1] * v1[0];
+  result[0] = vert0[1] * vert1[2] - vert0[2] * vert1[1];
+  result[1] = vert0[2] * vert1[0] - vert0[0] * vert1[2];
+  result[2] = vert0[0] * vert1[1] - vert0[1] * vert1[0];
 }
-float triangleArea(float p0[3], float p1[3], float p2[3])
+float triangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert1, std::array<float32, 3>& vert2)
 {
   // Area of triangle with vertex positions p0, p1, p2
-  float v01[3] = {p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]};
-  float v02[3] = {p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]};
-  float cp[3];
-  crossProduct(v01, v02, cp);
-  float magCP = std::sqrt(cp[0] * cp[0] + cp[1] * cp[1] + cp[2] * cp[2]);
-  return 0.5 * magCP;
+  const std::array<float32, 3> v01 = {vert1[0] - vert0[0], vert1[1] - vert0[1], vert1[2] - vert0[2]};
+  const std::array<float32, 3> v02 = {vert2[0] - vert0[0], vert2[1] - vert0[1], vert2[2] - vert0[2]};
+  std::array<float32, 3> cross = {0.0f, 0.0f, 0.0f};
+  crossProduct(v01, v02, cross);
+  float const magCP = std::sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
+  return 0.5f * magCP;
 }
 
-void getQuadTriangleIDs(vtxData vData[4], bool isQuadFrontFacing, int triangleVtxIDs[6])
+void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<int32, 6>& triangleVtxIDs)
 {
   // Order quad vertices so quad is front facing
   if(!isQuadFrontFacing)
   {
-    vtxData temp = vData[3];
+    VertexData const temp = vData[3];
     vData[3] = vData[1];
     vData[1] = temp;
   }
 
   // Order quad vertices so that the two generated triangles have the minimal area. This
   // reduces self intersections in the surface.
-  float thisArea = triangleArea(vData[0].position, vData[1].position, vData[2].position) + triangleArea(vData[0].position, vData[2].position, vData[3].position);
-  float alternateArea = triangleArea(vData[1].position, vData[2].position, vData[3].position) + triangleArea(vData[1].position, vData[3].position, vData[0].position);
+  float const thisArea = triangleArea(vData[0].Position, vData[1].Position, vData[2].Position) + triangleArea(vData[0].Position, vData[2].Position, vData[3].Position);
+  float const alternateArea = triangleArea(vData[1].Position, vData[2].Position, vData[3].Position) + triangleArea(vData[1].Position, vData[3].Position, vData[0].Position);
   if(alternateArea < thisArea)
   {
-    vtxData temp = vData[0];
+    VertexData const temp = vData[0];
     vData[0] = vData[1];
     vData[1] = vData[2];
     vData[2] = vData[3];
@@ -108,46 +95,45 @@ void getQuadTriangleIDs(vtxData vData[4], bool isQuadFrontFacing, int triangleVt
   }
 
   // Generate vertex ids to triangulate the quad
-  triangleVtxIDs[0] = vData[0].vID;
-  triangleVtxIDs[1] = vData[1].vID;
-  triangleVtxIDs[2] = vData[2].vID;
-  triangleVtxIDs[3] = vData[0].vID;
-  triangleVtxIDs[4] = vData[2].vID;
-  triangleVtxIDs[5] = vData[3].vID;
+  triangleVtxIDs[0] = vData[0].VertexId;
+  triangleVtxIDs[1] = vData[1].VertexId;
+  triangleVtxIDs[2] = vData[2].VertexId;
+  triangleVtxIDs[3] = vData[0].VertexId;
+  triangleVtxIDs[4] = vData[2].VertexId;
+  triangleVtxIDs[5] = vData[3].VertexId;
 }
 
-void ExportObjFiles(MMSurfaceNet* m_surfaceNet)
+void exportObjFiles(MMSurfaceNet* m_surfaceNet)
 {
-  if(!m_surfaceNet)
+  if(m_surfaceNet == nullptr)
+  {
     return;
-  std::shared_ptr<MMGeometryOBJ> geometry = std::make_shared<MMGeometryOBJ>(m_surfaceNet);
+  }
+  std::shared_ptr<MMGeometryOBJ> const geometry = std::make_shared<MMGeometryOBJ>(m_surfaceNet);
 
   // Export an OBJ file for each material to the specified path
-  std::vector<int> materials = geometry->labels();
+  std::vector<int> const materials = geometry->labels();
   for(const auto& itMatIdx : materials)
-  // for(std::vector<int>::iterator itMatIdx = materials.begin(); itMatIdx != materials.end(); itMatIdx++)
   {
     if(itMatIdx > 20 && itMatIdx < 65530)
     {
       continue;
     }
-    std::string filename = fmt::format("/tmp/surface_mash_test_{}.obj", itMatIdx);
-    std::cout << "Export file Obj file: " << filename << std::endl;
+    const std::string filename = fmt::format("surface_mash_test_{}.obj", itMatIdx);
+    std::cout << "Export file Obj file: " << filename << "\n";
     std::ofstream stream(filename, std::ios_base::binary);
     if(stream.is_open())
     {
-      MMGeometryOBJ::OBJData data = geometry->objData(itMatIdx);
-      stream << "# vertices for feature id " << itMatIdx << std::endl;
-      // for(std::vector<std::array<float, 3>>::iterator v = data.vertexPositions.begin(); v != data.vertexPositions.end(); v++)
+      const MMGeometryOBJ::OBJData data = geometry->objData(itMatIdx);
+      stream << "# vertices for feature id " << itMatIdx << "\n";
       for(const auto& vertex : data.vertexPositions)
       {
-        stream << "v " << (vertex)[0] << ' ' << (vertex)[1] << ' ' << (vertex)[2] << std::endl;
+        stream << "v " << (vertex)[0] << ' ' << (vertex)[1] << ' ' << (vertex)[2] << "\n";
       }
-      // for(std::vector<std::array<int, 3>>::iterator t = data.triangles.begin(); t != data.triangles.end(); t++)
-      stream << "# triangles for feature id " << itMatIdx << std::endl;
+      stream << "# triangles for feature id " << itMatIdx << "\n";
       for(const auto& face : data.triangles)
       {
-        stream << "f " << (face)[0] << ' ' << (face)[1] << ' ' << (face)[2] << std::endl;
+        stream << "f " << (face)[0] << ' ' << (face)[1] << ' ' << (face)[2] << "\n";
       }
     }
   }
@@ -201,19 +187,19 @@ Result<> SurfaceNets::operator()()
   // Use current parameters to relax the SurfaceNet
   if(m_InputValues->ApplySmoothing)
   {
-    MMSurfaceNet::RelaxAttrs m_relaxAttrs;
-    m_relaxAttrs.maxDistFromCellCenter = m_InputValues->MaxDistanceFromVoxel;
-    m_relaxAttrs.numRelaxIterations = m_InputValues->SmoothingIterations;
-    m_relaxAttrs.relaxFactor = m_InputValues->RelaxationFactor;
+    MMSurfaceNet::RelaxAttrs relaxAttrs{};
+    relaxAttrs.maxDistFromCellCenter = m_InputValues->MaxDistanceFromVoxel;
+    relaxAttrs.numRelaxIterations = m_InputValues->SmoothingIterations;
+    relaxAttrs.relaxFactor = m_InputValues->RelaxationFactor;
 
-    surfaceNet.relax(m_relaxAttrs);
+    surfaceNet.relax(relaxAttrs);
   }
 
-  auto* cellMap = surfaceNet.getCellMap();
-  int nodeCount = cellMap->numVertices();
+  auto* cellMapPtr = surfaceNet.getCellMap();
+  const int nodeCount = cellMapPtr->numVertices();
 
   std::array<int, 3> arraySize2 = {0, 0, 0};
-  cellMap->getArraySize(arraySize2.data());
+  cellMapPtr->getArraySize(arraySize2.data());
 
   triangleGeom.resizeVertexList(nodeCount);
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nodeCount)});
@@ -221,23 +207,22 @@ Result<> SurfaceNets::operator()()
   LinkedGeometryData& linkedGeometryData = triangleGeom.getLinkedGeometryData();
 
   // Remove and then insert a properly sized int8 for the NodeTypes
-  m_DataStructure.removeData(m_InputValues->NodeTypesDataPath);
-  Result<> nodeTypeResult = complex::CreateArray<int8_t>(m_DataStructure, {static_cast<usize>(nodeCount)}, {1}, m_InputValues->NodeTypesDataPath, IDataAction::Mode::Execute);
   Int8Array& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath);
+  nodeTypes.resizeTuples({static_cast<usize>(nodeCount)});
   linkedGeometryData.addVertexData(m_InputValues->NodeTypesDataPath);
 
-  Point3D<float32> position = {0.0f, 0.0f, 0.0f};
+  Point3Df position = {0.0f, 0.0f, 0.0f};
 
   std::array<int, 3> vertCellIndex = {0, 0, 0};
   for(int32 vertIndex = 0; vertIndex < nodeCount; vertIndex++)
   {
-    cellMap->getVertexPosition(vertIndex, position.data());
+    cellMapPtr->getVertexPosition(vertIndex, position.data());
     // Relocate the vertex correctly based on the origin of the ImageGeometry
     position = position + origin - Point3Df(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[1]);
 
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
-    cellMap->getVertexCellIndex(vertIndex, vertCellIndex.data());
-    MMCellMap::Cell* currentCellPtr = cellMap->getCell(vertCellIndex.data());
+    cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());
+    MMCellMap::Cell* currentCellPtr = cellMapPtr->getCell(vertCellIndex.data());
     nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
   }
   usize triangleCount = 0;
@@ -246,7 +231,7 @@ Result<> SurfaceNets::operator()()
   {
     std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
     std::array<LabelType, 2> quadLabels = {0, 0};
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -264,7 +249,7 @@ Result<> SurfaceNets::operator()()
       }
       triangleCount += 2;
     }
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -282,7 +267,7 @@ Result<> SurfaceNets::operator()()
       }
       triangleCount += 2;
     }
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -304,10 +289,9 @@ Result<> SurfaceNets::operator()()
   triangleGeom.resizeFaceList(triangleCount);
   triangleGeom.getFaceAttributeMatrix()->resizeTuples({triangleCount});
 
-  // Remove and then insert a properly sized Int32Array for the FaceLabels
-  m_DataStructure.removeData(m_InputValues->FaceLabelsDataPath);
-  Result<> faceLabelResult = complex::CreateArray<int32_t>(m_DataStructure, {triangleCount}, {2}, m_InputValues->FaceLabelsDataPath, IDataAction::Mode::Execute);
+  // Resize the face labels Int32Array
   Int32Array& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath);
+  faceLabels.resizeTuples({triangleCount});
   linkedGeometryData.addFaceData(m_InputValues->FaceLabelsDataPath);
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays
@@ -328,21 +312,19 @@ Result<> SurfaceNets::operator()()
   std::array<int, 6> triangleVtxIDs = {0, 0, 0, 0, 0, 0};
   std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
   std::array<LabelType, 2> quadLabels = {0, 0};
-  bool isQuadFrontFacing = false;
-  vtxData vData[4];
+  std::array<VertexData, 4> vData{};
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
 
     // Back-bottom edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
+      vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
+      vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
+      vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
+      vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
-      for(int i = 0; i < 4; i++)
-      {
-        vData[i] = {vertexIndices[i], 00.0f, 0.0f, 0.0f};
-      }
-
-      isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+      const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
         quadLabels[0] = 0;
@@ -352,7 +334,7 @@ Result<> SurfaceNets::operator()()
         quadLabels[1] = 0;
       }
 
-      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs.data());
+      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
@@ -395,15 +377,14 @@ Result<> SurfaceNets::operator()()
     }
 
     // Left-bottom edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
+      vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
+      vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
+      vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
+      vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
-      for(int i = 0; i < 4; i++)
-      {
-        vData[i] = {vertexIndices[i], 00.0f, 0.0f, 0.0f};
-      }
-
-      isQuadFrontFacing = (quadLabels[0] < quadLabels[1]); ///
+      const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]); ///
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
         quadLabels[0] = 0;
@@ -412,7 +393,7 @@ Result<> SurfaceNets::operator()()
       {
         quadLabels[1] = 0;
       }
-      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs.data());
+      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
@@ -454,15 +435,14 @@ Result<> SurfaceNets::operator()()
     }
 
     // Left-back edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
     {
+      vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
+      vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
+      vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
+      vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
-      for(int i = 0; i < 4; i++)
-      {
-        vData[i] = {vertexIndices[i], 00.0f, 0.0f, 0.0f};
-      }
-
-      isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+      const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
         quadLabels[0] = 0;
@@ -471,7 +451,7 @@ Result<> SurfaceNets::operator()()
       {
         quadLabels[1] = 0;
       }
-      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs.data());
+      getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
@@ -512,19 +492,6 @@ Result<> SurfaceNets::operator()()
       faceIndex++;
     }
   }
-
-  //  // Now correct the FaceLabels to always have the smaller label value in component[0];
-  //  auto& faceLabelsDataStore = faceLabels.getDataStoreRef();
-  //  size_t numElements = faceLabelsDataStore.getSize();
-  //  for(size_t idx = 0; idx < numElements; idx = idx + 2)
-  //  {
-  //    if(faceLabelsDataStore[idx] > faceLabelsDataStore[idx + 1])
-  //    {
-  //      int32 temp = faceLabelsDataStore[idx];
-  //      faceLabelsDataStore[idx] = faceLabelsDataStore[idx + 1];
-  //      faceLabelsDataStore[idx + 1] = temp;
-  //    }
-  //  }
 
   return {};
 }

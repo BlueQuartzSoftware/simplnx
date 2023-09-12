@@ -8,6 +8,7 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
+#include <random>
 #include <string>
 
 namespace complex

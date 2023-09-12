@@ -21,17 +21,17 @@ TEST_CASE("ComplexCore::SurfaceNetsFilter: NO Smoothing", "[ComplexCore][Surface
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceMeshTest/SurfaceMeshTest.dream3d", complex::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({complex::Constants::k_DataContainer});
+  const DataPath smallIn100Group({complex::Constants::k_DataContainer});
 
-  DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
-  DataPath ebsdSanDataPath({k_DataContainer, k_CellData});
+  const DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
+  const DataPath ebsdSanDataPath({k_DataContainer, k_CellData});
   // DataPath triangleParentGroup({k_DataContainer});
-  DataPath triangleGeometryPath({"SurfaceNets Mesh Test"});
+  const DataPath triangleGeometryPath({"SurfaceNets Mesh Test"});
   const std::string exemplarGeometryPath("SurfaceNets Mesh");
 
   {
     Arguments args;
-    SurfaceNetsFilter filter;
+    SurfaceNetsFilter const filter;
 
     // Create default Parameters for the filter.
 
@@ -39,27 +39,26 @@ TEST_CASE("ComplexCore::SurfaceNetsFilter: NO Smoothing", "[ComplexCore][Surface
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0));
     args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5));
 
-    DataPath gridGeomDataPath({k_DataContainer});
+    const DataPath gridGeomDataPath({k_DataContainer});
     args.insertOrAssign(SurfaceNetsFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
     args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
-
-    MultiArraySelectionParameter::ValueType selectedArrayPaths = {ebsdSanDataPath.createChildPath("BoundaryCells"), ebsdSanDataPath.createChildPath("ConfidenceIndex"),
-                                                                  ebsdSanDataPath.createChildPath("IPFColors")};
+    const MultiArraySelectionParameter::ValueType selectedArrayPaths = {ebsdSanDataPath.createChildPath("BoundaryCells"), ebsdSanDataPath.createChildPath("ConfidenceIndex"),
+                                                                        ebsdSanDataPath.createChildPath("IPFColors")};
 
     args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
 
     args.insertOrAssign(SurfaceNetsFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeometryPath));
 
-    DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
+    const DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
 
-    DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
+    const DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
 
-    DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
+    const DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
 
-    DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+    const DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
 
     // Preflight the filter and check result
@@ -72,11 +71,11 @@ TEST_CASE("ComplexCore::SurfaceNetsFilter: NO Smoothing", "[ComplexCore][Surface
 
     // Check a few things about the generated data.
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-    REQUIRE(triangle->getNumberOfTuples() == 63804);
-    REQUIRE(vertices->getNumberOfTuples() == 28894);
+    REQUIRE(trianglePtr->getNumberOfTuples() == 63804);
+    REQUIRE(verticesPtr->getNumberOfTuples() == 28894);
 
     // Compare the shift values
     CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath("SharedTriList"), DataPath({exemplarGeometryPath, "SharedTriList"}));
@@ -98,17 +97,17 @@ TEST_CASE("ComplexCore::SurfaceNetsFilter: With Smoothing", "[ComplexCore][Surfa
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceMeshTest/SurfaceMeshTest.dream3d", complex::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({complex::Constants::k_DataContainer});
+  const DataPath smallIn100Group({complex::Constants::k_DataContainer});
 
-  DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
-  DataPath ebsdSanDataPath({k_DataContainer, k_CellData});
+  const DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
+  const DataPath ebsdSanDataPath({k_DataContainer, k_CellData});
   // DataPath triangleParentGroup({k_DataContainer});
-  DataPath triangleGeometryPath({"SurfaceNets Mesh Test"});
+  const DataPath triangleGeometryPath({"SurfaceNets Mesh Test"});
   const std::string exemplarGeometryPath("SurfaceNets Mesh Smooth");
 
   {
     Arguments args;
-    SurfaceNetsFilter filter;
+    SurfaceNetsFilter const filter;
 
     // Create default Parameters for the filter.
 
@@ -116,27 +115,27 @@ TEST_CASE("ComplexCore::SurfaceNetsFilter: With Smoothing", "[ComplexCore][Surfa
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0));
     args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5));
 
-    DataPath gridGeomDataPath({k_DataContainer});
+    const DataPath gridGeomDataPath({k_DataContainer});
     args.insertOrAssign(SurfaceNetsFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
     args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
 
-    MultiArraySelectionParameter::ValueType selectedArrayPaths = {ebsdSanDataPath.createChildPath("BoundaryCells"), ebsdSanDataPath.createChildPath("ConfidenceIndex"),
-                                                                  ebsdSanDataPath.createChildPath("IPFColors")};
+    MultiArraySelectionParameter::ValueType const selectedArrayPaths = {ebsdSanDataPath.createChildPath("BoundaryCells"), ebsdSanDataPath.createChildPath("ConfidenceIndex"),
+                                                                        ebsdSanDataPath.createChildPath("IPFColors")};
 
     args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
 
     args.insertOrAssign(SurfaceNetsFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeometryPath));
 
-    DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
+    const DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
 
-    DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
+    const DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
 
-    DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
+    const DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
 
-    DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+    const DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
 
     // Preflight the filter and check result
@@ -149,11 +148,11 @@ TEST_CASE("ComplexCore::SurfaceNetsFilter: With Smoothing", "[ComplexCore][Surfa
 
     // Check a few things about the generated data.
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
+    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
 
-    REQUIRE(triangle->getNumberOfTuples() == 63804);
-    REQUIRE(vertices->getNumberOfTuples() == 28894);
+    REQUIRE(trianglePtr->getNumberOfTuples() == 63804);
+    REQUIRE(verticesPtr->getNumberOfTuples() == 28894);
 
     // Compare the shift values
     CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath("SharedTriList"), DataPath({exemplarGeometryPath, "SharedTriList"}));
