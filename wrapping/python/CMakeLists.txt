@@ -282,6 +282,7 @@ endforeach()
 #------------------------------------------------------------------------------
 # Create the Sphinx based Documentation
 #------------------------------------------------------------------------------
+option(COMPLEX_ENABLE_SPHINX_DOCS "Enables the Sphinx based documentation generation" OFF)
 if(COMPLEX_ENABLE_SPHINX_DOCS)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs ${complex_BINARY_DIR}/sphinx_docs)
 endif()
