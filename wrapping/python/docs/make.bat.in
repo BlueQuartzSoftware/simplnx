@@ -7,8 +7,8 @@ REM Command file for Sphinx documentation
 if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=${SPHINX_EXECUTABLE}
 )
-set SOURCEDIR=${complex_BINARY_DIR}/wrapping/python/docs/source
-set BUILDDIR=${complex_BINARY_DIR}/wrapping/python/docs/build
+set SOURCEDIR=${COMPLEX_SPHINX_DOCS_DIR}/source
+set BUILDDIR=${COMPLEX_SPHINX_DOCS_DIR}/build
 
 if "%1" == "" goto help
 
