@@ -64,27 +64,7 @@ add_custom_target(sphinx_generate_plugin_rst ALL
 #------------------------------------------------------------------------------
 # Find the `sphinx-build` executable
 #------------------------------------------------------------------------------
-get_filename_component(PYTHON_EXE_PATH "${Python3_EXECUTABLE}" DIRECTORY CACHE)
-set(SPHINX_PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
-find_program(SPHINX_EXECUTABLE sphinx-build
-    NAMES sphinx-buildd sphinx-build.exe
-    PATHS "${PYTHON_EXE_PATH};${PYTHON_EXE_PATH}/Scripts"
-)
-
-if(NOT SPHINX_EXECUTABLE)
-  if("${SPHINX_EXECUTABLE}" STREQUAL "SPHINX_EXECUTABLE-NOTFOUND")
-    message(FATAL_ERROR "sphinx-build was not found on your system. Typical installation under python is\n\
-    `pip install sphinx` or `conda install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme`\n\
-    You can also define Python3_EXECUTABLE and SPHINX_EXECUTABLE on the command line\n\
-    using the standard '-DPython3_EXECUTABLE=.....' syntax")
-
-    message(STATUS "Python3_EXECUTABLE=${Python3_EXECUTABLE}")
-    message(STATUS "PYTHON_EXE_PATH=${PYTHON_EXE_PATH}")
-    message(STATUS "SPHINX_PYTHON_EXECUTABLE=${SPHINX_PYTHON_EXECUTABLE}")
-    message(STATUS "SPHINX_EXECUTABLE=${SPHINX_EXECUTABLE}")
-
-  endif()
-endif()
+find_package(Sphinx REQUIRED)
 
 #------------------------------------------------------------------------------
 # Ensure this directory is created
