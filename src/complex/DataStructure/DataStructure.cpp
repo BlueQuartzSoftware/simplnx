@@ -776,11 +776,11 @@ void DataStructure::applyAllDataStructure()
   m_RootGroup.setDataStructure(this);
 }
 
-nonstd::expected<bool, std::string> DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
+nonstd::expected<void, std::string> DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
 {
   if(dataPaths.empty())
   {
-    return true;
+    return {};
   }
 
   std::stringstream message;
@@ -819,7 +819,7 @@ nonstd::expected<bool, std::string> DataStructure::validateNumberOfTuples(const 
       return {nonstd::make_unexpected(message.str())};
     }
   }
-  return true;
+  return {};
 }
 
 void DataStructure::resetIds(DataObject::IdType startingId)

@@ -651,7 +651,7 @@ public:
    * @param dataPaths
    * @return bool
    */
-  nonstd::expected<bool, std::string> validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
+  nonstd::expected<void, std::string> validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
 
   /**
    * @brief Resets DataObject IDs starting at the provided value.
