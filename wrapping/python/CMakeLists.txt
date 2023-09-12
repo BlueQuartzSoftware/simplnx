@@ -184,9 +184,6 @@ if(COMPLEX_PY_ENABLE_INSTALL)
     install(FILES $<TARGET_FILE_DIR:complex>/complex.pyi
       DESTINATION ${COMPLEX_PY_INSTALL_DIR}
     )
-    # install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/complex.pyi
-    #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
-    # )
   endif()
 endif()
 
@@ -207,7 +204,7 @@ function(complex_add_python_plugin)
 
   #string(TOLOWER ${ARGS_PLUGIN_NAME} PYTHON_MODULE_NAME)
   set(PYTHON_MODULE_NAME ${ARGS_PYTHON_MODULE_NAME})
-  set(PYTHON_WRAPPING_DIR "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}/wrapping/python/")
+  set(PYTHON_WRAPPING_DIR "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}/wrapping/python")
 
   pybind11_add_module(${PYTHON_MODULE_NAME} ${PYTHON_WRAPPING_DIR}/${PYTHON_MODULE_NAME}.cpp)
 
@@ -252,9 +249,6 @@ function(complex_add_python_plugin)
       install(FILES $<TARGET_FILE_DIR:complex>/${PYTHON_MODULE_NAME}.pyi
         DESTINATION ${COMPLEX_PY_INSTALL_DIR}
       )
-      # install(FILES ${PYTHON_WRAPPING_DIR}/${PYTHON_MODULE_NAME}.pyi
-      #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
-      # )
     endif()
   endif()
 
