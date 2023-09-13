@@ -14,11 +14,6 @@ find_package(Catch2 CONFIG REQUIRED)
 
 include(Catch)
 
-get_property(COMPLEX_PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
-add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestOne ${complex_BINARY_DIR}/Plugins/TestOne)
-add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/TestTwo ${complex_BINARY_DIR}/Plugins/TestTwo)
-MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+2")
-
 add_subdirectory(UnitTestCommon)
 
 add_executable(complex_test
@@ -51,9 +46,23 @@ target_link_libraries(complex_test
     complex::UnitTestCommon
 )
 
+#------------------------------------------------------------------------------
 # Require that the test plugins are built before tests because some tests
 # require loading from those plugins but don't want to link to them.
-add_dependencies(complex_test TestOne TestTwo)
+get_property(COMPLEX_PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
+
+#------------------------------------------------------------------------------
+# Create dependencies with complex_test on each of the test plugins
+#------------------------------------------------------------------------------
+if(COMPLEX_PLUGIN_ENABLE_TestOne)
+  MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+1")
+  add_dependencies(complex_test TestOne)
+endif()
+
+if(COMPLEX_PLUGIN_ENABLE_TestTwo)
+  MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+1")
+  add_dependencies(complex_test TestTwo)
+endif()
 
 set_target_properties(complex_test
   PROPERTIES

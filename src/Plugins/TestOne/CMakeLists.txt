@@ -1,6 +1,8 @@
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "TestOne")
+set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
+
 #------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
@@ -15,7 +17,7 @@ set(FilterList
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
-                      DESCRIPTION "Plugin for Comp${PLUGIN_NAME}lexCore"
+                      DESCRIPTION "Test Plugin for ${PLUGIN_NAME}"
                       VERSION "0.1.0"
 )
 

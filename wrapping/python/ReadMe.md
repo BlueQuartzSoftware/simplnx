@@ -38,6 +38,13 @@ Create the package from the `complex` sources
     [user@host] $ cd complex/conda
     [user@host] $ conda build . 
 
+For faster environment solves mamba can also be used. 
+
+```
+conda install boa
+conda mambabuild --python 3.8|3.9|3.10 .
+```
+
 ### Uploading to Anaconda.org
 
     [user@host] $ conda login

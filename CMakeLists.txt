@@ -786,13 +786,18 @@ endif()
 if(COMPLEX_ENABLE_OrientationAnalysis)
   set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} OrientationAnalysis)
 endif()
+
+if(COMPLEX_BUILD_TESTS)
+  set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} TestOne TestTwo)
+endif()
+
 # Add any plugins to the list
 set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} ${COMPLEX_EXTRA_PLUGINS})
 
 
 foreach(plugin ${COMPLEX_PLUGIN_LIST})
-  if(NOT DEFINED COMPLEX_ENABLE_${plugin})
-    set(COMPLEX_ENABLE_${plugin} ON)
+  if(NOT DEFINED COMPLEX_PLUGIN_ENABLE_${plugin})
+    set(COMPLEX_PLUGIN_ENABLE_${plugin} ON)
   endif()
   complex_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()

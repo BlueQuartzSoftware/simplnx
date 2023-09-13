@@ -1,6 +1,14 @@
+:: ****************************************************************************
+:: This script file builds the necessary dependencies that are not found as 
+:: part of a python environment but are needed to ultimately build the 
+:: complex python bindings.
+:: ****************************************************************************
+
 mkdir sdk
 
-rem "H5Support"
+:: ****************************************************************************
+:: Build the H5Support library
+:: ****************************************************************************
 
 mkdir h5support_build
 cd h5support_build
@@ -30,7 +38,9 @@ if errorlevel 1 exit 1
 
 cd ..
 
-rem "EbsdLib"
+:: ****************************************************************************
+:: Build the EbsdLib library
+:: ****************************************************************************
 
 mkdir ebsdlib_build
 cd ebsdlib_build
@@ -59,7 +69,9 @@ if errorlevel 1 exit 1
 
 cd ..
 
-rem "expected-lite"
+:: ****************************************************************************
+:: Build the expected-light library
+:: ****************************************************************************
 
 mkdir expected-lite_build
 cd expected-lite_build
@@ -80,7 +92,9 @@ if errorlevel 1 exit 1
 
 cd ..
 
-rem "span-lite"
+:: ****************************************************************************
+:: Build the span-light library
+:: ****************************************************************************
 
 mkdir span-lite_build
 cd span-lite_build
@@ -101,7 +115,9 @@ if errorlevel 1 exit 1
 
 cd ..
 
-rem "nod"
+:: ****************************************************************************
+:: Build the nod library
+:: ****************************************************************************
 
 mkdir nod_build
 cd nod_build
@@ -118,9 +134,25 @@ if errorlevel 1 exit 1
 cmake --build . --target install
 if errorlevel 1 exit 1
 
+
+:: ****************************************************************************
+:: Install the EbsdLibrary into the python build environment so that stubgen
+:: has access to it.
+:: ****************************************************************************
+cd ..
+cd ebsdlib_build
+
+cmake -D CMAKE_INSTALL_PREFIX:PATH="%LIBRARY_PREFIX%" .
+if errorlevel 1 exit 1
+
+cmake --build . --target install
+if errorlevel 1 exit 1
+
 cd ..
 
-rem "complex"
+:: ****************************************************************************
+:: Build the complex library
+:: ****************************************************************************
 
 mkdir build
 cd build
@@ -134,11 +166,3 @@ if errorlevel 1 exit 1
 cmake --build . --target install
 if errorlevel 1 exit 1
 
-cd ..
-cd ebsdlib_build
-
-cmake -D CMAKE_INSTALL_PREFIX:PATH="%LIBRARY_PREFIX%" .
-if errorlevel 1 exit 1
-
-cmake --build . --target install
-if errorlevel 1 exit 1
