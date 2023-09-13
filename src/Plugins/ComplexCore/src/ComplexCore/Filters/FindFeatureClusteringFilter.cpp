@@ -122,10 +122,10 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
     featureDataArrays.push_back(filterArgs.value<DataPath>(k_BiasedFeaturesArrayPath_Key));
   }
 
-  if(!dataStructure.validateNumberOfTuples(featureDataArrays))
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(featureDataArrays);
+  if(!tupleValidityCheck)
   {
-    return MakePreflightErrorResult(-9750, "Mismatching number of tuples in one or more of the feature level arrays (equivalent diameters, phases, centroids, and biased features). Make sure these "
-                                           "arrays all come from the same feature attribute matrix.");
+    return {MakeErrorResult<OutputActions>(-9750, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& cellEnsembleAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixNameValue);

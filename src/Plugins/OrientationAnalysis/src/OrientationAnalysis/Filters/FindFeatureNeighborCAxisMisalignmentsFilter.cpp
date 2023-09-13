@@ -96,12 +96,10 @@ IFilter::PreflightResult FindFeatureNeighborCAxisMisalignmentsFilter::preflightI
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(!dataStructure.validateNumberOfTuples({pNeighborListArrayPathValue, pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue}))
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pNeighborListArrayPathValue, pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue});
+  if(!tupleValidityCheck)
   {
-    return MakePreflightErrorResult(
-        -1560, fmt::format("The average quaternions feature data array '{}', neighbor list feature data array '{}' and the feature phases data array '{}' have mismatching number of tuples. Make "
-                           "sure these arrays are all located in the cell data attribute matrix for the selected geometry.",
-                           pAvgQuatsArrayPathValue.toString(), pNeighborListArrayPathValue.toString(), pFeaturePhasesArrayPathValue.toString()));
+    return {MakeErrorResult<OutputActions>(-1560, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);

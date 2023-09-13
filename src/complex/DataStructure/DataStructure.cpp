@@ -15,6 +15,7 @@
 #include <fmt/core.h>
 
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 
 namespace
@@ -775,12 +776,14 @@ void DataStructure::applyAllDataStructure()
   m_RootGroup.setDataStructure(this);
 }
 
-bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
+nonstd::expected<void, std::string> DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
 {
   if(dataPaths.empty())
   {
-    return true;
+    return {};
   }
+
+  std::stringstream message;
 
   usize tupleCount = std::numeric_limits<usize>::max();
   for(const auto& dataPath : dataPaths)
@@ -791,12 +794,19 @@ bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPath
     size_t numTuples = 0;
     if(dataObjectType == DataObject::Type::NeighborList || dataObjectType == DataObject::Type::StringArray || dataObjectType == DataObject::Type::DataArray)
     {
-      auto* dataArray = getDataAs<IArray>(dataPath);
-      numTuples = dataArray->getNumberOfTuples();
+      const auto* dataArrayPtr = getDataAs<IArray>(dataPath);
+      numTuples = dataArrayPtr->getNumberOfTuples();
     }
     else // We can only check DataObject subclasses that hold items that can be expressed as getNumberOfTuples();
     {
-      return false;
+      message << "Only NeighborList, StringArray and DataArray can be validated for tuple counts\n";
+      return {nonstd::make_unexpected(message.str())};
+    }
+
+    auto parentPaths = dataObject->getDataPaths();
+    for(const auto& path : parentPaths)
+    {
+      message << "DataPath: " << path.toString() << "    | Tuple Count: " << numTuples << "\n";
     }
 
     // Check equality if not first item
@@ -806,10 +816,10 @@ bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPath
     }
     else if(tupleCount != numTuples)
     {
-      return false;
+      return {nonstd::make_unexpected(message.str())};
     }
   }
-  return true;
+  return {};
 }
 
 void DataStructure::resetIds(DataObject::IdType startingId)

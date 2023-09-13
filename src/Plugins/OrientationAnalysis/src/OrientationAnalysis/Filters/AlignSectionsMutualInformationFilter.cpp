@@ -125,10 +125,10 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   }
 
   std::vector<DataPath> dataArrayPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pGoodVoxelsArrayPathValue};
-  if(!dataStructure.validateNumberOfTuples(dataArrayPaths))
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(
-        -3542, fmt::format("The quaternions, phases, and mask data arrays have mismatching tuple numbers. Make sure you are using data arrays from the Image geometry's cell data Attribute Matrix."))};
+    return {MakeErrorResult<OutputActions>(-3542, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

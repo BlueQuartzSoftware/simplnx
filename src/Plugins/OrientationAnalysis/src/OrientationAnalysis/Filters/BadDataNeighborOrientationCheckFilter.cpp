@@ -16,6 +16,7 @@ inline constexpr int32 k_MissingGeomError = -6800;
 inline constexpr int32 k_MissingInputArray = -6801;
 inline constexpr int32 k_IncorrectInputArray = -6802;
 inline constexpr int32 k_InvalidNumTuples = -6803;
+inline constexpr int32 k_InconsistentTupleCount = -6809;
 } // namespace
 
 namespace complex
@@ -176,9 +177,11 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
   dataArrayPaths.push_back(pQuatsArrayPathValue);
 
   // validate the number of tuples
-  if(!dataStructure.validateNumberOfTuples(dataArrayPaths))
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!tupleValidityCheck)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_InvalidNumTuples, "Input arrays do not have matching tuple counts."}})};
+    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
+                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   return {};

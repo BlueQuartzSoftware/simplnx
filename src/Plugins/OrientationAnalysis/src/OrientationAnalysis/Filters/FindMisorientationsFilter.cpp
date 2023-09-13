@@ -127,9 +127,10 @@ IFilter::PreflightResult FindMisorientationsFilter::preflightImpl(const DataStru
   dataArrayPaths.push_back(pFeaturePhasesArrayPathValue);
   dataArrayPaths.push_back(pNeighborListArrayPathValue);
 
-  if(!dataStructure.validateNumberOfTuples(dataArrayPaths))
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-34501, "Input DataArrays do not have matching tuple count")};
+    return {MakeErrorResult<OutputActions>(-34501, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   complex::Result<OutputActions> resultOutputActions;
