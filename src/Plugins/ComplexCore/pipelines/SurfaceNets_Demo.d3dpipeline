@@ -1,0 +1,129 @@
+{
+  "isDisabled": false,
+  "name": "SurfaceNets_Demo.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_data_name": "Optical Data",
+        "image_data_array_path": "ImageData",
+        "image_geometry_path": "RoboMet.3D Image Stack",
+        "image_transform_choice": 0,
+        "input_file_list_info": {
+          "end_index": 174,
+          "file_extension": ".tif",
+          "file_prefix": "slice_",
+          "file_suffix": "",
+          "increment_index": 1,
+          "input_path": "Data/Porosity_Image",
+          "ordering": 0,
+          "padding_digits": 2,
+          "start_index": 11
+        },
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "comments": "This pipeline shows how to import a stack of binarized images, segment them and perform a surfacemeshing on those pores using the 'SurfaceNets' Algorithm.\n\nIf you want to visualize the pores you will need to threshold out (with a visualization program) those triangle faces that have a FaceLael > 0 (for the 2nd component of the FaceLabels) array.",
+      "filter": {
+        "name": "complex::ITKImportImageStack",
+        "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
+              "comparison": 2,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "Mask",
+        "created_mask_type": 10,
+        "custom_false_value": 0.0,
+        "custom_true_value": 1.0,
+        "use_custom_false_value": false,
+        "use_custom_true_value": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "active_array_path": "Active",
+        "cell_feature_group_path": "Pore Data",
+        "feature_ids_path": "FeatureIds",
+        "grid_geometry_path": "RoboMet.3D Image Stack",
+        "input_array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
+        "mask_path": "RoboMet.3D Image Stack/Optical Data/Mask",
+        "randomize_features": true,
+        "scalar_tolerance": 0,
+        "use_mask": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ScalarSegmentFeaturesFilter",
+        "uuid": "e067cd97-9bbf-4c92-89a6-3cb4fdb76c93"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "apply_smoothing": true,
+        "face_data_group_name": "Face Data",
+        "face_feature_attribute_matrix_name": "Face Feature Data",
+        "face_labels_array_name": "FaceLabels",
+        "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+        "grid_geometry_data_path": "RoboMet.3D Image Stack",
+        "max_distance_from_voxel": 1.0,
+        "node_types_array_name": "NodeTypes",
+        "relaxation_factor": 0.5,
+        "selected_data_array_paths": [],
+        "smoothing_iterations": 20,
+        "triangle_geometry_name": "TriangleDataContainer",
+        "vertex_data_group_name": "Vertex Data"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::SurfaceNetsFilter",
+        "uuid": "13ddf0bd-af49-4e0f-95fb-3267952fd6e5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/SurfaceMesh/SurfaceNets_Demo.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

@@ -9,7 +9,6 @@
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include <array>
-#include <random>
 #include <unordered_map>
 
 using namespace complex;
@@ -17,6 +16,13 @@ using namespace complex;
 // -----------------------------------------------------------------------------
 namespace
 {
+constexpr double k_RangeMin = 0.0;
+constexpr double k_RangeMax = 1.0;
+std::random_device k_RandomDevice;             // Will be used to obtain a seed for the random number engine
+std::mt19937_64 k_Generator(k_RandomDevice()); // Standard mersenne_twister_engine seeded with rd()
+std::mt19937_64::result_type k_Seed = 3412341234123412;
+std::uniform_real_distribution<> k_Distribution(k_RangeMin, k_RangeMax);
+
 template <class T>
 inline void hashCombine(size_t& seed, const T& obj)
 {
@@ -25,13 +31,13 @@ inline void hashCombine(size_t& seed, const T& obj)
 }
 
 // -----------------------------------------------------------------------------
-using Vertex = std::array<float, 3>;
-using Edge = std::array<IGeometry::MeshIndexType, 2>;
+using VertexType = std::array<float, 3>;
+using EdgeType = std::array<IGeometry::MeshIndexType, 2>;
 
 // -----------------------------------------------------------------------------
 struct VertexHasher
 {
-  size_t operator()(const Vertex& vert) const
+  size_t operator()(const VertexType& vert) const
   {
     size_t hash = std::hash<float>()(vert[0]);
     hashCombine(hash, vert[1]);
@@ -43,7 +49,7 @@ struct VertexHasher
 // -----------------------------------------------------------------------------
 struct EdgeHasher
 {
-  size_t operator()(const Edge& edge) const
+  size_t operator()(const EdgeType& edge) const
   {
     size_t hash = std::hash<IGeometry::MeshIndexType>()(edge[0]);
     hashCombine(hash, edge[1]);
@@ -52,8 +58,8 @@ struct EdgeHasher
 };
 
 // -----------------------------------------------------------------------------
-using VertexMap = std::unordered_map<Vertex, IGeometry::MeshIndexType, VertexHasher>;
-using EdgeMap = std::unordered_map<Edge, IGeometry::MeshIndexType, EdgeHasher>;
+using VertexMap = std::unordered_map<VertexType, IGeometry::MeshIndexType, VertexHasher>;
+using EdgeMap = std::unordered_map<EdgeType, IGeometry::MeshIndexType, EdgeHasher>;
 
 // -----------------------------------------------------------------------------
 struct GenerateTripleLinesImpl
@@ -94,13 +100,13 @@ struct GenerateTripleLinesImpl
           neigh2 = point + (xP * yP) + 1;
           neigh3 = point + (xP * yP);
 
-          Vertex p0 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+          VertexType const p0 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-          Vertex p1 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+          VertexType const p1 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-          Vertex p2 = {{origin[0] + static_cast<float>(i) * res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+          VertexType const p2 = {{origin[0] + static_cast<float>(i) * res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-          Vertex p3 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2]}};
+          VertexType const p3 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2]}};
 
           uFeatures.clear();
           uFeatures.insert(featureIds[point]);
@@ -123,7 +129,7 @@ struct GenerateTripleLinesImpl
             MeshIndexType i0 = vertexMap[p0];
             MeshIndexType i1 = vertexMap[p1];
 
-            Edge tmpEdge = {{i0, i1}};
+            const EdgeType tmpEdge = {{i0, i1}};
             auto eiter = edgeMap.find(tmpEdge);
             if(eiter == edgeMap.end())
             {
@@ -157,7 +163,7 @@ struct GenerateTripleLinesImpl
             MeshIndexType i0 = vertexMap[p0];
             MeshIndexType i2 = vertexMap[p2];
 
-            Edge tmpEdge = {{i0, i2}};
+            const EdgeType tmpEdge = {{i0, i2}};
             auto eiter = edgeMap.find(tmpEdge);
             if(eiter == edgeMap.end())
             {
@@ -191,7 +197,7 @@ struct GenerateTripleLinesImpl
             MeshIndexType i0 = vertexMap[p0];
             MeshIndexType i3 = vertexMap[p3];
 
-            Edge tmpEdge = {{i0, i3}};
+            const EdgeType tmpEdge = {{i0, i3}};
             auto eiter = edgeMap.find(tmpEdge);
             if(eiter == edgeMap.end())
             {
@@ -228,10 +234,11 @@ private:
 // -----------------------------------------------------------------------------
 QuickSurfaceMesh::QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
-, m_Inputs(inputValues)
+, m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
+  k_Generator.seed(k_Seed);
 }
 
 // -----------------------------------------------------------------------------
@@ -241,10 +248,10 @@ QuickSurfaceMesh::~QuickSurfaceMesh() noexcept = default;
 Result<> QuickSurfaceMesh::operator()()
 {
   // Get the ImageGeometry
-  auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
+  auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
 
   // Get the Created Triangle Geometry
-  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_Inputs->pTriangleGeometryPath);
+  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
 
   SizeVec3 udims = grid.getDimensions();
 
@@ -260,7 +267,7 @@ Result<> QuickSurfaceMesh::operator()()
   MeshIndexType nodeCount = 0;
   MeshIndexType triangleCount = 0;
 
-  if(m_Inputs->pFixProblemVoxels)
+  if(m_InputValues->FixProblemVoxels)
   {
     correctProblemVoxels();
   }
@@ -275,23 +282,23 @@ Result<> QuickSurfaceMesh::operator()()
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({nodeCount});
 
   // Resize the Face Arrays that are being copied over from the ImageGeom Cell Data
-  for(const auto& dataPath : m_Inputs->pCreatedDataArrayPaths)
+  for(const auto& dataPath : m_InputValues->CreatedDataArrayPaths)
   {
     Result<> result = complex::ResizeAndReplaceDataArray(m_DataStructure, dataPath, tupleShape, complex::IDataAction::Mode::Execute);
   }
 
   createNodesAndTriangles(nodeIds, nodeCount, triangleCount);
 
-#if 0
-  if(m_Inputs->pGenerateTripleLines)
+#ifdef QSM_CREATE_TRIPLE_LINES
+  if(m_InputValues->pGenerateTripleLines)
   {
     IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
     IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
-    EdgeGeom* edgeGeom = EdgeGeom::Create(m_DataStructure, "[Edge Geometry]", parentGroupId);
+    EdgeGeom* edgeGeom = EdgeGeom::Create(m_DataStructure, "[EdgeType Geometry]", parentGroupId);
     edgeGeom->setVertices(*vertices);
 
-    Int32Array& nodeTypes = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFaceLabelsDataPath);
+    Int32Array& nodeTypes = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->pFaceLabelsDataPath);
 
     MeshIndexType edgeCount = 0;
     for(MeshIndexType i = 0; i < triangleCount; i++)
@@ -313,8 +320,8 @@ Result<> QuickSurfaceMesh::operator()()
       }
     }
 
-    std::string edgeGeometryName = "[Edge Geometry]";
-    DataPath edgeGeometryDataPath = m_Inputs->pParentDataGroupPath.createChildPath(edgeGeometryName);
+    std::string edgeGeometryName = "[EdgeType Geometry]";
+    DataPath edgeGeometryDataPath = m_InputValues->pParentDataGroupPath.createChildPath(edgeGeometryName);
     std::string sharedEdgeListName = "SharedEdgeList";
     size_t numEdges = edgeCount;
     size_t numEdgeComps = 2;
@@ -367,15 +374,7 @@ void QuickSurfaceMesh::getGridCoordinates(const IGridGeometry* grid, size_t x, s
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::flipProblemVoxelCase1(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4, MeshIndexType v5, MeshIndexType v6) const
 {
-  double rangeMin = 0.0;
-  double rangeMax = 1.0;
-  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  generator.seed(seed);
-  std::uniform_real_distribution<> distribution(rangeMin, rangeMax);
-
-  float val = static_cast<float>(distribution(generator)); // Random remaining position.
+  float val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
   if(val < 0.25f)
   {
@@ -398,15 +397,7 @@ void QuickSurfaceMesh::flipProblemVoxelCase1(Int32AbstractDataStore& featureIds,
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::flipProblemVoxelCase2(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4) const
 {
-  double rangeMin = 0.0;
-  double rangeMax = 1.0;
-  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  generator.seed(seed);
-  std::uniform_real_distribution<> distribution(rangeMin, rangeMax);
-
-  float val = static_cast<float>(distribution(generator)); // Random remaining position.
+  float val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
   if(val < 0.125f)
   {
@@ -445,15 +436,7 @@ void QuickSurfaceMesh::flipProblemVoxelCase2(Int32AbstractDataStore& featureIds,
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::flipProblemVoxelCase3(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3) const
 {
-  double rangeMin = 0.0;
-  double rangeMax = 1.0;
-  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  generator.seed(seed);
-  std::uniform_real_distribution<> distribution(rangeMin, rangeMax);
-
-  float val = static_cast<float>(distribution(generator)); // Random remaining position.
+  float val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
   if(val < 0.5f)
   {
@@ -470,9 +453,9 @@ void QuickSurfaceMesh::correctProblemVoxels()
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Correcting Problem Voxels");
 
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
+  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
 
-  Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
+  Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto& featureIds = featureIdsArray.getDataStoreRef();
 
   SizeVec3 udims = grid->getDimensions();
@@ -639,9 +622,9 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Determining active Nodes");
 
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
+  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
 
-  Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
+  Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   Int32AbstractDataStore& featureIds = featureIdsArray.getDataStoreRef();
 
   SizeVec3 udims = grid->getDimensions();
@@ -940,7 +923,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Creating mesh");
 
-  Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
+  Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto& featureIds = featureIdsArray.getDataStoreRef();
 
   size_t numFeatures = 0;
@@ -955,7 +938,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
     }
   }
 
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
+  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
 
   SizeVec3 udims = grid->getDimensions();
 
@@ -975,7 +958,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   MeshIndexType nodeId3 = 0;
   MeshIndexType nodeId4 = 0;
 
-  auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_Inputs->pTriangleGeometryPath);
+  auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   LinkedGeometryData& linkedGeometryData = triangleGeom->getLinkedGeometryData();
 
   std::vector<size_t> tDims = {nodeCount};
@@ -984,22 +967,26 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   triangleGeom->getFaceAttributeMatrix()->resizeTuples({triangleCount});
   triangleGeom->getVertexAttributeMatrix()->resizeTuples(tDims);
 
-  auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFaceLabelsDataPath);
-  linkedGeometryData.addFaceData(m_Inputs->pFaceLabelsDataPath);
-  linkedGeometryData.addVertexData(m_Inputs->pNodeTypesDataPath);
+  auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath);
+  linkedGeometryData.addFaceData(m_InputValues->FaceLabelsDataPath);
+
+  // Resize the NodeTypes array
+  auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath);
+  nodeTypes.resizeTuples({nodeCount});
+  linkedGeometryData.addVertexData(m_InputValues->NodeTypesDataPath);
 
   IGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());
   IGeometry::SharedTriList& triangle = *(triangleGeom->getFaces());
 
   ownerLists.resize(nodeCount);
 
-  // Create a vector of TupleTransferFunctions for each of the Triangle Face to Vertex Data Arrays
+  // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(size_t i = 0; i < m_Inputs->pSelectedDataArrayPaths.size(); i++)
+  for(size_t i = 0; i < m_InputValues->SelectedDataArrayPaths.size(); i++)
   {
     // Associate these arrays with the Triangle Face Data.
-    linkedGeometryData.addFaceData(m_Inputs->pSelectedDataArrayPaths[i]);
-    ::AddTupleTransferInstance(m_DataStructure, m_Inputs->pSelectedDataArrayPaths[i], m_Inputs->pCreatedDataArrayPaths[i], tupleTransferFunctions);
+    linkedGeometryData.addFaceData(m_InputValues->SelectedDataArrayPaths[i]);
+    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
   }
 
   // Cycle through again assigning coordinates to each node and assigning node numbers and feature labels to each triangle
@@ -1036,9 +1023,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1049,9 +1036,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1085,9 +1072,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1098,9 +1085,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1134,9 +1121,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1147,9 +1134,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1183,9 +1170,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1196,9 +1183,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1240,9 +1227,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabels[triangleIndex * 2 + 1] = featureIds[neigh1];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh1, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh1, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1260,9 +1247,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabels[triangleIndex * 2 + 1] = featureIds[neigh1];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh1, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh1, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1296,9 +1283,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1309,9 +1296,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1352,9 +1339,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabels[triangleIndex * 2 + 1] = featureIds[neigh2];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh2, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh2, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1372,9 +1359,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabels[triangleIndex * 2 + 1] = featureIds[neigh2];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh2, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh2, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1408,9 +1395,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1421,9 +1408,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabels[triangleIndex * 2] = -1;
           faceLabels[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1464,9 +1451,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabels[triangleIndex * 2 + 1] = featureIds[neigh3];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh3, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh3, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1484,9 +1471,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabels[triangleIndex * 2 + 1] = featureIds[neigh3];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh3, point, true);
+            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh3, point, faceLabels);
           }
 
           triangleIndex++;
@@ -1504,7 +1491,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
     }
   }
 
-  Int8Array& m_NodeTypesArray = m_DataStructure.getDataRefAs<Int8Array>(m_Inputs->pNodeTypesDataPath);
+  Int8Array& m_NodeTypesArray = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath);
   Int8AbstractDataStore& m_NodeTypes = m_NodeTypesArray.getDataStoreRef();
 
   for(size_t i = 0; i < nodeCount; i++)
@@ -1542,7 +1529,7 @@ void QuickSurfaceMesh::generateTripleLines()
   //  DataContainer* sm = getDataContainerArray()->getDataContainer(getSurfaceDataContainerName());
   //
   //  AttributeMatrix* featAttrMat = sm->getAttributeMatrix(m_FeatureAttributeMatrixName);
-  Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
+  Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   Int32AbstractDataStore& featureIds = featureIdsArray.getDataStoreRef();
 
   int32_t numFeatures = 0;
@@ -1557,7 +1544,7 @@ void QuickSurfaceMesh::generateTripleLines()
 
   std::vector<size_t> featDims = {static_cast<size_t>(numFeatures) + 1};
 
-  ImageGeom* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_Inputs->pGridGeomDataPath);
+  ImageGeom* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->GridGeomDataPath);
 
   SizeVec3 udims = imageGeom->getDimensions();
 
@@ -1589,7 +1576,7 @@ void QuickSurfaceMesh::generateTripleLines()
   algorithm.setParallelizationEnabled(false);
   algorithm.execute(GenerateTripleLinesImpl(imageGeom, featureIds, vertexMap, edgeMap));
 
-#if 0
+#if QSM_CREATE_TRIPLE_LINES
   for(size_t k = 0; k < zP - 1; k++)
   {
     for(size_t j = 0; j < yP - 1; j++)
@@ -1602,13 +1589,13 @@ void QuickSurfaceMesh::generateTripleLines()
         neigh2 = point + (xP * yP) + 1;
         neigh3 = point + (xP * yP);
 
-        Vertex p0 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+        VertexType p0 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-        Vertex p1 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+        VertexType p1 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-        Vertex p2 = {{origin[0] + static_cast<float>(i) * res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
+        VertexType p2 = {{origin[0] + static_cast<float>(i) * res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2] + res[2]}};
 
-        Vertex p3 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2]}};
+        VertexType p3 = {{origin[0] + static_cast<float>(i) * res[0] + res[0], origin[1] + static_cast<float>(j) * res[1] + res[1], origin[2] + static_cast<float>(k) * res[2]}};
 
         uFeatures.clear();
         uFeatures.insert(featureIds[point]);
@@ -1631,7 +1618,7 @@ void QuickSurfaceMesh::generateTripleLines()
           MeshIndexType i0 = vertexMap[p0];
           MeshIndexType i1 = vertexMap[p1];
 
-          Edge tmpEdge = {{i0, i1}};
+          EdgeType tmpEdge = {{i0, i1}};
           auto eiter = edgeMap.find(tmpEdge);
           if(eiter == edgeMap.end())
           {
@@ -1665,7 +1652,7 @@ void QuickSurfaceMesh::generateTripleLines()
           MeshIndexType i0 = vertexMap[p0];
           MeshIndexType i2 = vertexMap[p2];
 
-          Edge tmpEdge = {{i0, i2}};
+          EdgeType tmpEdge = {{i0, i2}};
           auto eiter = edgeMap.find(tmpEdge);
           if(eiter == edgeMap.end())
           {
@@ -1699,7 +1686,7 @@ void QuickSurfaceMesh::generateTripleLines()
           MeshIndexType i0 = vertexMap[p0];
           MeshIndexType i3 = vertexMap[p3];
 
-          Edge tmpEdge = {{i0, i3}};
+          EdgeType tmpEdge = {{i0, i3}};
           auto eiter = edgeMap.find(tmpEdge);
           if(eiter == edgeMap.end())
           {
