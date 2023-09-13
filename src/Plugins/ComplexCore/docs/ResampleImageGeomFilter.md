@@ -11,11 +11,47 @@ This **Filter** changes the **Cell** spacing/resolution based on inputs from the
 ### Spacing ###
 The values entered are the desired new spacings (not multiples of the current resolution).  The number of **Cells** in the volume will change when the spacing values are changed and thus the user should be cautious of generating "too many" **Cells** by entering very small values (i.e., very high resolution).
 
+**Example 1**:
+
+Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
+
+If the new spacing value is (2, 2, 2), then the geometry will have cell dimensions (262, 195, 82) and spacing (2, 2, 2).
+
+**Example 2**:
+
+Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
+
+If the new spacing value is (0.25, 0.7, 2.3), then the geometry will have cell dimensions (2096, 557, 71) and spacing (0.25, 0.7, 2.3).
+
 ### Scale Factor ###
-The values entered are the desired scaling factor for each dimension, in percentages.  (50%, 50%, 50%) would resample the geometry by half in all dimensions.
+The values entered are the desired scaling factor for each dimension, in percentages.
+
+**Example 1**:
+
+Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
+
+If the new scaling value is (30%, 30%, 30%), then the geometry will have cell dimensions (157, 117, 49) and spacing (3.3333, 3.3333, 3.3333).
+
+**Example 2**:
+
+Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
+
+If the new scaling value is (120.4%, 50.74%, 68.12%), then the geometry will have cell dimensions (630, 197, 111) and spacing (0.830565, 1.97083, 1.468).
 
 ### Exact Dimensions ###
 The values entered are the desired cell dimensions of the resampled geometry.  (100, 100, 100) would resample the geometry so that there are 100 cells in each dimension.
+
+**Example 1**:
+
+Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
+
+If the new exact dimensions are (100, 100, 100), then the geometry will have cell dimensions (100, 100, 100) and spacing (5.24, 3.9, 1.64).
+
+**Example 2**:
+
+Image Geometry with cell dimensions (524, 390, 164) and spacing (1, 1, 1).
+
+If the new exact dimensions are (100, 500, 20), then the geometry will have cell dimensions (100, 500, 20) and spacing (5.24, 0.78, 8.2).
 
 ---
 
@@ -56,7 +92,7 @@ Image
 
 ## Example Pipelines ##
 
-
+ComplexCore/ResamplePorosityImage
 
 ## License & Copyright ##
 
