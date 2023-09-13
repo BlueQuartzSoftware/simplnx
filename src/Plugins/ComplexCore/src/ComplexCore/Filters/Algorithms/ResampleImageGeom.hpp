@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
 
 #include <vector>
 
@@ -32,7 +33,7 @@ struct COMPLEXCORE_EXPORT ResampleImageGeomInputValues
 class COMPLEXCORE_EXPORT ResampleImageGeom
 {
 public:
-  ResampleImageGeom(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ResampleImageGeomInputValues* inputValues);
+  ResampleImageGeom(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ResampleImageGeomInputValues* inputValues);
   ~ResampleImageGeom() noexcept;
 
   ResampleImageGeom(const ResampleImageGeom&) = delete;
