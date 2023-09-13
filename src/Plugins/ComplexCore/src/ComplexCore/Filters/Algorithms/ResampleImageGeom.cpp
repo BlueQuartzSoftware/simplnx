@@ -1,7 +1,6 @@
 #include "ResampleImageGeom.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
@@ -79,11 +78,11 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-ResampleImageGeom::ResampleImageGeom(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ResampleImageGeomInputValues* inputValues)
+ResampleImageGeom::ResampleImageGeom(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ResampleImageGeomInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
+, m_MessageHandler(msgHandler)
 {
 }
 
@@ -118,9 +117,9 @@ Result<> ResampleImageGeom::operator()()
   std::vector<DataPath> selectedCellArrays;
 
   // Create the vector of selected cell DataPaths
-  for(auto child = cellDataGroup.begin(); child != cellDataGroup.end(); ++child)
+  for(const auto& child : cellDataGroup)
   {
-    selectedCellArrays.push_back(m_InputValues->CellDataGroupPath.createChildPath(child->second->getName()));
+    selectedCellArrays.push_back(m_InputValues->CellDataGroupPath.createChildPath(child.second->getName()));
   }
 
   // The actual cropping of the dataStructure arrays is done in parallel where parallel here
