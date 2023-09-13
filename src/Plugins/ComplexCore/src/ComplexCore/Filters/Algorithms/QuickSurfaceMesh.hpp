@@ -8,6 +8,7 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
+#include <random>
 #include <string>
 
 namespace complex
@@ -15,17 +16,18 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT QuickSurfaceMeshInputValues
 {
-  bool pFixProblemVoxels;
-  DataPath pGridGeomDataPath;
-  DataPath pFeatureIdsArrayPath;
-  MultiArraySelectionParameter::ValueType pSelectedDataArrayPaths;
-  DataPath pTriangleGeometryPath;
-  DataPath pVertexGroupDataPath;
-  DataPath pNodeTypesDataPath;
-  DataPath pFaceGroupDataPath;
-  DataPath pFaceLabelsDataPath;
-  MultiArraySelectionParameter::ValueType pCreatedDataArrayPaths;
-  bool pGenerateTripleLines;
+  bool FixProblemVoxels;
+  bool GenerateTripleLines;
+
+  DataPath GridGeomDataPath;
+  DataPath FeatureIdsArrayPath;
+  MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
+  DataPath TriangleGeometryPath;
+  DataPath VertexGroupDataPath;
+  DataPath NodeTypesDataPath;
+  DataPath FaceGroupDataPath;
+  DataPath FaceLabelsDataPath;
+  MultiArraySelectionParameter::ValueType CreatedDataArrayPaths;
 };
 
 class COMPLEXCORE_EXPORT QuickSurfaceMesh
@@ -106,13 +108,18 @@ public:
   void createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount);
 
   /**
+   * @brief
+   */
+  void copyCellDataToTriangleFaceArray();
+
+  /**
    * @brief generateTripleLines
    */
   void generateTripleLines();
 
 private:
   DataStructure& m_DataStructure;
-  const QuickSurfaceMeshInputValues* m_Inputs = nullptr;
+  const QuickSurfaceMeshInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   bool m_GenerateTripleLines = false;

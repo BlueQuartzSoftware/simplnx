@@ -53,13 +53,13 @@ public:
     float32 rotNormal[3] = {0.0f, 0.0f, 0.0f};
     float32 rotNormal2[3] = {0.0f, 0.0f, 0.0f};
     float32 sqCoord[2] = {0.0f, 0.0f};
-    float32 dg[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 dgt[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 dg1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 dg2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 sym1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 sym2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 sym2t[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    float32 dg[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    float32 dgt[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    float32 dg1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    float32 dg2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    float32 sym1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    float32 sym2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    float32 sym2t[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
     float32 misEuler1[3] = {0.0f, 0.0f, 0.0f};
 
     float32 misAngle = m_MisorientationRotation[0] * Constants::k_PiOver180F;
@@ -122,9 +122,10 @@ public:
               // calculate symmetric misorientation
               MatrixMath::Multiply3x3with3x3(dg, sym2t, dg1);
               MatrixMath::Multiply3x3with3x3(sym1, dg1, dg2);
+              OrientationF om(dg2);
               // convert to euler angle
               OrientationF eu(misEuler1, 3);
-              eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(OrientationF(dg2));
+              eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(om);
               if(misEuler1[0] < Constants::k_PiOver2F && misEuler1[1] < Constants::k_PiOver2F && misEuler1[2] < Constants::k_PiOver2F)
               {
                 misEuler1[1] = cosf(misEuler1[1]);
@@ -156,8 +157,9 @@ public:
               // calculate symmetric misorientation
               MatrixMath::Multiply3x3with3x3(dgt, sym2, dg1);
               MatrixMath::Multiply3x3with3x3(sym1, dg1, dg2);
+              om = OrientationF(dg2);
               // convert to euler angle
-              eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(OrientationF(dg2));
+              eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(om);
               if(misEuler1[0] < Constants::k_PiOver2D && misEuler1[1] < Constants::k_PiOver2F && misEuler1[2] < Constants::k_PiOver2F)
               {
                 misEuler1[1] = cosf(misEuler1[1]);
