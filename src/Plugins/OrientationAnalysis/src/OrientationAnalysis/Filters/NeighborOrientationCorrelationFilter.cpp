@@ -212,10 +212,11 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   }
 
   // validate the number of tuples
-  if(!dataStructure.validateNumberOfTuples(dataArrayPaths))
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!tupleValidityCheck)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{
-        Error{k_InvalidNumTuples, "Geometry arrays do not have matching tuple counts.  Input arrays as well as all arrays not on the ignore list must have matching tuple counts."}})};
+    return {
+        MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   return {};

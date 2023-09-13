@@ -7,6 +7,7 @@
 #include "complex/complex_export.hpp"
 
 #include <nod/nod.hpp>
+#include <nonstd/expected.hpp>
 
 #include <filesystem>
 #include <map>
@@ -650,7 +651,7 @@ public:
    * @param dataPaths
    * @return bool
    */
-  bool validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
+  nonstd::expected<void, std::string> validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
 
   /**
    * @brief Resets DataObject IDs starting at the provided value.

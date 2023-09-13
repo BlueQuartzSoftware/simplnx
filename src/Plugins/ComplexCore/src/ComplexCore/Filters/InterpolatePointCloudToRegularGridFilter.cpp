@@ -220,7 +220,7 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto useMask = args.value<bool>(k_UseMask_Key);
@@ -257,8 +257,8 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   }
 
   const DataPath interpolatedGroupPath = imageGeomPath.createChildPath(interpolatedGroupName);
-  auto vertexGeom = data.getDataAs<VertexGeom>(vertexGeomPath);
-  auto image = data.getDataAs<ImageGeom>(imageGeomPath);
+  auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
+  auto image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
   const SizeVec3 imageDims = image->getDimensions();
   std::vector<usize> tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
   const usize numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
@@ -276,7 +276,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     dataArrays.push_back(interpolatePath);
 
-    auto targetArray = data.getDataAs<IDataArray>(interpolatePath);
+    auto targetArray = dataStructure.getDataAs<IDataArray>(interpolatePath);
     auto targetPath = interpolatedGroupPath.createChildPath(targetArray->getName());
     if(targetArray->getNumberOfComponents() != 1)
     {
@@ -296,7 +296,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     dataArrays.push_back(copyPath);
 
-    auto targetArray = data.getDataAs<IDataArray>(copyPath);
+    auto targetArray = dataStructure.getDataAs<IDataArray>(copyPath);
     auto targetPath = interpolatedGroupPath.createChildPath(targetArray->getName());
     if(targetArray->getNumberOfComponents() != 1)
     {
@@ -317,9 +317,10 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     dataArrays.push_back(args.value<DataPath>(k_Mask_Key));
   }
 
-  if(!data.validateNumberOfTuples(dataArrays))
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
+  if(!tupleValidityCheck)
   {
-    return MakePreflightErrorResult(-11003, fmt::format("Input vertices, voxel indices and/or interpolated/copy arrays have mismatching numbers of tuples."));
+    return {MakeErrorResult<OutputActions>(-11003, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // Create the neighbor list array for storing the kernel distances

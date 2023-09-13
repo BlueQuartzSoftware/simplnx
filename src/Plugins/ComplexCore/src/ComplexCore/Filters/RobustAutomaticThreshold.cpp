@@ -6,14 +6,14 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;
 
 namespace
 {
-constexpr int32 k_IncorrectInputArrayType = -63;
+constexpr int32 k_IncorrectInputArrayType = -2363;
+constexpr int32 k_InconsistentTupleCount = -2364;
 
 template <class T>
 void FindThreshold(const DataArray<T>& inputArray, const Float32Array& gradMagnitudeArray, BoolArray& maskArray)
@@ -172,9 +172,11 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
   std::vector<usize> tupleDims = {inputArray.getTupleShape()};
   usize numComponents = inputArray.getNumberOfComponents();
 
-  if(!dataStructure.validateNumberOfTuples(dataPaths))
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input array and gradient array have mismatched dimensions")};
+    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
+                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{numComponents}, createdMaskPath, inputArray.getDataFormat());
