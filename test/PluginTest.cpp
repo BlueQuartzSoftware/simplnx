@@ -31,6 +31,16 @@ TEST_CASE("Test Loading Plugins")
   const auto& filterHandles = filterList->getFilterHandles();
   auto plugins = filterList->getLoadedPlugins();
 
+  if(plugins.size() != COMPLEX_PLUGIN_COUNT)
+  {
+    std::cout << "Incorrect number of plugins were loaded.\n"
+              << "Expected: " << COMPLEX_PLUGIN_COUNT << "\nLoaded: " << plugins.size() << "\nLoaded Plugins are:\n";
+    for(auto const& plugin : plugins)
+    {
+      std::cout << plugin->getName() << std::endl;
+    }
+  }
+
   REQUIRE(plugins.size() == COMPLEX_PLUGIN_COUNT);
   REQUIRE(filterHandles.size() >= 2);
 
@@ -62,6 +72,15 @@ TEST_CASE("Test Singleton")
   auto plugins = filterList->getLoadedPlugins();
 
   // Check plugins were loaded
+  if(plugins.size() != COMPLEX_PLUGIN_COUNT)
+  {
+    std::cout << "Incorrect number of plugins were loaded.\n"
+              << "Expected: " << COMPLEX_PLUGIN_COUNT << "\nLoaded: " << plugins.size() << "\nLoaded Plugins are:\n";
+    for(auto const& plugin : plugins)
+    {
+      std::cout << plugin->getName() << std::endl;
+    }
+  }
   REQUIRE(plugins.size() == COMPLEX_PLUGIN_COUNT);
 
   // Check filters loaded

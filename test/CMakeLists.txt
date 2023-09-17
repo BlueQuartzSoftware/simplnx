@@ -55,12 +55,10 @@ get_property(COMPLEX_PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
 # Create dependencies with complex_test on each of the test plugins
 #------------------------------------------------------------------------------
 if(COMPLEX_PLUGIN_ENABLE_TestOne)
-  MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+1")
   add_dependencies(complex_test TestOne)
 endif()
 
 if(COMPLEX_PLUGIN_ENABLE_TestTwo)
-  MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+1")
   add_dependencies(complex_test TestTwo)
 endif()
 
