@@ -399,7 +399,7 @@ void GenerateRstFilterDocs()
       }
       rstStream << '\n';
 
-      rstStream << "   .. py:method:: Execute(";
+      rstStream << "   .. py:method:: Execute(data_structure";
 
       std::stringstream memberStream;
 
@@ -407,10 +407,7 @@ void GenerateRstFilterDocs()
       for(const auto& parameterPair : parameters)
       {
         auto const& anyParameter = parameterPair.second;
-        if(index != 0)
-        {
-          rstStream << ", ";
-        }
+        rstStream << ", ";
 
         rstStream << parameterPair.first;
         memberStream << "      :param " << s_ParameterMap[anyParameter->uuid()] << " " << anyParameter->name() << ": " << anyParameter->helpText() << "\n";
