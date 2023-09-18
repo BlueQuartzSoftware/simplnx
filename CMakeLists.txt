@@ -788,7 +788,7 @@ if(COMPLEX_ENABLE_OrientationAnalysis)
 endif()
 
 if(COMPLEX_BUILD_TESTS)
-  set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} TestOne TestTwo)
+  list(APPEND COMPLEX_PLUGIN_LIST TestOne TestTwo)
 endif()
 
 # Add any plugins to the list
