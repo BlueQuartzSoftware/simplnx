@@ -13,7 +13,7 @@ import numpy as np
 data_structure = cx.DataStructure()
 # Create a DataArray to copy the Euler Angles into 
 array_path = cx.DataPath(['Euler Angles'])
-result = cx.CreateDataArray.execute(data_structure,
+result = cx.CreateDataArray.execute(data_structure=data_structure,
                                     numeric_type=cx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[99]],
