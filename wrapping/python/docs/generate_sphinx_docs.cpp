@@ -353,6 +353,9 @@ void GenerateRstFilterDocs()
       IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
       // auto plugin = filterListPtr->getPlugin(filterHandle);
 
+      rstStream << filterClassName << "\n";
+      rstStream << GenerateUnderline(filterClassName.size(), '-') << "\n\n";
+
       rstStream << ".. _" << filterClassName << ":\n";
       rstStream << ".. py:class:: " << filterClassName << "\n\n";
 
@@ -399,18 +402,16 @@ void GenerateRstFilterDocs()
       }
       rstStream << '\n';
 
-      rstStream << "   .. py:method:: Execute(";
+      rstStream << "   .. py:method:: Execute(data_structure";
 
       std::stringstream memberStream;
+      memberStream << "      :param complex.DataStructure data_structure: The DataStructure object that holds the data to be processed.\n";
 
       size_t index = 0;
       for(const auto& parameterPair : parameters)
       {
         auto const& anyParameter = parameterPair.second;
-        if(index != 0)
-        {
-          rstStream << ", ";
-        }
+        rstStream << ", ";
 
         rstStream << parameterPair.first;
         memberStream << "      :param " << s_ParameterMap[anyParameter->uuid()] << " " << anyParameter->name() << ": " << anyParameter->helpText() << "\n";
@@ -466,6 +467,10 @@ void GenerateIndexRstFile()
   for(const auto& plugin : pluginListPtr)
   {
     std::string plugName = plugin->getName();
+    if(plugName == "TestOne" || plugName == "TestTwo")
+    {
+      continue;
+    }
     const std::string pluginRootDir = fmt::format("{}", s_PluginDirMap[plugName]);
 
     if(plugName == "ComplexCore")
