@@ -108,7 +108,12 @@ Result<> FillBadData::operator()()
 
   const SizeVec3 udims = selectedImageGeom.getDimensions();
 
-  auto* m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath);
+  Int32Array* cellPhasesPtr = nullptr;
+
+  if(m_InputValues->storeAsNewPhase)
+  {
+    cellPhasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+  }
 
   std::array<int64_t, 3> dims = {
       static_cast<int64_t>(udims[0]),
@@ -145,9 +150,9 @@ Result<> FillBadData::operator()()
   {
     for(size_t i = 0; i < totalPoints; i++)
     {
-      if((*m_CellPhases)[i] > maxPhase)
+      if((*cellPhasesPtr)[i] > maxPhase)
       {
-        maxPhase = (*m_CellPhases)[i];
+        maxPhase = (*cellPhasesPtr)[i];
       }
     }
   }
@@ -218,7 +223,7 @@ Result<> FillBadData::operator()()
           m_FeatureIds[currentIndex] = 0;
           if(m_InputValues->storeAsNewPhase)
           {
-            (*m_CellPhases)[currentIndex] = static_cast<int32>(maxPhase) + 1;
+            (*cellPhasesPtr)[currentIndex] = static_cast<int32>(maxPhase) + 1;
           }
         }
       }
