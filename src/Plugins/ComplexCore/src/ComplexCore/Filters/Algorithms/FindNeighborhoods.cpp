@@ -109,8 +109,7 @@ const std::atomic_bool& FindNeighborhoods::getCancel()
 // -----------------------------------------------------------------------------
 void FindNeighborhoods::updateNeighborHood(size_t sourceIndex, size_t destIndex)
 {
-  static std::mutex mutex;
-  std::lock_guard<std::mutex> lock(mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   (*m_Neighborhoods)[sourceIndex]++;
   m_LocalNeighborhoodList[sourceIndex].push_back(static_cast<int32_t>(destIndex));
 }
@@ -120,8 +119,7 @@ void FindNeighborhoods::updateNeighborHood(size_t sourceIndex, size_t destIndex)
 // -----------------------------------------------------------------------------
 void FindNeighborhoods::updateProgress(size_t numCompleted, size_t totalFeatures)
 {
-  static std::mutex mutex;
-  std::lock_guard<std::mutex> lock(mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   m_IncCount += numCompleted;
   m_NumCompleted = m_NumCompleted + numCompleted;
   if(m_IncCount > m_ProgIncrement)
@@ -187,7 +185,7 @@ Result<> FindNeighborhoods::operator()()
 
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
-  parallelAlgorithm.setParallelizationEnabled(true);
+  parallelAlgorithm.setParallelizationEnabled(false);
   parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, centroids, bins, criticalDistance));
 
   // Output Variables

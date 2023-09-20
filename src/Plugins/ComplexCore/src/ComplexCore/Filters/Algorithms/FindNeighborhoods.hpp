@@ -8,6 +8,8 @@
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include <mutex>
+
 namespace complex
 {
 
@@ -51,6 +53,8 @@ private:
   const FindNeighborhoodsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  std::mutex m_Mutex;
 
   Int32Array* m_Neighborhoods = nullptr;
   std::vector<std::vector<int32_t>> m_LocalNeighborhoodList;
