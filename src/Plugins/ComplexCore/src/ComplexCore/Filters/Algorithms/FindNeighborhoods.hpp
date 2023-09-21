@@ -45,8 +45,8 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void updateNeighborHood(size_t sourceIndex, size_t targetIndex);
-  void updateProgress(size_t numCompleted, size_t totalFeatures);
+  void updateNeighborHood(usize sourceIndex, usize targetIndex);
+  void updateProgress(float64 counter, const std::chrono::steady_clock::time_point& now = std::chrono::steady_clock::now());
 
 private:
   DataStructure& m_DataStructure;
@@ -55,12 +55,12 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   std::mutex m_Mutex;
+  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
+  float64 m_TotalFeatures = 0;
+  float64 m_ProgressCounter = 0;
 
   Int32Array* m_Neighborhoods = nullptr;
   std::vector<std::vector<int32_t>> m_LocalNeighborhoodList;
-  size_t m_NumCompleted = 0;
-  size_t m_ProgIncrement = 0;
-  size_t m_IncCount = 0;
 };
 
 } // namespace complex
