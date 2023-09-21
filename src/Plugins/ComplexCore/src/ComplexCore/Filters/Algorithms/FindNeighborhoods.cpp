@@ -12,11 +12,12 @@ using namespace complex;
 class FindNeighborhoodsImpl
 {
 public:
-  FindNeighborhoodsImpl(FindNeighborhoods* filter, usize totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance)
+  FindNeighborhoodsImpl(FindNeighborhoods* filter, usize totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_TotalFeatures(totalFeatures)
   , m_Bins(bins)
   , m_CriticalDistance(criticalDistance)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -48,10 +49,12 @@ public:
           startTime = now;
         }
       }
-      if(m_Filter->getCancel())
+
+      if(m_ShouldCancel)
       {
-        break;
+        return;
       }
+
       bin1x = m_Bins[3 * featureIdx];
       bin1y = m_Bins[3 * featureIdx + 1];
       bin1z = m_Bins[3 * featureIdx + 2];
@@ -92,6 +95,7 @@ private:
   usize m_TotalFeatures = 0;
   const std::vector<int64>& m_Bins;
   const std::vector<float32>& m_CriticalDistance;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 // -----------------------------------------------------------------------------
@@ -185,7 +189,7 @@ Result<> FindNeighborhoods::operator()()
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
   parallelAlgorithm.setParallelizationEnabled(true);
-  parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, bins, criticalDistance));
+  parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, bins, criticalDistance, m_ShouldCancel));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32_t>>(m_InputValues->NeighborhoodListArrayName);
