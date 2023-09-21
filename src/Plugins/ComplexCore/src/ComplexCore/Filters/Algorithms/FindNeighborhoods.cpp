@@ -12,10 +12,9 @@ using namespace complex;
 class FindNeighborhoodsImpl
 {
 public:
-  FindNeighborhoodsImpl(FindNeighborhoods* filter, size_t totalFeatures, const Float32Array& centroids, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance)
+  FindNeighborhoodsImpl(FindNeighborhoods* filter, size_t totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance)
   : m_Filter(filter)
   , m_TotalFeatures(totalFeatures)
-  , m_Centroids(centroids)
   , m_Bins(bins)
   , m_CriticalDistance(criticalDistance)
   {
@@ -34,10 +33,10 @@ public:
     {
       start = 1;
     }
-    for(size_t i = start; i < end; i++)
+    for(size_t featureIdx = start; featureIdx < end; featureIdx++)
     {
       incCount++;
-      if(incCount == increment || i == end - 1)
+      if(incCount == increment || featureIdx == end - 1)
       {
         incCount = 0;
         m_Filter->updateProgress(increment, m_TotalFeatures);
@@ -46,12 +45,12 @@ public:
       {
         break;
       }
-      bin1x = m_Bins[3 * i];
-      bin1y = m_Bins[3 * i + 1];
-      bin1z = m_Bins[3 * i + 2];
-      criticalDistance1 = m_CriticalDistance[i];
+      bin1x = m_Bins[3 * featureIdx];
+      bin1y = m_Bins[3 * featureIdx + 1];
+      bin1z = m_Bins[3 * featureIdx + 2];
+      criticalDistance1 = m_CriticalDistance[featureIdx];
 
-      for(size_t j = i + 1; j < m_TotalFeatures; j++)
+      for(size_t j = featureIdx + 1; j < m_TotalFeatures; j++)
       {
         bin2x = m_Bins[3 * j];
         bin2y = m_Bins[3 * j + 1];
@@ -64,12 +63,12 @@ public:
 
         if(dBinX < criticalDistance1 && dBinY < criticalDistance1 && dBinZ < criticalDistance1)
         {
-          m_Filter->updateNeighborHood(i, j);
+          m_Filter->updateNeighborHood(featureIdx, j);
         }
 
         if(dBinX < criticalDistance2 && dBinY < criticalDistance2 && dBinZ < criticalDistance2)
         {
-          m_Filter->updateNeighborHood(j, i);
+          m_Filter->updateNeighborHood(j, featureIdx);
         }
       }
     }
@@ -83,7 +82,6 @@ public:
 private:
   FindNeighborhoods* m_Filter = nullptr;
   size_t m_TotalFeatures = 0;
-  const Float32Array& m_Centroids;
   const std::vector<int64_t>& m_Bins;
   const std::vector<float>& m_CriticalDistance;
 };
@@ -185,8 +183,8 @@ Result<> FindNeighborhoods::operator()()
 
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
-  parallelAlgorithm.setParallelizationEnabled(false);
-  parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, centroids, bins, criticalDistance));
+  parallelAlgorithm.setParallelizationEnabled(true);
+  parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, bins, criticalDistance));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32_t>>(m_InputValues->NeighborhoodListArrayName);
