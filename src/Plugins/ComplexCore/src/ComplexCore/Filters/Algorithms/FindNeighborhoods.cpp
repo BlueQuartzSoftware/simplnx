@@ -12,67 +12,77 @@ using namespace complex;
 class FindNeighborhoodsImpl
 {
 public:
-  FindNeighborhoodsImpl(FindNeighborhoods* filter, size_t totalFeatures, const Float32Array& centroids, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance)
+  FindNeighborhoodsImpl(FindNeighborhoods* filter, usize totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_TotalFeatures(totalFeatures)
-  , m_Centroids(centroids)
   , m_Bins(bins)
   , m_CriticalDistance(criticalDistance)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
-  void convert(size_t start, size_t end) const
+  void convert(usize start, usize end) const
   {
-    int64_t bin1x = 0, bin2x = 0, bin1y = 0, bin2y = 0, bin1z = 0, bin2z = 0;
-    float dBinX = 0, dBinY = 0, dBinZ = 0;
-    float criticalDistance1 = 0, criticalDistance2 = 0;
+    int64 bin1x, bin2x, bin1y, bin2y, bin1z, bin2z;
+    float32 dBinX, dBinY, dBinZ;
+    float32 criticalDistance1, criticalDistance2;
 
-    size_t increment = (end - start) / 100;
-    size_t incCount = 0;
+    auto increment = static_cast<float64>(end - start) / 100.0;
+    float64 incCount = 0.0;
     // NEVER start at 0.
     if(start == 0)
     {
       start = 1;
     }
-    for(size_t i = start; i < end; i++)
+
+    auto startTime = std::chrono::steady_clock::now();
+    for(usize featureIdx = start; featureIdx < end; featureIdx++)
     {
       incCount++;
-      if(incCount == increment || i == end - 1)
+      if(incCount >= increment)
       {
-        incCount = 0;
-        m_Filter->updateProgress(increment, m_TotalFeatures);
+        auto now = std::chrono::steady_clock::now();
+        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > 1000)
+        {
+          incCount = 0;
+          m_Filter->updateProgress(incCount, now);
+          startTime = now;
+        }
       }
-      if(m_Filter->getCancel())
-      {
-        break;
-      }
-      bin1x = m_Bins[3 * i];
-      bin1y = m_Bins[3 * i + 1];
-      bin1z = m_Bins[3 * i + 2];
-      criticalDistance1 = m_CriticalDistance[i];
 
-      for(size_t j = i + 1; j < m_TotalFeatures; j++)
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+
+      bin1x = m_Bins[3 * featureIdx];
+      bin1y = m_Bins[3 * featureIdx + 1];
+      bin1z = m_Bins[3 * featureIdx + 2];
+      criticalDistance1 = m_CriticalDistance[featureIdx];
+
+      for(usize j = featureIdx + 1; j < m_TotalFeatures; j++)
       {
         bin2x = m_Bins[3 * j];
         bin2y = m_Bins[3 * j + 1];
         bin2z = m_Bins[3 * j + 2];
         criticalDistance2 = m_CriticalDistance[j];
 
-        dBinX = std::abs(bin2x - bin1x);
-        dBinY = std::abs(bin2y - bin1y);
-        dBinZ = std::abs(bin2z - bin1z);
+        dBinX = std::abs(static_cast<float32>(bin2x - bin1x));
+        dBinY = std::abs(static_cast<float32>(bin2y - bin1y));
+        dBinZ = std::abs(static_cast<float32>(bin2z - bin1z));
 
         if(dBinX < criticalDistance1 && dBinY < criticalDistance1 && dBinZ < criticalDistance1)
         {
-          m_Filter->updateNeighborHood(i, j);
+          m_Filter->updateNeighborHood(featureIdx, j);
         }
 
         if(dBinX < criticalDistance2 && dBinY < criticalDistance2 && dBinZ < criticalDistance2)
         {
-          m_Filter->updateNeighborHood(j, i);
+          m_Filter->updateNeighborHood(j, featureIdx);
         }
       }
     }
+    m_Filter->updateProgress(incCount);
   }
 
   void operator()(const Range& range) const
@@ -82,10 +92,10 @@ public:
 
 private:
   FindNeighborhoods* m_Filter = nullptr;
-  size_t m_TotalFeatures = 0;
-  const Float32Array& m_Centroids;
-  const std::vector<int64_t>& m_Bins;
-  const std::vector<float>& m_CriticalDistance;
+  usize m_TotalFeatures = 0;
+  const std::vector<int64>& m_Bins;
+  const std::vector<float32>& m_CriticalDistance;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 // -----------------------------------------------------------------------------
@@ -107,7 +117,7 @@ const std::atomic_bool& FindNeighborhoods::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-void FindNeighborhoods::updateNeighborHood(size_t sourceIndex, size_t destIndex)
+void FindNeighborhoods::updateNeighborHood(usize sourceIndex, usize destIndex)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   (*m_Neighborhoods)[sourceIndex]++;
@@ -117,26 +127,27 @@ void FindNeighborhoods::updateNeighborHood(size_t sourceIndex, size_t destIndex)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void FindNeighborhoods::updateProgress(size_t numCompleted, size_t totalFeatures)
+void FindNeighborhoods::updateProgress(float64 counter, const std::chrono::steady_clock::time_point& now)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
-  m_IncCount += numCompleted;
-  m_NumCompleted = m_NumCompleted + numCompleted;
-  if(m_IncCount > m_ProgIncrement)
+
+  m_ProgressCounter += counter;
+
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
   {
-    m_IncCount = 0;
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Feature {} of {}", m_NumCompleted, totalFeatures));
+    auto progressInt = static_cast<int32>((m_ProgressCounter / m_TotalFeatures) * 100.0);
+    std::string progressMessage = "Finding Feature Neighborhoods:";
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, progressInt});
+    m_InitialTime = std::chrono::steady_clock::now();
   }
 }
 
 // -----------------------------------------------------------------------------
 Result<> FindNeighborhoods::operator()()
 {
-  m_IncCount = 0;
+  // m_ProgressCounter initialized to zero on filter creation
 
-  float x = 0.0f, y = 0.0f, z = 0.0f;
-  m_NumCompleted = 0;
-  std::vector<float> criticalDistance;
+  std::vector<float32> criticalDistance;
 
   auto multiplesOfAverage = m_InputValues->MultiplesOfAverage;
   const auto& equivalentDiameters = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath);
@@ -144,58 +155,50 @@ Result<> FindNeighborhoods::operator()()
 
   m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
 
-  size_t totalFeatures = equivalentDiameters.getNumberOfTuples();
-
-  m_ProgIncrement = totalFeatures / 100;
+  usize totalFeatures = equivalentDiameters.getNumberOfTuples();
+  m_TotalFeatures = static_cast<float64>(totalFeatures); // Pre-cast to save time in lock later
 
   m_LocalNeighborhoodList.resize(totalFeatures);
   criticalDistance.resize(totalFeatures);
 
-  float aveDiam = 0.0f;
-  for(size_t i = 1; i < totalFeatures; i++)
+  float32 aveDiam = 0.0f;
+  for(usize i = 1; i < totalFeatures; i++)
   {
     (*m_Neighborhoods)[i] = 0;
     aveDiam += equivalentDiameters[i];
     criticalDistance[i] = equivalentDiameters[i] * multiplesOfAverage;
   }
-  aveDiam /= totalFeatures;
-  for(size_t i = 1; i < totalFeatures; i++)
+  aveDiam /= static_cast<float32>(totalFeatures);
+  for(usize i = 1; i < totalFeatures; i++)
   {
     criticalDistance[i] /= aveDiam;
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
-
-  FloatVec3 origin = gridGeom->getOrigin();
-
-  size_t xbin = 0, ybin = 0, zbin = 0;
-  std::vector<int64_t> bins(3 * totalFeatures, 0);
-  for(size_t i = 1; i < totalFeatures; i++)
+  std::vector<int64> bins(3 * totalFeatures, 0);
+  FloatVec3 origin = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry)->getOrigin();
+  for(usize i = 1; i < totalFeatures; i++)
   {
-    x = centroids[3 * i];
-    y = centroids[3 * i + 1];
-    z = centroids[3 * i + 2];
-    xbin = static_cast<size_t>((x - origin[0]) / aveDiam);
-    ybin = static_cast<size_t>((y - origin[1]) / aveDiam);
-    zbin = static_cast<size_t>((z - origin[2]) / aveDiam);
-    bins[3 * i] = static_cast<int64_t>(xbin);
-    bins[3 * i + 1] = static_cast<int64_t>(ybin);
-    bins[3 * i + 2] = static_cast<int64_t>(zbin);
+    float32 x = centroids[3 * i];
+    float32 y = centroids[3 * i + 1];
+    float32 z = centroids[3 * i + 2];
+    bins[3 * i] = static_cast<int64>((x - origin[0]) / aveDiam);     // x-Bin
+    bins[3 * i + 1] = static_cast<int64>((y - origin[1]) / aveDiam); // y-Bin
+    bins[3 * i + 2] = static_cast<int64>((z - origin[2]) / aveDiam); // z-Bin
   }
 
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
-  parallelAlgorithm.setParallelizationEnabled(false);
-  parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, centroids, bins, criticalDistance));
+  parallelAlgorithm.setParallelizationEnabled(true);
+  parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, bins, criticalDistance, m_ShouldCancel));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32_t>>(m_InputValues->NeighborhoodListArrayName);
   // Set the vector for each list into the NeighborList Object
-  for(size_t i = 1; i < totalFeatures; i++)
+  for(usize i = 1; i < totalFeatures; i++)
   {
     // Construct a shared vector<int32> through the std::vector<> copy constructor.
-    NeighborList<int32>::SharedVectorType sharedMisorientationList(new std::vector<int32>(m_LocalNeighborhoodList[i]));
-    outputNeighborList.setList(static_cast<int32_t>(i), sharedMisorientationList);
+    NeighborList<int32>::SharedVectorType sharedMisOrientationList(new std::vector<int32>(m_LocalNeighborhoodList[i]));
+    outputNeighborList.setList(static_cast<int32>(i), sharedMisOrientationList);
   }
 
   m_LocalNeighborhoodList.clear();
