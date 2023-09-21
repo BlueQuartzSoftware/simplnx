@@ -24,11 +24,11 @@ Not Applicable
 
 ## Created Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **QuadGeom** | Quad Geometry | QuadGeom | N/A | Created **QuadGeom** path and name |
-| **Attribute Matrix** | Vertex Data | Vertex | N/A | Created **Vertex Attribute Matrix** name |
-| **Attribute Matrix** | Cell Data | Cell | N/A | Created **Cell Attribute Matrix** name |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| QuadGeom | Quad Geometry | QuadGeom | N/A | Created **QuadGeom** path and name |
+|   Attribute Matrix   | Vertex Data | Vertex | N/A | Created **Vertex Attribute Matrix** name |
+|   Attribute Matrix   | Cell Data | Cell | N/A | Created **Cell Attribute Matrix** name |
 
 ## License & Copyright
 

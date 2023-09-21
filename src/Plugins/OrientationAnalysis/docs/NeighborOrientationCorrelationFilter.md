@@ -30,7 +30,7 @@ In this example cell (1,1) has a confidence index < 0.1 and the surrounding cell
 | Name | Type | Description |
 |------|------|-------------|
 | Minimum Confidence Index | float32 | Sets the minimum value of 'confidence' a **Cell** must have |
-| Misorientation Tolerance (Degrees) | Float32 | Angular tolerance used to compare with neighboring **Cells** |
+| Misorientation Tolerance (Degrees) | Float32 | Angular tolerance used to compare with neighboring **Cells |
 | Cleanup Level | int32 | Minimum number of neighbor **Cells** that must have orientations within above tolerace to allow **Cell** to be changed | 
 
 ## Required Geometry ##
@@ -39,12 +39,12 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | Confidence Index | float32 | (1) | Specifies the confidence in the orientation of the **Cell** (TSL data) |
-| **Cell Attribute Array** | Cell Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| **Cell Attribute Array** | Quaternions | float32 | (4) | Specifies the orientation of the **Cell** in quaternion representation |
-| **Ensemble Attribute Array** | Crystal Structures | uint32 | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | Confidence Index | float32 | (1) | Specifies the confidence in the orientation of the **Cell** (TSL data) |
+| Cell Attribute Array | Cell Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
+| Cell Attribute Array | Quaternions | float32 | (4) | Specifies the orientation of the **Cell** in quaternion representation |
+| Ensemble Attribute Array | Crystal Structures | uint32 | (1) | Enumeration representing the crystal structure for each **Ensemble |
 
 ## Created Objects ##
 

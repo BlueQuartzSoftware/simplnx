@@ -1,4 +1,4 @@
-# ITK Intensity Windowing Image Filter (ITKIntensityWindowingImage)
+# ITK Intensity Windowing Image Filter
 
 Applies a linear transformation to the intensity levels of the input Image that are inside a user-defined interval. Values below this interval are mapped to a constant. Values over the interval are mapped to another constant.
 

@@ -34,7 +34,7 @@ This **Filter** will generate *inverse pole figure* (IPF) colors for cubic, hexa
 | Name | Type | Description |
 |------|------| ----------- |
 | Reference Direction | float (3x) | The reference axis with respect to compute the IPF colors |
-| Apply to Good Elements Only (Bad Elements Will Be Black) | bool | Whether to assign a black color to "bad" **Elements** |
+| Apply to Good Elements Only (Bad Elements Will Be Black) | bool | Whether to assign a black color to "bad" **Elements |
 
 ## Required Geometry ##
 
@@ -42,18 +42,18 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Data Array** | Euler Angles | float | (3)  | Three angles defining the orientation of the **Element** in Bunge convention (Z-X-Z) |
-| **Element Data Array** | Phases | int32 | (1) | Phase Id specifying the phase of the **Element** |
-| **Element Data Array** | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if _Apply to Good Elements Only (Bad Elements Will Be Black)_ is checked |
-| **Ensemble Data Array** | Crystal Structures | uint32 | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Data Array | Euler Angles | float | (3)  | Three angles defining the orientation of the **Element** in Bunge convention (Z-X-Z) |
+| Element Data Array | Phases | int32 | (1) | Phase Id specifying the phase of the **Element |
+| Element Data Array | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if _Apply to Good Elements Only (Bad Elements Will Be Black)_ is checked |
+| Ensemble Data Array | Crystal Structures | uint32 | (1) | Enumeration representing the crystal structure for each **Ensemble |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Data Array** | IPFColor |  uint8 | (3) | The RGB colors encoded as unsigned chars for each **Element** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Data Array | IPFColor |  uint8 | (3) | The RGB colors encoded as unsigned chars for each **Element |
 
 ## Example Pipelines ##
 

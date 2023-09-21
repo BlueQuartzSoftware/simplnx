@@ -25,23 +25,23 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | NonContiguousNeighbors | List of int32_t | (1) | List of non-contiguous neighbors for each **Feature**. Only needed if _Use Non-Contiguous Neighbors_ is checked |
-| **Feature Attribute Array** | NeighborList | List of int32_t | (1) | List of neighbors for each **Feature** |
-| **Element Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
-| **Feature Attribute Array** | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
-| **Feature Attribute Array** | AvgQuats | float| (4) | Specifies the average orientation of the **Feature** in quaternion representation |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | NonContiguousNeighbors | List of int32_t | (1) | List of non-contiguous neighbors for each **Feature**. Only needed if _Use Non-Contiguous Neighbors_ is checked |
+| Feature Attribute Array | NeighborList | List of int32_t | (1) | List of neighbors for each **Feature |
+| Element Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
+| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
+| Feature Attribute Array | AvgQuats | float| (4) | Specifies the average orientation of the **Feature** in quaternion representation |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | ParentIds | int32_t | (1) | Specifies to which *parent* each **Element** belongs |
-| **Attribute Matrix** | NewFeatureData | Feature | N/A | Created **Feature Attribute Matrix** name |
-| **Feature Attribute Array** | ParentIds | int32_t | (1) | Specifies to which *parent* each **Feature** belongs |
-| **Feature Attribute Array** | Active | bool | (1) | Specifies if the **Feature** is still in the sample (*true* if the **Feature** is in the sample and *false* if it is not). At the end of the **Filter**, all **Features** will be *Active* |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array | ParentIds | int32_t | (1) | Specifies to which *parent* each **Element** belongs |
+|   Attribute Matrix   | NewFeatureData | Feature | N/A | Created **Feature Attribute Matrix** name |
+| Feature Attribute Array | ParentIds | int32_t | (1) | Specifies to which *parent* each **Feature** belongs |
+| Feature Attribute Array | Active | bool | (1) | Specifies if the **Feature** is still in the sample (*true* if the **Feature** is in the sample and *false* if it is not). At the end of the **Filter**, all **Features** will be *Active* |
 
 
 ## Example Pipelines ##

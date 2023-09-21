@@ -22,16 +22,16 @@ None
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Any **Attribute Array** | None | Any except bool | (1) | **Attribute Array** to threshold |
-| **Attribute Array** | None | float | (1) | Gradient magnitude of input **Attribute Array** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Attribute Array | None | Any except bool | (1) | Attribute Array** to threshold |
+| Attribute Array | None | float | (1) | Gradient magnitude of input **Attribute Array |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Attribute Array** | Mask | bool | (1) | Mask array produced after application of the computed robust threshold to the input **Attribute Array** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Attribute Array | Mask | bool | (1) | Mask array produced after application of the computed robust threshold to the input **Attribute Array |
 
 ## Example Pipelines ##
 

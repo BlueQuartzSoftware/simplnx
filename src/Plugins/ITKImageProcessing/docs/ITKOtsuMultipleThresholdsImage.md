@@ -1,4 +1,4 @@
-# ITK Otsu Multiple Thresholds Image Filter (ITKOtsuMultipleThresholdsImage)
+# ITK Otsu Multiple Thresholds Image Filter
 
 Threshold an image using multiple Otsu Thresholds.
 

@@ -1,4 +1,4 @@
-# ITK Erode Object Morphology Image Filter (ITKErodeObjectMorphologyImage)
+# ITK Erode Object Morphology Image Filter
 
 Erosion of an object in an image.
 

@@ -48,7 +48,7 @@ Image
 
 ## Required Objects 
 
-| Type | Default Name | Type | Component Dimensions | Description |
+| Type | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|-----|
 | Cell | FeatureIds | Ids (Int) that specify to which **Feature** each **Cell** belongs. | (1) | Filters Known to Create Data: Segment Features (Misorientation, C-Axis Misorientation, Scalar) (Reconstruction), Read Dx File (IO), Read Ph File (IO), Pack Primary Phases (SyntheticBuilding), Insert Precipitate Phases (SyntheticBuilding), Establish Matrix Phase (SyntheticBuilding)
 

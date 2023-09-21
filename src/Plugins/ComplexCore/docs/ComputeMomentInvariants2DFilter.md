@@ -36,20 +36,20 @@ ImageGeom
 
 ## Required Objects 
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Cell **Attribute Array** | FeatureIds | int32_t | (1) | The Feature Ids array to analyze for ellipsoids |
-| Cell **Attribute Array** | FeatureRectArray | uint32_t | (6) | Array holding the min xy and max xy pixel coordinates of each feature id |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell **Attribute Array | FeatureIds | int32_t | (1) | The Feature Ids array to analyze for ellipsoids |
+| Cell **Attribute Array | FeatureRectArray | uint32_t | (6) | Array holding the min xy and max xy pixel coordinates of each feature id |
 
 
 
 ## Created Objects 
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Cell **Attribute Array** | Omega1 | float | (1) | Omega1 value  |
-| Cell **Attribute Array** | Omega2 | float | (1) | Omega2 value  |
-| Cell **Attribute Array** | CentralMoments | float | (3)(3) | Central Moments value  |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell **Attribute Array | Omega1 | float | (1) | Omega1 value  |
+| Cell **Attribute Array | Omega2 | float | (1) | Omega2 value  |
+| Cell **Attribute Array | CentralMoments | float | (3)(3) | Central Moments value  |
 
 # Citations
 

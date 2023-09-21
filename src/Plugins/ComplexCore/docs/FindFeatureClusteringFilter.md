@@ -22,7 +22,7 @@ This Filter determines the radial distribution function (RDF), as a histogram, o
 | Name | Type | Description |
 |------|------| ----------- |
 | Number of Bins for RDF | int32_t | Number of bins to split the RDF |
-| Phase Index | int32_t | **Ensemble** number for which to calculate the RDF and clustering list |
+| Phase Index | int32_t | Ensemble** number for which to calculate the RDF and clustering list |
 | Remove Biased Features | bool | Default=OFF |
 | Set Random Seed | bool | When checked, allows the user to set the seed value used to randomly generate the points in the RDF (Default=ON) |
 | Seed Value | uint64_t | The seed value used to generate the points in the RDF when the Set Random Seed option is ON |
@@ -33,20 +33,20 @@ Image
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | EquivalentDiameters | float | (1) | Diameter of a sphere with the same volume as the **Feature** |
-| **Feature Attribute Array** | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
-| **Feature Attribute Array** | Centroids | float | (3) | X, Y, Z coordinates of **Feature** center of mass |
-| **Feature Attribute Array** | BiasedFeatures | bool | (1) | Specifies which features are biased and therefor should be removed if the Remove Biased Features option is on |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | EquivalentDiameters | float | (1) | Diameter of a sphere with the same volume as the **Feature |
+| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
+| Feature Attribute Array | Centroids | float | (3) | X, Y, Z coordinates of **Feature** center of mass |
+| Feature Attribute Array | BiasedFeatures | bool | (1) | Specifies which features are biased and therefor should be removed if the Remove Biased Features option is on |
 
 ## Created Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | ClusteringList | float | (1) | Distance of each **Features**'s centroid to ever other **Features**'s centroid |
-| **Ensemble Attribute Array** | RDF | float | (Number of Bins) | A histogram of the normalized frequency at each bin | 
-| **Ensemble Attribute Array** | RDFMaxMinDistances | float | (2) | The max and min distance found between **Features** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | ClusteringList | float | (1) | Distance of each **Features**'s centroid to ever other **Features**'s centroid |
+| Ensemble Attribute Array | RDF | float | (Number of Bins) | A histogram of the normalized frequency at each bin | 
+| Ensemble Attribute Array | RDFMaxMinDistances | float | (2) | The max and min distance found between **Features |
 
 ## Example Pipelines
 

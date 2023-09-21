@@ -1,4 +1,4 @@
-# ITK Gradient Magnitude Image Filter (ITKGradientMagnitudeImage)
+# ITK Gradient Magnitude Image Filter
 
 Computes the gradient magnitude of an image region at each pixel.
 

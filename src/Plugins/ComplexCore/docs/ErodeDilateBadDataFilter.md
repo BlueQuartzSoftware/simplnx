@@ -50,7 +50,7 @@ would remain removed and not "grow back".
 ## Parameters
 
 | Name                 | Type        | Description                                          |
-|----------------------|-------------|------------------------------------------------------|
+|-------------|-------------|------------------------------------------------------|
 | Operation            | Enumeration | Whether to erode (0) or dilate (1)                   |
 | Number of Iterations | int32_t     | The number of iterations to use for erosion/dilation |
 | X Direction          | bool        | Whether to erode/dilate in the X direction           |
@@ -63,10 +63,10 @@ Image
 
 ## Required Objects
 
-| Kind                     | Default Name   | Type     | Component Dimensions | Description                                                      |
-|--------------------------|----------------|----------|----------------------|------------------------------------------------------------------|
-| **Image Geometry**       | Image Geometry | DataPath | N/A                  | The path to the Image Geometry where the feature Ids are stored. |
-| **Cell Attribute Array** | FeatureIds     | int32    | (1)                  | Specifies to which **Feature** each **Cell** belongs             |
+| Kind                     | Default Name   | Type     | Comp Dims | Description                                                      |
+|--------------------------|----------------|----------|-------------|------------------------------------------------------------------|
+| Image Geometry**       | Image Geometry | DataPath | N/A                  | The path to the Image Geometry where the feature Ids are stored. |
+| Cell Attribute Array | FeatureIds     | int32    | (1)                  | Specifies to which **Feature** each **Cell** belongs             |
 
 ## Created Objects
 

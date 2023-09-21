@@ -18,16 +18,16 @@ None
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| **Attribute Matrix** | CellEnsembleData | Ensemble AttributeMatrix | N/A | The path to the cell ensemble **Attribute Matrix** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
+|   Attribute Matrix   | CellEnsembleData | Ensemble AttributeMatrix | N/A | The path to the cell ensemble **Attribute Matrix |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Ensemble Attribute Array** | VolFractions | float | (1) | Fraction of volume that belongs to each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Ensemble Attribute Array | VolFractions | float | (1) | Fraction of volume that belongs to each **Ensemble |
 
 ## Example Pipelines ##
 

@@ -20,7 +20,7 @@ If *Fill Holes* is set to *true*:
 | Name | Description |
 |------|-------------|
 |![Small IN100 IPF Map](Images/Small_IN100.png) | Good dataset to use this filter |
-|![APTR IPF Colors](Images/aptr12_001_0.png) | **NOT** a good data set to use because there is **no** overscan of the sample. |
+|![APTR IPF Colors](Images/aptr12_001_0.png) | NOT** a good data set to use because there is **no** overscan of the sample. |
 
 ## Parameters
 
@@ -34,9 +34,9 @@ Image
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | Mask | bool | (1) | *Mask* array defining what is sample and what is not |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | Mask | bool | (1) | *Mask* array defining what is sample and what is not |
 
 ## Created Objects
 

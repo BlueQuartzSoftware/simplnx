@@ -1,4 +1,4 @@
-# ITK Cos Image Filter (ITKCosImage)
+# ITK Cos Image Filter
 
 Computes the cosine of each pixel.
 

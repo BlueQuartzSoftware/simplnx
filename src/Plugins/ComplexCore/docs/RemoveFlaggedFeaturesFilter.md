@@ -19,10 +19,10 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Feature Attribute Array** | Active | bool | (1) | Specifies whether the **Feature** will remain in the structure or not |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
+| Feature Attribute Array | Active | bool | (1) | Specifies whether the **Feature** will remain in the structure or not |
 
 ## Created Objects ##
 

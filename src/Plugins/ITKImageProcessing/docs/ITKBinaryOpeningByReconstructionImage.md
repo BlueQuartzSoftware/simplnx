@@ -1,4 +1,4 @@
-# ITK Binary Opening By Reconstruction Image Filter (ITKBinaryOpeningByReconstructionImage)
+# ITK Binary Opening By Reconstruction Image Filter
 
 binary morphological closing of an image.
 

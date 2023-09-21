@@ -29,21 +29,21 @@ Image + Triangle
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array** | FaceLabels | int32 | (2) | Specifies which **Features** are on either side of each **Face** |
-| **Feature Attribute Array** | AvgQuats | float32 | (4) | Specifies the average orientation of each **Feature** in quaternion representation |
-| **Feature Attribute Array** | Phases | int32 | (1) | Specifies to which **Ensemble** each **Feature** belongs |
-| **Ensemble Attribute Array** | CrystalStructures | uint32 | (1) | Enumeration representing the crystal structure for each phase |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Face Attribute Array | FaceLabels | int32 | (2) | Specifies which **Features** are on either side of each **Face |
+| Feature Attribute Array | AvgQuats | float32 | (4) | Specifies the average orientation of each **Feature** in quaternion representation |
+| Feature Attribute Array | Phases | int32 | (1) | Specifies to which **Ensemble** each **Feature** belongs |
+| Ensemble Attribute Array | CrystalStructures | uint32 | (1) | Enumeration representing the crystal structure for each phase |
 
 ## Created Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array** | F1s | float32 | (2) | |
-| **Face Attribute Array** | F1spts | float32 | (2) | |
-| **Face Attribute Array** | F7s | float32 | (2) | |
-| **Face Attribute Array** | mPrimes | float32 | (2) | |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Face Attribute Array | F1s | float32 | (2) | |
+| Face Attribute Array | F1spts | float32 | (2) | |
+| Face Attribute Array | F7s | float32 | (2) | |
+| Face Attribute Array | mPrimes | float32 | (2) | |
 
 ## Example Pipelines
 

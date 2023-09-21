@@ -24,16 +24,16 @@ Triangle
 
 ## Required Objects
 
-| Kind                     | Default Name    | Type         | Component Dimensions | Description                                                      |
-|--------------------------|-----------------|--------------|----------------------|------------------------------------------------------------------|
-| **Face Attribute Array** | FaceLabels      | int32_t      | (2)                  | Specifies which **Features** are on either side of each **Face** |
-| **Attribute Matrix**     | FaceFeatureData | Face Feature | N/A                  | **Feature Attribute Matrix** of the selected *Face Labels*       |
+| Kind                     | Default Name    | Type         | Comp Dims | Description                                                      |
+|--------------------------|-----------------|--------------|-------------|------------------------------------------------------------------|
+| Face Attribute Array | FaceLabels      | int32_t      | (2)                  | Specifies which **Features** are on either side of each **Face |
+| Attribute Matrix**     | FaceFeatureData | Face Feature | N/A                  | Feature Attribute Matrix** of the selected *Face Labels*       |
 
 ## Created Objects
 
-| Kind                        | Default Name | Type  | Component Dimensions | Description                                                        |
-|-----------------------------|--------------|-------|----------------------|--------------------------------------------------------------------|
-| **Feature Attribute Array** | Centroids    | float | (3)                  | Coordinates of the center of mass for a given enclosed **Feature** |
+| Kind                        | Default Name | Type  | Comp Dims | Description                                                        |
+|-----------------------------|--------------|-------|-------------|--------------------------------------------------------------------|
+| Feature Attribute Array | Centroids    | float | (3)                  | Coordinates of the center of mass for a given enclosed **Feature |
 
 ## Example Pipelines
 

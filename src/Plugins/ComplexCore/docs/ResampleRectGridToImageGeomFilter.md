@@ -28,11 +28,11 @@ Rectilinear Grid Geometry
 
 ## Created Objects 
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Image Geometry** | Image Geometry | N/A | N/A | Path to the created Image Geometry |
-| **Attribute Matrix** | Cell Data | Element/Feature/Ensemble/etc. | N/A | The name of the cell data Attribute Matrix created with the Image Geometry |
-| **Element/Feature/Ensemble/etc. Attribute Array** | Copied from the input Data Container | int32_t/float/etc. | (1)/(3)/etc. | Cell level arrays copied over from the input to the resampled geometry |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Image Geometry | Image Geometry | N/A | N/A | Path to the created Image Geometry |
+|   Attribute Matrix   | Cell Data | Element/Feature/Ensemble/etc. | N/A | The name of the cell data Attribute Matrix created with the Image Geometry |
+| Element/Feature/Ensemble/etc. Attribute Array | Copied from the input Data Container | int32_t/float/etc. | (1)/(3)/etc. | Cell level arrays copied over from the input to the resampled geometry |
 
 ## Example Pipelines 
 

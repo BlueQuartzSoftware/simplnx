@@ -23,18 +23,18 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
-| **Attribute Matrix** | FeatureData | Feature | N/A | **Feature Attribute Matrix** of the selected *Feature Ids* |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
+|   Attribute Matrix   | FeatureData | Feature | N/A | Feature Attribute Matrix** of the selected *Feature Ids* |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | EquivalentDiameters | float | (1) | Diameter of a sphere with the same volume as the **Feature** |
-| **Feature Attribute Array** | NumElements |  int32_t | (1) | Number of **Elements** that are owned by the **Feature**. This value does not place any distinction between **Elements** that may be of a different size |
-| **Feature Attribute Array** | Volumes |  float | (1) | Volume of the **Feature**. This value may be "redundant" from the NumElements value if all **Elements** are the same size and is calculable from the EquivalentDiameters value |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | EquivalentDiameters | float | (1) | Diameter of a sphere with the same volume as the **Feature |
+| Feature Attribute Array | NumElements |  int32_t | (1) | Number of **Elements** that are owned by the **Feature**. This value does not place any distinction between **Elements** that may be of a different size |
+| Feature Attribute Array | Volumes |  float | (1) | Volume of the **Feature**. This value may be "redundant" from the NumElements value if all **Elements** are the same size and is calculable from the EquivalentDiameters value |
 
 ## Example Pipelines ##
 

@@ -22,10 +22,10 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Object** | None | Any | N/A | **Data Object** to move |
-| **Base Group** Child | None | Any | Any | **Base Group** to be moved into |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Object | None | Any | N/A | Data Object** to move |
+| Base Group** Child | None | Any | Any | Base Group** to be moved into |
 
 ## Created Objects ##
 

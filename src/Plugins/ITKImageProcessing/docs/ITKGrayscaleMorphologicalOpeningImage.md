@@ -1,4 +1,4 @@
-# ITK Grayscale Morphological Opening Image Filter (ITKGrayscaleMorphologicalOpeningImage)
+# ITK Grayscale Morphological Opening Image Filter
 
 Grayscale opening of an image.
 

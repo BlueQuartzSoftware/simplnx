@@ -1,4 +1,4 @@
-# ITK Asin Image Filter (ITKAsinImage)
+# ITK Asin Image Filter
 
 Computes the sine of each pixel.
 

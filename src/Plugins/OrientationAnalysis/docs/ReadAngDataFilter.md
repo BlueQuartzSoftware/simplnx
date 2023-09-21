@@ -33,22 +33,22 @@ Not Applicable
 None
 
 ## Created Objects ## 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container**  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry** |
-| **Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
-| **Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
-| **Cell Attribute Array**  | Confidence Index | float |(1)     | Confidence of indexing  |
-| **Cell Attribute Array**  | EulerAngles      | float |(3)     | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z)  |
-| **Cell Attribute Array**  | Fit              | float |(1)     |  Quality of fit for indexing  |
-| **Cell Attribute Array**  | Image Quality    | float |(1) | Quality of image   |
-| **Cell Attribute Array**  | Phases           | int32_t   | (1) | Specifies to which phase each **Cell** belongs   |
-| **Cell Attribute Array**  | SEM Signal       | float |(1) | Value of SEM signal   |
-| **Cell Attribute Array**  | X Position       | float |(1) | X coordinate of **Cell**   |
-| **Cell Attribute Array**  | Y Position       | float |(1) | Y coordinate of **Cell**   |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
-| **Ensemble Attribute Array** | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
-| **Ensemble Attribute Array** | MaterialName | String | (1) | Name of each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry |
+| Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
+| Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
+| Cell Attribute Array | Confidence Index | float |(1)     | Confidence of indexing  |
+| Cell Attribute Array | EulerAngles      | float |(3)     | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z)  |
+| Cell Attribute Array | Fit              | float |(1)     |  Quality of fit for indexing  |
+| Cell Attribute Array | Image Quality    | float |(1) | Quality of image   |
+| Cell Attribute Array | Phases           | int32_t   | (1) | Specifies to which phase each **Cell** belongs   |
+| Cell Attribute Array | SEM Signal       | float |(1) | Value of SEM signal   |
+| Cell Attribute Array | X Position       | float |(1) | X coordinate of **Cell**   |
+| Cell Attribute Array | Y Position       | float |(1) | Y coordinate of **Cell**   |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
+| Ensemble Attribute Array | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
+| Ensemble Attribute Array | MaterialName | String | (1) | Name of each **Ensemble |
 
 ## Example Pipelines ##
 

@@ -30,9 +30,9 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | None | N/A | N/A | **Data Container** in which to place the created **Image Geometry** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | None | N/A | N/A | Data Container in which to place the created **Image Geometry |
 
 
 ## Created Objects ##

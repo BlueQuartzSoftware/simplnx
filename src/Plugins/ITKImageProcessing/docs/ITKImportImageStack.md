@@ -26,11 +26,11 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | ImageDataContainer | N/A | N/A | Created **Data Container** name **Image Geometry** |
-| **Attribute Matrix** | CellData | Cell | N/A | Created **Cell Attribute Matrix** name  |
-| **Cell Attribute Array**  | ImageData | Varies based on input | (n) |  |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | ImageDataContainer | N/A | N/A | Created **Data Container** name **Image Geometry |
+|   Attribute Matrix   | CellData | Cell | N/A | Created **Cell Attribute Matrix** name  |
+| Cell Attribute Array | ImageData | Varies based on input | (n) |  |
 
 ## Example Pipelines ##
 

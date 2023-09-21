@@ -1,0 +1,89 @@
+========================================
+ITK Morphological Watershed Image Filter
+========================================
+
+
+Watershed segmentation implementation with morphological operators.
+
+Group (Subgroup)
+================
+
+ITKWatersheds (Watersheds)
+
+Description
+===========
+
+Watershed pixel are labeled 0. TOutputImage should be an integer type. Labels of output image are in no particular
+order. You can reorder the labels such that object labels are consecutive and sorted based on object size by passing the
+output of this filter to a RelabelComponentImageFilter .
+
+The morphological watershed transform algorithm is described in Chapter 9.2 of Pierre Soille’s book “Morphological Image
+Analysis: Principles and Applications”, Second Edition, Springer, 2003.
+
+This code was contributed in the Insight Journal paper: “The watershed transform in ITK - discussion and new
+developments” by Beare R., Lehmann G. https://www.insight-journal.org/browse/publication/92
+
+Author
+------
+
+Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+
+Related Filters
+---------------
+
+-  WatershedImageFilter , MorphologicalWatershedFromMarkersImageFilter
+
+Parameters
+==========
+
++---------------------------+---------------------------+-------------------------------------------------------------+
+| Name                      | Type                      | Description                                                 |
++===========================+===========================+=============================================================+
+| Level                     | float64                   | Set the ‘level’ variable to the filter                      |
++---------------------------+---------------------------+-------------------------------------------------------------+
+| MarkWatershedLine         | bool                      | Set/Get whether the watershed pixel must be marked or not.  |
+|                           |                           | Default is true. Set it to false do not only avoid writing  |
+|                           |                           | watershed pixels, it also decrease algorithm complexity.    |
++---------------------------+---------------------------+-------------------------------------------------------------+
+| FullyConnected            | bool                      | Whether the connected components are defined strictly by    |
+|                           |                           | face connectivity (False) or by face+edge+vertex            |
+|                           |                           | connectivity (True). Default is False                       |
++---------------------------+---------------------------+-------------------------------------------------------------+
+
+Required Geometry
+=================
+
+Image Geometry
+
+Required Objects
+================
+
+====================== ======== ==================================================================
+Name                   Type     Description
+====================== ======== ==================================================================
+Input Image Geometry   DataPath DataPath to the Input Image Geometry
+Input Image Data Array DataPath Path to input image with pixel type matching ScalarPixelIDTypeList
+====================== ======== ==================================================================
+
+Created Objects
+===============
+
+======================= ======== ===================================================================
+Name                    Type     Description
+======================= ======== ===================================================================
+Output Image Data Array DataPath Path to output image with pixel type matching ScalarPixelIDTypeList
+======================= ======== ===================================================================
+
+Example Pipelines
+=================
+
+License & Copyright
+===================
+
+Please see the description file distributed with this plugin.
+
+DREAM3DNX Help
+==============
+
+Check out our GitHub community page at `DREAM3DNX-Issues <https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues>`__ to
+report bugs, ask the community for help, discuss features, or get help from the developers.

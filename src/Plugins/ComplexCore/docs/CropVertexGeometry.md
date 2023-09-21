@@ -31,9 +31,9 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Cropped **Data Group** | CroppedDataContainer | N/A | N/A | **Data Container** holding the cropped **Vertex Geometry** and any copied **Attribute Matrices** and **Attribute Arrays** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cropped **Data Group | CroppedDataContainer | N/A | N/A | Data Container holding the cropped **Vertex Geometry** and any copied **Attribute Matrices** and **Attribute Arrays |
 
 ## Example Pipelines ##
 

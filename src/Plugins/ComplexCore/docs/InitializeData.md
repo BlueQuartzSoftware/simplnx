@@ -13,12 +13,12 @@ This **Filter** allows the user to define a subvolume of the data set in which t
 
 | Name | Type | Description |
 |------|------|-------------|
-| X Min | int32_t | Minimum X bound in **Cells** |
-| Y Min | int32_t | Minimum Y bound in **Cells** |
-| Z Min | int32_t | Minimum Z bound in **Cells** |
-| X Max | int32_t | Maximum X bound in **Cells** |
-| Y Max | int32_t | Maximum Y bound in **Cells** |
-| Z Max | int32_t | Maximum Z bound in **Cells** |
+| X Min | int32_t | Minimum X bound in **Cells |
+| Y Min | int32_t | Minimum Y bound in **Cells |
+| Z Min | int32_t | Minimum Z bound in **Cells |
+| X Max | int32_t | Maximum X bound in **Cells |
+| Y Max | int32_t | Maximum Y bound in **Cells |
+| Z Max | int32_t | Maximum Z bound in **Cells |
 
 ## Required Geometry ##
 
@@ -26,9 +26,9 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Attribute Matrix** | CellData | Cell | N/A | **Cell** data in which to initialize a subvolume to zeros |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+|   Attribute Matrix   | CellData | Cell | N/A | Cell** data in which to initialize a subvolume to zeros |
 
 ## Created Objects ##
 

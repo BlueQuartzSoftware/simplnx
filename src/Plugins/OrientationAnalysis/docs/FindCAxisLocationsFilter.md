@@ -21,17 +21,17 @@ Not Applicable
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | Quats | float | (4) | Specifies the orientation of the **Element** in quaternion representation |
-| **Cell Attribute Array** | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array | Quats | float | (4) | Specifies the orientation of the **Element** in quaternion representation |
+| Cell Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
 
 ## Created Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | CAxisLocation | float | (3) | Direction <u,v,w> of the C-axis for each **Element** in the sample reference frame |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array | CAxisLocation | float | (3) | Direction <u,v,w> of the C-axis for each **Element** in the sample reference frame |
 
 
 ## Example Pipelines

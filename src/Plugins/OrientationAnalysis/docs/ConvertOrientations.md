@@ -54,16 +54,16 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Any **Data Array** | Input Orientations | float | See above table | Incoming orientation representation |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Data Array | Input Orientations | float | See above table | Incoming orientation representation |
 
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-------------------|
-| Any **Data Array** | *Output Orientations* | float | See above table | Converted orientation representation |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Data Array | *Output Orientations* | float | See above table | Converted orientation representation |
 
 
 ## Example Pipelines ##

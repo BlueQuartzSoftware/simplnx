@@ -29,7 +29,7 @@ Gone_ parameter, which will continue to run until no **Cells** fail the original
 | Name                | Type    | Description                                                                                                                        |
 |---------------------|---------|------------------------------------------------------------------------------------------------------------------------------------|
 | Coordination Number | int32_t | Number of neighboring **Cells** that can be of opposite classification before a **Cell** will be removed                           |
-| Loop Until Gone     | bool    | Whether to run a single iteration or iterate until no *bad* **Cells** have more than the above number of *good* neighbor **Cells** |
+| Loop Until Gone     | bool    | Whether to run a single iteration or iterate until no *bad* **Cells** have more than the above number of *good* neighbor **Cells |
 
 ## Required Geometry
 
@@ -37,10 +37,10 @@ Image
 
 ## Required Objects
 
-| Kind                     | Default Name   | Type     | Component Dimensions | Description                                                      |
-|--------------------------|----------------|----------|----------------------|------------------------------------------------------------------|
-| **Image Geometry**       | Image Geometry | DataPath | N/A                  | The path to the Image Geometry where the feature Ids are stored. |
-| **Cell Attribute Array** | FeatureIds     | int32_t  | (1)                  | Specifies to which **Feature** each **Cell** belongs             |
+| Kind                     | Default Name   | Type     | Comp Dims | Description                                                      |
+|--------------------------|----------------|----------|-------------|------------------------------------------------------------------|
+| Image Geometry**       | Image Geometry | DataPath | N/A                  | The path to the Image Geometry where the feature Ids are stored. |
+| Cell Attribute Array | FeatureIds     | int32_t  | (1)                  | Specifies to which **Feature** each **Cell** belongs             |
 
 ## Created Objects
 

@@ -1,4 +1,4 @@
-# ITK Valued Regional Maxima Image Filter (ITKValuedRegionalMaximaImage)
+# ITK Valued Regional Maxima Image Filter
 
 Transforms the image so that any pixel that is not a regional maxima is set to the minimum value for the pixel type. Pixels that are regional maxima retain their value.
 

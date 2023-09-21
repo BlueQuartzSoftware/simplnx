@@ -1,4 +1,4 @@
-# ITK Binary Morphological Opening Image Filter (ITKBinaryMorphologicalOpeningImage)
+# ITK Binary Morphological Opening Image Filter
 
 binary morphological opening of an image.
 

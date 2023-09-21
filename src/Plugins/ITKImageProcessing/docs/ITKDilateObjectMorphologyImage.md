@@ -1,4 +1,4 @@
-# ITK Dilate Object Morphology Image Filter (ITKDilateObjectMorphologyImage)
+# ITK Dilate Object Morphology Image Filter
 
 dilation of an object in an image
 

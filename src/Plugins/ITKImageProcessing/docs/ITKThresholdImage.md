@@ -1,4 +1,4 @@
-# ITK Threshold Image Filter (ITKThresholdImage)
+# ITK Threshold Image Filter
 
 Set image values to a user-specified value if they are below, above, or between simple threshold values.
 

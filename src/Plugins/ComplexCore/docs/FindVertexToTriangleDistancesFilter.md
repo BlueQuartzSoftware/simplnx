@@ -15,17 +15,17 @@ None
 Vertex and Triangle
 
 ## Required Objects ##
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Data Container** | None | N/A | N/A | **Data Container** holding the source **Vertex Geometry** |
-| **Data Container** | None | N/A | N/A | **Data Container** holding the target **Triangle Geometry** |
-| **Face Attribute Array** | None | float | (3)) | Normals for the target **Triangle Geometry** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | None | N/A | N/A | Data Container holding the source **Vertex Geometry |
+| Data Container | None | N/A | N/A | Data Container holding the target **Triangle Geometry |
+| Face Attribute Array | None | float | (3)) | Normals for the target **Triangle Geometry |
 
 ## Created Objects ##
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Vertex Attribute Array** | Distances | float | (1) | Euclidean distance to the closest triangle for each point |
-| **Vertex Attribute Array** | ClosestTriangleId | int32_t | (1) | Id of the closest triangle for each point |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Vertex Attribute Array | Distances | float | (1) | Euclidean distance to the closest triangle for each point |
+| Vertex Attribute Array | ClosestTriangleId | int32_t | (1) | Id of the closest triangle for each point |
 
 ## License & Copyright ##
 

@@ -39,15 +39,15 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array(s)** | ImageData | uint8_t | (3) or (4) | RGB or RGBA values |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array(s) | ImageData | uint8_t | (3) or (4) | RGB or RGBA values |
 
 ## Created Objects ##
 
 | Kind | Default Name | Type | Component Dimensions (dimension, size) | Description |
 |------|--------------|-------------|---------|-----|
-| **Element Attribute Array** | GrayScale Data | uint8_t | (1) | Grayscale values |
+| Element Attribute Array | GrayScale Data | uint8_t | (1) | Grayscale values |
 | AttributeMatrix (Optional)  |                |         |     |                  |
 
 

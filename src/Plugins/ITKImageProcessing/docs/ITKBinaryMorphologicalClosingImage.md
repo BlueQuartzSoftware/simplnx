@@ -1,4 +1,4 @@
-# ITK Binary Morphological Closing Image Filter (ITKBinaryMorphologicalClosingImage)
+# ITK Binary Morphological Closing Image Filter
 
 binary morphological closing of an image.
 

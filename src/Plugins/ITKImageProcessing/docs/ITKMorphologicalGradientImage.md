@@ -1,4 +1,4 @@
-# ITK Morphological Gradient Image Filter (ITKMorphologicalGradientImage)
+# ITK Morphological Gradient Image Filter
 
 Compute the gradient of a grayscale image.
 

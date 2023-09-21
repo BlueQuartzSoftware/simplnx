@@ -30,7 +30,7 @@ The example images below were generated **AFTER** the execution of the filter an
 ## Parameters
 
 | Name                 | Type        | Description                                          |
-|----------------------|-------------|------------------------------------------------------|
+|-------------|-------------|------------------------------------------------------|
 | Operation            | Enumeration | Whether to dilate or erode                           |
 | Number of Iterations | int32_t     | The number of iterations to use for erosion/dilation |
 | X Direction          | bool        | Whether to erode/dilate in the X direction           |
@@ -45,7 +45,7 @@ Image
 
 | Kind                     | Default Name | Type | Component Dimensionss | Description                                               |
 |--------------------------|--------------|------|-----------------------|-----------------------------------------------------------|
-| **Cell Attribute Array** | Mask         | bool | (1)                   | Used to define whether the **Cells** are part of the mask |
+| Cell Attribute Array | Mask         | bool | (1)                   | Used to define whether the **Cells** are part of the mask |
 
 ## Created Objects
 

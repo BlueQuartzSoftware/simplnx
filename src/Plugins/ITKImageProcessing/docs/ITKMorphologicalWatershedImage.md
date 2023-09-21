@@ -1,4 +1,4 @@
-# ITK Morphological Watershed Image Filter (ITKMorphologicalWatershedImage)
+# ITK Morphological Watershed Image Filter
 
 Watershed segmentation implementation with morphological operators.
 

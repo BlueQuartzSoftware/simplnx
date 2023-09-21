@@ -1,4 +1,4 @@
-# ITK Binary Dilate Image Filter (ITKBinaryDilateImage)
+# ITK Binary Dilate Image Filter
 
 Fast binary dilation of a single intensity value in the image.
 
@@ -31,7 +31,7 @@ for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9. No
 | KernelType | KernelEnum | Set the kernel or structuring element used for the morphology. |
 | BackgroundValue | float64 | The eroded pixels will receive the BackgroundValue. Default = non positive minimum  |
 | ForegroundValue | float64 | The pixel value considered 'Foreground' that will be eroded  |
-| BoundaryToForeground | bool | "Mark the boundary between foreground and background. |
+| BoundaryToForeground | bool | Mark the boundary between foreground and background. |
 
 ## Required Geometry
 

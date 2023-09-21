@@ -20,8 +20,8 @@ For more information on synthetic building, visit the tutorial.
 | Seed | uint64 | This is the value fed into the random generator |
 | Add Random Noise | bool | Whether to add random Poisson noise to the whole volume |
 | Volume Fraction Random Noise | float | Fraction of noise to add over the whole volume |
-| Add Boundary Noise | bool | Whether to add noise to the boundary **Cells** |
-| Volume Fraction Boundary Noise | float | Fraction of noise to add to the boundary **Cells** |
+| Add Boundary Noise | bool | Whether to add noise to the boundary **Cells |
+| Volume Fraction Boundary Noise | float | Fraction of noise to add to the boundary **Cells |
 
 ## Required Geometry
 
@@ -29,9 +29,9 @@ Image
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | GBEuclideanDistances | int32 | (1) | Manhattan distances of each **Cell** to the closest **Feature** boundary |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | GBEuclideanDistances | int32 | (1) | Manhattan distances of each **Cell** to the closest **Feature** boundary |
 
 ## Created Objects
 

@@ -1,4 +1,4 @@
-# ITK Grayscale Erode Image Filter (ITKGrayscaleErodeImage)
+# ITK Grayscale Erode Image Filter
 
 Grayscale erosion of an image.
 

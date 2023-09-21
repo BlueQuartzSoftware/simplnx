@@ -37,17 +37,17 @@ Triangle
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 | ------ | -------------- | ------------ - | -------- - | ---- - |
 |**Attribute Matrix**| FaceData | Face | N / A | Specifies which **Attribute Matrix** to store the results |
-|**Face Attribute Array**| FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each **Face** |
+|**Face Attribute Array**| FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each **Face |
 |**Face Attribute Array**| FeatureFaceIds | int32_t | (1) | Specifies to which **Feature** boundary each **Face** belongs |
-|**Face Attribute Array**| FaceNormals | double | (3) | Specifies the normal of each **Face** |
-|**Face Attribute Array**| FaceCentroids | double | (3) | Specifies the centroid of each **Face** |
+|**Face Attribute Array**| FaceNormals | double | (3) | Specifies the normal of each **Face |
+|**Face Attribute Array**| FaceCentroids | double | (3) | Specifies the centroid of each **Face |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 | ------ | -------------- | ------------ - | -------- - | ---- - |
 |**Face Attribute Array**| PrincipalCurvature1 | double | (1) | First set eigenvalues of the Wiengarten matrix (&kappa;<sub>1</sub>). Only created if *Compute Principal Direction Vectors*is checked |
 |**Face Attribute Array**| PrincipalCurvature2 | double | (1) | Second set eigenvalues of the Wiengarten matrix (&kappa;<sub>2</sub>). Only created if *Compute Principal Direction Vectors*is checked |

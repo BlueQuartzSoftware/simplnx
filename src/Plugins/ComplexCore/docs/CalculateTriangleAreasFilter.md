@@ -27,9 +27,9 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array**  | FaceAreas | double | (1) | Specifies the area of each **Face** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Face Attribute Array | FaceAreas | double | (1) | Specifies the area of each **Face |
 
 
 ## Example Pipelines ##

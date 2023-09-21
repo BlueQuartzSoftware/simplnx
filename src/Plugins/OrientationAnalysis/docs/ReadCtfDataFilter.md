@@ -37,7 +37,7 @@ Most 2D .ctf files have their angles in **degrees** where as DREAM.3D expects ra
 | Figure 1 |
 |--------|
 | ![Figure showing 30 Degree conversions](Images/Hexagonal_Axis_Alignment.png) |
-| **Figure 1:** showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Inst. is in **Red** |
+| Figure 1:** showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Inst. is in **Red |
 
 ## Parameters ##
 
@@ -57,23 +57,23 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container**  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry** |
-| **Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
-| **Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
-| **Cell Attribute Array** | BC           | float | (1) | Band contrast levels |
-| **Cell Attribute Array** | EulerAngles  | float | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z)  |
-| **Cell Attribute Array** | BS           | float | (1) | Band saturation levels |
-| **Cell Attribute Array** | Bands        | float | (1) | Number of bands   |
-| **Cell Attribute Array** | Phases       | int32_t   | (1) | Specifies to which phase each **Cell** belongs   |
-| **Cell Attribute Array** | MAD          | float | (1) | Mean angular deviation. Typical threshold value is < 1.8  |
-| **Cell Attribute Array**  | X Position       | float |(1) | X coordinate of **Cell**   |
-| **Cell Attribute Array**  | Y Position       | float |(1) | Y coordinate of **Cell**   |
-| **Cell Attribute Array** | Error        | int32_t   | (1) | Value = 0 is a well indexed scan point   |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
-| **Ensemble Attribute Array** | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
-| **Ensemble Attribute Array** | MaterialName | String | (1) | Name of each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry |
+| Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
+| Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
+| Cell Attribute Array | BC           | float | (1) | Band contrast levels |
+| Cell Attribute Array | EulerAngles  | float | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z)  |
+| Cell Attribute Array | BS           | float | (1) | Band saturation levels |
+| Cell Attribute Array | Bands        | float | (1) | Number of bands   |
+| Cell Attribute Array | Phases       | int32_t   | (1) | Specifies to which phase each **Cell** belongs   |
+| Cell Attribute Array | MAD          | float | (1) | Mean angular deviation. Typical threshold value is < 1.8  |
+| Cell Attribute Array | X Position       | float |(1) | X coordinate of **Cell**   |
+| Cell Attribute Array | Y Position       | float |(1) | Y coordinate of **Cell**   |
+| Cell Attribute Array | Error        | int32_t   | (1) | Value = 0 is a well indexed scan point   |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
+| Ensemble Attribute Array | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
+| Ensemble Attribute Array | MaterialName | String | (1) | Name of each **Ensemble |
 
 ## Example Pipelines ##
 

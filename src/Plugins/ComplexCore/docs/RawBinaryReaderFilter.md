@@ -74,8 +74,8 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
 | Any  | None     | Any  | Any                  |  Created **Attribute Array** name |
 
 

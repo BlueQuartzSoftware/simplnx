@@ -1,4 +1,4 @@
-# ITK Adaptive Histogram Equalization Image Filter (ITKAdaptiveHistogramEqualizationImage)
+# ITK Adaptive Histogram Equalization Image Filter
 
 Power Law Adaptive Histogram Equalization.
 

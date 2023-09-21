@@ -31,27 +31,27 @@ There are several mathematical operators available for usage in an infix express
 | `-` | subtraction | Subtracts two items |
 | `*` | multiplication | Multiplies two items |
 | `/` | division | Divides two items |
-| **x^y** | exponentiation | Raises the base *x* to the *y* power |
+| x^y | exponentiation | Raises the base *x* to the *y* power |
 
 #### Unary Operators ####
 
 | Symbol | Name | Number of Arguments | Operation |
 |-----------|----------|-------------------------------|---------------|
-| **e^y** | exponential function | 1 | Raises *e* to the *y* power |
-| **sin(x)** | sine function | 1 | Computes the sine of *x* |
-| **cos(x)** | cosine function | 1 | Computes the cosine of *x* |
-| **tan(x)** | tangent function | 1 | Computes the tangent of *x* |
-| **asin(x)** | arcsine function | 1 | Computes the arcsine of *x* |
-| **acos(x)** | arccosine function | 1 | Computes the arccosine of *x* |
-| **atan(x)** | arctangent function | 1 | Computes the arctangent of *x* |
-| **abs(x)** | absolute value | 1 | Returns the absolute value of *x* |
-| **ceil(x)** | ceiling function | 1 | Returns the smallest integral value not less than *x* |
-| **floor(x)** | floor function | 1 | Returns the largest integral value not greater than *x* |
-| **log10(x)** | base 10 logarithm | 1 | Computes the base 10 logarithm of *x* |
-| **ln(x)** | natural logarithm | 1 | Computes the natural logarithm of *x* |
-| **sqrt(x)** | square root | 1 | Computes the square root of *x* |
-| **log(b, x)** | base *b* logarithm | 2 | Computes the base *b* logarithm of *x* |
-| **root(r, ind)** | *ind<sup>th</sup>* root | 2 | Computes the *ind<sup>th</sup>* root of the radicand*r* |
+| e^y | exponential function | 1 | Raises *e* to the *y* power |
+| sin(x) | sine function | 1 | Computes the sine of *x* |
+| cos(x) | cosine function | 1 | Computes the cosine of *x* |
+| tan(x) | tangent function | 1 | Computes the tangent of *x* |
+| asin(x) | arcsine function | 1 | Computes the arcsine of *x* |
+| acos(x) | arccosine function | 1 | Computes the arccosine of *x* |
+| atan(x) | arctangent function | 1 | Computes the arctangent of *x* |
+| abs(x) | absolute value | 1 | Returns the absolute value of *x* |
+| ceil(x) | ceiling function | 1 | Returns the smallest integral value not less than *x* |
+| floor(x) | floor function | 1 | Returns the largest integral value not greater than *x* |
+| log10(x) | base 10 logarithm | 1 | Computes the base 10 logarithm of *x* |
+| ln(x) | natural logarithm | 1 | Computes the natural logarithm of *x* |
+| sqrt(x) | square root | 1 | Computes the square root of *x* |
+| log(b, x) | base *b* logarithm | 2 | Computes the base *b* logarithm of *x* |
+| root(r, ind) | *ind<sup>th</sup>* root | 2 | Computes the *ind<sup>th</sup>* root of the radicand*r* |
 
 #### Trigonometric Operators and Degrees/Radians ####
 
@@ -146,15 +146,15 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|----------------|
-| Any **Attribute Matrix** | None | Any | N/A | Source **Attribute Matrix** for arrays available to the mathematical expression |
+| Any **Attribute Matrix | None | Any | N/A | Source **Attribute Matrix** for arrays available to the mathematical expression |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|----------------|
-| Any **Attribute Array** | Output | double | varies | Output of mathematical expression |
+| Any **Attribute Array | Output | double | varies | Output of mathematical expression |
 
 ## Example Pipelines ##
 

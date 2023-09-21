@@ -31,10 +31,10 @@ Required Geometry Type -or- Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Data Container** | Moving Geometry | Must have a geometry | N/A | The Geometry that is going to be moved |
-| **Data Container** | Target Geometry |Must have a geometry | N/A | The Target Geometry that the moving is going to be aligned to. |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | Moving Geometry | Must have a geometry | N/A | The Geometry that is going to be moved |
+| Data Container | Target Geometry |Must have a geometry | N/A | The Target Geometry that the moving is going to be aligned to. |
 
 ## Created Objects ##
 

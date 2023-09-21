@@ -1,4 +1,4 @@
-# ITK Binary Threshold Image Filter (ITKBinaryThresholdImage)
+# ITK Binary Threshold Image Filter
 
 Binarize an input image by thresholding.
 

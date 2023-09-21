@@ -1,4 +1,4 @@
-# ITK Rescale Intensity Image Filter (ITKRescaleIntensityImage)
+# ITK Rescale Intensity Image Filter
 
 Applies a linear transformation to the intensity levels of the input Image .
 

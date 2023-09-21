@@ -1,4 +1,4 @@
-# ITK H Maxima Image Filter (ITKHMaximaImage)
+# ITK H Maxima Image Filter
 
 Suppress local maxima whose height above the baseline is less than h.
 

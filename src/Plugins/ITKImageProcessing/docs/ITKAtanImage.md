@@ -1,4 +1,4 @@
-# ITK Atan Image Filter (ITKAtanImage)
+# ITK Atan Image Filter
 
 Computes the one-argument inverse tangent of each pixel.
 

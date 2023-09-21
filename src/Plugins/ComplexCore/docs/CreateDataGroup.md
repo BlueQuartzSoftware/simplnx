@@ -25,9 +25,9 @@ Not Applicable
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|----------------|
-| **Data Container** | DataContainer | N/A | N/A | Created **Data Container** name |
+| Data Container | DataContainer | N/A | N/A | Created **Data Container** name |
 
 
 ## Example Pipelines ##

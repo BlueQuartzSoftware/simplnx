@@ -33,16 +33,16 @@ Triangle
 
 ## Required Objects
 
-| Kind                     | Default Name | Type    | Component Dimensions | Description                                                      |
-|--------------------------|--------------|---------|----------------------|------------------------------------------------------------------|
-| **Face Attribute Array** | FaceLabels   | int32_t | (2)                  | Specifies which **Features** are on either side of each **Face** |
+| Kind                     | Default Name | Type    | Comp Dims | Description                                                      |
+|--------------------------|--------------|---------|-------------|------------------------------------------------------------------|
+| Face Attribute Array | FaceLabels   | int32_t | (2)                  | Specifies which **Features** are on either side of each **Face |
 
 ## Created Objects
 
-| Kind                        | Default Name    | Type         | Component Dimensions | Description                               |
-|-----------------------------|-----------------|--------------|----------------------|-------------------------------------------|
-| **Attribute Matrix**        | FaceFeatureData | Face Feature | N/A                  | Created **Feature Attribute Matrix** name |
-| **Feature Attribute Array** | Volumes         | float        | (1)                  | Volume of the enclosed **Feature**        |
+| Kind                        | Default Name    | Type         | Comp Dims | Description                               |
+|-----------------------------|-----------------|--------------|-------------|-------------------------------------------|
+| Attribute Matrix**        | FaceFeatureData | Face Feature | N/A                  | Created **Feature Attribute Matrix** name |
+| Feature Attribute Array | Volumes         | float        | (1)                  | Volume of the enclosed **Feature**        |
 
 ## Example Pipelines
 

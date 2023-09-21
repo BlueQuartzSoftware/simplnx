@@ -13,7 +13,7 @@ This **Filter** calculates the largest cross-sectional area on a user-defined pl
 
 | Name | Type | Description |
 |------|------| ----------- |
-| Plane of Interest | Enumeration | Specifies which plane to consider when determining the maximum cross-section for each **Feature** |
+| Plane of Interest | Enumeration | Specifies which plane to consider when determining the maximum cross-section for each **Feature |
 
 ## Required Geometry
 
@@ -21,15 +21,15 @@ Image
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
 
 ## Created Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | LargestCrossSection | flaot | (1) | Area of largest cross-section for **Feature** perpendicular to the user specified direction |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | LargestCrossSection | flaot | (1) | Area of largest cross-section for **Feature** perpendicular to the user specified direction |
 
 
 ## Example Pipelines

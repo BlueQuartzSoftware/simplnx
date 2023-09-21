@@ -32,14 +32,14 @@ Note that the resulting hull geometry does not inherit any **Attribute Arrays** 
 Vertex
 
 ## Required Objects ##
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Data Container** | None | N/A | N/A | **Data Container** holding the input **Vertex Geometry** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | None | N/A | N/A | Data Container holding the input **Vertex Geometry |
 
 ## Created Objects ##
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Data Container** | HullDataContainer | N/A | N/A | **Data Container** holding the approximated surface **Vertex Geometry** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | HullDataContainer | N/A | N/A | Data Container holding the approximated surface **Vertex Geometry |
 
 ## License & Copyright ##
 

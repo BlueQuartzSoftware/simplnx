@@ -31,7 +31,7 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|----------------|
 | DataObject | N/A | N/A | N/A | The list of DataObjects to copy. |
 | bool | false | N/A | N/A | Whether to copy the DataObjects to a new parent or not. |

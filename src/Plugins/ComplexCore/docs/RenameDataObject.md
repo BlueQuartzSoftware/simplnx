@@ -12,7 +12,7 @@ This **Filter** renames a user chosen **Data Object** of any type.
 
 | Name | Type | Description |
 |------|------| ----------- |
-| New Data Object Name| String | New name for the selected **Data Object** |
+| New Data Object Name| String | New name for the selected **Data Object |
 
 ## Required Geometry ##
 
@@ -20,9 +20,9 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Object** | None | N/A | N/A | **Data Object** to rename |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Object | None | N/A | N/A | Data Object** to rename |
 
 ## Created Objects ##
 

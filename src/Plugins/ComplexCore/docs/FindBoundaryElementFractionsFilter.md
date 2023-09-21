@@ -19,17 +19,17 @@ Not Applicable
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | Feature Ids | int32 | (1) | Specifies to which **Feature** each **Element** belongs |
-| **Element Attribute Array** | Surface Elements | int32 | (1) | The number of neighboring **Elements** of a given **Element** that belong to a different **Feature** than itself |
-| **Attribute Matrix** | Feature Data | AttributeMatrix | N/A | Parent Attribute Matrix for the *Surface Element Fractions* Array to be created in |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array | Feature Ids | int32 | (1) | Specifies to which **Feature** each **Element** belongs |
+| Element Attribute Array | Surface Elements | int32 | (1) | The number of neighboring **Elements** of a given **Element** that belong to a different **Feature** than itself |
+|   Attribute Matrix   | Feature Data | AttributeMatrix | N/A | Parent Attribute Matrix for the *Surface Element Fractions* Array to be created in |
 
 ## Created Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | Surface Element Fractions | float32 | (1) | Fraction of **Elements** belonging to the **Feature** that are "surface" **Elements** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | Surface Element Fractions | float32 | (1) | Fraction of **Elements** belonging to the **Feature** that are "surface" **Elements |
 
 ## Example Pipelines
 

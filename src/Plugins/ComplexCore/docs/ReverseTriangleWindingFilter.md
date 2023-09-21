@@ -18,9 +18,9 @@ Triangle
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | None | N/A | N/A | **Data Container** that holds the **Triangle Geometry** to reverse winding |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | None | N/A | N/A | Data Container that holds the **Triangle Geometry** to reverse winding |
 
 ## Created Objects
 

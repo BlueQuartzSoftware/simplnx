@@ -31,9 +31,9 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array**  | FaceNormals | double array | (1) | Specifies the normal of each **Face** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Face Attribute Array | FaceNormals | double array | (1) | Specifies the normal of each **Face |
 
 
 ## Example Pipelines ##

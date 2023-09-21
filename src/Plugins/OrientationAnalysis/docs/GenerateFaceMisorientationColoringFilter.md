@@ -19,19 +19,19 @@ Image + Triangle
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array** | FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each **Face** |
-| **Feature Attribute Array** | AvgQuats | float | (4) | Specifies the average orientation of each **Feature** in quaternion representation |
-| **Feature Attribute Array** | Phases | int32_t | (1) | Specifies to which phase each **Feature** belongs |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Face Attribute Array | FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each **Face |
+| Feature Attribute Array | AvgQuats | float | (4) | Specifies the average orientation of each **Feature** in quaternion representation |
+| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which phase each **Feature** belongs |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
 
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array** | MisorientationColors | float | (3) | A set of RGB color schemes encoded as floats for each **Face** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Face Attribute Array | MisorientationColors | float | (3) | A set of RGB color schemes encoded as floats for each **Face |
 
 
 ## Example Pipelines ##

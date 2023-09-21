@@ -25,15 +25,15 @@ Required Geometry Type -or- Not Applicable
 
 ## Required Objects ##
 
-| Kind                | Default Name           | Type  | Component Dimensions | Description |
-|---------------------|------------------------|-------|----------------------|-------------|
-| **Attribute Array** | Rodrigues Input Vector | float | (3)                  |             |
+| Kind                | Default Name           | Type  | Comp Dims | Description |
+|---------------------|------------------------|-------|-------------|-------------|
+| Attribute Array | Rodrigues Input Vector | float | (3)                  |             |
 
 ## Created Objects ##
 
-| Kind                | Default Name           | Type  | Component Dimensions | Description |
-|---------------------|------------------------|-------|----------------------|-------------|
-| **Attribute Array** | Rodrigues Ouput Vector | float | (4)                  |             |
+| Kind                | Default Name           | Type  | Comp Dims | Description |
+|---------------------|------------------------|-------|-------------|-------------|
+| Attribute Array | Rodrigues Ouput Vector | float | (4)                  |             |
 
 ## Example Pipelines ##
 

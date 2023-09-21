@@ -1,4 +1,4 @@
-# ITK Binary Projection Image Filter (ITKBinaryProjectionImage)
+# ITK Binary Projection Image Filter
 
 Binary projection.
 

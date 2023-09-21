@@ -23,7 +23,7 @@ After all the **Features** have been identified, an **Attribute Matrix** is crea
 
 | Name | Type | Description |
 |------|------| ----------- |
-| Scalar Tolerance | float | Tolerance  used to determine if neighboring **Cells** belong to the same **Feature** |
+| Scalar Tolerance | float | Tolerance  used to determine if neighboring **Cells** belong to the same **Feature |
 | Use Mask Array | bool | Specifies whether to use a boolean array to exclude some **Cells** from the **Feature** identification process |
 
 ## Required Geometry ##
@@ -32,18 +32,18 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None | Any | (1) | Scalar array used during segmentation |
-| **Cell Attribute Array** | Mask | bool | (1) | Specifies if the **Cell** is to be counted in the algorithm. Only required if *Use Mask Array* is checked |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | None | Any | (1) | Scalar array used during segmentation |
+| Cell Attribute Array | Mask | bool | (1) | Specifies if the **Cell** is to be counted in the algorithm. Only required if *Use Mask Array* is checked |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. |
-| **Attribute Matrix** | CellFeatureData | Cell Feature | N/A | Created **Feature Attribute Matrix** name |
-| **Feature Attribute Array** | Active | bool | (1) | Specifies if the **Feature** is still in the sample (*true* if the **Feature** is in the sample and *false* if it is not). At the end of the **Filter**, all **Features** will be *Active* |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. |
+|   Attribute Matrix   | CellFeatureData | Cell Feature | N/A | Created **Feature Attribute Matrix** name |
+| Feature Attribute Array | Active | bool | (1) | Specifies if the **Feature** is still in the sample (*true* if the **Feature** is in the sample and *false* if it is not). At the end of the **Filter**, all **Features** will be *Active* |
 
 
 ## Example Pipelines ##

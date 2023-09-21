@@ -17,12 +17,12 @@ This **Filter** combines all of the STL files from a given directory into a sing
 Not Applicable
 
 ## Created Objects 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Geometry** | TriangleGeometry  | N/A | N/A | The path to the triangle geometry to be created from the combined STL files |
-| **Face Attribute Matrix** | FaceData  | Face | N/A | Created **Face Attribute Matrix** name for the combined geometry  |
-| **Face Attribute Array** | FaceNormals  | double | (3) | Specifies the normal of each **Face** in the combined geometry |
-| **Vertex Attribute Matrix** | VertexData  | Vertex | N/A | Created **Vertex Attribute Matrix** name for the combined geometry |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Geometry | TriangleGeometry  | N/A | N/A | The path to the triangle geometry to be created from the combined STL files |
+| Face Attribute Matrix | FaceData  | Face | N/A | Created **Face Attribute Matrix** name for the combined geometry  |
+| Face Attribute Array | FaceNormals  | double | (3) | Specifies the normal of each **Face** in the combined geometry |
+| Vertex Attribute Matrix | VertexData  | Vertex | N/A | Created **Vertex Attribute Matrix** name for the combined geometry |
 
 ## Example Pipelines
 

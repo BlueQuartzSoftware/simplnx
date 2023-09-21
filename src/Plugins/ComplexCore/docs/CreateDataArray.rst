@@ -1,0 +1,139 @@
+=================
+Create Data Array
+=================
+
+
+Group (Subgroup)
+================
+
+Core (Generation)
+
+Description
+===========
+
+This **Filter** creates an **Data Array** of any primitive type with any number of components along a *single component
+dimension*. For example, a scalar as (1) or a 3-vector as (3), but *not* a matrix as (3, 3). The array is initialized to
+a user define value or with random values within a specified range.
+
+When initializing a multicomponent array square bracket notation can be used to specify different initialization values
+for each component. For example say that I want to intialize a 2 component array where the first component is 0 and the
+second component is 1 we would use the following input string for the *Initialization Value*
+
+::
+
+   0;1
+
+We are using semicolons instead of commas or decimal points due to different international standards (European versus
+United States?).
+
+Another example is if you want to create a floating point array where each tuple has 10 components but you just want the
+value of 2.5 to be used for each, then simply use:
+
+::
+
+   2.5
+
+When creating a Data Array within an Attribute matrix, the tuple dimensions will **always** be taken direct from the
+Attribute Matrix. This means that the *Set Tuple Dimensions* parameter can be unchecked to hide the tuple dimensions
+entry table.
+
+If the parent is **NOT an Attribute Matrix**, then the user **MUST** set the tuple dimensions themselves.
+
+Scalar Type Values
+------------------
+
+::
+
+   static const int Int8 = 0;
+   static const int UInt8 = 1;
+   static const int Int16 = 2;
+   static const int UInt16 = 3;
+   static const int Int32 = 4;
+   static const int UInt32 = 5;
+   static const int Int64 = 6;
+   static const int UInt64 = 7;
+   static const int Float = 8;
+   static const int Double = 9;
+   static const int Bool = 10;
+
+Primitive Data Type Valid Ranges
+--------------------------------
+
+================ ====== =============================================================
+Type             Size   Range
+================ ====== =============================================================
+Signed Integer   8 bit  0 to 255
+Unsigned Integer 8 bit  -128 to 127
+Signed Integer   16 bit -32,768 to 32,767
+Unsigned Integer 16 bit 0 to 65,535
+Signed Integer   32 bit -2,147,483,648 to 2,147,483,647
+Unsigned Integer 32 bit 0 to 4,294,967,295
+Signed Integer   64 bit 9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
+Unsigned Integer 64 bit 0 to 18,446,744,073,709,551,615
+Float            32 bit -3.4e+38 to -1.1e-38, 0.0, 1.1e-38 to 3.4e+38 (7 digits)
+Double           64 bit -1.7e+308 to -2.2e-308, 0.0, 2.2e-308 to 1.7e+308 (15 digits)
+Boolean          8 bit  0 = false and any other value will be forced to 1 = true
+================ ====== =============================================================
+
+The number of components should be at least 1. Examples of *Number of Components* would be 3 for an RGB Image, 1 for a
+gray scale image, 1 for a scalar array, 4 for a quaternions array, etc. All values of the array will be initialized to
+the user set value. The initialization value text box must have a user entry or the default value *0* will be used.
+
+Parameters
+==========
+
++---------------------------------------------------------+------------------+-----------------------------------------+
+| Name                                                    | Type             | Description                             |
++=========================================================+==================+=========================================+
+| Set Tuple Dimensions                                    | bool             | This allows the user to set the tuple   |
+|                                                         |                  | dimensions directly rather than just    |
+|                                                         |                  | inheriting them. This option is NOT     |
+|                                                         |                  | required if you are creating the Data   |
+|                                                         |                  | Array in an Attribute Matrix            |
++---------------------------------------------------------+------------------+-----------------------------------------+
+| Numeric Type                                            | Enumeration      | Primitive data type for created array   |
++---------------------------------------------------------+------------------+-----------------------------------------+
+| Number of Components                                    | int32_t          | The number of components that each      |
+|                                                         |                  | tuple contains. Matrix are row major    |
+|                                                         |                  | form within SIMPL                       |
++---------------------------------------------------------+------------------+-----------------------------------------+
+| Initialization Value                                    | String           | Initialization value for array          |
++---------------------------------------------------------+------------------+-----------------------------------------+
+| Data Format                                             | String           | This value will specify which data      |
+|                                                         |                  | format is used by the array’s data      |
+|                                                         |                  | store. An empty string results in       |
+|                                                         |                  | in-memory data store.                   |
++---------------------------------------------------------+------------------+-----------------------------------------+
+
+Required Geometry
+=================
+
+Not Applicable
+
+Required Objects
+================
+
+None
+
+Created Objects
+===============
+
+====================== ============ ==== ========= =============================================
+Kind                   Default Name Type Comp Dims Description
+====================== ============ ==== ========= =============================================
+Any \**Attribute Array None         Any  Any       Created **Attribute Array** location and name
+====================== ============ ==== ========= =============================================
+
+Example Pipelines
+=================
+
+License & Copyright
+===================
+
+Please see the description file distributed with this **Plugin**
+
+DREAM3DNX Help
+==============
+
+Check out our GitHub community page at `DREAM3DNX-Issues <https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues>`__ to
+report bugs, ask the community for help, discuss features, or get help from the developers.

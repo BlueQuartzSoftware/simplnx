@@ -1,4 +1,4 @@
-# ITK Grayscale Morphological Closing Image Filter (ITKGrayscaleMorphologicalClosingImage)
+# ITK Grayscale Morphological Closing Image Filter
 
 Grayscale closing of an image.
 

@@ -20,17 +20,17 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind  | Type | Component Dimensions | Description |
-|------|------|----------------------|-------------|
-| Element Array DataPath | Any | Any | **Element** data to copy to **Feature** data |
+| Kind  | Type | Comp Dims | Description |
+|------|------|-------------|-------------|
+| Element Array DataPath | Any | Any | Element** data to copy to **Feature** data |
 | Element Array DataPath | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
-| Cell Feature **Attribute Matrix** | Cell Feauture | N/A | The path to the cell feature **Attribute Matrix** |
+| Cell Feature **Attribute Matrix | Cell Feauture | N/A | The path to the cell feature **Attribute Matrix |
 
 
 ## Created Objects ##
 
-| Kind | Type | Component Dimensions | Description |
-|------|------|----------------------|-------------|
+| Kind | Type | Comp Dims | Description |
+|------|------|-------------|-------------|
 | Feature Array DataPath | Any  | Any | The copied array containing **Feature** data |
 
 ## Example Pipelines ##

@@ -17,15 +17,15 @@ None
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description                                                    |
-|------|--------------|-----|----------------------|----------------------------------------------------------------|
-| **Attribute Array** | N/A | Any | (1) | 1-component input array used to generate the color table array |
+| Kind | Default Name | Type | Comp Dims | Description                                                    |
+|------|--------------|-----|-------------|----------------------------------------------------------------|
+| Attribute Array | N/A | Any | (1) | 1-component input array used to generate the color table array |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type  | Component Dimensions | Description                                             |
-|------|--------------|-------|----------------------|---------------------------------------------------------|
-| **Attribute Array** | N/A | uint8 | (3) | RGB output color table array |
+| Kind | Default Name | Type  | Comp Dims | Description                                             |
+|------|--------------|-------|-------------|---------------------------------------------------------|
+| Attribute Array | N/A | uint8 | (3) | RGB output color table array |
 
 ## Example Pipelines ##
 

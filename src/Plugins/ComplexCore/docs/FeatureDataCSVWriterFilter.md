@@ -56,9 +56,9 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **AttributeMatrix** | None | Feature | N/A | **AttributeMatrix** that holds the data to write |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| AttributeMatrix | None | Feature | N/A | AttributeMatrix** that holds the data to write |
 
 ## Created Objects ##
 

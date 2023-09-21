@@ -29,11 +29,11 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Feature Attribute Array** | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs. Only required if *Apply to Single Phase Only* is checked  |
-| **Feature Attribute Array** | NumCells | int32_t | (1) | Specifies the number of **Cells** belonging to each **Feature** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
+| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs. Only required if *Apply to Single Phase Only* is checked  |
+| Feature Attribute Array | NumCells | int32_t | (1) | Specifies the number of **Cells** belonging to each **Feature |
 
 ## Created Objects ##
 

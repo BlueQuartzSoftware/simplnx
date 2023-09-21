@@ -1,4 +1,4 @@
-# ITK Normalize Image Filter (ITKNormalizeImage)
+# ITK Normalize Image Filter
 
 Normalize an image by setting its mean to zero and variance to one.
 

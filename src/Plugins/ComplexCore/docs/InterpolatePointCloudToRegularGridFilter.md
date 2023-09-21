@@ -32,19 +32,19 @@ Vertex and Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | None | N/A | N/A | **Data Container** holding the **Vertex Geometry** to interpolate |
-| **Data Container** | None | N/A | N/A | **Data Container** holding the **Image Geometry** that serves as the target grid for interpolation |
-| **Vertex Attribute Array** | VoxelIndices | size_t | (1) | The indices that indicate in which voxel in the supplied **Image Geometry** each vertex lies |
-| Various **Attribute Array** | None | Varies | (1) | The **Vertex Attribute Arrays** to interpolate |
-| Various **Attribute Array** | None | Varies | (1) | The **Vertex Attribute Arrays** to copy |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | None | N/A | N/A | Data Container holding the **Vertex Geometry** to interpolate |
+| Data Container | None | N/A | N/A | Data Container holding the **Image Geometry** that serves as the target grid for interpolation |
+| Vertex Attribute Array | VoxelIndices | size_t | (1) | The indices that indicate in which voxel in the supplied **Image Geometry** each vertex lies |
+| Various **Attribute Array | None | Varies | (1) | The **Vertex Attribute Arrays** to interpolate |
+| Various **Attribute Array | None | Varies | (1) | The **Vertex Attribute Arrays** to copy |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Attribute Matrix** | InterpolatedAttributeMatrix | Cell | N/A | **Attribute Matrix** that stores the interpolated **Attribute Arrays** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+|   Attribute Matrix   | InterpolatedAttributeMatrix | Cell | N/A | Attribute Matrix** that stores the interpolated **Attribute Arrays |
 
 ## License & Copyright ##
 

@@ -1,4 +1,4 @@
-# ITK Median Image Filter (ITKMedianImage)
+# ITK Median Image Filter
 
 Applies a median filter to an image.
 

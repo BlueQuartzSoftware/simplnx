@@ -76,14 +76,14 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name |Type | Component Dimensions | Description |
+| Kind | Default Name |Type | Comp Dims | Description |
 |------|--------------|-------------|---------|-----|
-| **Cell Attribute Array** | FeatureIds | int32 | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Cell Attribute Array** | Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| **Cell Attribute Array** | EulerAngles | float32 | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z) |
-| **Ensemble Attribute Array** | CrystalStructures | uint32 | (1) | Enumeration representing the crystal structure for each **Ensemble** |
-| **Ensemble Attribute Array** | Material Names | String | (1)  | Name of each **Ensemble** |
-| **Ensemble Attribute Array** | Number of Features | int32 | (1) | The number of **Features** per **Ensemble** |
+| Cell Attribute Array | FeatureIds | int32 | (1) | Specifies to which **Feature** each **Cell** belongs |
+| Cell Attribute Array | Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
+| Cell Attribute Array | EulerAngles | float32 | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z) |
+| Ensemble Attribute Array | CrystalStructures | uint32 | (1) | Enumeration representing the crystal structure for each **Ensemble |
+| Ensemble Attribute Array | Material Names | String | (1)  | Name of each **Ensemble |
+| Ensemble Attribute Array | Number of Features | int32 | (1) | The number of **Features** per **Ensemble |
 
 ## Created Objects ##
 

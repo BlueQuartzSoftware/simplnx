@@ -40,12 +40,12 @@ Image + Triangle
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array** | FaceLabels | int32_t  | (2) | Specifies which **Features** are on either side of each **Face** |
-| **Face Attribute Array** | FaceNormals | double | (3) | Specifies the normal of each **Face** |
-| **Face Attribute Array**  | FaceAreas | double | (1) | Specifies the area of each **Face** |
-| **Feature Attribute Array**  | AvgEulerAngles | float | (3) | Three angles defining the orientation of the **Feature** in Bunge convention (Z-X-Z). |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Face Attribute Array | FaceLabels | int32_t  | (2) | Specifies which **Features** are on either side of each **Face |
+| Face Attribute Array | FaceNormals | double | (3) | Specifies the normal of each **Face |
+| Face Attribute Array | FaceAreas | double | (1) | Specifies the area of each **Face |
+| Feature Attribute Array**  | AvgEulerAngles | float | (3) | Three angles defining the orientation of the **Feature** in Bunge convention (Z-X-Z). |
 
 ## Created Objects ##
 

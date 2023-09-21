@@ -17,10 +17,10 @@ This **Filter** changes the origin and/or the spacing of an **Image Geometry**. 
 
 | Name    | Type      |  Description |
 |---------|-----------|--------|
-| Origin | float (3x) | New origin for the **Image Geometry** |
-| Spacing | float (3x) | New spacing for the **Image Geometry** |
-| Change Origin | bool | Whether a new origin should be applied to the **Image Geometry** |
-| Change Spacing | bool | Whether a new spacing should be applied to the **Image Geometry** |
+| Origin | float (3x) | New origin for the **Image Geometry |
+| Spacing | float (3x) | New spacing for the **Image Geometry |
+| Change Origin | bool | Whether a new origin should be applied to the **Image Geometry |
+| Change Spacing | bool | Whether a new spacing should be applied to the **Image Geometry |
 
 ## Required Geometry ##
 
@@ -28,9 +28,9 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | None | N/A | N/A | **Data Container** with an **Image Geometry** to modify |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | None | N/A | N/A | Data Container with an **Image Geometry** to modify |
 
 ## Created Objects ##
 

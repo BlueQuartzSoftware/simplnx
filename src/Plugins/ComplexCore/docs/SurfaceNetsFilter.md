@@ -50,22 +50,22 @@ Image/RectGrid
 
 ## Required Objects ##
 
-| Kind                         | Default Name | Type    | Component Dimensions | Description                                                                                |
-|------------------------------|--------------|---------|----------------------|--------------------------------------------------------------------------------------------|
-| **Cell Attribute Array**     | FeatureIds   | int32_t | (1)                  | Specifies to which **Feature** each **Cell** belongs                                       |
-| Any **Cell Attribute Array** | None         | Any     | Any                  | Specifies which **Cell Attribute Arrays** to transfer to the created **Triangle Geometry** |
+| Kind                         | Default Name | Type    | Comp Dims | Description                                                                                |
+|------------------------------|--------------|---------|-------------|--------------------------------------------------------------------------------------------|
+| Cell Attribute Array**     | FeatureIds   | int32_t | (1)                  | Specifies to which **Feature** each **Cell** belongs                                       |
+| Any **Cell Attribute Array | None         | Any     | Any                  | Specifies which **Cell Attribute Arrays** to transfer to the created **Triangle Geometry |
 
 ## Created Objects ##
 
-| Kind                         | Default Name          | Type             | Component Dimensions | Description                                                      |
-|------------------------------|-----------------------|------------------|----------------------|------------------------------------------------------------------|
-| **Data Container**           | TriangleDataContainer | N/A              | N/A                  | Created **Data Container** name with a **Triangle Geometry**     |
-| **Attribute Matrix**         | VertexData            | Vertex           | N/A                  | Created **Vertex Attribute Matrix** name                         |
-| **Vertex Attribute Array**   | NodeTypes             | int8_t           | (1)                  | Specifies the type of node in the **Geometry**                   |
-| **Attribute Matrix**         | FaceData              | Face             | N/A                  | Created **Face Attribute Matrix** name                           |
-| **Face Attribute Array**     | FaceLabels            | int32_t          | (2)                  | Specifies which **Features** are on either side of each **Face** |
-| **Attribute Matrix**         | FaceFeatureData       | Face Feature     | N/A                  | **Feature Attribute Matrix** of the created _Face Labels_        |
-| Any **Face Attribute Array** | None                  | List of DataPath | Any                  | The set of transferred **Cell Attribute Arrays**                 |
+| Kind                         | Default Name          | Type             | Comp Dims | Description                                                      |
+|------------------------------|-----------------------|------------------|-------------|------------------------------------------------------------------|
+| Data Container           | TriangleDataContainer | N/A              | N/A                  | Created **Data Container** name with a **Triangle Geometry**     |
+| Attribute Matrix**         | VertexData            | Vertex           | N/A                  | Created **Vertex Attribute Matrix** name                         |
+| Vertex Attribute Array**   | NodeTypes             | int8_t           | (1)                  | Specifies the type of node in the **Geometry**                   |
+| Attribute Matrix**         | FaceData              | Face             | N/A                  | Created **Face Attribute Matrix** name                           |
+| Face Attribute Array**     | FaceLabels            | int32_t          | (2)                  | Specifies which **Features** are on either side of each **Face |
+| Attribute Matrix**         | FaceFeatureData       | Face Feature     | N/A                  | Feature Attribute Matrix** of the created _Face Labels_        |
+| Any **Face Attribute Array | None                  | List of DataPath | Any                  | The set of transferred **Cell Attribute Arrays**                 |
 
 ## Example Pipelines ##
 

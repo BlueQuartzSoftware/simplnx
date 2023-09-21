@@ -22,17 +22,17 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | VectorData | float32 | (3) | Vectors the colors will represent |
-| **Element Attribute Array** | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*  |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array | VectorData | float32 | (3) | Vectors the colors will represent |
+| Element Attribute Array | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*  |
 
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | Colors | uint8 | (3) | RGB colors |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array | Colors | uint8 | (3) | RGB colors |
 
 ## Example Pipelines ##
 

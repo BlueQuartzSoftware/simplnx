@@ -74,11 +74,11 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Geometry** | ImageGeometry | Image | N/A | Created **Image Geometry** |
-| **Attribute Matrix** | CellData | Cell | N/A | Created **Cell Attribute Matrix** name |
-| **Attribute Matrix** | CellEnsembleData | Cell Ensemble | N/A | Created **Cell Ensemble Attribute Matrix** name |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Geometry | ImageGeometry | Image | N/A | Created **Image Geometry |
+|   Attribute Matrix   | CellData | Cell | N/A | Created **Cell Attribute Matrix** name |
+|   Attribute Matrix   | CellEnsembleData | Cell Ensemble | N/A | Created **Cell Ensemble Attribute Matrix** name |
 
 An array for each of the arrays selected in the *Data Arrays to Read* section will also be created.
 

@@ -30,16 +30,16 @@ Vertex
 
 ## Required Objects ##
 
-| Kind                       | Default Name        | Type | Component Dimensions | Description                                                  |
-|----------------------------|---------------------|------|----------------------|--------------------------------------------------------------|
-| **Data Container**         | VertexDataContainer | N/A  | N/A                  | **Data Container** holding the **Vertex Geometry** to reduce |
-| **Vertex Attribute Array** | Mask                | bool | (1)                  | Mask array specifying which **Vertices* to remove            |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container         | VertexDataContainer | N/A  | N/A                  | Data Container holding the **Vertex Geometry** to reduce |
+| Vertex Attribute Array | Mask                | bool | (1)                  | Mask array specifying which **Vertices* to remove            |
 
 ## Created Objects ##
 
-| Kind                       | Default Name               | Type | Component Dimensions | Description                                                                                                               |
-|----------------------------|----------------------------|------|----------------------|---------------------------------------------------------------------------------------------------------------------------|
-| Reduced **Data Container** | ReducedVertexDataContainer | N/A  | N/A                  | **Data Container** holding the reduced **Vertex Geometry** and any copied **Attribute Matrices** and **Attribute Arrays** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Reduced **Data Container | ReducedVertexDataContainer | N/A  | N/A                  | Data Container holding the reduced **Vertex Geometry** and any copied **Attribute Matrices** and **Attribute Arrays |
 
 ## Example Pipelines ##
 

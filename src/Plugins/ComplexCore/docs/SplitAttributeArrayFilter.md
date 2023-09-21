@@ -35,15 +35,15 @@ None
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Any **Attribute Array** | None | Any | > (1) | The multicomponent **Attribute Array** to split |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Attribute Array | None | Any | > (1) | The multicomponent **Attribute Array** to split |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Attribute Arrays** | Input array name + *Postfix* + component number | Same as input array | (1)| The set of scalar **Attribute Arrays**, equal to the number of components of the input **Attribute Array** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Attribute Arrays | Input array name + *Postfix* + component number | Same as input array | (1)| The set of scalar **Attribute Arrays**, equal to the number of components of the input **Attribute Array |
 
 ## Example Pipelines ##
 

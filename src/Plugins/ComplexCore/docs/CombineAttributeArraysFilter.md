@@ -53,15 +53,15 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|----------------|
-| Any **Attribute Array** | None | Any | Any | **Attribute Arrays** to combine |
+| Any **Attribute Array | None | Any | Any | Attribute Arrays** to combine |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|----------------|
-| Any **Attribute Array** | CombinedData | Any | Any | Combined **Attribute Array** name |
+| Any **Attribute Array | CombinedData | Any | Any | Combined **Attribute Array** name |
 
 ## Example Pipelines ##
 

@@ -1,4 +1,4 @@
-# ITK Signed Maurer Distance Map Image Filter (ITKSignedMaurerDistanceMapImage)
+# ITK Signed Maurer Distance Map Image Filter
 
 This filter calculates the Euclidean distance transform of a binary image in linear time for arbitrary dimensions.
 

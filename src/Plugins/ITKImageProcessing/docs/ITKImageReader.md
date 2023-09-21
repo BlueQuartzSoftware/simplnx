@@ -20,9 +20,9 @@ Reads images through ITK
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | Data Container Name | N/A | N/A | Description of object... |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | Data Container Name | N/A | N/A | Description of object... |
 
 ## Example Pipelines ##
 

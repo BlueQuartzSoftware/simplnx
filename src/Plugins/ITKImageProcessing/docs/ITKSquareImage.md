@@ -1,4 +1,4 @@
-# ITK Square Image Filter (ITKSquareImage)
+# ITK Square Image Filter
 
 Computes the square of the intensity values pixel-wise.
 

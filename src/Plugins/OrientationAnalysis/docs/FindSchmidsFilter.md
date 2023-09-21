@@ -20,7 +20,7 @@ The **Filter** determines the Schmid factor for each **Feature** by using the ab
 | Name | Type | Description |
 |------|------| ----------- |
 | Loading Direction | float (3x) | The loading axis for the sample |
-| Store Angle Components of Schmid Factor | bool | Whether to store the &phi; and &lambda; for each **Feature** |
+| Store Angle Components of Schmid Factor | bool | Whether to store the &phi; and &lambda; for each **Feature |
 | Override Default Slip System | bool | Allows the user to manually input the slip plane and slip direction |
 | Slip Plane | float (3x) | Vector defining the slip plane normal. Only needed if *Override Default Slip System* is checked |
 | Slip Direction | float (3x) | Vector defining the slip direction. Only needed if *Override Default Slip System* is checked |
@@ -31,21 +31,21 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
-| **Feature Attribute Array** | AvgQuats | float | (4) | Specifies the average orienation of each **Feature** in quaternion representation |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
+| Feature Attribute Array | AvgQuats | float | (4) | Specifies the average orienation of each **Feature** in quaternion representation |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | Schmids | Float | (1) | Value of the Schmid factor for the most favorably oriented slip system (i.e., the one with the highest Schmid factor) |
-| **Feature Attribute Array** | SlipSystems | Int | (1) | Enumeration of the slip system that has the highest Schmid factor |
-| **Feature Attribute Array** | Poles | Ints | (3) | Specifies the crystallographic pole that points along the user defined loading direction |
-| **Feature Attribute Array** | SchmidPhis | Float | (1) | Angle between tensile axis and slip plane normal. Only created if *Store Angle Components of Schmid Factor* is checked |
-| **Feature Attribute Array** | SchmidLambdas | Float | (1) | Angle between tensile axis and splid drirection. Only created if *Store Angle Components of Schmid Factor* is checked |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | Schmids | Float | (1) | Value of the Schmid factor for the most favorably oriented slip system (i.e., the one with the highest Schmid factor) |
+| Feature Attribute Array | SlipSystems | Int | (1) | Enumeration of the slip system that has the highest Schmid factor |
+| Feature Attribute Array | Poles | Ints | (3) | Specifies the crystallographic pole that points along the user defined loading direction |
+| Feature Attribute Array | SchmidPhis | Float | (1) | Angle between tensile axis and slip plane normal. Only created if *Store Angle Components of Schmid Factor* is checked |
+| Feature Attribute Array | SchmidLambdas | Float | (1) | Angle between tensile axis and splid drirection. Only created if *Store Angle Components of Schmid Factor* is checked |
 
 
 ## Example Pipelines ##

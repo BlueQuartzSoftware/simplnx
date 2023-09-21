@@ -43,22 +43,22 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Attribute Matrix** | Attribute Matrix Name | N/A | N/A | Output Attribute Matrix |
-| **Input NeighborList** | NeighborList Name | int32_t/float/etc. | (1) | The input NeighborList. Boolean Not allowed. |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+|   Attribute Matrix   | Attribute Matrix Name | N/A | N/A | Output Attribute Matrix |
+| Input NeighborList | NeighborList Name | int32_t/float/etc. | (1) | The input NeighborList. Boolean Not allowed. |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Length Attribute Array** | Length | float | (1) | Output Length Array |
-| **Minimum Attribute Array** | Minimum | float | (1) | Output Minimum Array |
-| **Maximum Attribute Array** | Maximum | float | (1) | Output Maximum Array |
-| **Mean Attribute Array** | Mean | float | (1) | Output Mean Array |
-| **Median Attribute Array** | Median | float | (1) | Output Median Array |
-| **Standard Deviation Attribute Array** | Standard Deviation | float | (1) | Output Standard Deviation Array |
-| **Summation Attribute Array** | Summation | float | (1) | Output Summation Array |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Length Attribute Array | Length | float | (1) | Output Length Array |
+| Minimum Attribute Array | Minimum | float | (1) | Output Minimum Array |
+| Maximum Attribute Array | Maximum | float | (1) | Output Maximum Array |
+| Mean Attribute Array | Mean | float | (1) | Output Mean Array |
+| Median Attribute Array | Median | float | (1) | Output Median Array |
+| Standard Deviation Attribute Array | Standard Deviation | float | (1) | Output Standard Deviation Array |
+| Summation Attribute Array | Summation | float | (1) | Output Summation Array |
 
 ## License & Copyright ##
 

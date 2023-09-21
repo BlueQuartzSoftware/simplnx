@@ -19,17 +19,17 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Feature **Attribute Array**  | None | Any | Any | **Feature** data to copy to **Element** data  |
-| Element **Attribute Array** | FeatureIds  | int32_t | (1) | Specifies to which **Feature** each **Element** belongs  |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature **Attribute Array**  | None | Any | Any | Feature** data to copy to **Element** data  |
+| Element **Attribute Array | FeatureIds  | int32_t | (1) | Specifies to which **Feature** each **Element** belongs  |
 
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Element **Attribute Array** | None | Any | Any | Copied **Attribute Array**  |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element **Attribute Array | None | Any | Any | Copied **Attribute Array**  |
 
 
 ## Example Pipelines ##

@@ -1,4 +1,4 @@
-# ITK Abs Image Filter (ITKAbsImage)
+# ITK Abs Image Filter
 
 Computes the absolute value of each pixel.
 

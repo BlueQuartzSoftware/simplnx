@@ -29,9 +29,9 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Element Attribute Array** | None    | float | (n)                 | Values that represent angles in degrees or radians |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Element Attribute Array | None    | float | (n)                 | Values that represent angles in degrees or radians |
 
 ## Created Objects ##
 

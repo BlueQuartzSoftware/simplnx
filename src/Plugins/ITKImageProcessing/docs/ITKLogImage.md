@@ -1,4 +1,4 @@
-# ITK Log Image Filter (ITKLogImage)
+# ITK Log Image Filter
 
 Computes the log() of each pixel.
 

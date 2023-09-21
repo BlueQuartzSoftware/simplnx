@@ -15,7 +15,7 @@ Note: the average orientation of the **Feature** is a typical choice, but if the
 
 | Name | Type | Description |
 |------|------| ----------- |
-| Reference Orientation | Enumeration | Specifies the *reference orientation* to use when comparing to each **Cell** |
+| Reference Orientation | Enumeration | Specifies the *reference orientation* to use when comparing to each **Cell |
 
 ## Required Geometry ##
 
@@ -23,21 +23,21 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Cell Attribute Array**     | Phases            | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| **Cell Attribute Array** | Quats | float | (4) | Specifies the orientation of the **Cell** in quaternion representation |
-| **Feature Attribute Array** | AvgQuats | float | (4) | Specifies the average orientation of the **Feature** in quaternion representation  (<x,y,z>, w). Only required if the *reference orientation* is selected to be the average of the **Feature** |
-| **Cell Attribute Array** | GBEuclideanDistances | float | (1) | Distance the **Cells** are from the *boundary* of the **Feature** they belong to. Only required if the *reference orientation* is selected to be the orientation at the **Feature** centroid  |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
+| Cell Attribute Array**     | Phases            | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
+| Cell Attribute Array | Quats | float | (4) | Specifies the orientation of the **Cell** in quaternion representation |
+| Feature Attribute Array | AvgQuats | float | (4) | Specifies the average orientation of the **Feature** in quaternion representation  (<x,y,z>, w). Only required if the *reference orientation* is selected to be the average of the **Feature |
+| Cell Attribute Array | GBEuclideanDistances | float | (1) | Distance the **Cells** are from the *boundary* of the **Feature** they belong to. Only required if the *reference orientation* is selected to be the orientation at the **Feature** centroid  |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureReferenceMisorientations | float | (1) | Misorientation angle (in degrees) between **Cell's** orientation and the reference orientation of the **Feature** that owns that **Cell** |
-| **Feature Attribute Array** | FeatureAvgMisorientations | float | (1) | Average of the *FeatureReferenceMisorientation* values for all of the **Cells** that belong to the **Feature** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | FeatureReferenceMisorientations | float | (1) | Misorientation angle (in degrees) between **Cell's** orientation and the reference orientation of the **Feature** that owns that **Cell |
+| Feature Attribute Array | FeatureAvgMisorientations | float | (1) | Average of the *FeatureReferenceMisorientation* values for all of the **Cells** that belong to the **Feature |
 
 
 ## Example Pipelines ##

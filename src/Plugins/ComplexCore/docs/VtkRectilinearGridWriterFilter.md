@@ -22,7 +22,7 @@ This Filter reads the **Feature** and phase ids together with image parameters r
 | Write KAM Value | Boolean (On or Off) |
 | Write GAM Values | Boolean (On or Off) |
 | Write LMG Values | Boolean (On or Off) |
-| Write Good **Cells** | Boolean (On or Off) |
+| Write Good **Cells | Boolean (On or Off) |
 | Write IPF Colors | Boolean (On or Off) |
 | Write Binary File | Boolean (On or Off) |
 

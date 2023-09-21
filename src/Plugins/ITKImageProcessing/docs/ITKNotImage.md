@@ -1,4 +1,4 @@
-# ITK Not Image Filter (ITKNotImage)
+# ITK Not Image Filter
 
 Implements the NOT logical operator pixel-wise on an image.
 

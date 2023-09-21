@@ -1,4 +1,4 @@
-# ITK Binary Contour Image Filter (ITKBinaryContourImage)
+# ITK Binary Contour Image Filter
 
 Labels the pixels on the border of the objects in a binary image.
 

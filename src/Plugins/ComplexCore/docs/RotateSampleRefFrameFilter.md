@@ -28,7 +28,7 @@ When importing EBSD data from EDAX typically the user will need to rotate the sa
 
 | Name | Type | Description |
 |------|------|-------------|
-| Rotation Representation | Enumeration | Which form used to represent rotation (**axis angle** or **rotation matrix)** |
+| Rotation Representation | Enumeration | Which form used to represent rotation (**axis angle** or **rotation matrix) |
 | Rotation Axis (ijk) | float (3x) | Axis in sample reference frame to rotate about (if **axis angle**) |
 | Rotation Angle (Degrees) | float | Magnitude of rotation (in degrees) about the rotation axis (if **axis angle**) |
 | Rotation Matrix | float (3x3) | Axis in sample reference frame to rotate about (if **rotation matrix**) |
@@ -39,9 +39,9 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **DataArray** | N/A | Any | Same as geometry | List of **DataArrays** associated with the geometry |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+|   DataArray   | N/A | Any | Same as geometry | List of **DataArrays** associated with the geometry |
 
 ## Created Objects ##
 

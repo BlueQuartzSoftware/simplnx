@@ -70,11 +70,11 @@ None
 
 ## Created Objects 
 
-| Kind | Default Name | Type | Component Dimension | Description |
-|------|--------------|-------------|---------|--------------|
-| **Attribute Matrix** | EnsembleAttributeMatrix | Ensemble | N/A | Created **Ensemble Attribute Matrix** name |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1)  | Enumeration representing the crystal structure for each **Ensemble** |
-| **Ensemble Attribute Array** | PhaseTypes        | uint32_t | (1) | Enumeration representing the phase type for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+|   Attribute Matrix   | EnsembleAttributeMatrix | Ensemble | N/A | Created **Ensemble Attribute Matrix** name |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1)  | Enumeration representing the crystal structure for each **Ensemble |
+| Ensemble Attribute Array | PhaseTypes        | uint32_t | (1) | Enumeration representing the phase type for each **Ensemble |
 
 
 ## Example Pipelines 

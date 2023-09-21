@@ -1,4 +1,4 @@
-# ITK Sqrt Image Filter (ITKSqrtImage)
+# ITK Sqrt Image Filter
 
 Computes the square root of each pixel.
 

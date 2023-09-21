@@ -44,11 +44,11 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | TriangleDataContainer  | N/A | N/A | Created **Data Container** name with a **Triangle Geometry** |
-| **Attribute Matrix** | FaceData  | Face | N/A | Created **Face Attribute Matrix** name  |
-| **Face Attribute Array** | FaceNormals  | double | (3) | Specifies the normal of each **Face** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | TriangleDataContainer  | N/A | N/A | Created **Data Container** name with a **Triangle Geometry |
+|   Attribute Matrix   | FaceData  | Face | N/A | Created **Face Attribute Matrix** name  |
+| Face Attribute Array | FaceNormals  | double | (3) | Specifies the normal of each **Face |
 
 
 ## Example Pipelines ##

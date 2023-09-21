@@ -1,4 +1,4 @@
-# ITK Acos Image Filter (ITKAcosImage)
+# ITK Acos Image Filter
 
 Computes the inverse cosine of each pixel.
 

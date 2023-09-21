@@ -17,7 +17,7 @@ Additionally, the user may opt to use a mask; points for which the mask are fals
 |------|------|-------------|
 | Sampling Grid Type | Enumeration | The method used to create the sampling grid, either *Manual* or *Use Existing Image Geometry* |
 | Grid Dimensions | int 3x | Dimensions of the sampling grid, if *Manual* is selected |
-| Use Mask | bool | Whether to use a mask for the input **Vertex Geometry** |
+| Use Mask | bool | Whether to use a mask for the input **Vertex Geometry |
 
 ## Required Geometry 
 
@@ -25,17 +25,17 @@ Vertex
 
 ## Required Objects 
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | None | N/A | N/A | **Data Container** holding the input **Vertex Geometry** |
-| **Data Container** | None | N/A | N/A | **Data Container** holding the sampling **Image Geometry**, if *Use Existing Image Geometry* is selected |
-| **Vertex Attribute Array** | None | bool | (1) | Vertex mask, if *Use Mask* is selected |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | None | N/A | N/A | Data Container holding the input **Vertex Geometry |
+| Data Container | None | N/A | N/A | Data Container holding the sampling **Image Geometry**, if *Use Existing Image Geometry* is selected |
+| Vertex Attribute Array | None | bool | (1) | Vertex mask, if *Use Mask* is selected |
 
 ## Created Objects 
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Vertex Attribute Array** | VoxelIndices | size_t | (1) | Indices of the voxels in which each point lies |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Vertex Attribute Array | VoxelIndices | size_t | (1) | Indices of the voxels in which each point lies |
 
 ## License & Copyright 
 

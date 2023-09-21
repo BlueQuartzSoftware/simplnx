@@ -75,9 +75,9 @@ None
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|----------------|
-| Any **Attribute Array** | None | Any | Any | Created **Attribute Array** location and name |
+| Any **Attribute Array | None | Any | Any | Created **Attribute Array** location and name |
 
 ## Example Pipelines ##
 

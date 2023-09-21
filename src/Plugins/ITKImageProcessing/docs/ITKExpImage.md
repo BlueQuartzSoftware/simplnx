@@ -1,4 +1,4 @@
-# ITK Exp Image Filter (ITKExpImage)
+# ITK Exp Image Filter
 
 Computes the exponential function of each pixel.
 

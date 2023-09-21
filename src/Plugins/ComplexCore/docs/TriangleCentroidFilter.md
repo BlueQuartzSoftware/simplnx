@@ -22,9 +22,9 @@ Triangle
 None
 
 ## Created Objects ##
-| Kind                     | Default Name  | Type   | Component Dimensions | Description                             |
-|--------------------------|---------------|--------|----------------------|-----------------------------------------|
-| **Face Attribute Array** | FaceCentroids | float32 | (1)                  | Specifies the centroid of each **Face** |
+| Kind                     | Default Name  | Type   | Comp Dims | Description                             |
+|--------------------------|---------------|--------|-------------|-----------------------------------------|
+| Face Attribute Array | FaceCentroids | float32 | (1)                  | Specifies the centroid of each **Face |
 
 
 ## Example Pipelines ##

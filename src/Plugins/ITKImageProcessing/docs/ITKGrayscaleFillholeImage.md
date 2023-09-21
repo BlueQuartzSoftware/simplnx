@@ -1,4 +1,4 @@
-# ITK Grayscale Fillhole Image Filter (ITKGrayscaleFillholeImage)
+# ITK Grayscale Fillhole Image Filter
 
 Remove local minima not connected to the boundary of the image.
 

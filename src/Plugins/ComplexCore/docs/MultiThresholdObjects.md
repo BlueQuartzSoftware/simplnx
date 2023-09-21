@@ -33,15 +33,15 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Any **Attribute Array** | None | Any | (1) | Array(s) selected in criteria set |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Attribute Array | None | Any | (1) | Array(s) selected in criteria set |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Any **Attribute Array** | Mask | bool | (1) | Specifies whether the objects passed the set of criteria applied during thresholding |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Attribute Array | Mask | bool | (1) | Specifies whether the objects passed the set of criteria applied during thresholding |
 
 
 ## Example Pipelines ##

@@ -11,11 +11,11 @@ This **Filter** computes the XYZ minimum and maximum coordinates for each **Feat
 
 |       | 0 | 1 | 2 | 3 | 4 |
 |-------|---|---|---|---|---|
-| **0** | 0 | 0 | 1 | 0 | 0 |
-| **1** | 0 | 0 | 1 | 1 | 0 |
-| **2** | 0 | 1 | 1 | 1 | 1 |
-| **3** | 0 | 0 | 1 | 1 | 0 |
-| **4** | 0 | 0 | 0 | 0 | 0 |
+| 0 | 0 | 0 | 1 | 0 | 0 |
+| 1 | 0 | 0 | 1 | 1 | 0 |
+| 2 | 0 | 1 | 1 | 1 | 1 |
+| 3 | 0 | 0 | 1 | 1 | 0 |
+| 4 | 0 | 0 | 0 | 0 | 0 |
 
 
 If the example matrix above which represents a single feature where the feature ID = 1, the output of the filter would be:
@@ -39,16 +39,16 @@ N/A
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **FeatureIds** | FeatureIdsArrayName | int32_t | (1) | |
-| **Feature Attribute Matrix** | N/A | Feature AttributeMatrix | N/A | The path to the cell feature **Attribute Matrix** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| FeatureIds | FeatureIdsArrayName | int32_t | (1) | |
+| Feature Attribute Matrix | N/A | Feature AttributeMatrix | N/A | The path to the cell feature **Attribute Matrix |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Feature Attribute Array** | FeatureRect | uint32 | (6) | Xmin, Ymin, Zmin, Xmax, Ymax, Zmax |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | FeatureRect | uint32 | (6) | Xmin, Ymin, Zmin, Xmax, Ymax, Zmax |
 
 ## Example Pipelines ##
 

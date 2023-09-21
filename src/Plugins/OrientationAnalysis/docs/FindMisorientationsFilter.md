@@ -19,7 +19,7 @@ __NOTE:__ Only features with identical crystal structures will be calculated. If
 
 | Name | Type | Description |
 |------|------|-------------|
-| Find Average Misorientation Per Feature | bool | Specifies if the *average* of the misorienations with the neighboring **Features** should be stored for each **Feature** |
+| Find Average Misorientation Per Feature | bool | Specifies if the *average* of the misorienations with the neighboring **Features** should be stored for each **Feature |
 
 ## Required Geometry ##
 
@@ -27,19 +27,19 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | NeighborLists | List of int32_t | (1) | List of the contiguous neighboring **Features** for a given **Feature** |
-| **Feature Attribute Array** | AvgQuats | float | (4) | Defines the average orientation of the **Feature** in quaternion representation |
-| **Feature Attribute Array** | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | NeighborLists | List of int32_t | (1) | List of the contiguous neighboring **Features** for a given **Feature |
+| Feature Attribute Array | AvgQuats | float | (4) | Defines the average orientation of the **Feature** in quaternion representation |
+| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | MisorientationLists | List of float | (1) | List of the misorientation angles with the contiguous neighboring **Features** for a given **Feature** |
-| **Feature Attribute Array** | AvgMisorientation | float | (1) | Number weighted average of neighbor misorientations. Only created if *Find Average Misorientation Per Feature* is checked |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | MisorientationLists | List of float | (1) | List of the misorientation angles with the contiguous neighboring **Features** for a given **Feature |
+| Feature Attribute Array | AvgMisorientation | float | (1) | Number weighted average of neighbor misorientations. Only created if *Find Average Misorientation Per Feature* is checked |
 
 
 ## Example Pipelines ##

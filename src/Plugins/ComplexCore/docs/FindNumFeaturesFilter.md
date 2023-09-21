@@ -19,16 +19,16 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | Phases | int32 | (1) | Specifies to which **Ensemble** each **Feature** belongs |
-| **Attribute Matrix** | EnsembleData | Ensemble AttributeMatrix | N/A | The path to the ensemble **Attribute Matrix** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | Phases | int32 | (1) | Specifies to which **Ensemble** each **Feature** belongs |
+|   Attribute Matrix   | EnsembleData | Ensemble AttributeMatrix | N/A | The path to the ensemble **Attribute Matrix |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Ensemble Attribute Array** | NumFeatures | int32 | (1) | Number of **Features** that belong each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Ensemble Attribute Array | NumFeatures | int32 | (1) | Number of **Features** that belong each **Ensemble |
 
 ## Example Pipelines ##
 

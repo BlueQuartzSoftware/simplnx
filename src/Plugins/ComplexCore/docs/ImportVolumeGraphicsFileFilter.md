@@ -27,11 +27,11 @@ Not Applicable
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Image Geometry** | VolumeGraphics | Image Geometry | N/A |  |
-| **Attribute Matrix** | CT Data | Cell Attribute Matrix | N/A |  |
-| **Element Attribute Array** | Density | float | (1) | raw data |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Image Geometry | VolumeGraphics | Image Geometry | N/A |  |
+|   Attribute Matrix   | CT Data | Cell Attribute Matrix | N/A |  |
+| Element Attribute Array | Density | float | (1) | raw data |
 
 ## License & Copyright ##
 

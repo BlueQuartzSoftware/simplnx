@@ -1,4 +1,4 @@
-# ITK Binary Thinning Image Filter (ITKBinaryThinningImage)
+# ITK Binary Thinning Image Filter
 
 This filter computes one-pixel-wide edges of the input image.
 

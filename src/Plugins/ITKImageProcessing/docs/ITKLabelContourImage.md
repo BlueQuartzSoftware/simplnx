@@ -1,4 +1,4 @@
-# ITK Label Contour Image Filter (ITKLabelContourImage)
+# ITK Label Contour Image Filter
 
 Labels the pixels on the border of the objects in a labeled image.
 

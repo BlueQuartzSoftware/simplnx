@@ -1,4 +1,4 @@
-# ITK Tan Image Filter (ITKTanImage)
+# ITK Tan Image Filter
 
 Computes the tangent of each input pixel.
 

@@ -27,12 +27,12 @@ None.
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Image Geometry** | ImageDataContainer | N/A | N/A | The created image geometry that contains the image data from the .mha file. |
-| **Cell Attribute Matrix** | Cell Data | N/A | N/A | The created cell attribute matrix that contains the image data from the .mha file. |
-| **Data Array** | ImageData | uint16 | 1 | The created data array that contains the image data from the .mha file. |
-| **Data Array** | TransformationMatrix | float32 | 16 | 4x4 transformation matrix read from the .mha input file. Only available if **Save Image Transformation As Array** is set to True. |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Image Geometry | ImageDataContainer | N/A | N/A | The created image geometry that contains the image data from the .mha file. |
+| Cell Attribute Matrix | Cell Data | N/A | N/A | The created cell attribute matrix that contains the image data from the .mha file. |
+| Data Array | ImageData | uint16 | 1 | The created data array that contains the image data from the .mha file. |
+| Data Array | TransformationMatrix | float32 | 16 | 4x4 transformation matrix read from the .mha input file. Only available if **Save Image Transformation As Array** is set to True. |
 
 ## Example Pipelines ##
 

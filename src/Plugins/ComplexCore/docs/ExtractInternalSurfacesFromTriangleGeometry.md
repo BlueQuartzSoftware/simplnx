@@ -10,7 +10,7 @@ This **Filter** extracts any **Triangles** from the supplied **Triangle Geometry
 
 | Id Value | Node Type |
 |----------|-----------|
-| 2 | Normal **Vertex** |
+| 2 | Normal **Vertex |
 | 3 | Triple Line |
 | 4 | Quadruple Point |
 | 12 | Normal **Vertex** on the outer surface |
@@ -31,14 +31,14 @@ Triangle
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Vertex Data Array** | NodeTypes | int8 | (1) | Specifies the type of node in the **Geometry** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Vertex Data Array | NodeTypes | int8 | (1) | Specifies the type of node in the **Geometry |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
 | Geometry | None | Triangle | N/A | The new Triangle Geometry |
 | Attribute Matrix | Vertex Data | N/A | N/A | Created vertex data AttributeMatrix name |
 | Attribute Matrix | Face Data | N/A | N/A | Created face data AttributeMatrix name |

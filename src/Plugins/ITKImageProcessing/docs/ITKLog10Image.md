@@ -1,4 +1,4 @@
-# ITK Log10 Image Filter (ITKLog10Image)
+# ITK Log10 Image Filter
 
 Computes the log10 of each pixel.
 

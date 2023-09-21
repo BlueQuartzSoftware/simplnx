@@ -1,4 +1,4 @@
-# ITK White Top Hat Image Filter (ITKWhiteTopHatImage)
+# ITK White Top Hat Image Filter
 
 White top hat extracts local maxima that are larger than the structuring element.
 

@@ -82,10 +82,10 @@ Any **Unstructured Geometry** or **Image Geometry**
 
 ## Required Objects
 
-| Kind          | Default Name         | Type  | Component Dimensions | Description                                                                                                |
-|---------------|----------------------|-------|----------------------|------------------------------------------------------------------------------------------------------------|
-| **Geometry**  | None                 | N/A   | N/A                  | The unstructured **Geometry** or Image Geometry to transform                                               |
-| **DataArray** | TransformationMatrix | float | 4x4                  | The pre-computed transformation matrix to apply, if _Pre-Computed_ is chosen for the *Transformation Type* |
+| Kind             | Default Name         | Type     | Comp Dims | Description                                                                                                |
+|------------------|-------------|----------|-------------|------------------------------------------------------------------------------------------------------------|
+|   Geometry   | None                 | N/A   | N/A                  | The unstructured **Geometry** or Image Geometry to transform                                               |
+|   DataArray   | TransformationMatrix | float | 4x4                  | The pre-computed transformation matrix to apply, if _Pre-Computed_ is chosen for the *Transformation Type* |
 
 ## Created Objects
 

@@ -27,16 +27,16 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Any **Attribute Array** | None | Any | >1 | Multicomponent **Attribute Array** to use as input |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Attribute Array | None | Any | >1 | Multicomponent **Attribute Array** to use as input |
 
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Any **Attribute Array** | None | Any | (1) | Scalar **Attribute Array** name |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Attribute Array | None | Any | (1) | Scalar **Attribute Array** name |
 
 ## Example Pipelines ##
 

@@ -17,7 +17,7 @@ This **Filter** compares the orientations of *bad* **Cells** with their neighbor
 
 | Name | Type | Description |
 |------|------|-------------|
-| Misorientation Tolerance (Degrees) | float | Angular tolerance used to compare with neighboring **Cells** |
+| Misorientation Tolerance (Degrees) | float | Angular tolerance used to compare with neighboring **Cells |
 | Required Number of Neighbors | int32_t | Minimum number of neighbor **Cells** that must have orientations within above tolerace to allow **Cell** to be changed |
 
 ## Required Geometry ##
@@ -26,12 +26,12 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | Quaternions | flaot | (4) | Specifies the orientation of the **Cell** in quaternion representation |
-| **Cell Attribute Array** | Mask | bool | (1) | Used to define **Cells** as *good* or *bad*  |
-| **Cell Attribute Array** | Cell Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| **Ensemble Attribute Array** | Crystal Structures | uint32_t | (1) | Enumeration representing the crystal structure for each phase |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | Quaternions | flaot | (4) | Specifies the orientation of the **Cell** in quaternion representation |
+| Cell Attribute Array | Mask | bool | (1) | Used to define **Cells** as *good* or *bad*  |
+| Cell Attribute Array | Cell Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
+| Ensemble Attribute Array | Crystal Structures | uint32_t | (1) | Enumeration representing the crystal structure for each phase |
 
 ## Created Objects ##
 

@@ -79,11 +79,11 @@ Choice of delimiter is as follows:
 
 ## Required Objects 
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |-------|---------------------|--------|---------------------------------|-----------------|
-| **Element Attribute Array** | EulerAngles | float | (3) | Three angles defining the orientation of the **Element** in Bunge convention (Z-X-Z) |
-| **Element Attribute Array** | Phases | int32_t | (1) |  Specifies to which **Ensemble** each **Element** belongs |
-| **Element Attribute Array** | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if *Only Write Good Elements* is checked |
+| Element Attribute Array | EulerAngles | float | (3) | Three angles defining the orientation of the **Element** in Bunge convention (Z-X-Z) |
+| Element Attribute Array | Phases | int32_t | (1) |  Specifies to which **Ensemble** each **Element** belongs |
+| Element Attribute Array | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if *Only Write Good Elements* is checked |
 
 ## Created Objects 
 

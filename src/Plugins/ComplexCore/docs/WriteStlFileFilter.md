@@ -22,11 +22,11 @@ Triangle
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Data Array** | Face Labels | int32 | (2)  | Specifies which **Features** are on either side of each **Face** |
-| **Phases Data Array** | Feature Phases | int32 | (2)  | Specifies which **Phases** of **Features** are on either side of each **Face** |
-| **Normals Data Array** | Face Normals | int32 | (2)  | These are the face normals to be printed to the stl |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Face Data Array | Face Labels | int32 | (2)  | Specifies which **Features** are on either side of each **Face |
+| Phases Data Array | Feature Phases | int32 | (2)  | Specifies which **Phases** of **Features** are on either side of each **Face |
+| Normals Data Array | Face Normals | int32 | (2)  | These are the face normals to be printed to the stl |
 
 ## Created Objects
 

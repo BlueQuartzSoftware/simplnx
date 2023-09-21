@@ -27,15 +27,15 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind                | Default Name     | Type  | Component Dimensions | Description |
-|---------------------|------------------|-------|----------------------|-------------|
-| **Attribute Array** | Quaternion Input | float | (4)                  |             |
+| Kind                | Default Name     | Type  | Comp Dims | Description |
+|---------------------|------------------|-------|-------------|-------------|
+| Attribute Array | Quaternion Input | float | (4)                  |             |
 
 ## Created Objects ##
 
-| Kind                | Default Name     | Type  | Component Dimensions | Description |
-|---------------------|------------------|-------|----------------------|-------------|
-| **Attribute Array** | Quaternion Ouput | float | (4)                  |             |
+| Kind                | Default Name     | Type  | Comp Dims | Description |
+|---------------------|------------------|-------|-------------|-------------|
+| Attribute Array | Quaternion Ouput | float | (4)                  |             |
 
 ## Example Pipelines ##
 

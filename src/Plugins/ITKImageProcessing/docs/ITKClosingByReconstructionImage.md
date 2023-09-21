@@ -1,4 +1,4 @@
-# ITK Closing By Reconstruction Image Filter (ITKClosingByReconstructionImage)
+# ITK Closing By Reconstruction Image Filter
 
 Closing by reconstruction of an image.
 

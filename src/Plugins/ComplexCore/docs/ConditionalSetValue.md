@@ -35,7 +35,7 @@ This **Filter** replaces values in a user specified **Attribute Array** with a u
 |------------------|------|-------------|
 | Use Conditional Mask | bool | Whether to use a boolean mask array to replace values marked true |
 | Invert Mask | bool | If checked values marked FALSE will be replaced instead |
-| Any **Attribute Array** | None | Bool | (1) | The complete path to the conditional array that will determine which values/entries will be replaced if index is true|
+| Any **Attribute Array | None | Bool | (1) | The complete path to the conditional array that will determine which values/entries will be replaced if index is true|
 | Value to Replace | std::string | The numerical value that will be replaced in the array [will be typecasted to appropriate value later] |
 
 ## Required Geometry ##
@@ -44,9 +44,9 @@ Not Applicable
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
+| Kind | Default Name | Type | Comp Dims | Description |
 |------|--------------|-------------|---------|----------------|
-| Any **Attribute Array** | None | Any | (1) | Path to **Attribute Array** that will have values replaced |
+| Any **Attribute Array | None | Any | (1) | Path to **Attribute Array** that will have values replaced |
 
 ## Created Objects ##
 

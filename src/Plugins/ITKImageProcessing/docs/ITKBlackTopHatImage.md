@@ -1,4 +1,4 @@
-# ITK Black Top Hat Image Filter (ITKBlackTopHatImage)
+# ITK Black Top Hat Image Filter
 
 Black top hat extracts local minima that are smaller than the structuring element.
 

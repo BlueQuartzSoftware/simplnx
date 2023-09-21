@@ -1,4 +1,4 @@
-# ITK Invert Intensity Image Filter (ITKInvertIntensityImage)
+# ITK Invert Intensity Image Filter
 
 Invert the intensity of an image.
 

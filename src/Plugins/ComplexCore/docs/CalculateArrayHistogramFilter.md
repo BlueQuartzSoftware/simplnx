@@ -62,15 +62,15 @@ None
 
 ## Required Objects
 
-| Kind | Default Name | Type | Description |
-|------|--------------|------|-------------|
-| **DataArray** | DataArray(s) to Histogram | DataArray | Specifies to which **DataArray(s)** to create a histogram from |
+| Kind         | Default Name | Type | Description                                    |
+|--------------|---------------|------|-----------------------------------------------|
+|   DataArray   | DataArray(s) to Histogram | DataArray | Specifies to which **DataArray(s)** to create a histogram from |
 
 ## Created Objects
 
-| Kind | Default Name | Type | Description |
-|------|--------------|------|-------------|
-| **DataArray** | **DataArray** name + "Histogram" | DataArray | A new **DataArray** stored in specified **DataGroup** in which
+| Kind         | Default Name | Type | Description                                    |
+|--------------|---------------|------|-----------------------------------------------|
+|   DataArray   | DataArray** name + "Histogram" | DataArray | A new **DataArray** stored in specified **DataGroup** in which
 the histogram will be generated based on **DataArray** specified in *DataArray(s) to Histogram* (One per **DataArray** in
 *DataArray(s) to Histogram*) |
 

@@ -1,4 +1,4 @@
-# ITK Opening By Reconstruction Image Filter (ITKOpeningByReconstructionImage)
+# ITK Opening By Reconstruction Image Filter
 
 Opening by reconstruction of an image.
 

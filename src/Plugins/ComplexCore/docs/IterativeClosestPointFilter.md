@@ -22,7 +22,7 @@ ICP has a number of advantages, such as robustness to noise and no requirement t
 | Name | Type | Description |
 |------|------|------|
 | Number of Iterations | int | Number if iterations for the ICP algorithm |
-| Apply Transform to Moving Geometry | bool | Whether to apply the computed transform to the moving **Vertex Geometry** |
+| Apply Transform to Moving Geometry | bool | Whether to apply the computed transform to the moving **Vertex Geometry |
 
 ## Required Geometry ##
 
@@ -30,17 +30,17 @@ Vertex
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Data Container** | None | N/A | N/A | **Data Container** holding the moving **Vertex Geometry** |
-| **Data Container** | None | N/A | N/A | **Data Container** holding the target **Vertex Geometry** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | None | N/A | N/A | Data Container holding the moving **Vertex Geometry |
+| Data Container | None | N/A | N/A | Data Container holding the target **Vertex Geometry |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Attribute Matrix** | TransformAttributeMatrix | Generic | N/A | **Attribute Matrix** that stores the computed transformation |
-| **Attribute Array** | Transform | float | (4, 4) | Computed transformation matrix |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+|   Attribute Matrix   | TransformAttributeMatrix | Generic | N/A | Attribute Matrix** that stores the computed transformation |
+| Attribute Array | Transform | float | (4, 4) | Computed transformation matrix |
 
 
 ## Example Pipelines ##

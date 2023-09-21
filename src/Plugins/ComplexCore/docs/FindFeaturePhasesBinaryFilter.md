@@ -18,17 +18,17 @@ Image
 
 ## Required Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Cell Attribute Array** | Mask | bool | (1) | Specifies if the **Cell** is to be counted in the algorithm |
-| **Attribute Matrix** | Cell Data Attribute Matrix | Attribute Matrix | N/A | The *Cell Data* **Attribute Matrix** of the **Image Geometry** where the *Binary Phases Array* will be created |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
+| Cell Attribute Array | Mask | bool | (1) | Specifies if the **Cell** is to be counted in the algorithm |
+|   Attribute Matrix   | Cell Data Attribute Matrix | Attribute Matrix | N/A | The *Cell Data* **Attribute Matrix** of the **Image Geometry** where the *Binary Phases Array* will be created |
 
 ## Created Objects
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | Binary Feature Phases Array Name | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | Binary Feature Phases Array Name | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
 
 ## Example Pipelines
 

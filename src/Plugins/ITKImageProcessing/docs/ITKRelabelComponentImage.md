@@ -1,4 +1,4 @@
-# ITK Relabel Component Image Filter (ITKRelabelComponentImage)
+# ITK Relabel Component Image Filter
 
 Relabel the components in an image such that consecutive labels are used.
 

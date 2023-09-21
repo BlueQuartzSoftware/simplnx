@@ -23,9 +23,9 @@ None
 
 ## Required Objects ##
 
-| Kind          | Default Name | Type | Component Dimensions | Description |
+| Kind          | Default Name | Type | Comp Dims | Description |
 |---------------|-------|------|------|-----------------------------------------------------|
-| **DataArray** | Attribute Arrays to Export | DataArray | any | Specifies **DataArray** to have their values printed |
+|   DataArray   | Attribute Arrays to Export | DataArray | any | Specifies **DataArray** to have their values printed |
 
 ## Created Objects ##
 

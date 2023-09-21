@@ -1,4 +1,4 @@
-# ITK Exp Negative Image Filter (ITKExpNegativeImage)
+# ITK Exp Negative Image Filter
 
 Computes the function exp(-K.x) for each input pixel.
 

@@ -41,19 +41,19 @@ Triangle
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | TriangleDataContainer | N/A | N/A | **Data Container** holding the **Triangle Geometry** to sample |
-| **Data Container** | None | N/A | N/A | **Data Container** holding the **Geometry** used to determine the number of samples, if *Other Geometry* is selected for *Source for Number of Samples* |
-| **Face Attribute Array**  | FaceAreas | double | (1) | Specifies the area of each **Face** |
-| **Face Attribute Array** | Mask | bool | (1) | Specifies if the **Face** can be sampled, if *Use Mask* is checked |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | TriangleDataContainer | N/A | N/A | Data Container holding the **Triangle Geometry** to sample |
+| Data Container | None | N/A | N/A | Data Container holding the **Geometry** used to determine the number of samples, if *Other Geometry* is selected for *Source for Number of Samples* |
+| Face Attribute Array | FaceAreas | double | (1) | Specifies the area of each **Face |
+| Face Attribute Array | Mask | bool | (1) | Specifies if the **Face** can be sampled, if *Use Mask* is checked |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | VertexDataContainer | N/A | N/A | **Data Container** holding the **Vertex Geometry** that represents the sampling points |
-| **Vertex Attribute Matrix** | VertexData | Vertex | N/A | **Vertex Attribute Matrix** for the created **Vertex Data Container** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container | VertexDataContainer | N/A | N/A | Data Container holding the **Vertex Geometry** that represents the sampling points |
+| Vertex Attribute Matrix | VertexData | Vertex | N/A | Vertex Attribute Matrix** for the created **Vertex Data Container |
 
 ## Example Pipelines ##
 

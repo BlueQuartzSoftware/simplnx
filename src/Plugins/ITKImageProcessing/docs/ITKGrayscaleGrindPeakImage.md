@@ -1,4 +1,4 @@
-# ITK Grayscale Grind Peak Image Filter (ITKGrayscaleGrindPeakImage)
+# ITK Grayscale Grind Peak Image Filter
 
 Remove local maxima not connected to the boundary of the image.
 

@@ -91,8 +91,8 @@ NONE
 
 This filter will create one data container for each image tile that is in the xml file. That created Data Container will have a Cell Attribute Matrix which will also hold a single Attribute Array of the same type of the image (unless the user selects to convert images to Gray Scale images.)
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
 | DataGroup | Zen DataGroup | N/A | N/A | Parent DataGroup created in the datastructure |
 | Image Geometry | Mosaic- | N/A | N/A | The prefix for all created Image Geometries |
 | AttributeMatrix | Tile Data | N/A | N/A | The name of every created Attribute Matrix |

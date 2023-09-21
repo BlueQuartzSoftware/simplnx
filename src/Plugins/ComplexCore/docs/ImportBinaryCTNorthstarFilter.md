@@ -32,11 +32,11 @@ Not Applicable
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Image Geometry** | CT Image Geometry | ImageGeom | N/A |  |
-| **Attribute Matrix** | CT Scan Data | Attribute Matrix | N/A |  |
-| **Data Array** | Density | float | (1) | Density Data |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Image Geometry | CT Image Geometry | ImageGeom | N/A |  |
+|   Attribute Matrix   | CT Scan Data | Attribute Matrix | N/A |  |
+| Data Array | Density | float | (1) | Density Data |
 
 ## License & Copyright ##
 

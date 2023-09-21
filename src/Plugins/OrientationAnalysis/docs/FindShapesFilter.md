@@ -28,21 +28,21 @@ Image
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Feature Attribute Array** | Centroids | float | (3) | X, Y, Z coordinates of **Feature** center of mass |
-| **Attribute Matrix** | CellFeatureData | Cell Feature | N/A | **Feature Attribute Matrix** of the selected *Feature Ids* |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
+| Feature Attribute Array | Centroids | float | (3) | X, Y, Z coordinates of **Feature** center of mass |
+|   Attribute Matrix   | CellFeatureData | Cell Feature | N/A | Feature Attribute Matrix** of the selected *Feature Ids* |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | AspectRatios | float | (2) | Ratio of semi-axis lengths (b/a and c/a) for best-fit ellipsoid to **Feature** |
-| **Feature Attribute Array** | AxisEulerAngles | float | (3) | Euler angles (in radians) necessary to rotate the sample reference frame to the reference frame of the **Feature**, where the prinicpal axes of the best-fit ellipsoid are (X, Y, Z) |
-| **Feature Attribute Array** | SemiAxisLengths | float | (3) | Semi-axis lengths (a, b, c) for best-fit ellipsoid to **Feature** |
-| **Feature Attribute Array** | Omega3s | float | (1) | 3rd invariant of the second-order moment matrix for the **Feature**, does not assume a shape type (i.e., ellipsoid) |
-| **Feature Attribute Array** | Volumes | float | (1) | The volume of each **Feature** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Feature Attribute Array | AspectRatios | float | (2) | Ratio of semi-axis lengths (b/a and c/a) for best-fit ellipsoid to **Feature |
+| Feature Attribute Array | AxisEulerAngles | float | (3) | Euler angles (in radians) necessary to rotate the sample reference frame to the reference frame of the **Feature**, where the prinicpal axes of the best-fit ellipsoid are (X, Y, Z) |
+| Feature Attribute Array | SemiAxisLengths | float | (3) | Semi-axis lengths (a, b, c) for best-fit ellipsoid to **Feature |
+| Feature Attribute Array | Omega3s | float | (1) | 3rd invariant of the second-order moment matrix for the **Feature**, does not assume a shape type (i.e., ellipsoid) |
+| Feature Attribute Array | Volumes | float | (1) | The volume of each **Feature |
 
 ## References ## 
 

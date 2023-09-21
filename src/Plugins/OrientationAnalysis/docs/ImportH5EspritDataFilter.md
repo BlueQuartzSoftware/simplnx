@@ -56,45 +56,45 @@ None
 ## Created Objects 
 
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container**  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry** |
-| **Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
-| **Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Data Container  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry |
+| Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
+| Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
 
 ### Created Cell Attribute Arrays 
 
 These arrays will **most likely** be created but is not guaranteed. Additional arrays (unknown at the time of writing) may also be created.
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array**  | DD | float | (1) |  |
-| **Cell Attribute Array**  | MAD | float | (1) | Mean Angular Deviation |
-| **Cell Attribute Array**  | MADPhase | int | (1) |  |
-| **Cell Attribute Array**  | NIndexedBands | int | (1) |  |
-| **Cell Attribute Array**  | PCX | float | (1) | Pattern Center X |
-| **Cell Attribute Array**  | PCY | float | (1) | Pattern Center Y |
-| **Cell Attribute Array**  | Phase | int | (1) |  |
-| **Cell Attribute Array**  | RadonBandCount | int | (1) |  |
-| **Cell Attribute Array**  | RadonQuality | float | (1) |  |
-| **Cell Attribute Array**  | RawPatterns | float | (1) |  |
-| **Cell Attribute Array**  | XBEAM | int | (1) |  |
-| **Cell Attribute Array**  | YBEAM | int | (1) |  |
-| **Cell Attribute Array**  | XSAMPLE | float | (1) |  |
-| **Cell Attribute Array**  | YSAMPLE | float | (1) |  |
-| **Cell Attribute Array**  | Euler Angles | float | (3) | Note the filter will create the Euler Angles array by interleaving the phi1, PHI and phi2 data arrays from the data file.  |
-| **Cell Attribute Array**  | Pattern           | uint8_t   | (NxM) | The pattern data may be very large. There is an option to NOT read it into DREAM.3D if it is not needed by the analysis.   |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Cell Attribute Array | DD | float | (1) |  |
+| Cell Attribute Array | MAD | float | (1) | Mean Angular Deviation |
+| Cell Attribute Array | MADPhase | int | (1) |  |
+| Cell Attribute Array | NIndexedBands | int | (1) |  |
+| Cell Attribute Array | PCX | float | (1) | Pattern Center X |
+| Cell Attribute Array | PCY | float | (1) | Pattern Center Y |
+| Cell Attribute Array | Phase | int | (1) |  |
+| Cell Attribute Array | RadonBandCount | int | (1) |  |
+| Cell Attribute Array | RadonQuality | float | (1) |  |
+| Cell Attribute Array | RawPatterns | float | (1) |  |
+| Cell Attribute Array | XBEAM | int | (1) |  |
+| Cell Attribute Array | YBEAM | int | (1) |  |
+| Cell Attribute Array | XSAMPLE | float | (1) |  |
+| Cell Attribute Array | YSAMPLE | float | (1) |  |
+| Cell Attribute Array | Euler Angles | float | (3) | Note the filter will create the Euler Angles array by interleaving the phi1, PHI and phi2 data arrays from the data file.  |
+| Cell Attribute Array | Pattern           | uint8_t   | (NxM) | The pattern data may be very large. There is an option to NOT read it into DREAM.3D if it is not needed by the analysis.   |
 
 
 ### Created Ensemble Attribute Arrays 
 
 These arrays will **most likely** be created but is not guaranteed. Additional arrays (unknown at the time of writing) may also be created.
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
-| **Ensemble Attribute Array** | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
-| **Ensemble Attribute Array** | MaterialName | String | (1) | Name of each **Ensemble** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
+| Ensemble Attribute Array | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
+| Ensemble Attribute Array | MaterialName | String | (1) | Name of each **Ensemble |
 
 
 

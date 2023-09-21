@@ -1,4 +1,4 @@
-# ITK Grayscale Dilate Image Filter (ITKGrayscaleDilateImage)
+# ITK Grayscale Dilate Image Filter
 
 Grayscale dilation of an image.
 

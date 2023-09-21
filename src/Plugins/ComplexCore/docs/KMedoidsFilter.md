@@ -55,18 +55,18 @@ None
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Any **Attribute Array** | None | Any| Any | The **Attribute Array** to cluster |
-| **Attrubute Array** | Mask | bool | (1) | Specifies if the point is to be counted in the algorithm, if *Use Mask* is checked |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Any **Attribute Array | None | Any| Any | The **Attribute Array** to cluster |
+| Attrubute Array | Mask | bool | (1) | Specifies if the point is to be counted in the algorithm, if *Use Mask* is checked |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Attribute Matrix** | ClusterData | Feature/Ensemble | N/A | The **Attribute Matrix** in which to store information associated with the created clusters |
-| **Attribute Array** | ClusterIds | int32_t | (1) | Specifies to which cluster each point belongs |
-| **Attribute Array** | ClusterMeans | double | (1) | The means of the final clusters |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+|   Attribute Matrix   | ClusterData | Feature/Ensemble | N/A | The **Attribute Matrix** in which to store information associated with the created clusters |
+| Attribute Array | ClusterIds | int32_t | (1) | Specifies to which cluster each point belongs |
+| Attribute Array | ClusterMeans | double | (1) | The means of the final clusters |
 
 ## References ##
 

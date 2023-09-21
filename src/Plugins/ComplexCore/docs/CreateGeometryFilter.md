@@ -159,16 +159,16 @@ None
 
 ## Required Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Geometry Path** | None | N/A | N/A | **Data Path** in which to place the created **Geometry** |
-| Various **Attribute Arrays** | None | float/int64_t | 1/2/3/4 | Various **Attribute Arrays** used to define the **Geometry** topology; see the above documentation for a detailed discussion of what kinds of information are needed for each **Geometry** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Geometry Path | None | N/A | N/A | Data Path** in which to place the created **Geometry |
+| Various **Attribute Arrays | None | float/int64_t | 1/2/3/4 | Various **Attribute Arrays** used to define the **Geometry** topology; see the above documentation for a detailed discussion of what kinds of information are needed for each **Geometry |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| Various **Attribute Matrices** | None | Vertex/Edge/Face/Cell | N/A | Various **Attribute Matrices** used to store information for the new **Geometry**; see the above documentation for a detailed discussion of what kinds of **Attribute Matrices** are created for each **Geometry** |
+| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
+|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Various **Attribute Matrices | None | Vertex/Edge/Face/Cell | N/A | Various **Attribute Matrices** used to store information for the new **Geometry**; see the above documentation for a detailed discussion of what kinds of **Attribute Matrices** are created for each **Geometry |
 
 ## Example Pipelines ##
 

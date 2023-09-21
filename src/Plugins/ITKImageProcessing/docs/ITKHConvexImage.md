@@ -1,4 +1,4 @@
-# ITK H Convex Image Filter (ITKHConvexImage)
+# ITK H Convex Image Filter
 
 Identify local maxima whose height above the baseline is greater than h.
 

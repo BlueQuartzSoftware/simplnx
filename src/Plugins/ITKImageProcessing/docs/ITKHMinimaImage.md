@@ -1,4 +1,4 @@
-# ITK H Minima Image Filter (ITKHMinimaImage)
+# ITK H Minima Image Filter
 
 Suppress local minima whose depth below the baseline is less than h.
 

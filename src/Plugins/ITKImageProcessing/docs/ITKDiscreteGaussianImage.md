@@ -1,4 +1,4 @@
-# ITK Discrete Gaussian Image Filter (ITKDiscreteGaussianImage)
+# ITK Discrete Gaussian Image Filter
 
 Blurs an image by separable convolution with discrete gaussian kernels. This filter performs Gaussian blurring by separable convolution of an image and a discrete Gaussian operator (kernel).
 

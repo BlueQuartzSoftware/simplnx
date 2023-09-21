@@ -1,4 +1,4 @@
-# ITK Sigmoid Image Filter (ITKSigmoidImage)
+# ITK Sigmoid Image Filter
 
 Computes the sigmoid function pixel-wise.
 
