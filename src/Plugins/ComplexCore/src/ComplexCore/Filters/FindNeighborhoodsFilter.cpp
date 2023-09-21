@@ -10,6 +10,7 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 
 using namespace complex;
 
@@ -52,6 +53,9 @@ Parameters FindNeighborhoodsFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
+
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Parallel_Key, "Parallel Execution", "Runs the filter using multiple cores where possible", false));
+
 
   params.insert(std::make_unique<Float32Parameter>(k_MultiplesOfAverage_Key, "Multiples of Average Diameter", "Defines the search radius to use when looking for 'neighboring' Features", 1.0F));
 
@@ -140,7 +144,7 @@ Result<> FindNeighborhoodsFilter::executeImpl(DataStructure& dataStructure, cons
                                               const std::atomic_bool& shouldCancel) const
 {
   FindNeighborhoodsInputValues inputValues;
-
+  inputValues.ParallelExecution =  filterArgs.value<bool>(k_Parallel_Key);
   inputValues.MultiplesOfAverage = filterArgs.value<float32>(k_MultiplesOfAverage_Key);
   inputValues.EquivalentDiametersArrayPath = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);

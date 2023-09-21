@@ -6,6 +6,7 @@
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <cmath>
+#include <chrono>
 
 using namespace complex;
 
@@ -34,10 +35,24 @@ public:
     {
       start = 1;
     }
-    for(size_t i = start; i < end; i++)
+    int32 progInt = 0.0f;
+    auto startTime = std::chrono::steady_clock::now();
+
+    for(size_t featureIdx = start; featureIdx < end; featureIdx++)
     {
+      progInt = static_cast<float>(featureIdx) / static_cast<float>(m_TotalFeatures) * 100.0f;
+      auto now = std::chrono::steady_clock::now();
+      // Only send updates every 1 second
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > 1000)
+      {
+        std::string message = fmt::format("Finding Neighborhood for FeatureId:{}", featureIdx);
+        //m_MessageHandler(complex::IFilter::ProgressMessage{complex::IFilter::Message::Type::Info, message, progInt});
+        std::cout << message<< "\n";
+        startTime = std::chrono::steady_clock::now();
+      }
+
       incCount++;
-      if(incCount == increment || i == end - 1)
+      if(incCount == increment || featureIdx == end - 1)
       {
         incCount = 0;
         m_Filter->updateProgress(increment, m_TotalFeatures);
@@ -46,12 +61,12 @@ public:
       {
         break;
       }
-      bin1x = m_Bins[3 * i];
-      bin1y = m_Bins[3 * i + 1];
-      bin1z = m_Bins[3 * i + 2];
-      criticalDistance1 = m_CriticalDistance[i];
+      bin1x = m_Bins[3 * featureIdx];
+      bin1y = m_Bins[3 * featureIdx + 1];
+      bin1z = m_Bins[3 * featureIdx + 2];
+      criticalDistance1 = m_CriticalDistance[featureIdx];
 
-      for(size_t j = i + 1; j < m_TotalFeatures; j++)
+      for(size_t j = featureIdx + 1; j < m_TotalFeatures; j++)
       {
         bin2x = m_Bins[3 * j];
         bin2y = m_Bins[3 * j + 1];
@@ -64,12 +79,12 @@ public:
 
         if(dBinX < criticalDistance1 && dBinY < criticalDistance1 && dBinZ < criticalDistance1)
         {
-          m_Filter->updateNeighborHood(i, j);
+          m_Filter->updateNeighborHood(featureIdx, j);
         }
 
         if(dBinX < criticalDistance2 && dBinY < criticalDistance2 && dBinZ < criticalDistance2)
         {
-          m_Filter->updateNeighborHood(j, i);
+          m_Filter->updateNeighborHood(j, featureIdx);
         }
       }
     }
@@ -185,7 +200,7 @@ Result<> FindNeighborhoods::operator()()
 
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
-  parallelAlgorithm.setParallelizationEnabled(false);
+  parallelAlgorithm.setParallelizationEnabled(m_InputValues->ParallelExecution);
   parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, centroids, bins, criticalDistance));
 
   // Output Variables

@@ -22,6 +22,7 @@ struct COMPLEXCORE_EXPORT FindNeighborhoodsInputValues
   DataPath NeighborhoodsArrayName;
   DataPath NeighborhoodListArrayName;
   DataPath InputImageGeometry;
+  bool ParallelExecution;
 };
 
 /**

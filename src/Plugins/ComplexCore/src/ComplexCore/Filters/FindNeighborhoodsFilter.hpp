@@ -31,6 +31,7 @@ public:
   static inline constexpr StringLiteral k_NeighborhoodsArrayName_Key = "neighborhoods_array_name";
   static inline constexpr StringLiteral k_NeighborhoodListArrayName_Key = "neighborhood_list_array_name";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+  static inline constexpr StringLiteral k_Parallel_Key = "parallel_execution";
 
   /**
    * @brief Returns the name of the filter.

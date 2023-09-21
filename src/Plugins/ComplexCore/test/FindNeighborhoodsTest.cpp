@@ -74,3 +74,34 @@ TEST_CASE("ComplexCore::FindNeighborhoods", "[ComplexCore][FindNeighborhoods]")
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighborhoods.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }
+
+//
+//TEST_CASE("ComplexCore::FindNeighborhoods Debug", "[ComplexCore][FindNeighborhoods]")
+//{
+//
+//  // Read the Small IN100 Data set
+//  auto baseDataFilePath = fs::path(fmt::format("/tmp/7_after.dream3d"));
+//  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+//
+//  // Compare the k_Neighborhoods output array with those precalculated from the file
+//  {
+//    const DataPath exemplarPath = DataPath::FromString("ImageDataContainerNX/CellFeatureData/Neighborhoods").value();
+//    const DataPath parallelPath = DataPath::FromString("ImageDataContainerNX/CellFeatureData/Neighborhoods Parallel").value();
+//    UnitTest::CompareArrays<int32>(dataStructure.getDataAs<IDataArray>(exemplarPath), dataStructure.getDataAs<IDataArray>(parallelPath));
+//  }
+//
+//  // Compare the k_NeighborhoodList output neighborlist with those precalculated from the file
+//  {
+//    const DataPath exemplarPath = DataPath::FromString("ImageDataContainerNX/CellFeatureData/NeighborhoodList").value();
+//    const DataPath parallelPath = DataPath::FromString("ImageDataContainerNX/CellFeatureData/NeighborhoodList Parallel").value();
+//
+//    UnitTest::CompareNeighborLists<int32>(dataStructure.getDataAs<NeighborList<int32>>(exemplarPath), dataStructure.getDataAs<NeighborList<int32>>(parallelPath));
+//  }
+//
+//// Write the DataStructure out to the file system
+//#ifdef COMPLEX_WRITE_TEST_OUTPUT
+//  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighborhoods.dream3d", unit_test::k_BinaryTestOutputDir)));
+//#endif
+//}
+
+
