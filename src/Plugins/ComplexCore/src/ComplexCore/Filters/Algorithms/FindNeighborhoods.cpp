@@ -26,7 +26,7 @@ public:
     float32 dBinX, dBinY, dBinZ;
     float32 criticalDistance1, criticalDistance2;
 
-    auto increment = static_cast<float64>((end - start) / 100);
+    auto increment = static_cast<float64>(end - start) / 100.0;
     float64 incCount = 0.0;
     // NEVER start at 0.
     if(start == 0)
