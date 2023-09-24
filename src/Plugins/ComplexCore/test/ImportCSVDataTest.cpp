@@ -61,22 +61,20 @@ DataStructure createDataStructure(const std::string& dummyGroupName)
 }
 
 // -----------------------------------------------------------------------------
-Arguments createArguments(const std::string& arrayName, std::optional<DataType> dataType, nonstd::span<std::string> values, const std::string& newGroupName, const std::string& dummyGroupName)
+Arguments createArguments(const std::string& arrayName, DataType dataType, nonstd::span<std::string> values, const std::string& newGroupName, const std::string& dummyGroupName)
 {
   Arguments args;
 
   CSVWizardData data;
   data.inputFilePath = k_TestInput.string();
-  data.dataHeaders = {arrayName};
+  data.customHeaders = {arrayName};
   data.dataTypes = {dataType};
-  data.beginIndex = 2;
+  data.startImportRow = 2;
   data.commaAsDelimiter = true;
-  data.delimiters = {','};
-  data.headerLine = 1;
-  data.numberOfLines = values.size() + 1;
+  data.headersLine = 1;
+  data.tupleDims = {static_cast<size_t>(values.size())};
 
   args.insertOrAssign(ImportCSVDataFilter::k_WizardData_Key, std::make_any<CSVWizardData>(data));
-  args.insertOrAssign(ImportCSVDataFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(values.size())}}));
   args.insertOrAssign(ImportCSVDataFilter::k_UseExistingGroup_Key, std::make_any<bool>(false));
   args.insertOrAssign(ImportCSVDataFilter::k_CreatedDataGroup_Key, std::make_any<DataPath>(DataPath({newGroupName})));
   args.insertOrAssign(ImportCSVDataFilter::k_SelectedDataGroup_Key, std::make_any<DataPath>(DataPath({dummyGroupName})));

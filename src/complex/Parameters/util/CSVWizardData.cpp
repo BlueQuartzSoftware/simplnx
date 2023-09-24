@@ -36,13 +36,12 @@ using namespace complex;
 
 namespace
 {
-const std::string k_DataHeadersKey = "Data Headers";
+const std::string k_CustomHeadersKey = "Custom Headers";
 const std::string k_DataTypesKey = "Data Types";
-const std::string k_DelimitersKey = "Delimiters";
+const std::string k_SkippedArrayMaskKey = "Skipped Array Mask";
 const std::string k_TupleDimensionsKey = "Tuple Dimensions";
 const std::string k_InputFilePathKey = "Input File Path";
-const std::string k_BeginIndexKey = "Begin Index";
-const std::string k_NumberOfLinesKey = "Number of Lines";
+const std::string k_StartImportRowKey = "Start Import Row";
 const std::string k_HeaderLineKey = "Header Line";
 const std::string k_HeaderModeKey = "Header Mode";
 const std::string k_TabAsDelimiterKey = "Tab As Delimiter";
@@ -58,37 +57,36 @@ nlohmann::json CSVWizardData::writeJson() const
   nlohmann::json json;
 
   nlohmann::json dHeaders;
-  for(const auto& header : dataHeaders)
+  for(const auto& header : customHeaders)
   {
     dHeaders.push_back(header);
   }
-  json[k_DataHeadersKey] = dHeaders;
+  json[k_CustomHeadersKey] = dHeaders;
 
   nlohmann::json dTypes;
   for(const auto& dType : dataTypes)
   {
-    if(!dType.has_value())
-    {
-      dTypes.push_back(k_SkipDataTypeString);
-    }
-    else
-    {
-      dTypes.push_back(dType.value());
-    }
+    dTypes.push_back(dType);
   }
   json[k_DataTypesKey] = dTypes;
 
-  nlohmann::json delimitersObj;
-  for(const auto& delimiter : delimiters)
+  nlohmann::json tDims;
+  for(const auto& tDim : tupleDims)
   {
-    delimitersObj.push_back(delimiter);
+    tDims.push_back(tDim);
   }
-  json[k_DelimitersKey] = delimitersObj;
+  json[k_TupleDimensionsKey] = tDims;
+
+  nlohmann::json dSkippedArrays;
+  for(const auto& skippedArrayVal : skippedArrayMask)
+  {
+    dSkippedArrays.push_back(skippedArrayVal);
+  }
+  json[k_SkippedArrayMaskKey] = dSkippedArrays;
 
   json[k_InputFilePathKey] = inputFilePath;
-  json[k_BeginIndexKey] = beginIndex;
-  json[k_NumberOfLinesKey] = numberOfLines;
-  json[k_HeaderLineKey] = headerLine;
+  json[k_StartImportRowKey] = startImportRow;
+  json[k_HeaderLineKey] = headersLine;
   json[k_HeaderModeKey] = headerMode;
   json[k_TabAsDelimiterKey] = tabAsDelimiter;
   json[k_SemicolonAsDelimiterKey] = semicolonAsDelimiter;
@@ -104,21 +102,21 @@ Result<CSVWizardData> CSVWizardData::ReadJson(const nlohmann::json& json)
 {
   CSVWizardData data;
 
-  if(!json.contains(k_DataHeadersKey))
+  if(!json.contains(k_CustomHeadersKey))
   {
-    return MakeErrorResult<CSVWizardData>(-100, fmt::format("CSVWizardData: Cannot find the Data Headers key \"{}\" in the CSVWizardData json object.", k_DataHeadersKey));
+    return MakeErrorResult<CSVWizardData>(-100, fmt::format("CSVWizardData: Cannot find the Data Headers key \"{}\" in the CSVWizardData json object.", k_CustomHeadersKey));
   }
 
-  nlohmann::json dHeaders = json[k_DataHeadersKey];
+  nlohmann::json dHeaders = json[k_CustomHeadersKey];
   for(usize i = 0; i < dHeaders.size(); i++)
   {
     auto header = dHeaders[i];
     if(!header.is_string())
     {
-      return MakeErrorResult<CSVWizardData>(-101, fmt::format("CSVWizardData: Data header at index {} is of type {} and is not a string.", std::to_string(i), header.type_name()));
+      return MakeErrorResult<CSVWizardData>(-101, fmt::format("CSVWizardData: Custom header at index {} is of type {} and is not a string.", std::to_string(i), header.type_name()));
     }
 
-    data.dataHeaders.push_back(header);
+    data.customHeaders.push_back(header);
   }
 
   if(!json.contains(k_DataTypesKey))
@@ -130,43 +128,41 @@ Result<CSVWizardData> CSVWizardData::ReadJson(const nlohmann::json& json)
   for(usize i = 0; i < dTypes.size(); i++)
   {
     auto dType = dTypes[i];
-    if(dType.is_string())
+    if(!dType.is_number_integer())
     {
-      if(dType != k_SkipDataTypeString)
-      {
-        return MakeErrorResult<CSVWizardData>(-103, fmt::format("CSVWizardData: Data type at index {} is not a valid data type and is not marked as \"skipped\".", std::to_string(i)));
-      }
-    }
-    else if(!dType.is_number_integer())
-    {
-      return MakeErrorResult<CSVWizardData>(-104, fmt::format("CSVWizardData: Data type at index {} is of type {} and is not an integer.", std::to_string(i), dType.type_name()));
+      return MakeErrorResult<CSVWizardData>(-103, fmt::format("CSVWizardData: Data type at index {} is of type {} and is not an integer.", std::to_string(i), dType.type_name()));
     }
 
-    if(dType.is_string())
-    {
-      data.dataTypes.push_back({});
-    }
-    else
-    {
-      data.dataTypes.push_back(dType);
-    }
+    data.dataTypes.push_back(dType);
   }
 
-  if(!json.contains(k_DelimitersKey))
+  if(!json.contains(k_TupleDimensionsKey))
   {
-    return MakeErrorResult<CSVWizardData>(-105, fmt::format("CSVWizardData: Cannot find the Delimiters key \"{}\" in the CSVWizardData json object.", k_DelimitersKey));
+    return MakeErrorResult<CSVWizardData>(-104, fmt::format("CSVWizardData: Cannot find the Tuple Dimensions key \"{}\" in the CSVWizardData json object.", k_TupleDimensionsKey));
   }
 
-  nlohmann::json delimiters = json[k_DelimitersKey];
-  for(usize i = 0; i < delimiters.size(); i++)
+  nlohmann::json tDims = json[k_TupleDimensionsKey];
+  for(usize i = 0; i < tDims.size(); i++)
   {
-    auto delimiterObj = delimiters[i];
-    if(!delimiterObj.is_number_integer())
+    auto tDim = tDims[i];
+    data.tupleDims.push_back(tDim);
+  }
+
+  if(!json.contains(k_SkippedArrayMaskKey))
+  {
+    return MakeErrorResult<CSVWizardData>(-105, fmt::format("CSVWizardData: Cannot find the Skipped Arrays key \"{}\" in the CSVWizardData json object.", k_DataTypesKey));
+  }
+
+  nlohmann::json dSkippedArrays = json[k_SkippedArrayMaskKey];
+  for(usize i = 0; i < dSkippedArrays.size(); i++)
+  {
+    auto skippedArrayVal = dSkippedArrays[i];
+    if(!skippedArrayVal.is_boolean())
     {
-      return MakeErrorResult<CSVWizardData>(-106, fmt::format("CSVWizardData: Delimiter at index {} is of type {} and is not an integer.", std::to_string(i), fmt::underlying(delimiterObj.type())));
+      return MakeErrorResult<CSVWizardData>(-106, fmt::format("CSVWizardData: Skipped array value at index {} is of type {} and is not a boolean.", std::to_string(i), skippedArrayVal.type_name()));
     }
 
-    data.delimiters.push_back(delimiterObj.get<char>());
+    data.skippedArrayMask.push_back(skippedArrayVal);
   }
 
   if(!json.contains(k_InputFilePathKey))
@@ -179,25 +175,15 @@ Result<CSVWizardData> CSVWizardData::ReadJson(const nlohmann::json& json)
   }
   data.inputFilePath = json[k_InputFilePathKey];
 
-  if(!json.contains(k_BeginIndexKey))
+  if(!json.contains(k_StartImportRowKey))
   {
-    return MakeErrorResult<CSVWizardData>(-109, fmt::format("CSVWizardData: Cannot find the 'Begin Index' key \"{}\" in the CSVWizardData json object.", k_BeginIndexKey));
+    return MakeErrorResult<CSVWizardData>(-109, fmt::format("CSVWizardData: Cannot find the 'Begin Index' key \"{}\" in the CSVWizardData json object.", k_StartImportRowKey));
   }
-  else if(!json[k_BeginIndexKey].is_number_integer())
+  else if(!json[k_StartImportRowKey].is_number_integer())
   {
-    return MakeErrorResult<CSVWizardData>(-110, fmt::format("CSVWizardData: 'Begin Index' value is of type {} and is not an integer.", json[k_BeginIndexKey].type_name()));
+    return MakeErrorResult<CSVWizardData>(-110, fmt::format("CSVWizardData: 'Begin Index' value is of type {} and is not an integer.", json[k_StartImportRowKey].type_name()));
   }
-  data.beginIndex = json[k_BeginIndexKey];
-
-  if(!json.contains(k_NumberOfLinesKey))
-  {
-    return MakeErrorResult<CSVWizardData>(-111, fmt::format("CSVWizardData: Cannot find the 'Number of Lines' key \"{}\" in the CSVWizardData json object.", k_NumberOfLinesKey));
-  }
-  else if(!json[k_NumberOfLinesKey].is_number_integer())
-  {
-    return MakeErrorResult<CSVWizardData>(-112, fmt::format("CSVWizardData: 'Number of Lines' value is of type {} and is not an integer.", json[k_NumberOfLinesKey].type_name()));
-  }
-  data.numberOfLines = json[k_NumberOfLinesKey];
+  data.startImportRow = json[k_StartImportRowKey];
 
   if(!json.contains(k_HeaderLineKey))
   {
@@ -207,7 +193,7 @@ Result<CSVWizardData> CSVWizardData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<CSVWizardData>(-114, fmt::format("CSVWizardData: 'Header Line' value is of type {} and is not an integer.", json[k_HeaderLineKey].type_name()));
   }
-  data.headerLine = json[k_HeaderLineKey];
+  data.headersLine = json[k_HeaderLineKey];
 
   if(!json.contains(k_HeaderModeKey))
   {

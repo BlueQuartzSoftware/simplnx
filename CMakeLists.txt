@@ -459,6 +459,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/FileUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp

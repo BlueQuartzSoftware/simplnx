@@ -101,12 +101,10 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       Arguments args;
       CSVWizardData data;
       data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/small_in100_sigma_3_1.dat", unit_test::k_TestFilesDir);
-      data.dataHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
+      data.customHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
-      data.beginIndex = 2;
+      data.startImportRow = 2;
       data.spaceAsDelimiter = true;
-      data.delimiters = {' '};
-      data.numberOfLines = 3752;
 
       args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
       args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(3751)}}));
@@ -122,12 +120,10 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       Arguments args;
       CSVWizardData data;
       data.inputFilePath = outputFile.string();
-      data.dataHeaders = {k_GMT1, k_GMT2, k_GMT3};
+      data.customHeaders = {k_GMT1, k_GMT2, k_GMT3};
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
-      data.beginIndex = 2;
+      data.startImportRow = 2;
       data.spaceAsDelimiter = true;
-      data.delimiters = {' '};
-      data.numberOfLines = 3752;
 
       args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
       args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(3751)}}));
@@ -189,12 +185,10 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       Arguments args;
       CSVWizardData data;
       data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/small_in100_sigma_9_1.dat", unit_test::k_TestFilesDir);
-      data.dataHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
+      data.customHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
-      data.beginIndex = 2;
+      data.startImportRow = 2;
       data.spaceAsDelimiter = true;
-      data.delimiters = {' '};
-      data.numberOfLines = 3752;
 
       args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
       args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(3751)}}));
@@ -210,12 +204,10 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       Arguments args;
       CSVWizardData data;
       data.inputFilePath = outputFile.string();
-      data.dataHeaders = {k_GMT1, k_GMT2, k_GMT3};
+      data.customHeaders = {k_GMT1, k_GMT2, k_GMT3};
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
-      data.beginIndex = 2;
+      data.startImportRow = 2;
       data.spaceAsDelimiter = true;
-      data.delimiters = {' '};
-      data.numberOfLines = 3752;
 
       args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
       args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(3751)}}));
@@ -277,12 +269,10 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       Arguments args;
       CSVWizardData data;
       data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/small_in100_sigma_11_1.dat", unit_test::k_TestFilesDir);
-      data.dataHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
+      data.customHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
-      data.beginIndex = 2;
+      data.startImportRow = 2;
       data.spaceAsDelimiter = true;
-      data.delimiters = {' '};
-      data.numberOfLines = 3752;
 
       args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
       args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(3751)}}));
@@ -298,12 +288,10 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       Arguments args;
       CSVWizardData data;
       data.inputFilePath = outputFile.string();
-      data.dataHeaders = {k_GMT1, k_GMT2, k_GMT3};
+      data.customHeaders = {k_GMT1, k_GMT2, k_GMT3};
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
-      data.beginIndex = 2;
+      data.startImportRow = 2;
       data.spaceAsDelimiter = true;
-      data.delimiters = {' '};
-      data.numberOfLines = 3752;
 
       args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
       args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(3751)}}));

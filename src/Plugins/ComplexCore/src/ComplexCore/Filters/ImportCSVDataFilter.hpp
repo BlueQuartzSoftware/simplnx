@@ -35,7 +35,6 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_WizardData_Key = "wizard_data";
-  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
   static inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
   static inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_data_group";
   static inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group";
@@ -104,6 +103,11 @@ protected:
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
+
+private:
+  int32 m_InstanceId;
+
+  IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize headersLineNum, bool useTab, bool useSemicolon, bool useSpace, bool useComma, bool useConsecutive) const;
 };
 } // namespace complex
 

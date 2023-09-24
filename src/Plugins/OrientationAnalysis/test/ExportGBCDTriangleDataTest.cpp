@@ -92,13 +92,11 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
     Arguments args;
     CSVWizardData data;
     data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD_Triangles.ph", unit_test::k_TestFilesDir);
-    data.dataHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
+    data.customHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.dataTypes = {DataType::float32, DataType::float32, DataType::float32, DataType::float32, DataType::float32,
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
-    data.beginIndex = 6;
+    data.startImportRow = 6;
     data.spaceAsDelimiter = true;
-    data.delimiters = {' '};
-    data.numberOfLines = 636479;
 
     args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
     args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(636474)}}));
@@ -115,13 +113,11 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
     Arguments args;
     CSVWizardData data;
     data.inputFilePath = outputFile.string();
-    data.dataHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
+    data.customHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.dataTypes = {DataType::float32, DataType::float32, DataType::float32, DataType::float32, DataType::float32,
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
-    data.beginIndex = 5;
+    data.startImportRow = 5;
     data.spaceAsDelimiter = true;
-    data.delimiters = {' '};
-    data.numberOfLines = 636478;
 
     args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
     args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(636474)}}));
