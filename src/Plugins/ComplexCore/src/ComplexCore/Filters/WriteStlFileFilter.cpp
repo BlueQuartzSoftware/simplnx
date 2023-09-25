@@ -123,16 +123,6 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
     return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
   }
 
-  //  if(auto* normals = dataStructure.getDataAs<Float32Array>(pFaceNormalsPathValue); normals == nullptr)
-  //  {
-  //    return MakePreflightErrorResult(-27874, fmt::format("Face Normals Array doesn't exist at: {}", pFaceNormalsPathValue.toString()));
-  //  }
-
-  if(!exists(pOutputStlDirectoryValue))
-  {
-    return MakePreflightErrorResult(-27875, fmt::format("Directory {} doesn't exist.", pOutputStlDirectoryValue.string()));
-  }
-
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
