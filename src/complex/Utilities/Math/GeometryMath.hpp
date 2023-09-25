@@ -525,7 +525,7 @@ char RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, con
  * @return bool
  */
 template <typename T>
-char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
+char IsPointInPolyhedron(const complex::TriangleGeom& triangleGeom, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
                          const complex::BoundingBox3D<T>& bounds, T radius)
 {
   usize iter = 0, crossings = 0;
@@ -541,6 +541,16 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
   std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   generator.seed(seed);
   std::uniform_real_distribution<T> distribution(0.0, 1.0);
+
+  const IGeometry::SharedVertexList& vertexListRef = triangleGeom.getVerticesRef();
+  const IGeometry::SharedFaceList& faceListRef = triangleGeom.getFacesRef();
+
+  const auto& vertexListDataStore = vertexListRef.getDataStoreRef();
+  const auto& faceListDataStore = faceListRef.getDataStoreRef();
+
+  Point3D<T> v0;
+  Point3D<T> v1;
+  Point3D<T> v2;
 
   usize numFaces = faceIds.size();
   while(iter++ < numFaces)
@@ -570,9 +580,20 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
       }
       else
       {
-        std::array<Point3D<T>, 3> coords;
-        faces.getFaceCoordinates(faceIds[face], coords);
-        code = RayIntersectsTriangle(ray, coords[0], coords[1], coords[2]);
+        //        std::array<Point3D<T>, 3> coords;
+        //        triangleGeom.getFaceCoordinates(faceIds[face], coords);
+        usize faceId = static_cast<usize>(faceIds[face]);
+
+        usize vertId = faceListDataStore[faceId * 3];
+        v0 = {vertexListDataStore[vertId * 3], vertexListDataStore[vertId * 3 + 1], vertexListDataStore[vertId * 3 + 2]};
+
+        vertId = faceListDataStore[faceId * 3 + 1];
+        v1 = {vertexListDataStore[vertId * 3], vertexListDataStore[vertId * 3 + 1], vertexListDataStore[vertId * 3 + 2]};
+
+        vertId = faceListDataStore[faceId * 3 + 2];
+        v2 = {vertexListDataStore[vertId * 3], vertexListDataStore[vertId * 3 + 1], vertexListDataStore[vertId * 3 + 2]};
+
+        code = RayIntersectsTriangle(ray, v0, v1, v2);
       }
 
       /* If ray is degenerate, then goto outer while to generate another. */

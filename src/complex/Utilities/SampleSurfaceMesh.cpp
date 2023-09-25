@@ -105,6 +105,8 @@ public:
 
   void checkPoints(usize start, usize end) const
   {
+    auto startTime = std::chrono::steady_clock::now();
+
     usize iter = m_FeatureId;
 
     // find bounding box for current feature
@@ -115,6 +117,15 @@ public:
     // check points in vertex array to see if they are in the bounding box of the feature
     for(usize i = start; i < end; i++)
     {
+      auto now = std::chrono::steady_clock::now();
+      // Only send updates every 1 second
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > 1000)
+      {
+        std::string message = fmt::format("{}", i);
+        m_Filter->sendThreadSafeProgressMessage(i, i - start, m_Points.size());
+        startTime = std::chrono::steady_clock::now();
+      }
+
       Point3Df point = m_Points[i];
       if(m_PolyIds[i] == 0)
       {
@@ -126,11 +137,6 @@ public:
       }
       pointsVisited++;
 
-      // Send some feedback
-      if(pointsVisited % 1000 == 0)
-      {
-        m_Filter->sendThreadSafeProgressMessage(m_FeatureId, 1000, m_Points.size());
-      }
       // Check for the filter being cancelled.
       if(m_ShouldCancel)
       {
@@ -288,8 +294,11 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   {
     for(int32 featureId = 0; featureId < numFeatures; featureId++)
     {
+      updateProgress(fmt::format("Sampling FeatureID: {} ", featureId));
+
       ParallelDataAlgorithm dataAlg;
       dataAlg.setRange(0, points.size());
+      dataAlg.setParallelizationEnabled(true);
       dataAlg.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel));
     }
   }
@@ -306,21 +315,20 @@ void SampleSurfaceMesh::sendThreadSafeProgressMessage(usize featureId, usize num
 
   m_ProgressCounter += numCompleted;
   auto now = std::chrono::steady_clock::now();
-  auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(m_InitialTime - now).count();
-  if(diff > 1000)
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_LastUpdateTime).count() > 1000)
   {
-    std::string progMessage = fmt::format("Feature {} | Points Completed: {} of {}", featureId, m_ProgressCounter, totalFeatures);
-    float inverseRate = static_cast<float>(diff) / static_cast<float>(m_ProgressCounter - m_LastProgressInt);
-    auto remainMillis = std::chrono::milliseconds(static_cast<int64>(inverseRate * (totalFeatures - m_ProgressCounter)));
-    auto secs = std::chrono::duration_cast<std::chrono::seconds>(remainMillis);
-    remainMillis -= std::chrono::duration_cast<std::chrono::milliseconds>(secs);
-    auto mins = std::chrono::duration_cast<std::chrono::minutes>(secs);
-    secs -= std::chrono::duration_cast<std::chrono::seconds>(mins);
-    auto hour = std::chrono::duration_cast<std::chrono::hours>(mins);
-    mins -= std::chrono::duration_cast<std::chrono::minutes>(hour);
-    progMessage += fmt::format(" || Est. Time Remain: {} hours {} minutes {} seconds", hour.count(), mins.count(), secs.count());
+    std::string progMessage = fmt::format("{}", m_ProgressCounter);
+    //    float inverseRate = static_cast<float>(diff) / static_cast<float>(m_ProgressCounter - m_LastProgressInt);
+    //    auto remainMillis = std::chrono::milliseconds(static_cast<int64>(inverseRate * (totalFeatures - m_ProgressCounter)));
+    //    auto secs = std::chrono::duration_cast<std::chrono::seconds>(remainMillis);
+    //    remainMillis -= std::chrono::duration_cast<std::chrono::milliseconds>(secs);
+    //    auto mins = std::chrono::duration_cast<std::chrono::minutes>(secs);
+    //    secs -= std::chrono::duration_cast<std::chrono::seconds>(mins);
+    //    auto hour = std::chrono::duration_cast<std::chrono::hours>(mins);
+    //    mins -= std::chrono::duration_cast<std::chrono::minutes>(hour);
+    //    progMessage += fmt::format(" || Est. Time Remain: {} hours {} minutes {} seconds", hour.count(), mins.count(), secs.count());
     m_MessageHandler({IFilter::Message::Type::Info, progMessage});
-    m_InitialTime = std::chrono::steady_clock::now();
-    m_LastProgressInt = m_ProgressCounter;
+    m_LastUpdateTime = std::chrono::steady_clock::now();
+    //    m_LastProgressInt = m_ProgressCounter;
   }
 }

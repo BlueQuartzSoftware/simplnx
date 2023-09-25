@@ -52,6 +52,6 @@ private:
   mutable std::mutex m_ProgressMessage_Mutex;
   usize m_ProgressCounter = 0;
   usize m_LastProgressInt = 0;
-  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
+  std::chrono::steady_clock::time_point m_LastUpdateTime = std::chrono::steady_clock::now();
 };
 } // namespace complex
