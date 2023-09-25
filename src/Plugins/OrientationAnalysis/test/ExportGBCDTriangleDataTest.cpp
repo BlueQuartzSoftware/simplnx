@@ -95,11 +95,12 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
     data.customHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.dataTypes = {DataType::float32, DataType::float32, DataType::float32, DataType::float32, DataType::float32,
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
+    data.skippedArrayMask = {false, false, false, false, false, false, false, false, false, false};
     data.startImportRow = 6;
     data.spaceAsDelimiter = true;
+    data.tupleDims = {636474};
 
     args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
-    args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(636474)}}));
     args.insertOrAssign(k_UseExistingGroup_Key, std::make_any<bool>(false));
     args.insertOrAssign(k_CreatedDataGroup_Key, std::make_any<DataPath>(exemplarResultsGroupPath));
     args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(DataPath{}));
@@ -116,11 +117,12 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
     data.customHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.dataTypes = {DataType::float32, DataType::float32, DataType::float32, DataType::float32, DataType::float32,
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
+    data.skippedArrayMask = {false, false, false, false, false, false, false, false, false, false};
     data.startImportRow = 5;
     data.spaceAsDelimiter = true;
+    data.tupleDims = {636474};
 
     args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
-    args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(636474)}}));
     args.insertOrAssign(k_UseExistingGroup_Key, std::make_any<bool>(false));
     args.insertOrAssign(k_CreatedDataGroup_Key, std::make_any<DataPath>(generatedResultsGroupPath));
     args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(generatedResultsGroupPath));

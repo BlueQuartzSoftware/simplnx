@@ -142,6 +142,7 @@ Result<CSVWizardData> CSVWizardData::ReadJson(const nlohmann::json& json)
   }
 
   nlohmann::json tDims = json[k_TupleDimensionsKey];
+  data.tupleDims.clear();
   for(usize i = 0; i < tDims.size(); i++)
   {
     auto tDim = tDims[i];

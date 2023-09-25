@@ -35,7 +35,11 @@ void CreateTestDataFile(nonstd::span<std::string> colValues, const std::string& 
   usize rowCount = colValues.size();
   for(int i = 0; i < rowCount; i++)
   {
-    file << colValues[i] << "\n";
+    file << colValues[i];
+    if(i < rowCount - 1)
+    {
+      file << "\n";
+    }
   }
 }
 
@@ -61,7 +65,7 @@ DataStructure createDataStructure(const std::string& dummyGroupName)
 }
 
 // -----------------------------------------------------------------------------
-Arguments createArguments(const std::string& arrayName, DataType dataType, nonstd::span<std::string> values, const std::string& newGroupName, const std::string& dummyGroupName)
+Arguments createArguments(const std::string& arrayName, DataType dataType, bool skip, nonstd::span<std::string> values, const std::string& newGroupName, const std::string& dummyGroupName)
 {
   Arguments args;
 
@@ -72,7 +76,9 @@ Arguments createArguments(const std::string& arrayName, DataType dataType, nonst
   data.startImportRow = 2;
   data.commaAsDelimiter = true;
   data.headersLine = 1;
+  data.headerMode = CSVWizardData::HeaderMode::LINE;
   data.tupleDims = {static_cast<size_t>(values.size())};
+  data.skippedArrayMask = {skip};
 
   args.insertOrAssign(ImportCSVDataFilter::k_WizardData_Key, std::make_any<CSVWizardData>(data));
   args.insertOrAssign(ImportCSVDataFilter::k_UseExistingGroup_Key, std::make_any<bool>(false));
@@ -97,7 +103,7 @@ void TestCase_TestPrimitives(nonstd::span<std::string> values)
 
   ImportCSVDataFilter filter;
   DataStructure dataStructure = createDataStructure(dummyGroupName);
-  Arguments args = createArguments(arrayName, GetDataType<T>(), values, newGroupName, dummyGroupName);
+  Arguments args = createArguments(arrayName, GetDataType<T>(), false, values, newGroupName, dummyGroupName);
 
   // Create the test input data file
   CreateTestDataFile(values, arrayName);
@@ -140,7 +146,7 @@ void TestCase_TestPrimitives_Error(nonstd::span<std::string> values, int32 expec
 
   ImportCSVDataFilter filter;
   DataStructure dataStructure = createDataStructure(dummyGroupName);
-  Arguments args = createArguments(arrayName, GetDataType<T>(), values, newGroupName, dummyGroupName);
+  Arguments args = createArguments(arrayName, GetDataType<T>(), false, values, newGroupName, dummyGroupName);
 
   // Create the test input data file
   fs::create_directories(k_TestInput.parent_path());
@@ -204,7 +210,7 @@ TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 2): Valid filter execution - S
   ImportCSVDataFilter filter;
   DataStructure dataStructure = createDataStructure(dummyGroupName);
   std::vector<std::string> values = {"0"};
-  Arguments args = createArguments(arrayName, {}, values, newGroupName, dummyGroupName);
+  Arguments args = createArguments(arrayName, DataType::int8, true, values, newGroupName, dummyGroupName);
 
   // Create the test input data file
   CreateTestDataFile(values, arrayName);

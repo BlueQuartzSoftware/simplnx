@@ -130,14 +130,21 @@ Result<OutputActions> validateNewGroup(const DataPath& groupPath, const DataStru
 }
 
 // -----------------------------------------------------------------------------
-Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const DataPath& parentPath, const std::vector<std::string>& headers, DataStructure& dataStructure)
+Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
+                                    DataStructure& dataStructure)
 {
   ParsersVector dataParsers(dataTypes.size());
 
-  for(usize i = 0; i < dataTypes.size() && i < headers.size(); i++)
+  for(usize i = 0; i < dataTypes.size() && i < headers.size() && i < skippedArrays.size(); i++)
   {
     DataType dataType = dataTypes[i];
     std::string name = headers[i];
+    bool skipped = skippedArrays[i];
+
+    if(skipped)
+    {
+      continue;
+    }
 
     DataPath arrayPath = parentPath;
     arrayPath = arrayPath.createChildPath(name);
@@ -361,7 +368,7 @@ Parameters ImportCSVDataFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Attribute Matrix", "Store the imported CSV data arrays in an existing attribute matrix.", false));
   params.insert(
-      std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedDataGroup_Key, "Existing Data Group", "Store the imported CSV data arrays in this existing attribute matrix.", DataPath{}));
+      std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedDataGroup_Key, "Existing Attribute Matrix", "Store the imported CSV data arrays in this existing attribute matrix.", DataPath{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDataGroup_Key, "New Attribute Matrix", "Store the imported CSV data arrays in a newly created attribute matrix.",
                                                              DataPath{{"Imported Data"}}));
 
@@ -473,7 +480,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   size_t totalLines = s_HeaderCache[s_InstanceId].TotalLines;
   size_t totalImportedLines = totalLines - wizardData.startImportRow + 1;
   size_t tupleTotal = std::accumulate(wizardData.tupleDims.begin(), wizardData.tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
-  if(tupleTotal != totalImportedLines)
+  if(tupleTotal > totalImportedLines)
   {
     std::string tupleDimsStr;
     for(size_t i = 0; i < wizardData.tupleDims.size(); ++i)
@@ -485,8 +492,8 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
       }
     }
 
-    std::string errMsg =
-        fmt::format("Error: The current tuple dimensions ({}) has {} tuples, but this does not match the total number of imported lines ({}).", tupleDimsStr, tupleTotal, totalImportedLines);
+    std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr, tupleTotal,
+                                     totalImportedLines);
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
   }
 
@@ -587,6 +594,7 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
   std::string inputFilePath = wizardData.inputFilePath;
   StringVector headers = s_HeaderCache[s_InstanceId].Headers;
   DataTypeVector dataTypes = wizardData.dataTypes;
+  std::vector<bool> skippedArrays = wizardData.skippedArrayMask;
   bool consecutiveDelimiters = wizardData.consecutiveDelimiters;
   usize startImportRow = wizardData.startImportRow;
 
@@ -596,7 +604,7 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
     groupPath = selectedDataGroup;
   }
 
-  Result<ParsersVector> parsersResult = createParsers(dataTypes, groupPath, headers, dataStructure);
+  Result<ParsersVector> parsersResult = createParsers(dataTypes, skippedArrays, groupPath, headers, dataStructure);
   if(parsersResult.invalid())
   {
     return ConvertResult(std::move(parsersResult));
@@ -635,7 +643,7 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
   float32 threshold = 0.0f;
   usize numTuples = std::accumulate(wizardData.tupleDims.begin(), wizardData.tupleDims.end(), 1, std::multiplies<>());
   usize lineNum = startImportRow;
-  while(!in.eof())
+  for(usize i = 0; i < numTuples && !in.eof(); i++)
   {
     if(shouldCancel)
     {
