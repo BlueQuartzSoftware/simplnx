@@ -312,9 +312,18 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
   int32_t bin = 0, xBin = 0, yBin = 0, zBin = 0;
   for(size_t i = 0; i < nNodes; i++)
   {
-    xBin = static_cast<int32_t>((vertices[i * 3] - m_MinMaxCoords[0]) / stepX);
-    yBin = static_cast<int32_t>((vertices[i * 3 + 1] - m_MinMaxCoords[2]) / stepY);
-    zBin = static_cast<int32_t>((vertices[i * 3 + 2] - m_MinMaxCoords[4]) / stepZ);
+    if(stepX != 0.0)
+    {
+      xBin = static_cast<int32_t>((vertices[i * 3] - m_MinMaxCoords[0]) / stepX);
+    }
+    if(stepY != 0.0)
+    {
+      yBin = static_cast<int32_t>((vertices[i * 3 + 1] - m_MinMaxCoords[2]) / stepY);
+    }
+    if(zBin != 0.0)
+    {
+      zBin = static_cast<int32_t>((vertices[i * 3 + 2] - m_MinMaxCoords[4]) / stepZ);
+    }
     if(xBin == 100)
     {
       xBin = 99;
