@@ -1,9 +1,12 @@
 # ------------------------------------------------------------------------------
 # Required EbsdLib and H5Support
 # ------------------------------------------------------------------------------
-find_package(H5Support REQUIRED)
+#find_package(H5Support REQUIRED)
 
-find_package(EbsdLib REQUIRED)
+#find_package(EbsdLib REQUIRED)
+
+add_subdirectory(${complex_SOURCE_DIR}/../H5Support ${complex_BINARY_DIR}/H5Support)
+add_subdirectory(${complex_SOURCE_DIR}/../EbsdLib ${complex_BINARY_DIR}/EbsdLib)
 
 # ------------------------------------------------------------------------------
 # EbsdLib needs install rules for creating packages
@@ -67,6 +70,7 @@ set(FilterList
   ReadH5EbsdFilter
   ReadH5EspritDataFilter
   ReadH5OimDataFilter
+  ReadH5OinaDataFilter
   RodriguesConvertorFilter
   RotateEulerRefFrameFilter
   WriteGBCDGMTFileFilter
@@ -197,6 +201,7 @@ set(filter_algorithms
   ReadH5Ebsd
   ReadH5EspritData
   ReadH5OimData
+  ReadH5OinaData
   RodriguesConvertor
   RotateEulerRefFrame
   WriteGBCDGMTFile
