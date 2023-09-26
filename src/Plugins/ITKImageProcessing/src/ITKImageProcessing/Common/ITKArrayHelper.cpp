@@ -6,6 +6,11 @@
 
 using namespace complex;
 
+bool ITK::DoTuplesMatch(const IDataStore& dataStore, const ImageGeom& imageGeom)
+{
+  return imageGeom.getNumberOfCells() == dataStore.getNumberOfTuples();
+}
+
 bool ITK::DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom)
 {
   // Stored fastest to slowest i.e. X Y Z
