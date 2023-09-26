@@ -50,10 +50,10 @@ uint64 GetTotalMemory()
   return pages * page_size;
 }
 
-dataStorage GetAvailableStorageOnDrive(const std::filesystem::path& path)
+dataStorage GetAvailableStorageOnDrive(const std::filesystem::path& directory)
 {
   std::filesystem::space_info info = std::filesystem::space(directory);
-  data storage;
+  dataStorage storage;
   storage.free = info.available;
   storage.total = info.capacity;
   return storage;
