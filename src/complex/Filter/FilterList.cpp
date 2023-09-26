@@ -101,8 +101,8 @@ bool FilterList::addPlugin(const std::shared_ptr<IPluginLoader>& loader)
   Uuid pluginUuid = plugin->getId();
   if(m_PluginMap.count(pluginUuid) > 0)
   {
-    //throw std::runtime_error(fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", plugin->getName(), pluginUuid.str(),
-    //                                     m_PluginMap[pluginUuid]->getPlugin()->getName()));
+    // throw std::runtime_error(fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", plugin->getName(), pluginUuid.str(),
+    //                                      m_PluginMap[pluginUuid]->getPlugin()->getName()));
     return false;
   }
   auto pluginHandles = plugin->getFilterHandles();

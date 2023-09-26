@@ -105,7 +105,7 @@ Result<> ITKAcosImage::executeImpl(DataStructure& dataStructure, const Arguments
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
-  
+
   const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
   if(inputArray->getDataFormat() != "")
   {

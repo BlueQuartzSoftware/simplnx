@@ -120,7 +120,7 @@ private:
   int64 m_Length = 0;                                    // Length of the Data Array
   T m_Tolerance = static_cast<T>(0);                     // The tolerance of the comparison
   AbstractDataStore<int32>* m_FeatureIdsArray = nullptr; // The Feature Ids
-  DataStoreType& m_Data;                       // The data that is being compared
+  DataStoreType& m_Data;                                 // The data that is being compared
 };
 } // namespace
 

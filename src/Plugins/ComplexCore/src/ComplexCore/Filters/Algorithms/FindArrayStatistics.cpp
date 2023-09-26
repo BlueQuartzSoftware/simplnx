@@ -660,7 +660,7 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* modalBinsArrayPtr = dynamic_cast<NeighborList<float32>*>(arrays[11]);
     auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[12]);
 
-//#ifdef COMPLEX_ENABLE_MULTICORE
+// #ifdef COMPLEX_ENABLE_MULTICORE
 #if 0
     const tbb::simple_partitioner simplePartitioner;
     const size_t grainSize = 500;
@@ -726,8 +726,8 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void StandardizeDataByIndex(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIdsArray, const Float32Array& muArray, const Float32Array& sigArray,
-                            Float32Array& standardizedArray)
+void StandardizeDataByIndex(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIdsArray, const Float32Array& muArray,
+                            const Float32Array& sigArray, Float32Array& standardizedArray)
 {
   auto& data = dataArray.getDataStoreRef();
   auto& standardized = standardizedArray.getDataStoreRef();
