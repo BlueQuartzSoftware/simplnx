@@ -54,15 +54,15 @@ IParameter::AcceptedTypes ImportCSVDataParameter::acceptedTypes() const
 // -----------------------------------------------------------------------------
 nlohmann::json ImportCSVDataParameter::toJson(const std::any& value) const
 {
-  const auto& CSVWizardData = GetAnyRef<ValueType>(value);
-  nlohmann::json json = CSVWizardData.writeJson();
+  const auto& CSVImporterData = GetAnyRef<ValueType>(value);
+  nlohmann::json json = CSVImporterData.writeJson();
   return json;
 }
 
 // -----------------------------------------------------------------------------
 Result<std::any> ImportCSVDataParameter::fromJson(const nlohmann::json& json) const
 {
-  return {ConvertResultTo<std::any>(CSVWizardData::ReadJson(json))};
+  return {ConvertResultTo<std::any>(CSVImporterData::ReadJson(json))};
 }
 
 // -----------------------------------------------------------------------------
@@ -80,7 +80,7 @@ std::any ImportCSVDataParameter::defaultValue() const
 // -----------------------------------------------------------------------------
 Result<> ImportCSVDataParameter::validate(const std::any& value) const
 {
-  [[maybe_unused]] auto data = std::any_cast<CSVWizardData>(value);
+  [[maybe_unused]] auto data = std::any_cast<CSVImporterData>(value);
   return {};
 }
 } // namespace complex

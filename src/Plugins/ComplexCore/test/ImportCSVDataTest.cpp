@@ -69,18 +69,18 @@ Arguments createArguments(const std::string& arrayName, DataType dataType, bool 
 {
   Arguments args;
 
-  CSVWizardData data;
+  CSVImporterData data;
   data.inputFilePath = k_TestInput.string();
   data.customHeaders = {arrayName};
   data.dataTypes = {dataType};
   data.startImportRow = 2;
   data.commaAsDelimiter = true;
   data.headersLine = 1;
-  data.headerMode = CSVWizardData::HeaderMode::LINE;
+  data.headerMode = CSVImporterData::HeaderMode::LINE;
   data.tupleDims = {static_cast<size_t>(values.size())};
   data.skippedArrayMask = {skip};
 
-  args.insertOrAssign(ImportCSVDataFilter::k_WizardData_Key, std::make_any<CSVWizardData>(data));
+  args.insertOrAssign(ImportCSVDataFilter::k_CSVImporterData_Key, std::make_any<CSVImporterData>(data));
   args.insertOrAssign(ImportCSVDataFilter::k_UseExistingGroup_Key, std::make_any<bool>(false));
   args.insertOrAssign(ImportCSVDataFilter::k_CreatedDataGroup_Key, std::make_any<DataPath>(DataPath({newGroupName})));
   args.insertOrAssign(ImportCSVDataFilter::k_SelectedDataGroup_Key, std::make_any<DataPath>(DataPath({dummyGroupName})));

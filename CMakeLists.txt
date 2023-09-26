@@ -431,7 +431,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.hpp
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.hpp
+  ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVImporterData.hpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
@@ -630,7 +630,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.cpp
+  ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVImporterData.cpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.cpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp

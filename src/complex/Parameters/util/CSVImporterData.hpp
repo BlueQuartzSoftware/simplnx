@@ -42,7 +42,7 @@
 
 namespace complex
 {
-struct COMPLEX_EXPORT CSVWizardData
+struct COMPLEX_EXPORT CSVImporterData
 {
 public:
   enum class HeaderMode
@@ -53,7 +53,7 @@ public:
 
   // Json Reader and Writer
   nlohmann::json writeJson() const;
-  static Result<CSVWizardData> ReadJson(const nlohmann::json& json);
+  static Result<CSVImporterData> ReadJson(const nlohmann::json& json);
 
   std::string inputFilePath;
   std::vector<std::string> customHeaders;

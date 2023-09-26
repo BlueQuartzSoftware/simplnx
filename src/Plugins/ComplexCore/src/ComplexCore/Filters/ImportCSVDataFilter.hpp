@@ -13,7 +13,7 @@ namespace complex
 /**
  * @class ImportCSVDataFilter
  * @brief This filter reads CSV data from any text-based file and imports the data into complex-style arrays.
- * The user uses the filter's wizard to specify which file to import, how the data is formatted, what to call
+ * The user uses the parameter user interface to specify which file to import, how the data is formatted, what to call
  * each array, and what type each array should be.
  *
  * Note:* This filter is intended to read data that is column-oriented, such that each created complex array
@@ -34,7 +34,7 @@ public:
   ImportCSVDataFilter& operator=(ImportCSVDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_WizardData_Key = "wizard_data";
+  static inline constexpr StringLiteral k_CSVImporterData_Key = "csv_importer_data";
   static inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
   static inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_data_group";
   static inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group";

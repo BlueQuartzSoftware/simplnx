@@ -32,7 +32,7 @@
 
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
-#include "complex/Parameters/util/CSVWizardData.hpp"
+#include "complex/Parameters/util/CSVImporterData.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -40,7 +40,7 @@ namespace complex
 class COMPLEX_EXPORT ImportCSVDataParameter : public ValueParameter
 {
 public:
-  using ValueType = CSVWizardData;
+  using ValueType = CSVImporterData;
 
   ImportCSVDataParameter() = delete;
   ImportCSVDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
