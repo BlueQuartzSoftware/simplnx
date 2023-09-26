@@ -23,6 +23,40 @@ constexpr StringLiteral k_PipelineNameKey = "name";
 constexpr StringLiteral k_PipelineItemsKey = "pipeline";
 constexpr StringLiteral k_PipelineVersionKey = "version";
 constexpr uint64 k_PipelineVersion = 1;
+
+constexpr StringLiteral k_SIMPLPipelineBuilderKey = "PipelineBuilder";
+constexpr StringLiteral k_SIMPLPipelineNameKey = "Name";
+constexpr StringLiteral k_SIMPLNumFilterseKey = "Number_Filters";
+
+std::string GenerateSIMPLPipelineStringIndex(int32 index, int32 maxIndex)
+{
+  std::string numStr = fmt::format("{}", index);
+
+  if(maxIndex >= 10)
+  {
+    int32 mag = 0;
+    int32 max = maxIndex;
+    while(max > 0)
+    {
+      mag++;
+      max = max / 10;
+    }
+    std::string formatString = fmt::format("{{:0{}}}", mag);
+    numStr = fmt::format(fmt::runtime(formatString), index);
+  }
+  return numStr;
+}
+
+nlohmann::json CreatePipelineJson(std::string_view name, nlohmann::json filterArray)
+{
+  nlohmann::json jsonObject;
+  jsonObject[k_PipelineNameKey] = name;
+  jsonObject[k_PipelineVersionKey] = k_PipelineVersion;
+
+  jsonObject[k_PipelineItemsKey] = std::move(filterArray);
+
+  return jsonObject;
+}
 } // namespace
 
 Pipeline::Pipeline(const std::string& name, FilterList* filterList)
@@ -698,19 +732,13 @@ Pipeline::const_iterator Pipeline::end() const
 
 nlohmann::json Pipeline::toJsonImpl() const
 {
-  nlohmann::json jsonObject;
-  jsonObject[k_PipelineNameKey] = m_Name;
-  jsonObject[k_PipelineVersionKey] = k_PipelineVersion;
-
   auto jsonArray = nlohmann::json::array();
   for(const auto& item : m_Collection)
   {
     jsonArray.push_back(item->toJson());
   }
 
-  jsonObject[k_PipelineItemsKey] = std::move(jsonArray);
-
-  return jsonObject;
+  return CreatePipelineJson(m_Name, std::move(jsonArray));
 }
 
 Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json)
@@ -791,6 +819,87 @@ Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, FilterLis
 void Pipeline::onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg)
 {
   notify(std::make_shared<PipelineNodeMessage>(node, msg));
+}
+
+Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json, FilterList* filterList)
+{
+  if(!json.contains(k_SIMPLPipelineBuilderKey))
+  {
+    return MakeErrorResult<Pipeline>(-1, fmt::format("SIMPL Pipeline does not contain key '{}'", k_SIMPLPipelineBuilderKey.view()));
+  }
+
+  const auto& pipelineBuilderObject = json[k_SIMPLPipelineBuilderKey];
+
+  if(!pipelineBuilderObject.contains(k_SIMPLPipelineNameKey))
+  {
+    return MakeErrorResult<Pipeline>(-2, fmt::format("SIMPL Pipeline does not contain key '{}' under PipelineBuilder", k_SIMPLPipelineNameKey.view()));
+  }
+
+  auto name = pipelineBuilderObject[k_SIMPLPipelineNameKey].get<std::string>();
+
+  if(!pipelineBuilderObject.contains(k_SIMPLNumFilterseKey))
+  {
+    return MakeErrorResult<Pipeline>(-3, fmt::format("SIMPL Pipeline does not contain key '{}' under PipelineBuilder", k_SIMPLNumFilterseKey.view()));
+  }
+
+  auto numFilters = pipelineBuilderObject[k_SIMPLNumFilterseKey].get<int32>();
+
+  Pipeline pipeline(name, filterList);
+  for(int32 i = 0; i < numFilters; i++)
+  {
+    std::string filterKey = GenerateSIMPLPipelineStringIndex(i, numFilters - 1);
+
+    if(!json.contains(filterKey))
+    {
+      return MakeErrorResult<Pipeline>(-4, fmt::format("SIMPL Pipeline does not contain filter key '{}'", filterKey));
+    }
+
+    const auto& filterJson = json[filterKey];
+    auto filterResult = PipelineFilter::FromSIMPLJson(filterJson, *filterList);
+
+    if(filterResult.invalid())
+    {
+      return ConvertInvalidResult<Pipeline>(std::move(filterResult));
+    }
+
+    pipeline.push_back(std::move(filterResult.value()));
+  }
+
+  return {std::move(pipeline)};
+}
+
+Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json)
+{
+  auto* app = Application::Instance();
+  return FromSIMPLJson(json, app->getFilterList());
+}
+
+Result<Pipeline> Pipeline::FromSIMPLFile(const std::filesystem::path& path, FilterList* filterList)
+{
+  std::ifstream file(path);
+
+  if(!file.is_open())
+  {
+    return MakeErrorResult<Pipeline>(-1, fmt::format("Failed to open file '{}'", path.string()));
+  }
+
+  nlohmann::json pipelineJson;
+
+  try
+  {
+    pipelineJson = nlohmann::json::parse(file);
+  } catch(const nlohmann::json::parse_error& exception)
+  {
+    return MakeErrorResult<Pipeline>(-2, exception.what());
+  }
+
+  return FromSIMPLJson(pipelineJson, filterList);
+}
+
+Result<Pipeline> Pipeline::FromSIMPLFile(const std::filesystem::path& path)
+{
+  auto* app = Application::Instance();
+  return FromSIMPLFile(path, app->getFilterList());
 }
 
 uint64 Pipeline::checkMemoryRequired()

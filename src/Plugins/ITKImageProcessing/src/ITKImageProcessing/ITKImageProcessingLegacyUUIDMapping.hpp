@@ -1,5 +1,9 @@
 #pragma once
 
+#include "complex/Plugin/AbstractPlugin.hpp"
+
+#include <nlohmann/json.hpp>
+
 #include <map>
 #include <string>
 
@@ -74,7 +78,7 @@
 
 namespace complex
 {
-  static const std::map<complex::Uuid, complex::Uuid> k_SIMPL_to_ITKImageProcessing
+  static const AbstractPlugin::SIMPLMapType k_SIMPL_to_ITKImageProcessing
   {
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID}, // dream3d-class-name
     {complex::Uuid::FromString("53df5340-f632-598f-8a9b-802296b3a95c").value(), complex::FilterTraits<ITKDiscreteGaussianImage>::uuid}, // ITKDiscreteGaussianImage

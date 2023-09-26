@@ -27,6 +27,13 @@ public:
   static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
 
   /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief Returns the name of the filter.
    * @return
    */

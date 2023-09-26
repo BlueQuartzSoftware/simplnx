@@ -18,6 +18,40 @@ constexpr StringLiteral k_FilterKey = "filter";
 constexpr StringLiteral k_FilterNameKey = "name";
 constexpr StringLiteral k_FilterUuidKey = "uuid";
 constexpr StringLiteral k_FilterCommentsKey = "comments";
+
+constexpr StringLiteral k_SIMPLFilterUuidKey = "Filter_Uuid";
+
+nlohmann::json CreateFilterJson(std::string_view uuid, std::string_view name, nlohmann::json argsArray, std::string_view comments)
+{
+  nlohmann::json json;
+
+  auto filterObjectJson = nlohmann::json::object();
+
+  filterObjectJson[k_FilterUuidKey] = uuid;
+  filterObjectJson[k_FilterNameKey] = name;
+
+  nlohmann::json argsJsonArray = std::move(argsArray);
+
+  json[k_FilterKey] = std::move(filterObjectJson);
+  json[k_ArgsKey] = std::move(argsJsonArray);
+  json[k_FilterCommentsKey] = comments;
+
+  return json;
+}
+
+std::optional<AbstractPlugin::SIMPLData> FindComplexConversionFromSIMPL(const Uuid& uuid, const FilterList& filterList)
+{
+  auto plugins = filterList.getLoadedPlugins();
+  for(const auto* plugin : plugins)
+  {
+    auto filterMap = plugin->getSimplToComplexMap();
+    if(filterMap.count(uuid) > 0)
+    {
+      return filterMap.at(uuid);
+    }
+  }
+  return {};
+}
 } // namespace
 
 std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handle, const Arguments& args, FilterList* filterList)
@@ -429,20 +463,7 @@ void PipelineFilter::notifyRenamedPaths(const RenamedPaths& renamedPathPairs)
 
 nlohmann::json PipelineFilter::toJsonImpl() const
 {
-  nlohmann::json json;
-
-  auto filterObjectJson = nlohmann::json::object();
-
-  filterObjectJson[k_FilterUuidKey] = m_Filter->uuid().str();
-  filterObjectJson[k_FilterNameKey] = m_Filter->name();
-
-  nlohmann::json argsJsonArray = m_Filter->toJson(m_Arguments);
-
-  json[k_FilterKey] = std::move(filterObjectJson);
-  json[k_ArgsKey] = std::move(argsJsonArray);
-  json[k_FilterCommentsKey] = m_Comments;
-
-  return json;
+  return CreateFilterJson(m_Filter->uuid().str(), m_Filter->name(), m_Filter->toJson(m_Arguments), m_Comments);
 }
 
 Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann::json& json)
@@ -551,4 +572,45 @@ void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
       }
     }
   }
+}
+
+Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nlohmann::json& json, const FilterList& filterList)
+{
+  if(!json.contains(k_SIMPLFilterUuidKey))
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-1, fmt::format("SIMPL filter does not contain key '{}'", k_SIMPLFilterUuidKey.view()));
+  }
+
+  auto uuidString = json[k_SIMPLFilterUuidKey].get<std::string>();
+  std::optional<Uuid> filterUuid = Uuid::FromString(uuidString);
+
+  if(!filterUuid.has_value())
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-2, fmt::format("Unable to parse uuid '{}'", uuidString));
+  }
+
+  std::optional<AbstractPlugin::SIMPLData> simplData = FindComplexConversionFromSIMPL(*filterUuid, filterList);
+
+  if(!simplData.has_value())
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, fmt::format("Unable to parse find conversion data for filter '{}'", uuidString));
+  }
+
+  IFilter::UniquePointer filter = filterList.createFilter(simplData->complexUuid);
+
+  if(!simplData->convertJson)
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("Conversion function for filter '{}' is null", uuidString));
+  }
+
+  Result<Arguments> argumentsResult = simplData->convertJson(json);
+
+  if(argumentsResult.invalid())
+  {
+    return ConvertInvalidResult<std::unique_ptr<PipelineFilter>>(std::move(argumentsResult));
+  }
+
+  auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter), std::move(argumentsResult.value()));
+
+  return {std::move(pipelineFilter)};
 }

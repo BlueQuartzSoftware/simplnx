@@ -294,8 +294,8 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
     return;
   }
 
-  std::map<Uuid, Uuid> simplToComplexUuids = plugin->getSimplToComplexMap();
-  for(auto const& [simplUuid, complexUuid] : simplToComplexUuids)
+  AbstractPlugin::SIMPLMapType simplToComplexUuids = plugin->getSimplToComplexMap();
+  for(auto const& [simplUuid, simplData] : simplToComplexUuids)
   {
     for(const auto& uuid : m_Simpl_Uuids)
     {
@@ -305,7 +305,7 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
       }
     }
     m_Simpl_Uuids.push_back(simplUuid);
-    m_Complex_Uuids.push_back(complexUuid);
+    m_Complex_Uuids.push_back(simplData.complexUuid);
   }
 
   if(m_Simpl_Uuids.size() != m_Complex_Uuids.size())

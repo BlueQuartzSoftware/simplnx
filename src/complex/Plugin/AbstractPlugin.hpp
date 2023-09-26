@@ -4,6 +4,7 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/complex_export.hpp"
 
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -32,6 +33,16 @@ public:
   using FilterContainerType = std::unordered_set<FilterHandle>;
   using IOManagerPointer = std::shared_ptr<IDataIOManager>;
   using IOManagersContainerType = std::vector<IOManagerPointer>;
+
+  struct COMPLEX_EXPORT SIMPLData
+  {
+    using ConversionFunction = std::function<Result<Arguments>(const nlohmann::json&)>;
+
+    Uuid complexUuid;
+    ConversionFunction convertJson;
+  };
+
+  using SIMPLMapType = std::map<Uuid, SIMPLData>;
 
   virtual ~AbstractPlugin();
 
@@ -100,9 +111,9 @@ public:
   /**
    * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
    * their complex counterpart
-   * @return std::map<complex::Uuid, complex::Uuid>
+   * @return SIMPLMapType
    */
-  virtual std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const = 0;
+  virtual SIMPLMapType getSimplToComplexMap() const = 0;
 
 protected:
   /**

@@ -10,6 +10,7 @@
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/SIMPLConversion.hpp"
 
 #include <stdexcept>
 
@@ -224,5 +225,40 @@ Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteral k_InitializationTypeKey = "InitializationType";
+constexpr StringLiteral k_InitializationValueKey = "InitializationValue";
+constexpr StringLiteral k_InitializationRangeKey = "InitializationRange";
+constexpr StringLiteral k_StartingIndexValueKey = "StartingIndexValue";
+constexpr StringLiteral k_NewArrayKey = "NewArray";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CreateDataArray::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CreateDataArray().getDefaultArguments();
+
+  args.insertOrAssign(k_AdvancedOptions_Key, false);
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumComps_Key));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_InitializationTypeKey, k_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitilizationValue_Key));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::RangeFilterParameterConverter>(args, json, SIMPL::k_InitializationRangeKey, k_Key));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter>(args, json, SIMPL::k_StartingIndexValueKey, k_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayKey, k_DataPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
