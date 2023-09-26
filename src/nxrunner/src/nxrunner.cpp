@@ -43,12 +43,14 @@ constexpr StringLiteral k_ExecuteParamLong = "--execute";
 constexpr StringLiteral k_PreflightParamLong = "--preflight";
 constexpr StringLiteral k_LogFileParamLong = "--logfile";
 constexpr StringLiteral k_ConvertParamLong = "--convert";
+constexpr StringLiteral k_ConvertOutputParamLong = "--convert-output";
 
 constexpr StringLiteral k_HelpParamShort = "-h";
 constexpr StringLiteral k_ExecuteParamShort = "-e";
 constexpr StringLiteral k_PreflightParamShort = "-p";
 constexpr StringLiteral k_LogFileParamShort = "-l";
 constexpr StringLiteral k_ConvertParamShort = "-c";
+constexpr StringLiteral k_ConvertOutputParamShort = "-co";
 
 void LoadApp()
 {
@@ -131,7 +133,8 @@ enum class ArgumentType
   Preflight,
   Help,
   Logfile,
-  Convert
+  Convert,
+  ConvertOutput
 };
 
 struct Argument
@@ -224,6 +227,11 @@ Result<CliArguments> ParseParameters(int argc, char* argv[])
     {
       std::string argStr = ParseArgument(argc, argv, index);
       args.emplace_back(ArgumentType::Convert, argStr);
+    }
+    else if(arg == k_ConvertOutputParamLong || arg == k_ConvertOutputParamShort)
+    {
+      std::string argStr = ParseArgument(argc, argv, index);
+      args.emplace_back(ArgumentType::ConvertOutput, argStr);
     }
     else
     {
@@ -325,7 +333,7 @@ Result<> PreflightPipeline(const Argument& arg)
   return PreflightPipeline(pipeline);
 }
 
-Result<> ConvertPipeline(const Argument& arg)
+Result<> ConvertPipeline(const Argument& arg, bool saveConverted = false)
 {
   std::string pipelinePath = arg.value;
   auto loadPipelineResult = Pipeline::FromSIMPLFile(pipelinePath);
@@ -340,6 +348,21 @@ Result<> ConvertPipeline(const Argument& arg)
   cliOut.endline();
 
   Pipeline pipeline = std::move(loadPipelineResult.value());
+  if(saveConverted)
+  {
+    std::filesystem::path path(pipelinePath);
+    auto extension = path.extension().string();
+    pipelinePath.erase(pipelinePath.size() - extension.size());
+    pipelinePath += Pipeline::k_Extension;
+
+    std::fstream fout(pipelinePath, std::ios_base::out | std::ios_base::trunc);
+    fout << pipeline.toJson().dump(4);
+    fout.flush();
+
+    cliOut << fmt::format("Saved converted pipeline at path: '{}'\n", pipelinePath);
+    cliOut.endline();
+  }
+
   cliOut << pipeline.toJson().dump(4);
   cliOut.endline();
   return ConvertResult(std::move(loadPipelineResult));
@@ -382,6 +405,14 @@ void DisplayConvertHelp()
   cliOut.endline();
 }
 
+void DisplayConvertOutputHelp()
+{
+  cliOut << "To convert and save a target SIMPL pipeline file:\n\t";
+  cliOut << fmt::format("\t {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertOutputParamLong, k_ConvertOutputParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "\t Convert the SIMPL pipeline at the target filepath and saves the converted version with the updated extension. Optionally, create a log file at the specified path.";
+  cliOut.endline();
+}
+
 void DisplayLogfileHelp()
 {
   cliOut << "To export output a log file:\n\t";
@@ -408,6 +439,10 @@ Result<> DisplayHelpMenu(const std::vector<Argument>& arguments)
   }
   case ArgumentType::Convert: {
     DisplayConvertHelp();
+    return {};
+  }
+  case ArgumentType::ConvertOutput: {
+    DisplayConvertOutputHelp();
     return {};
   }
   case ArgumentType::Logfile: {
@@ -486,6 +521,9 @@ int main(int argc, char* argv[])
       break;
     }
     case ArgumentType::Convert: {
+      [[fallthrough]];
+    }
+    case ArgumentType::ConvertOutput: {
       [[fallthrough]];
     }
     case ArgumentType::Execute: {
@@ -584,6 +622,11 @@ int main(int argc, char* argv[])
   }
   case ArgumentType::Convert: {
     auto result = ConvertPipeline(arguments[0]);
+    results.push_back(result);
+    break;
+  }
+  case ArgumentType::ConvertOutput: {
+    auto result = ConvertPipeline(arguments[0], true);
     results.push_back(result);
     break;
   }

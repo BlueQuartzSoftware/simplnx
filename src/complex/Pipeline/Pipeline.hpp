@@ -32,6 +32,8 @@ public:
   using iterator = collection_type::iterator;
   using const_iterator = collection_type::const_iterator;
 
+  static constexpr StringLiteral k_Extension = ".d3dpipeline";
+
   /**
    * @brief Constructs a Pipeline from json.
    * @param json

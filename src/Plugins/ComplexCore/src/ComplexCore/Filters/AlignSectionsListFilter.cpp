@@ -10,6 +10,9 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -113,3 +116,52 @@ Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, cons
   return AlignSectionsList(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputFileKey = "InputFile";
+constexpr StringLiteral k_DREAM3DAlignmentFileKey = "DREAM3DAlignmentFile";
+constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+} // namespace SIMPL
+
+namespace SIMPLConversionCustom
+{
+struct AttributeMatrixSelectionFilterParameterConverter
+{
+  using ParameterType = AttributeMatrixSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto dataContainerNameResult = SIMPLConversion::ReadDataContainerName(json, "AttributeMatrixSelectionFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value())});
+
+    return {std::move(dataPath)};
+  }
+};
+}
+} // namespace
+
+Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = AlignSectionsListFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DREAM3DAlignmentFileKey, k_DREAM3DAlignmentFile_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversionCustom::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_SelectedImageGeometry_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}
+

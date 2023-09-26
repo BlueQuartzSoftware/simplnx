@@ -34,6 +34,13 @@ public:
   static inline constexpr StringLiteral k_InvalidColorValue_Key = "invalid_color_value";
 
   /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief Returns the name of the filter.
    * @return
    */

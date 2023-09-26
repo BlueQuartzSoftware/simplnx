@@ -9,6 +9,9 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/FilterUtilities.hpp"
 
 namespace complex
@@ -234,5 +237,41 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_XMinKey = "XMin";
+constexpr StringLiteral k_YMinKey = "YMin";
+constexpr StringLiteral k_ZMinKey = "ZMin";
+constexpr StringLiteral k_XMaxKey = "XMax";
+constexpr StringLiteral k_YMaxKey = "YMax";
+constexpr StringLiteral k_ZMaxKey = "ZMax";
+constexpr StringLiteral k_CroppedDataContainerNameKey = "CroppedDataContainerName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CropVertexGeometry::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CropVertexGeometry().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  // Cannot convert 6 DataArray inputs into 2 DataArray inputs
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter>(args, json, SIMPL::k_XMinKey, "@COMPLEX_PARAMETER_KEY@"));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter>(args, json, SIMPL::k_YMinKey, "@COMPLEX_PARAMETER_KEY@"));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter>(args, json, SIMPL::k_ZMinKey, "@COMPLEX_PARAMETER_KEY@"));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter>(args, json, SIMPL::k_XMaxKey, "@COMPLEX_PARAMETER_KEY@"));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter>(args, json, SIMPL::k_YMaxKey, "@COMPLEX_PARAMETER_KEY@"));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter>(args, json, SIMPL::k_ZMaxKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_VertexGeom_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_CroppedDataContainerNameKey, k_CroppedGeom_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

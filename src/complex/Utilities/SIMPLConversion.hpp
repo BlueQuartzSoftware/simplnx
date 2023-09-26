@@ -10,10 +10,14 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataTypeParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Parameters/GenerateColorTableParameter.hpp"
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
@@ -25,6 +29,7 @@
 
 namespace complex::SIMPLConversion
 {
+//------------------------------------------------------------------------------
 template <class ConverterT>
 Result<> ConvertParameter(Arguments& args, const nlohmann::json& json, std::string_view simplKey, const std::string& complexKey)
 {
@@ -51,7 +56,9 @@ Result<> ConvertParameter(Arguments& args, const nlohmann::json& json, std::stri
 inline constexpr StringLiteral k_DataContainerNameKey = "Data Container Name";
 inline constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
 inline constexpr StringLiteral k_DataArrayNameKey = "Data Array Name";
+inline constexpr StringLiteral k_LinkedDataArrayNameKey = "OutputArrayName";
 
+//------------------------------------------------------------------------------
 inline Result<std::string> ReadDataContainerName(const nlohmann::json& json, std::string_view parameterName)
 {
   if(!json.contains(k_DataContainerNameKey))
@@ -71,6 +78,7 @@ inline Result<std::string> ReadDataContainerName(const nlohmann::json& json, std
   return {std::move(dataContainerName)};
 }
 
+//------------------------------------------------------------------------------
 inline Result<std::string> ReadAttributeMatrixName(const nlohmann::json& json, std::string_view parameterName)
 {
   if(!json.contains(k_AttributeMatrixNameKey))
@@ -90,6 +98,7 @@ inline Result<std::string> ReadAttributeMatrixName(const nlohmann::json& json, s
   return {std::move(attributeMatrixName)};
 }
 
+//------------------------------------------------------------------------------
 inline Result<std::string> ReadDataArrayName(const nlohmann::json& json, std::string_view parameterName)
 {
   if(!json.contains(k_DataArrayNameKey))
@@ -109,6 +118,7 @@ inline Result<std::string> ReadDataArrayName(const nlohmann::json& json, std::st
   return {std::move(dataArrayName)};
 }
 
+//------------------------------------------------------------------------------
 inline Result<ChoicesParameter::ValueType> ConvertChoicesParameter(const nlohmann::json& json, std::string_view parameterName)
 {
   if(!json.is_number_integer())
@@ -125,6 +135,76 @@ inline Result<ChoicesParameter::ValueType> ConvertChoicesParameter(const nlohman
 
   return {static_cast<ChoicesParameter::ValueType>(value)};
 }
+
+//------------------------------------------------------------------------------
+inline Result<FileSystemPathParameter::ValueType> ReadInputFilePath(const nlohmann::json& json, std::string_view parameterName)
+{
+  using ParameterType = FileSystemPathParameter;
+
+  if(!json.is_string())
+  {
+    return MakeErrorResult<ParameterType::ValueType>(-1, fmt::format("{} json '{}' is not a string", parameterName, json.dump()));
+  }
+
+  auto value = json.get<std::string>();
+
+  return {ParameterType::ValueType(value)};
+}
+
+struct NumericTypeParameterConverter
+{
+  using ParameterType = NumericTypeParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("ScalarTypeParameter json '{}' is not an integer", json.dump()));
+    }
+
+    auto value = json.get<int32>();
+
+    switch(value)
+    {
+    case 0: {
+      return {NumericType::int8};
+    }
+    case 1: {
+      return {NumericType::uint8};
+    }
+    case 2: {
+      return {NumericType::int16};
+    }
+    case 3: {
+      return {NumericType::uint16};
+    }
+    case 4: {
+      return {NumericType::int32};
+    }
+    case 5: {
+      return {NumericType::uint32};
+    }
+    case 6: {
+      return {NumericType::int64};
+    }
+    case 7: {
+      return {NumericType::uint64};
+    }
+    case 8: {
+      return {NumericType::float32};
+    }
+    case 9: {
+      return {NumericType::float64};
+    }
+    case 10: {
+      return {NumericType::uint64};
+    }
+    }
+
+    return MakeErrorResult<ValueType>(-2, fmt::format("Unknown NumericTypeParameter value '{}'", value));
+  }
+};
 
 struct ScalarTypeParameterConverter
 {
@@ -228,7 +308,7 @@ struct ScalarTypeParameterToNumericTypeConverter
   }
 };
 
-template <class T>
+template<typename T>
 struct IntFilterParameterConverter
 {
   using ParameterType = NumberParameter<T>;
@@ -274,6 +354,8 @@ struct FloatFilterParameterConverter
   }
 };
 
+using DoubleFilterParameterConverter = FloatingPoointFilterParameterConverter<float64>;
+
 struct BooleanFilterParameterConverter
 {
   using ParameterType = BoolParameter;
@@ -289,6 +371,24 @@ struct BooleanFilterParameterConverter
     auto value = static_cast<bool>(json.get<uint8>());
 
     return {std::move(value)};
+  }
+};
+
+struct LinkedBooleanFilterParameterConverter
+{
+  using ParameterType = BoolParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("LinkedBooleanFilterParameter json '{}' is not an integer", json.dump()));
+    }
+
+    auto value = static_cast<bool>(json.get<int32>());
+
+    return {value};
   }
 };
 
@@ -390,6 +490,49 @@ struct RangeFilterParameterConverter
   }
 };
 
+template <typename T>
+struct Vec3FilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    static const std::string x = "x";
+    static const std::string y = "y";
+    static const std::string z = "z";
+
+    if(!json.is_object())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("IntVec3FilterParameter json '{}' is not an object", json.dump()));
+    }
+
+    if(!json.contains(x))
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("IntVec3FilterParameter json '{}' does not contain an X value", json.dump()));
+    }
+    if(!json.contains(y))
+    {
+      return MakeErrorResult<ValueType>(-3, fmt::format("IntVec3FilterParameter json '{}' does not contain a Y value", json.dump()));
+    }
+    if(!json.contains(z))
+    {
+      return MakeErrorResult<ValueType>(-4, fmt::format("IntVec3FilterParameter json '{}' does not contain an Z value", json.dump()));
+    }
+
+    std::vector<T> value(3);
+    value[0] = json[x].get<T>();
+    value[1] = json[y].get<T>();
+    value[2] = json[z].get<T>();
+
+    return {std::move(value)};
+  }
+};
+
+using IntVec3FilterParameterConverter = Vec3FilterParameterConverter<int32>;
+using UInt64Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint64>;
+using FloatVec3FilterParameterConverter = Vec3FilterParameterConverter<float32>;
+
 struct DataArrayCreationFilterParameterConverter
 {
   using ParameterType = ArrayCreationParameter;
@@ -463,6 +606,37 @@ struct DataArrayCreationToDataObjectNameFilterParameterConverter
   }
 };
 
+struct DataArraySelectionFilterParameterConverter
+{
+  using ParameterType = ArraySelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArraySelectionFilterParameter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+
+    auto dataArrayNameResult = ReadDataArrayName(json, "DataArraySelectionFilterParameter");
+    if(dataArrayNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
+
+    return {std::move(dataPath)};
+  }
+};
+
 struct DataContainerCreationFilterParameterConverter
 {
   using ParameterType = DataGroupCreationParameter;
@@ -479,6 +653,85 @@ struct DataContainerCreationFilterParameterConverter
     DataPath dataPath({std::move(dataContainerNameResult.value())});
 
     return {std::move(dataPath)};
+  }
+};
+
+struct LinkedPathCreationFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_string())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("LinkedPathCreationFilterParameterConverter json '{}' is not a string", json.dump()));
+    }
+    
+    DataPath dataPath({json.get<std::string>()});
+
+    return {std::move(dataPath)};
+  }
+};
+
+struct DataContainerSelectionFilterParameterConverter
+{
+  using ParameterType = DataGroupSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json, "DataContainerSelectionFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value())});
+
+    return {std::move(dataPath)};
+  }
+};
+
+struct MultiDataArraySelectionFilterParameterConverter
+{
+  using ParameterType = MultiArraySelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("MultiDataArraySelectionParameter json '{}' is not an array", json.dump()));
+    }
+
+    std::vector<DataPath> dataPaths;
+
+    for(auto& iter : json)
+    {
+      auto dataContainerNameResult = ReadDataContainerName(iter, "DataContainerSelectionFilterParameter");
+      if(dataContainerNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+      }
+
+      auto attributeMatrixNameResult = ReadAttributeMatrixName(iter, "DataArrayCreationFilterParameter");
+      if(attributeMatrixNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+      }
+
+      auto dataArrayNameResult = ReadDataArrayName(iter, "DataArrayCreationFilterParameter");
+      if(dataArrayNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+      }
+
+      DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
+      dataPaths.push_back(std::move(dataPath));
+    }
+
+    return {std::move(dataPaths)};
   }
 };
 
@@ -647,4 +900,56 @@ struct DataArraySelectionToGeometrySelectionFilterParameterConverter
   }
 };
 
+struct InputFileFilterParameterConverter
+{
+  using ParameterType = FileSystemPathParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto filePathReult = ReadInputFilePath(json, "InputFileFilterParameter");
+    if(filePathReult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(filePathReult));
+    }
+
+    return {filePathReult.value()};
+  }
+};
+
+struct OutputFileFilterParameterConverter
+{
+  using ParameterType = FileSystemPathParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto filePathReult = ReadInputFilePath(json, "OutputFileFilterParameter");
+    if(filePathReult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(filePathReult));
+    }
+
+    return {filePathReult.value()};
+  }
+};
+
+#if 0
+struct GenerateColorTableFilterParameterConverter
+{
+  using ParameterType = GenerateColorTableParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto filePathReult = ReadInputFilePath(json, "GenerateColorTableParameter");
+    if(filePathReult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(filePathReult));
+    }
+
+    return {filePathReult.value()};
+  }
+};
+#endif
 } // namespace complex::SIMPLConversion

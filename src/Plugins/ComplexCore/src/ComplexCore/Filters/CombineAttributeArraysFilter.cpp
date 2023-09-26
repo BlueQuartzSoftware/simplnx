@@ -8,6 +8,9 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
@@ -153,3 +156,31 @@ Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure,
   return CombineAttributeArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_NormalizeDataKey = "NormalizeData";
+constexpr StringLiteral k_MoveValuesKey = "MoveValues";
+constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteral k_StackedDataArrayNameKey = "StackedDataArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CombineAttributeArraysFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CombineAttributeArraysFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_NormalizeDataKey, k_NormalizeData_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_MoveValuesKey, k_MoveValues_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_StackedDataArrayNameKey, k_StackedDataArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}
+

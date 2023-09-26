@@ -127,31 +127,31 @@ namespace complex
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID, {}}}, // dream3d-class-name
     {complex::Uuid::FromString("886f8b46-51b6-5682-a289-6febd10b7ef0").value(), {complex::FilterTraits<AlignSectionsFeatureCentroidFilter>::uuid, {}}}, // AlignSectionsFeatureCentroid
     {complex::Uuid::FromString("ce1ee404-0336-536c-8aad-f9641c9458be").value(), {complex::FilterTraits<AlignGeometries>::uuid, {}}}, // AlignGeometries
-    {complex::Uuid::FromString("accf8f6c-0551-5da3-9a3d-e4be41c3985c").value(), {complex::FilterTraits<AlignSectionsListFilter>::uuid, {}}}, // AlignSectionsListFilter
+    {complex::Uuid::FromString("accf8f6c-0551-5da3-9a3d-e4be41c3985c").value(), {complex::FilterTraits<AlignSectionsListFilter>::uuid, &AlignSectionsListFilter::FromSIMPLJson}}, // AlignSectionsListFilter
     {complex::Uuid::FromString("7ff0ebb3-7b0d-5ff7-b9d8-5147031aca10").value(), {complex::FilterTraits<ArrayCalculatorFilter>::uuid, {}}}, // ArrayCalculatorFilter
     {complex::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), {complex::FilterTraits<ApplyTransformationToGeometryFilter>::uuid, {}}}, // ApplyTransformationToGeometry
     {complex::Uuid::FromString("fab669ad-66c6-5a39-bdb7-fc47b94311ed").value(), {complex::FilterTraits<ApproximatePointCloudHull>::uuid, {}}}, // ApproximatePointCloudHull
     {complex::Uuid::FromString("289f0d8c-29ab-5fbc-91bd-08aac01e37c5").value(), {complex::FilterTraits<CalculateArrayHistogramFilter>::uuid, {}}}, // CalculateArrayHistogram
     {complex::Uuid::FromString("656f144c-a120-5c3b-bee5-06deab438588").value(), {complex::FilterTraits<CalculateFeatureSizesFilter>::uuid, {}}}, // FindSizes
-    {complex::Uuid::FromString("a9900cc3-169e-5a1b-bcf4-7569e1950d41").value(), {complex::FilterTraits<CalculateTriangleAreasFilter>::uuid, {}}}, // TriangleAreaFilter
-    {complex::Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value(), {complex::FilterTraits<ChangeAngleRepresentation>::uuid, {}}}, // ChangeAngleRepresentation
-    {complex::Uuid::FromString("a6b50fb0-eb7c-5d9b-9691-825d6a4fe772").value(), {complex::FilterTraits<CombineAttributeArraysFilter>::uuid, {}}}, // CombineAttributeArrays
-    {complex::Uuid::FromString("47cafe63-83cc-5826-9521-4fb5bea684ef").value(), {complex::FilterTraits<ConditionalSetValue>::uuid, {}}}, // ConditionalSetValue
-    {complex::Uuid::FromString("eb5a89c4-4e71-59b1-9719-d10a652d961e").value(), {complex::FilterTraits<ConvertColorToGrayScaleFilter>::uuid, {}}}, // ConvertColorToGrayScale
-    {complex::Uuid::FromString("f4ba5fa4-bb5c-5dd1-9429-0dd86d0ecb37").value(), {complex::FilterTraits<ConvertDataFilter>::uuid, {}}}, // ConvertData
-    {complex::Uuid::FromString("a37f2e24-7400-5005-b9a7-b2224570cbe9").value(), {complex::FilterTraits<ConditionalSetValue>::uuid, {}}}, // ReplaceValueInArray
-    {complex::Uuid::FromString("99836b75-144b-5126-b261-b411133b5e8a").value(), {complex::FilterTraits<CopyFeatureArrayToElementArray>::uuid, {}}}, // CopyFeatureArrayToElementArray
+    {complex::Uuid::FromString("a9900cc3-169e-5a1b-bcf4-7569e1950d41").value(), {complex::FilterTraits<CalculateTriangleAreasFilter>::uuid, &CalculateTriangleAreasFilter::FromSIMPLJson}}, // TriangleAreaFilter
+    {complex::Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value(), {complex::FilterTraits<ChangeAngleRepresentation>::uuid, &ChangeAngleRepresentation::FromSIMPLJson}}, // ChangeAngleRepresentation
+    {complex::Uuid::FromString("a6b50fb0-eb7c-5d9b-9691-825d6a4fe772").value(), {complex::FilterTraits<CombineAttributeArraysFilter>::uuid, &CombineAttributeArraysFilter::FromSIMPLJson}}, // CombineAttributeArrays
+    {complex::Uuid::FromString("47cafe63-83cc-5826-9521-4fb5bea684ef").value(), {complex::FilterTraits<ConditionalSetValue>::uuid, &ConditionalSetValue::FromSIMPLJson}}, // ConditionalSetValue
+    {complex::Uuid::FromString("eb5a89c4-4e71-59b1-9719-d10a652d961e").value(), {complex::FilterTraits<ConvertColorToGrayScaleFilter>::uuid, &ConvertColorToGrayScaleFilter::FromSIMPLJson}}, // ConvertColorToGrayScale
+    {complex::Uuid::FromString("f4ba5fa4-bb5c-5dd1-9429-0dd86d0ecb37").value(), {complex::FilterTraits<ConvertDataFilter>::uuid, &ConvertDataFilter::FromSIMPLJson}}, // ConvertData
+    {complex::Uuid::FromString("a37f2e24-7400-5005-b9a7-b2224570cbe9").value(), {complex::FilterTraits<ConditionalSetValue>::uuid, &ConditionalSetValue::FromSIMPLJson}}, // ReplaceValueInArray
+    {complex::Uuid::FromString("99836b75-144b-5126-b261-b411133b5e8a").value(), {complex::FilterTraits<CopyFeatureArrayToElementArray>::uuid, &CopyFeatureArrayToElementArray::FromSIMPLJson}}, // CopyFeatureArrayToElementArray
     {complex::Uuid::FromString("93375ef0-7367-5372-addc-baa019b1b341").value(), {complex::FilterTraits<CreateAttributeMatrixFilter>::uuid, &CreateAttributeMatrixFilter::FromSIMPLJson}}, // CreateAttributeMatrix
     {complex::Uuid::FromString("77f392fb-c1eb-57da-a1b1-e7acf9239fb8").value(), {complex::FilterTraits<CreateDataArray>::uuid, &CreateDataArray::FromSIMPLJson}}, // CreateDataArray
     {complex::Uuid::FromString("816fbe6b-7c38-581b-b149-3f839fb65b93").value(), {complex::FilterTraits<CreateDataGroup>::uuid, &CreateDataGroup::FromSIMPLJson}}, // CreateDataContainer
     {complex::Uuid::FromString("94438019-21bb-5b61-a7c3-66974b9a34dc").value(), {complex::FilterTraits<CreateFeatureArrayFromElementArray>::uuid, {}}}, // CreateFeatureArrayFromElementArray
-    {complex::Uuid::FromString("f2132744-3abb-5d66-9cd9-c9a233b5c4aa").value(), {complex::FilterTraits<CreateImageGeometry>::uuid, {}}}, // CreateImageGeometry
-    {complex::Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf").value(), {complex::FilterTraits<CropImageGeometry>::uuid, {}}}, // CropImageGeometry
-    {complex::Uuid::FromString("f28cbf07-f15a-53ca-8c7f-b41a11dae6cc").value(), {complex::FilterTraits<CropVertexGeometry>::uuid, {}}}, // CropVertexGeometry
+    {complex::Uuid::FromString("f2132744-3abb-5d66-9cd9-c9a233b5c4aa").value(), {complex::FilterTraits<CreateImageGeometry>::uuid, &CreateImageGeometry::FromSIMPLJson}}, // CreateImageGeometry
+    {complex::Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf").value(), {complex::FilterTraits<CropImageGeometry>::uuid, &CropImageGeometry::FromSIMPLJson}}, // CropImageGeometry
+    {complex::Uuid::FromString("f28cbf07-f15a-53ca-8c7f-b41a11dae6cc").value(), {complex::FilterTraits<CropVertexGeometry>::uuid, &CropVertexGeometry::FromSIMPLJson}}, // CropVertexGeometry
     {complex::Uuid::FromString("7b1c8f46-90dd-584a-b3ba-34e16958a7d0").value(), {complex::FilterTraits<DeleteData>::uuid, {}}}, // RemoveArrays   
     {complex::Uuid::FromString("3fcd4c43-9d75-5b86-aad4-4441bc914f37").value(), {complex::FilterTraits<ExportDREAM3DFilter>::uuid, {}}}, // DataContainerWriter
-    {complex::Uuid::FromString("52a069b4-6a46-5810-b0ec-e0693c636034").value(), {complex::FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid, {}}}, // ExtractInternalSurfacesFromTriangleGeometry
-    {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), {complex::FilterTraits<FeatureDataCSVWriterFilter>::uuid, {}}}, // FeatureDataCSVWriter
+    {complex::Uuid::FromString("52a069b4-6a46-5810-b0ec-e0693c636034").value(), {complex::FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid, &ExtractInternalSurfacesFromTriangleGeometry::FromSIMPLJson}}, // ExtractInternalSurfacesFromTriangleGeometry
+    {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), {complex::FilterTraits<FeatureDataCSVWriterFilter>::uuid, &FeatureDataCSVWriterFilter::FromSIMPLJson}}, // FeatureDataCSVWriter
     {complex::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), {complex::FilterTraits<FindArrayStatisticsFilter>::uuid, {}}}, // FindArrayStatistics
     {complex::Uuid::FromString("8a1106d4-c67f-5e09-a02a-b2e9b99d031e").value(), {complex::FilterTraits<FindBoundaryCellsFilter>::uuid, {}}}, // FindBoundaryCellsFilter
     {complex::Uuid::FromString("450c2f00-9ddf-56e1-b4c1-0e74e7ad2349").value(), {complex::FilterTraits<FindBiasedFeaturesFilter>::uuid, {}}}, // FindBiasedFeaturesFilter

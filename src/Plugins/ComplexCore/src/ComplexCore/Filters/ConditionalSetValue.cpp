@@ -6,6 +6,11 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
@@ -190,5 +195,40 @@ Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Ar
     ExecuteDataFunction(ReplaceValueInArrayFunctor{}, inputDataArray.getDataType(), inputDataArray, removeValueString, replaceValueString);
   }
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_RemoveValueKey = "RemoveValue";
+constexpr StringLiteral k_ReplaceValueKey = "ReplaceValue";
+constexpr StringLiteral k_SelectedArrayKey = "SelectedArray";
+constexpr StringLiteral k_ConditionalArrayPathKey = "ConditionalArrayPath";
+constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ConditionalSetValue::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ConditionalSetValue().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  if(json.contains(SIMPL::k_RemoveValueKey))
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_RemoveValueKey, k_RemoveValue_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayKey, k_SelectedArrayPath_Key));
+  }
+  else
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  }
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_ReplaceValueKey, k_ReplaceValue_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

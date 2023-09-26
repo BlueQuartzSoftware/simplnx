@@ -9,6 +9,8 @@
 
 #include <fmt/format.h>
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <cmath>
 
 using namespace complex;
@@ -147,3 +149,26 @@ Result<> ChangeAngleRepresentation::executeImpl(DataStructure& dataStructure, co
   return {};
 }
 } // namespace complex
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ConversionTypeKey = "ConversionType";
+constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ChangeAngleRepresentation::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ChangeAngleRepresentation().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ConversionTypeKey, k_ConversionType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellEulerAnglesArrayPathKey, k_AnglesArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}

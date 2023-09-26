@@ -8,6 +8,9 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -122,5 +125,36 @@ Result<> FindBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.BiasedFeaturesArrayName = inputValues.CentroidsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key));
 
   return FindBiasedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_CalcByPhaseKey = "CalcByPhase";
+constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
+constexpr StringLiteral k_SurfaceFeaturesArrayPathKey = "SurfaceFeaturesArrayPath";
+constexpr StringLiteral k_PhasesArrayPathKey = "PhasesArrayPath";
+constexpr StringLiteral k_BiasedFeaturesArrayNameKey = "BiasedFeaturesArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindBiasedFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindBiasedFeaturesFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  // Missing: GeometryPath
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_CalcByPhaseKey, k_CalcByPhase_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayPathKey, k_SurfaceFeaturesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_PhasesArrayPathKey, k_PhasesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_BiasedFeaturesArrayNameKey, k_BiasedFeaturesArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

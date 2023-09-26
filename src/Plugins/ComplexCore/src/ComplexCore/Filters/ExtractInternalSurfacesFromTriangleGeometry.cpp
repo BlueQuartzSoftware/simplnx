@@ -13,6 +13,9 @@
 #include <fmt/format.h>
 
 #include <limits>
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <unordered_map>
 
 using namespace complex;
@@ -392,5 +395,32 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
+constexpr StringLiteral k_NodeTypesArrayPathKey = "NodeTypesArrayPath";
+constexpr StringLiteral k_InternalTrianglesNameKey = "InternalTrianglesName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ExtractInternalSurfacesFromTriangleGeometry::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ExtractInternalSurfacesFromTriangleGeometry().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  // Check k_InternalTrianglesNameKey
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_TriangleGeom_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InternalTrianglesNameKey, "@COMPLEX_PARAMETER_KEY@"));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

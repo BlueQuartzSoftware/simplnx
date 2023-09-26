@@ -10,6 +10,9 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
@@ -117,4 +120,50 @@ Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Argu
 
   return ConvertData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteral k_OutputArrayNameKey = "OutputArrayName";
+} // namespace SIMPL
+namespace SIMPLConversionCustom
+{
+struct LinkedPathCreationFilterParameterConverter
+{
+  using ParameterType = DataObjectNameParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_string())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("ConvertDataFilter::LinkedPathCreationFilterParameterConverter json '{}' is not a string", json.dump()));
+    }
+
+    auto value = json.get<std::string>();
+
+    return {std::move(value)};
+  }
+};
+} // namespace SIMPLConversionCustom
+} // namespace
+
+Result<Arguments> ConvertDataFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ConvertDataFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_ArrayToConvert_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversionCustom::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_OutputArrayNameKey, k_ConvertedArray_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}
+
 } // namespace complex
