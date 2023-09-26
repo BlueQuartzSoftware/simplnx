@@ -62,7 +62,8 @@ enum class IssueCodes
   CANNOT_SKIP_TO_LINE = -115,
   EMPTY_NAMES = -116,
   START_LINE_LARGER_THAN_TOTAL = -117,
-  HEADER_LINE_LARGER_THAN_TOTAL = -118
+  HEADER_LINE_LARGER_THAN_TOTAL = -118,
+  IGNORED_TUPLE_DIMS = -200
 };
 
 // -----------------------------------------------------------------------------
@@ -305,6 +306,20 @@ std::vector<char> createDelimitersVector(bool tabAsDelimiter, bool semicolonAsDe
 
   return delimiters;
 }
+
+std::string tupleDimsToString(const std::vector<usize>& tupleDims)
+{
+  std::string tupleDimsStr;
+  for(size_t i = 0; i < tupleDims.size(); ++i)
+  {
+    tupleDimsStr += std::to_string(tupleDims[i]);
+    if(i != tupleDims.size() - 1)
+    {
+      tupleDimsStr += "x";
+    }
+  }
+  return tupleDimsStr;
+}
 } // namespace
 
 namespace complex
@@ -482,16 +497,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   size_t tupleTotal = std::accumulate(wizardData.tupleDims.begin(), wizardData.tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
   if(tupleTotal > totalImportedLines)
   {
-    std::string tupleDimsStr;
-    for(size_t i = 0; i < wizardData.tupleDims.size(); ++i)
-    {
-      tupleDimsStr += std::to_string(wizardData.tupleDims[i]);
-      if(i != wizardData.tupleDims.size() - 1)
-      {
-        tupleDimsStr += "x";
-      }
-    }
-
+    std::string tupleDimsStr = tupleDimsToString(wizardData.tupleDims);
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr, tupleTotal,
                                      totalImportedLines);
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
@@ -556,6 +562,18 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   }
 
   // Create the arrays
+  std::vector<usize> tupleDims(wizardData.tupleDims.size());
+  std::transform(wizardData.tupleDims.begin(), wizardData.tupleDims.end(), tupleDims.begin(), [](float64 d) { return static_cast<usize>(d); });
+  if(useExistingAM)
+  {
+    const AttributeMatrix& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
+    tupleDims = am.getShape();
+    std::string tupleDimsStr = tupleDimsToString(wizardData.tupleDims);
+    std::string tupleDimsStr2 = tupleDimsToString(tupleDims);
+    std::string msg = fmt::format("The Array Tuple Dimensions ({}) will be ignored and the Existing Attribute Matrix tuple dimensions ({}) will be used instead.", tupleDimsStr, tupleDimsStr2);
+    resultOutputActions.warnings().push_back(Warning{to_underlying(IssueCodes::IGNORED_TUPLE_DIMS), msg});
+  }
+
   for(usize i = 0; i < wizardData.dataTypes.size() && i < headers.size(); i++)
   {
     if(wizardData.skippedArrayMask[i])
@@ -569,10 +587,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
 
     DataPath arrayPath = groupPath;
     arrayPath = arrayPath.createChildPath(name);
-
-    std::vector<usize> tupleDimsUSize(wizardData.tupleDims.size());
-    std::transform(wizardData.tupleDims.begin(), wizardData.tupleDims.end(), tupleDimsUSize.begin(), [](float64 d) { return static_cast<usize>(d); });
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleDimsUSize, cDims, arrayPath));
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleDims, cDims, arrayPath));
   }
 
   // Create preflight updated values
@@ -642,6 +657,11 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
 
   float32 threshold = 0.0f;
   usize numTuples = std::accumulate(wizardData.tupleDims.begin(), wizardData.tupleDims.end(), 1, std::multiplies<>());
+  if(useExistingGroup)
+  {
+    const AttributeMatrix& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
+    numTuples = std::accumulate(am.getShape().begin(), am.getShape().end(), 1, std::multiplies<>());
+  }
   usize lineNum = startImportRow;
   for(usize i = 0; i < numTuples && !in.eof(); i++)
   {
