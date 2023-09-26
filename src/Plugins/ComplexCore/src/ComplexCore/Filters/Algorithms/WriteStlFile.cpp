@@ -1,6 +1,7 @@
 #include "WriteStlFile.hpp"
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
@@ -65,7 +66,15 @@ Result<> WriteStlFile::operator()()
   const IGeometry::MeshIndexArrayType& triangles = triangleGeom.getFacesRef();
   const IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
-  // const auto& normals = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FaceNormalsPath);
+
+  const std::filesystem::path outputPath = m_InputValues->OutputStlDirectory;
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  Result<> createDirectoriesResult = complex::CreateOutputDirectories(outputPath);
+  if(createDirectoriesResult.invalid())
+  {
+    return createDirectoriesResult;
+  }
 
   // Store all the unique Spins
   std::map<int32, int32> uniqueGrainIdToPhase;
