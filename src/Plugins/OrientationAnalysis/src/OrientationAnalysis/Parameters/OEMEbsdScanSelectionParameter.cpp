@@ -4,14 +4,6 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "H5Support/H5ScopedSentinel.h"
-#include "H5Support/H5Utilities.h"
-
-#include "EbsdLib/IO/BrukerNano/EspritConstants.h"
-#include "EbsdLib/IO/BrukerNano/H5EspritReader.h"
-#include "EbsdLib/IO/HKL/CtfFields.h"
-#include "EbsdLib/IO/TSL/H5OIMReader.h"
-
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
@@ -28,10 +20,9 @@ constexpr StringLiteral k_ScanNames = "scan_names";
 
 //-----------------------------------------------------------------------------
 OEMEbsdScanSelectionParameter::OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                             const AllowedManufacturers& allowedManufacturers, const EbsdReaderType& readerType, const ExtensionsType& extensionsType)
+                                                             const EbsdReaderType& readerType, const ExtensionsType& extensionsType)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
-, m_AllowedManufacturers(allowedManufacturers)
 , m_AvailableExtensions(extensionsType)
 , m_ReaderType(readerType)
 {
@@ -111,11 +102,13 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJson(const nlohmann::json& j
     }
   }
 
+  constexpr int32 k_LowtoHigh = 0;
+  constexpr int32 k_HightoLow = 1;
   const auto orderCheck = json[k_StackingOrder].get<int32>();
-  if(orderCheck != EbsdLib::RefFrameZDir::LowtoHigh && orderCheck != EbsdLib::RefFrameZDir::HightoLow)
+  if(orderCheck != k_LowtoHigh && orderCheck != k_HightoLow)
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(),
-                                                                                                           k_StackingOrder.view(), EbsdLib::RefFrameZDir::LowtoHigh, EbsdLib::RefFrameZDir::HightoLow));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
+                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(), k_StackingOrder.view(), k_LowtoHigh, k_HightoLow));
   }
 
   ValueType value;
@@ -161,7 +154,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJson(const nlohmann::json& j
 //-----------------------------------------------------------------------------
 IParameter::UniquePointer OEMEbsdScanSelectionParameter::clone() const
 {
-  return std::make_unique<OEMEbsdScanSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedManufacturers, m_ReaderType, m_AvailableExtensions);
+  return std::make_unique<OEMEbsdScanSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_ReaderType, m_AvailableExtensions);
 }
 
 //-----------------------------------------------------------------------------
@@ -193,96 +186,7 @@ Result<> OEMEbsdScanSelectionParameter::validate(const std::any& valueRef) const
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-20032, fmt::format("File extension '{}' is not a valid file extension.", value.inputFilePath.extension().string())}})};
   }
-
-  if(value.stackingOrder != EbsdLib::RefFrameZDir::LowtoHigh && value.stackingOrder != EbsdLib::RefFrameZDir::HightoLow)
-  {
-    errors.push_back({-20033, fmt::format("{} is not a valid value for the stacking order. Please choose either {} or {}", value.stackingOrder, EbsdLib::RefFrameZDir::LowtoHigh,
-                                          EbsdLib::RefFrameZDir::HightoLow)});
-    return {nonstd::make_unexpected(std::move(errors))};
-  }
-
-  std::list<std::string> scanNames;
-  int32 err = 0;
-  if(m_ReaderType == EbsdReaderType::Oim)
-  {
-    const H5OIMReader::Pointer reader = H5OIMReader::New();
-    reader->setFileName(value.inputFilePath.string());
-    err = reader->readScanNames(scanNames);
-  }
-  else
-  {
-    const H5EspritReader::Pointer reader = H5EspritReader::New();
-    reader->setFileName(value.inputFilePath.string());
-    err = reader->readScanNames(scanNames);
-  }
-
-  if(err < 0)
-  {
-    errors.push_back({-20034, fmt::format("H5 file '{}' could not be opened. Reported error code from the H5OIMReader class is '{}'", value.inputFilePath.string(), err)});
-    return {nonstd::make_unexpected(std::move(errors))};
-  }
-
-  const ManufacturerType manufacturer = ReadManufacturer(value.inputFilePath.string());
-  if(m_AllowedManufacturers.find(manufacturer) == m_AllowedManufacturers.end())
-  {
-    errors.push_back({-20035, fmt::format("Original data source type {} is not a valid manufacturer", fmt::underlying(manufacturer))});
-    return {nonstd::make_unexpected(std::move(errors))};
-  }
-
-  if(value.scanNames.empty())
-  {
-    errors.push_back({-20036, fmt::format("At least one scan must be chosen.  Please select a scan from the list.")});
-    return {nonstd::make_unexpected(std::move(errors))};
-  }
-
   return {};
-}
-
-//-----------------------------------------------------------------------------
-OEMEbsdScanSelectionParameter::ManufacturerType OEMEbsdScanSelectionParameter::ReadManufacturer(const std::string& inputFile)
-{
-  EbsdLib::OEM manuf = EbsdLib::OEM::Unknown;
-
-  const hid_t fid = H5Utilities::openFile(inputFile, true);
-  if(fid < 0)
-  {
-    return manuf;
-  }
-  H5ScopedFileSentinel sentinel(fid, false);
-  std::string dsetName;
-  std::list<std::string> names;
-  herr_t err = H5Utilities::getGroupObjects(fid, H5Utilities::CustomHDFDataTypes::Any, names);
-  auto findIter = std::find(names.begin(), names.end(), EbsdLib::H5OIM::Manufacturer);
-  if(findIter != names.end())
-  {
-    dsetName = EbsdLib::H5OIM::Manufacturer;
-  }
-
-  findIter = std::find(names.begin(), names.end(), EbsdLib::H5Esprit::Manufacturer);
-  if(findIter != names.end())
-  {
-    dsetName = EbsdLib::H5Esprit::Manufacturer;
-  }
-
-  std::string manufacturer("Unknown");
-  err = H5Lite::readStringDataset(fid, dsetName, manufacturer);
-  if(err < 0)
-  {
-    return manuf;
-  }
-  if(manufacturer == EbsdLib::H5OIM::EDAX)
-  {
-    manuf = EbsdLib::OEM::EDAX;
-  }
-  if(manufacturer == EbsdLib::H5Esprit::BrukerNano)
-  {
-    manuf = EbsdLib::OEM::Bruker;
-  }
-  if(manufacturer == "DREAM.3D")
-  {
-    manuf = EbsdLib::OEM::DREAM3D;
-  }
-  return manuf;
 }
 
 //-----------------------------------------------------------------------------

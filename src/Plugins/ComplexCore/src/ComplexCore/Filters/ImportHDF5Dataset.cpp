@@ -126,10 +126,6 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
 
   fs::path inputFilePath(inputFile);
   std::string ext = inputFilePath.extension().string();
-  if(ext != ".h5" && ext != ".hdf5" && ext != ".dream3d")
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20002, fmt::format("The selected file '{}' is not an HDF5 file.", inputFilePath.filename().string())}})};
-  }
 
   if(!fs::exists(inputFilePath))
   {

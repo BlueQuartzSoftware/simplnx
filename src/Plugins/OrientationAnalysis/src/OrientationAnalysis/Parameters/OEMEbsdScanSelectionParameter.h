@@ -5,8 +5,6 @@
 #include "complex/Utilities/FilePathGenerator.hpp"
 #include "complex/complex_export.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
-
 #include <filesystem>
 #include <list>
 #include <string>
@@ -26,16 +24,16 @@ public:
   struct ValueType
   {
     fs::path inputFilePath;
-    int32 stackingOrder = EbsdLib::RefFrameZDir::LowtoHigh;
+    int32 stackingOrder = 0; // Low to High This is the same from EbsdLib. If EbsdLib changes, this should change
     std::list<std::string> scanNames = {};
   };
-  using ManufacturerType = EbsdLib::OEM;
-  using AllowedManufacturers = std::unordered_set<ManufacturerType>;
+
   using ExtensionsType = std::unordered_set<std::string>;
   enum EbsdReaderType : uint8
   {
     Oim = 0,
-    Esprit = 1
+    Esprit = 1,
+    H5Oina = 2
   };
 
   OEMEbsdScanSelectionParameter() = delete;
@@ -47,7 +45,8 @@ public:
    * @param helpText The help text that should be displayed to a user
    * @param defaultValue The default value for the parameter
    */
-  OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedManufacturers& allowedManufacturers,
+  OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                /* const AllowedManufacturers& allowedManufacturers, */
                                 const EbsdReaderType& readerType, const ExtensionsType& extensionsType);
 
   ~OEMEbsdScanSelectionParameter() override = default;
@@ -112,16 +111,8 @@ public:
    */
   EbsdReaderType getReaderType() const;
 
-  /**
-   * @brief
-   * @param inputFile
-   * @return
-   */
-  static ManufacturerType ReadManufacturer(const std::string& inputFile);
-
 private:
   ValueType m_DefaultValue = {};
-  AllowedManufacturers m_AllowedManufacturers = {};
   ExtensionsType m_AvailableExtensions = {};
   EbsdReaderType m_ReaderType = {};
 };
