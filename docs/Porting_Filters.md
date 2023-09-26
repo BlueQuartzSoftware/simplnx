@@ -78,7 +78,8 @@ Example of getting an array and summing the values using range based for loop.
 
 ```c++
  // Let's sum up all the areas.
-    Float64Array& faceAreas = dataGraph.getDataRefAs<Float64Array>(triangleAreasDataPath);
+    Float64Array& faceAreasArray = dataGraph.getDataRefAs<Float64Array>(triangleAreasDataPath);
+    AbstractFloat64DataStore& faceAreas = faceAreasArray.getDataStoreRef();
     double sumOfAreas = 0.0;
     for(const auto& area : faceAreas)
     {
@@ -86,7 +87,13 @@ Example of getting an array and summing the values using range based for loop.
     }
 ```
 
-## Chaining Together DataPath + String to form new DataPath
+## DataArray Performance
+
+* When iterating over values, either to read or write, use the reference returned by DataArray<T>::getDataStoreRef().
+* When writing values in a multi-threaded function, use the getValue and setValue methods in AbstractDataStore to ensure that values being both read and written at the same time. The [] operators are not capable of protecting against data corruption.
+  * In situation where values are only being read from the array, the [] operators are both safe and faster to use.
+
+## Chaining Together DataPath + String to form new DataPath ##
 
 ```c++
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath("Triangle Areas");

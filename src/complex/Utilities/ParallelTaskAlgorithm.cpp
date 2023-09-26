@@ -17,18 +17,6 @@ ParallelTaskAlgorithm::~ParallelTaskAlgorithm()
 }
 
 // -----------------------------------------------------------------------------
-bool ParallelTaskAlgorithm::getParallelizationEnabled() const
-{
-  return m_RunParallel;
-}
-
-// -----------------------------------------------------------------------------
-void ParallelTaskAlgorithm::setParallelizationEnabled(bool doParallel)
-{
-  m_RunParallel = doParallel;
-}
-
-// -----------------------------------------------------------------------------
 uint32_t ParallelTaskAlgorithm::getMaxThreads() const
 {
 #ifdef COMPLEX_ENABLE_MULTICORE

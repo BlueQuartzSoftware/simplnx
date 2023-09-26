@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Utilities/IParallelAlgorithm.hpp"
 #include "complex/complex_export.hpp"
 
 #ifdef COMPLEX_ENABLE_MULTICORE
@@ -19,23 +20,11 @@ namespace complex
  * TBB for parallelization and will fallback to non-parallelization if it is not available
  * or the parallelization is disabled.
  */
-class COMPLEX_EXPORT ParallelTaskAlgorithm
+class COMPLEX_EXPORT ParallelTaskAlgorithm : public IParallelAlgorithm
 {
 public:
   ParallelTaskAlgorithm();
   virtual ~ParallelTaskAlgorithm();
-
-  /**
-   * @brief Returns true if parallelization is enabled.  Returns false otherwise.
-   * @return
-   */
-  bool getParallelizationEnabled() const;
-
-  /**
-   * @brief Sets whether parallelization is enabled.
-   * @param doParallel
-   */
-  void setParallelizationEnabled(bool doParallel);
 
   /**
    * @brief Return maximum threads to use for parallelization.  If Parallel Algorithms
@@ -61,7 +50,7 @@ public:
   void execute(const Body& body)
   {
 #ifdef COMPLEX_ENABLE_MULTICORE
-    if(m_RunParallel)
+    if(getParallelizationEnabled())
     {
       m_TaskGroup.run(body);
       m_CurThreads++;
@@ -85,12 +74,10 @@ public:
 private:
 #ifdef COMPLEX_ENABLE_MULTICORE
   uint32_t m_MaxThreads = std::thread::hardware_concurrency();
-  bool m_RunParallel = true;
   tbb::task_group m_TaskGroup;
   uint32_t m_CurThreads = 0;
 #else
   uint32_t m_MaxThreads = 1;
-  bool m_RunParallel = false;
 #endif
 };
 } // namespace complex

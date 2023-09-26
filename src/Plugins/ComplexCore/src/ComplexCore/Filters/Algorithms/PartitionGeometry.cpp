@@ -54,11 +54,13 @@ public:
           auto partitionIndexResult = m_PSImageGeom.getIndex(coord[0], coord[1], coord[2]);
           if(partitionIndexResult.has_value())
           {
-            partitionIdsStore.setValue(index, static_cast<int32>(*partitionIndexResult) + m_StartingPartitionId);
+            // partitionIdsStore.setValue(index, static_cast<int32>(*partitionIndexResult) + m_StartingPartitionId);
+            partitionIdsStore[index] = static_cast<int32>(*partitionIndexResult) + m_StartingPartitionId;
           }
           else
           {
-            partitionIdsStore.setValue(index, m_OutOfBoundsValue);
+            // partitionIdsStore.setValue(index, m_OutOfBoundsValue);
+            partitionIdsStore[index] = m_OutOfBoundsValue;
           }
         }
       }
@@ -244,6 +246,7 @@ Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inpu
 
   ParallelData3DAlgorithm dataAlg;
   dataAlg.setRange(dims[0], dims[1], dims[2]);
+  dataAlg.setParallelizationEnabled(false);
   dataAlg.execute(PartitionCellBasedGeometryImpl(inputGeometry, partitionIds, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, m_ShouldCancel));
 
   return {};

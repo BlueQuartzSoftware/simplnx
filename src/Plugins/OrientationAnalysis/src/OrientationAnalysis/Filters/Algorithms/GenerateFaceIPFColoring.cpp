@@ -185,6 +185,7 @@ Result<> GenerateFaceIPFColoring::operator()()
 
   ParallelDataAlgorithm parallelTask;
   parallelTask.setRange(0, numTriangles);
+  parallelTask.setParallelizationEnabled(false);
   parallelTask.execute(CalculateFaceIPFColorsImpl(faceLabels, phases, faceNormals, eulerAngles, crystalStructures, faceIpfColors));
 
   return {};

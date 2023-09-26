@@ -16,6 +16,8 @@ const std::string k_AvgCAxesComputed = "NX_AvgCAxes";
 
 TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[OrientationAnalysis][FindAvgCAxesFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
 
   // Read Exemplar DREAM3D File Filter
@@ -48,6 +50,8 @@ TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[O
 
 TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Invalid Filter Execution", "[OrientationAnalysis][FindAvgCAxesFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
 
   // Read Exemplar DREAM3D File Filter

@@ -140,6 +140,12 @@ Result<> ITKBinaryErodeImage::executeImpl(DataStructure& dataStructure, const Ar
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto boundaryToForeground = filterArgs.value<bool>(k_BoundaryToForeground_Key);
 
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
+  }
+
   const cxITKBinaryErodeImage::ITKBinaryErodeImageFunctor itkFunctor = {kernelRadius, kernelType, backgroundValue, foregroundValue, boundaryToForeground};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

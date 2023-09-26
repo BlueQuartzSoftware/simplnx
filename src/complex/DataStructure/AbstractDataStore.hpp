@@ -637,9 +637,9 @@ public:
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index
-   * @return const_reference
+   * @return value_type
    */
-  virtual const_reference getValue(usize index) const = 0;
+  virtual value_type getValue(usize index) const = 0;
 
   /**
    * @brief Sets the value stored at the specified index.
@@ -733,6 +733,17 @@ public:
   virtual void fill(value_type value)
   {
     std::fill(begin(), end(), value);
+  }
+
+  virtual bool copy(const AbstractDataStore& other)
+  {
+    if(getSize() != other.getSize())
+    {
+      return false;
+    }
+
+    std::copy(other.begin(), other.end(), begin());
+    return true;
   }
 
   /**
@@ -943,6 +954,11 @@ public:
    */
   virtual void flush() const
   {
+  }
+
+  virtual uint64 memoryUsage() const
+  {
+    return sizeof(T) * getSize();
   }
 
 protected:

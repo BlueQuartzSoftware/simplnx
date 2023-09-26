@@ -121,6 +121,12 @@ Result<> ITKRescaleIntensityImage::executeImpl(DataStructure& dataStructure, con
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
+  }
+
   const cxITKRescaleIntensityImage::ITKRescaleIntensityImageFunctor itkFunctor = {outputMinimum, outputMaximum};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

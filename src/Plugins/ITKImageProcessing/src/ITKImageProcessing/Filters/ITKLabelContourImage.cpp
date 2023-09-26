@@ -125,6 +125,12 @@ Result<> ITKLabelContourImage::executeImpl(DataStructure& dataStructure, const A
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
 
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
+  }
+
   const cxITKLabelContourImage::ITKLabelContourImageFunctor itkFunctor = {fullyConnected, backgroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

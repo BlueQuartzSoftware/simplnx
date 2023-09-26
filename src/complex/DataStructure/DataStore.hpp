@@ -253,7 +253,7 @@ public:
    * @param index
    * @return value_type
    */
-  const_reference getValue(usize index) const override
+  value_type getValue(usize index) const override
   {
     return m_Data.get()[index];
   }

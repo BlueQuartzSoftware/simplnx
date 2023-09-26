@@ -124,3 +124,23 @@ TEST_CASE("DataStore Test")
   REQUIRE(dataStore[8] == 99);
   REQUIRE(dataStore.getComponentValue(2, 2) == 99);
 }
+
+TEST_CASE("Copy DataStore", "DataArray")
+{
+  IDataStore::ShapeType tupleShape{5};
+  IDataStore::ShapeType componentShape{3};
+  DataStore<int32> dataStore(tupleShape, componentShape, 5);
+  usize size = dataStore.getSize();
+  for(usize i = 0; i < size; i++)
+  {
+    dataStore[i] = i;
+  }
+
+  DataStore<int32> dataStore2(tupleShape, componentShape, 5);
+  dataStore2.copy(dataStore);
+
+  for(usize i = 0; i < size; i++)
+  {
+    REQUIRE(dataStore[i] == dataStore2[i]);
+  }
+}

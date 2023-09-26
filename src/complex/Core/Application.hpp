@@ -34,21 +34,6 @@ public:
   using name_type_map = std::map<std::string, DataObject::Type>;
 
   /**
-   * @brief Constructs an Application using default values and replaces the
-   * current Instance pointer.
-   */
-  Application();
-
-  /**
-   * @brief Constructs an Application accepting a set of command line arguments.
-   *
-   * The current Application instance is replaced with the constructed Application.
-   * @param argc
-   * @param argv
-   */
-  Application(int argc, char** argv);
-
-  /**
    * @brief Destroys the Application. If the destroyed Application matches the
    * current Application::Instance(), the instance pointer is set to nullptr.
    */
@@ -59,11 +44,13 @@ public:
    * replaced when a new complex::Application is created, replacing the
    * previous value. If the current Application is destroyed, this method will
    * return nullptr until a new Application is created.
-   * @return Application*
+   * @return std::shared_ptr<Application>
    */
-  static Application* Instance();
+  static std::shared_ptr<Application> Instance();
 
-  static Application* GetOrCreateInstance();
+  static std::shared_ptr<Application> GetOrCreateInstance();
+
+  static void DeleteInstance();
 
   /**
    * @brief Finds and loads plugins in the target directory.
@@ -161,13 +148,25 @@ public:
 
   std::vector<std::string> getDataStoreFormats() const;
 
-private:
+protected:
   /**
-   * @brief Assigns Application as the current instance and sets the current
-   * executable path.
+   * @brief Constructs an Application using default values and replaces the
+   * current Instance pointer.
    */
-  void assignInstance();
+  Application();
 
+  /**
+   * @brief Constructs an Application accepting a set of command line arguments.
+   *
+   * The current Application instance is replaced with the constructed Application.
+   * @param argc
+   * @param argv
+   */
+  Application(int argc, char** argv);
+
+  void initialize();
+
+private:
   void initDefaultDataTypes();
 
   /**
@@ -179,7 +178,7 @@ private:
 
   //////////////////
   // Static Variable
-  static Application* s_Instance;
+  static std::shared_ptr<Application> s_Instance;
 
   ////////////
   // Variables

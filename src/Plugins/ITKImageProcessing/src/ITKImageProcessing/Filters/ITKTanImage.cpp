@@ -106,7 +106,13 @@ Result<> ITKTanImage::executeImpl(DataStructure& dataStructure, const Arguments&
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  const cxITKTanImage::ITKTanImageFunctor itkFunctor = {};
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
+  }
+
+  cxITKTanImage::ITKTanImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

@@ -116,7 +116,13 @@ Result<> ITKInvertIntensityImage::executeImpl(DataStructure& dataStructure, cons
 
   auto maximum = filterArgs.value<float64>(k_Maximum_Key);
 
-  const cxITKInvertIntensityImage::ITKInvertIntensityImageFunctor itkFunctor = {maximum};
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
+  }
+
+  cxITKInvertIntensityImage::ITKInvertIntensityImageFunctor itkFunctor = {maximum};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

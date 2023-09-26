@@ -186,7 +186,6 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
-
   ScalarSegmentFeaturesInputValues inputValues;
 
   inputValues.pInputDataPath = args.value<DataPath>(k_InputArrayPathKey);

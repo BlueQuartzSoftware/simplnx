@@ -81,29 +81,26 @@ std::string getApplicationName(Application* app)
 }
 } // namespace
 
-Application* Application::s_Instance = nullptr;
+std::shared_ptr<Application> Application::s_Instance = nullptr;
 
 Application::Application()
 : m_FilterList(std::make_unique<FilterList>())
 , m_DataIOCollection(std::make_shared<DataIOCollection>())
 {
-  loadPreferences();
-  assignInstance();
-  initDefaultDataTypes();
+  initialize();
 }
 
 Application::Application(int argc, char** argv)
 : Application()
 {
-  loadPreferences();
-  assignInstance();
-  initDefaultDataTypes();
+  initialize();
 }
 
-void Application::assignInstance()
+void Application::initialize()
 {
-  s_Instance = this;
+  loadPreferences();
   m_CurrentPath = findCurrentPath();
+  initDefaultDataTypes();
 }
 
 void Application::initDefaultDataTypes()
@@ -127,25 +124,31 @@ void Application::initDefaultDataTypes()
 
 Application::~Application()
 {
-  if(Instance() == this)
-  {
-    s_Instance = nullptr;
-    savePreferences();
-  }
+  savePreferences();
+  s_Instance = nullptr;
 }
 
-Application* Application::Instance()
+std::shared_ptr<Application> Application::Instance()
 {
   return s_Instance;
 }
 
-Application* Application::GetOrCreateInstance()
+std::shared_ptr<Application> Application::GetOrCreateInstance()
 {
   if(s_Instance == nullptr)
   {
-    new Application();
+    s_Instance = std::shared_ptr<Application>(new Application());
   }
   return s_Instance;
+}
+
+void Application::DeleteInstance()
+{
+  if(s_Instance != nullptr)
+  {
+    s_Instance->savePreferences();
+  }
+  s_Instance = nullptr;
 }
 
 std::filesystem::path Application::getCurrentPath() const
@@ -280,7 +283,10 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
     fmt::print("Loading Plugin: {}\n", path.string());
   }
   auto pluginLoader = std::make_shared<PluginLoader>(path);
-  getFilterList()->addPlugin(pluginLoader);
+  if(!getFilterList()->addPlugin(pluginLoader))
+  {
+    return;
+  }
 
   auto plugin = pluginLoader->getPlugin();
   if(plugin == nullptr)

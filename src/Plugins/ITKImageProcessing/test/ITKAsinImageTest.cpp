@@ -15,6 +15,8 @@ using namespace complex;
 
 TEST_CASE("ITKImageProcessing::ITKAsinImageFilter(defaults)", "[ITKImageProcessing][ITKAsinImage][defaults]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   ITKAsinImage filter;
 

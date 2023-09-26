@@ -134,9 +134,10 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arg
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
   auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  const auto& featureIds = data.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& featureIds = featureIdsArray.getDataStoreRef();
 
-  usize totalPoints = featureIds.getNumberOfTuples();
+  usize totalPoints = featureIdsArray.getNumberOfTuples();
 
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
   auto* geom = data.getDataAs<IGeometry>(geomPath);

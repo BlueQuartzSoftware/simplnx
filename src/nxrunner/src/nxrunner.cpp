@@ -46,12 +46,13 @@ inline constexpr StringLiteral k_ExecuteParamShort = "-e";
 inline constexpr StringLiteral k_PreflightParamShort = "-p";
 inline constexpr StringLiteral k_LogFileParamShort = "-l";
 
-void LoadApp(complex::Application& app)
+void LoadApp()
 {
+  auto app = Application::GetOrCreateInstance();
   // Try loading plugins from the directory that the executable is in.
   // This is the default for developer build trees and CI build trees
-  fs::path appPath = app.getCurrentDir();
-  app.loadPlugins(appPath, true);
+  fs::path appPath = app->getCurrentDir();
+  app->loadPlugins(appPath, true);
 
   // For non-windows platforms we need to look in the actual 'Plugins'
   // directory which is up one directory from the executable.
@@ -62,7 +63,7 @@ void LoadApp(complex::Application& app)
     if(fs::exists(appPath / "Plugins"))
     {
       appPath = appPath / "Plugins";
-      app.loadPlugins(appPath, true);
+      app->loadPlugins(appPath, true);
     }
   }
 #endif
@@ -441,8 +442,8 @@ int main(int argc, char* argv[])
   }
 
   // Load the Complex Application instance and load the plugins
-  complex::Application app;
-  LoadApp(app);
+  auto app = complex::Application::GetOrCreateInstance();
+  LoadApp();
 
 #if COMPLEX_EMBED_PYTHON
   py::scoped_interpreter guard{};
@@ -483,7 +484,7 @@ int main(int argc, char* argv[])
     return errorCode;
   }
   case ArgumentType::Execute: {
-    try
+    // try
     {
       auto result = ExecutePipeline(arguments[0]);
       results.push_back(result);
@@ -495,11 +496,11 @@ int main(int argc, char* argv[])
       return 1;
     }
 #endif
-    catch(const std::exception& exception)
+    /*catch(const std::exception& exception)
     {
       fmt::print("Exception: {}\n", exception.what());
       return 1;
-    }
+    }*/
     break;
   }
   case ArgumentType::Preflight: {

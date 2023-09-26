@@ -114,7 +114,7 @@ void TestCase1_Execute(NumericType scalarType)
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataArray<T>& createdData = dataStructure.getDataRefAs<DataArray<T>>(k_CreatedArrayPath);
-  const DataStore<T>& store = createdData.template getIDataStoreRefAs<DataStore<T>>();
+  const AbstractDataStore<T>& store = createdData.getDataStoreRef();
   bool isSame = true;
   for(usize i = 0; i < dataArraySize; ++i)
   {
@@ -246,16 +246,14 @@ void TestCase4_Execute(NumericType scalarType)
 
   DataArray<T>* createdArray = dataStructure.getDataAs<DataArray<T>>(k_CreatedArrayPath);
   REQUIRE(createdArray != nullptr);
-  DataStore<T>* createdStore = createdArray->template getIDataStoreAs<DataStore<T>>();
-  REQUIRE(createdStore != nullptr);
-  T* createdData = createdStore->data();
+  AbstractDataStore<T>& createdStore = createdArray->getDataStoreRef();
 
   constexpr usize elementOffset = skipHeaderBytes / sizeof(T);
   bool isSame = true;
-  usize size = createdStore->getSize();
+  usize size = createdStore.getSize();
   for(usize i = 0; i < size; ++i)
   {
-    if(createdData[i] != exemplaryData[i + elementOffset])
+    if(createdStore[i] != exemplaryData[i + elementOffset])
     {
       isSame = false;
       break;

@@ -47,13 +47,17 @@ Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
 {
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
   auto& absDataStore = dataArray.getDataStoreRef();
-  auto& dataStore = dynamic_cast<DataStore<T>&>(absDataStore);
-  if(!datasetReader.readIntoSpan<T>(dataStore.createSpan()))
+
+  std::vector<T> data(absDataStore.getSize());
+  nonstd::span<T> span{data.data(), data.size()};
+  if(!datasetReader.readIntoSpan<T>(span))
   {
     return {MakeErrorResult(-21002, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
                                                 dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
                                                 dataArray.getNumberOfComponents()))};
   }
+  std::copy(data.begin(), data.end(), absDataStore.begin());
+
   return {};
 }
 } // namespace

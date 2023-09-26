@@ -326,7 +326,7 @@ Result<> GenerateGBCDPoleFigure::operator()()
 
   ParallelData2DAlgorithm dataAlg;
   dataAlg.setRange(0, xPoints, 0, yPoints);
-  dataAlg.setParallelizationEnabled(true);
+  dataAlg.setParallelizationEnabled(false);
   dataAlg.execute(
       GenerateGBCDPoleFigureImpl(poleFigure, {xPoints, yPoints}, orientOps, gbcdDeltas, gbcdLimits, gbcdSizes, gbcd, m_InputValues->PhaseOfInterest, m_InputValues->MisorientationRotation));
 

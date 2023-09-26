@@ -90,8 +90,7 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
 
   // Instantiate an "Application" instance to load plugins
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   const uint64 k_NumTuples = 480000;
   const uint64 k_FeatureNumTuples = 409;

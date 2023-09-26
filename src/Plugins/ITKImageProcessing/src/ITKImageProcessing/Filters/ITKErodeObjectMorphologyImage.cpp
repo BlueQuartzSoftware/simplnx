@@ -134,6 +134,12 @@ Result<> ITKErodeObjectMorphologyImage::executeImpl(DataStructure& dataStructure
   auto objectValue = filterArgs.value<float64>(k_ObjectValue_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
 
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
+  }
+
   const cxITKErodeObjectMorphologyImage::ITKErodeObjectMorphologyImageFunctor itkFunctor = {kernelRadius, kernelType, objectValue, backgroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

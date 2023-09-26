@@ -21,6 +21,8 @@ using namespace complex::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKBinaryDilateImageFilter(BinaryDilate)", "[ITKImageProcessing][ITKBinaryDilateImage][BinaryDilate]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   const ITKBinaryDilateImage filter;
 
@@ -55,6 +57,8 @@ TEST_CASE("ITKImageProcessing::ITKBinaryDilateImageFilter(BinaryDilate)", "[ITKI
 
 TEST_CASE("ITKImageProcessing::ITKBinaryDilateImageFilter(BinaryDilateVectorRadius)", "[ITKImageProcessing][ITKBinaryDilateImage][BinaryDilateVectorRadius]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   const ITKBinaryDilateImage filter;
 

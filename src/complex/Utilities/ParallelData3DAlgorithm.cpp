@@ -9,18 +9,6 @@ ParallelData3DAlgorithm::ParallelData3DAlgorithm() = default;
 ParallelData3DAlgorithm::~ParallelData3DAlgorithm() = default;
 
 // -----------------------------------------------------------------------------
-bool ParallelData3DAlgorithm::getParallelizationEnabled() const
-{
-  return m_RunParallel;
-}
-
-// -----------------------------------------------------------------------------
-void ParallelData3DAlgorithm::setParallelizationEnabled(bool doParallel)
-{
-  m_RunParallel = doParallel;
-}
-
-// -----------------------------------------------------------------------------
 ParallelData3DAlgorithm::RangeType ParallelData3DAlgorithm::getRange() const
 {
   return m_Range;

@@ -305,7 +305,7 @@ void DatasetTest(ImportHDF5Dataset& filter, const std::list<ImportHDF5DatasetPar
 
   Arguments args;
   ImportHDF5DatasetParameter::ValueType val = {parentGroup, m_FilePath, dsetInfoList};
-  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key, std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
 
   // Execute Dataset Test
   if(dsetInfoList.size() > 1)

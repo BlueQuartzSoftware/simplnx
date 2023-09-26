@@ -134,6 +134,12 @@ Result<> ITKAdaptiveHistogramEqualizationImage::executeImpl(DataStructure& dataS
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
+  }
+
   auto radius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_Radius_Key);
 
   auto alpha = filterArgs.value<float32>(k_Alpha_Key);

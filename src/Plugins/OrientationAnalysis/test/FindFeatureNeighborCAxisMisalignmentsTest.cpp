@@ -19,6 +19,8 @@ const std::string k_AvgCAxisMisalignmentsNameComputed = "NX_AvgCAxisMisalignment
 
 TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: Valid Filter Execution", "[OrientationAnalysis][FindFeatureNeighborCAxisMisalignmentsFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
 
   // Read Exemplar DREAM3D File Filter
@@ -54,6 +56,8 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: Val
 
 TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: InValid Filter Execution")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
 
   // Read Exemplar DREAM3D File Filter

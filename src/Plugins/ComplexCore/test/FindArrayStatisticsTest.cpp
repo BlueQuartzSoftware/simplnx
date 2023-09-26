@@ -21,6 +21,8 @@ bool VectorContains(const std::vector<T>& vector, T value)
 
 TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCore][FindArrayStatisticsFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
   DataPath statsDataPath({"TestData", "Statistics"});
@@ -175,7 +177,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     REQUIRE(std::fabs(sumVal - 129.0f) < UnitTest::EPSILON);
     REQUIRE(numUnique == 8);
 
-    const auto& standardizeDataStore = standardizeArray->getIDataStoreRefAs<AbstractDataStore<float32>>();
+    const auto& standardizeDataStore = standardizeArray->getDataStoreRef();
     auto stand0 = std::ceil(standardizeDataStore[0] * 100.0f) / 100.0f;
     auto stand1 = std::ceil(standardizeDataStore[1] * 100.0f) / 100.0f;
     auto stand2 = standardizeDataStore[2]; //
@@ -208,6 +210,8 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
 
 TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[ComplexCore][FindArrayStatisticsFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
   DataPath statsDataPath({"TestData", "Statistics"});
@@ -313,9 +317,13 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
+    std::cout << "Before Execution" << std::endl;
+
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
+
+    std::cout << "After Execution" << std::endl;
   }
 
   // Check resulting values
@@ -429,7 +437,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     REQUIRE(std::fabs(sumVal3 - 64.0f) < UnitTest::EPSILON);
     REQUIRE(numUnique3 == 2);
 
-    const auto& standardizeDataStore = standardizeArray->getIDataStoreRefAs<AbstractDataStore<float32>>();
+    const auto& standardizeDataStore = standardizeArray->getDataStoreRef();
     auto stand0 = standardizeDataStore[0];
     auto stand1 = standardizeDataStore[1];
     auto stand2 = standardizeDataStore[2];

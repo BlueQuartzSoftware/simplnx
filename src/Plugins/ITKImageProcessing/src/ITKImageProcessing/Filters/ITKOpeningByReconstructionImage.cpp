@@ -139,7 +139,13 @@ Result<> ITKOpeningByReconstructionImage::executeImpl(DataStructure& dataStructu
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto preserveIntensities = filterArgs.value<bool>(k_PreserveIntensities_Key);
 
-  const cxITKOpeningByReconstructionImage::ITKOpeningByReconstructionImageFunctor itkFunctor = {kernelRadius, kernelType, fullyConnected, preserveIntensities};
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
+  }
+
+  cxITKOpeningByReconstructionImage::ITKOpeningByReconstructionImageFunctor itkFunctor = {kernelRadius, kernelType, fullyConnected, preserveIntensities};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

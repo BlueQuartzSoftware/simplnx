@@ -25,8 +25,8 @@ const FilterHandle k_Test2FilterHandle(k_Test2FilterId, k_TestTwoPluginId);
 
 TEST_CASE("Test Loading Plugins")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
 
   auto* filterListPtr = Application::Instance()->getFilterList();
   const auto& filterHandles = filterListPtr->getFilterHandles();
@@ -63,8 +63,8 @@ TEST_CASE("Test Loading Plugins")
 
 TEST_CASE("Test Singleton")
 {
-  Application* appPtr = new Application();
-  appPtr->loadPlugins(unit_test::k_BuildDir.view());
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
 
   REQUIRE(appPtr != nullptr);
 
@@ -102,7 +102,7 @@ TEST_CASE("Test Singleton")
     filter2->execute(dataStructure, {});
   }
 
-  delete Application::Instance();
+  Application::DeleteInstance();
   REQUIRE(Application::Instance() == nullptr);
 }
 

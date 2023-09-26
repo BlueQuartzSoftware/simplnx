@@ -27,12 +27,12 @@ public:
                         const complex::IDataArray* goodVoxels, complex::UInt8Array& colors)
   : m_Filter(filter)
   , m_ReferenceDir(referenceDir)
-  , m_CellEulerAngles(eulers)
-  , m_CellPhases(phases)
-  , m_CrystalStructures(crystalStructures)
+  , m_CellEulerAngles(eulers.getDataStoreRef())
+  , m_CellPhases(phases.getDataStoreRef())
+  , m_CrystalStructures(crystalStructures.getDataStoreRef())
   , m_NumPhases(numPhases)
   , m_GoodVoxels(goodVoxels)
-  , m_CellIPFColors(colors)
+  , m_CellIPFColors(colors.getDataStoreRef())
   {
   }
 
@@ -59,12 +59,12 @@ public:
     {
       phase = m_CellPhases[i];
       index = i * 3;
-      m_CellIPFColors[index] = 0;
-      m_CellIPFColors[index + 1] = 0;
-      m_CellIPFColors[index + 2] = 0;
-      dEuler[0] = m_CellEulerAngles[index];
-      dEuler[1] = m_CellEulerAngles[index + 1];
-      dEuler[2] = m_CellEulerAngles[index + 2];
+      m_CellIPFColors.setValue(index, 0);
+      m_CellIPFColors.setValue(index + 1, 0);
+      m_CellIPFColors.setValue(index + 2, 0);
+      dEuler[0] = m_CellEulerAngles.getValue(index);
+      dEuler[1] = m_CellEulerAngles.getValue(index + 1);
+      dEuler[2] = m_CellEulerAngles.getValue(index + 2);
 
       // Make sure we are using a valid Euler Angles with valid crystal symmetry
       calcIPF = true;
@@ -81,9 +81,9 @@ public:
       if(phase < m_NumPhases && calcIPF && m_CrystalStructures[phase] < EbsdLib::CrystalStructure::LaueGroupEnd)
       {
         argb = ops[m_CrystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false);
-        m_CellIPFColors[index] = static_cast<uint8_t>(complex::RgbColor::dRed(argb));
-        m_CellIPFColors[index + 1] = static_cast<uint8_t>(complex::RgbColor::dGreen(argb));
-        m_CellIPFColors[index + 2] = static_cast<uint8_t>(complex::RgbColor::dBlue(argb));
+        m_CellIPFColors.setValue(index, static_cast<uint8_t>(complex::RgbColor::dRed(argb)));
+        m_CellIPFColors.setValue(index + 1, static_cast<uint8_t>(complex::RgbColor::dGreen(argb)));
+        m_CellIPFColors.setValue(index + 2, static_cast<uint8_t>(complex::RgbColor::dBlue(argb)));
       }
     }
   }
@@ -115,12 +115,12 @@ public:
 private:
   GenerateIPFColors* m_Filter = nullptr;
   FloatVec3Type m_ReferenceDir;
-  complex::Float32Array& m_CellEulerAngles;
-  complex::Int32Array& m_CellPhases;
-  complex::UInt32Array& m_CrystalStructures;
+  complex::Float32AbstractDataStore& m_CellEulerAngles;
+  complex::Int32AbstractDataStore& m_CellPhases;
+  complex::UInt32AbstractDataStore& m_CrystalStructures;
   int32_t m_NumPhases = 0;
   const complex::IDataArray* m_GoodVoxels = nullptr;
-  complex::UInt8Array& m_CellIPFColors;
+  complex::UInt8AbstractDataStore& m_CellIPFColors;
 };
 } // namespace
 
@@ -167,6 +167,7 @@ Result<> GenerateIPFColors::operator()()
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, totalPoints);
+  dataAlg.setParallelizationEnabled(false);
   dataAlg.execute(GenerateIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, goodVoxelsArray, ipfColors));
 
   if(m_PhaseWarningCount > 0)

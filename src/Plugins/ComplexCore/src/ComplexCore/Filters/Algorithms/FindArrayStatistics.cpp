@@ -428,6 +428,8 @@ public:
       featureSources[featureSourceIndex].reserve(m_LengthArray->operator[](featureSourceIndex + start));
     }
     const usize numTuples = m_Source.getNumberOfTuples();
+    const auto& featureIds = m_FeatureIds->getDataStoreRef();
+    const auto& source = m_Source.getDataStoreRef();
 
     for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
     {
@@ -437,25 +439,28 @@ public:
         continue;
       }
       // Is the featureId within our range that we care about
-      const int32 featureId = (*m_FeatureIds)[tupleIndex];
+      const int32 featureId = featureIds[tupleIndex];
       if(featureId < start || featureId >= end)
       {
         continue;
       }
-      featureSources[featureId - start].push_back(m_Source[tupleIndex]);
+      featureSources[featureId - start].push_back(source[tupleIndex]);
     }
+
+    auto& medianArray = m_MedianArray->getDataStoreRef();
+    auto& numUniqueValuesArray = m_NumUniqueValuesArray->getDataStoreRef();
 
     for(usize featureSourceIndex = 0; featureSourceIndex < numFeatureSources; featureSourceIndex++)
     {
       if(m_FindMedian)
       {
         const float32 val = StatisticsCalculations::findMedian(featureSources[featureSourceIndex]);
-        m_MedianArray->operator[](featureSourceIndex + start) = val;
+        medianArray.setValue(featureSourceIndex + start, val);
       }
       if(m_FindNumUniqueValues)
       {
         const auto val = StatisticsCalculations::findNumUniqueValues(featureSources[featureSourceIndex]);
-        m_NumUniqueValuesArray->operator[](featureSourceIndex + start) = val;
+        numUniqueValuesArray.setValue(featureSourceIndex + start, val);
       }
     }
   }
@@ -655,7 +660,8 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* modalBinsArrayPtr = dynamic_cast<NeighborList<float32>*>(arrays[11]);
     auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[12]);
 
-#ifdef COMPLEX_ENABLE_MULTICORE
+//#ifdef COMPLEX_ENABLE_MULTICORE
+#if 0
     const tbb::simple_partitioner simplePartitioner;
     const size_t grainSize = 500;
     const tbb::blocked_range<size_t> tbbRange(0, numFeatures, grainSize);
@@ -667,11 +673,13 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
                                                         filter),
                       simplePartitioner);
 #else
-    auto impl = FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation,
-                                                  inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange, inputValues->NumBins,
-                                                  mask, featureIds, source, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr,
-                                                  histArrayPtr, mostPopulatedBinPtr, filter);
-    impl.compute(0, numFeatures);
+    ParallelDataAlgorithm indexAlg;
+    indexAlg.setRange(0, numFeatures);
+    indexAlg.execute(FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation,
+                                                       inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
+                                                       inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr,
+                                                       meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr, filter));
+    indexAlg.setParallelizationEnabled(false);
 #endif
 
     if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
@@ -710,7 +718,6 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     }
     else
     {
-
       // compute the statistics for the entire array
       FindStatisticsImpl<DataArray<T>, T>(source, arrays, inputValues);
     }
@@ -719,9 +726,15 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void StandardizeDataByIndex(const DataArray<T>& data, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const Float32Array& mu, const Float32Array& sig,
-                            Float32Array& standardized)
+void StandardizeDataByIndex(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIdsArray, const Float32Array& muArray, const Float32Array& sigArray,
+                            Float32Array& standardizedArray)
 {
+  auto& data = dataArray.getDataStoreRef();
+  auto& standardized = standardizedArray.getDataStoreRef();
+  const auto& featureIds = featureIdsArray->getDataStoreRef();
+  const auto& mu = muArray.getDataStoreRef();
+  const auto& sig = sigArray.getDataStoreRef();
+
   const usize numTuples = data.getNumberOfTuples();
   for(usize i = 0; i < numTuples; i++)
   {
@@ -729,20 +742,25 @@ void StandardizeDataByIndex(const DataArray<T>& data, bool useMask, const std::u
     {
       if(mask->isTrue(i))
       {
-        standardized[i] = (static_cast<float32>(data[i]) - mu[featureIds->at(i)]) / sig[featureIds->at(i)];
+        standardized.setValue(i, (static_cast<float32>(data[i]) - mu[featureIds.at(i)]) / sig[featureIds.at(i)]);
       }
     }
     else
     {
-      standardized[i] = (static_cast<float32>(data[i]) - mu[featureIds->at(i)]) / sig[featureIds->at(i)];
+      standardized.setValue(i, (static_cast<float32>(data[i]) - mu[featureIds.at(i)]) / sig[featureIds.at(i)]);
     }
   }
 }
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void StandardizeData(const DataArray<T>& data, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Float32Array& mu, const Float32Array& sig, Float32Array& standardized)
+void StandardizeData(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Float32Array& muArray, const Float32Array& sigArray, Float32Array& standardizedArray)
 {
+  auto& data = dataArray.getDataStoreRef();
+  auto& standardized = standardizedArray.getDataStoreRef();
+  const auto& mu = muArray.getDataStoreRef();
+  const auto& sig = sigArray.getDataStoreRef();
+
   const usize numTuples = data.getNumberOfTuples();
 
   for(usize i = 0; i < numTuples; i++)
@@ -751,12 +769,12 @@ void StandardizeData(const DataArray<T>& data, bool useMask, const std::unique_p
     {
       if(mask->isTrue(i))
       {
-        standardized[i] = (static_cast<float32>(data[i]) - mu[0]) / sig[0];
+        standardized.setValue(i, (static_cast<float32>(data[i]) - mu[0]) / sig[0]);
       }
     }
     else
     {
-      standardized[i] = (static_cast<float32>(data[i]) - mu[0]) / sig[0];
+      standardized.setValue(i, (static_cast<float32>(data[i]) - mu[0]) / sig[0]);
     }
   }
 }

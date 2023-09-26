@@ -36,8 +36,7 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Dilate)", "[ComplexCore][ErodeDila
   const std::string k_ExemplarDataContainerName("Exemplar Mask Dilate");
   const DataPath k_DilateCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
 
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_mask.dream3d", unit_test::k_TestFilesDir));
@@ -76,8 +75,7 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Erode)", "[ComplexCore][ErodeDilat
   const std::string k_ExemplarDataContainerName("Exemplar Mask Erode");
   const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
 
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_mask.dream3d", unit_test::k_TestFilesDir));

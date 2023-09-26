@@ -23,6 +23,8 @@ const std::string k_NeighborListArrayName("NeighborList");
 
 TEST_CASE("OrientationAnalysis::FindMisorientationsFilter", "[OrientationAnalysis][FindMisorientationsFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_stats_test.tar.gz", "6_6_stats_test.dream3d");
 
   // Read the Small IN100 Data set

@@ -138,6 +138,7 @@ public:
   {
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, totalPoints);
+    dataAlg.setParallelizationEnabled(false);
     dataAlg.execute(impl);
   }
 

@@ -1,6 +1,7 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ComputeFeatureRectFilter.hpp"
 
 #include <catch2/catch.hpp>
@@ -29,7 +30,7 @@ DataStructure CreateTestData()
   Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsArrayName, {dims[2], dims[1], dims[0]}, {1}, cellAM->getId());
   featureIds->fill(0);
 
-  auto& featureIdsStore = featureIds->getIDataStoreRefAs<Int32DataStore>();
+  auto& featureIdsStore = featureIds->getDataStoreRef();
   featureIdsStore[6] = 1;
   featureIdsStore[7] = 1;
   featureIdsStore[8] = 1;
@@ -70,7 +71,7 @@ DataStructure CreateTestData()
 
   std::vector<usize> compDims = {6};
   UInt32Array* rect = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_RectCoordsExemplaryArrayName, {4}, {6}, featureAM->getId());
-  auto& rectStore = rect->getIDataStoreRefAs<UInt32DataStore>();
+  auto& rectStore = rect->getDataStoreRef();
   rectStore.setComponent(1, 0, 1);
   rectStore.setComponent(1, 1, 1);
   rectStore.setComponent(1, 2, 0);
@@ -98,6 +99,8 @@ DataStructure CreateTestData()
 
 TEST_CASE("ComplexCore::ComputeFeatureRectFilter: Valid filter execution", "[ComplexCore][ComputeFeatureRectFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeFeatureRectFilter filter;
   DataStructure dataStructure = CreateTestData();
@@ -117,13 +120,11 @@ TEST_CASE("ComplexCore::ComputeFeatureRectFilter: Valid filter execution", "[Com
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsArrayName}}));
   const UInt32Array& coords = dataStructure.getDataRefAs<UInt32Array>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsArrayName}});
-  REQUIRE_NOTHROW(coords.getIDataStoreRefAs<UInt32DataStore>());
-  const auto& coordsDataStore = coords.getIDataStoreRefAs<UInt32DataStore>();
+  const auto& coordsDataStore = coords.getDataStoreRef();
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsExemplaryArrayName}}));
   const UInt32Array& exemplaryCoords = dataStructure.getDataRefAs<UInt32Array>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsExemplaryArrayName}});
-  REQUIRE_NOTHROW(exemplaryCoords.getIDataStoreRefAs<UInt32DataStore>());
-  const auto& exemplaryCoordsDataStore = exemplaryCoords.getIDataStoreRefAs<UInt32DataStore>();
+  const auto& exemplaryCoordsDataStore = exemplaryCoords.getDataStoreRef();
 
   REQUIRE(coordsDataStore.getNumberOfTuples() == exemplaryCoordsDataStore.getNumberOfTuples());
   REQUIRE(coordsDataStore.getNumberOfComponents() == exemplaryCoordsDataStore.getNumberOfComponents());

@@ -1,6 +1,7 @@
 #include "Preferences.hpp"
 
 #include "complex/Plugin/AbstractPlugin.hpp"
+#include "complex/Utilities/MemoryUtilities.hpp"
 
 #include <fstream>
 
@@ -23,6 +24,7 @@ inline constexpr int64 k_LargeDataSize = 1073741824; // 1 GB
 inline constexpr StringLiteral k_LargeDataFormat = "";
 inline constexpr StringLiteral k_Plugin_Key = "plugins";
 inline constexpr StringLiteral k_DefaultFileName = "preferences.json";
+inline constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
 
 inline constexpr int32 k_FailedToCreateDirectory_Code = -585;
 inline constexpr int32 k_FileDoesNotExist_Code = -586;
@@ -61,6 +63,7 @@ std::filesystem::path Preferences::DefaultFilePath(const std::string& applicatio
 Preferences::Preferences()
 {
   setDefaultValues();
+  checkUseOoc();
 }
 
 Preferences::~Preferences() noexcept = default;
@@ -72,6 +75,35 @@ void Preferences::setDefaultValues()
 
   m_DefaultValues[k_LargeDataSize_Key] = k_LargeDataSize;
   m_DefaultValues[k_PreferredLargeDataFormat_Key] = k_LargeDataFormat;
+
+  updateMemoryDefaults();
+
+#ifdef COMPLEX_FORCE_OUT_OF_CORE_DATA
+  m_DefaultValues[k_ForceOocData_Key] = true;
+#else
+  m_DefaultValues[k_ForceOocData_Key] = false;
+#endif
+}
+
+std::string Preferences::defaultLargeDataFormat() const
+{
+  return m_DefaultValues[k_PreferredLargeDataFormat_Key].get<std::string>();
+}
+
+void Preferences::setDefaultLargeDataFormat(std::string dataFormat)
+{
+  m_DefaultValues[k_PreferredLargeDataFormat_Key] = dataFormat;
+  checkUseOoc();
+}
+
+std::string Preferences::largeDataFormat() const
+{
+  return valueAs<std::string>(k_PreferredLargeDataFormat_Key);
+}
+void Preferences::setLargeDataFormat(std::string dataFormat)
+{
+  m_Values[k_PreferredLargeDataFormat_Key] = dataFormat;
+  checkUseOoc();
 }
 
 void Preferences::addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value)
@@ -200,6 +232,53 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
   }
   m_Values = nlohmann::json::parse(fileStream);
 
+  checkUseOoc();
   return {};
+}
+
+void Preferences::checkUseOoc()
+{
+  m_UseOoc = !value(k_PreferredLargeDataFormat_Key).empty();
+}
+
+bool Preferences::useOocData() const
+{
+  return m_UseOoc;
+}
+
+bool Preferences::forceOocData() const
+{
+  if(!m_UseOoc)
+  {
+    return false;
+  }
+  return valueAs<bool>(k_ForceOocData_Key);
+}
+
+void Preferences::setForceOocData(bool forceOoc)
+{
+  if(!m_UseOoc)
+  {
+    return;
+  }
+  setValue(k_ForceOocData_Key, forceOoc);
+}
+
+void Preferences::updateMemoryDefaults()
+{
+  const uint64 minimumRemaining = 2 * defaultValueAs<uint64>(k_LargeDataSize_Key);
+  const uint64 totalMemory = Memory::GetTotalMemory();
+  uint64 targetValue = totalMemory - minimumRemaining;
+  if(minimumRemaining >= totalMemory)
+  {
+    targetValue = totalMemory / 2;
+  }
+
+  m_DefaultValues[k_LargeDataStructureSize_Key] = targetValue;
+}
+
+uint64 Preferences::largeDataStructureSize() const
+{
+  return value(k_LargeDataStructureSize_Key).get<uint64>();
 }
 } // namespace complex

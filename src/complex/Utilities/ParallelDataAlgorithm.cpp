@@ -9,18 +9,6 @@ ParallelDataAlgorithm::ParallelDataAlgorithm() = default;
 ParallelDataAlgorithm::~ParallelDataAlgorithm() = default;
 
 // -----------------------------------------------------------------------------
-bool ParallelDataAlgorithm::getParallelizationEnabled() const
-{
-  return m_RunParallel;
-}
-
-// -----------------------------------------------------------------------------
-void ParallelDataAlgorithm::setParallelizationEnabled(bool doParallel)
-{
-  m_RunParallel = doParallel;
-}
-
-// -----------------------------------------------------------------------------
 Range ParallelDataAlgorithm::getRange() const
 {
   return m_Range;

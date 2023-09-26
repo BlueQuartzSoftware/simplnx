@@ -307,6 +307,12 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
   auto imageArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
 
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(imageArrayPath);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageArrayPath.toString()));
+  }
+
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   // Stored fastest to slowest i.e. X Y Z
   SizeVec3 dims = imageGeom.getDimensions();

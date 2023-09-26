@@ -21,6 +21,8 @@ class COMPLEX_EXPORT Preferences
 public:
   static inline constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";
   static inline constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";
+  static inline constexpr StringLiteral k_LargeDataStructureSize_Key = "large_datastructure_size";
+  static inline constexpr StringLiteral k_ForceOocData_Key = "force_ooc_data";
 
   static std::filesystem::path DefaultFilePath(const std::string& applicationName);
 
@@ -72,13 +74,30 @@ public:
   Result<> saveToFile(const std::filesystem::path& filepath) const;
   Result<> loadFromFile(const std::filesystem::path& filepath);
 
+  std::string defaultLargeDataFormat() const;
+  void setDefaultLargeDataFormat(std::string dataFormat);
+
+  std::string largeDataFormat() const;
+  void setLargeDataFormat(std::string dataFormat);
+
+  bool useOocData() const;
+  bool forceOocData() const;
+
+  void setForceOocData(bool forceOoc);
+
+  void updateMemoryDefaults();
+  uint64 largeDataStructureSize() const;
+
 protected:
   void setDefaultValues();
 
   void addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value);
 
+  void checkUseOoc();
+
 private:
   nlohmann::json m_DefaultValues;
   nlohmann::json m_Values;
+  bool m_UseOoc = false;
 };
 } // namespace complex

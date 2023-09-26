@@ -9,9 +9,9 @@ using namespace complex;
 
 TEST_CASE("Save Filters To Json")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
-  auto* filterList = app.getFilterList();
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
+  auto* filterList = app->getFilterList();
   REQUIRE(filterList != nullptr);
 
   const auto& handles = filterList->getFilterHandles();
@@ -36,9 +36,9 @@ TEST_CASE("Save Filters To Json")
 
 TEST_CASE("Save Pipeline To Json")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
-  auto* filterList = app.getFilterList();
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
+  auto* filterList = app->getFilterList();
   REQUIRE(filterList != nullptr);
 
   const auto& handles = filterList->getFilterHandles();
