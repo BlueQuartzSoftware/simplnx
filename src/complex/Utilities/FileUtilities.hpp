@@ -48,19 +48,21 @@ Result<> ValidateCSVFile(const std::string& filePath)
 {
   constexpr int64_t bufferSize = 2048;
 
-  if(!fs::exists(filePath))
+  std::string absPath = fs::absolute(filePath);
+
+  if(!fs::exists(absPath))
   {
-    return MakeErrorResult(-300, fmt::format("Could not open non-existent file for reading: {}", filePath));
+    return MakeErrorResult(-300, fmt::format("Could not open non-existent file for reading: {}", absPath));
   }
 
   // Obtain the file size
-  const size_t fileSize = fs::file_size(filePath);
+  const size_t fileSize = fs::file_size(absPath);
 
   // Open the file
-  std::fstream in(filePath.c_str(), std::ios_base::in | std::ios_base::binary);
+  std::fstream in(absPath.c_str(), std::ios_base::in | std::ios_base::binary);
   if(!in.is_open())
   {
-    return MakeErrorResult(-301, fmt::format("Could not open file for reading: {}", filePath));
+    return MakeErrorResult(-301, fmt::format("Could not open file for reading: {}", absPath));
   }
 
   size_t actualSize = bufferSize;
@@ -78,7 +80,7 @@ Result<> ValidateCSVFile(const std::string& filePath)
     in.read(buffer.data(), actualSize);
   } catch(std::exception& e)
   {
-    return MakeErrorResult(-302, fmt::format("There was an error reading the data from file: {}.  Exception: {}", filePath, e.what()));
+    return MakeErrorResult(-302, fmt::format("There was an error reading the data from file: {}.  Exception: {}", absPath, e.what()));
   }
 
   // Check the buffer for invalid characters, tab characters, new-line characters, and carriage return characters
@@ -93,7 +95,7 @@ Result<> ValidateCSVFile(const std::string& filePath)
     if(currentChar < 32 && currentChar != 9 && currentChar != 10 && currentChar != 13)
     {
       // This is an unprintable character
-      return MakeErrorResult(-303, fmt::format("Unprintable characters have been detected in file: {}.  Please import a different file.", filePath));
+      return MakeErrorResult(-303, fmt::format("Unprintable characters have been detected in file: {}.  Please import a different file.", absPath));
     }
     if(currentChar == 9)
     {
@@ -114,7 +116,7 @@ Result<> ValidateCSVFile(const std::string& filePath)
     // This might be a binary file
     return MakeErrorResult(-304, fmt::format("The file \"{}\" might be a binary file, because line-feed, tab, or carriage return characters have not been detected. Using this file may crash the "
                                              "program or cause unexpected results.  Please import a different file.",
-                                             filePath));
+                                             absPath));
   }
 
   // Close the file and free the memory from the buffer
