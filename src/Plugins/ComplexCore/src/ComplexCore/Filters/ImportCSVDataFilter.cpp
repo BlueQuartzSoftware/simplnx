@@ -53,10 +53,8 @@ enum class IssueCodes
   INVALID_ARRAY_TYPE = -106,
   ILLEGAL_NAMES = -107,
   FILE_NOT_OPEN = -108,
-  MEMORY_ALLOCATION_FAIL = -109,
-  UNABLE_TO_READ_DATA = -110,
-  UNPRINTABLE_CHARACTERS = -111,
-  BINARY_DETECTED = -112,
+  INCORRECT_DATATYPE_COUNT = -109,
+  INCORRECT_MASK_COUNT = -110,
   INCORRECT_TUPLES = -113,
   NEW_DG_EXISTS = -114,
   CANNOT_SKIP_TO_LINE = -115,
@@ -574,7 +572,22 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
     resultOutputActions.warnings().push_back(Warning{to_underlying(IssueCodes::IGNORED_TUPLE_DIMS), msg});
   }
 
-  for(usize i = 0; i < csvImporterData.dataTypes.size() && i < headers.size(); i++)
+  if(csvImporterData.dataTypes.size() != headers.size())
+  {
+    std::string errMsg = fmt::format("There are {} data types but there are {} arrays being imported.  The number of data types must match the number of imported arrays.",
+                                     csvImporterData.dataTypes.size(), headers.size());
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_DATATYPE_COUNT), errMsg), {}};
+  }
+
+  if(csvImporterData.skippedArrayMask.size() != headers.size())
+  {
+    std::string errMsg = fmt::format(
+        "There are {} booleans in the skipped array mask but there are {} arrays being imported.  The number of booleans in the skipped array mask must match the number of imported arrays.",
+        csvImporterData.skippedArrayMask.size(), headers.size());
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_MASK_COUNT), errMsg), {}};
+  }
+
+  for(usize i = 0; i < headers.size(); i++)
   {
     if(csvImporterData.skippedArrayMask[i])
     {
