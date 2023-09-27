@@ -428,28 +428,27 @@ PYBIND11_MODULE(complex, mod)
   arrayThresholdSet.def_property("thresholds", &ArrayThresholdSet::getArrayThresholds, &ArrayThresholdSet::setArrayThresholds);
   arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet& self) { return "ArrayThresholdSet()"; });
 
-  py::class_<CSVWizardData> csvWizardData(mod, "CSVWizardData");
+  py::class_<CSVImporterData> csvImporterData(mod, "CSVImporterData");
 
-  py::enum_<CSVWizardData::HeaderMode> csvHeaderMode(csvWizardData, "HeaderMode");
-  csvHeaderMode.value("Line", CSVWizardData::HeaderMode::LINE);
-  csvHeaderMode.value("Custom", CSVWizardData::HeaderMode::CUSTOM);
-  csvHeaderMode.value("Defaults", CSVWizardData::HeaderMode::DEFAULTS);
+  py::enum_<CSVImporterData::HeaderMode> csvHeaderMode(csvImporterData, "HeaderMode");
+  csvHeaderMode.value("Line", CSVImporterData::HeaderMode::LINE);
+  csvHeaderMode.value("Custom", CSVImporterData::HeaderMode::CUSTOM);
 
-  csvWizardData.def(py::init<>());
-  csvWizardData.def_readwrite("input_file_path", &CSVWizardData::inputFilePath);
-  csvWizardData.def_readwrite("data_headers", &CSVWizardData::dataHeaders);
-  csvWizardData.def_readwrite("begin_index", &CSVWizardData::beginIndex);
-  csvWizardData.def_readwrite("number_of_lines", &CSVWizardData::numberOfLines);
-  csvWizardData.def_readwrite("data_types", &CSVWizardData::dataTypes);
-  csvWizardData.def_readwrite("delimiters", &CSVWizardData::delimiters);
-  csvWizardData.def_readwrite("header_line", &CSVWizardData::headerLine);
-  csvWizardData.def_readwrite("header_mode", &CSVWizardData::headerMode);
-  csvWizardData.def_readwrite("tab_as_delimiter", &CSVWizardData::tabAsDelimiter);
-  csvWizardData.def_readwrite("semicolon_as_delimiter", &CSVWizardData::semicolonAsDelimiter);
-  csvWizardData.def_readwrite("comma_as_delimiter", &CSVWizardData::commaAsDelimiter);
-  csvWizardData.def_readwrite("space_as_delimiter", &CSVWizardData::spaceAsDelimiter);
-  csvWizardData.def_readwrite("consecutive_delimiters", &CSVWizardData::consecutiveDelimiters);
-  csvWizardData.def("__repr__", [](const CSVWizardData& self) { return "CSVWizardData()"; });
+  csvImporterData.def(py::init<>());
+  csvImporterData.def_readwrite("input_file_path", &CSVImporterData::inputFilePath);
+  csvImporterData.def_readwrite("custom_headers", &CSVImporterData::customHeaders);
+  csvImporterData.def_readwrite("start_import_row", &CSVImporterData::startImportRow);
+  csvImporterData.def_readwrite("data_types", &CSVImporterData::dataTypes);
+  csvImporterData.def_readwrite("skipped_array_mask", &CSVImporterData::skippedArrayMask);
+  csvImporterData.def_readwrite("headers_line", &CSVImporterData::headersLine);
+  csvImporterData.def_readwrite("header_mode", &CSVImporterData::headerMode);
+  csvImporterData.def_readwrite("tuple_dims", &CSVImporterData::tupleDims);
+  csvImporterData.def_readwrite("tab_as_delimiter", &CSVImporterData::tabAsDelimiter);
+  csvImporterData.def_readwrite("semicolon_as_delimiter", &CSVImporterData::semicolonAsDelimiter);
+  csvImporterData.def_readwrite("comma_as_delimiter", &CSVImporterData::commaAsDelimiter);
+  csvImporterData.def_readwrite("space_as_delimiter", &CSVImporterData::spaceAsDelimiter);
+  csvImporterData.def_readwrite("consecutive_delimiters", &CSVImporterData::consecutiveDelimiters);
+  csvImporterData.def("__repr__", [](const CSVImporterData& self) { return "CSVImporterData()"; });
 
   py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
   py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
