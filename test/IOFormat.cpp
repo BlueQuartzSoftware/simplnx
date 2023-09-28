@@ -30,6 +30,11 @@ TEST_CASE("Target DataStructure Size", "IOTest")
 
   const uint64 memory = Memory::GetTotalMemory();
   const uint64 largeDataSize = preferences->valueAs<uint64>(Preferences::k_LargeDataSize_Key);
-  const uint64 targetReducedSize = (memory - largeDataSize);
+  const uint64 minimumRemaining = 2 * largeDataSize;
+  uint64 targetReducedSize = (memory - 2 * largeDataSize);
+  if(minimumRemaining >= memory)
+  {
+    targetReducedSize = memory / 2;
+  }
   REQUIRE(preferences->defaultValueAs<uint64>(Preferences::k_LargeDataStructureSize_Key) == targetReducedSize);
 }

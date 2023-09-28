@@ -13,6 +13,11 @@
 
 using namespace complex;
 
+namespace unit_test
+{
+inline constexpr StringLiteral k_BuildDir = COMPLEX_BUILD_DIR;
+}
+
 TEST_CASE("Array")
 {
   FloatVec3 vec0(3.0F, 4.0F, 5.0F);
@@ -52,6 +57,7 @@ TEST_CASE("DataArrayCreation")
 
 TEST_CASE("complex::DataArray Copy TupleTest", "[complex][DataArray]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   const std::string k_DataArrayName("DataArray");
   const DataPath k_DataPath({k_DataArrayName});
