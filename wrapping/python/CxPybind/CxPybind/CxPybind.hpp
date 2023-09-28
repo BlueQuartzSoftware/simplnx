@@ -199,12 +199,12 @@ public:
 
   Application* getApp()
   {
-    return m_App;
+    return m_App.get();
   }
 
   const Application* getApp() const
   {
-    return m_App;
+    return m_App.get();
   }
 
   template <class T>
@@ -281,7 +281,7 @@ private:
   std::unordered_map<Uuid, PyParameterInfo> m_ParameterConversionMap;
   std::unordered_map<Uuid, std::vector<py::type>> m_PluginFilterMap;
   std::unordered_map<Uuid, std::shared_ptr<PythonPlugin>> m_PythonPlugins;
-  Application* m_App;
+  std::shared_ptr<Application> m_App;
 };
 
 inline py::dict ConvertArgsToDict(const Internals& internals, const Parameters& parameters, const Arguments& args)
