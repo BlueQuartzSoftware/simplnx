@@ -394,60 +394,64 @@ General Parameters
    + The file optionally can have a line of headers. The user can specify what line the headers are on
    + The import can start at a user specified line number but will continue to the end of the file.
 
-   The primary python object that will hold the information to pass to the filter is the CSVWizardData class described below.
+   The primary python object that will hold the information to pass to the filter is the CSVImporterData class described below.
 
-   :ivar ValueType: CSVWizardData
+   :ivar ValueType: CSVImporterData
 
-   .. py:class:: ImportCSVDataParameter.CSVWizardData
+   .. py:class:: ImportCSVDataParameter.CSVImporterData
 
-      The CSVWizardData class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are 
+      The CSVImporterData class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are
       a number of member variables that need to be set correctly before the filter will execute
       correctly.
 
-   :ivar input_file_path: "PathLike"  The path to the input file on the file syatem.
-   :ivar begin_index: Int  What line number does the data start on. 1 Based numbering scheme.
-   :ivar comma_as_delimiter: Bool Are the values comma separated
-   :ivar semicolon_as_delimiter: Bool Are the values semicolon separated
-   :ivar space_as_delimiter: Bool Are the values space separated
-   :ivar tab_as_delimiter: Bool Are the values tab separated
-   :ivar consecutive_delimiters: Bool Should consectutive delimiters be counted as a single delimiter. Bool
-   :ivar data_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of ecah of the created  :ref:`DataArray<DataArray>`
-   :ivar data_types: List[cx.DataType]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`
-   :ivar delimiters: List[string]. The actual delimiter to use. If you specified a comma above, then [","] would be used. The list should have a single value.
-   :ivar header_line: Int. The line number of the headers
-   :ivar header_mode: 'cx.CSVWizardData.HeaderMode.'. Can be one of 'cx.CSVWizardData.HeaderMode.Line' or 'cx.CSVWizardData.HeaderMode.Custom'
-   :ivar number_of_lines: Int. Total lines in the file.
+   :ivar input_file_path: "PathLike".  The path to the input file on the file system.
+   :ivar start_import_row: Int.  What line number does the data start on. 1 Based numbering scheme.
+   :ivar comma_as_delimiter: Bool. Are the values comma separated.
+   :ivar semicolon_as_delimiter: Bool. Are the values semicolon separated.
+   :ivar space_as_delimiter: Bool. Are the values space separated.
+   :ivar tab_as_delimiter: Bool. Are the values tab separated.
+   :ivar consecutive_delimiters: Bool. Should consecutive delimiters be counted as a single delimiter.
+   :ivar custom_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of the created  :ref:`DataArray<DataArray>`.
+   :ivar data_types: List[cx.DataType]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`.
+   :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray<DataArray>`.
+   :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArray<DataArray>`s.
+   :ivar headers_line: Int. The line number of the headers.
+   :ivar header_mode: 'cx.CSVImporterData.HeaderMode.'. Can be one of 'cx.CSVImporterData.HeaderMode.Line' or 'cx.CSVImporterData.HeaderMode.Custom'.
 
 
 .. code:: python
 
-   import_csv_wizard_data = cx.CSVWizardData()
-   import_csv_wizard_data.input_file_path = "/tmp/test_csv_data.csv"
-   import_csv_wizard_data.begin_index = 2
-   import_csv_wizard_data.comma_as_delimiter = True
-   import_csv_wizard_data.semicolon_as_delimiter = False
-   import_csv_wizard_data.space_as_delimiter = False
-   import_csv_wizard_data.tab_as_delimiter = False
-   import_csv_wizard_data.consecutive_delimiters = False
-   import_csv_wizard_data.data_headers = []
-   import_csv_wizard_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
-   import_csv_wizard_data.delimiters = [","]
-   import_csv_wizard_data.header_line = 1
-   import_csv_wizard_data.header_mode = cx.CSVWizardData.HeaderMode.Line
-   import_csv_wizard_data.number_of_lines = 37990
-   
-   result = cx.ImportCSVDataFilter.execute(data_structure=data_structure, 
-                                          # This will store the imported arrays into a newly generated DataGroup
-                                          created_data_group=cx.DataPath(["Imported Data"]),  
-                                          # We are not using this parameter but it still needs a value
-                                          selected_data_group=cx.DataPath(),  
-                                          # The dimensions of the tuples. Can be 1-N dimensions
-                                          tuple_dimensions=[[37989]], 
-                                          # Use an existing DataGroup or AttributeMatrix. If an AttributemMatrix is used, the total number of tuples must match
-                                          use_existing_group=False,   
-                                          # The CSVWizardData object with all member variables set.
-                                          wizard_data=import_csv_wizard_data # The CSVWizardData object with all member variables set.
-                                          )
+   data_structure = cx.DataStructure()
+
+   csv_importer_data = cx.CSVImporterData()
+   csv_importer_data.input_file_path = "/tmp/test_csv_data.csv"
+   csv_importer_data.start_import_row = 2
+
+   csv_importer_data.comma_as_delimiter = True
+   csv_importer_data.semicolon_as_delimiter = False
+   csv_importer_data.space_as_delimiter = False
+   csv_importer_data.tab_as_delimiter = False
+   csv_importer_data.consecutive_delimiters = False
+
+   csv_importer_data.custom_headers = []
+   csv_importer_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
+   csv_importer_data.skipped_array_mask = [False,False,False,False,False,False,False ]
+   csv_importer_data.tuple_dims = [37989]
+
+   csv_importer_data.headers_line = 1
+   csv_importer_data.header_mode = cx.CSVImporterData.HeaderMode.Line
+
+   # This will store the imported arrays into a newly generated DataGroup
+   result = cx.ImportCSVDataFilter.execute(data_structure=data_structure,
+                                         # This will store the imported arrays into a newly generated DataGroup
+                                         created_data_group=cx.DataPath(["Imported Data"]),
+                                         # We are not using this parameter but it still needs a value
+                                         selected_data_group=cx.DataPath(),
+                                         # Use an existing DataGroup or AttributeMatrix. If an AttributemMatrix is used, the total number of tuples must match
+                                         use_existing_group=False,
+                                         # The CSVImporterData object with all member variables set.
+                                         csv_importer_data=csv_importer_data # The CSVImporterData object with all member variables set.
+                                         )
 
 
 .. _ImportHDF5DatasetParameter:
