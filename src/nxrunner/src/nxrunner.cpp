@@ -484,7 +484,7 @@ int main(int argc, char* argv[])
     return errorCode;
   }
   case ArgumentType::Execute: {
-    // try
+    try
     {
       auto result = ExecutePipeline(arguments[0]);
       results.push_back(result);
@@ -496,11 +496,11 @@ int main(int argc, char* argv[])
       return 1;
     }
 #endif
-    /*catch(const std::exception& exception)
+    catch(const std::exception& exception)
     {
       fmt::print("Exception: {}\n", exception.what());
       return 1;
-    }*/
+    }
     break;
   }
   case ArgumentType::Preflight: {
