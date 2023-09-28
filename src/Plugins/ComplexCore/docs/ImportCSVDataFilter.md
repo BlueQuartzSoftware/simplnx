@@ -6,45 +6,62 @@ IO (Input)
 
 ## Description ##
 
-This **Filter** reads CSV data from any text-based file and imports the data into DREAM3D-NX-style arrays.  The user uses the **Filter's** wizard to specify which file to import, how the data is formatted, what to call each array, and what type each array should be.
+This **Filter** reads CSV data from any text-based file and imports the data into DREAM3D-NX-style arrays.  The user specifies which file to import, how the data is formatted, what to call each array, and what type each array should be.
 
 *Note:* This **Filter** is intended to read data that is column-oriented, such that each created DREAM3D-NX array corresponds to a column of data in the CSV file. Therefore, this **Filter** will only import scalar arrays. If multiple columns are in fact different components of the same array, then the columns may be imported as separate arrays and then combined in the correct order using the Combine Attribute Arrays **Filter**.
 
-### Separating the Data ###
+### Filling Out The Inputs ###
 
-After clicking the **Import Data...** button and selecting a file, a wizard appears. The user can choose how the data is delimited: comma (,), tab, semicolon (;) or space ( ). The user may also elect to treat consecutive delimiters as one delimiter.
+The user first selects the **Input CSV File** path, which then enables the rest of the interface.
 
-![Selecting how the data is separated](Images/Import_CSV_1.png)
+![Input CSV File Field](Images/Import_CSV_1.png)
 
-### Selecting the Delimiter ###
+If the chosen **Input CSV File** already has headers inside the file, the user can select the **My data has headers** checkbox.  This
+enables the **Headers Line Number** spin box where the user can select which line of the file contains the headers.
 
-![Selecting the delimiting character(s)](Images/Import_CSV_2.png)
+*NOTE*: The interface only allows importing data starting at the line after the chosen **Headers Line Number**.  So, in the example below, the **Headers Line Number** is set to 1, so **Start Import At Row** defaults to 2 and has a range of 2-297 (this particular input file has 297 total lines).  The max range of **Headers Line Number** is, of course, set to 296 so that at least 1 line can be imported.
 
-### Selecting Import Rows, Data Representation and Column Headers ###
+![Input CSV File Field](Images/Import_CSV_2.png)
 
-On the last page, the user can set the following information:
+The user can choose how the data is delimited: comma (,), tab, semicolon (;) or space ( ). The user may also elect to ignore consecutive delimiters, which treats consecutive delimiters as one delimiter.
 
-+ Header names, either from a line number in the file or manually through a dialog box or select the generated header values
-+ Row index to start the import
-+ Column data format (choosing the data type or deciding to skip the column)
+![Input CSV File Field](Images/Import_CSV_3.png)
 
+The user can select the number of preview lines available by changing the **Number of Preview Lines** spin box.  The range in the example is set to 1-296 because the import is currently starting at row 2 (from **Start Import At Row** spin box).
 
-![Setting Numerical Representations, Column Headers and other information](Images/Import_CSV_3.png)
+![Input CSV File Field](Images/Import_CSV_4.png)
 
+The user can then set the data format for each column.  Selecting one or more columns will enable the **Column Data Type** combo box, where you can choose a data type or decide to skip importing specific columns as well.
 
-If the data does not have any headers, the user can set a string value for each column. These values will be used as the name of the **Data Array** in DREAM3D-NX.
+![Input CSV File Field](Images/Import_CSV_5.png)
+![Input CSV File Field](Images/Import_CSV_6.png)
 
-![Setting Names of each Column which will be used as the name of each **Attribute Array** ](Images/Import_CSV_4.png)
+If the **My data has headers** checkbox is OFF, then it is also possible to double-click the headers in the Preview Table to edit them.  These values will be used as the name of the **Data Array** in DREAM3D-NX.
+
+*NOTE:* Editing table headers is only available when the **My data has headers** checkbox is OFF.  If the **My data has headers** checkbox is ON, then the headers will be read from the **Headers Line Number** in the data file, and the table headers will not be editable.
+
+![Input CSV File Field](Images/Import_CSV_7.png)
+
+The user can select the tuple dimensions that will be applied to the imported arrays.
+
+![Input CSV File Field](Images/Import_CSV_8.png)
+
+The imported arrays can be stored in either an existing attribute matrix or a new attribute matrix can be created.
+
+![Input CSV File Field](Images/Import_CSV_9.png)
+
+Afterwards, you end up with a data structure that looks like this:
+
+![Input CSV File Field](Images/Import_CSV_10.png)
 
 ## Parameters ##
 
-| Name | Type | Description |
-|------|------|-------------|
-| Wizard Data Object | CSVWizardData | The object that holds all relevant data collected from the wizard |
-| Tuple Dimensions | DynamicTableData | The tuple dimensions for the arrays being imported from the file |
-| Use Existing Group | bool | Determines whether or not to store the imported data arrays in an existing group |
-| Existing Data Group (Use Existing Group - ON) | DataPath | The data path to the existing group where the imported arrays will be stored |
-| New Data Group (Use Existing Group - OFF) | DataPath | The data path to the newly created group where the imported arrays will be stored |
+| Name                                                           | Type             | Description                                                                                                                                                                                                                                                 |
+|----------------------------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Importer Data Object                                           | CSVImporterData  | The object that holds all data relevant to importing the data, such as input file path, custom headers, start import row number, data types for all the imported arrays, header line number, header mode, imported array tuple dimensions, delimiters, etc. |
+| Use Existing Attribute Matrix                                  | bool             | Determines whether or not to store the imported data arrays in an existing attribute matrix                                                                                                                                                                 |
+| Existing Attribute Matrix (Use Existing Attribute Matrix - ON) | DataPath         | The data path to the existing attribute matrix where the imported arrays will be stored                                                                                                                                                                     |
+| New Attribute Matrix (Use Existing Attribute Matrix - OFF)     | DataPath         | The data path to the newly created attribute matrix where the imported arrays will be stored                                                                                                                                                                |
 
 ## Required Geometry ##
 
@@ -54,13 +71,13 @@ Not Applicable
 
 | Kind | Default Name | Description |
 |------|--------------|------|----------------------|-------------|
-| **Data Group** | None | The existing data group to store the imported data arrays (only if Existing Data Group is turned ON) |
+| **Attribute Matrix** | None | The existing attribute matrix to store the imported data arrays (only if Existing Attribute Matrix is turned ON) |
 
 ## Created Objects ##
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| One or more **Element/Feature/Ensemble/etc. Data Arrays** | None | Any | 1 | One or more arrays that are created due to importing CSV data via the wizard |
+| One or more **Element/Feature/Ensemble/etc. Data Arrays** | None | Any | 1 | One or more arrays that are created due to importing CSV data |
 
 ## Example Pipelines ##
 
