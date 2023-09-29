@@ -160,7 +160,8 @@ Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
     auto skippedArrayVal = dSkippedArrays[i];
     if(!skippedArrayVal.is_boolean())
     {
-      return MakeErrorResult<CSVImporterData>(-106, fmt::format("CSVImporterData: Skipped array value at index {} is of type {} and is not a boolean.", std::to_string(i), skippedArrayVal.type_name()));
+      return MakeErrorResult<CSVImporterData>(-106,
+                                              fmt::format("CSVImporterData: Skipped array value at index {} is of type {} and is not a boolean.", std::to_string(i), skippedArrayVal.type_name()));
     }
 
     data.skippedArrayMask.push_back(skippedArrayVal);
