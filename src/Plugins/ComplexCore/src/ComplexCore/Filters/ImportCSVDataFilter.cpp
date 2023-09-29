@@ -65,23 +65,6 @@ enum class IssueCodes
 };
 
 // -----------------------------------------------------------------------------
-Result<OutputActions> validateInputFilePath(const std::string& inputFilePath)
-{
-  if(inputFilePath.empty())
-  {
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_FILE), "A file has not been chosen to import. Please pick a file to import.")};
-  }
-
-  fs::path inputFile(inputFilePath);
-  if(!fs::exists(inputFile))
-  {
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::FILE_DOES_NOT_EXIST), fmt::format("The input file does not exist: '{}'", inputFilePath))};
-  }
-
-  return {};
-}
-
-// -----------------------------------------------------------------------------
 Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const DataStructure& dataStructure, const std::vector<std::string>& headers)
 {
   if(groupPath.empty())
@@ -436,6 +419,12 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   std::string inputFilePath = csvImporterData.inputFilePath;
   CSVImporterData::HeaderMode headerMode = csvImporterData.headerMode;
 
+  // Validate the input file path
+  if(inputFilePath.empty())
+  {
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_FILE), "A file has not been chosen to import. Please pick a file to import.")};
+  }
+
   Result<> csvResult = FileUtilities::ValidateCSVFile(inputFilePath);
   if(csvResult.invalid())
   {
@@ -483,13 +472,6 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   Dimensions cDims = {1};
   complex::Result<OutputActions> resultOutputActions;
 
-  // Validate the input file path
-  Result<OutputActions> result = validateInputFilePath(inputFilePath);
-  if(result.invalid())
-  {
-    return {std::move(result)};
-  }
-
   size_t totalLines = s_HeaderCache[s_InstanceId].TotalLines;
   size_t totalImportedLines = totalLines - csvImporterData.startImportRow + 1;
   size_t tupleTotal = std::accumulate(csvImporterData.tupleDims.begin(), csvImporterData.tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
@@ -505,7 +487,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   DataPath groupPath;
   if(useExistingAM)
   {
-    result = validateExistingGroup(selectedAM, dataStructure, headers);
+    Result<OutputActions> result = validateExistingGroup(selectedAM, dataStructure, headers);
     if(result.invalid())
     {
       return {std::move(result)};
@@ -514,7 +496,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   }
   else
   {
-    result = validateNewGroup(createdDataAM, dataStructure);
+    Result<OutputActions> result = validateNewGroup(createdDataAM, dataStructure);
     if(result.invalid())
     {
       return {std::move(result)};
