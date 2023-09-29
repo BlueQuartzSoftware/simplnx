@@ -108,6 +108,20 @@ inline constexpr int32 k_ImageComponentDimensionMismatch = -2001;
 
 } // namespace Constants
 
+/**
+ * @brief Compares the total number of cells of the image geometry and the total number of tuples from the data store
+ * @param dataStore
+ * @param imageGeom
+ * @return True if the Image Geometry's numCells() == the DataStore's numberOfTuples()
+ */
+bool DoTuplesMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
+
+/**
+ * @brief Checks to see if the dimensions of the Image Geometry and the DataStore are the same.
+ * @param dataStore
+ * @param imageGeom
+ * @return
+ */
 bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
 
 /**
@@ -466,10 +480,8 @@ Result<ResultT> ArraySwitchFuncDimsImpl(const IDataStore& dataStore, const Image
   {
     return ArraySwitchFuncComponentImpl<InputT, OutputT, 2, ComponentOptionsT, ResultT, FunctorT>(nComp, errorCode, args...);
   }
-  else
-  {
-    return ArraySwitchFuncComponentImpl<InputT, OutputT, 3, ComponentOptionsT, ResultT, FunctorT>(nComp, errorCode, args...);
-  }
+
+  return ArraySwitchFuncComponentImpl<InputT, OutputT, 3, ComponentOptionsT, ResultT, FunctorT>(nComp, errorCode, args...);
 }
 
 template <class InputPixelT, class OutputPixelT, uint32 Dimension>
@@ -484,11 +496,13 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
 
   const IDataStore& dataStore = dataArray.getIDataStoreRef();
 
-  if(!complex::ITK::DoDimensionsMatch(dataStore, imageGeom))
+  if(!complex::ITK::DoDimensionsMatch(dataStore, imageGeom) && !complex::ITK::DoTuplesMatch(dataStore, imageGeom))
   {
 
-    std::string errMessage = fmt::format("DataArray '{}' tuple dimensions '{}' do not match Image Geometry '{}' dimensions '{}'", inputArrayPath.toString(), fmt::join(dataStore.getTupleShape(), ", "),
-                                         imageGeomPath.toString(), fmt::join(imageGeom.getDimensions(), ", "));
+    std::string errMessage = fmt::format("DataArray '{}' tuple dimensions '{}' do not match Image Geometry '{}' with dimensions 'XYZ={}' and the total number of ImageGeometry Cells {} does not match "
+                                         "the total number of DataArray tuples {}.",
+                                         inputArrayPath.toString(), fmt::join(dataStore.getTupleShape(), ", "), imageGeomPath.toString(), fmt::join(imageGeom.getDimensions(), ", "),
+                                         imageGeom.getNumberOfCells(), dataStore.getNumberOfTuples());
     return MakeErrorResult<OutputActions>(complex::ITK::Constants::k_ImageGeometryDimensionMismatch, errMessage);
   }
 
@@ -497,7 +511,8 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
 
   if(cDims != inputPixelDims)
   {
-    std::string errMessage = fmt::format("DataArray component dimensions of '{}' do not match output image component dimensions of '{}'", fmt::join(inputPixelDims, ", "), fmt::join(cDims, ", "));
+    const std::string errMessage =
+        fmt::format("DataArray component dimensions of '{}' do not match output image component dimensions of '{}'", fmt::join(inputPixelDims, ", "), fmt::join(cDims, ", "));
     return MakeErrorResult<OutputActions>(complex::ITK::Constants::k_ImageComponentDimensionMismatch, errMessage);
   }
 
