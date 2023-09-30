@@ -102,13 +102,11 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJson(const nlohmann::json& j
     }
   }
 
-  constexpr int32 k_LowtoHigh = 0;
-  constexpr int32 k_HightoLow = 1;
   const auto orderCheck = json[k_StackingOrder].get<int32>();
-  if(orderCheck != k_LowtoHigh && orderCheck != k_HightoLow)
+  if(orderCheck != RefFrameZDir::k_LowtoHigh && orderCheck != RefFrameZDir::k_HightoLow)
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
-                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(), k_StackingOrder.view(), k_LowtoHigh, k_HightoLow));
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration, fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(),
+                                                                                                           k_StackingOrder.view(), RefFrameZDir::k_LowtoHigh, RefFrameZDir::k_HightoLow));
   }
 
   ValueType value;

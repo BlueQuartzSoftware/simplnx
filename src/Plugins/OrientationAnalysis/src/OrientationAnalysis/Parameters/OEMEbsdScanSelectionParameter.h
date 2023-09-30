@@ -14,6 +14,16 @@ namespace fs = std::filesystem;
 
 namespace complex
 {
+/** @brief RefFrameZDir defined for the Stacking order of images into a 3D Volume. This is taken from
+ * EbsdLib. If EbsdLib changes, this should follow suit.
+ */
+namespace RefFrameZDir
+{
+inline constexpr uint32_t k_LowtoHigh = 0;
+inline constexpr uint32_t k_HightoLow = 1;
+inline constexpr uint32_t UnknownRefFrameZDirection = 2;
+} // namespace RefFrameZDir
+
 class COMPLEX_EXPORT OEMEbsdScanSelectionParameter : public ValueParameter
 {
 
@@ -24,7 +34,7 @@ public:
   struct ValueType
   {
     fs::path inputFilePath;
-    int32 stackingOrder = 0; // Low to High This is the same from EbsdLib. If EbsdLib changes, this should change
+    uint32_t stackingOrder = RefFrameZDir::k_LowtoHigh;
     std::list<std::string> scanNames = {};
   };
 
