@@ -413,8 +413,8 @@ General Parameters
    :ivar consecutive_delimiters: Bool. Should consecutive delimiters be counted as a single delimiter.
    :ivar custom_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of the created  :ref:`DataArray<DataArray>`.
    :ivar data_types: List[cx.DataType]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`.
-   :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray<DataArray>`.
-   :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArray<DataArray>`s.
+   :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray <DataArray>`.
+   :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArrays <DataArray>`.
    :ivar headers_line: Int. The line number of the headers.
    :ivar header_mode: 'cx.CSVImporterData.HeaderMode.'. Can be one of 'cx.CSVImporterData.HeaderMode.Line' or 'cx.CSVImporterData.HeaderMode.Custom'.
 
