@@ -75,13 +75,13 @@ Parameters ITKMorphologicalWatershedImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_Level_Key, "Level", "", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_Level_Key, "Level", "Set the 'level' variable to the filter", 0.0));
   params.insert(std::make_unique<BoolParameter>(
       k_MarkWatershedLine_Key, "MarkWatershedLine",
       "Set/Get whether the watershed pixel must be marked or not. Default is true. Set it to false do not only avoid writing watershed pixels, it also decrease algorithm complexity.", true));
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected",
-                                                "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
-                                                "For objects that are 1 pixel wide, use FullyConnectedOn.",
+  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected Components",
+                                                "Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False"
+                                                "For objects that are 1 pixel wide, use True.",
                                                 false));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});

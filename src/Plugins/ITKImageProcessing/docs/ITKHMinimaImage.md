@@ -23,7 +23,7 @@ Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesic
 | Name | Type | Description |
 |------|------|-------------|
 | Height | float64 | Set/Get the height that a local maximum must be above the local background (local contrast) in order to survive the processing. Local maxima below this value are replaced with an estimate of the local background. |
-| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn. |
+| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
 ## Required Geometry
 

@@ -30,7 +30,7 @@ This implementation was taken from the Insight Journal paper: https://www.insigh
 | KernelType | KernelEnum | Set the kernel or structuring element used for the morphology. |
 | ForegroundValue | float64 | Set the value in the image to consider as "foreground". Defaults to maximum value of PixelType. |
 | BackgroundValue | float64 | Set the value in eroded part of the image. Defaults to zero |
-| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn. |
+| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
 ## Required Geometry
 

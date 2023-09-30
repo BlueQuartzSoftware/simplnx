@@ -25,7 +25,7 @@ This code was contributed in the Insight Journal paper: "Finding regional extrem
 
 | Name | Type | Description |
 |------|------|-------------|
-| FullyConnected | bool |  |
+| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
 ## Required Geometry
 

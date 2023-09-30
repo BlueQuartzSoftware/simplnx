@@ -27,9 +27,9 @@ This code was contributed in the Insight Journal paper: "The watershed transform
 
 | Name | Type | Description |
 |------|------|-------------|
-| Level | float64 |  |
+| Level | float64 | Set the 'level' variable to the filter |
 | MarkWatershedLine | bool | Set/Get whether the watershed pixel must be marked or not. Default is true. Set it to false do not only avoid writing watershed pixels, it also decrease algorithm complexity. |
-| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn. |
+| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
 ## Required Geometry
 
