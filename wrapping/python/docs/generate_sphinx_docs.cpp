@@ -311,6 +311,10 @@ void GenerateRstFilterDocs()
   {
     std::string plugName = plugin->getName();
     const std::string pluginRootDir = fmt::format("{}", s_PluginDirMap[plugName]);
+    if(pluginRootDir.empty())
+    {
+      continue;
+    }
 
     if(plugName == "ComplexCore")
     {
