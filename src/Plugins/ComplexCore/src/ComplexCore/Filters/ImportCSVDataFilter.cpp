@@ -608,6 +608,11 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
   bool consecutiveDelimiters = csvImporterData.consecutiveDelimiters;
   usize startImportRow = csvImporterData.startImportRow;
 
+  if(csvImporterData.headerMode == CSVImporterData::HeaderMode::CUSTOM)
+  {
+    headers = csvImporterData.customHeaders;
+  }
+
   DataPath groupPath = createdDataGroup;
   if(useExistingGroup)
   {
