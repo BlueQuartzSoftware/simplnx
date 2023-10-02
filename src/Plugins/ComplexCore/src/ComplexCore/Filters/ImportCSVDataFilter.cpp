@@ -224,6 +224,10 @@ Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
     Result<> result = dataParser->parse(tokens[index], lineNumber - beginIndex);
     if(result.invalid())
     {
+      for(Error& error : result.errors())
+      {
+        error.message = fmt::format("Line {}: ", lineNumber) + error.message;
+      }
       return result;
     }
   }
