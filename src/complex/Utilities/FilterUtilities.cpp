@@ -24,4 +24,28 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   return {};
 }
 
+// -----------------------------------------------------------------------------
+std::vector<char> CreateDelimitersVector(bool tabAsDelimiter, bool semicolonAsDelimiter, bool commaAsDelimiter, bool spaceAsDelimiter)
+{
+  std::vector<char> delimiters;
+  if(tabAsDelimiter)
+  {
+    delimiters.push_back('\t');
+  }
+  if(semicolonAsDelimiter)
+  {
+    delimiters.push_back(';');
+  }
+  if(commaAsDelimiter)
+  {
+    delimiters.push_back(',');
+  }
+  if(spaceAsDelimiter)
+  {
+    delimiters.push_back(' ');
+  }
+
+  return delimiters;
+}
+
 } // namespace complex

@@ -16,6 +16,7 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/ImportCSVDataParameter.hpp"
 #include "complex/Utilities/FileUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <fstream>
@@ -268,30 +269,6 @@ bool skipNumberOfLines(std::fstream& inStream, usize numberOfLines)
   return true;
 }
 
-// -----------------------------------------------------------------------------
-std::vector<char> createDelimitersVector(bool tabAsDelimiter, bool semicolonAsDelimiter, bool commaAsDelimiter, bool spaceAsDelimiter)
-{
-  std::vector<char> delimiters;
-  if(tabAsDelimiter)
-  {
-    delimiters.push_back('\t');
-  }
-  if(semicolonAsDelimiter)
-  {
-    delimiters.push_back(';');
-  }
-  if(commaAsDelimiter)
-  {
-    delimiters.push_back(',');
-  }
-  if(spaceAsDelimiter)
-  {
-    delimiters.push_back(' ');
-  }
-
-  return delimiters;
-}
-
 std::string tupleDimsToString(const std::vector<usize>& tupleDims)
 {
   std::string tupleDimsStr;
@@ -405,7 +382,7 @@ IFilter::PreflightResult ImportCSVDataFilter::readHeaders(const std::string& inp
   std::string headersLine;
   std::getline(in, headersLine);
 
-  std::vector<char> delimiters = createDelimitersVector(useTab, useSemicolon, useComma, useSpace);
+  std::vector<char> delimiters = CreateDelimitersVector(useTab, useSemicolon, useComma, useSpace);
   s_HeaderCache[s_InstanceId].Headers = StringUtilities::split(headersLine, delimiters, useConsecutive);
   s_HeaderCache[s_InstanceId].HeadersLine = headersLineNum;
   return {};
@@ -454,7 +431,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
 
       if(headerMode == CSVImporterData::HeaderMode::LINE && csvImporterData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
       {
-        std::vector<char> delimiters = createDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
+        std::vector<char> delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
         s_HeaderCache[s_InstanceId].Headers = StringUtilities::split(line, delimiters, csvImporterData.consecutiveDelimiters);
         s_HeaderCache[s_InstanceId].HeadersLine = csvImporterData.headersLine;
       }
