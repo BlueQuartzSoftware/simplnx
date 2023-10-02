@@ -2,6 +2,14 @@
 
 Transforms the image so that any pixel that is not a regional maxima is set to the minimum value for the pixel type. Pixels that are regional maxima retain their value.
 
+The pixel neighborhood is controlled by the FullyConnected attribute. All adjacent pixels are included in
+the neighborhood when FullyConnected=True and the diagonally adjacent pixels are not included when
+FullyConnected=False. Different terminology is often used to describe neighborhoods – one common ex-
+ample is the “connectivity” notation, which refers to the number of pixels in the neighborhood. FullyCon-
+nected=False corresponds to a connectivty of 4 in 2D and 6 in 3D, while FullyConnected=True corresponds
+to a connectivity of 8 in 2D and 26 in 3D. FullyConnected=False is also commonly referred to as “face
+connected”.
+
 ## Group (Subgroup)
 
 ITKMathematicalMorphology (MathematicalMorphology)
@@ -26,7 +34,7 @@ This code was contributed in the Insight Journal paper: "Finding regional extrem
 
 | Name | Type | Description |
 |------|------|-------------|
-| FullyConnected | bool |  |
+| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
 ## Required Geometry
 

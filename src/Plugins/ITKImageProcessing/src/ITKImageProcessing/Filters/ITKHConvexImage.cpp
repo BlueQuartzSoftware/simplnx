@@ -75,9 +75,9 @@ Parameters ITKHConvexImage::parameters() const
                                                    "Set/Get the height that a local maximum must be above the local background (local contrast) in order to survive the processing. Local maxima below "
                                                    "this value are replaced with an estimate of the local background.",
                                                    2.0));
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected",
-                                                "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
-                                                "For objects that are 1 pixel wide, use FullyConnectedOn.",
+  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected Components",
+                                                "Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False"
+                                                "For objects that are 1 pixel wide, use True.",
                                                 false));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});

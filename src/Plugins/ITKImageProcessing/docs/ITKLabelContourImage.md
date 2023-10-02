@@ -26,7 +26,7 @@ https://www.insight-journal.org/browse/publication/217
 
 | Name | Type | Description |
 |------|------|-------------|
-| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. *Note* For objects that are 1 pixel wide, use FullyConnectedOn. |
+| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 | BackgroundValue | float64 | Set/Get the background value used to identify the objects and mark the pixels not on the border of the objects. |
 
 ## Required Geometry

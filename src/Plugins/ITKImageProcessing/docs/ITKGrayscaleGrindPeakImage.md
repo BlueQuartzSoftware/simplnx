@@ -24,7 +24,7 @@ Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesic
 
 | Name | Type | Description |
 |------|------|-------------|
-| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn. |
+| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
 ## Required Geometry
 

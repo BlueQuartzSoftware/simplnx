@@ -31,7 +31,7 @@ Applications", Second Edition, Springer, 2003.
 |------|------|-------------|
 | KernelRadius | uint32 | Set the radius of the kernel structuring element. |
 | KernelType | KernelEnum | Set the kernel or structuring element used for the morphology. |
-| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn. |
+| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 | PreserveIntensities | bool | Set/Get whether the original intensities of the image retained for those pixels unaffected by the opening by reconstruction. If Off, the output pixel contrast will be reduced. |
 
 ## Required Geometry

@@ -29,9 +29,9 @@ for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9. No
 |------|------|-------------|
 | KernelRadius | uint32 | Set the radius of the kernel structuring element. |
 | KernelType | KernelEnum | Set the kernel or structuring element used for the morphology. |
-| BackgroundValue | float64 |  |
-| ForegroundValue | float64 |  |
-| BoundaryToForeground | bool |  |
+| BackgroundValue | float64 | The eroded pixels will receive the BackgroundValue. Default = non positive minimum  |
+| ForegroundValue | float64 | The pixel value considered 'Foreground' that will be eroded  |
+| BoundaryToForeground | bool | "Mark the boundary between foreground and background. |
 
 ## Required Geometry
 
