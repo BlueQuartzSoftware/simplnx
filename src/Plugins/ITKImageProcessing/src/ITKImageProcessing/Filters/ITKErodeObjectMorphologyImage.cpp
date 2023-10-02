@@ -80,7 +80,7 @@ Parameters ITKErodeObjectMorphologyImage::parameters() const
                                                           std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "The shape of the kernel to use. 0=Annulas, 1=Ball, 2=Box, 3=Cross", static_cast<uint64>(itk::simple::sitkBall),
                                                    ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
-  params.insert(std::make_unique<Float64Parameter>(k_ObjectValue_Key, "ObjectValue", "", 1));
+  params.insert(std::make_unique<Float64Parameter>(k_ObjectValue_Key, "ObjectValue", "The pixel value of the 'Object' to be eroded", 1));
   params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set the value to be assigned to eroded pixels", 0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});

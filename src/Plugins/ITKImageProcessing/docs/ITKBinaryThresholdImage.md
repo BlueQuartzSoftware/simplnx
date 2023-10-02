@@ -18,12 +18,13 @@ The filter expect both images to have the same number of dimensions.
 
 The default values for LowerThreshold and UpperThreshold are: LowerThreshold = NumericTraits<TInput>::NonpositiveMin() ; UpperThreshold = NumericTraits<TInput>::max() ; Therefore, generally only one of these needs to be set, depending on whether the user wants to threshold above or below the desired threshold.
 
+Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.
 ## Parameters
 
 | Name | Type | Description |
 |------|------|-------------|
-| LowerThreshold | float64 |  |
-| UpperThreshold | float64 | Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold. |
+| LowerThreshold | float64 | The lower threshold that a pixel value could be and still be considered 'Inside Value' |
+| UpperThreshold | float64 | The upper threshold that a pixel value could be and still be considered 'Inside Value'|
 | InsideValue | uint8 | Set the "inside" pixel value. The default value NumericTraits<OutputPixelType>::max() |
 | OutsideValue | uint8 | Set the "outside" pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() . |
 
