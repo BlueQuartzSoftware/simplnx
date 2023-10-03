@@ -10,9 +10,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsMutualInformationTest.cpp
   BadDataNeighborOrientationCheckTest.cpp
   CAxisSegmentFeaturesTest.cpp
+  ConvertHexGridToSquareGridTest.cpp
   ConvertQuaternionTest.cpp
   ConvertOrientationsTest.cpp
-  ConvertQuaternionTest.cpp
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
@@ -55,7 +55,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteStatsGenOdfAngleFileTest.cpp
 )
 set(DISABLED_TESTS
-  # ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
   CreateLambertSphereTest.cpp
   EMsoftSO3SamplerTest.cpp
   FindDistsToCharactGBsTest.cpp
