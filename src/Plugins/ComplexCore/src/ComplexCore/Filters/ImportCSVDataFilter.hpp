@@ -106,8 +106,6 @@ protected:
 
 private:
   int32 m_InstanceId;
-
-  IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize headersLineNum, bool useTab, bool useSemicolon, bool useSpace, bool useComma, bool useConsecutive) const;
 };
 } // namespace complex
 

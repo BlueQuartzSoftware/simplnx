@@ -282,6 +282,32 @@ std::string tupleDimsToString(const std::vector<usize>& tupleDims)
   }
   return tupleDimsStr;
 }
+
+//------------------------------------------------------------------------------
+IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize headersLineNum, ImportCSVDataFilterCache& headerCache, bool useTab, bool useSemicolon, bool useSpace, bool useComma,
+                                     bool useConsecutive)
+{
+  std::fstream in(inputFilePath.c_str(), std::ios_base::in);
+  if(!in.is_open())
+  {
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::FILE_NOT_OPEN), fmt::format("Could not open file for reading: {}", inputFilePath)), {}};
+  }
+
+  // Skip to the headers line
+  if(!skipNumberOfLines(in, headersLineNum))
+  {
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::CANNOT_SKIP_TO_LINE), fmt::format("Could not skip to the chosen header line ({}).", headersLineNum)), {}};
+  }
+
+  // Read the headers line
+  std::string headersLine;
+  std::getline(in, headersLine);
+
+  std::vector<char> delimiters = CreateDelimitersVector(useTab, useSemicolon, useComma, useSpace);
+  headerCache.Headers = StringUtilities::split(headersLine, delimiters, useConsecutive);
+  headerCache.HeadersLine = headersLineNum;
+  return {};
+}
 } // namespace
 
 namespace complex
@@ -363,32 +389,6 @@ IFilter::UniquePointer ImportCSVDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ImportCSVDataFilter::readHeaders(const std::string& inputFilePath, usize headersLineNum, bool useTab, bool useSemicolon, bool useSpace, bool useComma,
-                                                          bool useConsecutive) const
-{
-  std::fstream in(inputFilePath.c_str(), std::ios_base::in);
-  if(!in.is_open())
-  {
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::FILE_NOT_OPEN), fmt::format("Could not open file for reading: {}", inputFilePath)), {}};
-  }
-
-  // Skip to the headers line
-  if(!skipNumberOfLines(in, headersLineNum))
-  {
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::CANNOT_SKIP_TO_LINE), fmt::format("Could not skip to the chosen header line ({}).", headersLineNum)), {}};
-  }
-
-  // Read the headers line
-  std::string headersLine;
-  std::getline(in, headersLine);
-
-  std::vector<char> delimiters = CreateDelimitersVector(useTab, useSemicolon, useComma, useSpace);
-  s_HeaderCache[s_InstanceId].Headers = StringUtilities::split(headersLine, delimiters, useConsecutive);
-  s_HeaderCache[s_InstanceId].HeadersLine = headersLineNum;
-  return {};
-}
-
-//------------------------------------------------------------------------------
 IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
@@ -441,8 +441,8 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   }
   else if(headerMode == CSVImporterData::HeaderMode::LINE && csvImporterData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
   {
-    IFilter::PreflightResult result = readHeaders(csvImporterData.inputFilePath, csvImporterData.headersLine, csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter,
-                                                  csvImporterData.spaceAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.consecutiveDelimiters);
+    IFilter::PreflightResult result = readHeaders(csvImporterData.inputFilePath, csvImporterData.headersLine, s_HeaderCache[s_InstanceId], csvImporterData.tabAsDelimiter,
+                                                  csvImporterData.semicolonAsDelimiter, csvImporterData.spaceAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.consecutiveDelimiters);
     if(result.outputActions.invalid())
     {
       return result;
@@ -637,11 +637,11 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
   }
 
   float32 threshold = 0.0f;
-  usize numTuples = std::accumulate(csvImporterData.tupleDims.begin(), csvImporterData.tupleDims.end(), 1, std::multiplies<>());
+  usize numTuples = std::accumulate(csvImporterData.tupleDims.cbegin(), csvImporterData.tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
   if(useExistingGroup)
   {
     const AttributeMatrix& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
-    numTuples = std::accumulate(am.getShape().begin(), am.getShape().end(), 1, std::multiplies<>());
+    numTuples = std::accumulate(am.getShape().cbegin(), am.getShape().cend(), static_cast<usize>(1), std::multiplies<>());
   }
   usize lineNum = startImportRow;
   for(usize i = 0; i < numTuples && !in.eof(); i++)

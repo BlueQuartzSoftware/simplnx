@@ -59,7 +59,7 @@ Result<> ValidateCSVFile(const std::string& filePath)
   const size_t fileSize = fs::file_size(absPath);
 
   // Open the file
-  std::fstream in(absPath.c_str(), std::ios_base::in | std::ios_base::binary);
+  std::ifstream in(absPath.c_str(), std::ios_base::binary);
   if(!in.is_open())
   {
     return MakeErrorResult(-301, fmt::format("Could not open file for reading: {}", absPath.string()));
@@ -78,7 +78,7 @@ Result<> ValidateCSVFile(const std::string& filePath)
   try
   {
     in.read(buffer.data(), actualSize);
-  } catch(std::exception& e)
+  } catch(const std::exception& e)
   {
     return MakeErrorResult(-302, fmt::format("There was an error reading the data from file: {}.  Exception: {}", absPath.string(), e.what()));
   }
@@ -118,9 +118,6 @@ Result<> ValidateCSVFile(const std::string& filePath)
                                              "program or cause unexpected results.  Please import a different file.",
                                              absPath.string()));
   }
-
-  // Close the file and free the memory from the buffer
-  in.close();
 
   return {};
 }
