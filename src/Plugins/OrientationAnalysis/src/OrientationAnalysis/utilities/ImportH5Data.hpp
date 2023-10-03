@@ -20,6 +20,8 @@ struct ORIENTATIONANALYSIS_EXPORT ImportH5DataInputValues
   DataPath ImageGeometryPath;
   DataPath CellAttributeMatrixPath;
   DataPath CellEnsembleAttributeMatrixPath;
+  bool EdaxHexagonalAlignment;
+  bool ConvertPhaseToInt32;
 };
 
 /**
@@ -55,6 +57,8 @@ public:
     int index = 0;
     for(const auto& currentScanName : m_InputValues->SelectedScanNames.scanNames)
     {
+      m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Importing Index {}", currentScanName)});
+
       Result<> readResults = readData(currentScanName);
       if(readResults.invalid())
       {
