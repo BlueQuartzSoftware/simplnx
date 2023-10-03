@@ -43,23 +43,11 @@ PYBIND11_MODULE(orientationanalysis, mod)
   oemEbsdScanSelectionEbsdReaderType.value("Oim", OEMEbsdScanSelectionParameter::EbsdReaderType::Oim);
   oemEbsdScanSelectionEbsdReaderType.value("Esprit", OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit);
 
-  py::enum_<OEMEbsdScanSelectionParameter::ManufacturerType> oemEbsdScanSelectionManufacturerType(oemEbsdScanSelectionParameter, "ManufacturerType");
-  oemEbsdScanSelectionManufacturerType.value("EDAX", OEMEbsdScanSelectionParameter::ManufacturerType::EDAX);
-  oemEbsdScanSelectionManufacturerType.value("Oxford", OEMEbsdScanSelectionParameter::ManufacturerType::Oxford);
-  oemEbsdScanSelectionManufacturerType.value("Bruker", OEMEbsdScanSelectionParameter::ManufacturerType::Bruker);
-  oemEbsdScanSelectionManufacturerType.value("HEDM", OEMEbsdScanSelectionParameter::ManufacturerType::HEDM);
-  oemEbsdScanSelectionManufacturerType.value("Zeiss", OEMEbsdScanSelectionParameter::ManufacturerType::Zeiss);
-  oemEbsdScanSelectionManufacturerType.value("Phillips", OEMEbsdScanSelectionParameter::ManufacturerType::Phillips);
-  oemEbsdScanSelectionManufacturerType.value("ThermoFisher", OEMEbsdScanSelectionParameter::ManufacturerType::ThermoFisher);
-  oemEbsdScanSelectionManufacturerType.value("DREAM3D", OEMEbsdScanSelectionParameter::ManufacturerType::DREAM3D);
-  oemEbsdScanSelectionManufacturerType.value("Unknown", OEMEbsdScanSelectionParameter::ManufacturerType::Unknown);
-
   BindParameterConstructor(h5EbsdReaderParameter);
 
-  oemEbsdScanSelectionParameter.def(
-      py::init<const std::string&, const std::string&, const std::string&, const OEMEbsdScanSelectionParameter::ValueType&, const OEMEbsdScanSelectionParameter::AllowedManufacturers&,
-               OEMEbsdScanSelectionParameter::EbsdReaderType, OEMEbsdScanSelectionParameter::ExtensionsType>(),
-      "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_manufacturers"_a, "reader_type"_a, "extensions_type"_a);
+  oemEbsdScanSelectionParameter.def(py::init<const std::string&, const std::string&, const std::string&, const OEMEbsdScanSelectionParameter::ValueType&, OEMEbsdScanSelectionParameter::EbsdReaderType,
+                                             OEMEbsdScanSelectionParameter::ExtensionsType>(),
+                                    "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "reader_type"_a, "extensions_type"_a);
 
   internals.addConversion<H5EbsdReaderParameter>();
   internals.addConversion<OEMEbsdScanSelectionParameter>();
