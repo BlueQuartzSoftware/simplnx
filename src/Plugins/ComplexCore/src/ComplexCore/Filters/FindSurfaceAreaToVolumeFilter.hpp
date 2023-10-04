@@ -29,6 +29,14 @@ public:
   static inline constexpr StringLiteral k_SurfaceAreaVolumeRatioArrayName_Key = "surface_area_volume_ratio_array_name";
   static inline constexpr StringLiteral k_CalculateSphericity_Key = "calculate_sphericity";
   static inline constexpr StringLiteral k_SphericityArrayName_Key = "sphericity_array_name";
+
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**

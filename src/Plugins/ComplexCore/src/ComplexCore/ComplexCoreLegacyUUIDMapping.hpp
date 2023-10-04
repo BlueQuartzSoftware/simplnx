@@ -164,7 +164,7 @@ namespace complex
     {complex::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {complex::FilterTraits<FindNeighborListStatistics>::uuid, {}}}, // FindNeighborListStatistics
     {complex::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {complex::FilterTraits<FindNeighbors>::uuid, {}}}, // FindNeighbors
     {complex::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), {complex::FilterTraits<FindNumFeaturesFilter>::uuid, {}}}, // FindNumFeatures
-    {complex::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {complex::FilterTraits<FindSurfaceAreaToVolumeFilter>::uuid, {}}}, // FindSurfaceAreaToVolume
+    {complex::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {complex::FilterTraits<FindSurfaceAreaToVolumeFilter>::uuid, &FindSurfaceAreaToVolumeFilter::FromSIMPLJson}}, // FindSurfaceAreaToVolume
     {complex::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), {complex::FilterTraits<FindSurfaceFeatures>::uuid, {}}}, // FindSurfaceFeatures
     {complex::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), {complex::FilterTraits<FindVolFractionsFilter>::uuid, {}}}, // FindVolFractions
     {complex::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), {complex::FilterTraits<GenerateColorTableFilter>::uuid, {}}}, // GenerateColorTable
