@@ -38,6 +38,7 @@ struct ImportCSVDataFilterCache
   usize TotalLines = 0;
   usize HeadersLine = 0;
   std::vector<std::string> Headers;
+  bool BlankLastLine = false;
 };
 
 std::atomic_int32_t s_InstanceId = 0;
@@ -62,7 +63,9 @@ enum class IssueCodes
   EMPTY_NAMES = -116,
   START_LINE_LARGER_THAN_TOTAL = -117,
   HEADER_LINE_LARGER_THAN_TOTAL = -118,
-  IGNORED_TUPLE_DIMS = -200
+  EMPTY_LINE = -119,
+  IGNORED_TUPLE_DIMS = -200,
+  IGNORED_LAST_LINE = -201
 };
 
 // -----------------------------------------------------------------------------
@@ -206,6 +209,19 @@ Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
   std::getline(inStream, line);
 
   StringVector tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
+  if(tokens.empty())
+  {
+    if(inStream.eof())
+    {
+      // This is the last line and it is empty, so just return
+      return {};
+    }
+    else
+    {
+      // This is an empty line in the middle of the CSV file, which just shouldn't happen
+      return MakeErrorResult(to_underlying(IssueCodes::EMPTY_LINE), fmt::format("Line #{} is empty!  You should not have empty lines in the middle of the file.", std::to_string(lineNumber)));
+    }
+  }
 
   if(dataParsers.size() != tokens.size())
   {
@@ -400,6 +416,8 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   std::string inputFilePath = csvImporterData.inputFilePath;
   CSVImporterData::HeaderMode headerMode = csvImporterData.headerMode;
 
+  complex::Result<OutputActions> resultOutputActions;
+
   // Validate the input file path
   if(inputFilePath.empty())
   {
@@ -429,6 +447,14 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
       std::getline(in, line);
       lineCount++;
 
+      if(in.eof())
+      {
+        // This is the last line, so check to see if the line is blank
+        std::vector<char> delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
+        std::vector<std::string> tokens = StringUtilities::split(line, delimiters, csvImporterData.consecutiveDelimiters);
+        s_HeaderCache[s_InstanceId].BlankLastLine = tokens.empty();
+      }
+
       if(headerMode == CSVImporterData::HeaderMode::LINE && csvImporterData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
       {
         std::vector<char> delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
@@ -451,7 +477,6 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
 
   StringVector headers = (headerMode == CSVImporterData::HeaderMode::LINE) ? s_HeaderCache[s_InstanceId].Headers : csvImporterData.customHeaders;
   Dimensions cDims = {1};
-  complex::Result<OutputActions> resultOutputActions;
 
   size_t totalLines = s_HeaderCache[s_InstanceId].TotalLines;
   size_t totalImportedLines = totalLines - csvImporterData.startImportRow + 1;
@@ -462,6 +487,13 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr, tupleTotal,
                                      totalImportedLines);
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
+  }
+  else if(tupleTotal == totalImportedLines && s_HeaderCache[s_InstanceId].BlankLastLine)
+  {
+    std::string msg = fmt::format("The last line of the file (#{}) is blank and will be ignored.  The imported arrays will still have the specified tuple dimensions, but the last imported row will "
+                                  "contain default values (such as 0 or false).",
+                                  s_HeaderCache[s_InstanceId].TotalLines);
+    resultOutputActions.warnings().push_back(Warning{to_underlying(IssueCodes::IGNORED_LAST_LINE), msg});
   }
 
   // Validate the existing/created group
