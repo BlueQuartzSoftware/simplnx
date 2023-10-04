@@ -5,10 +5,14 @@
 
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataTypeParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
@@ -361,6 +365,48 @@ struct DataArrayCreationFilterParameterConverter
   }
 };
 
+struct DataArrayCreationToAMFilterParameterConverter
+{
+  using ParameterType = AttributeMatrixSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json, "DataArrayCreationFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArrayCreationFilterParameter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+    return {std::move(dataPath)};
+  }
+};
+
+struct DataArrayCreationToDataObjectNameFilterParameterConverter
+{
+  using ParameterType = DataObjectNameParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto dataArrayNameResult = ReadDataArrayName(json, "DataArrayCreationFilterParameter");
+    if(dataArrayNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+    }
+
+    return {std::move(dataArrayNameResult.value())};
+  }
+};
+
 struct DataContainerCreationFilterParameterConverter
 {
   using ParameterType = DataGroupCreationParameter;
@@ -469,4 +515,55 @@ struct AttributeMatrixCreationFilterParameterConverter
     return {std::move(dataPath)};
   }
 };
+
+struct DataArraySelectionFilterParameterConverter
+{
+  using ParameterType = ArraySelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArraySelectionFilterParameter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+
+    auto dataArrayNameResult = ReadDataArrayName(json, "DataArraySelectionFilterParameter");
+    if(dataArrayNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
+
+    return {std::move(dataPath)};
+  }
+};
+
+struct DataArraySelectionToGeometrySelectionFilterParameterConverter
+{
+  using ParameterType = GeometrySelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value())});
+
+    return {std::move(dataPath)};
+  }
+};
+
 } // namespace complex::SIMPLConversion
