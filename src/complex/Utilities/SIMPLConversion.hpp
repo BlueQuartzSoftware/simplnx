@@ -283,6 +283,24 @@ struct StringFilterParameterConverter
   }
 };
 
+struct LinkedPathCreationFilterParameterConverter
+{
+  using ParameterType = DataObjectNameParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_string())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("LinkedPathCreationFilterParameter json '{}' is not a string", json.dump()));
+    }
+
+    auto value = json.get<std::string>();
+
+    return {std::move(value)};
+  }
+};
+
 struct RangeFilterParameterConverter
 {
   using ParameterType = VectorParameter<float64>;
@@ -505,6 +523,31 @@ struct AttributeMatrixCreationFilterParameterConverter
     }
 
     auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "AttributeMatrixCreationFilterParameter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+    return {std::move(dataPath)};
+  }
+};
+
+struct AttributeMatrixSelectionFilterParameterConverter
+{
+  using ParameterType = AttributeMatrixSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json, "AttributeMatrixSelectionFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "AttributeMatrixSelectionFilterParameter");
     if(attributeMatrixNameResult.invalid())
     {
       return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
