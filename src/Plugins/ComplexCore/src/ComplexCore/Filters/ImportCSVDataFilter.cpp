@@ -37,8 +37,7 @@ struct ImportCSVDataFilterCache
   std::string FilePath;
   usize TotalLines = 0;
   usize HeadersLine = 0;
-  std::vector<std::string> Headers;
-  bool BlankLastLine = false;
+  std::string Headers;
 };
 
 std::atomic_int32_t s_InstanceId = 0;
@@ -47,7 +46,6 @@ std::map<int32, ImportCSVDataFilterCache> s_HeaderCache;
 enum class IssueCodes
 {
   EMPTY_FILE = -100,
-  FILE_DOES_NOT_EXIST = -101,
   EMPTY_NEW_DG = -102,
   EMPTY_EXISTING_DG = -103,
   INCONSISTENT_COLS = -104,
@@ -62,10 +60,11 @@ enum class IssueCodes
   CANNOT_SKIP_TO_LINE = -115,
   EMPTY_NAMES = -116,
   START_LINE_LARGER_THAN_TOTAL = -117,
-  HEADER_LINE_LARGER_THAN_TOTAL = -118,
   EMPTY_LINE = -119,
-  IGNORED_TUPLE_DIMS = -200,
-  IGNORED_LAST_LINE = -201
+  HEADER_LINE_OUT_OF_RANGE = -120,
+  START_IMPORT_ROW_OUT_OF_RANGE = -121,
+  EMPTY_HEADERS = -122,
+  IGNORED_TUPLE_DIMS = -200
 };
 
 // -----------------------------------------------------------------------------
@@ -203,7 +202,7 @@ Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const std::
 }
 
 // -----------------------------------------------------------------------------
-Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, const CharVector& delimiters, bool consecutiveDelimiters, usize lineNumber, usize beginIndex)
+Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, const StringVector& headers, const CharVector& delimiters, bool consecutiveDelimiters, usize lineNumber, usize beginIndex)
 {
   std::string line;
   std::getline(inStream, line);
@@ -211,26 +210,22 @@ Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
   StringVector tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
   if(tokens.empty())
   {
-    if(inStream.eof())
-    {
-      // This is the last line and it is empty, so just return
-      return {};
-    }
-    else
-    {
-      // This is an empty line in the middle of the CSV file, which just shouldn't happen
-      return MakeErrorResult(to_underlying(IssueCodes::EMPTY_LINE), fmt::format("Line #{} is empty!  You should not have empty lines in the middle of the file.", std::to_string(lineNumber)));
-    }
+    // This is an empty line in the middle of the CSV file, which just shouldn't happen
+    return MakeErrorResult(to_underlying(IssueCodes::EMPTY_LINE), fmt::format("Line #{} is empty!  You should not have any empty lines in the file.", std::to_string(lineNumber)));
   }
 
   if(dataParsers.size() != tokens.size())
   {
-    return MakeErrorResult(to_underlying(IssueCodes::INCONSISTENT_COLS), fmt::format("Line {} has an inconsistent number of columns.\nExpecting {} but found {}\nInput line was:\n{}",
-                                                                                     std::to_string(lineNumber), std::to_string(dataParsers.size()), std::to_string(tokens.size()), line));
+    return MakeErrorResult(to_underlying(IssueCodes::INCONSISTENT_COLS),
+                           fmt::format("Expecting {} tokens but found {} tokens in the file at line #{}.\n\nInput line was:\n{}\n\nThis is because the data-"
+                                       "types/headers/skipped-array-mask all have a size of {} but the file data at line #{} has a column count of {}.",
+                                       std::to_string(dataParsers.size()), std::to_string(tokens.size()), std::to_string(lineNumber), line, std::to_string(dataParsers.size()),
+                                       std::to_string(lineNumber), std::to_string(tokens.size())));
   }
 
-  for(const auto& dataParser : dataParsers)
+  for(int i = 0; i < dataParsers.size(); i++)
   {
+    const auto& dataParser = dataParsers[i];
     if(dataParser == nullptr)
     {
       continue;
@@ -243,7 +238,7 @@ Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
     {
       for(Error& error : result.errors())
       {
-        error.message = fmt::format("Line {}: ", lineNumber) + error.message;
+        error.message = fmt::format("Array \"{}\", Line {}: ", headers[i], lineNumber) + error.message;
       }
       return result;
     }
@@ -316,11 +311,7 @@ IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize hea
   }
 
   // Read the headers line
-  std::string headersLine;
-  std::getline(in, headersLine);
-
-  std::vector<char> delimiters = CreateDelimitersVector(useTab, useSemicolon, useComma, useSpace);
-  headerCache.Headers = StringUtilities::split(headersLine, delimiters, useConsecutive);
+  std::getline(in, headerCache.Headers);
   headerCache.HeadersLine = headersLineNum;
   return {};
 }
@@ -430,6 +421,8 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
     return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(csvResult))), {}), {}};
   }
 
+  StringVector headers;
+  std::vector<char> delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
   if(csvImporterData.inputFilePath != s_HeaderCache[s_InstanceId].FilePath)
   {
     std::fstream in(inputFilePath.c_str(), std::ios_base::in);
@@ -447,87 +440,95 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
       std::getline(in, line);
       lineCount++;
 
-      if(in.eof())
+      if(headerMode == CSVImporterData::HeaderMode::LINE && lineCount == csvImporterData.headersLine)
       {
-        // This is the last line, so check to see if the line is blank
-        std::vector<char> delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
-        std::vector<std::string> tokens = StringUtilities::split(line, delimiters, csvImporterData.consecutiveDelimiters);
-        s_HeaderCache[s_InstanceId].BlankLastLine = tokens.empty();
-      }
-
-      if(headerMode == CSVImporterData::HeaderMode::LINE && csvImporterData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
-      {
-        std::vector<char> delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
-        s_HeaderCache[s_InstanceId].Headers = StringUtilities::split(line, delimiters, csvImporterData.consecutiveDelimiters);
+        s_HeaderCache[s_InstanceId].Headers = line;
         s_HeaderCache[s_InstanceId].HeadersLine = csvImporterData.headersLine;
       }
     }
 
+    headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, delimiters, csvImporterData.consecutiveDelimiters);
     s_HeaderCache[s_InstanceId].TotalLines = lineCount;
   }
-  else if(headerMode == CSVImporterData::HeaderMode::LINE && csvImporterData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
+  else if(headerMode == CSVImporterData::HeaderMode::LINE)
   {
-    IFilter::PreflightResult result = readHeaders(csvImporterData.inputFilePath, csvImporterData.headersLine, s_HeaderCache[s_InstanceId], csvImporterData.tabAsDelimiter,
-                                                  csvImporterData.semicolonAsDelimiter, csvImporterData.spaceAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.consecutiveDelimiters);
-    if(result.outputActions.invalid())
+    if(csvImporterData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
     {
-      return result;
+      IFilter::PreflightResult result = readHeaders(csvImporterData.inputFilePath, csvImporterData.headersLine, s_HeaderCache[s_InstanceId], csvImporterData.tabAsDelimiter,
+                                                    csvImporterData.semicolonAsDelimiter, csvImporterData.spaceAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.consecutiveDelimiters);
+      if(result.outputActions.invalid())
+      {
+        return result;
+      }
     }
+
+    headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, delimiters, csvImporterData.consecutiveDelimiters);
   }
 
-  StringVector headers = (headerMode == CSVImporterData::HeaderMode::LINE) ? s_HeaderCache[s_InstanceId].Headers : csvImporterData.customHeaders;
-  Dimensions cDims = {1};
+  if(headerMode == CSVImporterData::HeaderMode::CUSTOM)
+  {
+    headers = csvImporterData.customHeaders;
+  }
 
   size_t totalLines = s_HeaderCache[s_InstanceId].TotalLines;
-  size_t totalImportedLines = totalLines - csvImporterData.startImportRow + 1;
-  size_t tupleTotal = std::accumulate(csvImporterData.tupleDims.begin(), csvImporterData.tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
-  if(tupleTotal > totalImportedLines)
-  {
-    std::string tupleDimsStr = tupleDimsToString(csvImporterData.tupleDims);
-    std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr, tupleTotal,
-                                     totalImportedLines);
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
-  }
-  else if(tupleTotal == totalImportedLines && s_HeaderCache[s_InstanceId].BlankLastLine)
-  {
-    std::string msg = fmt::format("The last line of the file (#{}) is blank and will be ignored.  The imported arrays will still have the specified tuple dimensions, but the last imported row will "
-                                  "contain default values (such as 0 or false).",
-                                  s_HeaderCache[s_InstanceId].TotalLines);
-    resultOutputActions.warnings().push_back(Warning{to_underlying(IssueCodes::IGNORED_LAST_LINE), msg});
-  }
 
-  // Validate the existing/created group
-  DataPath groupPath;
-  if(useExistingAM)
+  // Check that we have a valid start import row
+  if(csvImporterData.startImportRow == 0)
   {
-    Result<OutputActions> result = validateExistingGroup(selectedAM, dataStructure, headers);
-    if(result.invalid())
-    {
-      return {std::move(result)};
-    }
-    groupPath = selectedAM;
-  }
-  else
-  {
-    Result<OutputActions> result = validateNewGroup(createdDataAM, dataStructure);
-    if(result.invalid())
-    {
-      return {std::move(result)};
-    }
-    groupPath = createdDataAM;
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(createdDataAM, csvImporterData.tupleDims));
+    std::string errMsg = "'Start import at row' value is out of range.  The 'Start import at row' value cannot be set to line #0.";
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::START_IMPORT_ROW_OUT_OF_RANGE), errMsg), {}};
   }
 
   if(csvImporterData.startImportRow > totalLines)
   {
     std::string errMsg = fmt::format("'Start import at row' value ({}) is larger than the total number of lines in the file ({}).", csvImporterData.startImportRow, totalLines);
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::START_LINE_LARGER_THAN_TOTAL), errMsg), {}};
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::START_IMPORT_ROW_OUT_OF_RANGE), errMsg), {}};
   }
 
-  if(csvImporterData.headersLine > totalLines)
+  // Check that we have a valid header line number
+  if(headerMode == CSVImporterData::HeaderMode::LINE && csvImporterData.headersLine == 0)
   {
-    std::string errMsg = fmt::format("Header 'Line Number' value ({}) is larger than the total number of lines in the file ({}).", csvImporterData.headersLine, totalLines);
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::HEADER_LINE_LARGER_THAN_TOTAL), errMsg), {}};
+    std::string errMsg = "The header line number is out of range.  The header line number cannot be set to line #0.";
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::HEADER_LINE_OUT_OF_RANGE), errMsg), {}};
+  }
+
+  if(headerMode == CSVImporterData::HeaderMode::LINE && csvImporterData.headersLine > totalLines)
+  {
+    std::string errMsg = fmt::format("The header line number is out of range.  There are {} lines in the file and the header line number is set to line #{}.", totalLines, csvImporterData.headersLine);
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::HEADER_LINE_OUT_OF_RANGE), errMsg), {}};
+  }
+
+  if(headerMode == CSVImporterData::HeaderMode::LINE && csvImporterData.headersLine > csvImporterData.startImportRow)
+  {
+    std::string errMsg = fmt::format(
+        "The header line number is out of range.  The start import row is set to line #{} and the header line number is set to line #{}.  The header line number must be in the range 1-{}.",
+        csvImporterData.startImportRow, csvImporterData.headersLine, csvImporterData.startImportRow - 1);
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::HEADER_LINE_OUT_OF_RANGE), errMsg), {}};
+  }
+
+  // Check that we have valid headers
+  if(headers.empty())
+  {
+    std::string errMsg = "There are 0 imported array headers.  This is either because there are 0 headers being read from the header line or the custom headers are empty.  Please either choose a "
+                         "different header line number or input at least 1 custom header.";
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_HEADERS), errMsg), {}};
+  }
+
+  if(csvImporterData.dataTypes.size() != headers.size())
+  {
+    std::string errMsg =
+        fmt::format("The number of data types ({}) does not match the number of imported array headers ({}).  The number of data types must match the number of imported array headers.",
+                    csvImporterData.dataTypes.size(), headers.size());
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_DATATYPE_COUNT), errMsg), {}};
+  }
+
+  if(csvImporterData.skippedArrayMask.size() != headers.size())
+  {
+    std::string errMsg = fmt::format(
+        "The number of booleans in the skipped array mask ({}) does not match the number of imported array headers ({}).  The number of booleans in the skipped array mask must match the number "
+        "of imported array headers.",
+        csvImporterData.skippedArrayMask.size(), headers.size());
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_MASK_COUNT), errMsg), {}};
   }
 
   if(headerMode == CSVImporterData::HeaderMode::CUSTOM)
@@ -554,6 +555,39 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
     }
   }
 
+  // Check that we have a valid tuple count
+  size_t totalImportedLines = totalLines - csvImporterData.startImportRow + 1;
+  size_t tupleTotal = std::accumulate(csvImporterData.tupleDims.begin(), csvImporterData.tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
+  if(tupleTotal > totalImportedLines)
+  {
+    std::string tupleDimsStr = tupleDimsToString(csvImporterData.tupleDims);
+    std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr, tupleTotal,
+                                     totalImportedLines);
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
+  }
+
+  // Validate the existing/created group
+  DataPath groupPath;
+  if(useExistingAM)
+  {
+    Result<OutputActions> result = validateExistingGroup(selectedAM, dataStructure, headers);
+    if(result.invalid())
+    {
+      return {std::move(result)};
+    }
+    groupPath = selectedAM;
+  }
+  else
+  {
+    Result<OutputActions> result = validateNewGroup(createdDataAM, dataStructure);
+    if(result.invalid())
+    {
+      return {std::move(result)};
+    }
+    groupPath = createdDataAM;
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(createdDataAM, csvImporterData.tupleDims));
+  }
+
   // Create the arrays
   std::vector<usize> tupleDims(csvImporterData.tupleDims.size());
   std::transform(csvImporterData.tupleDims.begin(), csvImporterData.tupleDims.end(), tupleDims.begin(), [](float64 d) { return static_cast<usize>(d); });
@@ -565,21 +599,6 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
     std::string tupleDimsStr2 = tupleDimsToString(tupleDims);
     std::string msg = fmt::format("The Array Tuple Dimensions ({}) will be ignored and the Existing Attribute Matrix tuple dimensions ({}) will be used instead.", tupleDimsStr, tupleDimsStr2);
     resultOutputActions.warnings().push_back(Warning{to_underlying(IssueCodes::IGNORED_TUPLE_DIMS), msg});
-  }
-
-  if(csvImporterData.dataTypes.size() != headers.size())
-  {
-    std::string errMsg = fmt::format("There are {} data types but there are {} arrays being imported.  The number of data types must match the number of imported arrays.",
-                                     csvImporterData.dataTypes.size(), headers.size());
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_DATATYPE_COUNT), errMsg), {}};
-  }
-
-  if(csvImporterData.skippedArrayMask.size() != headers.size())
-  {
-    std::string errMsg = fmt::format(
-        "There are {} booleans in the skipped array mask but there are {} arrays being imported.  The number of booleans in the skipped array mask must match the number of imported arrays.",
-        csvImporterData.skippedArrayMask.size(), headers.size());
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_MASK_COUNT), errMsg), {}};
   }
 
   for(usize i = 0; i < headers.size(); i++)
@@ -595,14 +614,10 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
 
     DataPath arrayPath = groupPath;
     arrayPath = arrayPath.createChildPath(name);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleDims, cDims, arrayPath));
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath));
   }
 
-  // Create preflight updated values
-  std::vector<PreflightValue> preflightUpdatedValues;
-  preflightUpdatedValues.push_back({"Input File Path", csvImporterData.inputFilePath});
-
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions), {}};
 }
 
 //------------------------------------------------------------------------------
@@ -615,7 +630,8 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
   DataPath createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = csvImporterData.inputFilePath;
-  StringVector headers = s_HeaderCache[s_InstanceId].Headers;
+  std::vector<char> delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
+  StringVector headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, delimiters, csvImporterData.consecutiveDelimiters);
   DataTypeVector dataTypes = csvImporterData.dataTypes;
   std::vector<bool> skippedArrays = csvImporterData.skippedArrayMask;
   bool consecutiveDelimiters = csvImporterData.consecutiveDelimiters;
@@ -650,8 +666,6 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
     return MakeErrorResult(to_underlying(IssueCodes::CANNOT_SKIP_TO_LINE), fmt::format("Could not skip to the first line in the file to import ({}).", startImportRow));
   }
 
-  CharVector delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
-
   float32 threshold = 0.0f;
   usize numTuples = std::accumulate(csvImporterData.tupleDims.cbegin(), csvImporterData.tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
   if(useExistingGroup)
@@ -667,7 +681,7 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
       return {};
     }
 
-    Result<> parsingResult = parseLine(in, parsersResult.value(), delimiters, consecutiveDelimiters, lineNum, startImportRow);
+    Result<> parsingResult = parseLine(in, parsersResult.value(), headers, delimiters, consecutiveDelimiters, lineNum, startImportRow);
     if(parsingResult.invalid())
     {
       return std::move(parsingResult);
