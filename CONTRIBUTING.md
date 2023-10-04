@@ -1,6 +1,34 @@
 # Contributing to complex
 
-Thank you for considering contributing to complex. Your involvement helps make complex a valuable tool for the community. There are lots of
+Thank you for considering contributing to complex. Your involvement helps make complex a valuable tool for the global scientific community.
+
+This repository needs many different kinds of contribution not all of which require coding knowledge. Here are some of the different options:
+
+- **For Non-Code Contributors:**
+  - Provide datasets to be used for testing filters
+  - Documentation and comments can always be improved or expanded on to make it more accessible to users
+  - Language translation for documenation is always appreciated since this software is used around the world
+  - Suggest User Interface updates and/or add accesibility options
+  - Report bugs and test GUI client which can be downloaded from [dream3d.io](http://www.dream3d.io/)
+  - Answer questions from fellow users in [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions)
+- **For Python Developers:**
+  - Create new examples of use cases and as a Jupyter Notebook or sdd to documentation
+  - Create filters for complex from new papers and dissertations
+  - Fix bugs in filters or the python bindings
+  - Update exisitng filters to expand functionality or optimize
+- **For Operating System Power Users and CyberSecurity Experts:**
+  - Report security vulnerabilities in [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues)
+  - Add CMake presets for compiling on unique operating systems not already supported
+  - Create packages of DREAM3DNX and/or complex (with the nxrunner cli) and submit them to your favorite package manager (AUR, Flatpak, etc.)
+  - Create ways to run complex (with the nxrunner cli) in containers (such as Docker container)
+- **For C++ Developers:**
+  - Create new filters for complex from new papers and dissertations
+  - Port old SIMPL filters to the updated complex framework [porting filters guidelines](/docs/Porting_Filters.md)
+  - Handle bugs and feature requests: [issue tracker](https://github.com/bluequartzsoftware/complex/issues)
+  - Create new test cases to improve the reliability and robustness of the filters
+  - Update nxrunner cli to offer the same functionality as our GUI interface
+  - Optimize existing filter algorithms
+  - Port python filters to c++ to increase efficiency
 
 ## Building from Source
 
@@ -19,7 +47,7 @@ For instructions on building from source see our [Guide to Building From Source]
 
 By participating in this project, you are expected to uphold our [Code of Conduct](/CODE_OF_CONDUCT.md).
 
-If you experience or witness unacceptable behavior—or have any other concerns—please report it by contacting the project maintainers at <info@bluequartz.net>. All reports will be handled with discretion.
+If you experience or witness unacceptable behavior—or have any other concerns—please report it by contacting the project maintainers at [info@bluequartz.net](mailto:info@bluequartz.net). All reports will be handled with discretion.
 
 ## How Can I Contribute?
 

@@ -175,7 +175,3 @@ conda create -n cxpython python=3.8
 conda activate cxpython
 conda install -c bluequartzsoftware complex
 ```
-
-## Building the Documentation ##
-
-We use sphinx...

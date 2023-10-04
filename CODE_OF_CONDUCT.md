@@ -29,7 +29,7 @@ Unacceptable behaviors include, but are not limited to:
 
 ## 4. Reporting and Enforcement
 
-* If you experience or witness unacceptable behavior—or have any other concerns—please report it by contacting the project maintainers at <info@bluequartz.net>. All reports will be handled with discretion.
+* If you experience or witness unacceptable behavior—or have any other concerns—please report it by contacting the project maintainers at [info@bluequartz.net](mailto:info@bluequartz.net). All reports will be handled with discretion.
 * If a community member engages in unacceptable behavior, the project maintainers may take any action they deem appropriate, up to and including a permanent ban from the community without warning.
 
 ## 5. Acknowledgment & Credits
