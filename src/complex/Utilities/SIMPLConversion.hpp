@@ -254,6 +254,25 @@ struct IntFilterParameterConverter
   }
 };
 
+template <class T>
+struct FloatFilterParameterConverter
+{
+  using ParameterType = NumberParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_number())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("FloatFilterParameter json '{}' is not a number", json.dump()));
+    }
+
+    auto value = json.get<T>();
+
+    return {value};
+  }
+};
+
 struct LinkedChoicesFilterParameterConverter
 {
   using ParameterType = ChoicesParameter;
