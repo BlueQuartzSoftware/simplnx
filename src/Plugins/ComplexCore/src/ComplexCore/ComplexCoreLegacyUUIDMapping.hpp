@@ -156,7 +156,7 @@ namespace complex
     {complex::Uuid::FromString("8a1106d4-c67f-5e09-a02a-b2e9b99d031e").value(), {complex::FilterTraits<FindBoundaryCellsFilter>::uuid, {}}}, // FindBoundaryCellsFilter
     {complex::Uuid::FromString("450c2f00-9ddf-56e1-b4c1-0e74e7ad2349").value(), {complex::FilterTraits<FindBiasedFeaturesFilter>::uuid, {}}}, // FindBiasedFeaturesFilter
     {complex::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), {complex::FilterTraits<FindDifferencesMap>::uuid, {}}}, // FindDifferenceMap
-    {complex::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), {complex::FilterTraits<FindEuclideanDistMapFilter>::uuid, {}}}, // FindEuclideanDistMap
+    {complex::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), {complex::FilterTraits<FindEuclideanDistMapFilter>::uuid, &FindEuclideanDistMapFilter::FromSIMPLJson}}, // FindEuclideanDistMap
     {complex::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), {complex::FilterTraits<FindFeatureCentroidsFilter>::uuid, &FindFeatureCentroidsFilter::FromSIMPLJson}}, // FindFeatureCentroids
     {complex::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), {complex::FilterTraits<FindFeaturePhasesFilter>::uuid, {}}}, // FindFeaturePhases
     {complex::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), {complex::FilterTraits<FindFeaturePhasesBinaryFilter>::uuid, {}}}, // FindFeaturePhasesBinary
