@@ -9,6 +9,7 @@ This repository needs many different kinds of contribution not all of which requ
   - Documentation and comments can always be improved or expanded on to make it more accessible to users
   - Language translation for documenation is always appreciated since this software is used around the world
   - Suggest User Interface updates and/or add accesibility options
+  - Create new logos or images
   - Report bugs and test GUI client which can be downloaded from [dream3d.io](http://www.dream3d.io/)
   - Answer questions from fellow users in [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions)
 - **For Python Developers:**
@@ -29,6 +30,8 @@ This repository needs many different kinds of contribution not all of which requ
   - Update nxrunner cli to offer the same functionality as our GUI interface
   - Optimize existing filter algorithms
   - Port python filters to c++ to increase efficiency
+
+Our repository recognizes all forms of contribution as defined in the [all-contributors](https://allcontributors.org) specification. The categories of which can be seen here [emoji key](https://allcontributors.org/docs/en/emoji-key);
 
 ## Building from Source
 
@@ -140,5 +143,9 @@ For those looking to engage with the DREAM3DNX community, see the discussions bo
 We put together a specifc discussion category, called [Contributor Questions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/categories/contributor-questions), where you can quickly get help with issues related to development directly from maintainers.
 
 It is highly recommended for new code contributors to look at the [porting filters guidelines](/docs/Porting_Filters.md) to get a better idea of API and see how to bring older filters over from [SIMPL](https://github.com/BlueQuartzSoftware/SIMPL).
+
+## Getting Credit for Your Contributions
+
+Since our repository recognizes all contributions code or otherwise, feel free to add yourself to the **Contributors** section of the readme by following [this tutorial](https://allcontributors.org/docs/en/bot/usage). If you don't wan't to do it personally, one of the maintainers will do it when your Pull Request is approved unless you specifically state that you don't want to be added. Upon the GitHub PR being opened active maintainers will review your contributions then merge the PR by `all-contributors-bot` at which point you will appear in the main page under **Contributors**. The only requirement is having a GitHub account.
 
 Thank you for contributing!
