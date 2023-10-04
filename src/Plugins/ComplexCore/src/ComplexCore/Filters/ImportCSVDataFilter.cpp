@@ -618,23 +618,7 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
     return MakeErrorResult(to_underlying(IssueCodes::CANNOT_SKIP_TO_LINE), fmt::format("Could not skip to the first line in the file to import ({}).", startImportRow));
   }
 
-  CharVector delimiters;
-  if(csvImporterData.semicolonAsDelimiter)
-  {
-    delimiters.push_back(';');
-  }
-  if(csvImporterData.spaceAsDelimiter)
-  {
-    delimiters.push_back(' ');
-  }
-  if(csvImporterData.commaAsDelimiter)
-  {
-    delimiters.push_back(',');
-  }
-  if(csvImporterData.tabAsDelimiter)
-  {
-    delimiters.push_back('\t');
-  }
+  CharVector delimiters = CreateDelimitersVector(csvImporterData.tabAsDelimiter, csvImporterData.semicolonAsDelimiter, csvImporterData.commaAsDelimiter, csvImporterData.spaceAsDelimiter);
 
   float32 threshold = 0.0f;
   usize numTuples = std::accumulate(csvImporterData.tupleDims.cbegin(), csvImporterData.tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
