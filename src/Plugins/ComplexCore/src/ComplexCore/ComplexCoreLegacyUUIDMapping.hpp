@@ -160,7 +160,7 @@ namespace complex
     {complex::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), {complex::FilterTraits<FindFeatureCentroidsFilter>::uuid, &FindFeatureCentroidsFilter::FromSIMPLJson}}, // FindFeatureCentroids
     {complex::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), {complex::FilterTraits<FindFeaturePhasesFilter>::uuid, {}}}, // FindFeaturePhases
     {complex::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), {complex::FilterTraits<FindFeaturePhasesBinaryFilter>::uuid, {}}}, // FindFeaturePhasesBinary
-    {complex::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), {complex::FilterTraits<FindNeighborhoodsFilter>::uuid, {}}}, // FindNeighborhoods
+    {complex::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), {complex::FilterTraits<FindNeighborhoodsFilter>::uuid, &FindNeighborhoodsFilter::FromSIMPLJson}}, // FindNeighborhoods
     {complex::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {complex::FilterTraits<FindNeighborListStatistics>::uuid, {}}}, // FindNeighborListStatistics
     {complex::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {complex::FilterTraits<FindNeighbors>::uuid, {}}}, // FindNeighbors
     {complex::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), {complex::FilterTraits<FindNumFeaturesFilter>::uuid, {}}}, // FindNumFeatures
