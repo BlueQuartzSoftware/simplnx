@@ -88,7 +88,7 @@ namespace complex
     {complex::Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value(), {complex::FilterTraits<FindMisorientationsFilter>::uuid, {}}}, // FindMisorientations
     {complex::Uuid::FromString("2a0bfcd3-2517-5117-b164-964dfac8fe22").value(), {complex::FilterTraits<CreateEnsembleInfoFilter>::uuid, {}}}, // CreateEnsembleInfoFilter
     {complex::Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value(), {complex::FilterTraits<EnsembleInfoReaderFilter>::uuid, {}}}, // EnsembleInfoReader
-    {complex::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), {complex::FilterTraits<FindShapesFilter>::uuid, {}}}, // FindShapes
+    {complex::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), {complex::FilterTraits<FindShapesFilter>::uuid, &FindShapesFilter::FromSIMPLJson}}, // FindShapes
     {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), {complex::FilterTraits<ImportH5OimDataFilter>::uuid, {}}}, // ImportH5OimData
     {complex::Uuid::FromString("428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c").value(), {complex::FilterTraits<FindFeatureReferenceMisorientationsFilter>::uuid, {}}}, // FindFeatureReferenceMisorientations
     {complex::Uuid::FromString("433976f0-710a-5dcc-938e-fcde49cd842f").value(), {complex::FilterTraits<ExportGBCDTriangleDataFilter>::uuid, {}}}, // ExportGBCDTriangleDataFilter

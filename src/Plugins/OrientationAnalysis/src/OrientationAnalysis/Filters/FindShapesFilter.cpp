@@ -7,6 +7,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -170,5 +173,43 @@ Result<> FindShapesFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   return FindShapes(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_CellFeatureAttributeMatrixNameKey = "CellFeatureAttributeMatrixName";
+constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
+constexpr StringLiteral k_Omega3sArrayNameKey = "Omega3sArrayName";
+constexpr StringLiteral k_AxisLengthsArrayNameKey = "AxisLengthsArrayName";
+constexpr StringLiteral k_AxisEulerAnglesArrayNameKey = "AxisEulerAnglesArrayName";
+constexpr StringLiteral k_AspectRatiosArrayNameKey = "AspectRatiosArrayName";
+constexpr StringLiteral k_VolumesArrayNameKey = "VolumesArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindShapesFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindShapesFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  // results.push_back(
+  //     SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixNameKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_Omega3sArrayNameKey, k_Omega3sArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_AxisLengthsArrayNameKey, k_AxisLengthsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_AxisEulerAnglesArrayNameKey, k_AxisEulerAnglesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_AspectRatiosArrayNameKey, k_AspectRatiosArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VolumesArrayNameKey, k_VolumesArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
