@@ -7,6 +7,7 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
@@ -270,6 +271,24 @@ struct FloatFilterParameterConverter
     auto value = json.get<T>();
 
     return {value};
+  }
+};
+
+struct BooleanFilterParameterConverter
+{
+  using ParameterType = BoolParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_number_integer() || !json.is_number_unsigned())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("BooleanFilterParameter json '{}' is not a boolean", json.dump()));
+    }
+
+    auto value = static_cast<bool>(json.get<uint8>());
+
+    return {std::move(value)};
   }
 };
 
