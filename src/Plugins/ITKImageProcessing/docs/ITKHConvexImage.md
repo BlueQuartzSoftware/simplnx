@@ -13,13 +13,14 @@ HConvexImageFilter extract local maxima that are more than h intensity units abo
 This filter uses the HMaximaImageFilter .
 
 Geodesic morphology and the H-Convex algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
-Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter , HMinimaImageFilter 
+Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter , HMinimaImageFilter
+
 - MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Height | float64 | Set/Get the height that a local maximum must be above the local background (local contrast) in order to survive the processing. Local maxima below this value are replaced with an estimate of the local background. |
 | FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
@@ -42,14 +43,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

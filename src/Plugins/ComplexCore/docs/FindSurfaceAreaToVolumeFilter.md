@@ -26,15 +26,15 @@ Image
 
 ## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
 | Feature Attribute Array | NumCells |  int32_t | (1) | Number of **Cells** that are owned by the **Feature**. This value does not place any distinction between **Cells** that may be of a different size |
 
 ## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Feature Attribute Array | SurfaceAreaVolumeRatio | float | (1) | Ratio of surface area to volume for each **Feature**. The units are inverse length |
 | Feature Attribute Array | Sphericity | float | (1) | The sphericity of each feature |
 
@@ -49,5 +49,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

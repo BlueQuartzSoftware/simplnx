@@ -21,7 +21,7 @@ InvertIntensityImageFilter inverts intensity of pixels by subtracting pixel valu
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Maximum | float64 | Set/Get the maximum intensity value for the inversion. |
 
 ## Required Geometry
@@ -43,14 +43,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

@@ -1,43 +1,38 @@
-# Remove Flagged Features 
+# Remove Flagged Features
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Processing (Cleanup)
 
-## Description ##
+## Description
 
 This **Filter** will remove **Features** that have been flagged by another **Filter** from the structure.  The **Filter** requires that the user point to a boolean array at the **Feature** level that tells the **Filter** whether the **Feature** should remain in the structure.  If the boolean array is *false* for a **Feature**, then all **Cells** that belong to that **Feature** are temporarily *unassigned* and after all *undesired* **Features** are removed, the remaining **Features** are isotropically coarsened to fill in the gaps left by the removed **Features**.
 
-## Parameters ##
+## Parameters
 
 None
 
-## Required Geometry ##
+## Required Geometry
 
 Image
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
 | Feature Attribute Array | Active | bool | (1) | Specifies whether the **Feature** will remain in the structure or not |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## Example Pipelines ##
+## Example Pipelines
 
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

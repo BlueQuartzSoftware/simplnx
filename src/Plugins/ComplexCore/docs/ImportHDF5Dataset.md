@@ -1,10 +1,10 @@
 # Import HDF5 Dataset
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (IO/Read)
 
-## Description ##
+## Description
 
 This **Filter** allows the user to import datasets from an HDF5 file and store them as attribute arrays in DREAM.3D.  This filter supports importing datasets with any number of dimensions, as long as the created attribute array's total number of components and the tuple count of the destination attribute matrix multiply together to match the HDF5 dataset's total number of elements.
 
@@ -14,7 +14,7 @@ The component dimensions are input as a comma-delimited list of dimensional valu
 2. 5, 2, 1 = 5x2x1
 3. 6 = 6
 
-### Examples ###
+### Examples
 
 1. Suppose we have a 1D dataset in an HDF5 file with dimension **12,000**.
     We can input component dimensions of **5, 2, 2** and set the destination attribute matrix tuple dimensions to **35 x 5 x 2 x 2**
@@ -37,38 +37,36 @@ We can input component dimensions of **2** and set our destination attribute mat
 
 ![Example Image](Images/ImportHDF5Dataset_ui.png)
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------| ----------- |
+|------------|------| --------------------------------- |
 | HDF5 File | String | The path to the HDF5 file |
 | Checked Datasets | N/A | The checked datasets in the file tree to import |
 | Comp Dims | String | The component dimensions that the imported dataset will have.  This is a comma-delimited list of dimensional values |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Attribute Matrix**  | None | DataArrayPath | N/A | Attribute Matrix** used to store imported data |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Array(s) | Name of dataset(s) from HDF5 file | Type from HDF5 file | Input as a filter parameter | The created Attribute Array(s) |
 
-## Example Pipelines ##
+## Example Pipelines
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

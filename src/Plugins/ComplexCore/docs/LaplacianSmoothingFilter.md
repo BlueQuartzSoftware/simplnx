@@ -1,11 +1,10 @@
 # Laplacian Smoothing
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Surface Meshing (Smoothing)
 
-## Description ##
+## Description
 
 This **Filter** applies Laplacian smoothing to a **Triangle Geometry** that represents a surface mesh. A. Belyaev [2] has a concise explanation of the Laplacian Smoothing as follows:
 
@@ -28,23 +27,21 @@ where n is the number of neighbors. The local update rule
 
 ![](Images/Laplacian_Eq2.png)
 
-
 applied to every point of the triangulated surface is called Laplacian smoothing of the surface. Typically the factor &lambda; is a small positive number, and the process (2) is executed repeatedly. The Laplacian smoothing algorithm reduces the high frequency surface information and tends to flatten the surface. See Fig. 2 where Laplacian smoothing is applied to a triangulated model of a Noh mask.
 
-If &lambda; is too small, one needs more iterations for smoothing and the smoothing process becomes time-consuming. If &lambda; is not small enough, the smoothing process becomes unstable. 
+If &lambda; is too small, one needs more iterations for smoothing and the smoothing process becomes time-consuming. If &lambda; is not small enough, the smoothing process becomes unstable.
 
 ---------------------------
 
 In the Laplacian algorithm the &lambda; term has a range of 0 &le; &lambda; &le; 1 and defines a relative distance that a node can move relative to the positions of the nodes neighbors. A &lambda; = 0 value will effectively stop those node types from any movement during the algorithm thus by allowing the user to set this value for specific types of nodes the user can arrest the shrinkage of the surface mesh during the smoothing process.
 
-
-### Taubin's Lambda-Mu Smoothing Algorithm ##
+### Taubin's Lambda-Mu Smoothing Algorithm
 
 One of the options for the filter allows the user to apply Taubin's Lambda-Mu variation on Laplacian smoothing. This variation removes the shrinkage typically found with Laplacian smoothing by adding an additional step within each iteration where the negative of the (Lambda value \* Mu Factor) which effectively moves the points in the **opposite** direction from the initial movement. Because of this negative movement the number of iterations to achieve the same level of smoothing is greatly increased, on the order of 10x to 20x.
 
-### Algorithm Usage and Memory Requirements ###
+### Algorithm Usage and Memory Requirements
 
-Currently, if you lock the *Default Lambda* value to zero (0), the triple lines and quadruple points will not be able to move because none of their neighbors can move. The user may want to consider allowing a small value of &lambda; for the default nodes which will allow some movement of the triple lines and/or quadruple Points. 
+Currently, if you lock the *Default Lambda* value to zero (0), the triple lines and quadruple points will not be able to move because none of their neighbors can move. The user may want to consider allowing a small value of &lambda; for the default nodes which will allow some movement of the triple lines and/or quadruple Points.
 
 This **Filter** will create additional internal arrays in order to facilitate the calculations. These arrays are
 
@@ -54,7 +51,7 @@ This **Filter** will create additional internal arrays in order to facilitate th
 - Integer for number of connections for each node (same size as nodes array)
 - 64 bit float for delta values (3x size of nodes array)
 
-Due to these array allocations this **Filter** can consume large amounts of memory if the starting mesh has a large number of nodes. 
+Due to these array allocations this **Filter** can consume large amounts of memory if the starting mesh has a large number of nodes.
 The values for the *Node Type* array can take one of the following values.
 
     namespace SurfaceMesh {
@@ -71,12 +68,11 @@ The values for the *Node Type* array can take one of the following values.
 
 For more information on surface meshing, visit the tutorial.
 
-
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
-| Iteration Steps | int32_t | Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. _Inreasing this number too high may cause collapse of points!_ |
+|------------|------| --------------------------------- |
+| Iteration Steps | int32_t | Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. *Inreasing this number too high may cause collapse of points!* |
 | Default Lambda | float | Value of &lambda; to apply to general internal nodes that are not triple lines, quadruple points or on the surface of the volume |
 | Use Taubin Smoothing | boolean | Use Taubin's Lambda-Mu algorithm. |
 | Mu Factor | float | A value that is multipied by Lambda the result of which is the *mu* in Taubin's paper. The value should be a negative value. |
@@ -86,38 +82,35 @@ For more information on surface meshing, visit the tutorial.
 | Outer Triple Line Lambda | float | Value of &lambda; for triple lines that lie on the outer surface of the volume |
 | Outer Quadruple Points Lambda | float | Value of &lambda; for the quadruple Points that lie on the outer surface of the volume. |
 
-## Required Geometry ##
+## Required Geometry
 
 Triangle
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Vertex Attribute Array | NodeTypes | int8_t | (1) | Specifies the type of node in the **Geometry |
-| Face Attribute Array | FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each **Face |
+| Face Attribute Array | FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each Face |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## References ##
+## References
 
 [1] D. A. Feature, (1988) Laplacian smoothing and Delaunay triangulations. Commun. appl. numer. methods, 4: 709   712. doi: 10.1002/cnm.1630040603
 
-[2] A. Belyaev,    Mesh smoothing and enhancing curvature estimation,    [http://www.mpi-inf.mpg.de/   ag4-gm/handouts/06gm_surf3.pdf](http://www.mpi-inf.mpg.de/   ag4-gm/handouts/06gm_surf3.pdf).
+[2] A. Belyaev,    Mesh smoothing and enhancing curvature estimation,    [http://www.mpi-inf.mpg.de/   ag4-gm/handouts/06gm_surf3.pdf](<http://www.mpi-inf.mpg.de/>   ag4-gm/handouts/06gm_surf3.pdf).
 
+## Example Pipelines
 
-## Example Pipelines ##
+- (02) SmallIN100 Smooth Mesh
 
-+ (02) SmallIN100 Smooth Mesh
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

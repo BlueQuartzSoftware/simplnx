@@ -1,11 +1,10 @@
-# Segment Features (Scalar) 
+# Segment Features (Scalar)
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Reconstruction (Segmentation)
 
-## Description ##
+## Description
 
 This **Filter** segments the **Features** by grouping neighboring **Cells** that satisfy the *scalar tolerance*, i.e., have a scalar difference less than the value set by the user. The process by which the **Features** are identified is given below and is a standard *burn algorithm*.
 
@@ -15,47 +14,44 @@ This **Filter** segments the **Features** by grouping neighboring **Cells** that
 4. Remove the current **Cell** from the list and move to the next **Cell** and repeat 2. and 3.; continue until no **Cells** are left in the list
 5. Increment the current **Feature** counter and repeat steps 1. through 4.; continue until no **Cells** remain unassigned in the dataset
 
-The user has the option to *Use Mask Array*, which allows the user to set a boolean array for the **Cells** that remove **Cells** with a value of *false* from consideration in the above algorithm. This option is useful if the user has an array that either specifies the domain of the "sample" in the "image" or specifies if the orientation on the **Cell** is trusted/correct. 
+The user has the option to *Use Mask Array*, which allows the user to set a boolean array for the **Cells** that remove **Cells** with a value of *false* from consideration in the above algorithm. This option is useful if the user has an array that either specifies the domain of the "sample" in the "image" or specifies if the orientation on the **Cell** is trusted/correct.
 
 After all the **Features** have been identified, an **Attribute Matrix** is created for the **Features** and each **Feature** is flagged as *Active* in a boolean array in the matrix.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------| ----------- |
+|------------|------| --------------------------------- |
 | Scalar Tolerance | float | Tolerance  used to determine if neighboring **Cells** belong to the same **Feature |
 | Use Mask Array | bool | Specifies whether to use a boolean array to exclude some **Cells** from the **Feature** identification process |
 
-## Required Geometry ##
+## Required Geometry
 
 Image
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | None | Any | (1) | Scalar array used during segmentation |
 | Cell Attribute Array | Mask | bool | (1) | Specifies if the **Cell** is to be counted in the algorithm. Only required if *Use Mask Array* is checked |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. |
 |   Attribute Matrix   | CellFeatureData | Cell Feature | N/A | Created **Feature Attribute Matrix** name |
 | Feature Attribute Array | Active | bool | (1) | Specifies if the **Feature** is still in the sample (*true* if the **Feature** is in the sample and *false* if it is not). At the end of the **Filter**, all **Features** will be *Active* |
 
-
-## Example Pipelines ##
+## Example Pipelines
 
 + (09) Image Segmentation
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

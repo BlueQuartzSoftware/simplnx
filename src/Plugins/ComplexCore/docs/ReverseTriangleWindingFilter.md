@@ -18,8 +18,8 @@ Triangle
 
 ## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container | None | N/A | N/A | Data Container that holds the **Triangle Geometry** to reverse winding |
 
 ## Created Objects
@@ -35,5 +35,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

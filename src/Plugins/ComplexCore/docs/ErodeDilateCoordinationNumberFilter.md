@@ -16,11 +16,10 @@ are *coarsened* to fill the removed **Cells**.
 
 By default, the **Filter** will only perform a single iteration and will not concern itself with the possibility that
 after one iteration, **Cells** that were acceptable may become unacceptable by the original *coordination number*
-criteria due to the small changes to the structure during the *coarsening*. The user can opt to enable the _Loop Until
-Gone_ parameter, which will continue to run until no **Cells** fail the original criteria.
+criteria due to the small changes to the structure during the *coarsening*. The user can opt to enable the *Loop Until
+Gone* parameter, which will continue to run until no **Cells** fail the original criteria.
 
-
-| Before Filter                      | After Filter                       | 
+| Before Filter                      | After Filter                       |
 |--------------------------------------|--------------------------------------|
 | ![](Images/ErodeDilateCoordinationNumber_Before.png) | ![](Images/ErodeDilateCoordinationNumber_After.png) |
 
@@ -37,8 +36,8 @@ Image
 
 ## Required Objects
 
-| Kind                     | Default Name   | Type     | Comp Dims | Description                                                      |
-|--------------------------|----------------|----------|-------------|------------------------------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Image Geometry**       | Image Geometry | DataPath | N/A                  | The path to the Image Geometry where the feature Ids are stored. |
 | Cell Attribute Array | FeatureIds     | int32_t  | (1)                  | Specifies to which **Feature** each **Cell** belongs             |
 
@@ -55,5 +54,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

@@ -1,34 +1,31 @@
 # ImportDREAM3DFilter
 
-## Description ##
+## Description
 
 This **Filter** reads the data structure to an hdf5 file with the .dream3d extension.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Import File Path | Filesystem Path | The file path the DataStructure should be read from as an HDF5 file. |
 
-## Required Geometry ###
+## Required Geometry #
 
 None
 
-## Required Objects ##
+## Required Objects
 
 None
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## Example Pipelines ##
+## Example Pipelines
 
 ALL
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
-
-
-

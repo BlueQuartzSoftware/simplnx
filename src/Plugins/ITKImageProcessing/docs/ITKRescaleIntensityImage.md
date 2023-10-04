@@ -12,10 +12,7 @@ RescaleIntensityImageFilter applies pixel-wise a linear transformation to the in
 
 The following equation gives the mapping of the intensity values
 
-
- 
- \f[ outputPixel = ( inputPixel - inputMin) \cdot \frac{(outputMax - outputMin )}{(inputMax - inputMin)} + outputMin \f] 
-
+ \f[ outputPixel = ( inputPixel - inputMin) \cdot \frac{(outputMax - outputMin )}{(inputMax - inputMin)} + outputMin \f]
 
 All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.
 
@@ -24,7 +21,7 @@ NOTE: In this filter the minimum and maximum values of the input image are compu
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | OutputMinimum | float64 |  |
 | OutputMaximum | float64 |  |
 
@@ -47,14 +44,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

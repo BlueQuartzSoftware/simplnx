@@ -17,13 +17,14 @@ This filter uses the GrayscaleGeodesicDilateImageFilter . It provides its own in
 This filter is the dual to the GrayscaleFillholeImageFilter which implements the Fillhole algorithm. Since it is a dual, it is somewhat superfluous but is provided as a convenience.
 
 Geodesic morphology and the Fillhole algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
-Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter 
+Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesicDilateImageFilter
+
 - MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
 ## Required Geometry
@@ -45,14 +46,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

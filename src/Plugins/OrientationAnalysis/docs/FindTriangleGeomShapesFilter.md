@@ -1,10 +1,10 @@
 # Find Feature Shapes from Triangle Geometry
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Statistics (Morphological)
 
-## Description ##
+## Description
 
 This **Filter** calculates the second-order moments of each enclosed **Feature** in a **Triangle Geometry**. The
 second-order moments allow for the determination of the *principal axis lengths, principal axis directions, aspect
@@ -30,15 +30,15 @@ for determining the moments and these values is as follows:
 represented, resulting in inaccurate Omega3 values. This problem is especially apparent for perfect rectangular prisms,
 but any shape with clear sharp corners may be affected.
 
-## Parameters ##
+## Parameters
 
 None
 
-## Required Geometry ##
+## Required Geometry
 
 Triangle
 
-## Required Objects ##
+## Required Objects
 
 | Kind                        | Default Name    | Type         | Comp Dims | Description                                                        |
 |-----------------------------|-----------------|--------------|-------------|--------------------------------------------------------------------|
@@ -47,7 +47,7 @@ Triangle
 | Feature Attribute Array | Volumes         | float        | (1)                  | Volume of the enclosed **Feature**                                 |
 | Attribute Matrix**        | FaceFeatureData | Face Feature | N/A                  | Feature Attribute Matrix** of the selected _Face Labels          |
 
-## Created Objects ##
+## Created Objects
 
 | Kind                        | Default Name    | Type  | Comp Dims | Description                                                                                                                                                                                   |
 |-----------------------------|-----------------|-------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -56,7 +56,7 @@ Triangle
 | Feature Attribute Array | AxisLengths     | float | (3)                  | Axis lengths (a, b, c) for best-fit ellipsoid to enclosed **Feature**                                                                                                                         |
 | Feature Attribute Array | Omega3s         | float | (1)                  | 3rd invariant of the second-order moment matrix for the enclosed **Feature**, does not assume a shape type (i.e., ellipsoid)                                                                  |
 
-## References ## 
+## References ##
 
 [1] Representation and Reconstruction of Three-dimensional Microstructures in Ni-based Superalloys, AFOSR
 FA9550-07-1-0179 Final Report, 20 Dec 2010.
@@ -70,14 +70,12 @@ Mamistvalov, IEEE TRANSACTIONS ON PATTERN ANALYSIS AND MACHINE INTELLIGENCE, VOL
 [4] M. Groeber, M. Uchic, D. Dimiduk, and S. Ghosh. A Framework for Automated Analysis and Simulation of 3D
 Polycrystalline Microstructures, Part 1: Statistical Characterization Acta Materialia, 56 (2008), 1257-1273.
 
-## Example Pipelines ##
+## Example Pipelines
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

@@ -1,17 +1,14 @@
-# Vtk Rectilinear Grid Exporter  #
+# Vtk Rectilinear Grid Exporter
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 I/O Filters
 
-
-## Description ##
+## Description
 
 This Filter reads the **Feature** and phase ids together with image parameters required by Vtk to an output file named by the user. The file is used to generate the image of the **Features** and phases of the **Features**.
 
-
-## Parameters ##
+## Parameters
 
 | Name | Type |
 |------|------|
@@ -26,31 +23,26 @@ This Filter reads the **Feature** and phase ids together with image parameters r
 | Write IPF Colors | Boolean (On or Off) |
 | Write Binary File | Boolean (On or Off) |
 
-## Required DataContainers ##
+## Required DataContainers
 
 Voxel
 
-## Required Objects ##
+## Required Objects
 
 | Type | Default Name | Description | Comment | Filters Known to Create Data |
-|------|--------------|-------------|---------|-----|
+|------|--------------|-----|-----|-----------------------------------|
 | Cell | GrainIds | Ids (ints) that specify to which **Feature** each **Cell** belongs. | Values should be present from segmentation of experimental data or synthetic generation and cannot be determined by this filter. Not having these values will result in the filter to fail/not execute. | Segment Features (Misorientation, C-Axis Misorientation, Scalar) (Reconstruction), Read Dx File (IO), Read Ph File (IO), Pack Primary Phases (SyntheticBuilding), Insert Precipitate Phases (SyntheticBuilding), Establish Matrix Phase (SyntheticBuilding)
 
-## Created Objects ##
+## Created Objects
 
 None
 
+## Example Pipelines
 
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

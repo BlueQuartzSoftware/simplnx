@@ -1,15 +1,14 @@
-# Import EDAX EBSD Data (.ang) 
+# Import EDAX EBSD Data (.ang)
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 IO (Input)
 
-## Description ##
+## Description
 
-This **Filter** will read a single .ang file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and **Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be undefined or simply **wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data.
+This **Filter** will read a single .ang file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**. The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be undefined or simply **wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data.
 
-### Default TSL Transformations ###
+### Default TSL Transformations
 
 If the data has come from a TSL acquisition system and the settings of the acquisition software were in the default modes, he following reference frame transformations may need to be performed based on the version of the OIM Analysis software being used to collect the data:
 
@@ -18,23 +17,24 @@ If the data has come from a TSL acquisition system and the settings of the acqui
 
 The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The Threshold Objects **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > 0.1 or *Image Quality* > desired quality.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------| ----------- |
+|------------|------| --------------------------------- |
 | Input File | File Path | The input .ang file path |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
 None
 
-## Created Objects ## 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+## Created Objects
+
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry |
 | Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
 | Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
@@ -46,23 +46,21 @@ None
 | Cell Attribute Array | SEM Signal       | float |(1) | Value of SEM signal   |
 | Cell Attribute Array | X Position       | float |(1) | X coordinate of **Cell**   |
 | Cell Attribute Array | Y Position       | float |(1) | Y coordinate of **Cell**   |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
 | Ensemble Attribute Array | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
-| Ensemble Attribute Array | MaterialName | String | (1) | Name of each **Ensemble |
+| Ensemble Attribute Array | MaterialName | String | (1) | Name of each Ensemble |
 
-## Example Pipelines ##
+## Example Pipelines
 
 + INL Export
 + Export Small IN100 ODF Data (StatsGenerator)
 + Edax IPF Colors
 + Confidence Index Histogram
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

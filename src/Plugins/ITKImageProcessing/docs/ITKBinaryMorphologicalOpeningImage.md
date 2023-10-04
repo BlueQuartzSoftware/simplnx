@@ -12,7 +12,7 @@ This filter removes small (i.e., smaller than the structuring element) structure
 
 The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.
 
-This code was contributed in the Insight Journal paper: "Binary morphological closing and opening image filters" by Lehmann G. https://www.insight-journal.org/browse/publication/58 
+This code was contributed in the Insight Journal paper: "Binary morphological closing and opening image filters" by Lehmann G. <https://www.insight-journal.org/browse/publication/58>
 
 ### Author
 
@@ -25,7 +25,7 @@ This code was contributed in the Insight Journal paper: "Binary morphological cl
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | KernelRadius | uint32 | Set the radius of the kernel structuring element. |
 | KernelType | KernelEnum | Set the kernel or structuring element used for the morphology. |
 | BackgroundValue | float64 | Set the value in eroded part of the image. Defaults to zero |
@@ -50,14 +50,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

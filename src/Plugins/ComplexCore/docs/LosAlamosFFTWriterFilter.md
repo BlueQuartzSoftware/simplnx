@@ -18,7 +18,7 @@ The Euler angles are in degrees. X, Y, Z are integer indices into the **Image** 
 
 ### Example Output
 
-The output file:     
+The output file:
 
     90.000 0.000 0.000 1 1 1 0 1
     90.000 0.000 0.000 2 1 1 0 1 
@@ -53,8 +53,8 @@ Image
 
 ## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | FeaturesIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
 | Cell Attribute Array | EulerAngles | float | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z) |
 | Cell Attribute Array | Phases | int32_t | (1) |  Specifies to which **Ensemble** each **Cell** belongs |
@@ -76,5 +76,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

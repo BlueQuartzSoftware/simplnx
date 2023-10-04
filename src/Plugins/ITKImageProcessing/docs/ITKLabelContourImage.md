@@ -12,7 +12,7 @@ LabelContourImageFilter takes a labeled image as input, where the pixels in the 
 
 The connectivity can be changed to minimum or maximum connectivity with SetFullyConnected() . Full connectivity produces thicker contours.
 
-https://www.insight-journal.org/browse/publication/217 
+<https://www.insight-journal.org/browse/publication/217>
 
 ### Author
 
@@ -25,7 +25,7 @@ https://www.insight-journal.org/browse/publication/217
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 | BackgroundValue | float64 | Set/Get the background value used to identify the objects and mark the pixels not on the border of the objects. |
 
@@ -48,14 +48,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

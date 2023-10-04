@@ -1,50 +1,42 @@
-# Create Attribute Matrix  #
+# Create Attribute Matrix
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (Generation)
 
-
-## Description ##
+## Description
 
 This **Filter** creates a new **Attribute Matrix**.
 
-### Example Usage ###
+### Example Usage
 
 If you wanted to create an **Attribute Matrix** to represent a 3D volume where the dimensions of the 3 orthogonal axesare X=3, y=4 and Z=5, then the *Tuple Dimensions* would have a value of (3, 4, 5).
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | DataObject Path | DataPath | Where **Attribute Matrix** will be created |
 | Attribute Matrix Dimensions | Any | An array that contains the size of each tuple dimension |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container  | None | N/A | N/A | Data Container for the created **Attribute Matrix**  |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Attribute Matrix**  | None | Any | N/A | Created **Attribute Matrix** name  |
 
-## Example Pipelines ##
+## Example Pipelines
 
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
-
-
-
-

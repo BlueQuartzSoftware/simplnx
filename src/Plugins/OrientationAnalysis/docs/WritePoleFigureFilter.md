@@ -16,23 +16,18 @@ This **Filter** creates a standard pole figure image for each **Ensemble** in a 
 
 2: Discrete Pole figure. The algorithm will simply mark each pixel that had at least 1 count as a black pixel.
 
-
 ### Layout
 
 The 3 pole figures can be laid out in a Square, Horizontal row or vertical column. Supporting informatio (including the color bar legend for color pole figures) will also be printed on the image.
-
------
 
 | Lambert Projection | Discrete |
 |--------------------|----------|
 | ![Example Pole Figure Using Square Layout](Images/PoleFigure_Example.png) | ![Example Pole Figure Using Square Layout](Images/Pole_Figure_Discrete_Example.png) |
 
------
-
 ## Parameters
 
 | Name | Type | Description |
-|------|------| ----------- |
+|------------|------| --------------------------------- |
 | Figure Title | String | The title of the figure. |
 | Pole Figure Type | Enumeration: 0=Lambert, 1=Discrete | Controls the type of pole figure |
 | Lambert Image Size (Pixels) | int32_t | Size of the Lambert square in pixels |
@@ -51,21 +46,20 @@ NONE
 
 ## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | EulerAngles | float | (3)  | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z) |
 | Cell Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
 | Cell Attribute Array | Mask | bool | (1) | Used to define **Cells** as *good* or *bad* |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
 
 ## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Geometry | ImageGeometry | Image | N/A | Created **Image Geometry |
 |   Attribute Matrix   | CellData | Cell | N/A | Created **Cell Attribute Matrix** name |
 |   DataArray   | Image | Data Array (uint8) | 4 | Created **DataArray** name |
-
 
 ## Example Pipelines
 
@@ -79,5 +73,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

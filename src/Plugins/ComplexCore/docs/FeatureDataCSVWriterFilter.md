@@ -1,18 +1,17 @@
 # Write Feature Data as CSV File
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 IO (Output)
 
-## Description ##
+## Description
 
 This **Filter** writes the data associated with each **Feature** to a file name specified by the user in *CSV* format. Every array in the **Feature** map is written as a column of data in the *CSV* file.  The user can choose to also write the neighbor data. Neighbor data are data arrays that are associated with the neighbors of a **Feature**, such as: list of neighbors, list of misorientations, list of shared surface areas, etc. These blocks of info are written after the scalar data arrays.  Since the number of neighbors is variable for each **Feature**, the data is written as follows (for each **Feature**): Id, number of neighbors, value1, value2,...valueN.
 
+### Example Output
 
-### Example Output ###
+The *CSV* file:
 
-The *CSV* file:     
-     
     5414
     Feature_ID,Active,AvgEuler_0,AvgEuler_1,AvgEuler_2,AvgQuats_0,AvgQuats_1,AvgQuats_2,AvgQuats_3,NumNeighbors2,Phases
     1,1,4.7367158,0.40832964,1.1398145,-0.045759138,0.19751814,0.19773535,0.95905864,6,1
@@ -40,40 +39,37 @@ The *CSV* file with Write Neighbor Data checked:
     4,1,886
     5,26,61,224,278,454,786,923,1119,1137,1478,1517,1525,1651,1812,1814,2227,2233,2731,2750,2907,2930,3175,3548,3619,4492,4791,5010
 
-
-## Parameters ##
+## Parameters
 
 | Name | Type |Description |
 |------|------|------|
 | Output File | File Path | The output .csv file path |
 | Write Neighbor Data | bool | Whether to write the **Feature** neighbor data |
 | Write Number of Features Line | bool | Write the total number of features as the first line. Writing this line may interfere with standard CSV parsers. Default=ON |
-| Delimiter | choice | The delimiter character used to parse the file (Takes _COMMA_, _SEMICOLON_, _COLON_, _TAB_, or _SPACE_) |
+| Delimiter | choice | The delimiter character used to parse the file (Takes *COMMA*, *SEMICOLON*, *COLON*, *TAB*, or *SPACE*) |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | AttributeMatrix | None | Feature | N/A | AttributeMatrix** that holds the data to write |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## Example Pipelines ##
+## Example Pipelines
 
 None
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

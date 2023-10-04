@@ -1,11 +1,10 @@
 # Execute Process
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (Misc)
 
-## Description ##
+## Description
 
 This filter allows the user to execute any application, program, shell script or any other executable program on the computer system. Any output can be found in the user specified log file.
 
@@ -19,11 +18,11 @@ Simple command with arguments (for Windows users)
 
 > C:/Applications/DREAM3D-6.6.332/nxrunner.exe C:/Applications/DREAM3D/DREAM3D-6.6.332/Data/MyPipeline.json
 
-For a command with spaces in the path 
+For a command with spaces in the path
 
 > "C:/Program Files/DREAM3D-6.6.332/nxrunner.exe" "C:/Program Files/DREAM3D-6.6.332/PrebuiltPipelines/Workshop/EBSD Reconstruction/(01) SmallIN100 Archive.json"
 
-## Parameters ##
+## Parameters
 
 | Name             | Type | Description |
 |------------------|------|-------------|
@@ -32,31 +31,26 @@ For a command with spaces in the path
 | Timeout | Int32 | The amount of time (in ms) to wait for the command to start/finish when blocking is selected. |
 | Output Log File | File Path | The log file where the output from the process will be stored. |
 
-
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
 None
 
-## Created Objects ##
+## Created Objects
 
 None
 
-
-## Example Pipelines ##
+## Example Pipelines
 
 ExecuteProcess
 
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

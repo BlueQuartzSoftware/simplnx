@@ -1,16 +1,16 @@
-# Import Fiji Montage #
+# Import Fiji Montage
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Import/Export (Import)
 
-## Description ##
+## Description
 
 Imports multiple images for the purpose of montage assembly. Each image is stored in it's own *DataContaner/AttributeMatrix/AttributeArray* where the name of the *DataContainer* is based off the row & column index of the montage. The filter assumes that the Configuration File is in the same folder as the images. The created *AttributeMatrix* and *AttributeArray* will have the same name. The image files **MUST** be located in the same directory as the Fiji Configuration File.
 
 Utilizes the *itkReadImage* and *ColorToGrayScale* filters
 
-## Example Registration File ##
+## Example Registration File
 
     # Define the number of dimensions we are working on
     dim = 2                         <===== THIS LINE IS REQUIRED
@@ -23,7 +23,7 @@ Utilizes the *itkReadImage* and *ColorToGrayScale* filters
     SampleMosaic_p4.bmp; ; (0.23675, 1839.55)
     SampleMosaic_p5.bmp; ; (1227.31, 1839.55)
 
-## Parameters ##
+## Parameters
 
 | Name             | Type | Comment |
 |------------------|------|---------|
@@ -39,7 +39,7 @@ Utilizes the *itkReadImage* and *ColorToGrayScale* filters
 | Cell Attribute Matrix Name | String  | The name of the Cell Attribute Matrix. |
 | Image Data Array Name | String  | The name of the import image data |
 
-### Color To Gray Scale Notes ###
+### Color To Gray Scale Notes
 
 The luminosity method is a more sophisticated version of the average method. It also averages the values, but it forms a weighted average to account for human perception. We re more sensitive to green than other colors, so green is weighted most heavily. The default formula for luminosity is BT709 Gray scale:
 
@@ -47,7 +47,7 @@ The luminosity method is a more sophisticated version of the average method. It 
 
 The user can set the weightings to what ever values they would like.
 
-### Lenght Unit ###
+### Lenght Unit
 
     Yoctometer = 0
     Zeptometer = 1
@@ -79,35 +79,34 @@ The user can set the weightings to what ever values they would like.
     Unspecified = 100U
     Unknown = 101U
 
-## Required DataContainers ##
+## Required DataContainers
 
 NONE
 
-## Required Objects ##
+## Required Objects
 
 NONE
 
-## Created Objects ##
+## Created Objects
 
 This filter will create one data container for each image tile that is in the xml file. That created Data Container will have a Cell Attribute Matrix which will also hold a single Attribute Array of the same type of the image (unless the user selects to convert images to Gray Scale images.)
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | DataGroup | Zen DataGroup | N/A | N/A | Parent DataGroup created in the datastructure |
 | Image Geometry | Mosaic- | N/A | N/A | The prefix for all created Image Geometries |
 | AttributeMatrix | Tile Data | N/A | N/A | The name of every created Attribute Matrix |
 | DataArray | Image | N/A | N/A | The name of the created DataArray in each Image Geometry |
 
-## Example Pipelines ##
+## Example Pipelines
 
 Prebuilt Pipelines / Examples / ITKImageProcessing / Fiji Import
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
+## DREAM3D Mailing Lists
 
 If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
 <https://groups.google.com/forum/?hl=en#!forum/dream3d-users>
-

@@ -1,10 +1,10 @@
 # Create Data Array
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (Generation)
 
-## Description ##
+## Description
 
 This **Filter** creates an **Data Array** of any primitive type with any number of components along a *single component dimension*. For example, a scalar as (1) or a 3-vector as (3), but *not* a matrix as (3, 3). The array is initialized to a user define value or with random values within a specified range.
 
@@ -18,11 +18,11 @@ Another example is if you want to create a floating point array where each tuple
 
     2.5
 
-When creating a Data Array within an Attribute matrix, the tuple dimensions will **always** be taken direct from the Attribute Matrix. This means that the *Set Tuple Dimensions* parameter can be unchecked to hide the tuple dimensions entry table. 
+When creating a Data Array within an Attribute matrix, the tuple dimensions will **always** be taken direct from the Attribute Matrix. This means that the *Set Tuple Dimensions* parameter can be unchecked to hide the tuple dimensions entry table.
 
 If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the tuple dimensions themselves.
 
-### Scalar Type Values ###
+### Scalar Type Values
 
     static const int Int8 = 0;
     static const int UInt8 = 1;
@@ -36,7 +36,7 @@ If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the t
     static const int Double = 9;
     static const int Bool = 10;
 
-### Primitive Data Type Valid Ranges ##
+### Primitive Data Type Valid Ranges
 
 | Type             | Size |        Range       |
 |------------------|------|--------------------|
@@ -55,7 +55,7 @@ If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the t
 The number of components should be at least 1. Examples of *Number of Components* would be 3 for an RGB Image, 1 for a gray scale image, 1 for a scalar array, 4 for a quaternions array, etc. All values of the array will be initialized to the user set value. The initialization value text box
 must have a user entry or the default value *0* will be used.
 
-## Parameters ##
+## Parameters
 
 | Name             | Type | Description |
 |------------------|------|-------------|
@@ -65,28 +65,26 @@ must have a user entry or the default value *0* will be used.
 | Initialization Value | String | Initialization value for array |
 | Data Format | String | This value will specify which data format is used by the array's data store. An empty string results in in-memory data store. |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
 None
 
-## Created Objects ##
+## Created Objects
 
-| Kind | Default Name | Type | Comp Dims | Description |
-|------|--------------|-------------|---------|----------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Any **Attribute Array | None | Any | Any | Created **Attribute Array** location and name |
 
-## Example Pipelines ##
+## Example Pipelines
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

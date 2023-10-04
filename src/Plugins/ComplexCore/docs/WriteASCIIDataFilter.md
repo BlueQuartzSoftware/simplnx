@@ -1,15 +1,14 @@
 # Write ASCII Data
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 IO (Output) (Write) (Export) (Text) (CSV) (ASCII)
 
-## Description ##
+## Description
 
 This **Filter** accepts DataArray(s) as input, extracts the data, creates the file(s), and writes it out according to parameter choices
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Decision |
 |-------|-----|----------|
@@ -19,26 +18,24 @@ This **Filter** accepts DataArray(s) as input, extracts the data, creates the fi
 | Maximum Tuples Per Line | int32 | Number of tuples printed before newline character is printed |
 | Delimiter | Delimiter enum class | ASCII character used to seperate values |
 
-## Required Geometry ##
+## Required Geometry
 
 None
 
-## Required Objects ##
+## Required Objects
 
 | Kind | Default Name | Type | Comp Dims | Description                                          |
 |-----|-------|------|--------|------------------------------------------------------|
 |   DataArray   | Attribute Arrays to Export | DataArray |  any | Specifies **DataArray** to have their values printed |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

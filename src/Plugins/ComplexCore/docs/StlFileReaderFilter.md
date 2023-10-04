@@ -1,11 +1,10 @@
-# Read STL File 
+# Read STL File
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 IO (Input)
 
-## Description ##
+## Description
 
 This **Filter**  will read a binary STL File and create a **Triangle Geometry** object in memory. The STL reader is very strict to the STL specification. An explanation of the STL file format can be found on [Wikipedia](https://en.wikipedia.org/wiki/STL). The structure of the file is as follows:
 
@@ -22,7 +21,7 @@ This **Filter**  will read a binary STL File and create a **Triangle Geometry** 
 
 **It is very important that the "Attribute byte Count" is correct as DREAM.3D follows the specification strictly.** If you are writing an STL file be sure that the value for the "Attribute byte count" is *zero* (0). If you chose to encode additional data into a section after each triangle then be sure that the "Attribute byte count" is set correctly. DREAM.3D will obey the value located in the "Attribute byte count".
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
 |------|------|------|
@@ -34,33 +33,28 @@ This **Filter**  will read a binary STL File and create a **Triangle Geometry** 
 | Shared Vertex Attribute Matrix | String | Name of the created Shared Vertex Attribute Matrix |
 | Shared Face Attribute Matrix | String | Name of the created Shared Face Attribute Matrix |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
 None
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container | TriangleDataContainer  | N/A | N/A | Created **Data Container** name with a **Triangle Geometry |
 |   Attribute Matrix   | FaceData  | Face | N/A | Created **Face Attribute Matrix** name  |
-| Face Attribute Array | FaceNormals  | double | (3) | Specifies the normal of each **Face |
+| Face Attribute Array | FaceNormals  | double | (3) | Specifies the normal of each Face |
 
+## Example Pipelines
 
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

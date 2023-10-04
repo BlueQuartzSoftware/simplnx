@@ -12,16 +12,17 @@ The Gaussian operator used here was described by Tony Lindeberg (Discrete Scale-
 
 The variance or standard deviation (sigma) will be evaluated as pixel units if SetUseImageSpacing is off (false) or as physical units if SetUseImageSpacing is on (true, default). The variance can be set independently in each dimension.
 
-When the Gaussian kernel is small, this filter tends to run faster than itk::RecursiveGaussianImageFilter .* GaussianOperator 
-- Image 
-- Neighborhood 
-- NeighborhoodOperator 
+When the Gaussian kernel is small, this filter tends to run faster than itk::RecursiveGaussianImageFilter .* GaussianOperator
+
+- Image
+- Neighborhood
+- NeighborhoodOperator
 - RecursiveGaussianImageFilter
 
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Variance | float64 |  |
 | MaximumKernelWidth | uint32 | Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels. |
 | MaximumError | float64 |  |
@@ -46,14 +47,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

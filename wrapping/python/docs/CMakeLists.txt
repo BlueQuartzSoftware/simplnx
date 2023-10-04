@@ -51,7 +51,7 @@ add_custom_target(sphinx_copy_sources ALL
   DEPENDS generate_sphinx_docs
   COMMAND ${CMAKE_COMMAND} -E remove_directory "${COMPLEX_SPHINX_DOCS_DIR}/source"
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/source" "${COMPLEX_SPHINX_DOCS_DIR}/source"
-  COMMENT "SPHINX: Copying static doc files to build directory at ${COMPLEX_SPHINX_DOCS_DIR}"
+  COMMENT "COMPLEX Python Docs: Copying static doc files to build directory at ${COMPLEX_SPHINX_DOCS_DIR}"
 )
 
 #------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ add_custom_target(sphinx_copy_sources ALL
 add_custom_target(sphinx_generate_plugin_rst ALL
   DEPENDS sphinx_copy_sources
   COMMAND "$<TARGET_FILE:generate_sphinx_docs>"
-  COMMENT "SPHINX: Generated Plugin .rst docs file"
+  COMMENT "COMPLEX Python Docs: Generated Plugin .rst docs file"
 )
 
 #------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ if(WIN32)
     DEPENDS sphinx_generate_plugin_rst
     COMMAND "${SPHINX_MAKE_BAT_FILE}" clean
     COMMAND "${SPHINX_MAKE_BAT_FILE}" html
-    COMMENT "SPHINX: Generating Python HTML Documentation"
+    COMMENT "COMPLEX Python Docs: Generating Python HTML Documentation"
     WORKING_DIRECTORY "${COMPLEX_SPHINX_DOCS_DIR}"
   )
 else()
@@ -99,7 +99,7 @@ else()
     DEPENDS sphinx_generate_plugin_rst
     COMMAND "/usr/bin/make" clean
     COMMAND "/usr/bin/make" html
-    COMMENT "SPHINX: Generating Python HTML Documentation"
+    COMMENT "COMPLEX Python Docs: Generating Python HTML Documentation"
     WORKING_DIRECTORY "${COMPLEX_SPHINX_DOCS_DIR}"
   )
 endif()

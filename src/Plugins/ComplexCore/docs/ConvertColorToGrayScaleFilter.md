@@ -1,11 +1,10 @@
-# Color to GrayScale 
+# Color to GrayScale
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Processing (Image)
 
-## Description ##
+## Description
 
 This **Filter** allows the user to select a *flattening* method for turning an array of RGB or RGBa values into grayscale values.
 
@@ -16,15 +15,14 @@ This **Filter** allows the user to select a *flattening* method for turning an a
 
 The user can select 1 or more image data arrays which are assumed to be multi-component arrays of unsigned 8 bit values. The user can create a new AttributeMatrix if they want to store all the newly created arrays in a separate AttributeMatrix.
 
-### Additional GrayScale Conversions ###
+### Additional GrayScale Conversions
 
 The following are some additional accepted grayscale conversions
 
 + RMY Greyscale: Red: 0.5 Green: 0.419 Blue: 0.081
 + (YIQ/NTSC): Red: 0.299 Green: 0.587 Blue: 0.114
 
-
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
 |------|------|------|
@@ -33,34 +31,29 @@ The following are some additional accepted grayscale conversions
 | Color Channel | 1 Int | Only needed if the Color Channel conversion method is selected |
 | Output Array Prefix | String | This prefix will be added to each array name that is selected for conversion to form the new array name |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Element Attribute Array(s) | ImageData | uint8_t | (3) or (4) | RGB or RGBA values |
 
-## Created Objects ##
+## Created Objects
 
 | Kind | Default Name | Type | Component Dimensions (dimension, size) | Description |
-|------|--------------|-------------|---------|-----|
+|------|--------------|-----|-----|-----------------------------------|
 | Element Attribute Array | GrayScale Data | uint8_t | (1) | Grayscale values |
 | AttributeMatrix (Optional)  |                |         |     |                  |
 
+## Example Pipelines
 
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

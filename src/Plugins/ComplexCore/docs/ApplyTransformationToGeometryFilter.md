@@ -43,10 +43,10 @@ The user may select from a variety of options for the type of transformation to 
 
 | Enum Value | Transformation Type                | Representation                                                                       |
 |------------|------------------------------------|--------------------------------------------------------------------------------------|
-| 0          | No Transformation                  | Identity transformation                                                              | 
+| 0          | No Transformation                  | Identity transformation                                                              |
 | 1          | Pre-Computed Transformation Matrix | A 4x4 transformation matrix, supplied by an **Attribute Array** in *row major* order |
-| 2          | Manual Transformation Matrix       | Manually entered 4x4 transformation matrix                                           | 
-| 3          | Rotation                           | Rotation about the supplied axis-angle <x,y,z> (Angle in Degrees).                   | 
+| 2          | Manual Transformation Matrix       | Manually entered 4x4 transformation matrix                                           |
+| 3          | Rotation                           | Rotation about the supplied axis-angle <x,y,z> (Angle in Degrees).                   |
 | 4          | Translation                        | Translation by the supplied (x, y, z) values                                         |
 | 5          | Scale                              | Scaling by the supplied (x, y, z) values                                             |
 
@@ -61,15 +61,15 @@ The user may select from a variety of options for the type of transformation to 
 | Scale                                                     | float (3x)  | (x, y, z) scale values, if *Scale* is chosen for the *Transformation Type*                                                                  |
 | Translate Geometry To Global Origin Before Transformation | boolean     | If enabled, translates the geometry to (0, 0, 0), applies the transformation, and then translates the geometry back to its original origin. |
 | Precomputed Transformation Matrix Data Path               | DataPath    |                                                                                                                                             |
-| Geometry to be transformed.                               | DataPath    |                                                                                                                                             | 
+| Geometry to be transformed.                               | DataPath    |                                                                                                                                             |
 
 ### Image Geometry Transformation Options
 
-| Enum Value | Interpolation Type                        | 
+| Enum Value | Interpolation Type                        |
 |------------|-------------------------------------------|
-| 0          | No Interpolation                          | 
-| 1          | Nearest Neighbor                          | 
-| 2          | Linear/Bi linear/Tri linear Interpolation | 
+| 0          | No Interpolation                          |
+| 1          | Nearest Neighbor                          |
+| 2          | Linear/Bi linear/Tri linear Interpolation |
 
 | Name                  | Type        | Description                                            |
 |-----------------------|-------------|--------------------------------------------------------|
@@ -85,7 +85,7 @@ Any **Unstructured Geometry** or **Image Geometry**
 | Kind             | Default Name         | Type     | Comp Dims | Description                                                                                                |
 |------------------|-------------|----------|-------------|------------------------------------------------------------------------------------------------------------|
 |   Geometry   | None                 | N/A   | N/A                  | The unstructured **Geometry** or Image Geometry to transform                                               |
-|   DataArray   | TransformationMatrix | float | 4x4                  | The pre-computed transformation matrix to apply, if _Pre-Computed_ is chosen for the *Transformation Type* |
+|   DataArray   | TransformationMatrix | float | 4x4                  | The pre-computed transformation matrix to apply, if *Pre-Computed* is chosen for the *Transformation Type* |
 
 ## Created Objects
 
@@ -105,5 +105,3 @@ Please see the description file distributed with this plugin.
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

@@ -1,11 +1,10 @@
-# Split Multicomponent Attribute Array 
+# Split Multicomponent Attribute Array
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 DREAM3D Review (Memory/Management)
 
-## Description ##
+## Description
 
 This **Filter** splits an n-component **Attribute Array** into **n** scalar arrays, where each array is one of the original components.  Any arbitrary component array may be split in this manner, and the output arrays will have the same primitive type as the input array.  The original array is not modified (unless the option to remove the original array is selected); instead, **n** new arrays are created.  For example, consider an unsigned 8-bit array with three components:
 
@@ -23,38 +22,34 @@ There is an alternative option which allows the user to select a subset of compo
 
 This **Filter** is the opposite operation of the Combine Attribute Arrays **Filter**, and the generalized version of the Extract Component as Attribute Array **Filter**.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Postfix | string | Postfix to add to the end of the split **Attribute Arrays**; this value may be empty |
 
-## Required Geometry ###
+## Required Geometry #
 
 None
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Any **Attribute Array | None | Any | > (1) | The multicomponent **Attribute Array** to split |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Attribute Arrays | Input array name + *Postfix* + component number | Same as input array | (1)| The set of scalar **Attribute Arrays**, equal to the number of components of the input **Attribute Array |
 
-## Example Pipelines ##
+## Example Pipelines
 
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

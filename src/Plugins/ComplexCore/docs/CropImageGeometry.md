@@ -1,6 +1,6 @@
 # Crop Geometry (Image)
 
-## Description ##
+## Description
 
 This **Filter** allows the user to crop an **Image Geometry** of interest.  The input parameters are in units of **Cells**.  For example, if a **Image Geometry** was 100x100x100 **Cells** and each **Cell** was 0.25 x 0.25 x 0.25 units of resolution, then if the user wanted to crop the last 5 microns in the X direction, then the user would enter the following:
 
@@ -19,10 +19,10 @@ The user has the option to save the cropped volume as a new **Data Container** o
 
 Normally this **Filter** will leave the origin of the volume set at (0, 0, 0), which means output files like the Xdmf file will have the same (0, 0, 0) origin. When viewing both the original larger volume and the new cropped volume simultaneously the cropped volume and the original volume will have the same origin which makes the cropped volume look like it was shifted in space. In order to keep the cropped volume at the same absolute position in space the user should turn **ON** the *Update Origin* check box.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Image Geom | DataPath | DataPath to the target ImageGeom |
 | New Image Geom | DataPath | Created ImageGeom |
 | Min Voxels | std::vector<uint64> | Lower bounds of the volume to crop out |
@@ -33,18 +33,16 @@ Normally this **Filter** will leave the origin of the volume set at (0, 0, 0), w
 | New Cell Features Group Name | std::string | Specifies the name of the DataGroup containing cropped DataArrays |
 | Remove Original Geometry | bool | Whether the current **Geometry** should be removed after cropping |
 
-## Required Geometry ##
+## Required Geometry
 
-Image 
+Image
 
-## Example Pipelines ##
+## Example Pipelines
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

@@ -12,15 +12,16 @@ Computes an image where a given pixel is the median value of the the pixels in a
 
 A median filter is one of the family of nonlinear filters. It is used to smooth an image without being biased by outliers or shot noise.
 
-This filter requires that the input pixel type provides an operator<() (LessThan Comparable).* Image 
-- Neighborhood 
-- NeighborhoodOperator 
+This filter requires that the input pixel type provides an operator<() (LessThan Comparable).* Image
+
+- Neighborhood
+- NeighborhoodOperator
 - NeighborhoodIterator
 
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Radius | uint32 |  |
 
 ## Required Geometry
@@ -42,14 +43,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

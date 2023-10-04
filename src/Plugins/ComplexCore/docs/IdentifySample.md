@@ -25,7 +25,7 @@ If *Fill Holes* is set to *true*:
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Fill Holes in Largest Feature | bool | Whether to fill holes within sample after it is identified |
 
 ## Required Geometry
@@ -34,8 +34,8 @@ Image
 
 ## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | Mask | bool | (1) | *Mask* array defining what is sample and what is not |
 
 ## Created Objects
@@ -55,5 +55,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

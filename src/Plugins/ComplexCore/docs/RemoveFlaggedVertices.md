@@ -1,10 +1,10 @@
 # Remove Flagged Vertices
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 DREAM3D Review (Geometry)
 
-## Description ##
+## Description
 
 This **Filter** removes **Vertices** from the supplied **Vertex Geometry** that are flagged by a boolean mask array.
 Specifically, **Vertices** flagged as *true* are removed from the **Geometry**. A new reduced **Vertex Geometry** is
@@ -16,39 +16,37 @@ tuples *removed* for any **Vertices** removed by the **Filter**. The user must s
 Container**, but all other copied objects (**Attribute Matrices** and **Attribute Arrays**) will retain the same names
 as the original source.
 
-_Note:_ Since it cannot be known before run time how many **Vertices** will be removed, the new **Vertex Geometry** and
+*Note:* Since it cannot be known before run time how many **Vertices** will be removed, the new **Vertex Geometry** and
 all associated **Vertex** data to be copied will be initialized to have size 0. Any **Feature** or **Ensemble**
 information will retain the same dimensions and size.
 
-## Parameters ##
+## Parameters
 
 None
 
-## Required Geometry ###
+## Required Geometry #
 
 Vertex
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container         | VertexDataContainer | N/A  | N/A                  | Data Container holding the **Vertex Geometry** to reduce |
 | Vertex Attribute Array | Mask                | bool | (1)                  | Mask array specifying which **Vertices* to remove            |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Reduced **Data Container | ReducedVertexDataContainer | N/A  | N/A                  | Data Container holding the reduced **Vertex Geometry** and any copied **Attribute Matrices** and **Attribute Arrays |
 
-## Example Pipelines ##
+## Example Pipelines
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

@@ -15,7 +15,7 @@ For more information on synthetic building, visit the tutorial.
 ## Parameters
 
 | Name | Type | Description |
-|------|------| ----------- |
+|------------|------| --------------------------------- |
 | Use Seed | bool | Whether a seed shouold be used for random generation |
 | Seed | uint64 | This is the value fed into the random generator |
 | Add Random Noise | bool | Whether to add random Poisson noise to the whole volume |
@@ -29,8 +29,8 @@ Image
 
 ## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | GBEuclideanDistances | int32 | (1) | Manhattan distances of each **Cell** to the closest **Feature** boundary |
 
 ## Created Objects
@@ -44,5 +44,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

@@ -1,53 +1,46 @@
 # Write GBCD Pole Figure (GMT 5)
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 IO (Output)
 
-## Description ##
+## Description
 
-This **Filter** creates a .dat file that can be used in conjunction with [GMT](http://gmt.soest.hawaii.edu/) to generate a grain boundary character distribution (GBCD) pole figure. The user must select the relevant phase for which to write the pole figure by entering the *phase index*. 
-
------
+This **Filter** creates a .dat file that can be used in conjunction with [GMT](http://gmt.soest.hawaii.edu/) to generate a grain boundary character distribution (GBCD) pole figure. The user must select the relevant phase for which to write the pole figure by entering the *phase index*.
 
 ![GMT Visualization of the Small IN100 GBCD Results](Images/ExportGBCDGMTFile.png)
 
------
-
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|----------|------|-----------------------|
 | Phase of Interest | int32_t | Index of the **Ensemble** for which to plot the pole figure |
 | Crystal Structure | Enumeration | Crystal structure for GBCD. Currently supports from Hexagonal-High 6/mmm or Cubic-High m-3m symmetries |
 | Misorientation Axis-Angle | float (4x) | Axis-Angle pair values for drawing GBCD |
 | Output GMT File | File Path | The output .dat file path |
 
-## Required Geometry ##
+## Required Geometry
 
 Triangle
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Ensemble Attribute Array | GBDC | double | (n,m,l,o,q,r) | 5 parameter GBCD data. The 6<sup>th</sup> component is used internally to track the northern vs. southern hemisphere of the Lambert sphere |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## Example Pipelines ##
+## Example Pipelines
 
 + (04) SmallIN100 GBCD
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

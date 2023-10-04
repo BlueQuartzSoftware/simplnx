@@ -1,42 +1,37 @@
-# Delete Data 
+# Delete Data
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (Memory/Management)
 
-## Description ##
+## Description
 
 This **Filter** allows the user to remove specified objects from the existing structure. This can be helpful if the user has operations that need as much memory as possible and there are extra objects that are not needed residing in memory. Alternatively, this **Filter** allows the user to remove objects that may share a name with another object further in the **Pipeline** that another **Filter** tries to create, since DREAM.3D generally does not allows objects at the same hierarchy to share the same name.
 
-## Parameters ##
+## Parameters
 
 None
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Any  | None         | Any | Any | Objects to delete |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## Example Pipelines ##
+## Example Pipelines
 
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

@@ -1,10 +1,10 @@
-# Silhouette #
+# Silhouette
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 DREAM3D Review (Clustering)
 
-## Description ##
+## Description
 
 This **Filter** computes the silhouette for a clustered **Attribute Array**.  The user must select both the original array that has been clustered and the array of cluster Ids.  The silhouette represents a measure for the quality of a clustering.  Specifically, the silhouette provides a measure for how strongly a given point belongs to its own cluster compared to all other clusters.  The silhouette is computed as follows:
 
@@ -14,39 +14,37 @@ where \f$ a \f$ is the average distance between point \f$ i \f$ and all other po
 
 The silhouette can be used to determine how well a particular clustering has performed, such as k means or k medoids.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Distance Metric | Enumeration | The metric used to determine the distances between points |
 | Use Mask | bool | Whether to use a boolean mask array to ignore certain points flagged as *false* from the algorithm |
 
-## Required Geometry ###
+## Required Geometry #
 
 None
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Any **Attribute Array | None | Any| Any | The **Attribute Array** to silhouette |
 | Attribute Array | ClusterIds | int32_t | (1) | Specifies to which cluster each point belongs |
 | Attribute Array | Mask | bool | (1) | Specifies if the point is to be counted in the algorithm, if *Use Mask* is checked |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Attribute Array | Silhouette | double | (1) | Silhouette value for each point  |
 
-## Example Pipelines ##
+## Example Pipelines
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

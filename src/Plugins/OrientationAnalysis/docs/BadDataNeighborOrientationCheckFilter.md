@@ -1,11 +1,10 @@
-# Neighbor Orientation Comparison (Bad Data)  #
+# Neighbor Orientation Comparison (Bad Data)
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Orientation Analysis (Cleanup)
 
-## Description ##
+## Description
 
 This **Filter** compares the orientations of *bad* **Cells** with their neighbor **Cells**.  If the misorientation is below a user defined tolerance for a user defined number of neighbor **Cells** , then the *bad* **Cell** will be changed to a *good* **Cell**.
 
@@ -13,43 +12,41 @@ This **Filter** compares the orientations of *bad* **Cells** with their neighbor
 
 *Note:* The **Filter** will iteratively reduce the required number of neighbors from 6 until it reaches the user defined number. So, if the user selects a required number of neighbors of 4, then the **Filter** will run with a required number of neighbors of 6, then 5, then 4 before finishing.  
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Misorientation Tolerance (Degrees) | float | Angular tolerance used to compare with neighboring **Cells |
 | Required Number of Neighbors | int32_t | Minimum number of neighbor **Cells** that must have orientations within above tolerace to allow **Cell** to be changed |
 
-## Required Geometry ##
+## Required Geometry
 
 Image
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | Quaternions | flaot | (4) | Specifies the orientation of the **Cell** in quaternion representation |
 | Cell Attribute Array | Mask | bool | (1) | Used to define **Cells** as *good* or *bad*  |
 | Cell Attribute Array | Cell Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
 | Ensemble Attribute Array | Crystal Structures | uint32_t | (1) | Enumeration representing the crystal structure for each phase |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## Example Pipelines ##
+## Example Pipelines
 
 + (10) SmallIN100 Full Reconstruction
 + (04) SmallIN100 Presegmentation Processing
 + INL Export
 + 04_Steiner Compact
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

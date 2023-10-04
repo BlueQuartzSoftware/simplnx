@@ -12,19 +12,17 @@ This filter is templated over the pixel type of the input image and the pixel ty
 
 The filter walks over all of the pixels in the input image, and for each pixel does the following:
 
-- cast the pixel value to double , 
-- apply the std::cos() function to the double value, 
-- cast the double value resulting from std::cos() to the pixel type of the output image, 
+- cast the pixel value to double ,
+- apply the std::cos() function to the double value,
+- cast the double value resulting from std::cos() to the pixel type of the output image,
 - store the cast value into the output image.
-
-
 
 The filter expects both images to have the same dimension (e.g. both 2D, or both 3D, or both ND)
 
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 
 ## Required Geometry
 
@@ -45,14 +43,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

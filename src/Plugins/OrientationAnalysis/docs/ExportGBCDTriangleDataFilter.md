@@ -1,15 +1,14 @@
-# Write GBCD Triangles File 
+# Write GBCD Triangles File
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 IO (Output)
 
-## Description ##
+## Description
 
 This **Filter** writes relevant information about the Grain Boundary Character Distribution (GBCD) on an existing set of triangles.  The information written includes the inward and outward Euler angles, normals, and areas for each triangle.  The file format was originally defined by Prof. Greg Rohrer (CMU).
 
-## Example Output ## 
+## Example Output ##
 
     # Triangles Produced from DREAM3D version 5.2
     # Column 1-3:    right hand average orientation (phi1, PHI, phi2 in RADIANS)
@@ -28,39 +27,35 @@ This **Filter** writes relevant information about the Grain Boundary Character D
     3.4109 0.6178 1.0586 0.2662 0.6970 4.4347 0.9822 0.1328 0.1328 0.0256
        ..
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Output File | File Path | The output GBCD triangle file path |
 
-## Required Geometry ##
+## Required Geometry
 
 Image + Triangle
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
-| Face Attribute Array | FaceLabels | int32_t  | (2) | Specifies which **Features** are on either side of each **Face |
-| Face Attribute Array | FaceNormals | double | (3) | Specifies the normal of each **Face |
-| Face Attribute Array | FaceAreas | double | (1) | Specifies the area of each **Face |
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
+| Face Attribute Array | FaceLabels | int32_t  | (2) | Specifies which **Features** are on either side of each Face |
+| Face Attribute Array | FaceNormals | double | (3) | Specifies the normal of each Face |
+| Face Attribute Array | FaceAreas | double | (1) | Specifies the area of each Face |
 | Feature Attribute Array**  | AvgEulerAngles | float | (3) | Three angles defining the orientation of the **Feature** in Bunge convention (Z-X-Z). |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## Example Pipelines ##
+## Example Pipelines
 
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

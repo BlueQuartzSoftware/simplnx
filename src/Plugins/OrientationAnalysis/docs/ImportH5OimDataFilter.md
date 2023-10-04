@@ -1,33 +1,28 @@
 # Import EDAX EBSD Data (.h5)
 
-
-## Group (Subgroup) 
+## Group (Subgroup)
 
 Import/Export (Import)
 
 ## Description
 
-This **Filter** will read a single .h5 file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and **Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**.
+This **Filter** will read a single .h5 file into a new **Image Geometry**, allowing the immediate use of **Filters** on the data instead of having to generate the intermediate .h5ebsd file. A **Cell Attribute Matrix** and Ensemble Attribute Matrix** will also be created to hold the imported EBSD information. Currently, the user has no control over the names of the created **Attribute Arrays**.
 
-| User interface before entering a proper "Z Spacing" value and selecting which scans to include. |
-|-------|
-|![](Images/ReadEDAXH5_1.png)|
+![User interface before entering a proper "Z Spacing" value and selecting which scans to include.](Images/ReadEDAXH5_1.png)
 
-| User interface AFTER setting the "Z Spacing" and selecting files.  |
-|-------|
-|![](Images/ReadEDAXH5_2.png)|
+![User interface AFTER setting the "Z Spacing" and selecting files.](Images/ReadEDAXH5_2.png)
 
 ## Notes About Reference Frames
 
 The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be undefined or simply **wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data. The recommended filters are:
 
-+ [Rotate Euler Reference Frame](../RotateEulerRefFrameFilter/index.html)
-+ [Rotate Sample Reference Frame](../RotateSampleRefFrameFilter/index.html)
+- {ref}`Rotate Euler Reference Frame <OrientationAnalysis/RotateEulerRefFrameFilter:Description>`
+- {ref}`Rotate Sample Reference Frame <ComplexCore/RotateSampleRefFrameFilter:Description>`
 
 If the data has come from a TSL acquisition system and the settings of the acquisition software were in the default modes, the following reference frame transformations may need to be performed based on the version of the OIM Analysis software being used to collect the data:
 
-+ Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
-+ Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
+- Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
+- Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 
 ### Important Consideration for Sample Reference Frame
 
@@ -36,12 +31,12 @@ the user should **CHECK** the option **ON** for "Perform Slice By Slice Transfor
 
 ## Thresholding out Unindexed Scan Points
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Threshold Objects](../MultiThresholdObjects/index.html) **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > xx or *Image Quality* > desired quality.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The {ref}`Threshold Objects <ComplexCore/MultiThresholdObjects:Description>` **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > xx or *Image Quality* > desired quality.
 
 ## Parameters
 
 | Name | Type | Description |
-|------|------| ----------- |
+|------------|------| --------------------------------- |
 | Input File | File Path | The input .h5 file path |
 | Scan Name | Enumeration | The name of the scan in the .h5 file. EDAX can store multiple scans in a single file |
 | Z Spacing | float | The spacing in microns between each layer. |
@@ -58,19 +53,18 @@ None
 
 ## Created Objects
 
-
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry |
 | Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
 | Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
 
-### Created Cell Attribute Arrays 
+### Created Cell Attribute Arrays
 
 These arrays will **most likely** be created but is not guaranteed. Additional arrays (unknown at the time of writing) may also be created.
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Cell Attribute Array | Confidence Index | float |(1)     | Confidence of indexing  |
 | Cell Attribute Array | EulerAngles      | float |(3)     | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z)  |
 | Cell Attribute Array | Fit              | float |(1)     |  Quality of fit for indexing  |
@@ -81,29 +75,22 @@ These arrays will **most likely** be created but is not guaranteed. Additional a
 | Cell Attribute Array | Y Position       | float |(1) | Y coordinate of **Cell**   |
 | Cell Attribute Array | Pattern           | uint8_t   | (NxM) | The pattern data may be very large. There is an option to NOT read it into DREAM.3D if it is not needed by the analysis.   |
 
-
-### Created Ensemble Attribute Arrays 
+### Created Ensemble Attribute Arrays
 
 These arrays will **most likely** be created but is not guaranteed. Additional arrays (unknown at the time of writing) may also be created.
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
 | Ensemble Attribute Array | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
-| Ensemble Attribute Array | MaterialName | String | (1) | Name of each **Ensemble |
+| Ensemble Attribute Array | MaterialName | String | (1) | Name of each Ensemble |
 
+## Example Pipelines
 
-
-## Example Pipelines 
-
-
-
-## License & Copyright 
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

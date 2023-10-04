@@ -18,7 +18,7 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 Regional maxima are flat zones surrounded by pixels of lower value. A completely flat image will be marked as a regional maxima by this filter.
 
-This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. https://www.insight-journal.org/browse/publication/65 
+This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. <https://www.insight-journal.org/browse/publication/65>
 
 ### Author
 
@@ -26,14 +26,14 @@ This code was contributed in the Insight Journal paper: "Finding regional extrem
 
 ### Related Filters
 
-- ValuedRegionalMinimaImageFilter 
-- ValuedRegionalExtremaImageFilter 
+- ValuedRegionalMinimaImageFilter
+- ValuedRegionalExtremaImageFilter
 - HMinimaImageFilter
 
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
 
 ## Required Geometry
@@ -55,14 +55,10 @@ Image Geometry
 
 ## Example Pipelines
 
-
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

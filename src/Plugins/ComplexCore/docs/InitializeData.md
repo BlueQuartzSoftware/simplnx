@@ -1,18 +1,17 @@
-# Initialize Data 
+# Initialize Data
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Processing (Cleanup)
 
-## Description ##
+## Description
 
 This **Filter** allows the user to define a subvolume of the data set in which the **Filter** will reset all data by writing *zeros (0)* into every array for every **Cell** within the subvolume.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | X Min | int32_t | Minimum X bound in **Cells |
 | Y Min | int32_t | Minimum Y bound in **Cells |
 | Z Min | int32_t | Minimum Z bound in **Cells |
@@ -20,30 +19,26 @@ This **Filter** allows the user to define a subvolume of the data set in which t
 | Y Max | int32_t | Maximum Y bound in **Cells |
 | Z Max | int32_t | Maximum Z bound in **Cells |
 
-## Required Geometry ##
+## Required Geometry
 
-Image 
+Image
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 |   Attribute Matrix   | CellData | Cell | N/A | Cell** data in which to initialize a subvolume to zeros |
 
-## Created Objects ##
+## Created Objects
 
 None
 
-## Example Pipelines ##
+## Example Pipelines
 
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

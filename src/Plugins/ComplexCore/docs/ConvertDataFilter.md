@@ -1,18 +1,16 @@
-# Convert Attribute Data Type 
+# Convert Attribute Data Type
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (Misc)
 
-
-## Description ##
+## Description
 
 This **Filter** converts attribute data from one primitive type to another by using the built in translation of the compiler. This **Filter** can be used if the user needs to convert an array into a type that is accepted by another **Filter**. For example, a **Filter** may need an input array to be of type _int32_t_ but the array that the user would like to use is _uint16_t_. The user may use this **Filter** to create a new array that has the proper target type (_int32_t_).
 
 **This Filter is here for convenience and should be used with great care and understanding of the input and output data. This Filter should rarely be required, and if the user thinks that they require this Filter then a detailed examination of all the data involved should be undertaken to avoid possible undefined behaviors.**
 
-### Important Notes ###
+### Important Notes
 
 **Up Casting**
 
@@ -26,38 +24,34 @@ Down casting can have undefined behavior depending on the primitive types involv
 
 When converting data from signed values to unsigned values or vice-versa, there can also be undefined behavior. For example, if the user were to convert a signed 4 byte integer array to an unsigned 4 byte integer array and the input array has negative values, then the conversion rules are undefined and may differ from operating system to operating system.
 
-## Parameters ##
+## Parameters
 
 | Name             | Type | Description |
 |------------------|------|--------------|
 | Scalar Type      | Enumeration | Convert to this data type |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Any **Attribute Array**  | None | Any | Any | Array to convert |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Any **Attribute Array | None | Any | Any | The converted array |
 
-## Example Pipelines ##
+## Example Pipelines
 
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

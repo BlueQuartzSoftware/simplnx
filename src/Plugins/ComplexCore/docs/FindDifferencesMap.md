@@ -1,11 +1,10 @@
-# Find Difference Map 
+# Find Difference Map
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Statistics (Misc)
 
-## Description ##
+## Description
 
 This **Filter** calculates the difference between two **Attribute Arrays**. The arrays must have the same *primitive type* (e.g., float), *component dimensions* and *number of tuples*. The **Filter** uses the following pseudocode to calculate the difference map:
 
@@ -15,41 +14,37 @@ This **Filter** calculates the difference between two **Attribute Arrays**. The 
         end loop over number of components
     end loop over all tuples
 
-Note that in the above algorithm, the difference is taken as the *first selected* **Attribute Array** minus the *second selected* **Attribute Array**. The differences are also taken _component by component_. Therefore, two selected scalar arrays will result in a scalar difference map, whereas two selected 3 component vector arrays would result in a 3 component vector difference map, where component values are the scalar differences between the components of the input arrays.
+Note that in the above algorithm, the difference is taken as the *first selected* **Attribute Array** minus the *second selected* **Attribute Array**. The differences are also taken *component by component*. Therefore, two selected scalar arrays will result in a scalar difference map, whereas two selected 3 component vector arrays would result in a 3 component vector difference map, where component values are the scalar differences between the components of the input arrays.
 
-**WARNING: The resulting difference values *may be negative* if the values of the first array are smaller than those in the second array. Therefore, if the two arrays are _unsigned integers_, it may be possible to underflow the resulting difference map values if the first array is sufficiently smaller than the second array. "Underflow" means that what should be a negative value will end up being a potentially very large value!**
+**WARNING: The resulting difference values *may be negative* if the values of the first array are smaller than those in the second array. Therefore, if the two arrays are *unsigned integers*, it may be possible to underflow the resulting difference map values if the first array is sufficiently smaller than the second array. "Underflow" means that what should be a negative value will end up being a potentially very large value!**
 
-## Parameters ##
+## Parameters
 
 None
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Any **Attribute Array | None | Any | Any | The first selected **Attribute Array**. This array's values will be the first argument for the subtraction operation |
 | Any **Attribute Array | None | Any | Any | The second selected **Attribute Array**. This array's values will be subtracted from the first selected **Attribute Array** values |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Any **Attribute Array | DifferenceMap | Same as input arrays | Same as input arrays | The difference map **Attribute Array |
 
-## Example Pipelines ##
+## Example Pipelines
 
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

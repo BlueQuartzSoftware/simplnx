@@ -1,13 +1,12 @@
 # Create Ensemble Info
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Processing (Generation)
 
-## Description ##
+## Description
 
-This **Filter** allows the user to enter basic crystallographic information about each phase. The Laue class, Phase Type, and Phase Name can all be entered by the user. The information is stored in an EnsembleAttributeMatrix. These values are needed to allow the calculation of certain kinds of crystallographic statistics on the volume, if they have not already been provided by some other means. Each row in the table lists the __Crystal Structure__, __Phase Type__, and __Phase Name__. The proper values for the crystal structure and phase type come from internal constants within DREAM.3D and are listed here:
+This **Filter** allows the user to enter basic crystallographic information about each phase. The Laue class, Phase Type, and Phase Name can all be entered by the user. The information is stored in an EnsembleAttributeMatrix. These values are needed to allow the calculation of certain kinds of crystallographic statistics on the volume, if they have not already been provided by some other means. Each row in the table lists the **Crystal Structure**, **Phase Type**, and **Phase Name**. The proper values for the crystal structure and phase type come from internal constants within DREAM.3D and are listed here:
 
 ### Crystal Structure
 
@@ -37,41 +36,37 @@ This **Filter** allows the user to enter basic crystallographic information abou
 | BoundaryPhase | 4 |
 | UnknownPhaseType | 999 |
 
-
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Ensemble | Create Ensemble Info | The created Ensemble crystal structures, phase types, and phase names |
 
-## Required Geometry ##
+## Required Geometry
 
 Not Applicable
 
-## Required Objects ##
+## Required Objects
 
 None
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
-|   Attribute Matrix   | EnsembleAttributeMatrix | Ensemble | N/A | Created **Ensemble Attribute Matrix** name |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble |
-| Ensemble Attribute Array | PhaseTypes        | uint32_t | (1) | Enumeration representing the phase type for each **Ensemble |
-| String Data Array**        | PhaseNames        | String | (1)   | The phase names for each **Ensemble |
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
+|   Attribute Matrix   | EnsembleAttributeMatrix | Ensemble | N/A | Created Ensemble Attribute Matrix** name |
+| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
+| Ensemble Attribute Array | PhaseTypes        | uint32_t | (1) | Enumeration representing the phase type for each Ensemble |
+| String Data Array**        | PhaseNames        | String | (1)   | The phase names for each Ensemble |
 
+## Example Pipelines
 
-## Example Pipelines ##
 Import_ASCII
 
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

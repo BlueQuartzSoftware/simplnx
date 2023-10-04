@@ -1,11 +1,11 @@
 Approximate Point Cloud Hull
 =============
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Point Cloud (Geometry)
 
-## Description ##
+## Description
 
 This **Filter** determines a set of points that approximates the surface (or *hull*) or a 3D point cloud represented by a **Vertex Geometry**.  The hull is approximate in that the surface points are not guaranteed to hve belonged to the original point cloud; instead, the determined set of points is meant to represent a sampling of where the 3D point cloud surface occurs. To following steps are used to approximate the hull:
 
@@ -20,33 +20,33 @@ The above algorithm is significantly faster that other geometric approaches for 
 
 Note that the resulting hull geometry does not inherit any **Attribute Arrays** from the original point cloud.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
 |------|------|------|
 | Grid Resolution | float 3x | The resolution of the sampling grid |
 | Minimum Number of Empty Neighbors | int | The minimum number of voxel neighbors that must contain 0 points for a voxel to be considered on the surface |
 
-## Required Geometry ##
+## Required Geometry
 
 Vertex
 
-## Required Objects ##
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+## Required Objects
+
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container | None | N/A | N/A | Data Container holding the input **Vertex Geometry |
 
-## Created Objects ##
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+## Created Objects
+
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container | HullDataContainer | N/A | N/A | Data Container holding the approximated surface **Vertex Geometry |
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

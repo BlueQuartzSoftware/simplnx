@@ -1,10 +1,10 @@
 # IterativeClosestPoint
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Reconstruction (Alignment)
 
-## Description ##
+## Description
 
 This **Filter** estimates the rigid body transformation (i.e., rotation and translation) between two sets of points represted by **Vertex Geometries** using the *iterative closest point* (ICP) algorithm.  The two **Vertex Geometries** are not required to have the same number of points.  The **Filter** first initializes temporary storage for each set of points and a global transformation.  Then, the alignment algorithm iterates through the following steps:
 
@@ -17,42 +17,37 @@ Iterations proceed for a fixed number of user-defined steps.  The final rigid bo
 
 ICP has a number of advantages, such as robustness to noise and no requirement that the two sets of points to be the same size.  However, peformance may suffer if the two sets of points are of siginficantly different size.
 
-## Parameters ##
+## Parameters
 
 | Name | Type | Description |
 |------|------|------|
 | Number of Iterations | int | Number if iterations for the ICP algorithm |
 | Apply Transform to Moving Geometry | bool | Whether to apply the computed transform to the moving **Vertex Geometry |
 
-## Required Geometry ##
+## Required Geometry
 
 Vertex
 
-## Required Objects ##
+## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Data Container | None | N/A | N/A | Data Container holding the moving **Vertex Geometry |
 | Data Container | None | N/A | N/A | Data Container holding the target **Vertex Geometry |
 
-## Created Objects ##
+## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 |   Attribute Matrix   | TransformAttributeMatrix | Generic | N/A | Attribute Matrix** that stores the computed transformation |
 | Attribute Array | Transform | float | (4, 4) | Computed transformation matrix |
 
+## Example Pipelines
 
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

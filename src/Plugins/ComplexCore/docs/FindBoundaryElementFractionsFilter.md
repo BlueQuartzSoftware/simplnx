@@ -1,6 +1,5 @@
 # Find Feature Boundary Element Fractions
 
-
 ## Group (Subgroup)
 
 Statistics (Morphological)
@@ -19,20 +18,19 @@ Not Applicable
 
 ## Required Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Element Attribute Array | Feature Ids | int32 | (1) | Specifies to which **Feature** each **Element** belongs |
 | Element Attribute Array | Surface Elements | int32 | (1) | The number of neighboring **Elements** of a given **Element** that belong to a different **Feature** than itself |
 |   Attribute Matrix   | Feature Data | AttributeMatrix | N/A | Parent Attribute Matrix for the *Surface Element Fractions* Array to be created in |
 
 ## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | Feature Attribute Array | Surface Element Fractions | float32 | (1) | Fraction of **Elements** belonging to the **Feature** that are "surface" **Elements |
 
 ## Example Pipelines
-
 
 ## License & Copyright
 
@@ -41,5 +39,3 @@ Please see the description file distributed with this **Plugin**
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

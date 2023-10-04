@@ -24,8 +24,8 @@ Not Applicable
 
 ## Created Objects
 
-| Kind                      | Default Name | Type     | Comp. Dims | Description                                 |
-|---------------------------|--------------|----------|------------|---------------------------------------------|
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
 | QuadGeom | Quad Geometry | QuadGeom | N/A | Created **QuadGeom** path and name |
 |   Attribute Matrix   | Vertex Data | Vertex | N/A | Created **Vertex Attribute Matrix** name |
 |   Attribute Matrix   | Cell Data | Cell | N/A | Created **Cell Attribute Matrix** name |
@@ -37,5 +37,3 @@ Please see the description file distributed with this plugin.
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-

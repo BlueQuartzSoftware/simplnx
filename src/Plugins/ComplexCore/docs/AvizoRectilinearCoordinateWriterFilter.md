@@ -1,16 +1,14 @@
 # Avizo Rectilinear Coordinate Writer  
 
-
-## Group (Subgroup) 
+## Group (Subgroup)
 
 IO (Output)
 
-## Description 
+## Description
 
 This filter writes out a native Avizo Rectilinear Coordinate data file. Values should be present from segmentation of experimental data or synthetic generation and cannot be determined by this filter. Not having these values will result in the filter to fail/not execute.
 
-### Example Output 
-
+### Example Output
 
     # AmiraMesh BINARY-LITTLE-ENDIAN 2.1
     # Dimensions in x-, y-, and z-direction
@@ -32,38 +30,33 @@ This filter writes out a native Avizo Rectilinear Coordinate data file. Values s
     # Data section follows
        .. 
 
-## Parameters 
+## Parameters
 
 | Name | Type | Description |
-|------|------| ----------- |
+|------------|------| --------------------------------- |
 | Output File | File Path | Amira Mesh .am file created|
 | Write Binary File | Boolean | Binary file created, if checked |
 
-## Required Geometry 
+## Required Geometry
 
-Image 
+Image
 
-## Required Objects 
+## Required Objects
 
 | Type | Default Name | Type | Comp Dims | Description |
-|------|--------------|-------------|---------|-----|
+|------|--------------|-----|-----|-----------------------------------|
 | Cell | FeatureIds | Ids (Int) that specify to which **Feature** each **Cell** belongs. | (1) | Filters Known to Create Data: Segment Features (Misorientation, C-Axis Misorientation, Scalar) (Reconstruction), Read Dx File (IO), Read Ph File (IO), Pack Primary Phases (SyntheticBuilding), Insert Precipitate Phases (SyntheticBuilding), Establish Matrix Phase (SyntheticBuilding)
 
-
-## Created Objects 
+## Created Objects
 
 None
 
-## Example Pipelines 
+## Example Pipelines
 
-
-
-## License & Copyright 
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
 ## DREAM3DNX Help
 
 Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
