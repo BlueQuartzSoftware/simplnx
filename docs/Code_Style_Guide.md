@@ -1,12 +1,10 @@
-# Code Style Guide
+# Code Style Guide #
 
 This is the style guide for the COMPLEX library. When contributing sources to the complex repository we ask that all contributions follow this style guide. These general rules have been developed over the years in an effort to allow efficient coding practices.
-
 
 ## Source Code Line Endings ##
 
  All source code line endings should be in "Unix" style "\n". Every text editor understands these line endings on every platform **except** the "Notepad" application on Windows.
-
 
 ## Use of Tabs ##
 
@@ -30,7 +28,6 @@ nullptr should be used in conjunction with only raw pointers and 0 (zero) should
     int i = 0; // Good
     int i = NULL; // Bad 
 
-
 ## Array Initialization ##
 
 Prefer the use of C++11 std::array<N, T> instead of "C" style arrays.
@@ -44,7 +41,7 @@ Prefer the use of C++11 std::array<N, T> instead of "C" style arrays.
     int32   *p; // Incorrect
     int32*   p, q; // Probably error
 
-The _int32*  p;_ form emphasizes type over syntax while the _int32 *p;_ form emphasizes syntax over type. Although both forms are equally valid C++, the heavy emphasis on types in C++ suggests that _int32* p;_ is the preferable form.
+The `int32*  p;` form emphasizes type over syntax while the `int32 *p;` form emphasizes syntax over type. Although both forms are equally valid C++, the heavy emphasis on types in C++ suggests that `int32* p;` is the preferable form.
 
 ## Always Implement the "Big Five" in C++ Classes ##
 
@@ -73,7 +70,7 @@ should be marked as deleted or default'ed or manually implemented.
 
 Note that with C++11, programmers now have the ability to inform the compiler which of these operations can be constructed by default and which can be ignored using the `default` and `delete` keywords.
 
-## Naming conventions
+## Naming conventions ##
 
 There is an include clang-tidy file that most IDE's can use to assist with some of the major areas. One area is the naming conventions that COMPLEX uses. Here are the basic rules:
 
@@ -86,7 +83,6 @@ There is an include clang-tidy file that most IDE's can use to assist with some 
 - Global statics are `s_UpperCamelCase`
 - Free Functions are `UpperCamelCase`
 - Macros are `ALL_UPPER_SNAKE_CASE`
-
 
 ## String Constants ##
 
@@ -106,3 +102,7 @@ When using ANSI C one should use a char* for constant strings:
     const char MyFile[5] = { 'a', '.', 'd', 'a', 't'};
 
 Using this type of approach allows for quicker code updates when constant values need to be changed.
+
+## Clang Formatting ##
+
+`clang-format` is a tool to automatically format C++ code. You should run 'clang-format' on your code before opening a Pull Request to make sure it passes the *clang-format pr* check. You can install `clang-format` and `git-clang-format` with `npm install -g clang-format`. To automatically format a file according to a project's C++ code style, run `clang-format -i path/to/complex/file`, which is supported on macOS/Linux/Windows. If you want to run `clang-format` on all the changed code on your latest git commit (HEAD), you can run `git-clang-format HEAD~1`. Run `git-clang-format -h`  for extra help.
