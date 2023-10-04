@@ -1,4 +1,4 @@
-# Contributing to complex
+# Contributing Guide
 
 Thank you for considering contributing to complex. Your involvement helps make complex a valuable tool for the global scientific community.
 
@@ -136,6 +136,8 @@ Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/Blu
 For those looking to engage with the DREAM3DNX community, see the discussions board of [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions). All of our filter documentation now links back to this repository.
 
 ## Additional Notes
+
+We put together a specifc discussion category, called [Contributor Questions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/categories/contributor-questions), where you can quickly get help with issues related to development directly from maintainers.
 
 It is highly recommended for new code contributors to look at the [porting filters guidelines](/docs/Porting_Filters.md) to get a better idea of API and see how to bring older filters over from [SIMPL](https://github.com/BlueQuartzSoftware/SIMPL).
 
