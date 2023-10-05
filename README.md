@@ -97,6 +97,9 @@ Huge thanks go to these wonderful people ([emoji key](https://allcontributors.or
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/nyoungbq"><img src="https://avatars.githubusercontent.com/u/109472155?v=4?s=100" width="100px;" alt="Nathan Young"/><br /><sub><b>Nathan Young</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=nyoungbq" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/bpenniebq"><img src="https://avatars.githubusercontent.com/u/106270421?v=4?s=100" width="100px;" alt="bpenniebq"/><br /><sub><b>bpenniebq</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=bpenniebq" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/john-stone-ics"><img src="https://avatars.githubusercontent.com/u/18195504?v=4?s=100" width="100px;" alt="john-stone-ics"/><br /><sub><b>john-stone-ics</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=john-stone-ics" title="Code">💻</a></td>
+    </tr>
   </tbody>
   <tfoot>
     <tr>
