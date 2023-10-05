@@ -38,41 +38,7 @@ Most 2D .ctf files have their angles in **degrees** where as DREAM.3D expects ra
 | ![Figure showing 30 Degree conversions](Images/Hexagonal_Axis_Alignment.png) |
 | Figure 1:**showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Inst. is in**Red |
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Input File | File Path |The input .ctf file path |
-| Convert to Radians | bool | Should the filter convert the Eulers to Radians (Default = true)|
-| Hexagonal Axis Alignment | bool | Should the filter convert a Hexagonal phase to the EDAX standard for x-axis alignment |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-None
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry |
-| Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
-| Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
-| Cell Attribute Array | BC           | float | (1) | Band contrast levels |
-| Cell Attribute Array | EulerAngles  | float | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z)  |
-| Cell Attribute Array | BS           | float | (1) | Band saturation levels |
-| Cell Attribute Array | Bands        | float | (1) | Number of bands   |
-| Cell Attribute Array | Phases       | int32_t   | (1) | Specifies to which phase each **Cell** belongs   |
-| Cell Attribute Array | MAD          | float | (1) | Mean angular deviation. Typical threshold value is < 1.8  |
-| Cell Attribute Array | X Position       | float |(1) | X coordinate of **Cell**   |
-| Cell Attribute Array | Y Position       | float |(1) | Y coordinate of **Cell**   |
-| Cell Attribute Array | Error        | int32_t   | (1) | Value = 0 is a well indexed scan point   |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
-| Ensemble Attribute Array | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
-| Ensemble Attribute Array | MaterialName | String | (1) | Name of each Ensemble |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -87,6 +53,6 @@ Please see the description file distributed with this **Plugin**
 
 [1] Rollett, A.D. Lecture Slides located at [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

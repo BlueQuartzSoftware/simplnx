@@ -68,34 +68,7 @@ The values for the *Node Type* array can take one of the following values.
 
 For more information on surface meshing, visit the tutorial.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Iteration Steps | int32_t | Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. *Inreasing this number too high may cause collapse of points!* |
-| Default Lambda | float | Value of &lambda; to apply to general internal nodes that are not triple lines, quadruple points or on the surface of the volume |
-| Use Taubin Smoothing | boolean | Use Taubin's Lambda-Mu algorithm. |
-| Mu Factor | float | A value that is multipied by Lambda the result of which is the *mu* in Taubin's paper. The value should be a negative value. |
-| Triple Line Lambda | float | Value of &lambda; to apply to nodes designated as triple line nodes. |
-| Quadruple Points Lambda | float | Value of &lambda; to apply to nodes designated as quadruple points. |
-| Outer Points Lambda | float | The value of &lambda; to apply to nodes that lie on the outer surface of the volume |
-| Outer Triple Line Lambda | float | Value of &lambda; for triple lines that lie on the outer surface of the volume |
-| Outer Quadruple Points Lambda | float | Value of &lambda; for the quadruple Points that lie on the outer surface of the volume. |
-
-## Required Geometry
-
-Triangle
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Vertex Attribute Array | NodeTypes | int8_t | (1) | Specifies the type of node in the **Geometry |
-| Face Attribute Array | FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each Face |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## References
 
@@ -111,6 +84,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

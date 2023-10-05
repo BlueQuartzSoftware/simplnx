@@ -55,29 +55,7 @@ If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the t
 The number of components should be at least 1. Examples of *Number of Components* would be 3 for an RGB Image, 1 for a gray scale image, 1 for a scalar array, 4 for a quaternions array, etc. All values of the array will be initialized to the user set value. The initialization value text box
 must have a user entry or the default value *0* will be used.
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------|-------------|
-| Set Tuple Dimensions | bool | This allows the user to set the tuple dimensions directly rather than just inheriting them. This option is NOT required if you are creating the Data Array in an Attribute Matrix |
-| Numeric Type | Enumeration | Primitive data type for created array |
-| Number of Components | int32_t | The number of components that each tuple contains. Matrix are row major form within SIMPL|
-| Initialization Value | String | Initialization value for array |
-| Data Format | String | This value will specify which data format is used by the array's data store. An empty string results in in-memory data store. |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-None
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | None | Any | Any | Created **Attribute Array** location and name |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -85,6 +63,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

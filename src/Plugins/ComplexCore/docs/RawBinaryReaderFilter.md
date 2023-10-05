@@ -50,29 +50,7 @@ This setting is *crucial* to the correct interpretation of the binary data, so t
 
 If the raw binary file you are reading has a *header* before the actual data begins, the user can instruct the **Filter** to skip this header portion of the file. The user needs to know how lond the header is in bytes. Another way to use this value is if the user wants to read data out of the interior of a file by skipping a defined number of bytes.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Input File | File Path | The input binary file path |
-| Scalar Type | Enumeration | Data type of the binary data |
-| Number of Components | int32_t | The number of values at each tuple |
-| Endian | Enumeration | The endianness of the data |
-| Skip Header Bytes | int32_t | Number of bytes to skip before reading data |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-None
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any  | None     | Any  | Any                  |  Created **Attribute Array** name |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -80,6 +58,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

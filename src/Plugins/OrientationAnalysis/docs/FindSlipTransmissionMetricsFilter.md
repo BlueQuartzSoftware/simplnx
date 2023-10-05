@@ -17,31 +17,7 @@ This **Filter** calculates a suite of *slip transmission metrics* that are relat
 
 *Note:* The transmission metrics are calculated using the average orientations for neighboring **Features** and not the local orientation near the boundary. Also, the metrics are calculated twice (i.e., when **Feature** 1 has neighbor **Feature** 2 and when **Feature** 2 has neighbor **Feature** 1) because the direction across the boundary between the **Features** affects the value of the metric.
   
-## Parameters
-
-None
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Feature Attribute Array | NeighborList | List of int32 | (1) | List of the contiguous neighboring **Features** for a given **Feature |
-| Feature Attribute Array | AvgQuats | float32 | (4) | Specifies the average orienation of each **Feature** in quaternion representation |
-| Feature Attribute Array | Phases | int32 | (1) | Specifies to which **Ensemble** each **Feature** belongs |
-| Ensemble Attribute Array | CrystalStructures | uint32 | (1) | Enumeration representing the crystal structure for each Ensemble |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Feature Attribute Array | F1s | float32 | (2) | |
-| Feature Attribute Array | F1spts | float32 | (2) | |
-| Feature Attribute Array | F7s | float32 | (2) | |
-| Feature Attribute Array | mPrimes | float32 | (2) | |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -49,6 +25,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

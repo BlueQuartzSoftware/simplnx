@@ -24,28 +24,7 @@ When importing EBSD data from EDAX typically the user will need to rotate the sa
 
 ![Imported EBSD Data Rotated about the <010> axis](Images/RotateSampleRefFrame_1.png)
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Rotation Representation | Enumeration | Which form used to represent rotation (**axis angle** or **rotation matrix) |
-| Rotation Axis (ijk) | float (3x) | Axis in sample reference frame to rotate about (if **axis angle**) |
-| Rotation Angle (Degrees) | float | Magnitude of rotation (in degrees) about the rotation axis (if **axis angle**) |
-| Rotation Matrix | float (3x3) | Axis in sample reference frame to rotate about (if **rotation matrix**) |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-|   DataArray   | N/A | Any | Same as geometry | List of **DataArrays** associated with the geometry |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -60,6 +39,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

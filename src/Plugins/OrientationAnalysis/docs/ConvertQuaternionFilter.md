@@ -10,28 +10,7 @@ Internally DREAM.3D assumes that a quaternion is laid out in the order such that
 
 For Example if the user has imported quaternion data in the form of Scalar-Vector then they would run this filter using a conversion type of **ToVectorScalar** and using the generated quaternions in subsequent filters. If the user wanted to then write out the Quaternions in the Scalar-Vector form then could add this filter again to the end of the pipeline (but before writing out data) to convert the Vector-Scalar quaternions array (assuming something modified the array).
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|------|
-| Delete Original Array | Boolean | Set this to TRUE/ON to have the original 3 component data array deleted at the end of the filter. |
-| Conversion Type | Integer | 0=ToScalarVector, 1=ToVectorScalar |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Attribute Array | Quaternion Input | float | (4) |  |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Attribute Array | Quaternion Ouput | float | (4) |  |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -39,6 +18,6 @@ Not Applicable
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

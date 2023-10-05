@@ -39,28 +39,7 @@ The *CSV* file with Write Neighbor Data checked:
     4,1,886
     5,26,61,224,278,454,786,923,1119,1137,1478,1517,1525,1651,1812,1814,2227,2233,2731,2750,2907,2930,3175,3548,3619,4492,4791,5010
 
-## Parameters
-
-| Name | Type |Description |
-|------|------|------|
-| Output File | File Path | The output .csv file path |
-| Write Neighbor Data | bool | Whether to write the **Feature** neighbor data |
-| Write Number of Features Line | bool | Write the total number of features as the first line. Writing this line may interfere with standard CSV parsers. Default=ON |
-| Delimiter | choice | The delimiter character used to parse the file (Takes *COMMA*, *SEMICOLON*, *COLON*, *TAB*, or *SPACE*) |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| AttributeMatrix | None | Feature | N/A | AttributeMatrix** that holds the data to write |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -70,6 +49,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

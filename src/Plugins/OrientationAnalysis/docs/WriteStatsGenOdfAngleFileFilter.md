@@ -62,28 +62,7 @@ Choice of delimiter is as follows:
     3 = : (colon)
     4 = \t (tab)
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Output File | File Path | Output angles file path |
-| Default Weight | float | This value will be used for the Weight column |
-| Default Sigma | int | This value will be used for the Sigma column |
-| Delimiter | Enumeration | The delimiter separating the data |
-| Convert to Degrees | bool | Whether to convert the Euler angles from radians to degrees. If the Euler angles are already in degrees, this option will "convert" the data again, resulting in garbage orientations! |
-| Only Write Good Elements | bool | Whether to only write the Euler angles for those elements denoted as true in the supplied mask array |
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Element Attribute Array | EulerAngles | float | (3) | Three angles defining the orientation of the **Element** in Bunge convention (Z-X-Z) |
-| Element Attribute Array | Phases | int32_t | (1) |  Specifies to which **Ensemble** each **Element** belongs |
-| Element Attribute Array | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if *Only Write Good Elements* is checked |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -93,6 +72,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

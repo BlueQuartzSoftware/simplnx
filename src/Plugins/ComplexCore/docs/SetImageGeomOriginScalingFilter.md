@@ -12,28 +12,7 @@ This **Filter** changes the origin and/or the spacing of an **Image Geometry**. 
 + Y Origin: 4
 + Z Origin: 8
 
-## Parameters
-
-| Name    | Type      |  Description |
-|---------|-----------|--------|
-| Origin | float (3x) | New origin for the **Image Geometry |
-| Spacing | float (3x) | New spacing for the **Image Geometry |
-| Change Origin | bool | Whether a new origin should be applied to the **Image Geometry |
-| Change Spacing | bool | Whether a new spacing should be applied to the **Image Geometry |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | None | N/A | N/A | Data Container with an **Image Geometry** to modify |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -41,6 +20,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

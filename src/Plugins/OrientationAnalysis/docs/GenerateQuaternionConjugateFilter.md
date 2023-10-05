@@ -15,27 +15,7 @@ transformation. If the incoming data was collected in such a way that the orient
 Quats, Eulers, Orientation Matrix, Rodrigues) was assumed to be a **Crystal to Sample** transformation then this filter
 can be applied to a quaternion to convert into a reference frame that DREAM.3D assumes.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Delete Original Array | Boolean | Set this to TRUE/ON to have the original 3 component data array deleted at the end of the filter. |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                | Default Name     | Type  | Comp Dims | Description |
-|---------------------|------------------|-------|-------------|-------------|
-| Attribute Array | Quaternion Input | float | (4)                  |             |
-
-## Created Objects
-
-| Kind                | Default Name     | Type  | Comp Dims | Description |
-|---------------------|------------------|-------|-------------|-------------|
-| Attribute Array | Quaternion Ouput | float | (4)                  |             |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -43,6 +23,6 @@ Not Applicable
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

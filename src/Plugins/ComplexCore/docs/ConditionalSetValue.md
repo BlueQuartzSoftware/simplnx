@@ -24,39 +24,12 @@ This **Filter** replaces values in a user specified **Attribute Array** with a u
 | Double | 64 bit | -1.7e+308 to -2.2e-308, 0.0, 2.2e-308 to 1.7e+308 (15 digits)|
 | Boolean | 8 bit |0 = false and any other value will be forced to 1 = true|
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------|-------------|
-| New Value | std::string | Value to replace the removed values in the array [will be typecasted to appropriate value later] |
-
-## Optional Data Mask
-
-| Name             | Type | Description |
-|------------------|------|-------------|
-| Use Conditional Mask | bool | Whether to use a boolean mask array to replace values marked true |
-| Invert Mask | bool | If checked values marked FALSE will be replaced instead |
-| Any **Attribute Array | None | Bool | (1) | The complete path to the conditional array that will determine which values/entries will be replaced if index is true|
-| Value to Replace | std::string | The numerical value that will be replaced in the array [will be typecasted to appropriate value later] |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | None | Any | (1) | Path to **Attribute Array** that will have values replaced |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

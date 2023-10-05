@@ -18,33 +18,7 @@ The user has the option to *Use Mask Array*, which allows the user to set a bool
 
 After all the **Features** have been identified, a **Feature Attribute Matrix** is created for the **Features** and each **Feature** is flagged as *Active* in a boolean array in the matrix.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| C-Axis Misorientation Tolerance (Degrees) | float | Tolerance (in degrees) used to determine if neighboring **Cells** belong to the same **Feature |
-| Use Mask Array | bool | Specifies whether to use a boolean array to exclude some **Cells** from the **Feature** identification process |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | Quats | float | (4) | Specifies the orientation of the **Cell** in quaternion representation |
-| Cell Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| Cell Attribute Array | Mask | bool | (1) | Specifies if the **Cell** is to be counted in the algorithm. Only required if *Use Mask Array* is checked |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. |
-|   Attribute Matrix   | CellFeatureData | Cell Feature | N/A | Created **Feature Attribute Matrix** name |
-| Feature Attribute Array | Active | bool | (1) | Specifies if the **Feature** is still in the sample (*true* if the **Feature** is in the sample and *false* if it is not). At the end of the **Filter**, all **Features** will be *Active* |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -54,6 +28,6 @@ Combo-EBSD-osc_r0c0
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

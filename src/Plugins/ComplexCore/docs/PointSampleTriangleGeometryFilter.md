@@ -26,33 +26,7 @@ where ![](Images/PSTG_2.png) are the coordinates of the sampled point; ![](Image
 
 The user may opt to use a mask to prevent certain **Triangles** from being sampled; where the mask is _false_, the **Triangle** will not be sampled.  Additionally, the user may choose any number of **Face Attribute Arrays** to transfer to the created **Vertex Geometry**. The vertices in the new **Vertex Geometry** will gain the values of the **Faces** from which they were sampled.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Source for Number of Samples | Enumeration | Whether to input the number of samples manually or use another **Geometry** to determine the number of samples |
-| Number of Sample Points | int32_t | Number of sample points to use, if _Manual_ is selected for _Source for Number of Samples_ |
-| Use Mask | bool | Whether to use a boolean mask array to ignore certain **Trianlges** flagged as _false_ from the sampling algorithm |
-
-## Required Geometry #
-
-Triangle
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | TriangleDataContainer | N/A | N/A | Data Container holding the **Triangle Geometry** to sample |
-| Data Container | None | N/A | N/A | Data Container holding the **Geometry** used to determine the number of samples, if _Other Geometry_ is selected for _Source for Number of Samples_ |
-| Face Attribute Array | FaceAreas | double | (1) | Specifies the area of each Face |
-| Face Attribute Array | Mask | bool | (1) | Specifies if the **Face** can be sampled, if _Use Mask_ is checked |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | VertexDataContainer | N/A | N/A | Data Container holding the **Vertex Geometry** that represents the sampling points |
-| Vertex Attribute Matrix | VertexData | Vertex | N/A | Vertex Attribute Matrix**for the created**Vertex Data Container |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -60,6 +34,6 @@ Triangle
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

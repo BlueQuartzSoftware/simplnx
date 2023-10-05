@@ -16,31 +16,7 @@ It is possible to set custom values for both the TRUE and FALSE values that will
 
 **NOTE**: If custom TRUE/FALSE values are chosen, then using the resulting mask array in any other filters that require a mask array will break those other filters.  This is because most other filters that require a mask array make the assumption that the true/false values are 1/0.
 
-## Parameters
-
-| Name                     | Type            | Description                                                                                                    |
-|--------------------------|-----------------|----------------------------------------------------------------------------------------------------------------|
-| Data Arrays to Threshold | Comparison List | This is the set of criteria applied to the objects the selected arrays correspond to when doing the thresholding |
-| Use Custom TRUE Value    | bool            | Specifies whether to output a custom TRUE value                                                                |
-| Custom TRUE Value        | float64         | The custom TRUE value (the default value is 1)                                                                 |
-| Use Custom FALSE Value   | bool            | Specifies whether to output a custom FALSE value                                                               |
-| Custom FALSE Value       | float64         | The custom FALSE value (the default value is 0)                                                                |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | None | Any | (1) | Array(s) selected in criteria set |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | Mask | bool | (1) | Specifies whether the objects passed the set of criteria applied during thresholding |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -48,6 +24,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -64,34 +64,7 @@ A new grid of **Cells** is created and "overlaid" on the existing grid of **Cell
 
 *Note:* This filter does NOT change the overall bounds of the volume, just the spacing and number of cells in the volume.  To change the overall bounds of the volume, apply a scaling transformation with the [Apply Transformation To Geometry](./ApplyTransformationToGeometryFilter.md) filter.
 
-## Parameters
-
-| Name                     | Type        | Description                                                                                                 |
-|--------------------------|-------------|-------------------------------------------------------------------------------------------------------------|
-| Resampling Mode          | int         | The resampling mode used to resample the image geometry.  Choices are Spacing, Scaling, or Exact Dimensions |
-| Spacing                  | float (3x)  | The new resolution values (dx, dy, dz)                                                                      |
-| Scale Factor             | float (3x)  | The scale factor (dx, dy, dz), in percentages.                                                              |
-| Exact Dimensions         | uint64 (3x) | The exact dimensions (dx, dy, dz) to resample the geometry.                                                 |
-| Renumber Features        | bool        | Whether the **Features** should be renumbered                                                               |
-| Remove Original Geometry | bool        | Whether the current **Geometry** should be removed after the resampling                                     |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-|   Attribute Matrix   | CellData | Cell | N/A | Cell Attribute Matrix** that holds data for resolution change |
-| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. Only required if *Renumber Features* is checked |
-|   Attribute Matrix   | CellFeatureData | Cell Feature | N/A | Feature Attribute Matrix** that corresponds to the **Feature** data for the selected *Feature Ids*. Only required if *Renumber Features* is checked |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | NewImageDataContainer | N/A | N/A | Created **Data Container** name with an **Image Geometry**. |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -101,6 +74,6 @@ ComplexCore/ResamplePorosityImage
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

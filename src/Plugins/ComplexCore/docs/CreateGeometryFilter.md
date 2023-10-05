@@ -131,44 +131,7 @@ In this above example, the vertex information begins on line 4; thus, line 4 def
 
  When creating **Geometries**, remember to consider all the various rules for how a **Geometry** is stored and interpreted.  In particular, remeber that **Element** Ids are always zero indexed, mesh-like **Geometries** obey the _right hand rule_ for windings and normal directions, and **Element** lists are by default considered _shared_.  Note that although the storage scheme used by **DREAM.3D** (shared lists) is highly generic, some **Filters** may assume that the **Geometry** is reasonably _well formed_.
 
-## Parameters
-
-| Geometry Type | Value |
-| --|--|
-| ImageGeometry  |  0 |
-| RectGridGeometry  |  1 |
-| VertexGeometry  |  2 |
-| EdgeGeometry  |  3 |
-| TriangleGeometry  |  4 |
-| QuadGeometry  |  5 |
-| TetGeometry  |  6 |
-| HexGeometry  |  7 |
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Geometry Type | Enumeration | The type of **Geometry** to create |
-| Treat Geometry Warnings as Errors | bool | Whether run time warnings for **Geometries** should be treated as errors |
-| Array Handling | bool | Determines if the arrays that make up the geometry primitives should be **Moved** or **Copied** to the created Geometry object. |
-| Dimensions | size_t (3x) | The number of cells in each of the X, Y, Z directions, if _Image_ is chosen |
-| Origin | float (3x) | The origin of each of the axes in X, Y, Z order, if _Image_ is chosen |
-| Resolution | float (3x) | The length scale of each voxel/pixel, if _Image_ is chosen |
-
-## Required Geometry #
-
-None
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Geometry Path | None | N/A | N/A | Data Path**in which to place the created**Geometry |
-| Various **Attribute Arrays | None | float/int64_t | 1/2/3/4 | Various **Attribute Arrays** used to define the **Geometry** topology; see the above documentation for a detailed discussion of what kinds of information are needed for each **Geometry |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Various **Attribute Matrices | None | Vertex/Edge/Face/Cell | N/A | Various **Attribute Matrices** used to store information for the new **Geometry**; see the above documentation for a detailed discussion of what kinds of **Attribute Matrices** are created for each **Geometry |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -182,6 +145,6 @@ None
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

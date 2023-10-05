@@ -14,33 +14,7 @@ See below figure from [1] that can help the user classify objects.
 
 ![Example appllication of filter to identify elliptical particales (red) which are differentiated from non-elliptical particals (purple)](Images/ComputeMomentInvariants2D.png)
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Normalize MomentInvariants | Bool | Should the algorithm normalize the results to unit circle. |
-| Save Central Moments | Bool | Write the Central Moments to a new Data Array |
-
-## Required Geometry
-
-ImageGeom
-
-  CentralMomentsArrayPath 2
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell **Attribute Array | FeatureIds | int32_t | (1) | The Feature Ids array to analyze for ellipsoids |
-| Cell **Attribute Array | FeatureRectArray | uint32_t | (6) | Array holding the min xy and max xy pixel coordinates of each feature id |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell **Attribute Array | Omega1 | float | (1) | Omega1 value  |
-| Cell **Attribute Array | Omega2 | float | (1) | Omega2 value  |
-| Cell **Attribute Array | CentralMoments | float | (3)(3) | Central Moments value  |
+% Auto generated parameter table will be inserted here
 
 # Citations
 
@@ -50,13 +24,12 @@ ImageGeom
 # Acknowledgements
 
 The authors would like to thank Dr. Marc De Graef from Carnegie Mellon University for enlightening discussions and a concrete implementation from which to start this filter.
-
 ## Example Pipelines
 
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

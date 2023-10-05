@@ -20,31 +20,7 @@ The default values for LowerThreshold and UpperThreshold are: LowerThreshold = N
 
 Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| LowerThreshold | float64 | The lower threshold that a pixel value could be and still be considered 'Inside Value' |
-| UpperThreshold | float64 | The upper threshold that a pixel value could be and still be considered 'Inside Value'|
-| InsideValue | uint8 | Set the "inside" pixel value. The default value NumericTraits<OutputPixelType>::max() |
-| OutsideValue | uint8 | Set the "outside" pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() . |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -52,6 +28,6 @@ Image Geometry
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

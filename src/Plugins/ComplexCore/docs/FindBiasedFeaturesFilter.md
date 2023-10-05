@@ -22,29 +22,7 @@ By definition of the box, no **Feature** that intersects an outer surface of the
 The images below show the feature ids before and after running this filter. The image on the right shows the biased features colored in red, the unbiased features colored by their feature id, the bounding box (described in step 3 of the algorithm above), and the feature centroids (white for unbiased and purple for biased).
 ![2D Before and After Biased Features](Images/FindBiasedFeaturesBeforeAndAfter.png)
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------|-------------|
-| Apply Phase by Phase | bool | Whether to apply the biased **Features** algorithm per Ensemble |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Feature Attribute Array | Centroids | float | (3) | X, Y, Z coordinates of **Feature** center of mass |
-| Feature Attribute Array | SurfaceFeatures | bool | (1) | Flag of 1 if **Feature** touches an outer surface or of 0 if it does not |
-| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs. Only required if *Apply Phase by Phase* is checked |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Feature Attribute Array | BiasedFeatures | bool | (1) | Flag of 1 if **Feature** is biased or of 0 if it is not |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -54,6 +32,6 @@ Image
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

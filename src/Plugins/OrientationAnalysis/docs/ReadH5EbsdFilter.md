@@ -47,34 +47,7 @@ An excellant reference for this is the following PDF file:
 
 ![Figure 1 showing TSL \& Oxford Instr. conventions.](Images/Hexagonal_Axis_Alignment.png)
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Input File | File Path | The input .h5ebsd file path |
-| Start Slice | Int | The first slice of data to read |
-| End Slice | Int | The last slice of data to read |
-| Use Recommended Transformations | bool | Whether to apply the listed recommended transformations |
-| Data Arrays to Read | Bool(s) | Whether to read the listed arrays |
-| Angle Representation | Int (0=Radians, 1=Degrees) | How the Euler Angles are represented. |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-None
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Geometry | ImageGeometry | Image | N/A | Created **Image Geometry |
-|   Attribute Matrix   | CellData | Cell | N/A | Created **Cell Attribute Matrix** name |
-|   Attribute Matrix   | CellEnsembleData | Cell Ensemble | N/A | Created **Cell Ensemble Attribute Matrix** name |
-
-An array for each of the arrays selected in the *Data Arrays to Read* section will also be created.
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -96,6 +69,6 @@ Please see the description file distributed with this **Plugin**
 
 [2] Rollett, A.D. Lecture Slides located at [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

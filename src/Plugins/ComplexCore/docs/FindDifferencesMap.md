@@ -18,26 +18,7 @@ Note that in the above algorithm, the difference is taken as the *first selected
 
 **WARNING: The resulting difference values *may be negative* if the values of the first array are smaller than those in the second array. Therefore, if the two arrays are *unsigned integers*, it may be possible to underflow the resulting difference map values if the first array is sufficiently smaller than the second array. "Underflow" means that what should be a negative value will end up being a potentially very large value!**
 
-## Parameters
-
-None
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | None | Any | Any | The first selected **Attribute Array**. This array's values will be the first argument for the subtraction operation |
-| Any **Attribute Array | None | Any | Any | The second selected **Attribute Array**. This array's values will be subtracted from the first selected **Attribute Array** values |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | DifferenceMap | Same as input arrays | Same as input arrays | The difference map **Attribute Array |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -45,6 +26,6 @@ Not Applicable
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

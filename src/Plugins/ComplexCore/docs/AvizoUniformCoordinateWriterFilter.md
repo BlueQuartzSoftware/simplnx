@@ -31,26 +31,7 @@ This filter writes out a native Avizo Uniform Coordinate data file. Values shoul
     # Data section follows
        .. 
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Output File | File Path | Amira Mesh .am file created|
-| Write Binary File | Boolean | Binary file created, if checked |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Type | Default Name | Type | Comp Dims | Description |
-|------|--------------|-----|-----|-----------------------------------|
-| Cell | FeatureIds | Ids (Int) that specify to which **Feature** each **Cell** belongs. | (1) | Filters Known to Create Data: Segment Features (Misorientation, C-Axis Misorientation, Scalar) (Reconstruction), Read Dx File (IO), Read Ph File (IO), Pack Primary Phases (SyntheticBuilding), Insert Precipitate Phases (SyntheticBuilding), Establish Matrix Phase (SyntheticBuilding)
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -58,6 +39,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

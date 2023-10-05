@@ -17,38 +17,7 @@ If the data has come from a TSL acquisition system and the settings of the acqui
 
 The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The Threshold Objects **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > 0.1 or *Image Quality* > desired quality.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Input File | File Path | The input .ang file path |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-None
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container  | ImageDataContainer | N/A | N/A    | Created **Data Container** name with an **Image Geometry |
-| Attribute Matrix**  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
-| Attribute Matrix**  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
-| Cell Attribute Array | Confidence Index | float |(1)     | Confidence of indexing  |
-| Cell Attribute Array | EulerAngles      | float |(3)     | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z)  |
-| Cell Attribute Array | Fit              | float |(1)     |  Quality of fit for indexing  |
-| Cell Attribute Array | Image Quality    | float |(1) | Quality of image   |
-| Cell Attribute Array | Phases           | int32_t   | (1) | Specifies to which phase each **Cell** belongs   |
-| Cell Attribute Array | SEM Signal       | float |(1) | Value of SEM signal   |
-| Cell Attribute Array | X Position       | float |(1) | X coordinate of **Cell**   |
-| Cell Attribute Array | Y Position       | float |(1) | Y coordinate of **Cell**   |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
-| Ensemble Attribute Array | LatticeConstants | float | (6) | The 6 values that define the lattice constants for each **Ensemble**|
-| Ensemble Attribute Array | MaterialName | String | (1) | Name of each Ensemble |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -61,6 +30,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -15,33 +15,7 @@ This **Filter** determines, for each **Feature**, the number of other **Features
 
 While performing the above steps, the number of neighboring **Cells** with a different **Feature** owner than a given **Cell** is stored, which identifies whether a **Cell** lies on the surface/edge/corner of a **Feature** (i.e. the **Feature** boundary). Additionally, the surface area shared between each set of contiguous **Features** is calculated by tracking the number of times two neighboring **Cells** correspond to a contiguous **Feature** pair. The **Filter** also notes which **Features** touch the outer surface of the sample (this is obtained for "free" while performing the above algorithm). The **Filter** gives the user the option whether or not they want to store this additional information.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Store Boundary Cells Array | bool | Whether to store the boundary **Cells** array |
-| Store Surface Features Array | bool | Whether to store the surface **Features** array |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| Feature Attribute Matrix | CellFeatureData | Cell Feature | N/A | Feature Attribute Matrix** of the selected *Feature Ids* |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | BoundaryCells | int8_t | (1) | The number of neighboring **Cells** of a given **Cell** that belong to a different **Feature** than itself. Values will range from *0* to *6*. Only created if *Store Boundary Cells Array* is checked|
-| Feature Attribute Array | NumNeighbors | int32_t | (1) | Number of contiguous neighboring **Features** for a given **Feature |
-| Feature Attribute Array**  | NeighborList | List of int32_t | (1) | List of the contiguous neighboring **Features** for a given **Feature |
-| Feature Attribute Array**  | SharedSurfaceAreaLists | List of float | (1) | List of the shared surface area for each of the contiguous neighboring **Features** for a given **Feature |
-| Feature Attribute Array**  | SurfaceFeatures | bool | (1) | Flag equal to 1 if the **Feature** touches an outer surface of the sample and equal to 0 if it does not. Only created if *Store Surface Features Array* is checked |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -59,6 +33,6 @@ Image
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

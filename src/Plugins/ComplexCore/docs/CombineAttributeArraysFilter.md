@@ -30,28 +30,7 @@ _Combined (vector first)_: tuple 1 - { v1 v2 v3 s1 } ; tuple 2 - { v1 v2 v3 s1 }
 
 The user may also select to normalize the resulting combined array. The normalization procedure will enforce a range of [0, 1] for all values in the combined array. This may be useful for combining two arrays that have different order of magnitude data. Note that this option will fundamentally change the underlying data in the combined array from the original incoming arrays.
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------|-------------|
-| Standardize Data | bool | Whether to standardize the combine data on the interval [0, 1] |
-| Move Data        | bool | Whether to remove the original arrays after combining the data |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | None | Any | Any | Attribute Arrays** to combine |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | CombinedData | Any | Any | Combined **Attribute Array** name |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -59,6 +38,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

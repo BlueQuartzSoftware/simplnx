@@ -38,39 +38,11 @@ Output files are formatted to be readable by GMT plotting program. The first lin
 
 Then, the directions are given as [ sin &theta; &times; cos &phi; , sin &theta; &times; sin &phi; , cos &theta; ].
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Phase of Interest | int32_t | Index of the **Ensemble** for which to compute GBCD; boundaries having grains of this phase on both its sides will only be taken into account |
-| Fixed Misorientation | float (4x) | Axis-angle representation of the misorientation of interest. Angle value should be in degrees. |
-| Limiting Distances | float | &rho;<sub>m</sub> and &rho;<sub>p</sub> as defined above |
-| Number of Sampling Points | int32_t | The **approximate** number of sampling directions |
-| Exclude Triangles Directly Neighboring Triple Lines | bool | If checked, only interiors of **Faces** are included in GBCD |
-| Output Distribution File | File Path | The output file path (extension .dat, GMT format) |
-| Output Distribution Errors File | File Path |  The output file path (extension .dat, GMT format) |
-| Save Relative Errors Instead of Their Absolute Values | bool | What type of errors to save (see above description for more detail) |
-
-## Required Geometry
-
-Image + Triangle
-
-## Required Objects
-
-| Kind | Default Name | Type | Comp Dims | Description |
-|-------|--------------|-------------|---------|-----|
-| Vertex Attribute Array**  | NodeTypes | int8_t | (1) | Specifies the type of node in the Geometry
-| Face Attribute Array | FaceLabels | int32_t | (2) | Specifies which Features are on either side of each Face |
-| Face Attribute Array | FaceNormals | double | (3) | Specifies the normal of each Face |
-| Face Attribute Array | FaceAreas | double | (1) | Specifies the area of each Face |
-| Feature Attribute Array | FaceLabels | int32_t | (2) | Specifies which *original* Features are on either side of each boundary **Feature |
-| Feature Attribute Array | AvgEulerAngles | float | (3) | Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z) |
-| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which phase each Feature belongs |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
 
 ## Feedback
 
 In the case of any questions, suggestions, bugs, etc.,  please feel free to email the author of this **Filter** at kglowinski *at* ymail.com
+% Auto generated parameter table will be inserted here
 
 ## References
 
@@ -86,6 +58,6 @@ This pipeline depends on previous pipelines in the Small IN100 reconstruction pi
 
 Please see the description file distributed with this **Plugin**.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

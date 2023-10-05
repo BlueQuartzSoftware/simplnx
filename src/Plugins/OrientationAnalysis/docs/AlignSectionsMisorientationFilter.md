@@ -1,8 +1,3 @@
-```{index} single: Filters; Align Sections (Misorientation)
-```
-
-(header_target)=
-
 # Align Sections (Misorientation)
 
 ## Group (Subgroup)
@@ -28,32 +23,7 @@ The user can choose to write the determined shift to an output file by enabling 
 
 The user can also decide to remove a *background shift* present in the sample. The process for this is to fit a line to the X and Y shifts along the Z-direction of the sample.  The individual shifts are then modified to make the slope of the fit line be 0.  Effectively, this process is trying to keep the top and bottom section of the sample fixed.  Some combinations of sample geometry and internal features can result in this algorithm introducing a 'shear' in the sample and the *Linear Background Subtraction* will attempt to correct for this.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Misorientation Tolerance | float | Tolerance used to decide if **Cells** above/below one another should be considered to be *the same*. The value selected should be similar to the tolerance one would use to define **Features** (i.e., 2-10 degrees) |
-| Write Alignment Shift File | bool | Whether to write the shifts applied to each section to a file |
-| Alignment File | File Path | The output file path where the user would like the shifts applied to the section to be written. Only needed if *Write Alignment Shifts File* is checked |
-| Linear Background Subtraction | bool | Whether to remove a *background shift* present in the alignment |
-| Use Mask Array | bool | Whether to remove some **Cells** from consideration in the alignment process |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | Quats | float | (4) | Specifies the orientation of the **Cell** in quaternion representation |
-| Cell Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| Cell Attribute Array | Mask | bool | (1) | Specifies if the **Cell** is to be counted in the algorithm. Only required if *Use Mask Array* is checked |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -64,6 +34,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

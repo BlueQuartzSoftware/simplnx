@@ -17,28 +17,7 @@ This **Filter** determines, for each **Cell**, the number of neighboring **Cells
 |--|--|
 | ![Feature Ids](Images/FindBoundaryCellsInput.png) | ![Boundary Cells](Images/FindBoundaryCellsOutput.png) |
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------|-------------|
-| Ignore Feature 0 | bool | Do not use feature 0 |
-| Include Volume Boundary | bool | Include the Cell boundaries |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | BoundaryCells | int8_t | (1) | The number of neighboring **Cells** of a given **Cell** that belong to a different **Feature** than itself. Values will range from *0* to *6* |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -48,6 +27,6 @@ Image
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

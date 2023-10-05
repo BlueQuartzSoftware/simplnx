@@ -14,30 +14,7 @@ where \f$ a \f$ is the average distance between point \f$ i \f$ and all other po
 
 The silhouette can be used to determine how well a particular clustering has performed, such as k means or k medoids.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Distance Metric | Enumeration | The metric used to determine the distances between points |
-| Use Mask | bool | Whether to use a boolean mask array to ignore certain points flagged as *false* from the algorithm |
-
-## Required Geometry #
-
-None
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | None | Any| Any | The **Attribute Array** to silhouette |
-| Attribute Array | ClusterIds | int32_t | (1) | Specifies to which cluster each point belongs |
-| Attribute Array | Mask | bool | (1) | Specifies if the point is to be counted in the algorithm, if *Use Mask* is checked |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Attribute Array | Silhouette | double | (1) | Silhouette value for each point  |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -45,6 +22,6 @@ None
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

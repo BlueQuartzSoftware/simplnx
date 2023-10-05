@@ -27,28 +27,7 @@ This **Filter** writes relevant information about the Grain Boundary Character D
     3.4109 0.6178 1.0586 0.2662 0.6970 4.4347 0.9822 0.1328 0.1328 0.0256
        ..
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Output File | File Path | The output GBCD triangle file path |
-
-## Required Geometry
-
-Image + Triangle
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Face Attribute Array | FaceLabels | int32_t  | (2) | Specifies which **Features** are on either side of each Face |
-| Face Attribute Array | FaceNormals | double | (3) | Specifies the normal of each Face |
-| Face Attribute Array | FaceAreas | double | (1) | Specifies the area of each Face |
-| Feature Attribute Array**  | AvgEulerAngles | float | (3) | Three angles defining the orientation of the **Feature** in Bunge convention (Z-X-Z). |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -56,6 +35,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

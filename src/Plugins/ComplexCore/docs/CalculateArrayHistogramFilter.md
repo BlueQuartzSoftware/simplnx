@@ -43,36 +43,7 @@ The range on the data is [1.6, 5.1]. Using 8 bins starting from 1.5 with a bin w
 
 Also see Histogram Quick Reference at [https://plot.ly/histogram/](https://plot.ly/histogram/).
 
-## Parameters
-
-| Name | Type | Decision |
-|------|------|------|
-| Number of Bins | int32 | This determines how many bins the data is sorted into for histogram |
-| Use Custom Min & Max Range | bool | Toggles on custom range values for the histogram |
-| Min Value | float64 | Sets the lower limit for histogram range. Only needed if *Use Custom Min & Max Range* is checked |
-| Max Value | float64 | Sets the higher limit for histogram range. Only needed if *Use Custom Min & Max Range* is checked |
-| Create new DataGroup for Histograms | bool | If checked new **DataGroup** will be created to store the histogram(s) |
-| Output DataGroup Path | DataPath | The **DataPath** to existing **DataGroup** to insert histogram(s) into |
-| New DataGroup Path | DataPath | The **DataPath** to the new **DataGroup** that will store histogram(s). Replaces  
-*Output DataGroup Path* if *Create New DataGroup for Histograms* is checked |
-
-## Required Geometry
-
-None
-
-## Required Objects
-
-| Kind         | Default Name | Type | Description                                    |
-|--------------|---------------|------|-----------------------------------------------|
-|   DataArray   | DataArray(s) to Histogram | DataArray | Specifies to which **DataArray(s)** to create a histogram from |
-
-## Created Objects
-
-| Kind         | Default Name | Type | Description                                    |
-|--------------|---------------|------|-----------------------------------------------|
-|   DataArray   | DataArray** name + "Histogram" | DataArray | A new **DataArray** stored in specified **DataGroup** in which
-the histogram will be generated based on **DataArray** specified in *DataArray(s) to Histogram* (One per **DataArray** in
-*DataArray(s) to Histogram*) |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -83,9 +54,9 @@ the histogram will be generated based on **DataArray** specified in *DataArray(s
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.
 
 ### Example Data (Raw)
 

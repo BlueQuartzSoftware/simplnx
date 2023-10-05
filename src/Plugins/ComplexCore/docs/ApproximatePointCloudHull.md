@@ -20,33 +20,12 @@ The above algorithm is significantly faster that other geometric approaches for 
 
 Note that the resulting hull geometry does not inherit any **Attribute Arrays** from the original point cloud.
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|------|
-| Grid Resolution | float 3x | The resolution of the sampling grid |
-| Minimum Number of Empty Neighbors | int | The minimum number of voxel neighbors that must contain 0 points for a voxel to be considered on the surface |
-
-## Required Geometry
-
-Vertex
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | None | N/A | N/A | Data Container holding the input **Vertex Geometry |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | HullDataContainer | N/A | N/A | Data Container holding the approximated surface **Vertex Geometry |
+% Auto generated parameter table will be inserted here
 
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

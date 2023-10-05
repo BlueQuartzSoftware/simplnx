@@ -1,6 +1,12 @@
+#include "complex/Common/Types.hpp"
+#include "complex/Common/TypesUtility.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/DataObjectUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
@@ -46,16 +52,30 @@ void GenerateParameterList()
   ADD_PARAMETER_TRAIT(complex.DataTypeParameter, "d31358d5-3253-4c69-aff0-eb98618f851b")
   ADD_PARAMETER_TRAIT(complex.EnsembleInfoParameter, "10d3924f-b4c9-4e06-9225-ce11ec8dff89")
   ADD_PARAMETER_TRAIT(complex.ArrayThresholdsParameter, "e93251bc-cdad-44c2-9332-58fe26aedfbe")
-  ADD_PARAMETER_TRAIT(complex.MultiArraySelectionParameter, "d11e0bd8-f227-4fd1-b618-b6f16b259fc8")
   ADD_PARAMETER_TRAIT(complex.GenerateColorTableParameter, "7b0e5b25-564e-4797-b154-4324ef276bf0")
   ADD_PARAMETER_TRAIT(complex.DataObjectNameParameter, "fbc89375-3ca4-4eb2-8257-aad9bf8e1c94")
   ADD_PARAMETER_TRAIT(complex.NeighborListSelectionParameter, "ab0b7a7f-f9ab-4e6f-99b5-610e7b69fc5b")
   ADD_PARAMETER_TRAIT(complex.ChoicesParameter, "ee4d5ce2-9582-48fa-b182-8a766ce0feff")
   ADD_PARAMETER_TRAIT(complex.GeneratedFileListParameter, "aac15aa6-b367-508e-bf73-94ab6be0058b")
-  ADD_PARAMETER_TRAIT(complex.DataGroupCreationParameter, "bff2d4ac-04a6-5251-b188-4f83f7865074")
   ADD_PARAMETER_TRAIT(complex.DataPathSelectionParameter, "cd12d081-fbf0-46c4-8f4a-15e2e06e98b8")
   ADD_PARAMETER_TRAIT(complex.CalculatorParameter, "ba2d4937-dbec-5536-8c5c-c0a406e80f77")
   ADD_PARAMETER_TRAIT(complex.ReadCSVFileParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45")
+
+  ADD_PARAMETER_TRAIT(complex.MultiArraySelectionParameter, "d11e0bd8-f227-4fd1-b618-b6f16b259fc8")
+  ADD_PARAMETER_TRAIT(complex.ArraySelectionParameter, "ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b")
+  ADD_PARAMETER_TRAIT(complex.DataGroupSelectionParameter, "bff3d4ac-04a6-5251-b178-4f83f7865074")
+  ADD_PARAMETER_TRAIT(complex.AttributeMatrixSelectionParameter, "a3619d74-a1d9-4bc2-9e03-ca001d65b119")
+  ADD_PARAMETER_TRAIT(complex.GeometrySelectionParameter, "3804cd7f-4ee4-400f-80ad-c5af17735de2")
+
+  ADD_PARAMETER_TRAIT(complex.DataGroupCreationParameter, "bff2d4ac-04a6-5251-b188-4f83f7865074")
+  ADD_PARAMETER_TRAIT(complex.ArrayCreationParameter, "ab047a7d-f81b-4e6f-99b5-610e7b69fc5b")
+
+  ADD_PARAMETER_TRAIT(complex.FileSystemPathParameter, "f9a93f3d-21ef-43a1-a958-e57cbf3b2909")
+  ADD_PARAMETER_TRAIT(complex.BoolParameter, "b6936d18-7476-4855-9e13-e795d717c50f")
+  ADD_PARAMETER_TRAIT(complex.ImportHDF5DatasetParameter, "32e83e13-ee4c-494e-8bab-4e699df74a5a")
+  ADD_PARAMETER_TRAIT(complex.Dream3dImportParameter, "170a257d-5952-4854-9a91-4281cd06f4f5")
+  ADD_PARAMETER_TRAIT(complex.DynamicTableParameter, "eea76f1a-fab9-4704-8da5-4c21057cf44e")
+
   ADD_PARAMETER_TRAIT(complex.Int8Parameter, "cae73834-68f8-4235-b010-8bea87d8ff7a")
   ADD_PARAMETER_TRAIT(complex.UInt8Parameter, "6c3efeff-ce8f-47c0-83d1-262f2b2dd6cc")
   ADD_PARAMETER_TRAIT(complex.Int16Parameter, "44ae56e8-e6e7-4e4d-8128-dd3dc2c6696e")
@@ -66,11 +86,7 @@ void GenerateParameterList()
   ADD_PARAMETER_TRAIT(complex.UInt64Parameter, "36d91b23-5500-4ed4-bdf3-d680f54ee5d1")
   ADD_PARAMETER_TRAIT(complex.Float32Parameter, "e4452dfe-2f70-4833-819e-0cbbec21289b")
   ADD_PARAMETER_TRAIT(complex.Float64Parameter, "f2a18fff-a095-47d7-b436-ede41b5ea21a")
-  ADD_PARAMETER_TRAIT(complex.ArraySelectionParameter, "ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b")
-  ADD_PARAMETER_TRAIT(complex.FileSystemPathParameter, "f9a93f3d-21ef-43a1-a958-e57cbf3b2909")
-  ADD_PARAMETER_TRAIT(complex.DataGroupSelectionParameter, "bff3d4ac-04a6-5251-b178-4f83f7865074")
-  ADD_PARAMETER_TRAIT(complex.GeometrySelectionParameter, "3804cd7f-4ee4-400f-80ad-c5af17735de2")
-  ADD_PARAMETER_TRAIT(complex.BoolParameter, "b6936d18-7476-4855-9e13-e795d717c50f")
+
   ADD_PARAMETER_TRAIT(complex.VectorInt8Parameter, "9f5f9683-e492-4a79-8378-79d727b2356a")
   ADD_PARAMETER_TRAIT(complex.VectorUInt8Parameter, "bff78ff3-35ef-482a-b3b1-df8806e7f7ef")
   ADD_PARAMETER_TRAIT(complex.VectorInt16Parameter, "43810a29-1a5f-4472-bec6-41de9ffe27f7")
@@ -81,13 +97,177 @@ void GenerateParameterList()
   ADD_PARAMETER_TRAIT(complex.VectorUInt64Parameter, "17309744-c4e8-4d1e-807e-e7012387f1ec")
   ADD_PARAMETER_TRAIT(complex.VectorFloat32Parameter, "88f231a1-7956-41f5-98b7-4471705d2805")
   ADD_PARAMETER_TRAIT(complex.VectorFloat64Parameter, "57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96")
-  ADD_PARAMETER_TRAIT(complex.AttributeMatrixSelectionParameter, "a3619d74-a1d9-4bc2-9e03-ca001d65b119")
-  ADD_PARAMETER_TRAIT(complex.ImportHDF5DatasetParameter, "32e83e13-ee4c-494e-8bab-4e699df74a5a")
-  ADD_PARAMETER_TRAIT(complex.Dream3dImportParameter, "170a257d-5952-4854-9a91-4281cd06f4f5")
-  ADD_PARAMETER_TRAIT(complex.DynamicTableParameter, "eea76f1a-fab9-4704-8da5-4c21057cf44e")
-  ADD_PARAMETER_TRAIT(complex.ArrayCreationParameter, "ab047a7d-f81b-4e6f-99b5-610e7b69fc5b")
 }
 
+std::string ParseScalarType(const std::string& paramType)
+{
+  std::string temp = complex::StringUtilities::replace(paramType, "complex.", "Scalar Value |");
+  temp = complex::StringUtilities::replace(temp, "Parameter", "");
+  // temp = complex::StringUtilities::replace(temp, "Vector", " (Vector)");
+  return temp;
+}
+
+// std::string ParseVectorType(const std::string& paramType)
+//{
+//   std::string temp = complex::StringUtilities::replace(paramType, "complex.", "");
+//   temp = complex::StringUtilities::replace(temp, "Vector", "Vector of Values |");
+//   temp = complex::StringUtilities::replace(temp, "Parameter", "");
+//
+//   return temp;
+// }
+
+bool CheckScalarPrimitive(std::ostream& rstStream, const complex::AnyParameter& paramValue)
+{
+
+  static const std::set<complex::Uuid> scalarPrimitives = {
+      complex::Uuid::FromString("a8ff9dbd-45e7-4ed6-8537-12dd53069bce").value(), complex::Uuid::FromString("44ae56e8-e6e7-4e4d-8128-dd3dc2c6696e").value(),
+      complex::Uuid::FromString("156a6f46-77e5-41d8-8f5a-65ba1da52f2a").value(), complex::Uuid::FromString("21acff45-a653-45db-a0d1-f43cd344b93a").value(),
+      complex::Uuid::FromString("e9521130-276c-40c7-95d7-0b4cb4f80649").value(), complex::Uuid::FromString("b2039349-bd3a-4dbb-93d2-b4b5c633e697").value(),
+      complex::Uuid::FromString("36d91b23-5500-4ed4-bdf3-d680f54ee5d1").value(), complex::Uuid::FromString("e4452dfe-2f70-4833-819e-0cbbec21289b").value(),
+      complex::Uuid::FromString("f2a18fff-a095-47d7-b436-ede41b5ea21a").value(), complex::Uuid::FromString("e9521130-276c-40c7-95d7-0b4cb4f80649").value()};
+
+  if(scalarPrimitives.find(paramValue->uuid()) != scalarPrimitives.end())
+  {
+    rstStream << "| " << paramValue->humanName() << " | " << ParseScalarType(s_ParameterMap[paramValue->uuid()]) << " | " << paramValue->helpText() << " |\n";
+    return true;
+  }
+  return false;
+}
+
+bool CheckVectorPrimitive(std::ostream& rstStream, const complex::AnyParameter& paramValue)
+{
+  static const std::set<complex::Uuid> vectorPrimitives = {
+      complex::Uuid::FromString("9f5f9683-e492-4a79-8378-79d727b2356a").value(), complex::Uuid::FromString("bff78ff3-35ef-482a-b3b1-df8806e7f7ef").value(),
+      complex::Uuid::FromString("43810a29-1a5f-4472-bec6-41de9ffe27f7").value(), complex::Uuid::FromString("2f1ba2f4-c5d5-403c-8b90-0bf60d2bde9b").value(),
+      complex::Uuid::FromString("d3188e18-e383-4727-ab32-88b5fda56ae8").value(), complex::Uuid::FromString("37322aa6-1a2f-4ecb-9aa1-8922d7ac1e49").value(),
+      complex::Uuid::FromString("4ceaffc1-7326-4f65-a33a-eae263dc22d1").value(), complex::Uuid::FromString("17309744-c4e8-4d1e-807e-e7012387f1ec").value(),
+      complex::Uuid::FromString("88f231a1-7956-41f5-98b7-4471705d2805").value(), complex::Uuid::FromString("57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96").value()};
+
+  std::string paramTypeName = complex::StringUtilities::replace(s_ParameterMap[paramValue->uuid()], "complex.", "");
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "Vector", "");
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "Parameter", "");
+
+  if(vectorPrimitives.find(paramValue->uuid()) != vectorPrimitives.end())
+  {
+    const VectorParameterBase* paramPtr = dynamic_cast<const VectorParameterBase*>(paramValue.get());
+    rstStream << "| " << paramValue->humanName() << " | Vector of " << paramTypeName << " Values | Order=";
+
+    auto names = paramPtr->names();
+    int i = 0;
+    for(const auto& name : names)
+    {
+      rstStream << name;
+      i++;
+      if(i != names.size())
+      {
+        rstStream << ",";
+      }
+    }
+
+    rstStream << " | " << paramValue->helpText() << " |\n";
+    return true;
+  }
+  return false;
+}
+
+/**
+ *
+ * @param rstStream
+ * @param paramValue
+ * @return
+ */
+bool CheckArraySelectionParameter(std::ostream& rstStream, const complex::AnyParameter& paramValue)
+{
+  static const std::set<complex::Uuid> param = {complex::Uuid::FromString("ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b").value()};
+
+  std::string paramTypeName = s_ParameterMap[paramValue->uuid()];
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "complex.", "");
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "Parameter", "");
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "Selection", " Selection");
+  const ArraySelectionParameter* paramPtr = dynamic_cast<const ArraySelectionParameter*>(paramValue.get());
+  if(paramPtr != nullptr)
+  {
+    rstStream << "| " << paramValue->humanName() << " | " << paramTypeName << " | Allowed Types: ";
+    auto allowedTypes = paramPtr->allowedTypes();
+    int i = 0;
+    for(const auto& allowedType : allowedTypes)
+    {
+      rstStream << complex::DataTypeToString(allowedType).str();
+      i++;
+      if(i != allowedTypes.size())
+      {
+        rstStream << ", ";
+      }
+    }
+    auto compShapes = paramPtr->requiredComponentShapes();
+    if(!compShapes.empty())
+    {
+      rstStream << " Comp. Shape: ";
+    }
+    for(const auto& compShape : compShapes)
+    {
+      rstStream << fmt::format("{}", fmt::join(compShape, ","));
+    }
+    rstStream << " | " << paramValue->helpText() << " |\n";
+    return true;
+  }
+
+  return false;
+}
+
+bool CheckGeometrySelectionParameter(std::ostream& rstStream, const complex::AnyParameter& paramValue)
+{
+  static const std::set<complex::Uuid> param = {complex::Uuid::FromString("d11e0bd8-f227-4fd1-b618-b6f16b259fc8").value()};
+
+  std::string paramTypeName = s_ParameterMap[paramValue->uuid()];
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "complex.", "");
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "Parameter", "");
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "Selection", " Selection");
+  const GeometrySelectionParameter* paramPtr = dynamic_cast<const GeometrySelectionParameter*>(paramValue.get());
+  if(paramPtr != nullptr)
+  {
+
+    rstStream << "| " << paramValue->humanName() << " | " << paramTypeName << " | ";
+
+    auto allowedTypes = paramPtr->allowedTypes();
+    int i = 0;
+    for(const auto& allowedType : allowedTypes)
+    {
+      rstStream << complex::GeometryTypeToString(allowedType).str();
+      i++;
+      if(i != allowedTypes.size())
+      {
+        rstStream << ", ";
+      }
+    }
+
+    rstStream << " | " << paramValue->helpText() << " |\n";
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ *
+ * @param rstStream
+ * @param paramValue
+ */
+void CheckParameter(std::ostream& rstStream, const complex::AnyParameter& paramValue)
+{
+  std::string paramTypeName = s_ParameterMap[paramValue->uuid()];
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "complex.", "");
+  paramTypeName = complex::StringUtilities::replace(paramTypeName, "Parameter", " | ");
+
+  rstStream << "| " << paramValue->humanName() << " | " << paramTypeName << " | " << paramValue->helpText() << " |\n";
+}
+
+/**
+ *
+ * @param filePath
+ * @param trimLine
+ * @return
+ */
 std::vector<std::string> ReadFile(const std::filesystem::path& filePath, bool trimLine)
 {
   std::ifstream file = std::ifstream(filePath);
@@ -298,10 +478,197 @@ std::vector<int32_t> FindTableColumnWidths(const Parameters& parameters)
   return {maxUIDisplay, maxPythonArg};
 }
 
+std::vector<std::string> ConvertFilterDoc(const std::filesystem::path& docFilePath)
+{
+  // Open the existing doc file
+  // Extract out the first paragraph of the Filter's markdown documentation after the ## Description section marker
+  std::vector<std::string> mdLines = ReadFile(docFilePath, false);
+  std::vector<std::string> outputLines;
+  std::stringstream mdStream;
+  bool extractLines = true;
+  for(const auto& line : mdLines)
+  {
+    if(complex::StringUtilities::starts_with(line, "## Parameters"))
+    {
+      extractLines = false;
+      continue;
+    }
+
+    if(complex::StringUtilities::starts_with(line, "## Example Pipelines"))
+    {
+      extractLines = true;
+      outputLines.push_back("@PARAMETER_TABLE@");
+    }
+
+    if(!extractLines && complex::StringUtilities::starts_with(line, "## License & Copyright"))
+    {
+      extractLines = true;
+      outputLines.push_back("@PARAMETER_TABLE@");
+    }
+    if(extractLines)
+    {
+      outputLines.push_back(line);
+    }
+  }
+
+  return outputLines;
+}
+
+void GenerateMarkdownFilterParameterTable()
+{
+  auto* filterListPtr = Application::Instance()->getFilterList();
+
+  // Loop over each plugin and create a .rst file
+  const auto pluginListPtr = Application::Instance()->getPluginList();
+  for(const auto& plugin : pluginListPtr)
+  {
+    std::string plugName = plugin->getName();
+    const std::string pluginRootDir = fmt::format("{}", s_PluginDirMap[plugName]);
+    if(pluginRootDir.empty())
+    {
+      continue;
+    }
+
+    // This will alphabetize the filter list
+    const auto& pluginFilterHandles = plugin->getFilterHandles();
+    std::map<std::string, std::pair<FilterHandle::FilterIdType, FilterHandle::PluginIdType>> filterHandles;
+    for(const auto& filterHandle : pluginFilterHandles)
+    {
+      filterHandles[filterHandle.getClassName()] = {filterHandle.getFilterId(), filterHandle.getPluginId()};
+    }
+
+    // Loop on each Filter
+    for(const auto& filterHandleIter : filterHandles)
+    {
+      std::string filterClassName = filterHandleIter.first;
+      FilterHandle const filterHandle(filterHandleIter.second.first, filterHandleIter.second.second);
+      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+
+      std::stringstream pTableStream;
+
+      // std::vector<int32_t> columnWidths = FindTableColumnWidths(parameters);
+      int needTableHeader = 0;
+
+      const auto& parameters = filter->parameters();
+
+      for(const auto& layoutObj : parameters.getLayout())
+      {
+        if(std::holds_alternative<complex::Parameters::ParameterKey>(layoutObj))
+        {
+
+          if(needTableHeader == 0)
+          {
+            pTableStream << "### Filter Parameters\n\n";
+            pTableStream << "| Parameter Name | Parameter Type | Parameter Notes | Description |\n";
+            pTableStream << "|----------------|----------------|-----------------|-------------|\n";
+          }
+
+          std::string key = std::get<complex::Parameters::ParameterKey>(layoutObj).key;
+          const auto& paramValue = parameters.at(key);
+          if(CheckScalarPrimitive(pTableStream, paramValue))
+          {
+            continue;
+          }
+          if(CheckVectorPrimitive(pTableStream, paramValue))
+          {
+            continue;
+          }
+          if(CheckArraySelectionParameter(pTableStream, paramValue))
+          {
+            continue;
+          }
+          if(CheckGeometrySelectionParameter(pTableStream, paramValue))
+          {
+            continue;
+          }
+          CheckParameter(pTableStream, paramValue);
+        }
+        else
+        {
+          std::string key = std::get<complex::Parameters::Separator>(layoutObj).name;
+          pTableStream << "\n";
+          pTableStream << "### " << key << "\n\n";
+          pTableStream << "| Parameter Name | Parameter Type | Parameter Notes | Description |\n";
+          pTableStream << "|----------------|----------------|-----------------|-------------|\n";
+        }
+        needTableHeader++;
+      }
+
+#if SOMETHING
+      for(const auto& parameter : parameters)
+      {
+        auto const& paramValue = parameter.second;
+        if(paramValue->helpText().empty())
+        {
+          std::cout << filter->name() << "::" << paramValue->name() << " HELP Text is empty\n";
+        }
+        for(const auto& letter : paramValue->name())
+        {
+          if(::isupper(letter) != 0)
+          {
+            std::cout << filter->name() << "::" << paramValue->name() << " HAS CAPS. Should be lower snake case\n";
+            break;
+          }
+        }
+
+        if(CheckScalarPrimitive(pTableStream, paramValue))
+        {
+          continue;
+        }
+        if(CheckVectorPrimitive(pTableStream, paramValue))
+        {
+          continue;
+        }
+        if(CheckArraySelectionParameter(pTableStream, paramValue))
+        {
+          continue;
+        }
+        if(CheckGeometrySelectionParameter(pTableStream, paramValue))
+        {
+          continue;
+        }
+        CheckParameter(pTableStream, paramValue);
+      }
+#endif
+
+      pTableStream << '\n';
+
+      // Read the Current Filter's Documentation File
+      const std::filesystem::path docFilePath = fmt::format("{}/docs/{}.md", pluginRootDir, filterClassName);
+      std::vector<std::string> filterDocContents = ConvertFilterDoc(docFilePath);
+
+      // Create a new output file
+      const std::filesystem::path rstFilePath = fmt::format("{}/nx_docs/source/{}/{}.md", COMPLEX_BUILD_DIR, plugName, filterClassName);
+      const Result<> createDirectoriesResult = complex::CreateOutputDirectories(rstFilePath.parent_path());
+
+      std::ofstream rstStream = std::ofstream(rstFilePath, std::ios_base::binary | std::ios_base::trunc);
+      if(!rstStream.is_open())
+      {
+        std::cout << "ERROR:" << rstFilePath << "\n";
+        return;
+      }
+
+      rstStream << "```{index} single: Filters; " << filter->humanName() << "\n```\n";
+
+      for(const auto& line : filterDocContents)
+      {
+        if(line == "@PARAMETER_TABLE@")
+        {
+          rstStream << pTableStream.str();
+        }
+        else
+        {
+          rstStream << line << "\n";
+        }
+      }
+    }
+  }
+}
+
 /**
  * @brief
  */
-void GenerateRstFilterDocs()
+void GeneratePythonRstFiles()
 {
   auto* filterListPtr = Application::Instance()->getFilterList();
 
@@ -466,7 +833,7 @@ std::string ReadIndexTemplateFile(const std::filesystem::path& path)
 /**
  * @brief Generates the index.rst file for the sphinx docs
  */
-void GenerateIndexRstFile()
+void GeneratePythonSphinxIndex()
 {
   std::string indexTemplate;
   {
@@ -515,18 +882,21 @@ void GenerateIndexRstFile()
  */
 int main(int32_t argc, char** argv)
 {
-  try
+  // try
   {
     GenerateParameterList();
 
     Application app;
     app.loadPlugins(COMPLEX_BIN_DIR, true);
 
-    GenerateRstFilterDocs();
-    GenerateIndexRstFile();
-  } catch(const std::exception& except)
+    GeneratePythonRstFiles();
+    GeneratePythonSphinxIndex();
+
+    GenerateMarkdownFilterParameterTable();
+  }
+  // catch(const std::exception& except)
   {
-    std::cout << "RST Doc Generator threw a runtime exception which should NOT happen" << std::endl;
+    // std::cout << "RST Doc Generator threw a runtime exception which should NOT happen" << std::endl;
   }
   return 0;
 }

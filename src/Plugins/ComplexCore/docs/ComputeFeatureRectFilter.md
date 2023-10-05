@@ -26,26 +26,7 @@ If the example matrix above which represents a single feature where the feature 
     Y Max = 3
     Z Max = 0
 
-## Parameters
-
-N/A
-
-## Required Geometry
-
-N/A
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| FeatureIds | FeatureIdsArrayName | int32_t | (1) | |
-| Feature Attribute Matrix | N/A | Feature AttributeMatrix | N/A | The path to the cell feature **Attribute Matrix |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Feature Attribute Array | FeatureRect | uint32 | (6) | Xmin, Ymin, Zmin, Xmax, Ymax, Zmax |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -53,6 +34,6 @@ N/A
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

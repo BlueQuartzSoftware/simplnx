@@ -17,29 +17,7 @@ This **Filter** determines the average orientation of each **Feature** by the fo
 
 *Note:* The quaternions can be averaged with a simple average because the quaternion space is not distorted like Euler space.
 
-## Parameters
-
-None
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Element Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
-| Element Attribute Array | Phases | int32_t | (1) | Specifies the **Ensemble** of the **Element |
-| Element Attribute Array | Quats | float | (4) | Specifies the orientation of the **Element** in quaternion representation |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Feature Attribute Array | AvgQuats | float | (4) | Specifies the average orientation of the **Feature** in quaternion representation |
-| Feature Attribute Array | AvgEulerAngles | float | (3) | Specifies the orientation of each **Feature** in Bunge convention (Z-X-Z) |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -53,6 +31,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

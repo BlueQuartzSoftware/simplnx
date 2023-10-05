@@ -20,34 +20,7 @@ This **Filter** calculates the distance of each **Cell** from the nearest **Feat
 
 4. If the option *Calculate Manhattan Distance* is *false*, then the "city-block" distances are overwritten with the *Euclidean Distance* from the **Cell** to its *nearest neighbor* **Cell** and stored in a *float* array instead of an *integer* array.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Calculate Manhattan Distance | bool | Whether the distance to boundaries, triple lines and quadruple points is stored as "city block" or "Euclidean" distances |
-| Calculate Distance to Boundaries | bool | Whetherthe distance of each **Cell** to a **Feature** boundary is calculated |
-| Calculate Distance to Triple Lines | bool | Whetherthe distance of each **Cell** to a triple line between **Features** is calculated |
-| Calculate Distance to Quadruple Points | bool | Whetherthe distance of each **Cell** to a  quadruple point between **Features** is calculated |
-| Store the Nearest Boundary Cells | bool | Whether to store the *nearest neighbors* of **Cell**  
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | GBEuclideanDistances | float | (1) | Distance the **Cells** are from the *boundary* of the **Feature** they belong to. Only created if *Calculate Distance to Boundaries* is checked |
-| Cell Attribute Array | TJEuclideanDistances | float | (1) | Distance the **Cells** are from a *triple junction* of **Features**. Only created if *Calculate Distance to Triple Lines* is checked |
-| Cell Attribute Array | QPEuclideanDistances | float | (1) | Distance the **Cells** are from a *quadruple point* of **Features**. Only created if *Calculate Distance to Quadruple Points* is checked |
-| Cell Attribute Array | NearestNeighbors | int32_t | (3) | Indices of the closest **Cell** that touches a boundary, triple and quadruple point for each **Cell**. Only created if *Store the Nearest Boundary Cells* is checked |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -57,6 +30,6 @@ Image
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

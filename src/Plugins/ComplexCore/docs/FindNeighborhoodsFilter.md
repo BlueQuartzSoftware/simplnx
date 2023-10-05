@@ -12,30 +12,7 @@ This **Filter** determines the number of **Features**, for each **Feature**, who
 2. Check every other **Feature**'s *centroid* to see if it lies within the sphere and keep count and list of those that satisfy
 3. Repeat 1. & 2. for all **Features**
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Multiples of Average Diameter | float | Defines the search radius to use when looking for "neighboring" **Features |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Feature Attribute Array | EquivalentDiameters | float | (1) | Diameter of a sphere with the same volume as the **Feature |
-| Feature Attribute Array | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Feature** belongs |
-| Feature Attribute Array | Centroids | float | (3) | X, Y, Z coordinates of **Feature** center of mass |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Feature Attribute Array | Neighborhoods | int32_t | (1) | Number of **Features** that have their centroid within the user specified multiple of equivalent sphere diameters from each **Feature |
-| Feature Attribute Array | NeighborhoodLists | List of int32_t | (1) | List of the **Features** whose centroids are within the user specified multiple of equivalent sphere diameter from each **Feature |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -47,6 +24,6 @@ Image
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

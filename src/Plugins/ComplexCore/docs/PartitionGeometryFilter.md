@@ -104,28 +104,7 @@ On all partitioning modes, a vertex mask can be used with a vertex-based input g
 |:---:|:---:|
 | ![](Images/PartitionGeometry/UseVertexMask_1a.png) | ![](Images/PartitionGeometry/UseVertexMask_1b.png) |
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|------|
-| Input Geometry to Partition | DataPath | The path to the geometry object that the filter will partition. |
-| Input Geometry Cell Attribute Matrix | DataPath | The path to the attribute matrix where the partition ids array will be stored. |
-| Partitioning Mode | int | The mode used to partition the geometry.  The choices are Basic, Advanced, Bounding Box, and Existing Partition Grid. |
-| Starting Feature ID | int | The starting ID to use when creating the partition grid. |
-| Out-Of-Bounds Feature ID | int | The default ID used when the voxel or node in the input geometry is out-of-bounds compared to the partition grid. Available in all modes except for Basic mode (not needed since all voxels are in-bounds). |
-| Number of Cells Per Axis (X,Y,Z) | IntVec3 | The number of cells that will be created in each partition grid axis. |
-| Partition Grid Origin (X,Y,Z) | FloatVec3 | The origin of the partition grid. Only available in Advanced mode. |
-| Cell Length (X,Y,Z) | FloatVec3 | The length of each cell in each partition grid axis. Only available in Advanced mode. |
-| Minimum Grid Coordinate (X,Y,Z) | FloatVec3 | The minimum coordinate for the bounding box of the partition grid. Only available in Bounding Box mode. |
-| Maximum Grid Coordinate (X,Y,Z) | FloatVec3 | The maximum coordinate for the bounding box of the partition grid. Only available in Bounding Box mode. |
-| Existing Partition Grid | DataPath | The path to an image geometry that contains an existing partition grid. Only available in Existing Partition Grid mode. |
-| Use Vertex Mask | bool | Determines whether or not to use a vertex mask when partitioning the input geometry. |
-| Vertex Mask | DataPath | The path to the vertex mask array. |
-| Feature Attribute Matrix | string | The name of the feature attribute matrix that will be created. |
-| Partition Ids | string | The name of the partition ids array that will be created. |
-| Partition Grid Geometry | DataPath | The path to the partition grid geometry that will be created. |
-| Cell Attribute Matrix | string | The name of the attribute matrix that will be created as a child of the partition grid geometry. |
-| Feature Ids | string | The name of the feature ids array that will be created as a child of Cell Attribute Matrix. |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -135,6 +114,6 @@ None
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -57,31 +57,7 @@ The example data below has 50 elements. This means that it could successfully be
 | 3 | colon |
 | 4 | tab |
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| InputFile | String | The path to the input file including the filename |
-| ScalarType | int | See table above |
-| Number of Components | int | The number of components in the array. |
-| Skip Header Lines | int | If the file has some sort of a header, skip this many lines. |
-| Delimeter | int | See Table above |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Attribute Matrix**  | None         | DataArrayPath | N/A | Attribute Matrix** to store imported data into |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Attribute Array | N/A | See Table above | based on number of components | The created Attribute Array |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -89,6 +65,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

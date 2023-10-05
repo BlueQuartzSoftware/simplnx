@@ -10,19 +10,7 @@ ITKImageProcessing (ITKImageProcessing)
 
 Reads images through ITK
 
-## Parameters
-
-| Name             | Type |
-|------------------|------|
-| Input File | String | Path to the input file to read. |
-
-## Required Objects
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | Data Container Name | N/A | N/A | Description of object... |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -32,6 +20,6 @@ Reads images through ITK
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -15,32 +15,7 @@ This filter also includes an option to use the valley emphasis algorithm from H.
 - OtsuMultipleThresholdsCalculator
 - ThresholdLabelerImageFilter
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| NumberOfThresholds | uint8 | Set/Get the number of thresholds. Default is 1. |
-| LabelOffset | uint8 | Set/Get the offset which labels have to start from. Default is 0. |
-| NumberOfHistogramBins | uint32 | Set/Get the number of histogram bins. Default is 128. |
-| ValleyEmphasis | bool | Set/Get the use of valley emphasis. Default is false. |
-| ReturnBinMidpoint | bool | Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum. |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -48,6 +23,6 @@ Image Geometry
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

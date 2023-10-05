@@ -23,27 +23,7 @@ Gone* parameter, which will continue to run until no **Cells** fail the original
 |--------------------------------------|--------------------------------------|
 | ![](Images/ErodeDilateCoordinationNumber_Before.png) | ![](Images/ErodeDilateCoordinationNumber_After.png) |
 
-## Parameters
-
-| Name                | Type    | Description                                                                                                                        |
-|---------------------|---------|------------------------------------------------------------------------------------------------------------------------------------|
-| Coordination Number | int32_t | Number of neighboring **Cells** that can be of opposite classification before a **Cell** will be removed                           |
-| Loop Until Gone     | bool    | Whether to run a single iteration or iterate until no *bad* **Cells** have more than the above number of *good* neighbor **Cells |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Image Geometry**       | Image Geometry | DataPath | N/A                  | The path to the Image Geometry where the feature Ids are stored. |
-| Cell Attribute Array | FeatureIds     | int32_t  | (1)                  | Specifies to which **Feature** each **Cell** belongs             |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -51,6 +31,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -12,27 +12,7 @@ Here's what the results look like:
 
 ![3D-Contouring](Images/3D-contouring.png)
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Contour value | float64 | This is the thresholding value that will be used to create the *Contouring Geometry* |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Array | Data Array to Contour | Any | (1) | This is the array that will be parsed in order to create the contouring geometry, this is what the *Contour Value* will be compared against |
-
-## Created Objects
-
-| Kind         | Default Name | Type | Description                                    |
-|--------------|---------------|------|-----------------------------------------------|
-| Geometry | Contouring Geometry | TriangleGeom | This stores the 3D contouring line and the normals for the vertices |
+% Auto generated parameter table will be inserted here
 
 ## License & Copyright
 

@@ -24,30 +24,7 @@ Schematic layout of the neighboring cells. Only the In-Plane neighbors are shown
 
 In this example cell (1,1) has a confidence index < 0.1 and the surrounding cells all have a misorientation tolerance not greater than 5 degrees. Comparing cell (1,1) with its neighbor cells we can see that the misorientation is greater than 5 Degrees. In this case the central cell (1,1) would have all of its attributes replaced with the "best" neighbor based on the phase of a neighbor cell matching the central cell.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Minimum Confidence Index | float32 | Sets the minimum value of 'confidence' a **Cell** must have |
-| Misorientation Tolerance (Degrees) | Float32 | Angular tolerance used to compare with neighboring **Cells |
-| Cleanup Level | int32 | Minimum number of neighbor **Cells** that must have orientations within above tolerace to allow **Cell** to be changed |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | Confidence Index | float32 | (1) | Specifies the confidence in the orientation of the **Cell** (TSL data) |
-| Cell Attribute Array | Cell Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| Cell Attribute Array | Quaternions | float32 | (4) | Specifies the orientation of the **Cell** in quaternion representation |
-| Ensemble Attribute Array | Crystal Structures | uint32 | (1) | Enumeration representing the crystal structure for each Ensemble |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -60,6 +37,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

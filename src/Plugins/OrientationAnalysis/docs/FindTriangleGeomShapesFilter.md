@@ -30,31 +30,7 @@ for determining the moments and these values is as follows:
 represented, resulting in inaccurate Omega3 values. This problem is especially apparent for perfect rectangular prisms,
 but any shape with clear sharp corners may be affected.
 
-## Parameters
-
-None
-
-## Required Geometry
-
-Triangle
-
-## Required Objects
-
-| Kind                        | Default Name    | Type         | Comp Dims | Description                                                        |
-|-----------------------------|-----------------|--------------|-------------|--------------------------------------------------------------------|
-| Face Attribute Array**    | FaceLabels      | int32_t      | (2)                  | Specifies which **Features** are on either side of each **Face**   |
-| Feature Attribute Array | Centroids       | float        | (3)                  | Coordinates of the center of mass for a given enclosed **Feature |
-| Feature Attribute Array | Volumes         | float        | (1)                  | Volume of the enclosed **Feature**                                 |
-| Attribute Matrix**        | FaceFeatureData | Face Feature | N/A                  | Feature Attribute Matrix** of the selected _Face Labels          |
-
-## Created Objects
-
-| Kind                        | Default Name    | Type  | Comp Dims | Description                                                                                                                                                                                   |
-|-----------------------------|-----------------|-------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Feature Attribute Array | AspectRatios    | float | (2)                  | Ratio of axis lengths (b/a and c/a) for best-fit ellipsoid to enclosed **Feature**                                                                                                            |
-| Feature Attribute Array | AxisEulerAngles | float | (3)                  | Euler angles (in radians) necessary to rotate the sample reference frame to the reference frame of the enclosed **Feature**, where the principal axes of the best-fit ellipsoid are (X, Y, Z) |
-| Feature Attribute Array | AxisLengths     | float | (3)                  | Axis lengths (a, b, c) for best-fit ellipsoid to enclosed **Feature**                                                                                                                         |
-| Feature Attribute Array | Omega3s         | float | (1)                  | 3rd invariant of the second-order moment matrix for the enclosed **Feature**, does not assume a shape type (i.e., ellipsoid)                                                                  |
+% Auto generated parameter table will be inserted here
 
 ## References ##
 
@@ -76,6 +52,6 @@ Polycrystalline Microstructures, Part 1: Statistical Characterization Acta Mater
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

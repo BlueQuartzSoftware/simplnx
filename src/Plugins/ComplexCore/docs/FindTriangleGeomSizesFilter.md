@@ -23,26 +23,7 @@ unit element sizes for a set of **Features** (thus, the Find Feature Sizes would
 of **Features** in a **Triangle Geometry**, whereas this **Filter** is specialized to compute the enclosed volumes of **
 Features** in a surface mesh).
 
-## Parameters
-
-None
-
-## Required Geometry
-
-Triangle
-
-## Required Objects
-
-| Kind                     | Default Name | Type    | Comp Dims | Description                                                      |
-|--------------------------|--------------|---------|-------------|------------------------------------------------------------------|
-| Face Attribute Array | FaceLabels   | int32_t | (2)                  | Specifies which **Features** are on either side of each Face |
-
-## Created Objects
-
-| Kind                        | Default Name    | Type         | Comp Dims | Description                               |
-|-----------------------------|-----------------|--------------|-------------|-------------------------------------------|
-| Attribute Matrix**        | FaceFeatureData | Face Feature | N/A                  | Created **Feature Attribute Matrix** name |
-| Feature Attribute Array | Volumes         | float        | (1)                  | Volume of the enclosed **Feature**        |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -50,6 +31,6 @@ Triangle
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -13,27 +13,7 @@ equations and algorithms. The algorithm is the following:
 + Divide each component by the length
 + Store the length as the 4th component in the output array
 
-## Parameters
-
-| Name | Type | Description |
-|----------|------|-----------------------|
-| Delete Original Array | Boolean | Set this to TRUE/ON to have the original 3 component data array deleted at the end of the filter. |
-
-## Required Geometry
-
-Required Geometry Type -or- Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Attribute Array | Rodrigues Input Vector | float | (3)                  |             |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Attribute Array | Rodrigues Ouput Vector | float | (4)                  |             |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -43,6 +23,6 @@ List the names of the example pipelines where this filter is used.
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

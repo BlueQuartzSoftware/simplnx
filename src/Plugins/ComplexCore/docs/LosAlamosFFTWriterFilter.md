@@ -41,27 +41,7 @@ The output file:
     90.000 0.000 0.000 19 1 1 0 1 
        ..  
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------|-------------|
-| Output File | File Path | The output .txt file path |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | FeaturesIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| Cell Attribute Array | EulerAngles | float | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z) |
-| Cell Attribute Array | Phases | int32_t | (1) |  Specifies to which **Ensemble** each **Cell** belongs |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## References
 
@@ -73,6 +53,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

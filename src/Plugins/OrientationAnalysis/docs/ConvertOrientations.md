@@ -37,29 +37,7 @@ If the angles fall outside of this range the **original** Euler Input data **WIL
 
 While every effort has been made to ensure the correctness of each transformation algorithm, certain situations may arise where the initial precision of the input data is not large enough for the algorithm to calculate an answer that is intuitive. The user should be acutely aware of their input data and if their data may cause these situations to occur. Combinations of Euler angles close to 0, 180 and 360 can cause these issues to be hit. For instance an Euler angle of [180, 56, 360] is symmetrically the same as [180, 56, 0] and due to calculation errors and round off errors converting that Euler angle between representations may not give the numerical answer the user was anticipating but will give a symmetrically equivalent angle.
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------|-------------|
-| Input Orientation Type | Enumeration | Specifies the incoming orientation representation |
-| Output Orientation Type | Enumeration | Specifies to which orientation representation to convert the incoming data  |
-| Output Orientations | String | The name of the data array with the converted orientation representation |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Data Array | Input Orientations | float | See above table | Incoming orientation representation |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Data Array | *Output Orientations* | float | See above table | Converted orientation representation |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -76,6 +54,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

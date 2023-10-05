@@ -17,30 +17,7 @@ Iterations proceed for a fixed number of user-defined steps.  The final rigid bo
 
 ICP has a number of advantages, such as robustness to noise and no requirement that the two sets of points to be the same size.  However, peformance may suffer if the two sets of points are of siginficantly different size.
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|------|
-| Number of Iterations | int | Number if iterations for the ICP algorithm |
-| Apply Transform to Moving Geometry | bool | Whether to apply the computed transform to the moving **Vertex Geometry |
-
-## Required Geometry
-
-Vertex
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | None | N/A | N/A | Data Container holding the moving **Vertex Geometry |
-| Data Container | None | N/A | N/A | Data Container holding the target **Vertex Geometry |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-|   Attribute Matrix   | TransformAttributeMatrix | Generic | N/A | Attribute Matrix** that stores the computed transformation |
-| Attribute Array | Transform | float | (4, 4) | Computed transformation matrix |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -48,6 +25,6 @@ Vertex
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

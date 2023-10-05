@@ -32,59 +32,7 @@ Special operations occur for certain statistics if the supplied array is of type
 
 **Note**: If *Find Histogram* is on AND *Compute Statistics Per Feature/Ensemble* is on, then any features that have the exact same value throughout the entire feature will have its first histogram bin set to the total count of feature values.  All other bins will be 0.
 
-## Parameters
-
-| Name                                    | Type     | Description                                            |
-|-----------------------------------------|----------|--------------------------------------------------------|
-| Find Histogram                          | bool | Whether to compute the histogram of the input array                                                                                                               |
-| Histogram Min Value                     | double | Min cutoff value for histogram                                                                                                                                    |
-| Histogram Max Value                     | double | Max cutoff value for histogram                                                                                                                                    |
-| Number of Bins                          | int32_t | Number of bins in histogram                                                                                                                                       |
-| Use Full Range For Histogram            | bool | If true, ignore min and max and use min and max from array upon which histogram is computed                                                                       |
-| Find Length                             | bool | Whether to compute the length of the input array                                                                                                                  |
-| Find Minimum                            | bool | Whether to compute the minimum of the input array                                                                                                                 |
-| Find Maximum                            | bool | Whether to compute the maximum of the input array                                                                                                                 |
-| Find Mean                               | bool | Whether to compute the arithmetic mean of the input array                                                                                                         |
-| Find Median                             | bool | Whether to compute the median of the input array                                                                                                                  |
-| Find Mode                               | bool | Whether to compute the mode of the input array.  The input array may have multiple modes, so the modes are stored in a NeighborList.                              |
-| Find Standard Deviation                 | bool | Whether to compute the standard deviation of the input array                                                                                                      |
-| Find Summation                          | bool | Whether to compute the summation of the input array                                                                                                               |
-| Find Number of Unique Values            | bool | Whether to compute the number of unique values in the input array                                                                                                 |
-| Use Mask                                | bool | Whether to use a boolean mask array to ignore certain points flagged as *false* from the statistics                                                               |
-| Compute Statistics Per Feature/Ensemble | bool | Whether the statistics should be computed on a **Feature/Ensemble** basis                                                                                         |
-| Standardize Data                        | bool | Whether the input array should be standardized to have mean of 0 and unit variance; *Find Mean* and *Find Standard Deviation* must be selected to use this option |
-
-## Required Geometry
-
-None
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | None | Any | (1) | Input **Attribute Array** for which to compute statistics |
-| Attribute Array | None | int32_t | (1) | Specifies to which **Feature/Ensemble** each point in the input **Attribute Array** belongs, if *Compute Statistics Per Feature/Ensemble* is checked |
-| Attribute Array | Mask | bool | (1) | Specifies if the point is to be counted in the statistics, if *Use Mask* is checked |
-| Destination **Attribute Matrix | None | Any | N/A | Attribute Matrix** in which to store the computed statistics |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Attribute Array | Feature-Has-Data           | bool                            | (1)                  | Indicates, for each feature, whether or not the feature actually contains any data (only usable when *Compute Statistics Per Feature/Ensemble* is turned on). This array is especially useful to help determine whether or not the outputted statistics are actually valid or not for a given feature.                    |
-| Attribute Array | Histogram                  | uint64                          | (Number of Bins)     | Histogram of the input array, if *Find Histogram* is checked                                                                                                                                                                                                                                                              |
-| Attribute Array | Most Populated Bin         | uint64                          | (2)                  | Most populated bin from the histogram of the input array, if *Find Histogram* is checked.  First component is the bin index (0-based), second component is the number of values in the bin.                                                                                                                               |
-| Neighbor List**   | Modal Histogram Bin Ranges | float                           | (1)                  | Ranges, in physical units, of histogram bin(s) that contain mode value(s).  *Find Histogram*, *Find Modal Histogram Bin Ranges*, and *Find Mode* must all be checked.  The min/max values are stored in the neighbor list arrays from bin 0 - bin N (Example: [bin0min, bin0max, bin1min, bin1max, ... binNmin, binNmax]) |
-| Attribute Array | Length                     | int64_t                         | (1)                  | Length of the input array, if *Find Length* is checked                                                                                                                                                                                                                                                                    |
-| Attribute Array | Minimum                    | same as input **Attribute Array | (1)                  | Minimum of the input array, if *Find Minimum* is checked                                                                                                                                                                                                                                                                  |
-| Attribute Array | Maximum                    | same as input **Attribute Array | (1)                  | Maximum of the input array, if *Find Maximum* is checked                                                                                                                                                                                                                                                                  |
-| Attribute Array | Mean                       | double                          | (1)                  | Arithmetic mean of the input array, if *Find Mean* is checked                                                                                                                                                                                                                                                             |
-| Attribute Array | Median                     | double                          | (1)                  | Median of the input array, if *Find Median* is checked                                                                                                                                                                                                                                                                    |
-| Neighbor List**   | Mode                       | same as input **Attribute Array | (1)                  | Modes of the input array, if *Find Mode* is checked                                                                                                                                                                                                                                                                       |
-| Attribute Array | Standard Deviation         | double                          | (1)                  | Standard deviation of the input array, if *Find Standard Deviation* is checked                                                                                                                                                                                                                                            |
-| Attribute Array | Summation                  | double                          | (1)                  | Summation of the input array, if *Find Summation* is checked                                                                                                                                                                                                                                                              |
-| Attribute Array | Standardized               | double                          | (1)                  | Standardized version of the input array, if *Standardize Data* is checked                                                                                                                                                                                                                                                 |
-| Attribute Array | Number of Unique Values    | int32_t                         | (1)                  | The number of unique values in the input array, if *Find Number of Unique Values* is checked                                                                                                                                                                                                                              |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -92,6 +40,6 @@ None
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

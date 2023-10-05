@@ -11,27 +11,7 @@ This **Filter** will save images based on an array that represents grayscale, RG
 An example of a **Filter** that produces color data that can be used as input to this **Filter**
 is the {ref}`Generate IFP Colors <OrientationAnalysis/GenerateIPFColorsFilter:Description>` **Filter**, which will generate RGB values for each voxel in the volume.
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------| --------------|
-| Output File | String | Path to the output file to write. |
-| Plane | Enumeration | Selection for plane normal for writing the images (XY, XZ, or YZ) |
-| Index Offeset | Integer | Default=0, This is the starting index when writing mulitple images |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | None| uint8_t | (n) | Selected color data for output image. The data should represent grayscale, RGB or ARGB color values. The dimensionality of the array depends on the kind of image read: (1) for grayscale, (3) for RGB, and (4) for ARGB |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -44,6 +24,6 @@ None
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

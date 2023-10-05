@@ -30,27 +30,7 @@ Note that the input and the mask images must be of the same size.
 
  Wiki Examples:*All Examples* Apply a mask to an image
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| OutsideValue | double| Method to explicitly set the outside value of the mask. Defaults to 0 |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | None | N/A | (1)  | Array containing input image
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | None |  | (1)  | Array containing filtered image
+% Auto generated parameter table will be inserted here
 
 ## References
 

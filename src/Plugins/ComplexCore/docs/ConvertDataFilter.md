@@ -24,27 +24,7 @@ Down casting can have undefined behavior depending on the primitive types involv
 
 When converting data from signed values to unsigned values or vice-versa, there can also be undefined behavior. For example, if the user were to convert a signed 4 byte integer array to an unsigned 4 byte integer array and the input array has negative values, then the conversion rules are undefined and may differ from operating system to operating system.
 
-## Parameters
-
-| Name             | Type | Description |
-|------------------|------|--------------|
-| Scalar Type      | Enumeration | Convert to this data type |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array**  | None | Any | Any | Array to convert |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Any **Attribute Array | None | Any | Any | The converted array |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -52,6 +32,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

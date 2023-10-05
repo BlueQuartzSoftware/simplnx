@@ -21,26 +21,7 @@ See the DataStructure section of the reference manual for a complete hierarchy.
 
 When the _Copy to New Parent_ is toggled true a new parameter will appear. This parameter, _Copied Parent Group_, allows for the selected arrays to all be copied into whatever data container you place here.
 
-## Parameters
-
-None
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| DataObject | N/A | N/A | N/A | The list of DataObjects to copy. |
-| bool | false | N/A | N/A | Whether to copy the DataObjects to a new parent or not. |
-| DataGroup | N/A | N/A | N/A | The group to be used as the parent for all the DataObject copies if the Copy to New Parent option is selected |
-| string | _COPY | N/A | N/A | The suffix string to be appended to each copy's name |
-
-## Created Objects
-
-A deep copy of the DataObjects selected in the input.
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -48,6 +29,6 @@ A deep copy of the DataObjects selected in the input.
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

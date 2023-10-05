@@ -19,31 +19,7 @@ When the Gaussian kernel is small, this filter tends to run faster than itk::Rec
 - NeighborhoodOperator
 - RecursiveGaussianImageFilter
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Variance | float64 |  |
-| MaximumKernelWidth | uint32 | Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels. |
-| MaximumError | float64 |  |
-| UseImageSpacing | bool | Set/Get whether or not the filter will use the spacing of the input image in its calculations. Use On to take the image spacing information into account and to specify the Gaussian variance in real world units; use Off to ignore the image spacing and to specify the Gaussian variance in voxel units. Default is On. |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -51,6 +27,6 @@ Image Geometry
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

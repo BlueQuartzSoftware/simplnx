@@ -20,31 +20,7 @@ Reference: C. R. Maurer, Jr., R. Qi, and V. Raghavan, "A Linear Time Algorithm
  for Computing Exact Euclidean Distance Transforms of Binary Images in
  Arbitrary Dimensions", IEEE - Transactions on Pattern Analysis and Machine Intelligence, 25(2): 265-270, 2003.
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| InsideIsPositive | bool | Set if the inside represents positive values in the signed distance map. By convention ON pixels are treated as inside pixels. |
-| SquaredDistance | bool | Set if the distance should be squared. |
-| UseImageSpacing | bool | Set if image spacing should be used in computing distances. |
-| BackgroundValue | float64 | Set the background value which defines the object. Usually this value is = 0. |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching IntegerPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching IntegerPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -52,6 +28,6 @@ Image Geometry
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

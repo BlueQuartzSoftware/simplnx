@@ -129,9 +129,9 @@ For the basic code styling complex uses `clang-format`, the formatting file is i
 - Be sure to include the following at the bottom of all documentation files
 
 ```markdown
-## DREAM3DNX Help ##
+## DREAM3D-NX Help ##
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.
 ```
 
 ## Community

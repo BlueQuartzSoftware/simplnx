@@ -64,30 +64,7 @@ Some information about the phase is included in the header section of the file i
     0.266234 0.697020 4.434729 -34.750004 10.250000 -29.000000 639 1 43
     0.266234 0.697020 4.434729 -34.500004 10.250000 -29.000000 639 1 43
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Output File | File Path | The output .inl file path |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | FeatureIds | int32 | (1) | Specifies to which **Feature** each **Cell** belongs |
-| Cell Attribute Array | Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
-| Cell Attribute Array | EulerAngles | float32 | (3) | Three angles defining the orientation of the **Cell** in Bunge convention (Z-X-Z) |
-| Ensemble Attribute Array | CrystalStructures | uint32 | (1) | Enumeration representing the crystal structure for each Ensemble |
-| Ensemble Attribute Array | Material Names | String | (1)  | Name of each Ensemble |
-| Ensemble Attribute Array | Number of Features | int32 | (1) | The number of **Features** per Ensemble |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -97,6 +74,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

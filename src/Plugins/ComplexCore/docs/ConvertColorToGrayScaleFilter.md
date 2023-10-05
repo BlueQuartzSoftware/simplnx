@@ -22,31 +22,7 @@ The following are some additional accepted grayscale conversions
 + RMY Greyscale: Red: 0.5 Green: 0.419 Blue: 0.081
 + (YIQ/NTSC): Red: 0.299 Green: 0.587 Blue: 0.114
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|------|
-| Flattening Method | Enumeration | Which method to use when flattening the RGB array |
-| Luminosity Triplet | 3xFloats | Only used if Luminosity is selected as conversion method |
-| Color Channel | 1 Int | Only needed if the Color Channel conversion method is selected |
-| Output Array Prefix | String | This prefix will be added to each array name that is selected for conversion to form the new array name |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Element Attribute Array(s) | ImageData | uint8_t | (3) or (4) | RGB or RGBA values |
-
-## Created Objects
-
-| Kind | Default Name | Type | Component Dimensions (dimension, size) | Description |
-|------|--------------|-----|-----|-----------------------------------|
-| Element Attribute Array | GrayScale Data | uint8_t | (1) | Grayscale values |
-| AttributeMatrix (Optional)  |                |         |     |                  |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -54,6 +30,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

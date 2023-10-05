@@ -21,27 +21,7 @@ This **Filter** has the effect of removing any **Triangles** that only contain *
 
 It is unknown until runtime how the **Geometry** will be changed by removing certain **Vertices** and **Triangles**.
 
-## Parameters
-
-None
-
-## Required Geometry #
-
-Triangle
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Vertex Data Array | NodeTypes | int8 | (1) | Specifies the type of node in the **Geometry |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Geometry | None | Triangle | N/A | The new Triangle Geometry |
-| Attribute Matrix | Vertex Data | N/A | N/A | Created vertex data AttributeMatrix name |
-| Attribute Matrix | Face Data | N/A | N/A | Created face data AttributeMatrix name |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 

@@ -36,28 +36,7 @@ This **Filter** allows the user to enter basic crystallographic information abou
 | BoundaryPhase | 4 |
 | UnknownPhaseType | 999 |
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Ensemble | Create Ensemble Info | The created Ensemble crystal structures, phase types, and phase names |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-None
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-|   Attribute Matrix   | EnsembleAttributeMatrix | Ensemble | N/A | Created Ensemble Attribute Matrix** name |
-| Ensemble Attribute Array | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each Ensemble |
-| Ensemble Attribute Array | PhaseTypes        | uint32_t | (1) | Enumeration representing the phase type for each Ensemble |
-| String Data Array**        | PhaseNames        | String | (1)   | The phase names for each Ensemble |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -67,6 +46,6 @@ Import_ASCII
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

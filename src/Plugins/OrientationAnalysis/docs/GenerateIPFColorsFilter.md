@@ -21,31 +21,7 @@ This **Filter** will generate *inverse pole figure* (IPF) colors for cubic, hexa
 
 ![Example Data Set](Images/IPFColor_1.png)
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| Reference Direction | float (3x) | The reference axis with respect to compute the IPF colors |
-| Apply to Good Elements Only (Bad Elements Will Be Black) | bool | Whether to assign a black color to "bad" **Elements |
-
-## Required Geometry
-
-Not Applicable
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Element Data Array | Euler Angles | float | (3)  | Three angles defining the orientation of the **Element** in Bunge convention (Z-X-Z) |
-| Element Data Array | Phases | int32 | (1) | Phase Id specifying the phase of the **Element |
-| Element Data Array | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if *Apply to Good Elements Only (Bad Elements Will Be Black)* is checked |
-| Ensemble Data Array | Crystal Structures | uint32 | (1) | Enumeration representing the crystal structure for each Ensemble |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Element Data Array | IPFColor |  uint8 | (3) | The RGB colors encoded as unsigned chars for each **Element |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -68,6 +44,6 @@ Not Applicable
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

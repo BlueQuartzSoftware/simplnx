@@ -28,30 +28,7 @@ This class was contributed to the Insight Journal by Gaetan Lehmann. The origina
 - StandardDeviationProjectionImageFilter
 - SumProjectionImageFilter
 
-## Parameters
-
-| Name | Type | Description |
-|------------|------| --------------------------------- |
-| ProjectionDimension | uint32 | The index of the projection dimension |
-| ForegroundValue | float64 | Set the value in the image to consider as "foreground". Defaults to maximum value of PixelType. Subclasses may alias this to DilateValue or ErodeValue. |
-| BackgroundValue | float64 | Set the value used as "background". Any pixel value which is not DilateValue is considered background. BackgroundValue is used for defining boundary conditions. Defaults to NumericTraits<PixelType>::NonpositiveMin() . |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -59,6 +36,6 @@ Image Geometry
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

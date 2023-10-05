@@ -59,35 +59,7 @@ One of the arrays to come out of the algorithm is the "Node Type" vertex array. 
 | 13 | Node that is on the exterior of the mesh and is a triple line  |
 | 14 | Node that is on the exterior of the mesh and is a quadruple point   |
 
-## Parameters
-
-| Human Name | Description | Parameter Type |
-|--------------|-------------|----------------|
-| Attempt to Fix Problem Voxels | See help page. | complex.BoolParameter |
-| Generate Triple Lines | Experimental feature. May not work. Keep this off. | complex.BoolParameter |
-
-## Required Geometry
-
-Image/RectGrid
-
-## Required Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Cell Attribute Array | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| Any **Cell Attribute Array |  None | Any | Any | Specifies which **Cell Attribute Arrays** to transfer to the created **Triangle Geometry |
-
-## Created Objects
-
-| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
-|---------------------------|--------------|----------|--------|---------------------------------------------|
-| Data Container | TriangleDataContainer | N/A | N/A | Created **Data Container** name with a **Triangle Geometry |
-|   Attribute Matrix   | VertexData | Vertex | N/A | Created **Vertex Attribute Matrix** name  |
-| Vertex Attribute Array | NodeTypes | int8_t | (1) | Specifies the type of node in the **Geometry |
-|   Attribute Matrix   | FaceData | Face | N/A | Created **Face Attribute Matrix** name  |
-| Face Attribute Array | FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each Face |
-|   Attribute Matrix   | FaceFeatureData | Face Feature | N/A | Feature Attribute Matrix** of the created *Face Labels* |
-| Any **Face Attribute Array | None | Any | Any | The set of transferred **Cell Attribute Arrays |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -97,6 +69,6 @@ Image/RectGrid
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.
