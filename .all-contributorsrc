@@ -9,9 +9,20 @@
   "imageSize": 100,
   "commit": false,
   "contributorsSortAlphabetically": false,
-  "contributors": [],
+  "contributors": [
+    {
+      "login": "nyoungbq",
+      "name": "Nathan Young",
+      "avatar_url": "https://avatars.githubusercontent.com/u/109472155?v=4",
+      "profile": "https://github.com/nyoungbq",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
   "contributorsPerLine": 7,
   "linkToUsage": true,
   "skipCi": true,
-  "commitConvention": "angular"
+  "commitConvention": "angular",
+  "commitType": "docs"
 }
