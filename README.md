@@ -99,6 +99,7 @@ Huge thanks go to these wonderful people ([emoji key](https://allcontributors.or
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/john-stone-ics"><img src="https://avatars.githubusercontent.com/u/18195504?v=4?s=100" width="100px;" alt="john-stone-ics"/><br /><sub><b>john-stone-ics</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=john-stone-ics" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/VKUDRI"><img src="https://avatars.githubusercontent.com/u/90397883?v=4?s=100" width="100px;" alt="VKUDRI"/><br /><sub><b>VKUDRI</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=VKUDRI" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
