@@ -7,30 +7,33 @@
 - [ ] Documentation copied from SIMPL Repo and updated (if necessary)
 - [ ] Parameter argument variables are `k_CamelCase_Key`
 - [ ] Parameter argument strings are `lower_snake_case`
-```
+
+```cpp
 static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 ```
 
-## Misc. Code Style requirements
+## Misc. Code Style requirements ##
 
 - [ ] Filters should have both the Filter class and Algorithm class for anything beyond trivial needs
 
 ## Converting Types ##
 
-+ QString => std::string
-+ QVector<> => std::vector<>
-+ QMap<> => std::map<>
-+ QByteArray => std::array<int8> or std::vector<int8>
+- `QString => std::string`
+- `QVector<> => std::vector<>`
+- `QMap<> => std::map<>`
+- `QByteArray => std::array<int8> or std::vector<int8>`
 
-## Converting `setErrorCondition` from SIMPL to COMPLEX##
+## Converting `setErrorCondition` from SIMPL to COMPLEX ##
 
 SIMPL
-```c++
+
+```cpp
     setErrorCondition(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file");
 ```
 
 COMPLEX
-```c++
+
+```cpp
     Result<> result =  MakeErrorResult(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file")
 ```
 
@@ -127,7 +130,7 @@ code such as `vertex[index]` to get/set a value but the code `vertex = i` to mov
 
 If you need to have the user select a Geometry then you should use a `DataPathSelectionParameter`.
 
-```c++
+```cpp
   params.insert(std::make_unique<DataPathSelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry to Sample", "", DataPath{}));
 ```
 
@@ -149,13 +152,13 @@ of using ParallelData3DAlgorithm.
 
 ## Constants for Pi and Others ##
 
-```c++
+```cpp
   #include "complex/Common/Numbers.hpp"
-``` 
+```
 
 and use it this way:
 
-```c++
+```cpp
   double foo = complex::numbers::k_180OverPi * 232.0;
 ```
 
@@ -186,18 +189,18 @@ a feature attribute matrix then the following filters have examples.
 - TriangleNormalFilter
 - CalculateFeatureSizesFilter
 
-## Replace EXECUTE_FUNCTION_TEMPLATE
+## Replace EXECUTE_FUNCTION_TEMPLATE ##
 
 You have code that does this:
 
-```
+```cpp
 EXECUTE_FUNCTION_TEMPLATE(this, Detail::ExecuteTemplate, m_InArrayPtr.lock(), this, m_InArrayPtr.lock());
 ```
 
 and now you are porting that to `complex`. The old `Detail::ExecuteTemplate` needs to be converted into a "struct" based
 functor like the following:
 
-```
+```cpp
 struct ExecuteTemplate
 {
 
@@ -210,7 +213,7 @@ struct ExecuteTemplate
 
 then you replace the macro with the following template function:
 
-```
+```cpp
   ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray.getDataType(), [ARGUMENTS GO HERE], m_ShouldCancel, m_MessageHandler);
 ```
 
@@ -219,11 +222,11 @@ your functor implementation.
 
 ## Porting SIMPL Filter ##
 
-+ Create Filter class in "PLUGIN_NAME/src/PLUGIN_NAME/Filters/xxxxFilter[.hpp|.cpp]"
-+ Update Plugin's top level CMakeLists.txt to include the filter
-+ Create Algorithm class in "PLUGIN_NAME/src/PLUGIN_NAME/Filters/Algorithms/xxxxFilter[.hpp|.cpp]"
-+ Update Plugin's top level CMakeLists.txt to include the algorithm
-+ Ensure the UUID is the proper UUID from the know mappings file.
+- Create Filter class in "PLUGIN_NAME/src/PLUGIN_NAME/Filters/xxxxFilter[.hpp|.cpp]"
+- Update Plugin's top level CMakeLists.txt to include the filter
+- Create Algorithm class in "PLUGIN_NAME/src/PLUGIN_NAME/Filters/Algorithms/xxxxFilter[.hpp|.cpp]"
+- Update Plugin's top level CMakeLists.txt to include the algorithm
+- Ensure the UUID is the proper UUID from the know mappings file.
 
 ### Parameters ###
 
@@ -231,15 +234,15 @@ Use proper grouping in the parameters to help the User Interface.
 
 There are potentially 3 sections of parameters:
 
-```
+```cpp
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 ```
 
-```
+```cpp
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
 ```
 
-```
+```cpp
   params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
 ```
 
@@ -247,5 +250,4 @@ these should be used as needed by the filter.
 
 ## Processing a Geometry In Place ##
 
-Sometimes a filter needs allow the user to process it's geometry "in place" in order to ease the number of filters that are needed to remove temporary DataObjecsts. If your filter needs this kind of capability, then take a look at the "CropImageGeometry" or "RotateSampleRefFrame" filters
-
+Sometimes a filter needs allow the user to process it's geometry "in place" in order to ease the number of filters that are needed to remove temporary DataObjecsts. If your filter needs this kind of capability, then take a look at the "CropImageGeometry" or "RotateSampleRefFrame" filters.
