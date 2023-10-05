@@ -22,6 +22,7 @@ namespace
 const fs::path k_TestInput = fs::path(unit_test::k_BinaryDir.view()) / "ImportCSVDataTest" / "Input.txt";
 constexpr int32 k_InvalidArgumentErrorCode = -100;
 constexpr int32 k_OverflowErrorCode = -101;
+constexpr int32 k_BlankLineErrorCode = -119;
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -319,4 +320,103 @@ TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 4): Invalid filter execution -
   TestCase_TestPrimitives_Error<uint64>(v, k_InvalidArgumentErrorCode);
   TestCase_TestPrimitives_Error<float32>(v, k_InvalidArgumentErrorCode);
   TestCase_TestPrimitives_Error<float64>(v, k_InvalidArgumentErrorCode);
+}
+
+TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 4): Invalid filter execution - Blank Lines")
+{
+  // Create the parent directory path
+  fs::create_directories(k_TestInput.parent_path());
+
+  // First line blank tests
+  std::vector<std::string> v = {"", std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
+  TestCase_TestPrimitives_Error<int8>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<int16>::min()), std::to_string(std::numeric_limits<int16>::max())};
+  TestCase_TestPrimitives_Error<int16>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<int32>::min()), std::to_string(std::numeric_limits<int32>::max())};
+  TestCase_TestPrimitives_Error<int32>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<int64>::min()), std::to_string(std::numeric_limits<int64>::max())};
+  TestCase_TestPrimitives_Error<int64>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<uint8>::min()), std::to_string(std::numeric_limits<uint8>::max())};
+  TestCase_TestPrimitives_Error<uint8>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<uint16>::min()), std::to_string(std::numeric_limits<uint16>::max())};
+  TestCase_TestPrimitives_Error<uint16>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<uint32>::min()), std::to_string(std::numeric_limits<uint32>::max())};
+  TestCase_TestPrimitives_Error<uint32>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<uint64>::min()), std::to_string(std::numeric_limits<uint64>::max())};
+  TestCase_TestPrimitives_Error<uint64>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<float32>::min()), std::to_string(std::numeric_limits<float32>::max())};
+  TestCase_TestPrimitives_Error<float32>(v, k_BlankLineErrorCode);
+
+  v = {"", std::to_string(std::numeric_limits<float64>::min()), std::to_string(std::numeric_limits<float64>::max())};
+  TestCase_TestPrimitives_Error<float64>(v, k_BlankLineErrorCode);
+
+  // Middle line blank tests
+  v = {std::to_string(std::numeric_limits<int8>::min()), "", std::to_string(std::numeric_limits<int8>::max())};
+  TestCase_TestPrimitives_Error<int8>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<int16>::min()), "", std::to_string(std::numeric_limits<int16>::max())};
+  TestCase_TestPrimitives_Error<int16>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<int32>::min()), "", std::to_string(std::numeric_limits<int32>::max())};
+  TestCase_TestPrimitives_Error<int32>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<int64>::min()), "", std::to_string(std::numeric_limits<int64>::max())};
+  TestCase_TestPrimitives_Error<int64>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<uint8>::min()), "", std::to_string(std::numeric_limits<uint8>::max())};
+  TestCase_TestPrimitives_Error<uint8>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<uint16>::min()), "", std::to_string(std::numeric_limits<uint16>::max())};
+  TestCase_TestPrimitives_Error<uint16>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<uint32>::min()), "", std::to_string(std::numeric_limits<uint32>::max())};
+  TestCase_TestPrimitives_Error<uint32>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<uint64>::min()), "", std::to_string(std::numeric_limits<uint64>::max())};
+  TestCase_TestPrimitives_Error<uint64>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<float32>::min()), "", std::to_string(std::numeric_limits<float32>::max())};
+  TestCase_TestPrimitives_Error<float32>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<float64>::min()), "", std::to_string(std::numeric_limits<float64>::max())};
+  TestCase_TestPrimitives_Error<float64>(v, k_BlankLineErrorCode);
+
+  // End line blank tests
+  v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max()), ""};
+  TestCase_TestPrimitives_Error<int8>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<int16>::min()), std::to_string(std::numeric_limits<int16>::max()), ""};
+  TestCase_TestPrimitives_Error<int16>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<int32>::min()), std::to_string(std::numeric_limits<int32>::max()), ""};
+  TestCase_TestPrimitives_Error<int32>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<int64>::min()), std::to_string(std::numeric_limits<int64>::max()), ""};
+  TestCase_TestPrimitives_Error<int64>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<uint8>::min()), std::to_string(std::numeric_limits<uint8>::max()), ""};
+  TestCase_TestPrimitives_Error<uint8>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<uint16>::min()), std::to_string(std::numeric_limits<uint16>::max()), ""};
+  TestCase_TestPrimitives_Error<uint16>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<uint32>::min()), std::to_string(std::numeric_limits<uint32>::max()), ""};
+  TestCase_TestPrimitives_Error<uint32>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<uint64>::min()), std::to_string(std::numeric_limits<uint64>::max()), ""};
+  TestCase_TestPrimitives_Error<uint64>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<float32>::min()), std::to_string(std::numeric_limits<float32>::max()), ""};
+  TestCase_TestPrimitives_Error<float32>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<float64>::min()), std::to_string(std::numeric_limits<float64>::max()), ""};
+  TestCase_TestPrimitives_Error<float64>(v, k_BlankLineErrorCode);
 }
