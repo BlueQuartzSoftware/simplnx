@@ -59,7 +59,6 @@ enum class IssueCodes
   NEW_DG_EXISTS = -114,
   CANNOT_SKIP_TO_LINE = -115,
   EMPTY_NAMES = -116,
-  START_LINE_LARGER_THAN_TOTAL = -117,
   EMPTY_LINE = -119,
   HEADER_LINE_OUT_OF_RANGE = -120,
   START_IMPORT_ROW_OUT_OF_RANGE = -121,
@@ -86,11 +85,6 @@ Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const Dat
       {
         return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::DUPLICATE_NAMES),
                                                fmt::format("The header name \"{}\" matches an array name that already exists in the selected container.", headerName))};
-      }
-      if(StringUtilities::contains(headerName, '&') || StringUtilities::contains(headerName, ':') || StringUtilities::contains(headerName, '/') || StringUtilities::contains(headerName, '\\'))
-      {
-        return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::ILLEGAL_NAMES),
-                                               fmt::format("The header name \"{}\" contains a character that will cause problems. Do Not use '&',':', '/' or '\\' in the header names.", headerName))};
       }
     }
   }
@@ -531,26 +525,29 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_MASK_COUNT), errMsg), {}};
   }
 
-  if(headerMode == CSVImporterData::HeaderMode::CUSTOM)
+  for(int i = 0; i < headers.size(); i++)
   {
-    for(int i = 0; i < csvImporterData.customHeaders.size(); i++)
+    const auto& headerName = headers[i];
+    if(headerName.empty())
     {
-      const auto& customHeader = csvImporterData.customHeaders[i];
-      if(customHeader.empty())
-      {
-        std::string errMsg = fmt::format("The header for column #{} is empty.  Please fill in a header for column #{}.", i + 1, i + 1);
-        return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_NAMES), errMsg), {}};
-      }
+      std::string errMsg = fmt::format("The header for column #{} is empty.  Please fill in a header for column #{}.", i + 1, i + 1);
+      return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_NAMES), errMsg), {}};
+    }
 
-      for(int j = 0; j < csvImporterData.customHeaders.size(); j++)
-      {
-        std::string otherHeader = csvImporterData.customHeaders[j];
+    if(StringUtilities::contains(headerName, '&') || StringUtilities::contains(headerName, ':') || StringUtilities::contains(headerName, '/') || StringUtilities::contains(headerName, '\\'))
+    {
+      return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::ILLEGAL_NAMES),
+                                             fmt::format("The header name \"{}\" contains a character that will cause problems. Do Not use '&',':', '/' or '\\' in the header names.", headerName))};
+    }
 
-        if(i != j && !customHeader.empty() && !otherHeader.empty() && customHeader == otherHeader)
-        {
-          std::string errMsg = fmt::format("Header '{}' (column #{}) and header '{}' (column #{}) have the same name.  Headers may not have duplicate names.", customHeader, i + 1, otherHeader, j + 1);
-          return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::DUPLICATE_NAMES), errMsg), {}};
-        }
+    for(int j = 0; j < headers.size(); j++)
+    {
+      std::string otherHeaderName = headers[j];
+
+      if(i != j && !headerName.empty() && !otherHeaderName.empty() && headerName == otherHeaderName)
+      {
+        std::string errMsg = fmt::format("Header '{}' (column #{}) and header '{}' (column #{}) have the same name.  Headers may not have duplicate names.", headerName, i + 1, otherHeaderName, j + 1);
+        return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::DUPLICATE_NAMES), errMsg), {}};
       }
     }
   }
