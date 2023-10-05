@@ -23,24 +23,18 @@ const fs::path k_TestInput = fs::path(unit_test::k_BinaryDir.view()) / "ImportCS
 constexpr int32 k_InvalidArgumentErrorCode = -100;
 constexpr int32 k_OverflowErrorCode = -101;
 constexpr int32 k_BlankLineErrorCode = -119;
-
 constexpr int32 k_EmptyFile = -100;
 constexpr int32 k_InconsistentCols = -104;
 constexpr int32 k_DuplicateNames = -105;
 constexpr int32 k_InvalidArrayType = -106;
 constexpr int32 k_IllegalNames = -107;
-constexpr int32 k_FileNotOpen = -108;
 constexpr int32 k_IncorrectDataTypeCount = -109;
 constexpr int32 k_IncorrectMaskCount = -110;
 constexpr int32 k_IncorrectTuples = -113;
-constexpr int32 k_NewDGExists = -114;
-constexpr int32 k_CannotSkipToLine = -115;
 constexpr int32 k_EmptyNames = -116;
-constexpr int32 k_EmptyLine = -119;
 constexpr int32 k_HeaderLineOutOfRange = -120;
 constexpr int32 k_StartImportRowOutOfRange = -121;
 constexpr int32 k_EmptyHeaders = -122;
-constexpr int32 k_IgnoredTupleDims = -200;
 constexpr int32 k_FileDoesNotExist = -300;
 } // namespace
 
