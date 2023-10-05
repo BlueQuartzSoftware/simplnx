@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-At complex, we are committed to fostering an inclusive, welcoming, and respectful community for everyone. Everyone is entitled to a harassment-free experience regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, or sexual identity and orientation. This Code of Conduct outlines our expectations for community behavior and the procedures for reporting and handling unacceptable conduct.
+At BlueQuartz Software, we are committed to fostering an inclusive, welcoming, and respectful community for everyone. Everyone is entitled to a harassment-free experience regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, or sexual identity and orientation. This Code of Conduct outlines our expectations for community behavior and the procedures for reporting and handling unacceptable conduct.
 
 ## 2. Expected Behavior
 
