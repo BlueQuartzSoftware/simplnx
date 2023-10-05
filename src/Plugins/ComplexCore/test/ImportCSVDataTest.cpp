@@ -44,28 +44,7 @@ void CreateTestDataFile(nonstd::span<std::string> colValues, const std::string& 
 }
 
 // -----------------------------------------------------------------------------
-DataStructure createDataStructure(const std::string& dummyGroupName)
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  DataStructure dataStructure;
-
-  // Create a dummy group so that Existing Group parameter doesn't error out.  This should be removed once
-  // disabled linked parameters are no longer automatically validated!
-  {
-    CreateDataGroup filter;
-    Arguments args;
-
-    args.insertOrAssign(CreateDataGroup::k_DataObjectPath, std::make_any<DataPath>(DataPath({dummyGroupName})));
-
-    auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
-  }
-
-  return dataStructure;
-}
-
-// -----------------------------------------------------------------------------
-Arguments createArguments(const std::string& arrayName, DataType dataType, bool skip, nonstd::span<std::string> values, const std::string& newGroupName, const std::string& dummyGroupName)
+Arguments createArguments(const std::string& arrayName, DataType dataType, bool skip, nonstd::span<std::string> values, const std::string& newGroupName)
 {
   Arguments args;
 
@@ -83,7 +62,6 @@ Arguments createArguments(const std::string& arrayName, DataType dataType, bool 
   args.insertOrAssign(ImportCSVDataFilter::k_CSVImporterData_Key, std::make_any<CSVImporterData>(data));
   args.insertOrAssign(ImportCSVDataFilter::k_UseExistingGroup_Key, std::make_any<bool>(false));
   args.insertOrAssign(ImportCSVDataFilter::k_CreatedDataGroup_Key, std::make_any<DataPath>(DataPath({newGroupName})));
-  args.insertOrAssign(ImportCSVDataFilter::k_SelectedDataGroup_Key, std::make_any<DataPath>(DataPath({dummyGroupName})));
 
   return args;
 }
@@ -96,14 +74,13 @@ void TestCase_TestPrimitives(nonstd::span<std::string> values)
   INFO(fmt::format("Values = {}", values))
 
   std::string newGroupName = "New Group";
-  std::string dummyGroupName = "Dummy Group";
 
   std::string arrayName = "Array";
   DataPath arrayPath = DataPath({newGroupName, arrayName});
 
   ImportCSVDataFilter filter;
-  DataStructure dataStructure = createDataStructure(dummyGroupName);
-  Arguments args = createArguments(arrayName, GetDataType<T>(), false, values, newGroupName, dummyGroupName);
+  DataStructure dataStructure;
+  Arguments args = createArguments(arrayName, GetDataType<T>(), false, values, newGroupName);
 
   // Create the test input data file
   CreateTestDataFile(values, arrayName);
@@ -139,14 +116,13 @@ void TestCase_TestPrimitives_Error(nonstd::span<std::string> values, int32 expec
   INFO(fmt::format("Values = {}", values))
 
   std::string newGroupName = "New Group";
-  std::string dummyGroupName = "Dummy Group";
 
   std::string arrayName = "Array";
   DataPath arrayPath = DataPath({newGroupName, arrayName});
 
   ImportCSVDataFilter filter;
-  DataStructure dataStructure = createDataStructure(dummyGroupName);
-  Arguments args = createArguments(arrayName, GetDataType<T>(), false, values, newGroupName, dummyGroupName);
+  DataStructure dataStructure;
+  Arguments args = createArguments(arrayName, GetDataType<T>(), false, values, newGroupName);
 
   // Create the test input data file
   fs::create_directories(k_TestInput.parent_path());
@@ -202,15 +178,14 @@ TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 1): Valid filter execution")
 TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 2): Valid filter execution - Skipped Array")
 {
   std::string newGroupName = "New Group";
-  std::string dummyGroupName = "Dummy Group";
 
   std::string arrayName = "Array";
   DataPath arrayPath = DataPath({newGroupName, arrayName});
 
   ImportCSVDataFilter filter;
-  DataStructure dataStructure = createDataStructure(dummyGroupName);
+  DataStructure dataStructure;
   std::vector<std::string> values = {"0"};
-  Arguments args = createArguments(arrayName, DataType::int8, true, values, newGroupName, dummyGroupName);
+  Arguments args = createArguments(arrayName, DataType::int8, true, values, newGroupName);
 
   // Create the test input data file
   CreateTestDataFile(values, arrayName);
