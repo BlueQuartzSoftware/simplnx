@@ -77,10 +77,10 @@ Parameters FindFeatureClusteringFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellEnsembleAttributeMatrixName_Key, "Cell Ensemble Attribute Matrix",
                                                                     "The path to the cell ensemble attribute matrix where the RDF and RDF min and max distance arrays will be stored", DataPath{}));
-  params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_ClusteringListArrayName_Key, "Clustering List", "Distance of each Features's centroid to ever other Features's centroid", "ClusteringList"));
-  params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Created Cell Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_RDFArrayName_Key, "Radial Distribution Function", "A histogram of the normalized frequency at each bin", "RDF"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MaxMinArrayName_Key, "Max and Min Separation Distances", "The max and min distance found between Features", "RDFMaxMinDistances"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
