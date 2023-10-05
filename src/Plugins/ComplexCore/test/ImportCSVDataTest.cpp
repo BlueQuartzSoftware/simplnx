@@ -376,7 +376,7 @@ TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 4): Invalid filter execution -
   TestCase_TestPrimitives_Error<float64>(v, k_InvalidArgumentErrorCode);
 }
 
-TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 4): Invalid filter execution - Invalid CSVImporterData values")
+TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 5): Invalid filter execution - Invalid CSVImporterData values")
 {
   std::vector<std::string> v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
   fs::create_directories(k_TestInput.parent_path());
@@ -470,7 +470,7 @@ TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 4): Invalid filter execution -
                                   k_InconsistentCols);
 }
 
-TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 4): Invalid filter execution - Blank Lines")
+TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 6): Invalid filter execution - Blank Lines")
 {
   // Create the parent directory path
   fs::create_directories(k_TestInput.parent_path());
