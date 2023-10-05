@@ -91,6 +91,7 @@ Huge thanks go to these wonderful people ([emoji key](https://allcontributors.or
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="http://www.bluequartz.net"><img src="https://avatars.githubusercontent.com/u/5182396?v=4?s=100" width="100px;" alt="Michael Jackson"/><br /><sub><b>Michael Jackson</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=imikejackson" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/JDuffeyBQ"><img src="https://avatars.githubusercontent.com/u/43142415?v=4?s=100" width="100px;" alt="Jared Duffey"/><br /><sub><b>Jared Duffey</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=JDuffeyBQ" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/joeykleingers"><img src="https://avatars.githubusercontent.com/u/6197698?v=4?s=100" width="100px;" alt="Joey Kleingers"/><br /><sub><b>Joey Kleingers</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=joeykleingers" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
