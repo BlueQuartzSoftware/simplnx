@@ -93,6 +93,7 @@ Huge thanks go to these wonderful people ([emoji key](https://allcontributors.or
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/JDuffeyBQ"><img src="https://avatars.githubusercontent.com/u/43142415?v=4?s=100" width="100px;" alt="Jared Duffey"/><br /><sub><b>Jared Duffey</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=JDuffeyBQ" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/joeykleingers"><img src="https://avatars.githubusercontent.com/u/6197698?v=4?s=100" width="100px;" alt="Joey Kleingers"/><br /><sub><b>Joey Kleingers</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=joeykleingers" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/jmarquisbq"><img src="https://avatars.githubusercontent.com/u/83971431?v=4?s=100" width="100px;" alt="Jessica Marquis"/><br /><sub><b>Jessica Marquis</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=jmarquisbq" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mmarineBlueQuartz"><img src="https://avatars.githubusercontent.com/u/22151460?v=4?s=100" width="100px;" alt="Matthew Marine"/><br /><sub><b>Matthew Marine</b></sub></a><br /><a href="https://github.com/BlueQuartzSoftware/complex/commits?author=mmarineBlueQuartz" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
