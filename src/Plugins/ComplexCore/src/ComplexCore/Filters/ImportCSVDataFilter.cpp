@@ -277,7 +277,7 @@ bool skipNumberOfLines(std::fstream& inStream, usize numberOfLines)
 std::string tupleDimsToString(const std::vector<usize>& tupleDims)
 {
   std::string tupleDimsStr;
-  for(size_t i = 0; i < tupleDims.size(); ++i)
+  for(usize i = 0; i < tupleDims.size(); ++i)
   {
     tupleDimsStr += std::to_string(tupleDims[i]);
     if(i != tupleDims.size() - 1)
@@ -464,7 +464,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
     headers = csvImporterData.customHeaders;
   }
 
-  size_t totalLines = s_HeaderCache[s_InstanceId].TotalLines;
+  usize totalLines = s_HeaderCache[s_InstanceId].TotalLines;
 
   // Check that we have a valid start import row
   if(csvImporterData.startImportRow == 0)
@@ -553,13 +553,19 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   }
 
   // Check that we have a valid tuple count
-  size_t totalImportedLines = totalLines - csvImporterData.startImportRow + 1;
-  size_t tupleTotal = std::accumulate(csvImporterData.tupleDims.begin(), csvImporterData.tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
-  if(tupleTotal > totalImportedLines)
+  usize totalImportedLines = totalLines - csvImporterData.startImportRow + 1;
+  usize tupleTotal = std::accumulate(csvImporterData.tupleDims.begin(), csvImporterData.tupleDims.end(), static_cast<usize>(1), std::multiplies<usize>());
+  if(tupleTotal == 0)
   {
     std::string tupleDimsStr = tupleDimsToString(csvImporterData.tupleDims);
-    std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr, tupleTotal,
-                                     totalImportedLines);
+    std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has 0 total tuples.  At least 1 tuple is required.", tupleDimsStr, tupleTotal, totalImportedLines);
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
+  }
+  else if(tupleTotal > totalImportedLines)
+  {
+    std::string tupleDimsStr = tupleDimsToString(csvImporterData.tupleDims);
+    std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} total tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr,
+                                     tupleTotal, totalImportedLines);
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
   }
 

@@ -457,6 +457,7 @@ TEST_CASE("ComplexCore::ImportCSVDataFilter (Case 5): Invalid filter execution -
   fs::remove(tmp_file);
 
   // Incorrect Tuple Dimensions
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, CSVImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {0}, v, k_IncorrectTuples);
   TestCase_TestImporterData_Error(k_TestInput.string(), 2, CSVImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {30}, v, k_IncorrectTuples);
   TestCase_TestImporterData_Error(k_TestInput.string(), 2, CSVImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {30, 2}, v, k_IncorrectTuples);
   TestCase_TestImporterData_Error(k_TestInput.string(), 2, CSVImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {30, 5, 7}, v, k_IncorrectTuples);
