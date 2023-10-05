@@ -22,8 +22,8 @@ For other inquiries contact BlueQuartz Software company as follows:
 
 - Company Website: [www.bluequartz.net](http://www.bluequartz.net/)
 - General contact: [info@bluequartz.net](mailto:info@bluequartz.net)
-- Employment inquiries: [info@bluequartz.net](mailto:jobs@bluequartz.net)
-- Invoices: [info@bluequartz.net](mailto:invoices@bluequartz.net)
+- Employment inquiries: [jobs@bluequartz.net](mailto:jobs@bluequartz.net)
+- Invoices: [invoices@bluequartz.net](mailto:invoices@bluequartz.net)
 
 ## Building From Source ##
 
