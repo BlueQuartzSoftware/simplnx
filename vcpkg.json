@@ -73,7 +73,8 @@
       "description": "Ebsd data processing",
       "dependencies": [
         {
-          "name": "ebsdlib"
+          "name": "ebsdlib",
+          "version>=": "1.0.26"
         }
       ]
     },
