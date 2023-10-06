@@ -1,7 +1,6 @@
 {
   "isDisabled": false,
-  "name": "ReadCTF.d3dpipeline",
-  "pinnedParams": [],
+  "name": "Untitled Pipeline",
   "pipeline": [
     {
       "args": {
@@ -12,9 +11,88 @@
         "edax_hexagonal_alignment": false,
         "input_file": "Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
       },
+      "comments": "",
       "filter": {
         "name": "complex::ReadCtfDataFilter",
         "uuid": "7751923c-afb9-4032-8372-8078325c69a4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_image_geometry": "",
+        "remove_original_geometry": true,
+        "rotate_slice_by_slice": false,
+        "rotation_axis": [
+          0.0,
+          1.0,
+          0.0,
+          180.0
+        ],
+        "rotation_matrix": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "rotation_representation": 0,
+        "selected_image_geometry": "DataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateSampleRefFrameFilter",
+        "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "DataContainer/Cell Data/Error",
+              "comparison": 2,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "Mask",
+        "created_mask_type": 10,
+        "custom_false_value": 0.0,
+        "custom_true_value": 1.0,
+        "use_custom_false_value": false,
+        "use_custom_true_value": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
     },
@@ -24,14 +102,15 @@
         "cell_ipf_colors_array_name": "IPFColors",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-        "good_voxels_array_path": "",
+        "good_voxels_array_path": "DataContainer/Cell Data/Mask",
         "reference_dir": [
           0.0,
           0.0,
           1.0
         ],
-        "use_good_voxels": false
+        "use_good_voxels": true
       },
+      "comments": "",
       "filter": {
         "name": "complex::GenerateIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
@@ -39,5 +118,5 @@
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

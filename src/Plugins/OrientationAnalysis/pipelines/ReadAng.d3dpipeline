@@ -1,7 +1,6 @@
 {
   "isDisabled": false,
-  "name": "ReadAng.d3dpipeline",
-  "pinnedParams": [],
+  "name": "Untitled Pipeline",
   "pipeline": [
     {
       "args": {
@@ -10,9 +9,96 @@
         "data_container_name": "DataContainer",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
+      "comments": "",
       "filter": {
         "name": "complex::ReadAngDataFilter",
         "uuid": "5b062816-79ac-47ce-93cb-e7966896bcbd"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+        "rotation_axis": [
+          0.0,
+          0.0,
+          1.0,
+          90.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateEulerRefFrameFilter",
+        "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_image_geometry": "DataContainer",
+        "remove_original_geometry": true,
+        "rotate_slice_by_slice": false,
+        "rotation_axis": [
+          0.0,
+          1.0,
+          0.0,
+          180.0
+        ],
+        "rotation_matrix": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "rotation_representation": 0,
+        "selected_image_geometry": "DataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateSampleRefFrameFilter",
+        "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "DataContainer/Cell Data/Confidence Index",
+              "comparison": 1,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.1
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "Mask",
+        "created_mask_type": 10,
+        "custom_false_value": 0.0,
+        "custom_true_value": 1.0,
+        "use_custom_false_value": false,
+        "use_custom_true_value": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
     },
@@ -30,6 +116,7 @@
         ],
         "use_good_voxels": false
       },
+      "comments": "",
       "filter": {
         "name": "complex::GenerateIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
@@ -37,5 +124,5 @@
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }
