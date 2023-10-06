@@ -50,17 +50,49 @@ then *DataStructure* goes out of scope those items will also be cleaned up. The 
     data_structure = cx.DataStructure()
 
 
-Creating a DataGroup
---------------------
+Executing a Filter
+------------------
 
- A :ref:`DataGroup` can be created with the 
- :ref:`complex.CreateDataGroup.Execute() <CreateDataGroup>` method.
+Within the complex library the :ref:`Filter` is the object that will perform an action
+that could result in DataArrays being added, moved, removed, or nothing at all to 
+the :ref:`DataStructure`. Executing a complex filter can be done in one of two ways.
+
+- Immediate Mode
+   
+   The filter is executed immediately at the line of code where the filter is invoked. With this
+   mode there is **no** preflight performed to sanity check the inputs.
+
+- Delayed Mode
+
+   The filter is instantiated with all of the inputs but not yet executed. This mode
+   can be useful if the developer would like to build up a list of filters and then
+   execute them one after another.
+
+An example of executing a file in immediate mode is the following code snippet.
 
 .. code:: python
 
-    #------------------------------------------------------------------------------
+    result  = cx.CreateDataArray.execute(data_structure=data_structure, 
+                                        component_count=1, 
+                                        data_format="", 
+                                        initialization_value="10", 
+                                        numeric_type=cx.NumericType.float32, 
+                                        output_data_array=cx.DataPath(["3D Array"]), 
+                                        tuple_dimensions= [[3, 2, 5]])
+    npdata = data_structure[cx.DataPath(["3D Array"])].store.npview()
+
+
+The resulting DataArray_ is available for use immediately following the execution of the filter.
+This would not be the case had the filter just been instantiated but not executed.
+
+Creating a DataGroup
+--------------------
+
+A :ref:`DataGroup` can be created with the :ref:`complex.CreateDataGroup.Execute() <CreateDataGroup>` method.
+
+.. code:: python
+
     # Create a top level group: (Not needed)
-    #------------------------------------------------------------------------------
     result = cx.CreateDataGroup.execute(data_structure=data_structure,
                                         Data_Object_Path=cx.DataPath(['Group']))
 
@@ -237,3 +269,79 @@ connectivity from a sample file.
         print("No errors running the CreateGeometryFilter (Triangle) filter")
 
 
+Interoperating with Numpy
+-------------------------
+
+.. caution::
+
+    As of conda complex version 1.0.0 there is *NO* way to wrap an existing
+    numpy array. You will have to make a copy of the data into a complex DataArray
+    or have complex create the DataArray for you and load your data into the
+    DataArray (Overwriting the initialization values).
+
+    This will hopefully be addressed in a future update.
+
+
+This code example shows how to create a complex DataArray and then use that array 
+as a numpy view.
+
+The next code section was take from `basic_arrays.py <https://github.com/BlueQuartzSoftware/complex/tree/develop/wrapping/python/examples/basic_arrays.py>`__
+
+.. code:: python
+
+    import complex as cx
+    import numpy as np
+
+    # Create a Data Structure
+    data_structure = cx.DataStructure()    
+
+    output_array_path = cx.DataPath(["1D Array"])
+    array_type = cx.NumericType.float32
+    tuple_dims = [[10]]
+    create_array_filter = cx.CreateDataArray()
+    result  = create_array_filter.execute(data_structure=data_structure, 
+                                        component_count=1, 
+                                        data_format="", 
+                                        initialization_value="10", 
+                                        numeric_type=array_type, 
+                                        output_data_array=output_array_path, 
+                                        tuple_dimensions=tuple_dims)
+
+    # First get the array from the DataStructure
+    data_array = data_structure[output_array_path]
+    # Get the underlying complex.DataStore object
+    data_store = data_array.store
+    # Get the raw data as an Numpy View
+    npdata = data_store.npview()
+
+    # The developer could also just do this in a single line
+    npdata = data_structure[output_array_path].store.npview()
+
+The next code section was take from `basic_arrays.py <https://github.com/BlueQuartzSoftware/complex/tree/develop/wrapping/python/examples/angle_conversion.py>`__
+
+.. code:: python
+
+    import complex as cx
+    data_structure = cx.DataStructure()
+    # Create a DataArray to copy the Euler Angles into 
+    array_path = cx.DataPath(['Euler Angles'])
+    result = cx.CreateDataArray.execute(data_structure=data_structure,
+                                    numeric_type=cx.NumericType.float32,
+                                    component_count=3,
+                                    tuple_dimensions=[[99]],
+                                    output_data_array=array_path,
+                                    initialization_value='0')
+    npdata = data_structure[array_path].store.npview()
+    # Read the CSV file into the DataArray using the numpy view
+    file_path = 'angles.csv'
+    npdata[:] = np.loadtxt(file_path, delimiter=',')
+    # Run the ConvertOrientation Filter to convert the Eulers to Quaternions
+    quat_path = cx.DataPath(['Quaternions'])
+    result = cxor.ConvertOrientations.execute(data_structure=data_structure,
+                                            input_orientation_array_path=array_path,
+                                            input_type=0,
+                                            output_orientation_array_name='Quaternions',
+                                            output_type=2)
+    # Get the new numpy view and then print the data
+    npdata = data_structure['Quaternions'].store.npview()
+    print(npdata)

@@ -16,20 +16,22 @@ DREAM.3D can represent orientations in seven different forms:
 | Axis-Angle         | a     | 4 (< ax0, ax1, ax2 >, w)                                    |
 | Cubochoric         | c     | 3                                                           |
 | Homochoric         | h     | 3                                                           |
+| Stereographic      | s     | 3                                                           |
 
 ## Master Table of Available Conversions
 
 In many cases, a direct transformation is available from one representation to another; in some cases, an intermediate representation is used, e.g., from homochoric (h) to Euler (e), DREAM.3D first transforms to an axis angle pair (a), then to an orientation matrix (o), and finally to Euler angles.
 
-| From/To |  e   |  o   |  a   |  r   |  q   |  h   |  c   |
-|  -      |  -   |  -   |  -   |  -   |  -   |  -   |  -   |
-|  e      |  -   |  X   |  X   |  X   |  X   |  a   | ah   |
-|  o      |  X   |  --  |  X   |  e   |  X   |  a   | ah   |
-|  a      |  o   |  X   | --   |  X   |  X   |  X   |  h   |
-|  r      |  o   |  a   |  X   | --   |  a   |  X   |  h   |
-|  q      |  X   |  X   |  X   |  X   | --   |  X   |  h   |
-|  h      |  ao  |  a   |  X   |  a   |  a   | --   |  X   |
-|  c      | hao  |  ha  |  h   |  ha  | ha   |  X   | --   |
+| From/To |  e   |  o   |  a   |  r   |  q   |  h   |  c   | s  |
+|  -      |  -   |  -   |  -   |  -   |  -   |  -   |  -   |    |
+|  e      |  -   |  X   |  X   |  X   |  X   |  a   | ah   |    |
+|  o      |  X   |  --  |  X   |  e   |  X   |  a   | ah   |    |
+|  a      |  o   |  X   | --   |  X   |  X   |  X   |  h   |    |
+|  r      |  o   |  a   |  X   | --   |  a   |  X   |  h   |    |
+|  q      |  X   |  X   |  X   |  X   | --   |  X   |  h   |    |
+|  h      |  ao  |  a   |  X   |  a   |  a   | --   |  X   |    |
+|  c      | hao  |  ha  |  h   |  ha  | ha   |  X   | --   |    |
+|  s      |      |      |      |      |      |      |      | -- |
 
 ## Filters to Assist the User
 

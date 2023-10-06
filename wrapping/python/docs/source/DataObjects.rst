@@ -3,6 +3,9 @@ DataStructure Objects
 
 .. _DataStructure:
 
+DataStructure
+--------------
+
 The **complex** DataStructure can be filled with various types of objects. Those are
 all listed below. In the **DREAM3D-NX** user interface, the DataStructure of any
 pipeline can be inspected via the "DataStructure" view, shown below outlined in 
@@ -117,11 +120,13 @@ from a created DataArray_
 AttributeMatrix
 ----------------
 
-An AttributeMatrix is specialized :ref:`DataGroup` that has two main criteria that must be met when 
-inserting into the AttributeMatrix:
+.. attention::
 
-1) No :ref:`DataGroup` may be inserted into the AttributeMatrix
-2) All :ref:`DataArray` objects that are inserted into the AttributeMatrix **must** have the same number of tuples.
+   An AttributeMatrix is specialized :ref:`DataGroup` that has two main criteria that must be met when 
+   inserting into the AttributeMatrix:
+
+   1) No :ref:`DataGroup` may be inserted into the AttributeMatrix
+   2) All :ref:`DataArray` objects that are inserted into the AttributeMatrix **must** have the same number of tuples.
 
 The predominant use of an AttributeMatrix is to group together :ref:`DataArray` objects that represent DataArrays that
 all appear on a specific **Geometry**. For example if you have an **Image Geometry** that is 189 voxels wide (X) by 201

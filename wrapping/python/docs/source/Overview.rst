@@ -172,11 +172,27 @@ scales, allowing for connections and correlations to be assessed.
 For a detailed discussion of the DREAM.3D data structure and its associated applications
 to the analysis of microstructure data, please consult this `IMMI paper <http://www.immijournal.com/content/3/1/5/abstract>`__.
 
-Filters, Pipelines & Plugins
-----------------------------
+
+.. _Filter:
+
+Filter
+-------
 
 Manipulation of the underlying data structure is exposed to the user through the use 
-of **Filters**. A **Filter** can be considered a self-contained *function*, which takes the existing data structure as input and performs some series of operations to modify the data structure and produce and output. **Filters** can be strung together to form a **Pipeline**, in which the data structure flows through the set of **Filters**, being modified along the way. If a **Filter** reads in data from outside of DREAM.3D, then the new data will be incorporated into the existing data structure. Or, if no data structure yet exists (e.g, starting from a “blank slate”), a new one will be created. More information on creating **Pipelines** can be found in the ‘Creating A Pipeline’ section.
+of **Filters**. A **Filter** can be considered a self-contained *function*, which takes 
+the existing data structure as input and performs some series of operations to modify 
+the data structure and produce and output. **Filters** can be strung together to 
+form a **Pipeline**, in which the data structure flows through the set of **Filters**, 
+being modified along the way. If a **Filter** reads in data from outside of DREAM.3D, 
+then the new data will be incorporated into the existing data structure. Or, if no 
+data structure yet exists (e.g, starting from a “blank slate”), a new one will be 
+created. 
+
+.. _Pipeline:
+.. _Plugin:
+
+Pipelines
+----------
 
 **Filters** in DREAM.3D are contained within **Plugins**, which are collections of
 **Filters** with similar scope. The **Plugin** itself is the actual *library* into
