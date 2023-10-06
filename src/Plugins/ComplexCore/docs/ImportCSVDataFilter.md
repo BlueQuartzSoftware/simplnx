@@ -16,10 +16,10 @@ The user first selects the **Input CSV File** path, which then enables the rest 
 
 ![Input CSV File Field](Images/Import_CSV_1.png)
 
-If the chosen **Input CSV File** already has headers inside the file, the user can select the **My data has headers** checkbox.  This
+If the chosen **Input CSV File** already has headers inside the file, the user can select the **Input File Has Headers** checkbox.  This
 enables the **Headers Line Number** spin box where the user can select which line of the file contains the headers.
 
-*NOTE*: The interface only allows importing data starting at the line after the chosen **Headers Line Number**.  So, in the example below, the **Headers Line Number** is set to 1, so **Start Import At Row** defaults to 2 and has a range of 2-297 (this particular input file has 297 total lines).  The max range of **Headers Line Number** is, of course, set to 296 so that at least 1 line can be imported.
+*NOTE*: The interface only allows importing data starting at the line after the chosen **Headers Line Number**.  So, in the example below, the **Headers Line Number** is set to 1, so **Start Import Line Number** defaults to 2 and has a range of 2-297 (this particular input file has 297 total lines).  The max range of **Headers Line Number** is, of course, set to 296 so that at least 1 line can be imported.
 
 ![Input CSV File Field](Images/Import_CSV_2.png)
 
@@ -27,7 +27,7 @@ The user can choose how the data is delimited: comma (,), tab, semicolon (;) or 
 
 ![Input CSV File Field](Images/Import_CSV_3.png)
 
-The user can select the number of preview lines available by changing the **Number of Preview Lines** spin box.  The range in the example is set to 1-296 because the import is currently starting at row 2 (from **Start Import At Row** spin box).
+The user can select the number of preview lines available by changing the **Number of Preview Lines** spin box.  The range in the example is set to 1-296 because the import is currently starting at row 2 (from **Start Import Line Number** spin box).
 
 ![Input CSV File Field](Images/Import_CSV_4.png)
 
@@ -36,9 +36,9 @@ The user can then set the data format for each column.  Selecting one or more co
 ![Input CSV File Field](Images/Import_CSV_5.png)
 ![Input CSV File Field](Images/Import_CSV_6.png)
 
-If the **My data has headers** checkbox is OFF, then it is also possible to double-click the headers in the Preview Table to edit them.  These values will be used as the name of the **Data Array** in DREAM3D-NX.
+If the **Input File Has Headers** checkbox is OFF, then it is also possible to double-click the headers in the Preview Table to edit them.  These values will be used as the name of the **Data Array** in DREAM3D-NX.
 
-*NOTE:* Editing table headers is only available when the **My data has headers** checkbox is OFF.  If the **My data has headers** checkbox is ON, then the headers will be read from the **Headers Line Number** in the data file, and the table headers will not be editable.
+*NOTE:* Editing table headers is only available when the **Input File Has Headers** checkbox is OFF.  If the **Input File Has Headers** checkbox is ON, then the headers will be read from the **Headers Line Number** in the data file, and the table headers will not be editable.
 
 ![Input CSV File Field](Images/Import_CSV_7.png)
 
@@ -58,7 +58,7 @@ Afterwards, you end up with a data structure that looks like this:
 
 | Name                                                           | Type             | Description                                                                                                                                                                                                                                                 |
 |----------------------------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Importer Data Object                                           | CSVImporterData  | The object that holds all data relevant to importing the data, such as input file path, custom headers, start import row number, data types for all the imported arrays, header line number, header mode, imported array tuple dimensions, delimiters, etc. |
+| Importer Data Object                                           | CSVImporterData  | The object that holds all data relevant to importing the data, such as input file path, custom headers, start import line number, data types for all the imported arrays, headers line number, header mode, imported array tuple dimensions, delimiters, etc. |
 | Use Existing Attribute Matrix                                  | bool             | Determines whether or not to store the imported data arrays in an existing attribute matrix                                                                                                                                                                 |
 | Existing Attribute Matrix (Use Existing Attribute Matrix - ON) | DataPath         | The data path to the existing attribute matrix where the imported arrays will be stored                                                                                                                                                                     |
 | New Attribute Matrix (Use Existing Attribute Matrix - OFF)     | DataPath         | The data path to the newly created attribute matrix where the imported arrays will be stored                                                                                                                                                                |
