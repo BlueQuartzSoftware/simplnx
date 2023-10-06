@@ -64,7 +64,7 @@ Parameters FindSlipTransmissionMetricsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each phase", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_F1ListArrayName_Key, "F1 List", "DataArray Name to store the calculated F1s Values", "F1 List"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_F1sptListArrayName_Key, "F1spt List", "DataArray Name to store the calculated F1spts Values", "F1spt List"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_F7ListArrayName_Key, "F7 List", "DataArray Name to store the calculated F7s Values", "F7 List"));

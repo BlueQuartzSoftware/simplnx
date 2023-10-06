@@ -70,8 +70,6 @@ Parameters KMedoidsFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}));
-
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<UInt64Parameter>(k_InitClusters_Key, "Number of Clusters", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0));
   params.insert(
       std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(KUtilities::DistanceMetric::Euclidean),

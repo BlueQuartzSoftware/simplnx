@@ -162,7 +162,7 @@ Parameters GenerateFZQuaternions::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insertSeparator(Parameters::Separator{"Element Data"});
+  params.insertSeparator(Parameters::Separator{"Created Element Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FZQuatsArrayPath_Key, "Created FZ Quaternions",
                                                           "The name of the array containing the Quaternion that represents an orientation within the fundamental zone for each Element", ""));
   // Associate the Linkable Parameter(s) to the children parameters that they control

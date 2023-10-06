@@ -209,7 +209,7 @@ Parameters ITKMhaFileReader::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Filter Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(ITKImageReader::k_FileName_Key, "Input MHA File", "The input .mha file that will be read.", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{{".mha"}}, FileSystemPathParameter::PathType::InputFile, false));
   params.insertLinkableParameter(
