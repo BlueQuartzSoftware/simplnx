@@ -82,7 +82,7 @@ An example of executing a file in immediate mode is the following code snippet.
     npdata = data_structure[cx.DataPath(["3D Array"])].store.npview()
 
 
-The resulting DataArray_ is available for use immediately following the execution of the filter.
+The resulting :ref:`DataArray <DataArray>` is available for use immediately following the execution of the filter.
 This would not be the case had the filter just been instantiated but not executed.
 
 Creating a DataGroup

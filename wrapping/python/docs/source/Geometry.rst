@@ -3,14 +3,19 @@
 Geometry Descriptions
 =====================
 
-DREAM3D is capable of working with several different kinds of **Geometries** where a 
-goemetry describes where
+DREAM3D-NX is capable of working with several different kinds of geometric grids that describe the spatial location
+of geometric features in regular cartesian space. There are three main types of geometric grids in DREAM3D-NX:
 
+- Regular Grid
+- Semi-Regular Grid
+- Unstructured Grids
 
-ImageGeom
---------------
+.. _ImageGeom:
 
-A *structured grid*, this **Geometry** is composed of *pixels* (in 2D) or 
+Image Geom (Regular Grid)
+-------------------------
+
+A *structured grid*, this :ref:`Geometry<Geometry Descriptions>` is composed of *pixels* (in 2D) or 
 *voxels* (in 3D) with constant spacing along each axis. The voxel is a primary three-dimensional cell. 
 The voxel is topologically equivalent to the hexahedron with additional geometric 
 constraints. Each face of the voxel is perpendicular to one of the coordinate x-y-z axes.
@@ -26,10 +31,12 @@ are **ALWAYS** given in "C" order, or slowest to fastest order.
 
    Definition of Image Geometry
 
-RectilinearGrid Geometry
--------------------------
+.. _RectGridGeometry:
 
-An *rectilinear grid*; this **Geometry** is composed of *pixels* (in 2D) or *voxels* 
+RectilinearGrid Geometry (Semi-Regular Grid)
+--------------------------------------------
+
+An *rectilinear grid*; this :ref:`Geometry<Geometry Descriptions>` is composed of *pixels* (in 2D) or *voxels* 
 (in 3D) with variable spacing along each axis. RectilinearGrid represents a geometric structure 
 that is topologically regular with variable spacing in the three coordinate directions x-y-z.
 To define a RectilinearGrid, you must specify the dimensions of the 3 axis and provide 
@@ -47,13 +54,13 @@ in each array is +1 from the dimension size.
    Definition of RectGrid Geometry
 
 
-Node Based Geometries
----------------------
+Node Based Geometries (Unstructured Grid)
+-----------------------------------------
 
 These are geometries that consist of an array of vertices (points) where each vertex is
-defined by a vector of 3 x 32 bit floating point values representing the X, Y, and Z value for that point. 
-The higher dimensional node geometries will also include a second array that defines 
-each element (edge, triangle, ...) for that geometry. 
+defined by a vector of 3 x 32 bit floating point values representing the X, Y, and Z value for that point. Each vertex could be shared by 0 or more higher order elements.
+The higher dimensional node geometries will also include a second array that defines the topology or connectivity of
+each element (edge, triangle, ...) for that geometry.
 
 VertexGeometry
 ^^^^^^^^^^^^^^^^
@@ -84,10 +91,10 @@ primary one-dimensional cell. It is defined by two points. The direction along t
 
 Inherits from VertexGeometry and adds the following:
 
-- array of triples of indices (per triangle)
+- array of pairs of indices (per edge)
 
-  - (2 indices x 8 bytes) per triangle
-  - 16 bytes per triangle
+  - (2 indices x 8 bytes) per edge
+  - 16 bytes per edge
 
 - represents topology and geometry separately
 - finding neighbors is at least well defined
@@ -115,8 +122,6 @@ Inherits from VertexGeometry and adds the following:
 - represents topology and geometry separately
 - finding neighbors is at least well defined
 
-
-
 QuadGeometry
 ^^^^^^^^^^^^^^^^
 
@@ -127,10 +132,10 @@ defining a surface normal using the right-hand rule.
 
 Inherits from VertexGeometry and adds the following:
 
-- array of triples of indices (per triangle)
+- array of triples of indices (per quad)
 
-  - (4 indices x 8 bytes) per triangle
-  - 32 bytes per triangle
+  - (4 indices x 8 bytes) per quad
+  - 32 bytes per quad
 
 - represents topology and geometry separately
 - finding neighbors is at least well defined
@@ -151,10 +156,10 @@ cell consisting of six quadrilateral faces, twelve edges, and eight vertices. Th
 
 Inherits from QuadGeometry and adds the following:
 
-- array of triples of indices (per triangle)
+- array of triples of indices (per hexahedra)
 
-  - (8 indices x 8 bytes) per triangle
-  - 64 bytes per triangle
+  - (8 indices x 8 bytes) per hexahedra
+  - 64 bytes per hexahedra
 
 - represents topology and geometry separately
 - finding neighbors is at least well defined
@@ -168,11 +173,11 @@ TetrahedralGeometry
  
  Inherits from TriangleGeometry and adds the following:
 
-- array of triples of indices (per triangle)
+- array of triples of indices (per tetrahedra)
 
-  - (4 indices x 8 bytes) per triangle
-  - 32 bytes per triangle
+  - (4 indices x 8 bytes) per tetrahedra
+  - 32 bytes per tetrahedra
 
 - represents topology and geometry separately
 - finding neighbors is at least well defined
-- 
+

@@ -13,8 +13,8 @@ DREAM3D-NX Python Docs
    Overview
    DataObjects
    Geometry
-   Python_Introduction
    API
+   Python_Introduction
    Reference_Frame_Notes
 @PLUGIN_LIST@
 
