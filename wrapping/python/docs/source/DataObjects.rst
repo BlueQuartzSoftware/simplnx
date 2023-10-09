@@ -3,6 +3,9 @@ DataStructure Objects
 
 .. _DataStructure:
 
+DataStructure
+--------------
+
 The **complex** DataStructure can be filled with various types of objects. Those are
 all listed below. In the **DREAM3D-NX** user interface, the DataStructure of any
 pipeline can be inspected via the "DataStructure" view, shown below outlined in 
@@ -50,7 +53,7 @@ DataPath
 
 A DataPath is a complex class that describes the path to a :ref:`DataObject` within 
 the DataStructure_ . The path is constructed as a python list of string objects.
-For example if we have a top level group called **MyGroup** and a **DataArray** 
+For example if we have a top level group called **MyGroup** and a `DataArray<DataArray>` 
 called *Euler Angles* within that group the **DataPath** object that would be constructed is the following
 
 .. code:: python
@@ -65,7 +68,7 @@ DataArray
 The DataArray is the main class that holds the raw data. It is typically a contiguous
 chunk of memory that is allocated to hold the data that will be processed. The DataArray
 has a few properties that should be well understood by the user before starting to develop
-codes that are based on **complex**. The 
+codes that are based on the `complex <https://www.github.com/bluequartzsoftware/complex>`_ library.
 
 .. image:: Images/DataArray_Explanation.png
    :height: 664
@@ -102,8 +105,8 @@ DataStore
 The DataStore is the C++ object that actually allocates the memory necessary to store
 data in complex/DREAM3D. The Python API is intentially limited to getting a Numpy.View()
 so that python developers can have a consistent well known interace to the DataArray_. The
-programmer will never need to create from scratch a DataStore object. They should be fetched
-from a created DataArray_
+programmer will never need to create from scratch a **DataStore** object. They should be fetched
+from a created DataArray_ by executing the :ref:`Create Data Array <CreateDataArray>` filter.
 
 .. code:: python
 
@@ -111,20 +114,27 @@ from a created DataArray_
    data_array = data_structure[output_array_path]
    # Get the underlying DataStore object
    data_store = data_array.store
+   # Get the raw data as an Numpy View
+   npdata = data_store.npview()
+   # ------------
+   # The developer can also just inline the above lines into a single line
+   npdata = data_structure[output_array_path].store.npview
 
 .. _AttributeMatrix:
 
 AttributeMatrix
 ----------------
 
-An AttributeMatrix is specialized :ref:`DataGroup` that has two main criteria that must be met when 
-inserting into the AttributeMatrix:
+.. attention::
 
-1) No :ref:`DataGroup` may be inserted into the AttributeMatrix
-2) All :ref:`DataArray` objects that are inserted into the AttributeMatrix **must** have the same number of tuples.
+   An AttributeMatrix is specialized :ref:`DataGroup` that has two main criteria that must be met when 
+   inserting into the AttributeMatrix:
+
+   1) No :ref:`DataGroup` may be inserted into the AttributeMatrix
+   2) All :ref:`DataArray` objects that are inserted into the AttributeMatrix **must** have the same number of *tuples*.
 
 The predominant use of an AttributeMatrix is to group together :ref:`DataArray` objects that represent DataArrays that
-all appear on a specific **Geometry**. For example if you have an **Image Geometry** that is 189 voxels wide (X) by 201
+all appear on a specific **Geometry**. For example if you have an :ref:`Image Geometry <ImageGeom>` that is 189 voxels wide (X) by 201
 voxels tall (Y) by 117 voxels deep (Z), the AttributeMatrix that holds the various DataArrays will have the same dimensions, 
 (but expressed in reverse order, slowest dimension to fastest changing dimension). This ensures that the arrays that represent that data are all fully allocated and accessible. This
 concept can be summarized in the figure below.
@@ -145,3 +155,8 @@ the dimensions are listed as slowest changing (Z) to fastest changing (X) order.
    result = cx.CreateAttributeMatrixFilter.execute(data_structure=data_structure, 
                                                 data_object_path=cx.DataPath(["New Attribute Matrix"]), 
                                                 tuple_dimensions = [[117., 201., 189.]])
+
+Geometry
+----------
+
+Please see the :ref:`Geometry<Geometry Descriptions>` documentation.

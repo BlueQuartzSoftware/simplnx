@@ -2,7 +2,7 @@
    compiling additional plugins, and you want the python docs
    generated, you will need to add those to the list below
 
-DREAM3D Python Docs
+DREAM3D-NX Python Docs
 ================================
 
 .. toctree::
@@ -13,8 +13,8 @@ DREAM3D Python Docs
    Overview
    DataObjects
    Geometry
-   Python_Introduction
    API
+   Python_Introduction
    Reference_Frame_Notes
 @PLUGIN_LIST@
 

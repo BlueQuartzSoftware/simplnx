@@ -328,7 +328,7 @@ void GenerateRstFilterDocs()
     std::ofstream rstStream = std::ofstream(rstFilePath, std::ios_base::binary | std::ios_base::trunc);
     if(!rstStream.is_open())
     {
-      std::cout << "ERROR:" << rstFilePath << "\n";
+      std::cout << "ERROR Opening file:" << rstFilePath << "\n *** Aborting filter documentation generation!!\n";
       return;
     }
 
@@ -337,7 +337,13 @@ void GenerateRstFilterDocs()
     rstStream << GenerateUnderline(plugName.size(), '=') << "============="
               << "\n\n";
 
-    rstStream << "   This is the documentation for all filters included in the " << plugName << " module\n\n";
+    rstStream << "   This is the documentation for all filters included in the " << plugName << " module. These filters can"
+              << " be used by importing the appropriate module. Each filter is contained in the module:\n\n"
+              << ".. code:: python\n\n"
+              << "   import " << complex::StringUtilities::toLower(plugName) << "\n"
+              << "   # Instantiate and execute a filter from the module\n"
+              << "   result = " << complex::StringUtilities::toLower(plugName) << ".SomeFilterName.execute(...)\n"
+              << "\n";
 
     rstStream << ".. py:module:: " << plugName << "\n\n";
 
@@ -359,11 +365,15 @@ void GenerateRstFilterDocs()
 
       rstStream << filterClassName << "\n";
       rstStream << GenerateUnderline(filterClassName.size(), '-') << "\n\n";
+      rstStream << ".. index:: pair: Filter Human Names; " << filter->humanName() << "\n";
+      rstStream << ".. index:: pair: Filter Class Names; " << filter->className() << "\n";
+
+      rstStream << "\n";
+      rstStream << "-  **UI Name**: " << filter->humanName() << "\n\n";
 
       rstStream << ".. _" << filterClassName << ":\n";
-      rstStream << ".. py:class:: " << filterClassName << "\n\n";
 
-      rstStream << "   **UI Display Name:** *" << filter->humanName() << "*\n\n";
+      rstStream << ".. py:class:: " << filterClassName << "\n\n";
 
       // Extract out the first paragraph of the Filter's markdown documentation after the ## Description section marker
       const std::filesystem::path docFilePath = fmt::format("{}/docs/{}.md", pluginRootDir, filterClassName);
@@ -409,7 +419,7 @@ void GenerateRstFilterDocs()
       rstStream << "   .. py:method:: Execute(data_structure";
 
       std::stringstream memberStream;
-      memberStream << "      :param complex.DataStructure data_structure: The DataStructure object that holds the data to be processed.\n";
+      memberStream << "      :param DataStructure data_structure: The DataStructure object that holds the data to be processed.\n";
 
       size_t index = 0;
       for(const auto& parameterPair : parameters)
@@ -418,14 +428,15 @@ void GenerateRstFilterDocs()
         rstStream << ", ";
 
         rstStream << parameterPair.first;
-        memberStream << "      :param " << s_ParameterMap[anyParameter->uuid()] << " " << anyParameter->name() << ": " << anyParameter->helpText() << "\n";
+        memberStream << "      :param " << complex::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "complex.", "") << " " << anyParameter->name() << ": " << anyParameter->helpText()
+                     << "\n";
         index++;
       }
       rstStream << ")\n\n";
 
       rstStream << memberStream.str();
-      rstStream << "      :return: Returns a complex.Result object that holds any warnings and/or errors that were encountered during execution.\n";
-      rstStream << "      :rtype: complex.Result\n\n";
+      rstStream << "      :return: Returns a :ref:`Result <result>` object that holds any warnings and/or errors that were encountered during execution.\n";
+      rstStream << "      :rtype: :ref:`complex.Result <result>`\n\n";
       rstStream << '\n';
     }
   }
