@@ -1,7 +1,6 @@
 {
   "isDisabled": false,
-  "name": "ImportEdaxOIMData.d3dpipeline",
-  "pinnedParams": [],
+  "name": "Untitled Pipeline",
   "pipeline": [
     {
       "args": {
@@ -13,11 +12,19 @@
           0.0,
           0.0
         ],
-        "read_pattern_data": true,
+        "read_pattern_data": false,
         "selected_scan_names": {
-          "input_file_path": "Data/OrientationAnalysis/EdaxOIMData.h5",
+          "input_file_path": "Data/Hikari_Ni_Sequence.h5",
           "scan_names": [
-            "Scan 1"
+            "Scan 1",
+            "Scan 2",
+            "Scan 3",
+            "Scan 4",
+            "Scan 5",
+            "Scan 6",
+            "Scan 7",
+            "Scan 8",
+            "Scan 9"
           ],
           "stacking_order": 0
         },
@@ -27,6 +34,70 @@
       "filter": {
         "name": "complex::ImportH5OimDataFilter",
         "uuid": "4ad3d47c-b1e1-4429-bc65-5e021be62ba0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "ImageGeom/Cell Data/EulerAngles",
+        "rotation_axis": [
+          0.0,
+          0.0,
+          1.0,
+          90.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateEulerRefFrameFilter",
+        "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_image_geometry": "",
+        "remove_original_geometry": true,
+        "rotate_slice_by_slice": true,
+        "rotation_axis": [
+          0.0,
+          1.0,
+          0.0,
+          180.0
+        ],
+        "rotation_matrix": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "rotation_representation": 0,
+        "selected_image_geometry": "ImageGeom"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateSampleRefFrameFilter",
+        "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
       },
       "isDisabled": false
     },
@@ -43,5 +114,5 @@
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

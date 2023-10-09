@@ -13,11 +13,9 @@ This **Filter** will read a single .h5 file into a new **Image Geometry**, allow
 |-------|
 |![](Images/ReadEDAXH5_1.png)|
 
-
 | User interface AFTER setting the "Z Spacing" and selecting files.  |
 |-------|
 |![](Images/ReadEDAXH5_2.png)|
-
 
 ## Notes About Reference Frames
 
@@ -28,8 +26,15 @@ The user should be aware that simply reading the file then performing operations
 
 If the data has come from a TSL acquisition system and the settings of the acquisition software were in the default modes, the following reference frame transformations may need to be performed based on the version of the OIM Analysis software being used to collect the data:
 
-+ Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
++ Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
+
+### Important Consideration for Sample Reference Frame
+
+If the user is importing more than a single slice from the HDF5 file and using the "Rotate Sample Reference Frame" filter,
+the user should **CHECK** the option **ON** for "Perform Slice By Slice Transform".
+
+## Thresholding out Unindexed Scan Points
 
 The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Threshold Objects](../MultiThresholdObjects/index.html) **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > xx or *Image Quality* > desired quality.
 
