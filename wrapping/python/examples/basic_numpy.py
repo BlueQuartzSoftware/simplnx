@@ -4,7 +4,7 @@ import numpy as np
 
 #------------------------------------------------------------------------------
 # Notes:
-# As of conda complex version 0.1.3 there is *NO* way to wrap an existing
+# As of conda complex version 1.0.0 there is *NO* way to wrap an existing
 # numpy array. You will have to make a copy of the data into a complex DataArray
 # or have complex create the DataArray for you and load your data into the
 # DataArray (Overwriting the initialization values).
