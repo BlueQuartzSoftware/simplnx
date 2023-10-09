@@ -147,6 +147,12 @@ public:
   std::vector<DataPath> getCreatedPaths() const;
 
   /**
+   * @brief Returns a vector of DataPaths that would be modified when executing the node
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getModifiedPaths() const;
+
+  /**
    * @brief Returns a collection of warnings returned by the target filter.
    * This collection is cleared when the node is preflighted or executed.
    * @return std::vector<complex::Warning>
@@ -220,5 +226,6 @@ private:
   std::vector<complex::Error> m_Errors;
   std::vector<IFilter::PreflightValue> m_PreflightValues;
   std::vector<DataPath> m_CreatedPaths;
+  std::vector<DataPath> m_ModifiedPaths;
 };
 } // namespace complex

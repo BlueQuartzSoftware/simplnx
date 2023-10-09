@@ -108,12 +108,29 @@ private:
 };
 
 /**
+ * @brief
+ */
+struct COMPLEX_EXPORT DataModifiedAction
+{
+
+  enum class ModifiedType : uint64
+  {
+    DataArrayModified = 0,
+    DataArrayPossiblyDeleted = 1,
+  };
+
+  DataPath m_ModifiedPath;
+  ModifiedType m_ModifiedType;
+};
+
+/**
  * @brief Container for IDataActions
  */
 struct COMPLEX_EXPORT OutputActions
 {
   std::vector<AnyDataAction> actions = {};
   std::vector<AnyDataAction> deferredActions = {};
+  std::vector<DataModifiedAction> modifiedActions = {};
 
   OutputActions() = default;
 
@@ -137,6 +154,11 @@ struct COMPLEX_EXPORT OutputActions
   {
     static_assert(std::is_base_of_v<IDataAction, T>, "OutputActions::appendDeferredAction requires T to be derived from IDataAction");
     deferredActions.emplace_back(std::move(action));
+  }
+
+  void appendModifiedAction(const DataPath& dataPath, DataModifiedAction::ModifiedType modifiedType)
+  {
+    modifiedActions.emplace_back(DataModifiedAction{dataPath, modifiedType});
   }
 
   static Result<> ApplyActions(nonstd::span<const AnyDataAction> actions, DataStructure& dataStructure, IDataAction::Mode mode);

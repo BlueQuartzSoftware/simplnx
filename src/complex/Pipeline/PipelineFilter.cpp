@@ -140,25 +140,33 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   }
 
   std::vector<DataPath> newCreatedPaths;
+  std::vector<DataPath> newModifiedPaths;
   for(const auto& action : result.outputActions.value().actions)
   {
-    if(const auto* creationAction = dynamic_cast<const IDataCreationAction*>(action.get()); creationAction != nullptr)
+    if(const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get()); creationActionPtr != nullptr)
     {
-      auto allCreatedPaths = creationAction->getAllCreatedPaths();
-      newCreatedPaths.insert(newCreatedPaths.end(), allCreatedPaths.begin(), allCreatedPaths.end());
-    }
-  }
-  for(const auto& action : result.outputActions.value().deferredActions)
-  {
-    if(const auto* creationAction = dynamic_cast<const IDataCreationAction*>(action.get()); creationAction != nullptr)
-    {
-      auto allCreatedPaths = creationAction->getAllCreatedPaths();
+      auto allCreatedPaths = creationActionPtr->getAllCreatedPaths();
       newCreatedPaths.insert(newCreatedPaths.end(), allCreatedPaths.begin(), allCreatedPaths.end());
     }
   }
 
+  for(const auto& action : result.outputActions.value().deferredActions)
+  {
+    if(const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get()); creationActionPtr != nullptr)
+    {
+      auto allCreatedPaths = creationActionPtr->getAllCreatedPaths();
+      newCreatedPaths.insert(newCreatedPaths.end(), allCreatedPaths.begin(), allCreatedPaths.end());
+    }
+  }
+
+  for(const auto& action : result.outputActions.value().modifiedActions)
+  {
+    newModifiedPaths.emplace_back(action.m_ModifiedPath);
+  }
+
   // Do not clear the created paths unless the preflight succeeded
   m_CreatedPaths = newCreatedPaths;
+  m_ModifiedPaths = newModifiedPaths;
 
   setPreflightStructure(data);
   sendFilterFaultMessage(m_Index, getFaultState());
@@ -217,6 +225,11 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
 std::vector<DataPath> PipelineFilter::getCreatedPaths() const
 {
   return m_CreatedPaths;
+}
+
+std::vector<DataPath> PipelineFilter::getModifiedPaths() const
+{
+  return m_ModifiedPaths;
 }
 
 namespace

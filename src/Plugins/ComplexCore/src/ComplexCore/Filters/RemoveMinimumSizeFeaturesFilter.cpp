@@ -277,7 +277,7 @@ std::string RemoveMinimumSizeFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RemoveMinimumSizeFeaturesFilter::defaultTags() const
 {
-  return {className(), "Processing", "Cleanup", "MinSize"};
+  return {className(), "Processing", "Cleanup", "MinSize", "Feature Removal"};
 }
 
 Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
@@ -363,10 +363,8 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   }
 
   // Create the preflightResult object
-  IFilter::PreflightResult preflightResult;
-
-  // Create our OutputActions Object
-  OutputActions outputActions;
+  complex::Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
   std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
@@ -383,12 +381,25 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   {
     ss.append("  " + featureNeighborList.toString() + "\n");
     auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
-    outputActions.appendAction(std::move(action));
+    resultOutputActions.value().actions.emplace_back(std::move(action));
   }
 
-  preflightResult.outputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+  result = complex::GetAllChildDataPaths(data, featureGroupDataPath);
+  if(!result.has_value())
+  {
+    return {nonstd::make_unexpected(
+        std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the children of DataGroup '{}'", featureGroupDataPath.toString())}})};
+  }
+  const std::vector<DataPath> featureDataGroupChildren = result.value();
+  for(const auto& child : featureDataGroupChildren)
+  {
+    resultOutputActions.value().modifiedActions.emplace_back(DataModifiedAction{child, DataModifiedAction::ModifiedType::DataArrayModified});
+  }
 
-  return preflightResult;
+  resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+
+  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------
