@@ -228,6 +228,9 @@ TEST_CASE("ComplexCore::ImportTextDataFilter (Case 1): Valid filter execution")
 
   v = {std::to_string(std::numeric_limits<float64>::min()), std::to_string(std::numeric_limits<float64>::max())};
   TestCase_TestPrimitives<float64>(v);
+
+  v = {std::to_string(std::numeric_limits<bool>::min()), std::to_string(std::numeric_limits<bool>::max())};
+  TestCase_TestPrimitives<bool>(v);
 }
 
 TEST_CASE("ComplexCore::ImportTextDataFilter (Case 2): Valid filter execution - Skipped Array")
@@ -462,10 +465,6 @@ TEST_CASE("ComplexCore::ImportTextDataFilter (Case 5): Invalid filter execution 
   TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {30, 2}, v, k_IncorrectTuples);
   TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {30, 5, 7}, v, k_IncorrectTuples);
 
-  // Invalid Data Type
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::boolean}, {false}, tupleDims, v, k_InvalidArrayType);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::boolean}, {false}, tupleDims, v, k_InvalidArrayType);
-
   // Inconsistent Columns
   TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array", "Custom Array2"}, {DataType::int8, DataType::int8}, {false, false}, tupleDims, v,
                                   k_InconsistentCols);
@@ -538,6 +537,9 @@ TEST_CASE("ComplexCore::ImportTextDataFilter (Case 6): Invalid filter execution 
   v = {std::to_string(std::numeric_limits<float64>::min()), "", std::to_string(std::numeric_limits<float64>::max())};
   TestCase_TestPrimitives_Error<float64>(v, k_BlankLineErrorCode);
 
+  v = {std::to_string(std::numeric_limits<bool>::min()), "", std::to_string(std::numeric_limits<bool>::max())};
+  TestCase_TestPrimitives_Error<bool>(v, k_BlankLineErrorCode);
+
   // End line blank tests
   v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max()), ""};
   TestCase_TestPrimitives_Error<int8>(v, k_BlankLineErrorCode);
@@ -568,4 +570,7 @@ TEST_CASE("ComplexCore::ImportTextDataFilter (Case 6): Invalid filter execution 
 
   v = {std::to_string(std::numeric_limits<float64>::min()), std::to_string(std::numeric_limits<float64>::max()), ""};
   TestCase_TestPrimitives_Error<float64>(v, k_BlankLineErrorCode);
+
+  v = {std::to_string(std::numeric_limits<bool>::min()), std::to_string(std::numeric_limits<bool>::max()), ""};
+  TestCase_TestPrimitives_Error<bool>(v, k_BlankLineErrorCode);
 }

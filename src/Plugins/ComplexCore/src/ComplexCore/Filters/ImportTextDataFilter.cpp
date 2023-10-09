@@ -180,12 +180,11 @@ Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const std::
       dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
       break;
     }
-      //    case complex::DataType::string:
-      //    {
-      //      StringArray& data = dataStructure.getDataRefAs<StringArray>(arrayPath);
-      //      dataParsers[i] = std::make_unique<StringParser>(data, name, i);
-      //      break;
-      //    }
+    case complex::DataType::boolean: {
+      BoolArray& data = dataStructure.getDataRefAs<BoolArray>(arrayPath);
+      dataParsers[i] = std::make_unique<BoolParser>(data, name, i);
+      break;
+    }
     default:
       return {MakeErrorResult<ParsersVector>(to_underlying(IssueCodes::INVALID_ARRAY_TYPE),
                                              fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
