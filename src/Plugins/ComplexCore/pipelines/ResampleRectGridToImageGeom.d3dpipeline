@@ -41,7 +41,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportCSVDataFilter",
+        "name": "complex::ImportTextDataFilter",
         "uuid": "373be1f8-31cf-49f6-aa5d-e356f4f3f261"
       },
       "isDisabled": false

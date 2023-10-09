@@ -32,25 +32,25 @@
 
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
-#include "complex/Parameters/util/CSVImporterData.hpp"
+#include "complex/Parameters/util/TextImporterData.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT ImportCSVDataParameter : public ValueParameter
+class COMPLEX_EXPORT ImportTextDataParameter : public ValueParameter
 {
 public:
-  using ValueType = CSVImporterData;
+  using ValueType = TextImporterData;
 
-  ImportCSVDataParameter() = delete;
-  ImportCSVDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
-  ~ImportCSVDataParameter() override = default;
+  ImportTextDataParameter() = delete;
+  ImportTextDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ~ImportTextDataParameter() override = default;
 
-  ImportCSVDataParameter(const ImportCSVDataParameter&) = delete;
-  ImportCSVDataParameter(ImportCSVDataParameter&&) noexcept = delete;
+  ImportTextDataParameter(const ImportTextDataParameter&) = delete;
+  ImportTextDataParameter(ImportTextDataParameter&&) noexcept = delete;
 
-  ImportCSVDataParameter& operator=(const ImportCSVDataParameter&) = delete;
-  ImportCSVDataParameter& operator=(ImportCSVDataParameter&&) noexcept = delete;
+  ImportTextDataParameter& operator=(const ImportTextDataParameter&) = delete;
+  ImportTextDataParameter& operator=(ImportTextDataParameter&&) noexcept = delete;
 
   /**
    * @brief Returns the parameter's uuid.
@@ -103,4 +103,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::ImportCSVDataParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::ImportTextDataParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45");

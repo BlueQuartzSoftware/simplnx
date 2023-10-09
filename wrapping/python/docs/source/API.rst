@@ -383,10 +383,10 @@ General Parameters
 
    This parameter represents the :ref:`DataPath<DataPath>` to a valid :ref:`complex.Geometry() <Geometry Descriptions>`
 
-.. _ImportCSVDataParameter:
-.. py:class:: ImportCSVDataParameter
+.. _ImportTextDataParameter:
+.. py:class:: ImportTextDataParameter
 
-   This parameter is used for the :ref:`complex.ImportCSVDataFilter() <ImportCSVDataFilter>` and holds
+   This parameter is used for the :ref:`complex.ImportTextDataFilter() <ImportTextDataFilter>` and holds
    the information to import a file formatted as table data where each 
    column of data is a single array. 
    
@@ -394,13 +394,13 @@ General Parameters
    + The file optionally can have a line of headers. The user can specify what line the headers are on
    + The import can start at a user specified line number but will continue to the end of the file.
 
-   The primary python object that will hold the information to pass to the filter is the CSVImporterData class described below.
+   The primary python object that will hold the information to pass to the filter is the TextImporterData class described below.
 
-   :ivar ValueType: CSVImporterData
+   :ivar ValueType: TextImporterData
 
-   .. py:class:: ImportCSVDataParameter.CSVImporterData
+   .. py:class:: ImportTextDataParameter.TextImporterData
 
-      The CSVImporterData class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are
+      The TextImporterData class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are
       a number of member variables that need to be set correctly before the filter will execute
       correctly.
 
@@ -416,41 +416,41 @@ General Parameters
    :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray <DataArray>`.
    :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArrays <DataArray>`.
    :ivar headers_line: Int. The line number of the headers.
-   :ivar header_mode: 'cx.CSVImporterData.HeaderMode.'. Can be one of 'cx.CSVImporterData.HeaderMode.Line' or 'cx.CSVImporterData.HeaderMode.Custom'.
+   :ivar header_mode: 'cx.TextImporterData.HeaderMode.'. Can be one of 'cx.TextImporterData.HeaderMode.Line' or 'cx.TextImporterData.HeaderMode.Custom'.
 
 
 .. code:: python
 
    data_structure = cx.DataStructure()
 
-   csv_importer_data = cx.CSVImporterData()
-   csv_importer_data.input_file_path = "/tmp/test_csv_data.csv"
-   csv_importer_data.start_import_row = 2
+   text_importer_data = cx.TextImporterData()
+   text_importer_data.input_file_path = "/tmp/test_csv_data.csv"
+   text_importer_data.start_import_row = 2
 
-   csv_importer_data.comma_as_delimiter = True
-   csv_importer_data.semicolon_as_delimiter = False
-   csv_importer_data.space_as_delimiter = False
-   csv_importer_data.tab_as_delimiter = False
-   csv_importer_data.consecutive_delimiters = False
+   text_importer_data.comma_as_delimiter = True
+   text_importer_data.semicolon_as_delimiter = False
+   text_importer_data.space_as_delimiter = False
+   text_importer_data.tab_as_delimiter = False
+   text_importer_data.consecutive_delimiters = False
 
-   csv_importer_data.custom_headers = []
-   csv_importer_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
-   csv_importer_data.skipped_array_mask = [False,False,False,False,False,False,False ]
-   csv_importer_data.tuple_dims = [37989]
+   text_importer_data.custom_headers = []
+   text_importer_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
+   text_importer_data.skipped_array_mask = [False,False,False,False,False,False,False ]
+   text_importer_data.tuple_dims = [37989]
 
-   csv_importer_data.headers_line = 1
-   csv_importer_data.header_mode = cx.CSVImporterData.HeaderMode.Line
+   text_importer_data.headers_line = 1
+   text_importer_data.header_mode = cx.TextImporterData.HeaderMode.Line
 
    # This will store the imported arrays into a newly generated DataGroup
-   result = cx.ImportCSVDataFilter.execute(data_structure=data_structure,
+   result = cx.ImportTextDataFilter.execute(data_structure=data_structure,
                                          # This will store the imported arrays into a newly generated DataGroup
                                          created_data_group=cx.DataPath(["Imported Data"]),
                                          # We are not using this parameter but it still needs a value
                                          selected_data_group=cx.DataPath(),
                                          # Use an existing DataGroup or AttributeMatrix. If an AttributemMatrix is used, the total number of tuples must match
                                          use_existing_group=False,
-                                         # The CSVImporterData object with all member variables set.
-                                         csv_importer_data=csv_importer_data # The CSVImporterData object with all member variables set.
+                                         # The TextImporterData object with all member variables set.
+                                         text_importer_data=text_importer_data # The TextImporterData object with all member variables set.
                                          )
 
 

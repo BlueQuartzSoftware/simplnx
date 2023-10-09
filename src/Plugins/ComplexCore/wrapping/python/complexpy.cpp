@@ -68,8 +68,8 @@
 #include <complex/Parameters/GenerateColorTableParameter.hpp>
 #include <complex/Parameters/GeneratedFileListParameter.hpp>
 #include <complex/Parameters/GeometrySelectionParameter.hpp>
-#include <complex/Parameters/ImportCSVDataParameter.hpp>
 #include <complex/Parameters/ImportHDF5DatasetParameter.hpp>
+#include <complex/Parameters/ImportTextDataParameter.hpp>
 #include <complex/Parameters/MultiArraySelectionParameter.hpp>
 #include <complex/Parameters/MultiPathSelectionParameter.hpp>
 #include <complex/Parameters/NeighborListSelectionParameter.hpp>
@@ -428,27 +428,27 @@ PYBIND11_MODULE(complex, mod)
   arrayThresholdSet.def_property("thresholds", &ArrayThresholdSet::getArrayThresholds, &ArrayThresholdSet::setArrayThresholds);
   arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet& self) { return "ArrayThresholdSet()"; });
 
-  py::class_<CSVImporterData> csvImporterData(mod, "CSVImporterData");
+  py::class_<TextImporterData> textImporterData(mod, "TextImporterData");
 
-  py::enum_<CSVImporterData::HeaderMode> csvHeaderMode(csvImporterData, "HeaderMode");
-  csvHeaderMode.value("Line", CSVImporterData::HeaderMode::LINE);
-  csvHeaderMode.value("Custom", CSVImporterData::HeaderMode::CUSTOM);
+  py::enum_<TextImporterData::HeaderMode> csvHeaderMode(textImporterData, "HeaderMode");
+  csvHeaderMode.value("Line", TextImporterData::HeaderMode::LINE);
+  csvHeaderMode.value("Custom", TextImporterData::HeaderMode::CUSTOM);
 
-  csvImporterData.def(py::init<>());
-  csvImporterData.def_readwrite("input_file_path", &CSVImporterData::inputFilePath);
-  csvImporterData.def_readwrite("custom_headers", &CSVImporterData::customHeaders);
-  csvImporterData.def_readwrite("start_import_row", &CSVImporterData::startImportRow);
-  csvImporterData.def_readwrite("data_types", &CSVImporterData::dataTypes);
-  csvImporterData.def_readwrite("skipped_array_mask", &CSVImporterData::skippedArrayMask);
-  csvImporterData.def_readwrite("headers_line", &CSVImporterData::headersLine);
-  csvImporterData.def_readwrite("header_mode", &CSVImporterData::headerMode);
-  csvImporterData.def_readwrite("tuple_dims", &CSVImporterData::tupleDims);
-  csvImporterData.def_readwrite("tab_as_delimiter", &CSVImporterData::tabAsDelimiter);
-  csvImporterData.def_readwrite("semicolon_as_delimiter", &CSVImporterData::semicolonAsDelimiter);
-  csvImporterData.def_readwrite("comma_as_delimiter", &CSVImporterData::commaAsDelimiter);
-  csvImporterData.def_readwrite("space_as_delimiter", &CSVImporterData::spaceAsDelimiter);
-  csvImporterData.def_readwrite("consecutive_delimiters", &CSVImporterData::consecutiveDelimiters);
-  csvImporterData.def("__repr__", [](const CSVImporterData& self) { return "CSVImporterData()"; });
+  textImporterData.def(py::init<>());
+  textImporterData.def_readwrite("input_file_path", &TextImporterData::inputFilePath);
+  textImporterData.def_readwrite("custom_headers", &TextImporterData::customHeaders);
+  textImporterData.def_readwrite("start_import_row", &TextImporterData::startImportRow);
+  textImporterData.def_readwrite("data_types", &TextImporterData::dataTypes);
+  textImporterData.def_readwrite("skipped_array_mask", &TextImporterData::skippedArrayMask);
+  textImporterData.def_readwrite("headers_line", &TextImporterData::headersLine);
+  textImporterData.def_readwrite("header_mode", &TextImporterData::headerMode);
+  textImporterData.def_readwrite("tuple_dims", &TextImporterData::tupleDims);
+  textImporterData.def_readwrite("tab_as_delimiter", &TextImporterData::tabAsDelimiter);
+  textImporterData.def_readwrite("semicolon_as_delimiter", &TextImporterData::semicolonAsDelimiter);
+  textImporterData.def_readwrite("comma_as_delimiter", &TextImporterData::commaAsDelimiter);
+  textImporterData.def_readwrite("space_as_delimiter", &TextImporterData::spaceAsDelimiter);
+  textImporterData.def_readwrite("consecutive_delimiters", &TextImporterData::consecutiveDelimiters);
+  textImporterData.def("__repr__", [](const TextImporterData& self) { return "TextImporterData()"; });
 
   py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
   py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
@@ -715,7 +715,7 @@ PYBIND11_MODULE(complex, mod)
   auto generateColorTableParameter = COMPLEX_PY_BIND_PARAMETER(mod, GenerateColorTableParameter);
   auto generatedFileListParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeneratedFileListParameter);
   auto geometrySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeometrySelectionParameter);
-  auto importCSVDataParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportCSVDataParameter);
+  auto importTextDataParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportTextDataParameter);
   auto importHDF5DatasetParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportHDF5DatasetParameter);
   auto multiArraySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiArraySelectionParameter);
   auto multiPathSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiPathSelectionParameter);
@@ -875,7 +875,7 @@ PYBIND11_MODULE(complex, mod)
   geometrySelectionParameter.def(py::init<const std::string&, const std::string&, const std::string&, const GeometrySelectionParameter::ValueType&, const GeometrySelectionParameter::AllowedTypes&>(),
                                  "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a);
 
-  BindParameterConstructor(importCSVDataParameter);
+  BindParameterConstructor(importTextDataParameter);
 
   BindParameterConstructor(importHDF5DatasetParameter);
 
@@ -1056,7 +1056,7 @@ PYBIND11_MODULE(complex, mod)
   internals->addConversion<GenerateColorTableParameter>();
   internals->addConversion<GeneratedFileListParameter>();
   internals->addConversion<GeometrySelectionParameter>();
-  internals->addConversion<ImportCSVDataParameter>();
+  internals->addConversion<ImportTextDataParameter>();
   internals->addConversion<ImportHDF5DatasetParameter>();
   internals->addConversion<MultiArraySelectionParameter>();
   internals->addConversion<MultiPathSelectionParameter>();

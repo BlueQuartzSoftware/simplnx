@@ -1,11 +1,11 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ImportTextFilter.hpp"
 
-#include "ComplexCore/Filters/ImportCSVDataFilter.hpp"
+#include "ComplexCore/Filters/ImportTextDataFilter.hpp"
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/ImportCSVDataParameter.hpp"
+#include "complex/Parameters/ImportTextDataParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"

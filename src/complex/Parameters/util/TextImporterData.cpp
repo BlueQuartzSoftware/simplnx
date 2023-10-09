@@ -28,7 +28,7 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "CSVImporterData.hpp"
+#include "TextImporterData.hpp"
 
 #include <fmt/format.h>
 
@@ -52,7 +52,7 @@ const std::string k_ConsecutiveDelimitersKey = "Consecutive Delimiters";
 } // namespace
 
 // -----------------------------------------------------------------------------
-nlohmann::json CSVImporterData::writeJson() const
+nlohmann::json TextImporterData::writeJson() const
 {
   nlohmann::json json;
 
@@ -98,13 +98,13 @@ nlohmann::json CSVImporterData::writeJson() const
 }
 
 // -----------------------------------------------------------------------------
-Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
+Result<TextImporterData> TextImporterData::ReadJson(const nlohmann::json& json)
 {
-  CSVImporterData data;
+  TextImporterData data;
 
   if(!json.contains(k_CustomHeadersKey))
   {
-    return MakeErrorResult<CSVImporterData>(-100, fmt::format("CSVImporterData: Cannot find the Data Headers key \"{}\" in the CSVImporterData json object.", k_CustomHeadersKey));
+    return MakeErrorResult<TextImporterData>(-100, fmt::format("TextImporterData: Cannot find the Data Headers key \"{}\" in the TextImporterData json object.", k_CustomHeadersKey));
   }
 
   nlohmann::json dHeaders = json[k_CustomHeadersKey];
@@ -113,7 +113,7 @@ Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
     auto header = dHeaders[i];
     if(!header.is_string())
     {
-      return MakeErrorResult<CSVImporterData>(-101, fmt::format("CSVImporterData: Custom header at index {} is of type {} and is not a string.", std::to_string(i), header.type_name()));
+      return MakeErrorResult<TextImporterData>(-101, fmt::format("TextImporterData: Custom header at index {} is of type {} and is not a string.", std::to_string(i), header.type_name()));
     }
 
     data.customHeaders.push_back(header);
@@ -121,7 +121,7 @@ Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
 
   if(!json.contains(k_DataTypesKey))
   {
-    return MakeErrorResult<CSVImporterData>(-102, fmt::format("CSVImporterData: Cannot find the Data Types key \"{}\" in the CSVImporterData json object.", k_DataTypesKey));
+    return MakeErrorResult<TextImporterData>(-102, fmt::format("TextImporterData: Cannot find the Data Types key \"{}\" in the TextImporterData json object.", k_DataTypesKey));
   }
 
   nlohmann::json dTypes = json[k_DataTypesKey];
@@ -130,7 +130,7 @@ Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
     auto dType = dTypes[i];
     if(!dType.is_number_integer())
     {
-      return MakeErrorResult<CSVImporterData>(-103, fmt::format("CSVImporterData: Data type at index {} is of type {} and is not an integer.", std::to_string(i), dType.type_name()));
+      return MakeErrorResult<TextImporterData>(-103, fmt::format("TextImporterData: Data type at index {} is of type {} and is not an integer.", std::to_string(i), dType.type_name()));
     }
 
     data.dataTypes.push_back(dType);
@@ -138,7 +138,7 @@ Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
 
   if(!json.contains(k_TupleDimensionsKey))
   {
-    return MakeErrorResult<CSVImporterData>(-104, fmt::format("CSVImporterData: Cannot find the Tuple Dimensions key \"{}\" in the CSVImporterData json object.", k_TupleDimensionsKey));
+    return MakeErrorResult<TextImporterData>(-104, fmt::format("TextImporterData: Cannot find the Tuple Dimensions key \"{}\" in the TextImporterData json object.", k_TupleDimensionsKey));
   }
 
   nlohmann::json tDims = json[k_TupleDimensionsKey];
@@ -151,7 +151,7 @@ Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
 
   if(!json.contains(k_SkippedArrayMaskKey))
   {
-    return MakeErrorResult<CSVImporterData>(-105, fmt::format("CSVImporterData: Cannot find the Skipped Arrays key \"{}\" in the CSVImporterData json object.", k_DataTypesKey));
+    return MakeErrorResult<TextImporterData>(-105, fmt::format("TextImporterData: Cannot find the Skipped Arrays key \"{}\" in the TextImporterData json object.", k_DataTypesKey));
   }
 
   nlohmann::json dSkippedArrays = json[k_SkippedArrayMaskKey];
@@ -160,8 +160,8 @@ Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
     auto skippedArrayVal = dSkippedArrays[i];
     if(!skippedArrayVal.is_boolean())
     {
-      return MakeErrorResult<CSVImporterData>(-106,
-                                              fmt::format("CSVImporterData: Skipped array value at index {} is of type {} and is not a boolean.", std::to_string(i), skippedArrayVal.type_name()));
+      return MakeErrorResult<TextImporterData>(-106,
+                                               fmt::format("TextImporterData: Skipped array value at index {} is of type {} and is not a boolean.", std::to_string(i), skippedArrayVal.type_name()));
     }
 
     data.skippedArrayMask.push_back(skippedArrayVal);
@@ -169,91 +169,93 @@ Result<CSVImporterData> CSVImporterData::ReadJson(const nlohmann::json& json)
 
   if(!json.contains(k_InputFilePathKey))
   {
-    return MakeErrorResult<CSVImporterData>(-107, fmt::format("CSVImporterData: Cannot find the 'Input File Path' key \"{}\" in the CSVImporterData json object.", k_InputFilePathKey));
+    return MakeErrorResult<TextImporterData>(-107, fmt::format("TextImporterData: Cannot find the 'Input File Path' key \"{}\" in the TextImporterData json object.", k_InputFilePathKey));
   }
   else if(!json[k_InputFilePathKey].is_string())
   {
-    return MakeErrorResult<CSVImporterData>(-108, fmt::format("CSVImporterData: 'Input File Path' value is of type {} and is not a string.", json[k_InputFilePathKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-108, fmt::format("TextImporterData: 'Input File Path' value is of type {} and is not a string.", json[k_InputFilePathKey].type_name()));
   }
   data.inputFilePath = json[k_InputFilePathKey];
 
   if(!json.contains(k_StartImportRowKey))
   {
-    return MakeErrorResult<CSVImporterData>(-109, fmt::format("CSVImporterData: Cannot find the 'Begin Index' key \"{}\" in the CSVImporterData json object.", k_StartImportRowKey));
+    return MakeErrorResult<TextImporterData>(-109, fmt::format("TextImporterData: Cannot find the 'Begin Index' key \"{}\" in the TextImporterData json object.", k_StartImportRowKey));
   }
   else if(!json[k_StartImportRowKey].is_number_integer())
   {
-    return MakeErrorResult<CSVImporterData>(-110, fmt::format("CSVImporterData: 'Begin Index' value is of type {} and is not an integer.", json[k_StartImportRowKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-110, fmt::format("TextImporterData: 'Begin Index' value is of type {} and is not an integer.", json[k_StartImportRowKey].type_name()));
   }
   data.startImportRow = json[k_StartImportRowKey];
 
   if(!json.contains(k_HeaderLineKey))
   {
-    return MakeErrorResult<CSVImporterData>(-113, fmt::format("CSVImporterData: Cannot find the 'Header Line' key \"{}\" in the CSVImporterData json object.", k_HeaderLineKey));
+    return MakeErrorResult<TextImporterData>(-113, fmt::format("TextImporterData: Cannot find the 'Header Line' key \"{}\" in the TextImporterData json object.", k_HeaderLineKey));
   }
   else if(!json[k_HeaderLineKey].is_number_integer())
   {
-    return MakeErrorResult<CSVImporterData>(-114, fmt::format("CSVImporterData: 'Header Line' value is of type {} and is not an integer.", json[k_HeaderLineKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-114, fmt::format("TextImporterData: 'Header Line' value is of type {} and is not an integer.", json[k_HeaderLineKey].type_name()));
   }
   data.headersLine = json[k_HeaderLineKey];
 
   if(!json.contains(k_HeaderModeKey))
   {
-    return MakeErrorResult<CSVImporterData>(-115, fmt::format("CSVImporterData: Cannot find the 'Header Mode' key \"{}\" in the CSVImporterData json object.", k_HeaderModeKey));
+    return MakeErrorResult<TextImporterData>(-115, fmt::format("TextImporterData: Cannot find the 'Header Mode' key \"{}\" in the TextImporterData json object.", k_HeaderModeKey));
   }
   else if(!json[k_HeaderModeKey].is_number_integer())
   {
-    return MakeErrorResult<CSVImporterData>(-116, fmt::format("CSVImporterData: 'Header Mode' value is of type {} and is not an integer.", json[k_HeaderModeKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-116, fmt::format("TextImporterData: 'Header Mode' value is of type {} and is not an integer.", json[k_HeaderModeKey].type_name()));
   }
   data.headerMode = json[k_HeaderModeKey];
 
   if(!json.contains(k_TabAsDelimiterKey))
   {
-    return MakeErrorResult<CSVImporterData>(-117, fmt::format("CSVImporterData: Cannot find the 'Tab As Delimiter' key \"{}\" in the CSVImporterData json object.", k_TabAsDelimiterKey));
+    return MakeErrorResult<TextImporterData>(-117, fmt::format("TextImporterData: Cannot find the 'Tab As Delimiter' key \"{}\" in the TextImporterData json object.", k_TabAsDelimiterKey));
   }
   else if(!json[k_TabAsDelimiterKey].is_boolean())
   {
-    return MakeErrorResult<CSVImporterData>(-118, fmt::format("CSVImporterData: 'Tab As Delimiter' value is of type {} and is not a boolean.", json[k_TabAsDelimiterKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-118, fmt::format("TextImporterData: 'Tab As Delimiter' value is of type {} and is not a boolean.", json[k_TabAsDelimiterKey].type_name()));
   }
   data.tabAsDelimiter = json[k_TabAsDelimiterKey];
 
   if(!json.contains(k_SemicolonAsDelimiterKey))
   {
-    return MakeErrorResult<CSVImporterData>(-119, fmt::format("CSVImporterData: Cannot find the 'Semicolon As Delimiter' key \"{}\" in the CSVImporterData json object.", k_SemicolonAsDelimiterKey));
+    return MakeErrorResult<TextImporterData>(-119,
+                                             fmt::format("TextImporterData: Cannot find the 'Semicolon As Delimiter' key \"{}\" in the TextImporterData json object.", k_SemicolonAsDelimiterKey));
   }
   else if(!json[k_SemicolonAsDelimiterKey].is_boolean())
   {
-    return MakeErrorResult<CSVImporterData>(-120, fmt::format("CSVImporterData: 'Semicolon As Delimiter' value is of type {} and is not a boolean.", json[k_SemicolonAsDelimiterKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-120, fmt::format("TextImporterData: 'Semicolon As Delimiter' value is of type {} and is not a boolean.", json[k_SemicolonAsDelimiterKey].type_name()));
   }
   data.semicolonAsDelimiter = json[k_SemicolonAsDelimiterKey];
 
   if(!json.contains(k_SpaceAsDelimiterKey))
   {
-    return MakeErrorResult<CSVImporterData>(-121, fmt::format("CSVImporterData: Cannot find the 'Space As Delimiter' key \"{}\" in the CSVImporterData json object.", k_SpaceAsDelimiterKey));
+    return MakeErrorResult<TextImporterData>(-121, fmt::format("TextImporterData: Cannot find the 'Space As Delimiter' key \"{}\" in the TextImporterData json object.", k_SpaceAsDelimiterKey));
   }
   else if(!json[k_SpaceAsDelimiterKey].is_boolean())
   {
-    return MakeErrorResult<CSVImporterData>(-122, fmt::format("CSVImporterData: 'Space As Delimiter' value is of type {} and is not a boolean.", json[k_SpaceAsDelimiterKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-122, fmt::format("TextImporterData: 'Space As Delimiter' value is of type {} and is not a boolean.", json[k_SpaceAsDelimiterKey].type_name()));
   }
   data.spaceAsDelimiter = json[k_SpaceAsDelimiterKey];
 
   if(!json.contains(k_CommaAsDelimiterKey))
   {
-    return MakeErrorResult<CSVImporterData>(-123, fmt::format("CSVImporterData: Cannot find the 'Comma As Delimiter' key \"{}\" in the CSVImporterData json object.", k_CommaAsDelimiterKey));
+    return MakeErrorResult<TextImporterData>(-123, fmt::format("TextImporterData: Cannot find the 'Comma As Delimiter' key \"{}\" in the TextImporterData json object.", k_CommaAsDelimiterKey));
   }
   else if(!json[k_CommaAsDelimiterKey].is_boolean())
   {
-    return MakeErrorResult<CSVImporterData>(-124, fmt::format("CSVImporterData: 'Comma As Delimiter' value is of type {} and is not a boolean.", json[k_CommaAsDelimiterKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-124, fmt::format("TextImporterData: 'Comma As Delimiter' value is of type {} and is not a boolean.", json[k_CommaAsDelimiterKey].type_name()));
   }
   data.commaAsDelimiter = json[k_CommaAsDelimiterKey];
 
   if(!json.contains(k_ConsecutiveDelimitersKey))
   {
-    return MakeErrorResult<CSVImporterData>(-125, fmt::format("CSVImporterData: Cannot find the 'Consecutive Delimiters' key \"{}\" in the CSVImporterData json object.", k_ConsecutiveDelimitersKey));
+    return MakeErrorResult<TextImporterData>(-125,
+                                             fmt::format("TextImporterData: Cannot find the 'Consecutive Delimiters' key \"{}\" in the TextImporterData json object.", k_ConsecutiveDelimitersKey));
   }
   else if(!json[k_ConsecutiveDelimitersKey].is_boolean())
   {
-    return MakeErrorResult<CSVImporterData>(-126, fmt::format("CSVImporterData: 'Consecutive Delimiters' value is of type {} and is not a boolean.", json[k_ConsecutiveDelimitersKey].type_name()));
+    return MakeErrorResult<TextImporterData>(-126, fmt::format("TextImporterData: 'Consecutive Delimiters' value is of type {} and is not a boolean.", json[k_ConsecutiveDelimitersKey].type_name()));
   }
   data.consecutiveDelimiters = json[k_ConsecutiveDelimitersKey];
 
