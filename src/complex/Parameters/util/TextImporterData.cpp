@@ -44,10 +44,7 @@ const std::string k_InputFilePathKey = "Input File Path";
 const std::string k_StartImportRowKey = "Start Import Row";
 const std::string k_HeaderLineKey = "Header Line";
 const std::string k_HeaderModeKey = "Header Mode";
-const std::string k_TabAsDelimiterKey = "Tab As Delimiter";
-const std::string k_SemicolonAsDelimiterKey = "Semicolon As Delimiter";
-const std::string k_CommaAsDelimiterKey = "Comma As Delimiter";
-const std::string k_SpaceAsDelimiterKey = "Space As Delimiter";
+const std::string k_Delimiters = "Delimiters";
 const std::string k_ConsecutiveDelimitersKey = "Consecutive Delimiters";
 } // namespace
 
@@ -88,10 +85,7 @@ nlohmann::json TextImporterData::writeJson() const
   json[k_StartImportRowKey] = startImportRow;
   json[k_HeaderLineKey] = headersLine;
   json[k_HeaderModeKey] = headerMode;
-  json[k_TabAsDelimiterKey] = tabAsDelimiter;
-  json[k_SemicolonAsDelimiterKey] = semicolonAsDelimiter;
-  json[k_SpaceAsDelimiterKey] = spaceAsDelimiter;
-  json[k_CommaAsDelimiterKey] = commaAsDelimiter;
+  json[k_Delimiters] = delimiters;
   json[k_ConsecutiveDelimitersKey] = consecutiveDelimiters;
 
   return json;
@@ -207,46 +201,22 @@ Result<TextImporterData> TextImporterData::ReadJson(const nlohmann::json& json)
   }
   data.headerMode = json[k_HeaderModeKey];
 
-  if(!json.contains(k_TabAsDelimiterKey))
+  if(!json.contains(k_Delimiters))
   {
-    return MakeErrorResult<TextImporterData>(-117, fmt::format("TextImporterData: Cannot find the 'Tab As Delimiter' key \"{}\" in the TextImporterData json object.", k_TabAsDelimiterKey));
+    return MakeErrorResult<TextImporterData>(-117, fmt::format("TextImporterData: Cannot find the 'Delimiters' key \"{}\" in the TextImporterData json object.", k_Delimiters));
   }
-  else if(!json[k_TabAsDelimiterKey].is_boolean())
-  {
-    return MakeErrorResult<TextImporterData>(-118, fmt::format("TextImporterData: 'Tab As Delimiter' value is of type {} and is not a boolean.", json[k_TabAsDelimiterKey].type_name()));
-  }
-  data.tabAsDelimiter = json[k_TabAsDelimiterKey];
 
-  if(!json.contains(k_SemicolonAsDelimiterKey))
+  nlohmann::json dDelimiters = json[k_Delimiters];
+  for(usize i = 0; i < dDelimiters.size(); i++)
   {
-    return MakeErrorResult<TextImporterData>(-119,
-                                             fmt::format("TextImporterData: Cannot find the 'Semicolon As Delimiter' key \"{}\" in the TextImporterData json object.", k_SemicolonAsDelimiterKey));
-  }
-  else if(!json[k_SemicolonAsDelimiterKey].is_boolean())
-  {
-    return MakeErrorResult<TextImporterData>(-120, fmt::format("TextImporterData: 'Semicolon As Delimiter' value is of type {} and is not a boolean.", json[k_SemicolonAsDelimiterKey].type_name()));
-  }
-  data.semicolonAsDelimiter = json[k_SemicolonAsDelimiterKey];
+    auto delimiter = dDelimiters[i];
+    if(!delimiter.is_string() || delimiter.get<std::string>().size() != 1)
+    {
+      return MakeErrorResult<TextImporterData>(-118, fmt::format("TextImporterData: Delimiter at index {} is of type {} and is not a boolean.", std::to_string(i), delimiter.type_name()));
+    }
 
-  if(!json.contains(k_SpaceAsDelimiterKey))
-  {
-    return MakeErrorResult<TextImporterData>(-121, fmt::format("TextImporterData: Cannot find the 'Space As Delimiter' key \"{}\" in the TextImporterData json object.", k_SpaceAsDelimiterKey));
+    data.delimiters.push_back(delimiter.get<std::string>()[0]);
   }
-  else if(!json[k_SpaceAsDelimiterKey].is_boolean())
-  {
-    return MakeErrorResult<TextImporterData>(-122, fmt::format("TextImporterData: 'Space As Delimiter' value is of type {} and is not a boolean.", json[k_SpaceAsDelimiterKey].type_name()));
-  }
-  data.spaceAsDelimiter = json[k_SpaceAsDelimiterKey];
-
-  if(!json.contains(k_CommaAsDelimiterKey))
-  {
-    return MakeErrorResult<TextImporterData>(-123, fmt::format("TextImporterData: Cannot find the 'Comma As Delimiter' key \"{}\" in the TextImporterData json object.", k_CommaAsDelimiterKey));
-  }
-  else if(!json[k_CommaAsDelimiterKey].is_boolean())
-  {
-    return MakeErrorResult<TextImporterData>(-124, fmt::format("TextImporterData: 'Comma As Delimiter' value is of type {} and is not a boolean.", json[k_CommaAsDelimiterKey].type_name()));
-  }
-  data.commaAsDelimiter = json[k_CommaAsDelimiterKey];
 
   if(!json.contains(k_ConsecutiveDelimitersKey))
   {

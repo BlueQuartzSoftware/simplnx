@@ -105,7 +105,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
-      data.spaceAsDelimiter = true;
+      data.delimiters = {' '};
       data.tupleDims = {3751};
 
       args.insertOrAssign(k_TextImporterData_Key, std::make_any<TextImporterData>(data));
@@ -125,7 +125,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
-      data.spaceAsDelimiter = true;
+      data.delimiters = {' '};
       data.tupleDims = {3751};
 
       args.insertOrAssign(k_TextImporterData_Key, std::make_any<TextImporterData>(data));
@@ -191,7 +191,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
-      data.spaceAsDelimiter = true;
+      data.delimiters = {' '};
       data.tupleDims = {3751};
 
       args.insertOrAssign(k_TextImporterData_Key, std::make_any<TextImporterData>(data));
@@ -211,7 +211,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
-      data.spaceAsDelimiter = true;
+      data.delimiters = {' '};
       data.tupleDims = {3751};
 
       args.insertOrAssign(k_TextImporterData_Key, std::make_any<TextImporterData>(data));
@@ -277,7 +277,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
-      data.spaceAsDelimiter = true;
+      data.delimiters = {' '};
       data.tupleDims = {3751};
 
       args.insertOrAssign(k_TextImporterData_Key, std::make_any<TextImporterData>(data));
@@ -297,7 +297,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDGMTFileFilter", "[OrientationAnalysis]
       data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
-      data.spaceAsDelimiter = true;
+      data.delimiters = {' '};
       data.tupleDims = {3751};
 
       args.insertOrAssign(k_TextImporterData_Key, std::make_any<TextImporterData>(data));

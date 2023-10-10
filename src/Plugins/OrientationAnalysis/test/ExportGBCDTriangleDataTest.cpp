@@ -97,7 +97,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
     data.skippedArrayMask = {false, false, false, false, false, false, false, false, false, false};
     data.startImportRow = 6;
-    data.spaceAsDelimiter = true;
+    data.delimiters = {' '};
     data.tupleDims = {636474};
 
     args.insertOrAssign(k_TextImporterData_Key, std::make_any<TextImporterData>(data));
@@ -119,7 +119,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
     data.skippedArrayMask = {false, false, false, false, false, false, false, false, false, false};
     data.startImportRow = 5;
-    data.spaceAsDelimiter = true;
+    data.delimiters = {' '};
     data.tupleDims = {636474};
 
     args.insertOrAssign(k_TextImporterData_Key, std::make_any<TextImporterData>(data));

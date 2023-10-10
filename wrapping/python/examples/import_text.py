@@ -10,13 +10,7 @@ data_structure = cx.DataStructure()
 text_importer_data = cx.TextImporterData()
 text_importer_data.input_file_path = "wrapping/python/examples/test_csv_data.csv"
 text_importer_data.start_import_row = 2
-
-text_importer_data.comma_as_delimiter = True
-text_importer_data.semicolon_as_delimiter = False
-text_importer_data.space_as_delimiter = False
-text_importer_data.tab_as_delimiter = False
-text_importer_data.consecutive_delimiters = False
-
+text_importer_data.delimiters = [',']
 text_importer_data.custom_headers = []
 text_importer_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
 text_importer_data.skipped_array_mask = [False,False,False,False,False,False,False ]

@@ -63,10 +63,7 @@ public:
   usize headersLine = 1;
   HeaderMode headerMode = HeaderMode::CUSTOM;
   std::vector<usize> tupleDims = {1};
-  bool tabAsDelimiter = false;
-  bool semicolonAsDelimiter = false;
-  bool commaAsDelimiter = false;
-  bool spaceAsDelimiter = false;
+  std::vector<char> delimiters = {};
   bool consecutiveDelimiters = false;
 };
 } // namespace complex

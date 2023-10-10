@@ -443,10 +443,7 @@ PYBIND11_MODULE(complex, mod)
   textImporterData.def_readwrite("headers_line", &TextImporterData::headersLine);
   textImporterData.def_readwrite("header_mode", &TextImporterData::headerMode);
   textImporterData.def_readwrite("tuple_dims", &TextImporterData::tupleDims);
-  textImporterData.def_readwrite("tab_as_delimiter", &TextImporterData::tabAsDelimiter);
-  textImporterData.def_readwrite("semicolon_as_delimiter", &TextImporterData::semicolonAsDelimiter);
-  textImporterData.def_readwrite("comma_as_delimiter", &TextImporterData::commaAsDelimiter);
-  textImporterData.def_readwrite("space_as_delimiter", &TextImporterData::spaceAsDelimiter);
+  textImporterData.def_readwrite("delimiters", &TextImporterData::delimiters);
   textImporterData.def_readwrite("consecutive_delimiters", &TextImporterData::consecutiveDelimiters);
   textImporterData.def("__repr__", [](const TextImporterData& self) { return "TextImporterData()"; });
 

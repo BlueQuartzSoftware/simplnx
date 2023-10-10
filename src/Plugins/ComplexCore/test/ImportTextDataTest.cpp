@@ -35,6 +35,7 @@ constexpr int32 k_EmptyNames = -116;
 constexpr int32 k_HeaderLineOutOfRange = -120;
 constexpr int32 k_StartImportRowOutOfRange = -121;
 constexpr int32 k_EmptyHeaders = -122;
+constexpr int32 k_EmptyDelimiters = -123;
 constexpr int32 k_FileDoesNotExist = -300;
 } // namespace
 
@@ -80,9 +81,9 @@ void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::string>
 }
 
 // -----------------------------------------------------------------------------
-Arguments createArguments(const std::string& inputFilePath, usize startImportRow, TextImporterData::HeaderMode headerMode, usize headersLine, const std::vector<std::string>& customHeaders,
-                          const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrayMask, const std::vector<usize>& tupleDims, nonstd::span<std::string> values,
-                          const std::string& newGroupName)
+Arguments createArguments(const std::string& inputFilePath, usize startImportRow, TextImporterData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
+                          const std::vector<std::string>& customHeaders, const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrayMask, const std::vector<usize>& tupleDims,
+                          nonstd::span<std::string> values, const std::string& newGroupName)
 {
   Arguments args;
 
@@ -91,7 +92,7 @@ Arguments createArguments(const std::string& inputFilePath, usize startImportRow
   data.customHeaders = customHeaders;
   data.dataTypes = dataTypes;
   data.startImportRow = startImportRow;
-  data.commaAsDelimiter = true;
+  data.delimiters = delimiters;
   data.headersLine = headersLine;
   data.headerMode = headerMode;
   data.tupleDims = tupleDims;
@@ -118,7 +119,8 @@ void TestCase_TestPrimitives(nonstd::span<std::string> values)
 
   ImportTextDataFilter filter;
   DataStructure dataStructure;
-  Arguments args = createArguments(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {arrayName}, {GetDataType<T>()}, {false}, {static_cast<usize>(values.size())}, values, newGroupName);
+  Arguments args =
+      createArguments(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {arrayName}, {GetDataType<T>()}, {false}, {static_cast<usize>(values.size())}, values, newGroupName);
 
   // Create the test input data file
   CreateTestDataFile(k_TestInput, values, {arrayName});
@@ -160,7 +162,8 @@ void TestCase_TestPrimitives_Error(nonstd::span<std::string> values, int32 expec
 
   ImportTextDataFilter filter;
   DataStructure dataStructure;
-  Arguments args = createArguments(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {arrayName}, {GetDataType<T>()}, {false}, {static_cast<usize>(values.size())}, values, newGroupName);
+  Arguments args =
+      createArguments(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {arrayName}, {GetDataType<T>()}, {false}, {static_cast<usize>(values.size())}, values, newGroupName);
 
   // Create the test input data file
   fs::create_directories(k_TestInput.parent_path());
@@ -178,14 +181,14 @@ void TestCase_TestPrimitives_Error(nonstd::span<std::string> values, int32 expec
 }
 
 // -----------------------------------------------------------------------------
-void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize startImportRow, TextImporterData::HeaderMode headerMode, usize headersLine, const std::vector<std::string>& headers,
-                                     const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrayMask, const std::vector<usize>& tupleDims, nonstd::span<std::string> values,
-                                     int32 expectedErrorCode)
+void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize startImportRow, TextImporterData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
+                                     const std::vector<std::string>& headers, const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrayMask, const std::vector<usize>& tupleDims,
+                                     nonstd::span<std::string> values, int32 expectedErrorCode)
 {
   std::string newGroupName = "New Group";
   ImportTextDataFilter filter;
   DataStructure dataStructure;
-  Arguments args = createArguments(inputFilePath, startImportRow, headerMode, headersLine, headers, dataTypes, skippedArrayMask, tupleDims, values, newGroupName);
+  Arguments args = createArguments(inputFilePath, startImportRow, headerMode, headersLine, delimiters, headers, dataTypes, skippedArrayMask, tupleDims, values, newGroupName);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -243,7 +246,8 @@ TEST_CASE("ComplexCore::ImportTextDataFilter (Case 2): Valid filter execution - 
   ImportTextDataFilter filter;
   DataStructure dataStructure;
   std::vector<std::string> values = {"0"};
-  Arguments args = createArguments(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {arrayName}, {DataType::int8}, {true}, {static_cast<usize>(values.size())}, values, newGroupName);
+  Arguments args =
+      createArguments(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {arrayName}, {DataType::int8}, {true}, {static_cast<usize>(values.size())}, values, newGroupName);
 
   // Create the test input data file
   CreateTestDataFile(k_TestInput, values, {arrayName});
@@ -387,51 +391,52 @@ TEST_CASE("ComplexCore::ImportTextDataFilter (Case 5): Invalid filter execution 
   std::vector<usize> tupleDims = {static_cast<usize>(v.size())};
 
   // Empty input file path
-  TestCase_TestImporterData_Error("", 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false}, tupleDims, v, k_EmptyFile);
+  TestCase_TestImporterData_Error("", 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_EmptyFile);
 
   // Input file does not exist
   fs::path tmp_file = fs::temp_directory_path() / "ThisFileDoesNotExist.txt";
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false}, tupleDims, v, k_FileDoesNotExist);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_FileDoesNotExist);
 
   // Start Import Row Out-of-Range
-  TestCase_TestImporterData_Error(k_TestInput.string(), 0, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false}, tupleDims, v, k_StartImportRowOutOfRange);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 500, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false}, tupleDims, v, k_StartImportRowOutOfRange);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 0, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_StartImportRowOutOfRange);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 500, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_StartImportRowOutOfRange);
 
   // Header Line Number Out-of-Range
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 0, {}, {DataType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 600, {}, {DataType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 3, {}, {DataType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 0, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 600, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 3, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_HeaderLineOutOfRange);
 
   // Empty array headers
   tmp_file = fs::temp_directory_path() / "BlankLines.txt";
   v = {std::to_string(std::numeric_limits<int8>::min()), "", std::to_string(std::numeric_limits<int8>::max())};
   CreateTestDataFile(tmp_file, v, {"Array"});
-  TestCase_TestImporterData_Error(tmp_file.string(), 4, TextImporterData::HeaderMode::LINE, 3, {}, {DataType::int8}, {false}, {static_cast<usize>(v.size())}, v, k_EmptyHeaders);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {}, {DataType::int8}, {false}, {static_cast<usize>(v.size())}, v, k_EmptyHeaders);
+  TestCase_TestImporterData_Error(tmp_file.string(), 4, TextImporterData::HeaderMode::LINE, 3, {','}, {}, {DataType::int8}, {false}, {static_cast<usize>(v.size())}, v, k_EmptyHeaders);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {}, {DataType::int8}, {false}, {static_cast<usize>(v.size())}, v, k_EmptyHeaders);
   fs::remove(tmp_file);
   v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
 
   // Incorrect Data Type Count
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8, DataType::int32}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8, DataType::int32}, {false}, tupleDims, v,
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8, DataType::int32}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {}, {false}, tupleDims, v, k_IncorrectDataTypeCount);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {DataType::int8, DataType::int32}, {false}, tupleDims, v,
                                   k_IncorrectDataTypeCount);
 
   // Incorrect Skipped Array Mask Count
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false, false}, tupleDims, v, k_IncorrectMaskCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false, false}, tupleDims, v, k_IncorrectMaskCount);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false, false}, tupleDims, v, k_IncorrectMaskCount);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {DataType::int8}, {}, tupleDims, v, k_IncorrectMaskCount);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {DataType::int8}, {false, false}, tupleDims, v, k_IncorrectMaskCount);
 
   // Empty Header Names
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {""}, {DataType::int8}, {false}, tupleDims, v, k_EmptyNames);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {""}, {DataType::int8}, {false}, tupleDims, v, k_EmptyNames);
 
   // Duplicate Header Names
   tmp_file = fs::temp_directory_path() / "DuplicateHeaders.txt";
   std::vector<std::string> duplicateHeaders = {"Custom Array", "Custom Array"};
   CreateTestDataFile(tmp_file, v, duplicateHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, duplicateHeaders, {DataType::int8, DataType::int8}, {false, false}, tupleDims, v, k_DuplicateNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, duplicateHeaders, {DataType::int8, DataType::int8}, {false, false}, tupleDims, v,
+                                  k_DuplicateNames);
   fs::remove(tmp_file);
 
   // Illegal Header Names
@@ -439,35 +444,39 @@ TEST_CASE("ComplexCore::ImportTextDataFilter (Case 5): Invalid filter execution 
 
   std::vector<std::string> illegalHeaders = {"Illegal/Header"};
   CreateTestDataFile(tmp_file, v, illegalHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
 
   illegalHeaders = {"Illegal\\Header"};
   CreateTestDataFile(tmp_file, v, illegalHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
 
   illegalHeaders = {"Illegal&Header"};
   CreateTestDataFile(tmp_file, v, illegalHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
 
   illegalHeaders = {"Illegal:Header"};
   CreateTestDataFile(tmp_file, v, illegalHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
 
   fs::remove(tmp_file);
 
   // Incorrect Tuple Dimensions
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {0}, v, k_IncorrectTuples);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {30}, v, k_IncorrectTuples);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {30, 2}, v, k_IncorrectTuples);
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array"}, {DataType::int8}, {false}, {30, 5, 7}, v, k_IncorrectTuples);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {DataType::int8}, {false}, {0}, v, k_IncorrectTuples);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {DataType::int8}, {false}, {30}, v, k_IncorrectTuples);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {DataType::int8}, {false}, {30, 2}, v, k_IncorrectTuples);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array"}, {DataType::int8}, {false}, {30, 5, 7}, v, k_IncorrectTuples);
 
   // Inconsistent Columns
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {"Custom Array", "Custom Array2"}, {DataType::int8, DataType::int8}, {false, false}, tupleDims, v,
-                                  k_InconsistentCols);
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array", "Custom Array2"}, {DataType::int8, DataType::int8}, {false, false},
+                                  tupleDims, v, k_InconsistentCols);
+
+  // Empty Delimiters
+  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {}, {"Custom Array", "Custom Array2"}, {DataType::int8, DataType::int8}, {false, false}, tupleDims,
+                                  v, k_EmptyDelimiters);
 }
 
 TEST_CASE("ComplexCore::ImportTextDataFilter (Case 6): Invalid filter execution - Blank Lines")

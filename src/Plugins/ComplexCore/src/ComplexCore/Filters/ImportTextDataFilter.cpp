@@ -63,6 +63,7 @@ enum class IssueCodes
   HEADER_LINE_OUT_OF_RANGE = -120,
   START_IMPORT_ROW_OUT_OF_RANGE = -121,
   EMPTY_HEADERS = -122,
+  EMPTY_DELIMITERS = -123,
   IGNORED_TUPLE_DIMS = -200
 };
 
@@ -288,8 +289,7 @@ std::string tupleDimsToString(const std::vector<usize>& tupleDims)
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize headersLineNum, ImportTextDataFilterCache& headerCache, bool useTab, bool useSemicolon, bool useSpace, bool useComma,
-                                     bool useConsecutive)
+IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize headersLineNum, ImportTextDataFilterCache& headerCache)
 {
   std::fstream in(inputFilePath.c_str(), std::ios_base::in);
   if(!in.is_open())
@@ -417,8 +417,12 @@ IFilter::PreflightResult ImportTextDataFilter::preflightImpl(const DataStructure
     return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(csvResult))), {}), {}};
   }
 
+  if(textImporterData.delimiters.empty())
+  {
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_DELIMITERS), "No delimiters have been chosen.  Please choose at least one delimiter."), {}};
+  }
+
   StringVector headers;
-  std::vector<char> delimiters = CreateDelimitersVector(textImporterData.tabAsDelimiter, textImporterData.semicolonAsDelimiter, textImporterData.commaAsDelimiter, textImporterData.spaceAsDelimiter);
   if(textImporterData.inputFilePath != s_HeaderCache[s_InstanceId].FilePath)
   {
     std::fstream in(inputFilePath.c_str(), std::ios_base::in);
@@ -443,23 +447,21 @@ IFilter::PreflightResult ImportTextDataFilter::preflightImpl(const DataStructure
       }
     }
 
-    headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, delimiters, textImporterData.consecutiveDelimiters);
+    headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, textImporterData.delimiters, textImporterData.consecutiveDelimiters);
     s_HeaderCache[s_InstanceId].TotalLines = lineCount;
   }
   else if(headerMode == TextImporterData::HeaderMode::LINE)
   {
     if(textImporterData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
     {
-      IFilter::PreflightResult result =
-          readHeaders(textImporterData.inputFilePath, textImporterData.headersLine, s_HeaderCache[s_InstanceId], textImporterData.tabAsDelimiter, textImporterData.semicolonAsDelimiter,
-                      textImporterData.spaceAsDelimiter, textImporterData.commaAsDelimiter, textImporterData.consecutiveDelimiters);
+      IFilter::PreflightResult result = readHeaders(textImporterData.inputFilePath, textImporterData.headersLine, s_HeaderCache[s_InstanceId]);
       if(result.outputActions.invalid())
       {
         return result;
       }
     }
 
-    headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, delimiters, textImporterData.consecutiveDelimiters);
+    headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, textImporterData.delimiters, textImporterData.consecutiveDelimiters);
   }
 
   if(headerMode == TextImporterData::HeaderMode::CUSTOM)
@@ -637,8 +639,7 @@ Result<> ImportTextDataFilter::executeImpl(DataStructure& dataStructure, const A
   DataPath createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = textImporterData.inputFilePath;
-  std::vector<char> delimiters = CreateDelimitersVector(textImporterData.tabAsDelimiter, textImporterData.semicolonAsDelimiter, textImporterData.commaAsDelimiter, textImporterData.spaceAsDelimiter);
-  StringVector headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, delimiters, textImporterData.consecutiveDelimiters);
+  StringVector headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, textImporterData.delimiters, textImporterData.consecutiveDelimiters);
   DataTypeVector dataTypes = textImporterData.dataTypes;
   std::vector<bool> skippedArrays = textImporterData.skippedArrayMask;
   bool consecutiveDelimiters = textImporterData.consecutiveDelimiters;
@@ -688,7 +689,7 @@ Result<> ImportTextDataFilter::executeImpl(DataStructure& dataStructure, const A
       return {};
     }
 
-    Result<> parsingResult = parseLine(in, parsersResult.value(), headers, delimiters, consecutiveDelimiters, lineNum, startImportRow);
+    Result<> parsingResult = parseLine(in, parsersResult.value(), headers, textImporterData.delimiters, consecutiveDelimiters, lineNum, startImportRow);
     if(parsingResult.invalid())
     {
       return std::move(parsingResult);

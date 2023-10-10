@@ -406,10 +406,7 @@ General Parameters
 
    :ivar input_file_path: "PathLike".  The path to the input file on the file system.
    :ivar start_import_row: Int.  What line number does the data start on. 1 Based numbering scheme.
-   :ivar comma_as_delimiter: Bool. Are the values comma separated.
-   :ivar semicolon_as_delimiter: Bool. Are the values semicolon separated.
-   :ivar space_as_delimiter: Bool. Are the values space separated.
-   :ivar tab_as_delimiter: Bool. Are the values tab separated.
+   :ivar delimiters: List[string]. List of delimiters that will be used to separate the lines of the file into columns.
    :ivar consecutive_delimiters: Bool. Should consecutive delimiters be counted as a single delimiter.
    :ivar custom_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of the created  :ref:`DataArray<DataArray>`.
    :ivar data_types: List[cx.DataType]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`.
@@ -426,13 +423,7 @@ General Parameters
    text_importer_data = cx.TextImporterData()
    text_importer_data.input_file_path = "/tmp/test_csv_data.csv"
    text_importer_data.start_import_row = 2
-
-   text_importer_data.comma_as_delimiter = True
-   text_importer_data.semicolon_as_delimiter = False
-   text_importer_data.space_as_delimiter = False
-   text_importer_data.tab_as_delimiter = False
-   text_importer_data.consecutive_delimiters = False
-
+   text_importer_data.delimiters = [',']
    text_importer_data.custom_headers = []
    text_importer_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
    text_importer_data.skipped_array_mask = [False,False,False,False,False,False,False ]
