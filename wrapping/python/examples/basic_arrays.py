@@ -13,7 +13,20 @@ data_structure = cx.DataStructure()
 # Create a top level group: (Not needed)
 #------------------------------------------------------------------------------
 result = cx.CreateDataGroup.execute(data_structure=data_structure,
-                                    Data_Object_Path=cx.DataPath(['Group']))
+                                    data_object_path=cx.DataPath(['Group']))
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running CreateDataGroup filter")
+
+result = cx.CreateDataGroup.execute(data_structure=data_structure, 
+                                    data_object_path=cx.DataPath("/Some/Path/To/Group"));
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running CreateDataGroup filter")
 
 #------------------------------------------------------------------------------
 # Create 1D Array 
@@ -48,7 +61,6 @@ print(npdata)
 #------------------------------------------------------------------------------
 # Create 2D Array 
 #------------------------------------------------------------------------------
-data_structure = cx.DataStructure()
 
 # Create a 2D Array with dimensions 2, 5 where the 5 is the fastest moving dimension.
 # Example, and Image where 5 wide x 2 High
@@ -77,7 +89,6 @@ print(npdata)
 #------------------------------------------------------------------------------
 # Create 3D Array 
 #------------------------------------------------------------------------------
-data_structure = cx.DataStructure()
 
 # Create a 3D Array with dimensions 3, 2, 5 where the 5 is the fastest moving dimension.
 # Example, and Image where 5 wide x 2 High
@@ -110,4 +121,15 @@ if len(result.errors) != 0:
     print('Warnings: {}', result.warnings)
 else:
     print("No errors running CreateAttributeMatrixFilter filter")
-    
+
+
+
+output_file_path = "/tmp/output_file_example.dream3d"
+result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+                                        export_file_path=output_file_path, 
+                                        write_xdmf_file=True)
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running the filter")

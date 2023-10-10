@@ -256,6 +256,12 @@ Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
   return result;
 }
 
+complex::DataPath CreateDataPath(const std::string& path)
+{
+  auto result = DataPath::FromString(path);
+  return result.value();
+}
+
 PYBIND11_MODULE(complex, mod)
 {
   auto* internals = new Internals();
@@ -364,6 +370,7 @@ PYBIND11_MODULE(complex, mod)
   py::class_<DataPath> dataPath(mod, "DataPath");
   dataPath.def(py::init<>());
   dataPath.def(py::init<std::vector<std::string>>());
+  dataPath.def(py::init<>(&CreateDataPath));
   dataPath.def("__getitem__", [](const DataPath& self, usize index) { return self[index]; });
   dataPath.def("__repr__", [](const DataPath& self) { return fmt::format("DataPath('{}')", self.toString("/")); });
   dataPath.def("__str__", [](const DataPath& self) { return fmt::format("DataPath('{}')", self.toString("/")); });
