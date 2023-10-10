@@ -24,7 +24,7 @@ namespace
 {
 inline constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
-inline constexpr StringLiteral k_TextImporterData_Key = "csv_importer_data";
+inline constexpr StringLiteral k_TextImporterData_Key = "text_importer_data";
 inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
 inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
 inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_data_group";
