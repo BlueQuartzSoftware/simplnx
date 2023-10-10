@@ -23,12 +23,7 @@ assert cx.CreateDataArray.execute(data_structure,
                                   output_data_array=array_path, 
                                   initialization_value='0')
 
-
-data_array = data_structure[array_path]
-# Get the underlying DataStore object
-data_store = data_array.store
-# Get a Numpy View into the data
-npdata = data_store.npview()
+npdata = data_structure[array_path].npview()
 # Manipulate the underlying array
 npdata += 42.0
 

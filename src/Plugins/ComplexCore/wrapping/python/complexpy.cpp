@@ -169,6 +169,19 @@ auto BindDataArray(py::handle scope, const char* name)
 {
   py::class_<DataArray<T>, IDataArray, std::shared_ptr<DataArray<T>>> dataArray(scope, name);
   dataArray.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
+  dataArray.def(
+      "npview",
+      [](DataArray<T>& dataArray) {
+        using DataArrayType = DataArray<T>;
+        using DataStoreType = DataStore<T>;
+        const typename DataArrayType::store_type& abstractDataStore = dataArray.getDataStoreRef();
+        const DataStoreType& dataStore = dynamic_cast<const DataStoreType&>(abstractDataStore);
+        IDataStore::ShapeType shape = dataStore.getTupleShape();
+        IDataStore::ShapeType componentShape = dataStore.getComponentShape();
+        shape.insert(shape.end(), componentShape.cbegin(), componentShape.cend());
+        return py::array_t<T, py::array::c_style>(shape, dataStore.data(), py::cast(dataStore));
+      },
+      py::return_value_policy::reference_internal);
   return dataArray;
 }
 
