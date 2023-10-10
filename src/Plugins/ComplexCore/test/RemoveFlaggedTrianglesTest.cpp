@@ -36,4 +36,5 @@ TEST_CASE("ComplexCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
+
 }

@@ -23,7 +23,7 @@ public:
   , m_NewVerticesIndex(newVerticesIndex)
   {
   }
-  virtual ~PopulateReducedGeometryTrianglesImpl() = default;
+  ~PopulateReducedGeometryTrianglesImpl() = default;
 
   void generate(usize start, usize end) const
   {
@@ -68,9 +68,6 @@ RemoveFlaggedTriangles::RemoveFlaggedTriangles(DataStructure& dataStructure, con
 , m_MessageHandler(mesgHandler)
 {
 }
-
-// -----------------------------------------------------------------------------
-RemoveFlaggedTriangles::~RemoveFlaggedTriangles() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& RemoveFlaggedTriangles::getCancel()

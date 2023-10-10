@@ -27,7 +27,7 @@ class COMPLEXCORE_EXPORT RemoveFlaggedTriangles
 {
 public:
   RemoveFlaggedTriangles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RemoveFlaggedTrianglesInputValues* inputValues);
-  ~RemoveFlaggedTriangles() noexcept;
+  ~RemoveFlaggedTriangles() noexcept = default;
 
   RemoveFlaggedTriangles(const RemoveFlaggedTriangles&) = delete;
   RemoveFlaggedTriangles(RemoveFlaggedTriangles&&) noexcept = delete;
