@@ -23,9 +23,8 @@ constexpr ChoicesParameter::ValueType k_ToVectorScalar = 1;
 class Converter
 {
 public:
-  Converter(const std::atomic_bool& shouldCancel, const fs::path& inputPath, const fs::path& outputDirPath, const std::string& outputFilePrefix, const std::vector<float64>& spacingXY)
+  Converter(const std::atomic_bool& shouldCancel, const fs::path& outputDirPath, const std::string& outputFilePrefix, const std::vector<float64>& spacingXY)
   : m_ShouldCancel(shouldCancel)
-  , m_InputPath(inputPath)
   , m_OutputPath(outputDirPath)
   , m_FilePrefix(outputFilePrefix)
   , m_XResolution(spacingXY.at(0))
@@ -39,14 +38,14 @@ public:
   Converter& operator=(const Converter&) = delete; // Copy Assignment Not Implemented
   Converter& operator=(Converter&&) = delete;      // Move Assignment Not Implemented
 
-  Result<> operator()()
+  Result<> operator()(const fs::path& inputPath)
   {
     // Write the Manufacturer of the OIM file here
     // This list will grow to be the number of EBSD file formats we support
-    if(m_InputPath.extension() == ("." + EbsdLib::Ang::FileExt))
+    if(inputPath.extension() == ("." + EbsdLib::Ang::FileExt))
     {
       AngReader reader;
-      reader.setFileName(m_InputPath.string());
+      reader.setFileName(inputPath.string());
       reader.setReadHexGrid(true);
       int32 err = reader.readFile();
       if(err < 0 && err != -600)
@@ -55,19 +54,19 @@ public:
       }
       if(reader.getGrid().find(EbsdLib::Ang::SquareGrid) == 0)
       {
-        return MakeErrorResult(-55000, fmt::format("Ang file is already a square grid: {}", m_InputPath.string()));
+        return MakeErrorResult(-55000, fmt::format("Ang file is already a square grid: {}", inputPath.string()));
       }
 
       std::string origHeader = reader.getOriginalHeader();
       if(origHeader.empty())
       {
-        return MakeErrorResult(-55001, fmt::format("Header could not be retrieved: {}", m_InputPath.string()));
+        return MakeErrorResult(-55001, fmt::format("Header could not be retrieved: {}", inputPath.string()));
       }
 
-      std::ifstream in(origHeader, std::ios_base::in | std::ios_base::binary);
-      fs::path outPath = fs::absolute(m_OutputPath) / (m_FilePrefix + m_InputPath.filename().string());
+      std::istringstream in(origHeader, std::ios_base::in | std::ios_base::binary);
+      fs::path outPath = fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string());
 
-      if(outPath == m_InputPath)
+      if(outPath == inputPath)
       {
         return MakeErrorResult(-201, "New ang file is the same as the old ang file. Overwriting is NOT allowed");
       }
@@ -109,6 +108,10 @@ public:
       {
         std::string buf;
         std::getline(in, buf);
+        if(buf.empty())
+        {
+          continue;
+        }
         std::string line = modifyAngHeaderLine(buf);
         if(!m_HeaderIsComplete)
         {
@@ -167,7 +170,7 @@ public:
         return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
       }
     }
-    else if(m_InputPath.extension() == ("." + EbsdLib::Ctf::FileExt))
+    else if(inputPath.extension() == ("." + EbsdLib::Ctf::FileExt))
     {
       return MakeErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
     }
@@ -181,7 +184,6 @@ public:
 
 private:
   const std::atomic_bool& m_ShouldCancel;
-  const fs::path& m_InputPath;
   const fs::path& m_OutputPath;
   const std::string& m_FilePrefix;
   const float64 m_XResolution;
@@ -291,7 +293,7 @@ Result<> ConvertHexGridToSquareGrid::operator()()
 {
   if(!m_InputValues->MultiFile)
   {
-    return ::Converter(getCancel(), m_InputValues->InputPath, m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing)();
+    return ::Converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing)(m_InputValues->InputPath);
   }
 
   // Now generate all the file names the user is asking for and populate the table
@@ -329,11 +331,12 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   int64 z = m_InputValues->InputFileListInfo.startIndex;
 
   auto result = Result<>{};
+  ::Converter converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
   for(const auto& filepath : fileList)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Now Processing: {}", filepath));
 
-    result = MergeResults(::Converter(getCancel(), fs::path(filepath), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing)(), result);
+    result = MergeResults(converter(fs::path(filepath)), result);
 
     {
       z++;
