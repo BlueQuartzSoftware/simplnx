@@ -335,7 +335,9 @@ struct IntFilterParameterConverter
   }
 };
 
-template <class T>
+using UInt64FilterParameterConverter = IntFilterParameterConverter<uint64>;
+
+template <class T = float32>
 struct FloatFilterParameterConverter
 {
   using ParameterType = NumberParameter<T>;
@@ -354,7 +356,7 @@ struct FloatFilterParameterConverter
   }
 };
 
-using DoubleFilterParameterConverter = FloatingPoointFilterParameterConverter<float64>;
+using DoubleFilterParameterConverter = FloatFilterParameterConverter<float64>;
 
 struct BooleanFilterParameterConverter
 {
@@ -606,37 +608,6 @@ struct DataArrayCreationToDataObjectNameFilterParameterConverter
   }
 };
 
-struct DataArraySelectionFilterParameterConverter
-{
-  using ParameterType = ArraySelectionParameter;
-  using ValueType = ParameterType::ValueType;
-
-  static Result<ValueType> convert(const nlohmann::json& json)
-  {
-    auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
-    if(dataContainerNameResult.invalid())
-    {
-      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
-    }
-
-    auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArraySelectionFilterParameter");
-    if(attributeMatrixNameResult.invalid())
-    {
-      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
-    }
-
-    auto dataArrayNameResult = ReadDataArrayName(json, "DataArraySelectionFilterParameter");
-    if(dataArrayNameResult.invalid())
-    {
-      return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
-    }
-
-    DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
-
-    return {std::move(dataPath)};
-  }
-};
-
 struct DataContainerCreationFilterParameterConverter
 {
   using ParameterType = DataGroupCreationParameter;
@@ -656,6 +627,7 @@ struct DataContainerCreationFilterParameterConverter
   }
 };
 
+#if 0
 struct LinkedPathCreationFilterParameterConverter
 {
   using ParameterType = DataGroupCreationParameter;
@@ -673,6 +645,7 @@ struct LinkedPathCreationFilterParameterConverter
     return {std::move(dataPath)};
   }
 };
+#endif
 
 struct DataContainerSelectionFilterParameterConverter
 {

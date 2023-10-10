@@ -152,7 +152,7 @@ namespace complex
     {complex::Uuid::FromString("3fcd4c43-9d75-5b86-aad4-4441bc914f37").value(), {complex::FilterTraits<ExportDREAM3DFilter>::uuid, {}}}, // DataContainerWriter
     {complex::Uuid::FromString("52a069b4-6a46-5810-b0ec-e0693c636034").value(), {complex::FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid, &ExtractInternalSurfacesFromTriangleGeometry::FromSIMPLJson}}, // ExtractInternalSurfacesFromTriangleGeometry
     {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), {complex::FilterTraits<FeatureDataCSVWriterFilter>::uuid, &FeatureDataCSVWriterFilter::FromSIMPLJson}}, // FeatureDataCSVWriter
-    {complex::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), {complex::FilterTraits<FindArrayStatisticsFilter>::uuid, {}}}, // FindArrayStatistics
+    {complex::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), {complex::FilterTraits<FindArrayStatisticsFilter>::uuid, &FindArrayStatisticsFilter::FromSIMPLJson}}, // FindArrayStatistics
     {complex::Uuid::FromString("8a1106d4-c67f-5e09-a02a-b2e9b99d031e").value(), {complex::FilterTraits<FindBoundaryCellsFilter>::uuid, {}}}, // FindBoundaryCellsFilter
     {complex::Uuid::FromString("450c2f00-9ddf-56e1-b4c1-0e74e7ad2349").value(), {complex::FilterTraits<FindBiasedFeaturesFilter>::uuid, {}}}, // FindBiasedFeaturesFilter
     {complex::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), {complex::FilterTraits<FindDifferencesMap>::uuid, {}}}, // FindDifferenceMap
