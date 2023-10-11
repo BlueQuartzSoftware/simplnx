@@ -55,7 +55,7 @@ Parameters ConvertHexGridToSquareGridFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Orientation Source Data"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_MultipleFiles_Key, "Convert Multiple Files", "", false));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing", "Specifies the new spacing values", std::vector<float64>{1, 1}, std::vector<std::string>{"X", "Y"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "Specifies the new spacing values", std::vector<float32>{1.0f, 1.0f}, std::vector<std::string>{"X", "Y"}));
   params.insert(
       std::make_unique<FileSystemPathParameter>(k_InputPath_Key, "Input File", "", fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile, true));
   params.insert(std::make_unique<GeneratedFileListParameter>(k_GeneratedFileList_Key, "Generated File List", "", GeneratedFileListParameter::ValueType{}));
@@ -109,7 +109,7 @@ Result<> ConvertHexGridToSquareGridFilter::executeImpl(DataStructure& dataStruct
   ConvertHexGridToSquareGridInputValues inputValues;
 
   inputValues.MultiFile = filterArgs.value<bool>(k_MultipleFiles_Key);
-  inputValues.XYSpacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
+  inputValues.XYSpacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   inputValues.OutputFilePrefix = filterArgs.value<std::string>(k_OutputPrefix_Key);
   inputValues.InputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);

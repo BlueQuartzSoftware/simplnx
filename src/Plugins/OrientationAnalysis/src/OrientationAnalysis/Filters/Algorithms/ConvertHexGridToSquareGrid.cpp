@@ -23,7 +23,7 @@ constexpr ChoicesParameter::ValueType k_ToVectorScalar = 1;
 class Converter
 {
 public:
-  Converter(const std::atomic_bool& shouldCancel, const fs::path& outputDirPath, const std::string& outputFilePrefix, const std::vector<float64>& spacingXY)
+  Converter(const std::atomic_bool& shouldCancel, const fs::path& outputDirPath, const std::string& outputFilePrefix, const std::vector<float32>& spacingXY)
   : m_ShouldCancel(shouldCancel)
   , m_OutputPath(outputDirPath)
   , m_FilePrefix(outputFilePrefix)
@@ -161,7 +161,7 @@ public:
             point = point2;
           }
           outFile << "  " << phi1[point] << "	" << PHI[point] << "	" << phi2[point] << "	" << xSqr << "	" << ySqr << "	" << iq[point] << "	" << ci[point] << "	" << phase[point] << "	"
-                  << semSig[point] << "	" << fit[point] << "	"
+                  << semSig[point] << "	" << fit[point] << "   "
                   << "\n";
         }
       }
@@ -186,8 +186,8 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const fs::path& m_OutputPath;
   const std::string& m_FilePrefix;
-  const float64 m_XResolution;
-  const float64 m_YResolution;
+  const float32 m_XResolution;
+  const float32 m_YResolution;
 
   int32 m_NumCols = 0;
   int32 m_NumRows = 0;
@@ -241,11 +241,11 @@ private:
     }
     else if(StringUtilities::contains(buf, EbsdLib::Ang::XStep))
     {
-      line = "# " + EbsdLib::Ang::XStep + ": " + StringUtilities::number(static_cast<float64>(m_XResolution));
+      line = "# " + EbsdLib::Ang::XStep + ": " + StringUtilities::number(m_XResolution);
     }
     else if(StringUtilities::contains(buf, EbsdLib::Ang::YStep))
     {
-      line = "# " + EbsdLib::Ang::YStep + ": " + StringUtilities::number(static_cast<float64>(m_YResolution));
+      line = "# " + EbsdLib::Ang::YStep + ": " + StringUtilities::number(m_YResolution);
     }
     else if(StringUtilities::contains(buf, EbsdLib::Ang::NColsOdd))
     {

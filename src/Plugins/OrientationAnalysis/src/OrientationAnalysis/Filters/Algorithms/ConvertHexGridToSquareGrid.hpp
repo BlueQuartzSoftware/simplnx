@@ -18,7 +18,7 @@ namespace complex
 struct ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGridInputValues
 {
   bool MultiFile;
-  VectorFloat64Parameter::ValueType XYSpacing;
+  VectorFloat32Parameter::ValueType XYSpacing;
   FileSystemPathParameter::ValueType InputPath;
   FileSystemPathParameter::ValueType OutputPath;
   GeneratedFileListParameter::ValueType InputFileListInfo;
