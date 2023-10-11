@@ -35,7 +35,6 @@ constexpr int32 k_EmptyNames = -116;
 constexpr int32 k_HeaderLineOutOfRange = -120;
 constexpr int32 k_StartImportRowOutOfRange = -121;
 constexpr int32 k_EmptyHeaders = -122;
-constexpr int32 k_EmptyDelimiters = -123;
 constexpr int32 k_FileDoesNotExist = -300;
 } // namespace
 
@@ -473,10 +472,6 @@ TEST_CASE("ComplexCore::ImportTextDataFilter (Case 5): Invalid filter execution 
   // Inconsistent Columns
   TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {','}, {"Custom Array", "Custom Array2"}, {DataType::int8, DataType::int8}, {false, false},
                                   tupleDims, v, k_InconsistentCols);
-
-  // Empty Delimiters
-  TestCase_TestImporterData_Error(k_TestInput.string(), 2, TextImporterData::HeaderMode::CUSTOM, 1, {}, {"Custom Array", "Custom Array2"}, {DataType::int8, DataType::int8}, {false, false}, tupleDims,
-                                  v, k_EmptyDelimiters);
 }
 
 TEST_CASE("ComplexCore::ImportTextDataFilter (Case 6): Invalid filter execution - Blank Lines")

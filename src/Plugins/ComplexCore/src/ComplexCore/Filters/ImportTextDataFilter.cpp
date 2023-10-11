@@ -63,7 +63,6 @@ enum class IssueCodes
   HEADER_LINE_OUT_OF_RANGE = -120,
   START_IMPORT_ROW_OUT_OF_RANGE = -121,
   EMPTY_HEADERS = -122,
-  EMPTY_DELIMITERS = -123,
   IGNORED_TUPLE_DIMS = -200
 };
 
@@ -415,11 +414,6 @@ IFilter::PreflightResult ImportTextDataFilter::preflightImpl(const DataStructure
   if(csvResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(csvResult))), {}), {}};
-  }
-
-  if(textImporterData.delimiters.empty())
-  {
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_DELIMITERS), "No delimiters have been chosen.  Please choose at least one delimiter."), {}};
   }
 
   StringVector headers;
