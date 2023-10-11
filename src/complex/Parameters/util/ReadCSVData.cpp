@@ -85,7 +85,11 @@ nlohmann::json ReadCSVData::writeJson() const
   json[k_StartImportRowKey] = startImportRow;
   json[k_HeaderLineKey] = headersLine;
   json[k_HeaderModeKey] = headerMode;
-  json[k_Delimiters] = delimiters;
+
+  std::vector<std::string> stringVec(delimiters.size());
+  std::transform(delimiters.begin(), delimiters.end(), stringVec.begin(), [](char c) { return std::string(1, c); });
+  json[k_Delimiters] = stringVec;
+
   json[k_ConsecutiveDelimitersKey] = consecutiveDelimiters;
 
   return json;
@@ -208,13 +212,19 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   nlohmann::json dDelimiters = json[k_Delimiters];
   for(usize i = 0; i < dDelimiters.size(); i++)
   {
-    auto delimiter = dDelimiters[i];
-    if(!delimiter.is_string() || delimiter.get<std::string>().size() != 1)
+    auto dDelimiter = dDelimiters[i];
+    if(!dDelimiter.is_string() || dDelimiter.get<std::string>().size() != 1)
     {
-      return MakeErrorResult<ReadCSVData>(-118, fmt::format("ReadCSVData: Delimiter at index {} is of type {} and is not a boolean.", std::to_string(i), delimiter.type_name()));
+      return MakeErrorResult<ReadCSVData>(-118, fmt::format("ReadCSVData: Delimiter at index {} is of type {} and is not a string.", std::to_string(i), dDelimiter.type_name()));
     }
 
-    data.delimiters.push_back(delimiter.get<std::string>()[0]);
+    std::string delimiter = dDelimiter.get<std::string>();
+    if(delimiter.empty())
+    {
+      return MakeErrorResult<ReadCSVData>(-119, fmt::format("ReadCSVData: Delimiter at index {} is empty.", std::to_string(i)));
+    }
+
+    data.delimiters.push_back(delimiter[0]);
   }
 
   if(!json.contains(k_ConsecutiveDelimitersKey))
