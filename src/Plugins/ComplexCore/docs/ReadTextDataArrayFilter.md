@@ -1,4 +1,4 @@
-# Import ASCII Attribute Array 
+# Read Text Data Array
 
 
 ## Group (Subgroup) ##

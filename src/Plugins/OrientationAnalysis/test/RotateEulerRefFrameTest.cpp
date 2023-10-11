@@ -66,7 +66,7 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(0));
     args.insertOrAssign(k_DataArrayKey, std::make_any<DataPath>(k_EulerAnglesDataPath));
 
-    auto filter = filterList->createFilter(k_ImportTextFilterHandle);
+    auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
 
     // Preflight the filter and check result
@@ -88,7 +88,7 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(0));
     args.insertOrAssign(k_DataArrayKey, std::make_any<DataPath>(k_EulersRotatedDataPath));
 
-    auto filter = filterList->createFilter(k_ImportTextFilterHandle);
+    auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
 
     // Preflight the filter and check result

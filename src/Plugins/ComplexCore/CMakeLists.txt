@@ -81,7 +81,7 @@ set(FilterList
   ImportDeformKeyFileV12Filter
   ImportDREAM3DFilter
   ImportHDF5Dataset
-  ImportTextFilter
+  ReadTextDataArrayFilter
   ImportVolumeGraphicsFileFilter
   InitializeData
   InterpolatePointCloudToRegularGridFilter

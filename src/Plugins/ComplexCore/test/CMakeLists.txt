@@ -81,7 +81,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
 
   # ImportDeformKeyFileV12Test.cpp
   ImportHDF5DatasetTest.cpp
-  ImportTextTest.cpp
+  ReadTextDataArrayTest.cpp
   ImportVolumeGraphicsFileTest.cpp
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp

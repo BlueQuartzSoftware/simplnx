@@ -2,7 +2,7 @@
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/GenerateColorTableFilter.hpp"
-#include "ComplexCore/Filters/ImportTextFilter.hpp"
+#include "ComplexCore/Filters/ReadTextDataArrayFilter.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
@@ -79,14 +79,14 @@ TEST_CASE("ComplexCore::GenerateColorTableFilter: Valid filter execution")
 
   // Read Image File
   {
-    const ImportTextFilter filter;
+    const ReadTextDataArrayFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ImportTextFilter::k_InputFileKey, std::make_any<fs::path>(k_InputImageFilePath));
-    args.insertOrAssign(ImportTextFilter::k_ScalarTypeKey, std::make_any<NumericType>(NumericType::float32));
-    args.insertOrAssign(ImportTextFilter::k_NCompKey, std::make_any<uint64>(1));
-    args.insertOrAssign(ImportTextFilter::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(37989)}}));
-    args.insertOrAssign(ImportTextFilter::k_DataArrayKey, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFileKey, std::make_any<fs::path>(k_InputImageFilePath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarTypeKey, std::make_any<NumericType>(NumericType::float32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NCompKey, std::make_any<uint64>(1));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(37989)}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayKey, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
 
     IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
