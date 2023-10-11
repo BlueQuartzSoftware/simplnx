@@ -60,8 +60,8 @@ const FilterHandle k_RemoveMinimumSizeFeaturesFilterHandle(k_RemoveMinimumSizeFe
 // Make sure we can instantiate the CalculateFeatureSizesFilter
 const Uuid k_CalculateFeatureSizesFilterId = *Uuid::FromString("c666ee17-ca58-4969-80d0-819986c72485");
 const FilterHandle k_CalculateFeatureSizesFilterHandle(k_CalculateFeatureSizesFilterId, k_ComplexCorePluginId);
-const Uuid k_ImportTextDataFilterId = *Uuid::FromString("373be1f8-31cf-49f6-aa5d-e356f4f3f261");
-const FilterHandle k_ImportTextDataFilterHandle(k_ImportTextDataFilterId, k_ComplexCorePluginId);
+const Uuid k_ReadCSVFileFilterId = *Uuid::FromString("373be1f8-31cf-49f6-aa5d-e356f4f3f261");
+const FilterHandle k_ReadCSVFileFilterHandle(k_ReadCSVFileFilterId, k_ComplexCorePluginId);
 
 const Uuid k_OrientationAnalysisPluginId = *Uuid::FromString("c09cf01b-014e-5adb-84eb-ea76fc79eeb1");
 // Make sure we can instantiate the Convert Orientations

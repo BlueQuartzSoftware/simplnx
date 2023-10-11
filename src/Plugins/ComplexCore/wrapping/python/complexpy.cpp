@@ -69,12 +69,12 @@
 #include <complex/Parameters/GeneratedFileListParameter.hpp>
 #include <complex/Parameters/GeometrySelectionParameter.hpp>
 #include <complex/Parameters/ImportHDF5DatasetParameter.hpp>
-#include <complex/Parameters/ImportTextDataParameter.hpp>
 #include <complex/Parameters/MultiArraySelectionParameter.hpp>
 #include <complex/Parameters/MultiPathSelectionParameter.hpp>
 #include <complex/Parameters/NeighborListSelectionParameter.hpp>
 #include <complex/Parameters/NumberParameter.hpp>
 #include <complex/Parameters/NumericTypeParameter.hpp>
+#include <complex/Parameters/ReadCSVFileParameter.hpp>
 #include <complex/Parameters/StringParameter.hpp>
 #include <complex/Parameters/VectorParameter.hpp>
 #include <complex/Pipeline/AbstractPipelineNode.hpp>
@@ -428,24 +428,24 @@ PYBIND11_MODULE(complex, mod)
   arrayThresholdSet.def_property("thresholds", &ArrayThresholdSet::getArrayThresholds, &ArrayThresholdSet::setArrayThresholds);
   arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet& self) { return "ArrayThresholdSet()"; });
 
-  py::class_<TextImporterData> textImporterData(mod, "TextImporterData");
+  py::class_<ReadCSVData> readCSVData(mod, "ReadCSVData");
 
-  py::enum_<TextImporterData::HeaderMode> csvHeaderMode(textImporterData, "HeaderMode");
-  csvHeaderMode.value("Line", TextImporterData::HeaderMode::LINE);
-  csvHeaderMode.value("Custom", TextImporterData::HeaderMode::CUSTOM);
+  py::enum_<ReadCSVData::HeaderMode> csvHeaderMode(readCSVData, "HeaderMode");
+  csvHeaderMode.value("Line", ReadCSVData::HeaderMode::LINE);
+  csvHeaderMode.value("Custom", ReadCSVData::HeaderMode::CUSTOM);
 
-  textImporterData.def(py::init<>());
-  textImporterData.def_readwrite("input_file_path", &TextImporterData::inputFilePath);
-  textImporterData.def_readwrite("custom_headers", &TextImporterData::customHeaders);
-  textImporterData.def_readwrite("start_import_row", &TextImporterData::startImportRow);
-  textImporterData.def_readwrite("data_types", &TextImporterData::dataTypes);
-  textImporterData.def_readwrite("skipped_array_mask", &TextImporterData::skippedArrayMask);
-  textImporterData.def_readwrite("headers_line", &TextImporterData::headersLine);
-  textImporterData.def_readwrite("header_mode", &TextImporterData::headerMode);
-  textImporterData.def_readwrite("tuple_dims", &TextImporterData::tupleDims);
-  textImporterData.def_readwrite("delimiters", &TextImporterData::delimiters);
-  textImporterData.def_readwrite("consecutive_delimiters", &TextImporterData::consecutiveDelimiters);
-  textImporterData.def("__repr__", [](const TextImporterData& self) { return "TextImporterData()"; });
+  readCSVData.def(py::init<>());
+  readCSVData.def_readwrite("input_file_path", &ReadCSVData::inputFilePath);
+  readCSVData.def_readwrite("custom_headers", &ReadCSVData::customHeaders);
+  readCSVData.def_readwrite("start_import_row", &ReadCSVData::startImportRow);
+  readCSVData.def_readwrite("data_types", &ReadCSVData::dataTypes);
+  readCSVData.def_readwrite("skipped_array_mask", &ReadCSVData::skippedArrayMask);
+  readCSVData.def_readwrite("headers_line", &ReadCSVData::headersLine);
+  readCSVData.def_readwrite("header_mode", &ReadCSVData::headerMode);
+  readCSVData.def_readwrite("tuple_dims", &ReadCSVData::tupleDims);
+  readCSVData.def_readwrite("delimiters", &ReadCSVData::delimiters);
+  readCSVData.def_readwrite("consecutive_delimiters", &ReadCSVData::consecutiveDelimiters);
+  readCSVData.def("__repr__", [](const ReadCSVData& self) { return "ReadCSVData()"; });
 
   py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
   py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
@@ -712,7 +712,7 @@ PYBIND11_MODULE(complex, mod)
   auto generateColorTableParameter = COMPLEX_PY_BIND_PARAMETER(mod, GenerateColorTableParameter);
   auto generatedFileListParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeneratedFileListParameter);
   auto geometrySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeometrySelectionParameter);
-  auto importTextDataParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportTextDataParameter);
+  auto importTextDataParameter = COMPLEX_PY_BIND_PARAMETER(mod, ReadCSVFileParameter);
   auto importHDF5DatasetParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportHDF5DatasetParameter);
   auto multiArraySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiArraySelectionParameter);
   auto multiPathSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiPathSelectionParameter);
@@ -1053,7 +1053,7 @@ PYBIND11_MODULE(complex, mod)
   internals->addConversion<GenerateColorTableParameter>();
   internals->addConversion<GeneratedFileListParameter>();
   internals->addConversion<GeometrySelectionParameter>();
-  internals->addConversion<ImportTextDataParameter>();
+  internals->addConversion<ReadCSVFileParameter>();
   internals->addConversion<ImportHDF5DatasetParameter>();
   internals->addConversion<MultiArraySelectionParameter>();
   internals->addConversion<MultiPathSelectionParameter>();

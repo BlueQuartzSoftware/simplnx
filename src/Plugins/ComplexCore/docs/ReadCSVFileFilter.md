@@ -1,4 +1,4 @@
-# Import Text Data 
+# Read CSV File 
 
 ## Group (Subgroup) ##
 
@@ -58,7 +58,7 @@ Afterwards, you end up with a data structure that looks like this:
 
 | Name                                                           | Type             | Description                                                                                                                                                                                                                                                 |
 |----------------------------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Importer Data Object                                           | TextImporterData  | The object that holds all data relevant to importing the data, such as input file path, custom headers, start import line number, data types for all the imported arrays, headers line number, header mode, imported array tuple dimensions, delimiters, etc. |
+| Importer Data Object                                           | ReadCSVData  | The object that holds all data relevant to importing the data, such as input file path, custom headers, start import line number, data types for all the imported arrays, headers line number, header mode, imported array tuple dimensions, delimiters, etc. |
 | Use Existing Attribute Matrix                                  | bool             | Determines whether or not to store the imported data arrays in an existing attribute matrix                                                                                                                                                                 |
 | Existing Attribute Matrix (Use Existing Attribute Matrix - ON) | DataPath         | The data path to the existing attribute matrix where the imported arrays will be stored                                                                                                                                                                     |
 | New Attribute Matrix (Use Existing Attribute Matrix - OFF)     | DataPath         | The data path to the newly created attribute matrix where the imported arrays will be stored                                                                                                                                                                |

@@ -383,10 +383,10 @@ General Parameters
 
    This parameter represents the :ref:`DataPath<DataPath>` to a valid :ref:`complex.Geometry() <Geometry Descriptions>`
 
-.. _ImportTextDataParameter:
-.. py:class:: ImportTextDataParameter
+.. _ReadCSVFileParameter:
+.. py:class:: ReadCSVFileParameter
 
-   This parameter is used for the :ref:`complex.ImportTextDataFilter() <ImportTextDataFilter>` and holds
+   This parameter is used for the :ref:`complex.ReadCSVFileFilter() <ReadCSVFileFilter>` and holds
    the information to import a file formatted as table data where each 
    column of data is a single array. 
    
@@ -394,13 +394,13 @@ General Parameters
    + The file optionally can have a line of headers. The user can specify what line the headers are on
    + The import can start at a user specified line number but will continue to the end of the file.
 
-   The primary python object that will hold the information to pass to the filter is the TextImporterData class described below.
+   The primary python object that will hold the information to pass to the filter is the ReadCSVData class described below.
 
-   :ivar ValueType: TextImporterData
+   :ivar ValueType: ReadCSVData
 
-   .. py:class:: ImportTextDataParameter.TextImporterData
+   .. py:class:: ReadCSVFileParameter.ReadCSVData
 
-      The TextImporterData class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are
+      The ReadCSVData class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are
       a number of member variables that need to be set correctly before the filter will execute
       correctly.
 
@@ -413,35 +413,35 @@ General Parameters
    :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray <DataArray>`.
    :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArrays <DataArray>`.
    :ivar headers_line: Int. The line number of the headers.
-   :ivar header_mode: 'cx.TextImporterData.HeaderMode.'. Can be one of 'cx.TextImporterData.HeaderMode.Line' or 'cx.TextImporterData.HeaderMode.Custom'.
+   :ivar header_mode: 'cx.ReadCSVData.HeaderMode.'. Can be one of 'cx.ReadCSVData.HeaderMode.Line' or 'cx.ReadCSVData.HeaderMode.Custom'.
 
 
 .. code:: python
 
    data_structure = cx.DataStructure()
 
-   text_importer_data = cx.TextImporterData()
-   text_importer_data.input_file_path = "/tmp/test_csv_data.csv"
-   text_importer_data.start_import_row = 2
-   text_importer_data.delimiters = [',']
-   text_importer_data.custom_headers = []
-   text_importer_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
-   text_importer_data.skipped_array_mask = [False,False,False,False,False,False,False ]
-   text_importer_data.tuple_dims = [37989]
+   read_csv_data = cx.ReadCSVData()
+   read_csv_data.input_file_path = "/tmp/test_csv_data.csv"
+   read_csv_data.start_import_row = 2
+   read_csv_data.delimiters = [',']
+   read_csv_data.custom_headers = []
+   read_csv_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
+   read_csv_data.skipped_array_mask = [False,False,False,False,False,False,False ]
+   read_csv_data.tuple_dims = [37989]
 
-   text_importer_data.headers_line = 1
-   text_importer_data.header_mode = cx.TextImporterData.HeaderMode.Line
+   read_csv_data.headers_line = 1
+   read_csv_data.header_mode = cx.ReadCSVData.HeaderMode.Line
 
    # This will store the imported arrays into a newly generated DataGroup
-   result = cx.ImportTextDataFilter.execute(data_structure=data_structure,
+   result = cx.ReadCSVFileFilter.execute(data_structure=data_structure,
                                          # This will store the imported arrays into a newly generated DataGroup
                                          created_data_group=cx.DataPath(["Imported Data"]),
                                          # We are not using this parameter but it still needs a value
                                          selected_data_group=cx.DataPath(),
                                          # Use an existing DataGroup or AttributeMatrix. If an AttributemMatrix is used, the total number of tuples must match
                                          use_existing_group=False,
-                                         # The TextImporterData object with all member variables set.
-                                         text_importer_data=text_importer_data # The TextImporterData object with all member variables set.
+                                         # The ReadCSVData object with all member variables set.
+                                         read_csv_data=read_csv_data # The ReadCSVData object with all member variables set.
                                          )
 
 

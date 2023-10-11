@@ -28,59 +28,59 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "ImportTextDataParameter.hpp"
+#include "ReadCSVFileParameter.hpp"
 
 namespace complex
 {
 // -----------------------------------------------------------------------------
-ImportTextDataParameter::ImportTextDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ReadCSVFileParameter::ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 {
 }
 
 // -----------------------------------------------------------------------------
-Uuid ImportTextDataParameter::uuid() const
+Uuid ReadCSVFileParameter::uuid() const
 {
-  return ParameterTraits<ImportTextDataParameter>::uuid;
+  return ParameterTraits<ReadCSVFileParameter>::uuid;
 }
 
 // -----------------------------------------------------------------------------
-IParameter::AcceptedTypes ImportTextDataParameter::acceptedTypes() const
+IParameter::AcceptedTypes ReadCSVFileParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
 
 // -----------------------------------------------------------------------------
-nlohmann::json ImportTextDataParameter::toJson(const std::any& value) const
+nlohmann::json ReadCSVFileParameter::toJson(const std::any& value) const
 {
-  const auto& TextImporterData = GetAnyRef<ValueType>(value);
-  nlohmann::json json = TextImporterData.writeJson();
+  const auto& ReadCSVData = GetAnyRef<ValueType>(value);
+  nlohmann::json json = ReadCSVData.writeJson();
   return json;
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ImportTextDataParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ReadCSVFileParameter::fromJson(const nlohmann::json& json) const
 {
-  return {ConvertResultTo<std::any>(TextImporterData::ReadJson(json))};
+  return {ConvertResultTo<std::any>(ReadCSVData::ReadJson(json))};
 }
 
 // -----------------------------------------------------------------------------
-IParameter::UniquePointer ImportTextDataParameter::clone() const
+IParameter::UniquePointer ReadCSVFileParameter::clone() const
 {
-  return std::make_unique<ImportTextDataParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<ReadCSVFileParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
 
 // -----------------------------------------------------------------------------
-std::any ImportTextDataParameter::defaultValue() const
+std::any ReadCSVFileParameter::defaultValue() const
 {
   return m_DefaultValue;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ImportTextDataParameter::validate(const std::any& value) const
+Result<> ReadCSVFileParameter::validate(const std::any& value) const
 {
-  [[maybe_unused]] auto data = std::any_cast<TextImporterData>(value);
+  [[maybe_unused]] auto data = std::any_cast<ReadCSVData>(value);
   return {};
 }
 } // namespace complex

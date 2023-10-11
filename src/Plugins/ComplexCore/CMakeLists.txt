@@ -77,7 +77,7 @@ set(FilterList
   ImageContouringFilter
   IdentifySample
   ImportBinaryCTNorthstarFilter
-  ImportTextDataFilter
+  ReadCSVFileFilter
   ImportDeformKeyFileV12Filter
   ImportDREAM3DFilter
   ImportHDF5Dataset
