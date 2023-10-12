@@ -116,7 +116,7 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Multiple File 
     k_InPath.startIndex = 1;
     k_InPath.incrementIndex = 1;
     k_InPath.endIndex = 2;
-    k_InPath.inputPath = fs::path(fmt::format("{}/{}/multi", complex::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir));
+    k_InPath.inputPath = fmt::format("{}/{}/multi", complex::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir);
     k_InPath.filePrefix = "hex_grid";
     k_InPath.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
     k_InPath.paddingDigits = 0;
