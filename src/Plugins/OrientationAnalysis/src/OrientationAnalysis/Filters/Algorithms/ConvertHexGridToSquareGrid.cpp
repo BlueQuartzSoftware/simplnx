@@ -161,7 +161,7 @@ public:
             point = point2;
           }
           outFile << "  " << phi1[point] << "	" << PHI[point] << "	" << phi2[point] << "	" << xSqr << "	" << ySqr << "	" << iq[point] << "	" << ci[point] << "	" << phase[point] << "	"
-                  << semSig[point] << "	" << fit[point] << "   "
+                  << semSig[point] << "	" << fit[point] << "  "
                   << "\n";
         }
       }
