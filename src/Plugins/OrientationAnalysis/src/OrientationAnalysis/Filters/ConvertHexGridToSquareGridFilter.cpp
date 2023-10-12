@@ -2,21 +2,50 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ConvertHexGridToSquareGrid.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
+#include "EbsdLib/IO/HKL/CtfConstants.h"
+#include "EbsdLib/IO/TSL/AngConstants.h"
+#include "EbsdLib/IO/TSL/AngReader.h"
+
 #include <filesystem>
+#include <sstream>
 
 namespace fs = std::filesystem;
 using namespace complex;
 
+namespace
+{
+struct ConvertHexGridToSquareGridFilterCache
+{
+  fs::path workingPath;
+  std::string preflightReturnString;
+  fs::file_time_type lastWrite;
+};
+
+std::atomic_int32_t s_InstanceId = 0;
+std::map<int32, ConvertHexGridToSquareGridFilterCache> s_HeaderCache;
+} // namespace
+
 namespace complex
 {
+//------------------------------------------------------------------------------
+ConvertHexGridToSquareGridFilter::ConvertHexGridToSquareGridFilter()
+: m_InstanceId(s_InstanceId.fetch_add(1))
+{
+  s_HeaderCache[m_InstanceId] = {};
+}
+
+//------------------------------------------------------------------------------
+ConvertHexGridToSquareGridFilter::~ConvertHexGridToSquareGridFilter() noexcept
+{
+  s_HeaderCache.erase(m_InstanceId);
+}
+
 //------------------------------------------------------------------------------
 std::string ConvertHexGridToSquareGridFilter::name() const
 {
@@ -84,9 +113,12 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
 {
   auto pUseMultipleFilesValue = filterArgs.value<bool>(k_MultipleFiles_Key);
   auto pInputFileListInfoValue = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);
+  auto pInputSingleFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputPath_Key);
 
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  FileSystemPathParameter::ValueType inputPath = pInputSingleFile;
 
   if(pUseMultipleFilesValue)
   {
@@ -94,9 +126,54 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
 
     if(files.empty())
     {
-      return {MakeErrorResult<OutputActions>(-1, "GeneratedFileList must not be empty")};
+      return MakePreflightErrorResult(-44600, "GeneratedFileList must not be empty");
     }
+
+    inputPath = fs::path(files[0]);
   }
+
+  if(inputPath.extension() == ("." + EbsdLib::Ctf::FileExt))
+  {
+    return MakePreflightErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
+  }
+  else if(inputPath.extension() != ("." + EbsdLib::Ang::FileExt))
+  {
+    return MakePreflightErrorResult(-44602, "The file extension was not detected correctly");
+  }
+
+  if(!fs::exists(inputPath))
+  {
+    return MakePreflightErrorResult(-446003, "Please select a valid file path to run");
+  }
+
+  if(!fs::exists(s_HeaderCache[m_InstanceId].workingPath) || s_HeaderCache[m_InstanceId].workingPath != inputPath ||
+     fs::last_write_time(s_HeaderCache[m_InstanceId].workingPath) > s_HeaderCache[m_InstanceId].lastWrite || s_HeaderCache[m_InstanceId].preflightReturnString.empty())
+  {
+    s_HeaderCache[m_InstanceId].workingPath = inputPath;
+    s_HeaderCache[m_InstanceId].lastWrite = fs::last_write_time(inputPath);
+    AngReader reader;
+    reader.setFileName(inputPath.string());
+    reader.setReadHexGrid(true);
+    int32 err = reader.readFile();
+    if(err < 0 && err != -600)
+    {
+      return MakePreflightErrorResult(reader.getErrorCode(), reader.getErrorMessage());
+    }
+    if(err == -600)
+    {
+      complex::Warning warning;
+      warning.code = reader.getErrorCode();
+      warning.message = reader.getErrorMessage();
+      resultOutputActions.m_Warnings.emplace_back(std::move(warning));
+    }
+
+    std::stringstream preflightString;
+    preflightString << "Hex Grid X Spacing: " << reader.getXStep() << "\n"
+                    << "Hex Grid Y Spacing: " << reader.getYStep();
+    s_HeaderCache[m_InstanceId].preflightReturnString = preflightString.str();
+  }
+
+  preflightUpdatedValues.emplace_back(PreflightValue{"Suggested Spacing", s_HeaderCache[m_InstanceId].preflightReturnString});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

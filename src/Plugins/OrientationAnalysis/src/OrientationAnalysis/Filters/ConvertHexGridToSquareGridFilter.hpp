@@ -14,8 +14,8 @@ namespace complex
 class ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGridFilter : public IFilter
 {
 public:
-  ConvertHexGridToSquareGridFilter() = default;
-  ~ConvertHexGridToSquareGridFilter() noexcept override = default;
+  ConvertHexGridToSquareGridFilter();
+  ~ConvertHexGridToSquareGridFilter() noexcept override;
 
   ConvertHexGridToSquareGridFilter(const ConvertHexGridToSquareGridFilter&) = delete;
   ConvertHexGridToSquareGridFilter(ConvertHexGridToSquareGridFilter&&) noexcept = delete;
@@ -94,6 +94,9 @@ protected:
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+
+private:
+  int32 m_InstanceId;
 };
 } // namespace complex
 

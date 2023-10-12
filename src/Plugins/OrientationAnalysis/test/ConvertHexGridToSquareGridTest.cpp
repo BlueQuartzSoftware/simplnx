@@ -7,7 +7,10 @@
 #include <catch2/catch.hpp>
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
+
+namespace fs = std::filesystem;
 
 using namespace complex;
 

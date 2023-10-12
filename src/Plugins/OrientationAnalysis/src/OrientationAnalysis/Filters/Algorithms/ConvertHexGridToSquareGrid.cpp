@@ -6,7 +6,6 @@
 #include "complex/Utilities/FilePathGenerator.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/IO/TSL/AngConstants.h"
 #include "EbsdLib/IO/TSL/AngReader.h"
 
@@ -52,6 +51,10 @@ public:
       {
         return MakeErrorResult(reader.getErrorCode(), reader.getErrorMessage());
       }
+      if(err == -600)
+      {
+        return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
+      }
       if(reader.getGrid().find(EbsdLib::Ang::SquareGrid) == 0)
       {
         return MakeErrorResult(-55000, fmt::format("Ang file is already a square grid: {}", inputPath.string()));
@@ -63,7 +66,7 @@ public:
         return MakeErrorResult(-55001, fmt::format("Header could not be retrieved: {}", inputPath.string()));
       }
 
-      std::istringstream in(origHeader, std::ios_base::in | std::ios_base::binary);
+      std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
       fs::path outPath = fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string());
 
       if(outPath == inputPath)
@@ -104,10 +107,10 @@ public:
       float32* semSig = reader.getSEMSignalPointer();
       float32* fit = reader.getFitPointer();
       int32* phase = reader.getPhaseDataPointer();
-      while(!in.eof())
+      while(!headerStream.eof())
       {
         std::string buf;
-        std::getline(in, buf);
+        std::getline(headerStream, buf);
         if(buf.empty())
         {
           continue;
@@ -165,18 +168,6 @@ public:
                   << "\n";
         }
       }
-      if(err == -600)
-      {
-        return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
-      }
-    }
-    else if(inputPath.extension() == ("." + EbsdLib::Ctf::FileExt))
-    {
-      return MakeErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
-    }
-    else
-    {
-      return MakeErrorResult(-44600, "The file extension was not detected correctly");
     }
 
     return {};
