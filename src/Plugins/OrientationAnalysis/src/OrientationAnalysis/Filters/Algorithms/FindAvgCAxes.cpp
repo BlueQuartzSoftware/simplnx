@@ -138,6 +138,8 @@ Result<> FindAvgCAxes::operator()()
       avgCAxes[tupleIndex] /= counter[i];
       avgCAxes[tupleIndex + 1] /= counter[i];
       avgCAxes[tupleIndex + 2] /= counter[i];
+
+      MatrixMath::Normalize3x1(avgCAxes[tupleIndex], avgCAxes[tupleIndex + 1], avgCAxes[tupleIndex +2]);
     }
   }
   return result;
