@@ -391,7 +391,7 @@ General Parameters
    column of data is a single array. 
    
    + The file can be comma, space, tab or semicolon separated.
-   + The file optionally can have a line of headers. The user can specify what line the headers are on
+   + The file optionally can have a line of headers. The user can specify what line number the header is located.
    + The import can start at a user specified line number but will continue to the end of the file.
 
    The primary python object that will hold the information to pass to the filter is the ReadCSVData class described below.
@@ -419,16 +419,15 @@ General Parameters
 .. code:: python
 
    data_structure = cx.DataStructure()
-
+   # Example File has 7 columns to import
    read_csv_data = cx.ReadCSVData()
    read_csv_data.input_file_path = "/tmp/test_csv_data.csv"
    read_csv_data.start_import_row = 2
    read_csv_data.delimiters = [',']
    read_csv_data.custom_headers = []
-   read_csv_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
+   read_csv_data.column_data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
    read_csv_data.skipped_array_mask = [False,False,False,False,False,False,False ]
    read_csv_data.tuple_dims = [37989]
-
    read_csv_data.headers_line = 1
    read_csv_data.header_mode = cx.ReadCSVData.HeaderMode.Line
 

@@ -560,7 +560,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has 0 total tuples.  At least 1 tuple is required.", tupleDimsStr, tupleTotal, totalImportedLines);
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
   }
-  else if(tupleTotal > totalImportedLines)
+  else if(tupleTotal > totalImportedLines && !useExistingAM)
   {
     std::string tupleDimsStr = tupleDimsToString(readCSVData.tupleDims);
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} total tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr,
@@ -597,9 +597,11 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   {
     const AttributeMatrix& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
     tupleDims = am.getShape();
-    std::string tupleDimsStr = tupleDimsToString(readCSVData.tupleDims);
-    std::string tupleDimsStr2 = tupleDimsToString(tupleDims);
-    std::string msg = fmt::format("The Array Tuple Dimensions ({}) will be ignored and the Existing Attribute Matrix tuple dimensions ({}) will be used instead.", tupleDimsStr, tupleDimsStr2);
+
+    auto totalLinesRead = std::accumulate(tupleDims.begin(), tupleDims.end(), 1UL, std::multiplies<>());
+
+    std::string msg = fmt::format("The Array Tuple Dimensions ({}) will be ignored and the Existing Attribute Matrix tuple dimensions ({}) will be used. The total number of lines read will be {}.",
+                                  fmt::join(readCSVData.tupleDims, "x"), fmt::join(tupleDims, "x"), totalLinesRead);
     resultOutputActions.warnings().push_back(Warning{to_underlying(IssueCodes::IGNORED_TUPLE_DIMS), msg});
   }
 

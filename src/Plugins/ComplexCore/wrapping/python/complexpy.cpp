@@ -438,7 +438,7 @@ PYBIND11_MODULE(complex, mod)
   readCSVData.def_readwrite("input_file_path", &ReadCSVData::inputFilePath);
   readCSVData.def_readwrite("custom_headers", &ReadCSVData::customHeaders);
   readCSVData.def_readwrite("start_import_row", &ReadCSVData::startImportRow);
-  readCSVData.def_readwrite("data_types", &ReadCSVData::dataTypes);
+  readCSVData.def_readwrite("column_data_types", &ReadCSVData::dataTypes);
   readCSVData.def_readwrite("skipped_array_mask", &ReadCSVData::skippedArrayMask);
   readCSVData.def_readwrite("headers_line", &ReadCSVData::headersLine);
   readCSVData.def_readwrite("header_mode", &ReadCSVData::headerMode);

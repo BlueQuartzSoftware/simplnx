@@ -6,16 +6,15 @@ import numpy as np
 
 # Create the DataStructure object
 data_structure = cx.DataStructure()
-
+# This file has 7 columns to import
 read_csv_data = cx.ReadCSVData()
 read_csv_data.input_file_path = "wrapping/python/examples/test_csv_data.csv"
 read_csv_data.start_import_row = 2
 read_csv_data.delimiters = [',']
 read_csv_data.custom_headers = []
-read_csv_data.data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
+read_csv_data.column_data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
 read_csv_data.skipped_array_mask = [False,False,False,False,False,False,False ]
 read_csv_data.tuple_dims = [37989]
-
 read_csv_data.headers_line = 1
 read_csv_data.header_mode = cx.ReadCSVData.HeaderMode.Line
 
