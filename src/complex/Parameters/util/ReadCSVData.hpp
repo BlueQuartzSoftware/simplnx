@@ -33,6 +33,7 @@
 #include "complex/Common/Result.hpp"
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/complex_export.hpp"
 
 #include <nlohmann/json.hpp>
@@ -41,35 +42,28 @@
 
 namespace complex
 {
-struct COMPLEX_EXPORT CSVWizardData
+struct COMPLEX_EXPORT ReadCSVData
 {
 public:
   enum class HeaderMode
   {
     LINE,
-    CUSTOM,
-    DEFAULTS
+    CUSTOM
   };
 
   // Json Reader and Writer
   nlohmann::json writeJson() const;
-  static Result<CSVWizardData> ReadJson(const nlohmann::json& json);
+  static Result<ReadCSVData> ReadJson(const nlohmann::json& json);
 
   std::string inputFilePath;
-  std::vector<std::string> dataHeaders;
-  usize beginIndex = 1;
-  int64 numberOfLines = -1;
-  std::vector<std::optional<DataType>> dataTypes;
-  std::vector<char> delimiters;
-  usize headerLine = 1;
-  HeaderMode headerMode = HeaderMode::LINE;
-  bool tabAsDelimiter = false;
-  bool semicolonAsDelimiter = false;
-  bool commaAsDelimiter = false;
-  bool spaceAsDelimiter = false;
+  std::vector<std::string> customHeaders;
+  usize startImportRow = 1;
+  std::vector<DataType> dataTypes;
+  std::vector<bool> skippedArrayMask;
+  usize headersLine = 1;
+  HeaderMode headerMode = HeaderMode::CUSTOM;
+  std::vector<usize> tupleDims = {1};
+  std::vector<char> delimiters = {};
   bool consecutiveDelimiters = false;
-
-  static inline constexpr usize k_TotalPreviewLines = 50;
-  static inline constexpr StringLiteral k_SkipDataTypeString = "Skip";
 };
 } // namespace complex

@@ -1,6 +1,6 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CreateDataGroup.hpp"
-#include "ComplexCore/Filters/ImportTextFilter.hpp"
+#include "ComplexCore/Filters/ReadTextDataArrayFilter.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Core/Application.hpp"
@@ -76,13 +76,13 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
       file << i << "," << i + 1 << "," << i + 2 << "\n";
     }
   }
-  SECTION("Run ImportTextFilter")
+  SECTION("Run ReadTextDataArrayFilter")
   {
     static constexpr uint64 k_NComp = 3;
     static constexpr uint64 k_NSkipLines = 0;
     const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NLines)}};
 
-    ImportTextFilter filter;
+    ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
     Arguments args;
     DataPath dataPath({"foo"});

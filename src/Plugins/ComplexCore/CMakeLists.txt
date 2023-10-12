@@ -77,11 +77,11 @@ set(FilterList
   ImageContouringFilter
   IdentifySample
   ImportBinaryCTNorthstarFilter
-  ImportCSVDataFilter
+  ReadCSVFileFilter
   ImportDeformKeyFileV12Filter
   ImportDREAM3DFilter
   ImportHDF5Dataset
-  ImportTextFilter
+  ReadTextDataArrayFilter
   ImportVolumeGraphicsFileFilter
   InitializeData
   InterpolatePointCloudToRegularGridFilter

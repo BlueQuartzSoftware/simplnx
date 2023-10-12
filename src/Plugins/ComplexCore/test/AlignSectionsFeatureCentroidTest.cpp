@@ -1,6 +1,6 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
-#include "ComplexCore/Filters/ImportTextFilter.hpp"
+#include "ComplexCore/Filters/ReadTextDataArrayFilter.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -95,7 +95,7 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
 
     // Compare the output of the shifts file with the exemplar file
 
-    ImportTextFilter filter;
+    ReadTextDataArrayFilter filter;
 
     Arguments args;
     // read in the exemplar shift data file
@@ -129,7 +129,7 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
 
     // Compare the output of the shifts file with the exemplar file
 
-    ImportTextFilter filter;
+    ReadTextDataArrayFilter filter;
 
     Arguments args;
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));

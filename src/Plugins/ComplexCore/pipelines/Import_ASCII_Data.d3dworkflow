@@ -48,7 +48,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportTextFilter",
+        "name": "complex::ReadTextDataArrayFilter",
         "uuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4"
       },
       "isDisabled": false

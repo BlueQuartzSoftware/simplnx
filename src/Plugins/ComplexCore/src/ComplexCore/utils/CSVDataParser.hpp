@@ -125,4 +125,6 @@ using UInt64Parser = CSVDataParser<UInt64Array, uint64>;
 using Float32Parser = CSVDataParser<Float32Array, float32>;
 using Float64Parser = CSVDataParser<Float64Array, float64>;
 
+using BoolParser = CSVDataParser<BoolArray, bool>;
+
 // using StringParser = Parser<StringArray, std::string>;

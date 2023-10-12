@@ -189,4 +189,10 @@ auto ExecuteNeighborFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
  */
 COMPLEX_EXPORT Result<> CreateOutputDirectories(const fs::path& outputPath);
 
+/**
+ * @brief Creates a delimiters vector from the given delimiters booleans
+ * @return
+ */
+COMPLEX_EXPORT std::vector<char> CreateDelimitersVector(bool tabAsDelimiter, bool semicolonAsDelimiter, bool commaAsDelimiter, bool spaceAsDelimiter);
+
 } // namespace complex

@@ -1,4 +1,4 @@
-#include "ImportTextFilter.hpp"
+#include "ReadTextDataArrayFilter.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/TypeTraits.hpp"
@@ -22,32 +22,32 @@ using namespace complex;
 
 namespace complex
 {
-std::string ImportTextFilter::name() const
+std::string ReadTextDataArrayFilter::name() const
 {
-  return FilterTraits<ImportTextFilter>::name;
+  return FilterTraits<ReadTextDataArrayFilter>::name;
 }
 
-std::string ImportTextFilter::className() const
+std::string ReadTextDataArrayFilter::className() const
 {
-  return FilterTraits<ImportTextFilter>::className;
+  return FilterTraits<ReadTextDataArrayFilter>::className;
 }
 
-Uuid ImportTextFilter::uuid() const
+Uuid ReadTextDataArrayFilter::uuid() const
 {
-  return FilterTraits<ImportTextFilter>::uuid;
+  return FilterTraits<ReadTextDataArrayFilter>::uuid;
 }
 
-std::vector<std::string> ImportTextFilter::defaultTags() const
+std::vector<std::string> ReadTextDataArrayFilter::defaultTags() const
 {
-  return {className(), "IO", "Input", "Read", "Import", "Text"};
+  return {className(), "IO", "Input", "Read", "Import", "Text", "ASCII", "Attribute"};
 }
 
-std::string ImportTextFilter::humanName() const
+std::string ReadTextDataArrayFilter::humanName() const
 {
-  return "Import ASCII Data Array";
+  return "Read Text Data Array";
 }
 
-Parameters ImportTextFilter::parameters() const
+Parameters ReadTextDataArrayFilter::parameters() const
 {
   Parameters params;
 
@@ -81,12 +81,12 @@ Parameters ImportTextFilter::parameters() const
   return params;
 }
 
-IFilter::UniquePointer ImportTextFilter::clone() const
+IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
 {
-  return std::make_unique<ImportTextFilter>();
+  return std::make_unique<ReadTextDataArrayFilter>();
 }
 
-IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
   auto arrayPath = args.value<DataPath>(k_DataArrayKey);
@@ -141,7 +141,8 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
   return {std::move(resultOutputActions)};
 }
 
-Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel) const
 {
   auto inputFilePath = args.value<fs::path>(k_InputFileKey);
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
@@ -194,7 +195,7 @@ Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& arg
     return CsvParser::ReadFile<double>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   default:
-    return MakeErrorResult(-1001, fmt::format("ImportTextFilter: Parameter NumericType which has a value of '{}' does not match any in complex.", to_underlying(numericType)));
+    return MakeErrorResult(-1001, fmt::format("ReadTextDataArrayFilter: Parameter NumericType which has a value of '{}' does not match any in complex.", to_underlying(numericType)));
   }
 }
 } // namespace complex

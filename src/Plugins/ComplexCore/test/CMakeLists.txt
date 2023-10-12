@@ -77,11 +77,11 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ImageContouringTest.cpp
   ImageGeomTest.cpp
   ImportBinaryCTNorthstarTest.cpp
-  ImportCSVDataTest.cpp
+  ReadCSVFileTest.cpp
 
   # ImportDeformKeyFileV12Test.cpp
   ImportHDF5DatasetTest.cpp
-  ImportTextTest.cpp
+  ReadTextDataArrayTest.cpp
   ImportVolumeGraphicsFileTest.cpp
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp

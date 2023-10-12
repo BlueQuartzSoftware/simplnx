@@ -32,25 +32,25 @@
 
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
-#include "complex/Parameters/util/CSVWizardData.hpp"
+#include "complex/Parameters/util/ReadCSVData.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT ImportCSVDataParameter : public ValueParameter
+class COMPLEX_EXPORT ReadCSVFileParameter : public ValueParameter
 {
 public:
-  using ValueType = CSVWizardData;
+  using ValueType = ReadCSVData;
 
-  ImportCSVDataParameter() = delete;
-  ImportCSVDataParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
-  ~ImportCSVDataParameter() override = default;
+  ReadCSVFileParameter() = delete;
+  ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ~ReadCSVFileParameter() override = default;
 
-  ImportCSVDataParameter(const ImportCSVDataParameter&) = delete;
-  ImportCSVDataParameter(ImportCSVDataParameter&&) noexcept = delete;
+  ReadCSVFileParameter(const ReadCSVFileParameter&) = delete;
+  ReadCSVFileParameter(ReadCSVFileParameter&&) noexcept = delete;
 
-  ImportCSVDataParameter& operator=(const ImportCSVDataParameter&) = delete;
-  ImportCSVDataParameter& operator=(ImportCSVDataParameter&&) noexcept = delete;
+  ReadCSVFileParameter& operator=(const ReadCSVFileParameter&) = delete;
+  ReadCSVFileParameter& operator=(ReadCSVFileParameter&&) noexcept = delete;
 
   /**
    * @brief Returns the parameter's uuid.
@@ -103,4 +103,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::ImportCSVDataParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::ReadCSVFileParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45");

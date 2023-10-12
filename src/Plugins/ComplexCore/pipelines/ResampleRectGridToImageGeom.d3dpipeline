@@ -41,7 +41,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportCSVDataFilter",
+        "name": "complex::ReadCSVFileFilter",
         "uuid": "373be1f8-31cf-49f6-aa5d-e356f4f3f261"
       },
       "isDisabled": false
@@ -107,7 +107,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportTextFilter",
+        "name": "complex::ReadTextDataArrayFilter",
         "uuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4"
       },
       "isDisabled": false
@@ -130,7 +130,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportTextFilter",
+        "name": "complex::ReadTextDataArrayFilter",
         "uuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4"
       },
       "isDisabled": false
@@ -153,7 +153,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportTextFilter",
+        "name": "complex::ReadTextDataArrayFilter",
         "uuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4"
       },
       "isDisabled": false
@@ -176,7 +176,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportTextFilter",
+        "name": "complex::ReadTextDataArrayFilter",
         "uuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4"
       },
       "isDisabled": false
@@ -199,7 +199,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportTextFilter",
+        "name": "complex::ReadTextDataArrayFilter",
         "uuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4"
       },
       "isDisabled": false
@@ -222,7 +222,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportTextFilter",
+        "name": "complex::ReadTextDataArrayFilter",
         "uuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4"
       },
       "isDisabled": false

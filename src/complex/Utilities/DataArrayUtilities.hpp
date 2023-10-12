@@ -130,10 +130,28 @@ struct ConvertTo<bool>
 {
   static Result<bool> convert(const std::string& input)
   {
-    if(input == "TRUE" || input == "true" || input == "1" || input == "True")
+    if(input == "TRUE" || input == "true" || input == "True")
     {
       return {true};
     }
+
+    if(input == "FALSE" || input == "false" || input == "False")
+    {
+      return {false};
+    }
+
+    Result<int64> intResult = ConvertTo<int64>::convert(input);
+    if(intResult.valid())
+    {
+      return {intResult.value() != 0};
+    }
+
+    Result<float64> floatResult = ConvertTo<float64>::convert(input);
+    if(floatResult.valid())
+    {
+      return {floatResult.value() != 0.0};
+    }
+
     return {false};
   }
 };
