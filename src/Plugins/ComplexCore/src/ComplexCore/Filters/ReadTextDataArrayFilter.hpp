@@ -7,17 +7,17 @@
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT ImportTextFilter : public IFilter
+class COMPLEXCORE_EXPORT ReadTextDataArrayFilter : public IFilter
 {
 public:
-  ImportTextFilter() = default;
-  ~ImportTextFilter() noexcept override = default;
+  ReadTextDataArrayFilter() = default;
+  ~ReadTextDataArrayFilter() noexcept override = default;
 
-  ImportTextFilter(const ImportTextFilter&) = delete;
-  ImportTextFilter(ImportTextFilter&&) noexcept = delete;
+  ReadTextDataArrayFilter(const ReadTextDataArrayFilter&) = delete;
+  ReadTextDataArrayFilter(ReadTextDataArrayFilter&&) noexcept = delete;
 
-  ImportTextFilter& operator=(const ImportTextFilter&) = delete;
-  ImportTextFilter& operator=(ImportTextFilter&&) noexcept = delete;
+  ReadTextDataArrayFilter& operator=(const ReadTextDataArrayFilter&) = delete;
+  ReadTextDataArrayFilter& operator=(ReadTextDataArrayFilter&&) noexcept = delete;
 
   static inline constexpr StringLiteral k_InputFileKey = "input_file";
   static inline constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportTextFilter, "25f7df3e-ca3e-4634-adda-732c0e56efd4");
+COMPLEX_DEF_FILTER_TRAITS(complex, ReadTextDataArrayFilter, "25f7df3e-ca3e-4634-adda-732c0e56efd4");

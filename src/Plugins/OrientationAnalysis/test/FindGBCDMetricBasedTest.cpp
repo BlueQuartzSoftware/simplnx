@@ -102,7 +102,7 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
     static constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
     static constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
     static constexpr StringLiteral k_DataArrayKey = "output_data_array";
-    auto filter = filterListPtr->createFilter(k_ImportTextFilterHandle);
+    auto filter = filterListPtr->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
     // exemplar distribution
     {

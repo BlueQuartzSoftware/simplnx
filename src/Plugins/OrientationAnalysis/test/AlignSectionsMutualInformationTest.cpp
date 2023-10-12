@@ -85,7 +85,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
 
     // Compare the output of the shifts file with the exemplar file
 
-    auto filter = filterList->createFilter(k_ImportTextFilterHandle);
+    auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
 
     Arguments args;
@@ -120,7 +120,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
 
     // Compare the output of the shifts file with the exemplar file
 
-    auto filter = filterList->createFilter(k_ImportTextFilterHandle);
+    auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
 
     Arguments args;

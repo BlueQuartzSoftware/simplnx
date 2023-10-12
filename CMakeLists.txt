@@ -259,7 +259,7 @@ set(CoreParameters
   MultiPathSelectionParameter
   NumberParameter
   NumericTypeParameter
-  ImportCSVDataParameter
+  ReadCSVFileParameter
   ImportHDF5DatasetParameter
   StringParameter
   VectorParameter
@@ -431,7 +431,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.hpp
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.hpp
+  ${COMPLEX_SOURCE_DIR}/Parameters/util/ReadCSVData.hpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
   ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
@@ -459,6 +459,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/FileUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
@@ -629,7 +630,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.cpp
+  ${COMPLEX_SOURCE_DIR}/Parameters/util/ReadCSVData.cpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.cpp
 
   ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp

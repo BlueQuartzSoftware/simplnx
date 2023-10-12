@@ -23,5 +23,4 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   }
   return {};
 }
-
 } // namespace complex

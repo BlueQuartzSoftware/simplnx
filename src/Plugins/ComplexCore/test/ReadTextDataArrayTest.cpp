@@ -1,11 +1,11 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ImportTextFilter.hpp"
+#include "ComplexCore/Filters/ReadTextDataArrayFilter.hpp"
 
-#include "ComplexCore/Filters/ImportCSVDataFilter.hpp"
+#include "ComplexCore/Filters/ReadCSVFileFilter.hpp"
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/ImportCSVDataParameter.hpp"
+#include "complex/Parameters/ReadCSVFileParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -87,18 +87,18 @@ void RunInvalidTest()
   {
     writeInvalidFile<std::string>(inputFilePath, inputCharErrorVector, delimiter);
 
-    ImportTextFilter filter;
+    ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
     AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
-    args.insertOrAssign(ImportTextFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
-    args.insertOrAssign(ImportTextFilter::k_ScalarTypeKey, std::make_any<NumericType>(GetNumericType<T>()));
-    args.insertOrAssign(ImportTextFilter::k_NCompKey, std::make_any<uint64>(1));
-    args.insertOrAssign(ImportTextFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
-    args.insertOrAssign(ImportTextFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
-    args.insertOrAssign(ImportTextFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
-    args.insertOrAssign(ImportTextFilter::k_DataFormat_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(ImportTextFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarTypeKey, std::make_any<NumericType>(GetNumericType<T>()));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NCompKey, std::make_any<uint64>(1));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -120,18 +120,18 @@ void RunInvalidTest()
 
     tupleDims = {1};
 
-    ImportTextFilter filter;
+    ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
     AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
-    args.insertOrAssign(ImportTextFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
-    args.insertOrAssign(ImportTextFilter::k_ScalarTypeKey, std::make_any<NumericType>(GetNumericType<T>()));
-    args.insertOrAssign(ImportTextFilter::k_NCompKey, std::make_any<uint64>(1));
-    args.insertOrAssign(ImportTextFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
-    args.insertOrAssign(ImportTextFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
-    args.insertOrAssign(ImportTextFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
-    args.insertOrAssign(ImportTextFilter::k_DataFormat_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(ImportTextFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarTypeKey, std::make_any<NumericType>(GetNumericType<T>()));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NCompKey, std::make_any<uint64>(1));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -170,18 +170,18 @@ void RunInvalidTest()
 
     tupleDims = {1};
 
-    ImportTextFilter filter;
+    ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
     AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
-    args.insertOrAssign(ImportTextFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
-    args.insertOrAssign(ImportTextFilter::k_ScalarTypeKey, std::make_any<NumericType>(GetNumericType<T>()));
-    args.insertOrAssign(ImportTextFilter::k_NCompKey, std::make_any<uint64>(1));
-    args.insertOrAssign(ImportTextFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
-    args.insertOrAssign(ImportTextFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
-    args.insertOrAssign(ImportTextFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
-    args.insertOrAssign(ImportTextFilter::k_DataFormat_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(ImportTextFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarTypeKey, std::make_any<NumericType>(GetNumericType<T>()));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NCompKey, std::make_any<uint64>(1));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -210,16 +210,16 @@ void RunTest(char sep, int delimiter)
   int numberOfComponents = 1;
   int skipHeaderLines = 0;
 
-  ImportTextFilter filter;
+  ReadTextDataArrayFilter filter;
   Arguments args;
-  args.insertOrAssign(ImportTextFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
-  args.insertOrAssign(ImportTextFilter::k_ScalarTypeKey, std::make_any<NumericType>(scalarType));
-  args.insertOrAssign(ImportTextFilter::k_NCompKey, std::make_any<uint64>(numberOfComponents));
-  args.insertOrAssign(ImportTextFilter::k_NSkipLinesKey, std::make_any<uint64>(skipHeaderLines));
-  args.insertOrAssign(ImportTextFilter::k_DelimiterChoiceKey, std::make_any<uint64>(delimiter));
-  args.insertOrAssign(ImportTextFilter::k_DataArrayKey, std::make_any<DataPath>(createdAttributeArrayPath));
-  args.insertOrAssign(ImportTextFilter::k_DataFormat_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(ImportTextFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarTypeKey, std::make_any<NumericType>(scalarType));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_NCompKey, std::make_any<uint64>(numberOfComponents));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLinesKey, std::make_any<uint64>(skipHeaderLines));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoiceKey, std::make_any<uint64>(delimiter));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayKey, std::make_any<DataPath>(createdAttributeArrayPath));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -243,7 +243,7 @@ void RunTest(char sep, int delimiter)
   }
 }
 
-TEST_CASE("ComplexCore::ImportTextFilter: Valid filter execution", "[ComplexCore][ImportTextFilter]")
+TEST_CASE("ComplexCore::ReadTextDataArrayFilter: Valid filter execution", "[ComplexCore][ReadTextDataArrayFilter]")
 {
   RunTest<int8_t>(',', 0);
   RunTest<uint8_t>(',', 0);
@@ -301,7 +301,7 @@ TEST_CASE("ComplexCore::ImportTextFilter: Valid filter execution", "[ComplexCore
   RunTest<double>('\t', 4);
 }
 
-TEST_CASE("ComplexCore::ImportTextFilter: Invalid filter execution", "[ComplexCore][ImportTextFilter]")
+TEST_CASE("ComplexCore::ReadTextDataArrayFilter: Invalid filter execution", "[ComplexCore][ReadTextDataArrayFilter]")
 {
   // Reading alphabetical/special characters, and min/max overflow
   RunInvalidTest<int8>();
@@ -320,18 +320,18 @@ TEST_CASE("ComplexCore::ImportTextFilter: Invalid filter execution", "[ComplexCo
 
   // DataGroup parent but no tuple dimensions set
   {
-    ImportTextFilter filter;
+    ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
     DataGroup* dataGroup = DataGroup::Create(dataStructure, k_GroupAName);
     Arguments args;
-    args.insertOrAssign(ImportTextFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
-    args.insertOrAssign(ImportTextFilter::k_ScalarTypeKey, std::make_any<NumericType>(NumericType::int32));
-    args.insertOrAssign(ImportTextFilter::k_NCompKey, std::make_any<uint64>(1));
-    args.insertOrAssign(ImportTextFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
-    args.insertOrAssign(ImportTextFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
-    args.insertOrAssign(ImportTextFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
-    args.insertOrAssign(ImportTextFilter::k_DataFormat_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(ImportTextFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarTypeKey, std::make_any<NumericType>(NumericType::int32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NCompKey, std::make_any<uint64>(1));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -344,19 +344,19 @@ TEST_CASE("ComplexCore::ImportTextFilter: Invalid filter execution", "[ComplexCo
 
   // DataGroup parent with tuple dimension of 0
   {
-    ImportTextFilter filter;
+    ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
     DataGroup* dataGroup = DataGroup::Create(dataStructure, k_GroupAName);
     Arguments args;
-    args.insertOrAssign(ImportTextFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
-    args.insertOrAssign(ImportTextFilter::k_ScalarTypeKey, std::make_any<NumericType>(NumericType::int32));
-    args.insertOrAssign(ImportTextFilter::k_NCompKey, std::make_any<uint64>(1));
-    args.insertOrAssign(ImportTextFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
-    args.insertOrAssign(ImportTextFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
-    args.insertOrAssign(ImportTextFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
-    args.insertOrAssign(ImportTextFilter::k_DataFormat_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(ImportTextFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
-    args.insertOrAssign(ImportTextFilter::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{0}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFileKey, std::make_any<fs::path>(fs::path(inputFilePath)));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarTypeKey, std::make_any<NumericType>(NumericType::int32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NCompKey, std::make_any<uint64>(1));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLinesKey, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoiceKey, std::make_any<uint64>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayKey, std::make_any<DataPath>(createdArrayPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{0}}));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

@@ -260,6 +260,63 @@ inline const std::vector<std::string>& GetAllDataTypesAsStrings()
   return dataTypes;
 }
 
+inline constexpr StringLiteral DataTypeToHumanString(DataType dataType)
+{
+  switch(dataType)
+  {
+  case DataType::int8: {
+    return "signed int 8 bit";
+  }
+  case DataType::uint8: {
+    return "unsigned int 8 bit";
+  }
+  case DataType::int16: {
+    return "signed int 16 bit";
+  }
+  case DataType::uint16: {
+    return "unsigned int 16 bit";
+  }
+  case DataType::int32: {
+    return "signed int 32 bit";
+  }
+  case DataType::uint32: {
+    return "unsigned int 32 bit";
+  }
+  case DataType::int64: {
+    return "signed int 64 bit";
+  }
+  case DataType::uint64: {
+    return "unsigned int 64 bit";
+  }
+  case DataType::float32: {
+    return "float 32";
+  }
+  case DataType::float64: {
+    return "double 64";
+  }
+  case DataType::boolean: {
+    return "boolean";
+  }
+  default:
+    throw std::runtime_error("complex::DataTypeToString: Unknown DataType");
+  }
+}
+
+/**
+ *
+ * @param humanReadable Strings that would be good for a User interface
+ * @return
+ */
+inline const std::vector<std::string>& GetAllDataTypesAsHumanStrings()
+{
+  static const std::vector<std::string> dataTypes = {
+      DataTypeToHumanString(complex::DataType::int8),    DataTypeToHumanString(complex::DataType::uint8),  DataTypeToHumanString(complex::DataType::int16),
+      DataTypeToHumanString(complex::DataType::uint16),  DataTypeToHumanString(complex::DataType::int32),  DataTypeToHumanString(complex::DataType::uint32),
+      DataTypeToHumanString(complex::DataType::int64),   DataTypeToHumanString(complex::DataType::uint64), DataTypeToHumanString(complex::DataType::float32),
+      DataTypeToHumanString(complex::DataType::float64), DataTypeToHumanString(complex::DataType::boolean)};
+  return dataTypes;
+}
+
 /**
  * @brief Returns a DataType for the passed in string representation
  * @param dataTypeString

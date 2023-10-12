@@ -58,8 +58,8 @@ static constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
 static constexpr StringLiteral k_DataArrayKey = "output_data_array";
 } // namespace FindAvgOrientationsTest
 
-void runImportTextFilter(const std::string k_InputFileName, complex::NumericType k_NumericType, const uint64 k_NumTuples, const uint64 k_NumComponents, const DataPath k_InputFileDataPath,
-                         DataStructure& dataStructure)
+void runReadTextDataArrayFilter(const std::string k_InputFileName, complex::NumericType k_NumericType, const uint64 k_NumTuples, const uint64 k_NumComponents, const DataPath k_InputFileDataPath,
+                                DataStructure& dataStructure)
 {
   auto* filterList = Application::Instance()->getFilterList();
 
@@ -73,7 +73,7 @@ void runImportTextFilter(const std::string k_InputFileName, complex::NumericType
   args.insertOrAssign(FindAvgOrientationsTest::k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(FindAvgOrientationsTest::k_DataArrayKey, std::make_any<DataPath>(k_InputFileDataPath));
 
-  auto filter = filterList->createFilter(k_ImportTextFilterHandle);
+  auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
   REQUIRE(nullptr != filter);
 
   // Preflight the filter and check result
@@ -126,11 +126,11 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
   (*crystalStructuresPtr)[1] = 1;   // Cubic Laue Class
 
   // Run the "Import Text" Filter to import the data for the FeatureIds, Phases, Quats and Exemplar AvgQuats and AvgEulers
-  runImportTextFilter(k_Phases, NumericType::int32, k_NumTuples, 1, k_PhasesDataPath, dataStructure);
-  runImportTextFilter(k_Quats, NumericType::float32, k_NumTuples, 4, k_QuatsDataPath, dataStructure);
-  runImportTextFilter(k_FeatureIds, NumericType::int32, k_NumTuples, 1, k_FeatureIdsDataPath, dataStructure);
-  runImportTextFilter(k_AvgQuats, NumericType::float32, k_FeatureNumTuples, 4, k_ExemplarAvgQuatsDataPath, dataStructure);
-  runImportTextFilter(k_AvgEulers, NumericType::float32, k_FeatureNumTuples, 3, k_ExemplarAvgEulersDataPath, dataStructure);
+  runReadTextDataArrayFilter(k_Phases, NumericType::int32, k_NumTuples, 1, k_PhasesDataPath, dataStructure);
+  runReadTextDataArrayFilter(k_Quats, NumericType::float32, k_NumTuples, 4, k_QuatsDataPath, dataStructure);
+  runReadTextDataArrayFilter(k_FeatureIds, NumericType::int32, k_NumTuples, 1, k_FeatureIdsDataPath, dataStructure);
+  runReadTextDataArrayFilter(k_AvgQuats, NumericType::float32, k_FeatureNumTuples, 4, k_ExemplarAvgQuatsDataPath, dataStructure);
+  runReadTextDataArrayFilter(k_AvgEulers, NumericType::float32, k_FeatureNumTuples, 3, k_ExemplarAvgEulersDataPath, dataStructure);
 
   // Create the cell feature attribute matrix where the output arrays will be stored
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsDataPath);

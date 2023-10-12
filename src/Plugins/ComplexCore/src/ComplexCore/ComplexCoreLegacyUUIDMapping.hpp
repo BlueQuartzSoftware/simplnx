@@ -55,11 +55,11 @@
 #include "ComplexCore/Filters/GenerateColorTableFilter.hpp"
 #include "ComplexCore/Filters/IdentifySample.hpp"
 #include "ComplexCore/Filters/ImportBinaryCTNorthstarFilter.hpp"
-#include "ComplexCore/Filters/ImportCSVDataFilter.hpp"
+#include "ComplexCore/Filters/ReadCSVFileFilter.hpp"
 #include "ComplexCore/Filters/ImportDeformKeyFileV12Filter.hpp"
 #include "ComplexCore/Filters/ImportDREAM3DFilter.hpp"
 #include "ComplexCore/Filters/ImportHDF5Dataset.hpp"
-#include "ComplexCore/Filters/ImportTextFilter.hpp"
+#include "ComplexCore/Filters/ReadTextDataArrayFilter.hpp"
 #include "ComplexCore/Filters/ImportVolumeGraphicsFileFilter.hpp"
 #include "ComplexCore/Filters/InitializeData.hpp"
 #include "ComplexCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
@@ -166,10 +166,10 @@ namespace complex
     {complex::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), complex::FilterTraits<GenerateColorTableFilter>::uuid}, // GenerateColorTable
     {complex::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), complex::FilterTraits<IdentifySample>::uuid}, // IdentifySample
     {complex::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), complex::FilterTraits<ImportBinaryCTNorthstarFilter>::uuid}, // ImportBinaryCTNorthstarFilter
-    {complex::Uuid::FromString("bdb978bc-96bf-5498-972c-b509c38b8d50").value(), complex::FilterTraits<ImportCSVDataFilter>::uuid}, // ReadASCIIData
+    {complex::Uuid::FromString("bdb978bc-96bf-5498-972c-b509c38b8d50").value(), complex::FilterTraits<ReadCSVFileFilter>::uuid}, // ReadASCIIData
     {complex::Uuid::FromString("043cbde5-3878-5718-958f-ae75714df0df").value(), complex::FilterTraits<ImportDREAM3DFilter>::uuid}, // DataContainerReader
     {complex::Uuid::FromString("9e98c3b0-5707-5a3b-b8b5-23ef83b02896").value(), complex::FilterTraits<ImportHDF5Dataset>::uuid}, // ImportHDF5Dataset
-    {complex::Uuid::FromString("a7007472-29e5-5d0a-89a6-1aed11b603f8").value(), complex::FilterTraits<ImportTextFilter>::uuid}, // ImportAsciDataArray
+    {complex::Uuid::FromString("a7007472-29e5-5d0a-89a6-1aed11b603f8").value(), complex::FilterTraits<ReadTextDataArrayFilter>::uuid}, // ImportAsciDataArray
     {complex::Uuid::FromString("5fa10d81-94b4-582b-833f-8eabe659069e").value(), complex::FilterTraits<ImportVolumeGraphicsFileFilter>::uuid}, // ImportVolumeGraphicsFileFilter
     {complex::Uuid::FromString("dfab9921-fea3-521c-99ba-48db98e43ff8").value(), complex::FilterTraits<InitializeData>::uuid}, // InitializeData
     {complex::Uuid::FromString("4b551c15-418d-5081-be3f-d3aeb62408e5").value(), complex::FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid}, // InterpolatePointCloudToRegularGrid

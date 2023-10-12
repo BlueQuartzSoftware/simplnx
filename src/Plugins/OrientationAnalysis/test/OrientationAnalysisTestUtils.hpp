@@ -40,8 +40,8 @@ inline const std::string MaterialName("MaterialName");
 namespace complex
 {
 // Make sure we can instantiate the Import Text Filter
-const Uuid k_ImportTextFilterId = *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4");
-const FilterHandle k_ImportTextFilterHandle(k_ImportTextFilterId, k_ComplexCorePluginId);
+const Uuid k_ReadTextDataArrayFilterId = *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4");
+const FilterHandle k_ReadTextDataArrayFilterHandle(k_ReadTextDataArrayFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the Read DREAM3D Data File
 const Uuid k_ImportDream3dFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
 const FilterHandle k_ImportDream3dFilterHandle(k_ImportDream3dFilterId, k_ComplexCorePluginId);
@@ -60,8 +60,8 @@ const FilterHandle k_RemoveMinimumSizeFeaturesFilterHandle(k_RemoveMinimumSizeFe
 // Make sure we can instantiate the CalculateFeatureSizesFilter
 const Uuid k_CalculateFeatureSizesFilterId = *Uuid::FromString("c666ee17-ca58-4969-80d0-819986c72485");
 const FilterHandle k_CalculateFeatureSizesFilterHandle(k_CalculateFeatureSizesFilterId, k_ComplexCorePluginId);
-const Uuid k_ImportCSVDataFilterId = *Uuid::FromString("373be1f8-31cf-49f6-aa5d-e356f4f3f261");
-const FilterHandle k_ImportCSVDataFilterHandle(k_ImportCSVDataFilterId, k_ComplexCorePluginId);
+const Uuid k_ReadCSVFileFilterId = *Uuid::FromString("373be1f8-31cf-49f6-aa5d-e356f4f3f261");
+const FilterHandle k_ReadCSVFileFilterHandle(k_ReadCSVFileFilterId, k_ComplexCorePluginId);
 
 const Uuid k_OrientationAnalysisPluginId = *Uuid::FromString("c09cf01b-014e-5adb-84eb-ea76fc79eeb1");
 // Make sure we can instantiate the Convert Orientations

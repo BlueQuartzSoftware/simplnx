@@ -11,9 +11,9 @@ class AbstractDataParser;
 namespace complex
 {
 /**
- * @class ImportCSVDataFilter
+ * @class ReadCSVFileFilter
  * @brief This filter reads CSV data from any text-based file and imports the data into complex-style arrays.
- * The user uses the filter's wizard to specify which file to import, how the data is formatted, what to call
+ * The user uses the parameter user interface to specify which file to import, how the data is formatted, what to call
  * each array, and what type each array should be.
  *
  * Note:* This filter is intended to read data that is column-oriented, such that each created complex array
@@ -21,21 +21,20 @@ namespace complex
  * If multiple columns are in fact different components of the same array, then the columns may be imported as
  * separate arrays and then combined in the correct order using the Combine Attribute Arrays filter.
  */
-class COMPLEXCORE_EXPORT ImportCSVDataFilter : public IFilter
+class COMPLEXCORE_EXPORT ReadCSVFileFilter : public IFilter
 {
 public:
-  ImportCSVDataFilter();
-  ~ImportCSVDataFilter() noexcept override;
+  ReadCSVFileFilter();
+  ~ReadCSVFileFilter() noexcept override;
 
-  ImportCSVDataFilter(const ImportCSVDataFilter&) = delete;
-  ImportCSVDataFilter(ImportCSVDataFilter&&) noexcept = delete;
+  ReadCSVFileFilter(const ReadCSVFileFilter&) = delete;
+  ReadCSVFileFilter(ReadCSVFileFilter&&) noexcept = delete;
 
-  ImportCSVDataFilter& operator=(const ImportCSVDataFilter&) = delete;
-  ImportCSVDataFilter& operator=(ImportCSVDataFilter&&) noexcept = delete;
+  ReadCSVFileFilter& operator=(const ReadCSVFileFilter&) = delete;
+  ReadCSVFileFilter& operator=(ReadCSVFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_WizardData_Key = "wizard_data";
-  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+  static inline constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data";
   static inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
   static inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_data_group";
   static inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group";
@@ -104,7 +103,10 @@ protected:
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
+
+private:
+  int32 m_InstanceId;
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportCSVDataFilter, "373be1f8-31cf-49f6-aa5d-e356f4f3f261");
+COMPLEX_DEF_FILTER_TRAITS(complex, ReadCSVFileFilter, "373be1f8-31cf-49f6-aa5d-e356f4f3f261");

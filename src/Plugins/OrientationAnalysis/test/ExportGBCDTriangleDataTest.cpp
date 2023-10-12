@@ -6,7 +6,7 @@
 
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/util/CSVWizardData.hpp"
+#include "complex/Parameters/util/ReadCSVData.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -17,7 +17,7 @@ using namespace complex::UnitTest;
 
 namespace
 {
-inline constexpr StringLiteral k_WizardData_Key = "wizard_data";
+inline constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data";
 inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
 inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
 inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_data_group";
@@ -84,24 +84,23 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
   }
 
   // Compare the Output triangles files
-  auto importDataFilter = filterList->createFilter(k_ImportCSVDataFilterHandle);
+  auto importDataFilter = filterList->createFilter(k_ReadCSVFileFilterHandle);
   REQUIRE(nullptr != importDataFilter);
 
   // read in exemplar
   {
     Arguments args;
-    CSVWizardData data;
+    ReadCSVData data;
     data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD_Triangles.ph", unit_test::k_TestFilesDir);
-    data.dataHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
+    data.customHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.dataTypes = {DataType::float32, DataType::float32, DataType::float32, DataType::float32, DataType::float32,
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
-    data.beginIndex = 6;
-    data.spaceAsDelimiter = true;
+    data.skippedArrayMask = {false, false, false, false, false, false, false, false, false, false};
+    data.startImportRow = 6;
     data.delimiters = {' '};
-    data.numberOfLines = 636479;
+    data.tupleDims = {636474};
 
-    args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
-    args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(636474)}}));
+    args.insertOrAssign(k_ReadCSVData_Key, std::make_any<ReadCSVData>(data));
     args.insertOrAssign(k_UseExistingGroup_Key, std::make_any<bool>(false));
     args.insertOrAssign(k_CreatedDataGroup_Key, std::make_any<DataPath>(exemplarResultsGroupPath));
     args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(DataPath{}));
@@ -113,18 +112,17 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
   // read in generated
   {
     Arguments args;
-    CSVWizardData data;
+    ReadCSVData data;
     data.inputFilePath = outputFile.string();
-    data.dataHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
+    data.customHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.dataTypes = {DataType::float32, DataType::float32, DataType::float32, DataType::float32, DataType::float32,
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
-    data.beginIndex = 5;
-    data.spaceAsDelimiter = true;
+    data.skippedArrayMask = {false, false, false, false, false, false, false, false, false, false};
+    data.startImportRow = 5;
     data.delimiters = {' '};
-    data.numberOfLines = 636478;
+    data.tupleDims = {636474};
 
-    args.insertOrAssign(k_WizardData_Key, std::make_any<CSVWizardData>(data));
-    args.insertOrAssign(k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<float64>(636474)}}));
+    args.insertOrAssign(k_ReadCSVData_Key, std::make_any<ReadCSVData>(data));
     args.insertOrAssign(k_UseExistingGroup_Key, std::make_any<bool>(false));
     args.insertOrAssign(k_CreatedDataGroup_Key, std::make_any<DataPath>(generatedResultsGroupPath));
     args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(generatedResultsGroupPath));
