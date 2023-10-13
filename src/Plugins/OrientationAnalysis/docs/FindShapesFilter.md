@@ -1,11 +1,10 @@
-# Find Feature Shapes 
+# Find Feature Shapes
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Statistics (Morphological)
 
-## Description ##
+## Description
 
 This **Filter** calculates the second-order moments of each **Feature** in order to determine the *principal axis lengths, principal axis directions, aspect ratios and moment invariant Omega3s*.  The *principal axis lengths* are those of a "best-fit" ellipsoid.  The algorithm for determining the moments and these values is as follows:
 
@@ -18,33 +17,9 @@ This **Filter** calculates the second-order moments of each **Feature** in order
 7. Determine the Euler angles required to represent the *principal axis directions* in the *sample reference frame* and store them as the **Feature**'s *Axis Euler Angles*.
 8. Calculate the moment variant Omega3 as definied in [2] and is discussed further in [1] and [3]
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-None
-
-## Required Geometry ##
-
-Image 
-
-## Required Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Feature Attribute Array** | Centroids | float | (3) | X, Y, Z coordinates of **Feature** center of mass |
-| **Attribute Matrix** | CellFeatureData | Cell Feature | N/A | **Feature Attribute Matrix** of the selected *Feature Ids* |
-
-## Created Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Feature Attribute Array** | AspectRatios | float | (2) | Ratio of semi-axis lengths (b/a and c/a) for best-fit ellipsoid to **Feature** |
-| **Feature Attribute Array** | AxisEulerAngles | float | (3) | Euler angles (in radians) necessary to rotate the sample reference frame to the reference frame of the **Feature**, where the prinicpal axes of the best-fit ellipsoid are (X, Y, Z) |
-| **Feature Attribute Array** | SemiAxisLengths | float | (3) | Semi-axis lengths (a, b, c) for best-fit ellipsoid to **Feature** |
-| **Feature Attribute Array** | Omega3s | float | (1) | 3rd invariant of the second-order moment matrix for the **Feature**, does not assume a shape type (i.e., ellipsoid) |
-| **Feature Attribute Array** | Volumes | float | (1) | The volume of each **Feature** |
-
-## References ## 
+## References ##
 
 [1] Representation and Reconstruction of Three-dimensional Microstructures in Ni-based Superalloys, AFOSR FA9550-07-1-0179 Final Report, 20 Dec 2010.
 
@@ -52,19 +27,17 @@ Image
 
 [3] n-Dimensional Moment Invariants and Conceptual Mathematical Theory of Recognition n-Dimensional Solids, Alexander G. Mamistvalov, IEEE TRANSACTIONS ON PATTERN ANALYSIS AND MACHINE INTELLIGENCE, VOL. 20, NO. 8, AUGUST 1998, p. 819-831.
 
-[4] M. Groeber, M. Uchic, D. Dimiduk, and S. Ghosh.    A Framework for Automated Analysis and Simulation of 3D Polycrystalline Microstructures, Part 1: Statistical Characterization    Acta Materialia, 56 (2008), 1257-1273. 
+[4] M. Groeber, M. Uchic, D. Dimiduk, and S. Ghosh.    A Framework for Automated Analysis and Simulation of 3D Polycrystalline Microstructures, Part 1: Statistical Characterization    Acta Materialia, 56 (2008), 1257-1273.
 
-## Example Pipelines ##
+## Example Pipelines
 
 + (01) SmallIN100 Morphological Statistics
 + (06) SmallIN100 Synthetic
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

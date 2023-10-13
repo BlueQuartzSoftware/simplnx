@@ -56,9 +56,9 @@ very large grains being similar most of the fine grains and twins are **NOT** re
 ### Oxford/Bruker (.ctf) File
 
 Oxford Instruments and Bruker CTF data files do not include a "Confidence Index" measure. There are several measures
-such as _Mean Angular Deviation (MAD)_ or *Bands* but these values are not filled in or are defaulted to 0 (Zero) if the
+such as *Mean Angular Deviation (MAD)* or *Bands* but these values are not filled in or are defaulted to 0 (Zero) if the
 scan point was not indexed. By using the *Error* value from the data file we can get the same effect as the EDAX
-_Confidence Index_. The user would use the following input values:
+*Confidence Index*. The user would use the following input values:
 
 | Filter Parameter | Value                              |
 |------------------|------------------------------------|
@@ -76,28 +76,7 @@ _Confidence Index_. The user would use the following input values:
 Note the large areas of unindexed pixels in the original image (black pixels) and how they are all filled in. The filter
 can act much like a generic "flood fill" image processing algorithm if used improperly.
 
-## Parameters
-
-| Name                | Type     | Description                                                                                      |
-|---------------------|----------|--------------------------------------------------------------------------------------------------|
-| Threshold Value     | Any      | Sets the threshold value a **Cell** must have to be considered for changing                      |
-| Comparison Operator | Int      | Selects the operator to use. 0 = < (Less Than). 1 = > (Greater Than)                             |
-| Loop Until Gone     | bool     | Whether to iterate until all **Cells** are above the minimum tolerance or just run one iteration |
-| Image Geometry      | DataPath | The path to the Image Geometry                                                                   |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind                     | Default Name | Type | Component Dimensions | Description                                    |
-|--------------------------|--------------|------|----------------------|------------------------------------------------|
-| **Cell Attribute Array** | N/A          | Any  | (1)                  | The DataArray to use as input into the filter. |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -107,13 +86,10 @@ The example pipeline (pipelines/Examples/ReplaceElementAttributesWithNeighbor.d3
 |--|--|
 | ![Original Data](Images/NeighborReplace_Small_IN100_Before.png) | ![Original Data](Images/NeighborReplace_Small_IN100_After.png) |
 
-
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

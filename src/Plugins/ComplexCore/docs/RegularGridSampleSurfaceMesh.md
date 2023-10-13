@@ -16,7 +16,7 @@ This **Filter** "samples" a triangulated surface mesh on a rectilinear grid. The
 ## Parameters
 
 | Name | Type | Description |
-|------|------|-------------|
+|------------|------| --------------------------------- |
 | Dimensions | uint64 | Number of **Cells** along each axis |
 | Resolution | float32 (3x) | The resolution values (dx, dy, dz) |
 | Origin | float32 (3x) | The origin of the sampling volume |
@@ -27,19 +27,18 @@ Triangle
 
 ## Required Objects
 
-| Type | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Data Array** | Face Labels | int32 | (2) | Specifies which **Features** are on either side of each **Face**. |
+| Type | Default Name | Type | Comp Dims | Description |
+|------|--------------|-----|-----|-----------------------------------|
+| Data Array | Face Labels | int32 | (2) | Specifies which **Features** are on either side of each **Face**. |
 
 ## Created
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Image Geometry** | Image Geometry | N/A | N/A | Created **Image Geometry** name and *DataPath* |
-| **Attribute Matrix** | Cell Data | Cell | N/A | Created **Cell Attribute Matrix** name |
-| **Data Array** | Feature Ids | int32 | (1) | Specifies to which **Feature** each **Cell** belongs |
+| Kind                      | Default Name | Type     | Comp Dims | Description                                 |
+|---------------------------|--------------|----------|--------|---------------------------------------------|
+| Image Geometry | Image Geometry | N/A | N/A | Created **Image Geometry** name and *DataPath* |
+|   Attribute Matrix   | Cell Data | Cell | N/A | Created **Cell Attribute Matrix** name |
+| Data Array | Feature Ids | int32 | (1) | Specifies to which **Feature** each **Cell** belongs |
 
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**
-

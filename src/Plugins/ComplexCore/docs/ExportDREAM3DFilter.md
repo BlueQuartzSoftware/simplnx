@@ -1,39 +1,19 @@
 # ExportDREAM3DFilter
 
-## Description ##
+## Description
 
 This **Filter** dumps the data structure to an hdf5 file with the .dream3d extension.
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-| Name | Type | Description |
-|------|------|-------------|
-| Export File Path | Filesystem Path | The file path the DataStructure should be written to as an HDF5 file. |
-| Write Xdmf File | bool | Whether or not to write the data out an xdmf file |
-
-
-## Required Geometry ###
-
-None
-
-## Required Objects ##
-
-None
-
-## Created Objects ##
-
-None
-
-## Example Pipelines ##
+## Example Pipelines
 
 ALL
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

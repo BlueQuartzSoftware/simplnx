@@ -1,4 +1,4 @@
-# ITK H Maxima Image Filter (ITKHMaximaImage)
+# ITK H Maxima Image Filter
 
 Suppress local maxima whose height above the baseline is less than h.
 
@@ -17,42 +17,18 @@ This filter uses the ReconstructionByDilationImageFilter . It provides its own i
 Geodesic morphology and the H-Maxima algorithm is described in Chapter 6 of Pierre Soille's book "Morphological Image Analysis:
 Principles and Applications", Second Edition, Springer, 2003.
 
-The height parameter is set using SetHeight.* ReconstructionByDilationImageFilter , HMinimaImageFilter , HConvexImageFilter 
+The height parameter is set using SetHeight.* ReconstructionByDilationImageFilter , HMinimaImageFilter , HConvexImageFilter
+
 - MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| Height | float64 | Set/Get the height that a local maximum must be above the local background (local contrast) in order to survive the processing. Local maxima below this value are replaced with an estimate of the local background. |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
-
 
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
+## DREAM3D-NX Help
 
-## DREAM3DNX Help
-
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

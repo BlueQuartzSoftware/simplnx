@@ -1,4 +1,4 @@
-# ITK Binary Contour Image Filter (ITKBinaryContourImage)
+# ITK Binary Contour Image Filter
 
 Labels the pixels on the border of the objects in a binary image.
 
@@ -12,7 +12,7 @@ BinaryContourImageFilter takes a binary image as input, where the pixels in the 
 
 The connectivity can be changed to minimum or maximum connectivity with SetFullyConnected() . Full connectivity produces thicker contours.
 
-https://www.insight-journal.org/browse/publication/217 
+<https://www.insight-journal.org/browse/publication/217>
 
 ### Author
 
@@ -22,41 +22,14 @@ https://www.insight-journal.org/browse/publication/217
 
 - LabelContourImageFilter BinaryErodeImageFilter SimpleContourExtractorImageFilter
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
-| BackgroundValue | float64 | Set/Get the background value used to mark the pixels not on the border of the objects. |
-| ForegroundValue | float64 | Set/Get the foreground value used to identify the objects in the input and output images. |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching IntegerPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching IntegerPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
-
 
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
+## DREAM3D-NX Help
 
-## DREAM3DNX Help
-
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

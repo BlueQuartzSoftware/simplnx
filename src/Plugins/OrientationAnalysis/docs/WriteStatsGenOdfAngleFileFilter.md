@@ -4,7 +4,7 @@
 
 IO (Output)
 
-## Description 
+## Description
 
 This **Filter** is used in a workflow where the user would like to generate a synthetic microstructure with an ODF that matches (as closely as possible) an existing experimental data set or other data set that is being mimicked. The basic workflow is the following:
 
@@ -19,19 +19,18 @@ This **Filter** is used in a workflow where the user would like to generate a sy
 9. Select the file that was just written
 10. Load the data and inspect the ODF that was generated
 
+## Important Change from Earlier Versions of StatsGenerator
 
-## Important Change from Earlier Versions of StatsGenerator 
+StatsGenerator can not load data from standard .ang or .ctf files. If you want to get the ODF from an existing experimental data set and you have one of those files then you must use the functionality of this filter
 
-**StatsGenerator can not load data from standard .ang or .ctf files. If you want to get the ODF from an existing experimental data set and you have one of those files then you must use the functionality of this filter**
-
-## Notes on Implementation 
+## Notes on Implementation
 
 + A separate file is written for each phase
 + Spaces are the default as the delimiters between values. The user can select another value
-+ Default values of 1.0 are used for both the *weight* and _sigma_. **If the user needs a stronger texture due to a low number of angles then larger values should be used such as 10, 100 or even 1000.**
++ Default values of 1.0 are used for both the *weight* and *sigma*. **If the user needs a stronger texture due to a low number of angles then larger values should be used such as 10, 100 or even 1000.**
 + The user has the option to convert the supplied Euler angles to degrees. **StatsGenerator** is able to import Euler angles as either degrees or radians based on user input, so the output type from this **Filter** could remain as radians or be converted to degrees. The user should remain cognizant of what representation their angles are in so that the correct option is chosen during the import process in **StatsGenerator**
 
-## Example File 
+## Example File
 
 The file written is a simple text file that contains a short comment section and a single *Header* line of data. All comment lines should come **BEFORE** the actual header line. There is a single header line in the form of "Key:Value" and then the lines of data.
 
@@ -46,15 +45,14 @@ The file written is a simple text file that contains a short comment section and
     7.2 3.6 7.2 1 1
     10.8 5.4 10.8 1 1
     14.4 7.2 14.4 1 1
-    
+
 The **only** required header line is:
 
     Angle Count:100
 
 There are 5 columns of data which are the 3 Euler Angles, the Weight Value and the Sigma Value.
 
-
-### Delimiter 
+### Delimiter
 
 Choice of delimiter is as follows:
 
@@ -64,41 +62,16 @@ Choice of delimiter is as follows:
     3 = : (colon)
     4 = \t (tab)
 
+% Auto generated parameter table will be inserted here
 
-## Parameters 
-
-| Name | Type | Description |
-|---------|---------| --------------- |
-| Output File | File Path | Output angles file path |
-| Default Weight | float | This value will be used for the Weight column |
-| Default Sigma | int | This value will be used for the Sigma column |
-| Delimiter | Enumeration | The delimiter separating the data |
-| Convert to Degrees | bool | Whether to convert the Euler angles from radians to degrees. If the Euler angles are already in degrees, this option will "convert" the data again, resulting in garbage orientations! |
-| Only Write Good Elements | bool | Whether to only write the Euler angles for those elements denoted as true in the supplied mask array |
-
-
-## Required Objects 
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|-------|---------------------|--------|---------------------------------|-----------------|
-| **Element Attribute Array** | EulerAngles | float | (3) | Three angles defining the orientation of the **Element** in Bunge convention (Z-X-Z) |
-| **Element Attribute Array** | Phases | int32_t | (1) |  Specifies to which **Ensemble** each **Element** belongs |
-| **Element Attribute Array** | Mask | bool | (1) | Used to define **Elements** as *good* or *bad*. Only required if *Only Write Good Elements* is checked |
-
-## Created Objects 
-
-None
-
-## Example Pipelines 
+## Example Pipelines
 
 + Export Small IN100 ODF Data (StatsGenerator)
 
-## License & Copyright 
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

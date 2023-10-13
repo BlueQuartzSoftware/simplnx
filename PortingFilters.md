@@ -1,4 +1,4 @@
-# Porting a Filter #
+# Porting a Filter
 
 Depending on where the ported filter is coming from determines what you need to
 do. The sections are as follows:
@@ -13,17 +13,17 @@ do. The sections are as follows:
 </ul>
 
 
-## SECTION 1 : Porting From ***SIMPL*** to ***Filters Folder*** ##
+## SECTION 1 : Porting From ***SIMPL*** to ***Filters Folder***
 
 This will be the most common type of Filter porting. The steps for this are as
 follows:
 
-### Go to FreeNas and pull the custom build of DREAM3D ###
+### Go to FreeNas and pull the custom build of DREAM3D
 
 This custom build has **ALL** ***SIMPL*** plugins compiled so you don't need
 to worry about what filters will be available
 
-### Load up ***SIMPL*** DREAM3D and navigate to ***ComplexFilterGen*** ###
+### Load up ***SIMPL*** DREAM3D and navigate to ***ComplexFilterGen***
 
 Here you will need to set the command arguments using the following syntax:
 
@@ -40,14 +40,14 @@ Some nuances to note for this are as follows:
 You will need to update the various CMake files inside the target complex plugin in order to start compiling the new filter code inside of a complex build.
 
 
-## SECTION 2 : Porting stubs from existing folder to ***Filters Folder*** ##
+## SECTION 2 : Porting stubs from existing folder to ***Filters Folder***
 
 Some plugins have existing stubs in folders other than the primary ***Filters***
 folder.
 
-### Move the Filter and Algorithm files to the active ***Filters Folder*** ###
+### Move the Filter and Algorithm files to the active ***Filters Folder***
 
-### Update the Legacy UUID Maps ###
+### Update the Legacy UUID Maps
 <ol>
   <li> Open the LegacyUUIDMapping header file for this Plugin </li>
   <li> Find and uncomment the include statement for the filter being moved </li>
@@ -63,12 +63,12 @@ folder.
  
  > ***@@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@***
  
- ### Update the CMakeLists.txt files to reflect the changes ###
+ ### Update the CMakeLists.txt files to reflect the changes
  
  This includes the ones for the unit tests and the one at the plugin level
 
 
-## SECTION 3 : Developing a Test File ##
+## SECTION 3 : Developing a Test File
 
 Firstly, it is important to ensure that each unit test does not just instantiate filter. Current standards require the following:
 <ul>
@@ -79,7 +79,7 @@ Firstly, it is important to ensure that each unit test does not just instantiate
 
 Test Files should **NOT** output strings to the terminal. Output should be in the form of catch2 errors.
 
-### Adding a new data file to ***DREAM3D Data Repo*** ###
+### Adding a new data file to ***DREAM3D Data Repo***
 
 For adding the data file to the DREAM3D repo one should follow the following steps:
 
@@ -100,7 +100,7 @@ GitHub Repo : <https://github.com/BlueQuartzSoftware/complex/releases/tag/Data_A
 
 Located at line 579 in the CMakeLists.text file in the ***complex*** repo, one must update the table accordingly.
 
-### Working with filters outside the current plugin  ###
+### Working with filters outside the current plugin 
 
 There will be times you may have to call upon filters from another repo. Typically this occurs in ***complex_plugins***. In order to do this one must create an application instance which is done so by wrapping it in a struct that gets nested in a shared pointer to make sure it cleans itself up after each test case. Here is the syntax for doing so:
 
@@ -118,11 +118,11 @@ The syntax for use of ***filterList*** is as follows:
 > REQUIRE(nullptr != filter);
 
 
-## SECTION 4 : Multithreading ##
+## SECTION 4 : Multithreading
 
 At the current time, the only filters that should be made parallel are those that could be considered "embarrassingly parallel". It is important to remember that the cost of creating a thread is hefty so it should only be done when there is a sizeable amount of work available for each thread. Complex has two types: ParallelTaskAlgorithm and ParallelDataAlgorithm. Task Runner is for parsing multiple objects and Data Runner is for parsing a single object. 
 
-### Syntax for Complex ###
+### Syntax for Complex
 
 This is an examplar use case and doesn't truly encompass all possible use cases for the functions, but instead serves to show how it should be structured in most cases.  
 
@@ -163,11 +163,11 @@ In the exectuting function:
 > dataAlg.execute(::FilterNameImpl(object, argument));  
 
 
-## SECTION 5 : Progress Updating ##
+## SECTION 5 : Progress Updating
 
 With out of core functionality on the way, it is now a requirement for each and every filter to have progress updates and checks for cancel. This section shows threadsafe progress updating and message structuring.
 
-### ThreadSafe Progress Messaging ###
+### ThreadSafe Progress Messaging
 
 This is an example that aims to reduce the number of times a mutex lock is called. 
 
@@ -189,7 +189,7 @@ This is an example that aims to reduce the number of times a mutex lock is calle
 
 This function should avoid being called too many times in a thread as it would significantly slow it down.
 
-### Message Structuring ###
+### Message Structuring
 
 For error messaging the following syntax should be used:
 
@@ -198,11 +198,11 @@ For error messaging the following syntax should be used:
 The number at the start is an arbitrary value save for the fact it must be negative.
 
 
-## SECTION 6 : Utilizing API's to the fullest ##
+## SECTION 6 : Utilizing API's to the fullest
 
 This section aims to tackle ***complex*** convenience functions from major API's:
 
-### Utilizing the ExecuteDataFunction ###
+### Utilizing the ExecuteDataFunction
 
 These templated varg functions aim to eliminate the need for type switches, this is done using functors. Below is example syntax:
 
@@ -224,7 +224,7 @@ In the executing function:
 > ExecuteDataFunction(FilterNameFunctor{}, selectedArrayRef.getDataType(), selectedArrayRef, argumentBool);  
 
 
-## SECTION 7 : Useful Tips and Tricks ##
+## SECTION 7 : Useful Tips and Tricks
 
 This section is just for basic genralized tips to help make our code better:
 <ul>

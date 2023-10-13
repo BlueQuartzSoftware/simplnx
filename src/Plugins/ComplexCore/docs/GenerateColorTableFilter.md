@@ -1,42 +1,18 @@
 # Generate Color Table
 
-## Description ##
+## Description
 
 This **Filter** generates a color table array for a given 1-component input array.  Each element of the input array
 is normalized and converted to a color based on where the value falls in the spectrum of the selected color preset.
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-| Name            | Type | Description                                                       |
-|-----------------|------|-------------------------------------------------------------------|
-| Selected Preset | JSON | The selected color preset, used to generate the color table array |
+## Example Pipelines
 
-## Required Geometry ###
-
-None
-
-## Required Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description                                                    |
-|------|--------------|-----|----------------------|----------------------------------------------------------------|
-| **Attribute Array** | N/A | Any | (1) | 1-component input array used to generate the color table array |
-
-## Created Objects ##
-
-| Kind | Default Name | Type  | Component Dimensions | Description                                             |
-|------|--------------|-------|----------------------|---------------------------------------------------------|
-| **Attribute Array** | N/A | uint8 | (3) | RGB output color table array |
-
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -1,4 +1,4 @@
-# ITK Valued Regional Minima Image Filter (ITKValuedRegionalMinimaImage)
+# ITK Valued Regional Minima Image Filter
 
 Transforms the image so that any pixel that is not a regional minima is set to the maximum value for the pixel type. Pixels that are regional minima retain their value.
 
@@ -10,7 +10,7 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 Regional minima are flat zones surrounded by pixels of higher value. A completely flat image will be marked as a regional minima by this filter.
 
-This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. https://www.insight-journal.org/browse/publication/65 
+This code was contributed in the Insight Journal paper: "Finding regional extrema - methods and performance" by Beare R., Lehmann G. <https://www.insight-journal.org/browse/publication/65>
 
 ### Author
 
@@ -18,42 +18,17 @@ This code was contributed in the Insight Journal paper: "Finding regional extrem
 
 ### Related Filters
 
-- ValuedRegionalMaximaImageFilter , ValuedRegionalExtremaImageFilter , 
+- ValuedRegionalMaximaImageFilter , ValuedRegionalExtremaImageFilter ,
 - HMinimaImageFilter
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| FullyConnected | bool | Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching ScalarPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching ScalarPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
-
 
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
+## DREAM3D-NX Help
 
-## DREAM3DNX Help
-
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

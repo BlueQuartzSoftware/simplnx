@@ -1,43 +1,21 @@
-# Remove Flagged Features 
+# Remove Flagged Features
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Processing (Cleanup)
 
-## Description ##
+## Description
 
 This **Filter** will remove **Features** that have been flagged by another **Filter** from the structure.  The **Filter** requires that the user point to a boolean array at the **Feature** level that tells the **Filter** whether the **Feature** should remain in the structure.  If the boolean array is *false* for a **Feature**, then all **Cells** that belong to that **Feature** are temporarily *unassigned* and after all *undesired* **Features** are removed, the remaining **Features** are isotropically coarsened to fill in the gaps left by the removed **Features**.
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-None
+## Example Pipelines
 
-## Required Geometry ##
-
-Image
-
-## Required Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs |
-| **Feature Attribute Array** | Active | bool | (1) | Specifies whether the **Feature** will remain in the structure or not |
-
-## Created Objects ##
-
-None
-
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

@@ -1,11 +1,10 @@
 # Execute Process
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (Misc)
 
-## Description ##
+## Description
 
 This filter allows the user to execute any application, program, shell script or any other executable program on the computer system. Any output can be found in the user specified log file.
 
@@ -19,44 +18,20 @@ Simple command with arguments (for Windows users)
 
 > C:/Applications/DREAM3D-6.6.332/nxrunner.exe C:/Applications/DREAM3D/DREAM3D-6.6.332/Data/MyPipeline.json
 
-For a command with spaces in the path 
+For a command with spaces in the path
 
 > "C:/Program Files/DREAM3D-6.6.332/nxrunner.exe" "C:/Program Files/DREAM3D-6.6.332/PrebuiltPipelines/Workshop/EBSD Reconstruction/(01) SmallIN100 Archive.json"
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-| Name             | Type | Description |
-|------------------|------|-------------|
-| Command Line | String| The complete command to execute. |
-| Should Block | Bool | Whether to block the pipeline process while the command executes or not. |
-| Timeout | Int32 | The amount of time (in ms) to wait for the command to start/finish when blocking is selected. |
-| Output Log File | File Path | The log file where the output from the process will be stored. |
-
-
-## Required Geometry ##
-
-Not Applicable
-
-## Required Objects ##
-
-None
-
-## Created Objects ##
-
-None
-
-
-## Example Pipelines ##
+## Example Pipelines
 
 ExecuteProcess
 
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

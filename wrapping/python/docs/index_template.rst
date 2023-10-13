@@ -5,6 +5,17 @@
 DREAM3D-NX Python Docs
 ================================
 
+The *complex* library can be installed through an Anaconda packages from the *BlueQuartzSoftware* channel. This can be achieved
+by creating a new virtual environment
+
+.. code:: shell
+
+    conda config --add channels conda-forge
+    conda config --set channel_priority strict
+    conda create -n cxpython python=3.9
+    conda activate cxpython
+    conda install -c bluequartzsoftware complex
+
 .. toctree::
    :maxdepth: 3
    :caption: Contents:
@@ -23,6 +34,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
-
-

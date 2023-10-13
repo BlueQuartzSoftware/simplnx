@@ -2,47 +2,28 @@
 
 This filter directly wraps an ITK filter of the same name.
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 ITKImageProcessing (ITKImageProcessing)
 
-## Description ##
+## Description
 
 Read in a stack of 2D images into a 3D volume with ITK. Supports most common
 scalar pixel types and the many file formats supported by ITK.
 Images are read in as an **Image Geomotry**. The user must specify the origin
 in physical space and resolution (uniform physical size of the resulting **Cells**).
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-- Input Directory
-- File Ordering (Ascending or Descending)
-- Origin
-- Resolution
+## Example Pipelines
 
-## Required Objects ##
+- (08) Image Initial Visualization
+- (09) Image Segmentation
 
-None
-
-## Created Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | ImageDataContainer | N/A | N/A | Created **Data Container** name **Image Geometry** |
-| **Attribute Matrix** | CellData | Cell | N/A | Created **Cell Attribute Matrix** name  |
-| **Cell Attribute Array**  | ImageData | Varies based on input | (n) |  |
-
-## Example Pipelines ##
-
-+ (08) Image Initial Visualization
-+ (09) Image Segmentation
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

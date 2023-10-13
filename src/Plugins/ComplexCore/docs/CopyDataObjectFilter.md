@@ -1,17 +1,17 @@
 # Copy Data Object
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (Generation)
 
-## Description ##
+## Description
 
 This **Filter** deep copies one or more DataObjects.
 
-**In the case of copying _DataObject_s that inherit from _BaseGroup_**, such as *DataGroup* or _AttributeMatrix_, **it will copy all of the child objects recursively**, that is to say all of an object's children and childrens' children and so on will be copied if applicable.
+**In the case of copying _DataObject_s that inherit from _BaseGroup_**, such as _DataGroup_ or _AttributeMatrix_, **it will copy all of the child objects recursively**, that is to say all of an object's children and childrens' children and so on will be copied if applicable.
 
-Commonly used *BaseGroup* children:
+Commonly used _BaseGroup_ children:
+
 - **_ALL_** Geometries
 - _DataGroup_
 - _AttributeMatrix_
@@ -19,39 +19,16 @@ Commonly used *BaseGroup* children:
 
 See the DataStructure section of the reference manual for a complete hierarchy.
 
-When the *Copy to New Parent* is toggled true a new parameter will appear. This parameter, _Copied Parent Group_, allows for the selected arrays to all be copied into whatever data container you place here.
+When the _Copy to New Parent_ is toggled true a new parameter will appear. This parameter, _Copied Parent Group_, allows for the selected arrays to all be copied into whatever data container you place here.
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-None
+## Example Pipelines
 
-## Required Geometry ##
-
-Not Applicable
-
-## Required Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|----------------|
-| DataObject | N/A | N/A | N/A | The list of DataObjects to copy. |
-| bool | false | N/A | N/A | Whether to copy the DataObjects to a new parent or not. |
-| DataGroup | N/A | N/A | N/A | The group to be used as the parent for all the DataObject copies if the Copy to New Parent option is selected |
-| string | _COPY | N/A | N/A | The suffix string to be appended to each copy's name |
-
-## Created Objects ##
-
-A deep copy of the DataObjects selected in the input.
-
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.
