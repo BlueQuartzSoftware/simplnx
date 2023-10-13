@@ -1,4 +1,4 @@
-# ITK Sigmoid Image Filter (ITKSigmoidImage)
+# ITK Sigmoid Image Filter
 
 Computes the sigmoid function pixel-wise.
 
@@ -14,42 +14,14 @@ A linear transformation is applied first on the argument of the sigmoid function
 
 Every output pixel is equal to f(x). Where x is the intensity of the homologous input pixel, and alpha and beta are user-provided constants.
 
-## Parameters
-
-| Name | Type | Description              |
-|------|------|--------------------------|
-| Alpha | float64 | Alpha in the above equation |
-| Beta | float64 | Beta in the abvove equation |
-| OutputMaximum | float64 | The maximum output value |
-| OutputMinimum | float64 | The minimum output value |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
-
 
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
+## DREAM3D-NX Help
 
-## DREAM3DNX Help
-
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

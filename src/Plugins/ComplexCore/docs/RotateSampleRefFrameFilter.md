@@ -1,10 +1,10 @@
 # Rotate Sample Reference Frame
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Sampling (Rotating/Transforming)
 
-## Description ##
+## Description
 
 **NOTE: As of July 2023, this filter is only verified to work with a rotation angle of 180 degrees, a rotation axis of (010), and a (0, 0, 0) origin.**
 
@@ -18,36 +18,15 @@ The equivalent rotation matrix for the above rotation would be the following:
 | 1 | 0 | 0 |
 | 0 | 0 | 1 |
 
-## Example ##
+## Example
 
 When importing EBSD data from EDAX typically the user will need to rotate the sample reference frame about the <010> (Y) axis. This results in the image comparison below. Note that in the original image the origin of the data is at (0, 0) microns but after rotation the origin now becomes (-189, 0) microns. If you need to reset the origin back to (0,0) then the filter "Set Origin & Spacing" can be run.
 
 ![Imported EBSD Data Rotated about the <010> axis](Images/RotateSampleRefFrame_1.png)
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-| Name | Type | Description |
-|------|------|-------------|
-| Rotation Representation | Enumeration | Which form used to represent rotation (**axis angle** or **rotation matrix)** |
-| Rotation Axis (ijk) | float (3x) | Axis in sample reference frame to rotate about (if **axis angle**) |
-| Rotation Angle (Degrees) | float | Magnitude of rotation (in degrees) about the rotation axis (if **axis angle**) |
-| Rotation Matrix | float (3x3) | Axis in sample reference frame to rotate about (if **rotation matrix**) |
-
-## Required Geometry ##
-
-Image
-
-## Required Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **DataArray** | N/A | Any | Same as geometry | List of **DataArrays** associated with the geometry |
-
-## Created Objects ##
-
-None
-
-## Example Pipelines ##
+## Example Pipelines
 
 + INL Export
 + Export Small IN100 ODF Data (StatsGenerator)
@@ -56,12 +35,10 @@ None
 + Edax IPF Colors
 + Confidence Index Histogram
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

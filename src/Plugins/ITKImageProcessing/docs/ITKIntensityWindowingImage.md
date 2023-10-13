@@ -1,4 +1,4 @@
-# ITK Intensity Windowing Image Filter (ITKIntensityWindowingImage)
+# ITK Intensity Windowing Image Filter
 
 Applies a linear transformation to the intensity levels of the input Image that are inside a user-defined interval. Values below this interval are mapped to a constant. Values over the interval are mapped to another constant.
 
@@ -12,42 +12,14 @@ IntensityWindowingImageFilter applies pixel-wise a linear transformation to the 
 
 All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.* RescaleIntensityImageFilter
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| WindowMinimum | float64 | Set/Get the values of the maximum and minimum intensities of the input intensity window. |
-| WindowMaximum | float64 | Set/Get the values of the maximum and minimum intensities of the input intensity window. |
-| OutputMinimum | float64 | Set/Get the values of the maximum and minimum intensities of the output image. |
-| OutputMaximum | float64 | Set/Get the values of the maximum and minimum intensities of the output image. |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
-
 
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
+## DREAM3D-NX Help
 
-## DREAM3DNX Help
-
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

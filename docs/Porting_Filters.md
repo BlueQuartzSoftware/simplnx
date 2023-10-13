@@ -1,6 +1,6 @@
-# Porting Filter Notes #
+# Porting Filter Notes
 
-## Porting Checklist ##
+## Porting Checklist
 
 - [ ] Parameters should be generally broken down into "Input Parameters", "Required Data Objects", "Created Data Objects". There can be exceptions to this.
 - [ ] ChoicesParameter selections should be an enumeration defined in the filer header
@@ -16,7 +16,7 @@ static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 
 - [ ] Filters should have both the Filter class and Algorithm class for anything beyond trivial needs
 
-## Converting Types ##
+## Converting Types
 
 - `QString => std::string`
 - `QVector<> => std::vector<>`
@@ -39,7 +39,7 @@ COMPLEX
 
 then you can optionally return the `result` variable if needed
 
-## QString operations ##
+## QString operations
 
 There are some substitutions for the QString operations.
 See [https://en.cppreference.com/w/cpp/string/basic_string](https://en.cppreference.com/w/cpp/string/basic_string) for
@@ -47,7 +47,7 @@ more information about std::string
 
 There is a file `complex/Utilities/StringUtilities.hpp` that has some QString functionality that is needed.
 
-## Getting a Geometry from the DataStructure ##
+## Getting a Geometry from the DataStructure
 
 If you know the path to the Geometry:
 
@@ -56,11 +56,11 @@ If you know the path to the Geometry:
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
 ```
 
-## Resizing Attribute Matrix ##
+## Resizing Attribute Matrix
 
 If your codes specifically resize the AttributeMatrix, this is not needed anymore.
 
-## QString Formatting ##
+## QString Formatting
 
 Use the `format` library
 
@@ -72,7 +72,7 @@ QString msg = QString("Error reading Triangle '%1'. Object Count was %2 and shou
 std::string msg = fmt::format("Error reading Triangle '{}}'. Object Count was {} and should have been {}", t, objsRead, k_StlElementCount);
 ```
 
-## Get An Array from the DataStructure ##
+## Get An Array from the DataStructure
 
 Example of getting an array and summing the values using range based for loop.
 
@@ -86,13 +86,13 @@ Example of getting an array and summing the values using range based for loop.
     }
 ```
 
-## Chaining Together DataPath + String to form new DataPath ##
+## Chaining Together DataPath + String to form new DataPath
 
 ```c++
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath("Triangle Areas");
 ```
 
-## Print out the preflight errors during a Unit Test ##
+## Print out the preflight errors during a Unit Test
 
 ```c++
     auto preflightResult = filter.preflight(dataGraph, args);
@@ -105,7 +105,7 @@ Example of getting an array and summing the values using range based for loop.
     }
 ```
 
-## Moving from Pointer based array navigation ##
+## Moving from Pointer based array navigation
 
 Previously inside of SIMPL one would have done the following to get the raw pointer
 to the data stored in a DataArray:
@@ -126,7 +126,7 @@ Note the use of a *Reference Variable* instead of the pointer. The developer can
 code such as `vertex[index]` to get/set a value but the code `vertex = i` to move a pointer
 **will not work**.
 
-## Selecting Geometry from a Parameter ##
+## Selecting Geometry from a Parameter
 
 If you need to have the user select a Geometry then you should use a `DataPathSelectionParameter`.
 
@@ -134,14 +134,14 @@ If you need to have the user select a Geometry then you should use a `DataPathSe
   params.insert(std::make_unique<DataPathSelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry to Sample", "", DataPath{}));
 ```
 
-## Transferring Data from one Geometry to Another ##
+## Transferring Data from one Geometry to Another
 
 There are several filters (those that create a new geometry from an existing one) where
 the user is allowed to "transfer" data from the source geometry onto the newly created
 geometry. QuickSurfaceMeshFilter and PointSampleTriangleGeometryFilter both are examples
 of how to perform this transfer of data.
 
-## Parallel Algorithms ##
+## Parallel Algorithms
 
 There are several classes that can be used to help the developer write parallel algorithms.
 
@@ -150,7 +150,7 @@ on the situation. `AlignSections.cpp` and `CropImageGeoemtry.cpp` both use a tas
 parallelism. `RotateSampleRefFrameFilter.cpp` shows an example
 of using ParallelData3DAlgorithm.
 
-## Constants for Pi and Others ##
+## Constants for Pi and Others
 
 ```cpp
   #include "complex/Common/Numbers.hpp"
@@ -162,7 +162,7 @@ and use it this way:
   double foo = complex::numbers::k_180OverPi * 232.0;
 ```
 
-## MessageHandler ##
+## MessageHandler
 
 All filters give you access to the MessageHandler class that sends status, progress, error and warning messages back to
 the user.
@@ -181,7 +181,7 @@ and
     m_MessageHandler(IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt));
 ```
 
-## Creating Array within an Attribute Matrix ##
+## Creating Array within an Attribute Matrix
 
 If you have a filter that needs to create an array in something like a cell attribute matrix or
 a feature attribute matrix then the following filters have examples.
@@ -220,7 +220,7 @@ then you replace the macro with the following template function:
 The first 2 arguments to the above function are used by the function, any additional arguments are passed directly to
 your functor implementation.
 
-## Porting SIMPL Filter ##
+## Porting SIMPL Filter
 
 - Create Filter class in "PLUGIN_NAME/src/PLUGIN_NAME/Filters/xxxxFilter[.hpp|.cpp]"
 - Update Plugin's top level CMakeLists.txt to include the filter
@@ -228,7 +228,7 @@ your functor implementation.
 - Update Plugin's top level CMakeLists.txt to include the algorithm
 - Ensure the UUID is the proper UUID from the know mappings file.
 
-### Parameters ###
+### Parameters#
 
 Use proper grouping in the parameters to help the User Interface.
 
@@ -248,6 +248,6 @@ There are potentially 3 sections of parameters:
 
 these should be used as needed by the filter.
 
-## Processing a Geometry In Place ##
+## Processing a Geometry In Place
 
 Sometimes a filter needs allow the user to process it's geometry "in place" in order to ease the number of filters that are needed to remove temporary DataObjecsts. If your filter needs this kind of capability, then take a look at the "CropImageGeometry" or "RotateSampleRefFrame" filters.

@@ -21,7 +21,7 @@ The vision for the DREAM.3D project is to produce accessible software tools that
 
 ## Public Release Notice
 
-This software library is directly supported by USAF Contract _FA8650-22-C-5290_ and has been cleared as publicly releasable under the following:
+This software library is directly supported by USAF Contract *FA8650-22-C-5290* and has been cleared as publicly releasable under the following:
 
 ```text
 AFRL has completed the review process for your case on 14 Sep 2022:

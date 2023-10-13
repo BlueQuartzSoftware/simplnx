@@ -1,43 +1,21 @@
 # RenameDataObject
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Core (Memory/Management)
 
-## Description ##
+## Description
 
 This **Filter** renames a user chosen **Data Object** of any type.
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-| Name | Type | Description |
-|------|------| ----------- |
-| New Data Object Name| String | New name for the selected **Data Object** |
+## Example Pipelines
 
-## Required Geometry ##
-
-Not Applicable
-
-## Required Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Object** | None | N/A | N/A | **Data Object** to rename |
-
-## Created Objects ##
-
-None
-
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

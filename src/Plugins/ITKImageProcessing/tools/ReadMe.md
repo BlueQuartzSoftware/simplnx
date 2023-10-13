@@ -7,7 +7,6 @@ From the file `itk_filter_generator.py`, you will need to update the python vari
 
 Then you can run the `itk_filter_generator.py` file to generate the filters.
 
-
 An example usage of the python script is this:
 
 ````

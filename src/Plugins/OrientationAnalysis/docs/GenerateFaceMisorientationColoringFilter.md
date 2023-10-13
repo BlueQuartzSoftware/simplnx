@@ -1,49 +1,23 @@
 # Generate Misorientation Colors (Face)
 
-
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Processing (Crystallography)
 
-## Description ##
+## Description
 
 This **Filter** generates a 3 component vector for each **Triangle** in a **Triangle Geometry** that is the axis-angle of the misorientation associated with the **Features** that lie on either side of the **Triangle**.  The axis is normalized, so if the magnitude of the vector is viewed, it will be the *misorientation angle* in degrees.
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-None
-
-## Required Geometry ##
-
-Image + Triangle 
-
-## Required Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array** | FaceLabels | int32_t | (2) | Specifies which **Features** are on either side of each **Face** |
-| **Feature Attribute Array** | AvgQuats | float | (4) | Specifies the average orientation of each **Feature** in quaternion representation |
-| **Feature Attribute Array** | Phases | int32_t | (1) | Specifies to which phase each **Feature** belongs |
-| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
-
-
-## Created Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array** | MisorientationColors | float | (3) | A set of RGB color schemes encoded as floats for each **Face** |
-
-
-## Example Pipelines ##
+## Example Pipelines
 
 + (03) SmallIN100 Mesh Statistics
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

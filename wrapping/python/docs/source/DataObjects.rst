@@ -30,6 +30,20 @@ This is the abstract base class for all other objects that can be inserted into 
 DataStructure_ . It should never be used as the appropriate class from the list
 below should be used instead.
 
+
+DataPath
+---------
+
+A DataPath is a complex class that describes the path to a :ref:`DataObject` within 
+the DataStructure_ . The path is constructed as a python list of string objects.
+For example if we have a top level group called **MyGroup** and a `DataArray<DataArray>` 
+called *Euler Angles* within that group the **DataPath** object that would be constructed is the following
+
+.. code:: python
+
+  array_path = cx.DataPath(['MyGroup', 'Euler Angles'])
+
+
 .. _DataGroup:
 
 DataGroup
@@ -48,17 +62,6 @@ any needed DataGroups.
 
 .. _DataPath:
 
-DataPath
----------
-
-A DataPath is a complex class that describes the path to a :ref:`DataObject` within 
-the DataStructure_ . The path is constructed as a python list of string objects.
-For example if we have a top level group called **MyGroup** and a `DataArray<DataArray>` 
-called *Euler Angles* within that group the **DataPath** object that would be constructed is the following
-
-.. code:: python
-
-  array_path = cx.DataPath(['MyGroup', 'Euler Angles'])
 
 .. _DataArray:
 

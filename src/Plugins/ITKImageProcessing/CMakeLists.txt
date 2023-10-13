@@ -230,6 +230,8 @@ set(AlgorithmList
   )
 endif()
 
+list(SORT FilterList ORDER ASCENDING)
+
 # -----------------------------------------------------------------------------
 # These are filters that need to be compiled but not exposed to a user
 # -----------------------------------------------------------------------------

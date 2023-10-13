@@ -20,27 +20,9 @@ If *Fill Holes* is set to *true*:
 | Name | Description |
 |------|-------------|
 |![Small IN100 IPF Map](Images/Small_IN100.png) | Good dataset to use this filter |
-|![APTR IPF Colors](Images/aptr12_001_0.png) | **NOT** a good data set to use because there is **no** overscan of the sample. |
+|![APTR IPF Colors](Images/aptr12_001_0.png) | NOT** a good data set to use because there is **no** overscan of the sample. |
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| Fill Holes in Largest Feature | bool | Whether to fill holes within sample after it is identified |
-
-## Required Geometry
-
-Image
-
-## Required Objects
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | Mask | bool | (1) | *Mask* array defining what is sample and what is not |
-
-## Created Objects
-
-None
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
@@ -52,8 +34,6 @@ None
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

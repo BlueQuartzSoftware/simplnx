@@ -1,10 +1,10 @@
 # Resample RectGrid To ImageGeom
 
-## Group (Subgroup) 
+## Group (Subgroup)
 
 Sampling (Sampling)
 
-## Description 
+## Description
 
 This **Filter** will resample an existing RectilinearGrid onto a regular grid (Image Geometry) and copy cell data into the newly created Image Geometry Data Container during the process.
 
@@ -14,34 +14,14 @@ The algorithm logic is thus: If the ImageGeometry cell would contain multiple Re
 
 The user can select which cell attribute matrix data arrays will be copied into the newly created Image Geometry Cell Attribute Matrix.
 
-## Parameters 
+% Auto generated parameter table will be inserted here
 
-| Name | Type | Description |
-|------|------|------|
-| Input Rectilinear Grid| DataPath | Path to the RectGrid Geometry to be re-sampled |
-| Selected Cell Attribute Arrays to Copy | Array of (DataPath) | Rect Grid Cell Data to possibly copy |
-| Image Geometry Voxel Dimensions | 3 x Int32  | The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry |
+## Example Pipelines
 
-## Required Geometry 
-
-Rectilinear Grid Geometry
-
-## Created Objects 
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|-----|
-| **Image Geometry** | Image Geometry | N/A | N/A | Path to the created Image Geometry |
-| **Attribute Matrix** | Cell Data | Element/Feature/Ensemble/etc. | N/A | The name of the cell data Attribute Matrix created with the Image Geometry |
-| **Element/Feature/Ensemble/etc. Attribute Array** | Copied from the input Data Container | int32_t/float/etc. | (1)/(3)/etc. | Cell level arrays copied over from the input to the resampled geometry |
-
-## Example Pipelines 
-
-## License & Copyright 
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.
