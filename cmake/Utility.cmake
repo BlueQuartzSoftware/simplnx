@@ -178,8 +178,14 @@ function(create_data_copy_rules)
     return()
   endif()
 
+  get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+  if(is_multi_config)
+    set(CX_CONFIG_DIR "$<CONFIG>")
+  else()
+    set(CX_CONFIG_DIR ".")
+  endif()
 
-  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/Data/")
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data/")
   if(EXISTS "${ARGS_DREAM3D_DATA_DIR}/Data")
     add_custom_target(DataFolderCopy ALL
       COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARGS_DREAM3D_DATA_DIR}/Data ${DATA_DEST_DIR}

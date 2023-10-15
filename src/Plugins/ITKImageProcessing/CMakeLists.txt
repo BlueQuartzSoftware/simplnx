@@ -320,7 +320,8 @@ endif()
 
 # -----------------------------------------------------------------------
 # Install example pipelines
-# -----------------------------------------------------------------------get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+# -----------------------------------------------------------------------
+get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(is_multi_config)
   set(CX_CONFIG_DIR "$<CONFIG>")
 else()
