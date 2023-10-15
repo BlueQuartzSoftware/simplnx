@@ -109,8 +109,15 @@ function(download_test_data)
   #----------------------------------------------------------------------------
   # Create the custom CMake File for this archive file
   #----------------------------------------------------------------------------
+  get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+  if(is_multi_config)
+    set(CX_CONFIG_DIR "\${CONFIG}")
+  else()
+    set(CX_CONFIG_DIR ".")
+  endif()
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")
+
   set(fetch_data_file "${test_files_dir}/${ARGS_ARCHIVE_NAME}.cmake")
-  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/\${CONFIG}/Data")
   # Strip off the .tar.gz extension
   string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
 
@@ -152,6 +159,12 @@ function(download_test_data)
       file(REMOVE "${fetch_data_file}")
     endif()
 
+    if(is_multi_config)
+      set(CX_CONFIG_DIR "$<CONFIG>")
+    else()
+      set(CX_CONFIG_DIR ".")
+    endif()
+    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")    
     install(DIRECTORY
             "${DATA_DEST_DIR}/${ARCHIVE_BASE_NAME}"
             DESTINATION Data/

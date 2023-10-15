@@ -103,7 +103,9 @@ file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------
 # ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>
 # -----------------------------------------------------------------------\n
 cmake_policy(SET CMP0012 NEW)
-cmake_policy(SET CMP0054 NEW)\n")
+cmake_policy(SET CMP0054 NEW)\n
+message(STATUS \"CMAKE_CONFIG=\${CMAKE_CONFIG}\")
+")
 
 set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
@@ -112,7 +114,7 @@ endif()
 
 if(COMPLEX_BUILD_TESTS AND COMPLEX_DOWNLOAD_TEST_FILES)
   add_custom_target(Fetch_Remote_Data_Files ALL
-    COMMAND "${CMAKE_COMMAND}" -P "${FETCH_FILE_PATH}"
+    COMMAND "${CMAKE_COMMAND}" -DCMAKE_CONFIG=$<CONFIG> -P "${FETCH_FILE_PATH}"
     COMMENT "Downloading Test Data Files"
   #  WORKING_DIRECTORY "${TEST_WORKING_DIR}"
   )
