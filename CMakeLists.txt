@@ -808,15 +808,23 @@ set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 #------------------------------------------------------------------------------
 # Install the appropriate example pipelines based on which plugins are loaded
 #------------------------------------------------------------------------------
-set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/Data")
+get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(is_multi_config)
+  set(CX_CONFIG_DIR "$<CONFIG>")
+else()
+  set(CX_CONFIG_DIR ".")
+endif()
+
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
-set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/pipelines")
+set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipelines")
 set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
 
 if(COMPLEX_DOWNLOAD_TEST_FILES AND TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
   add_custom_target(Copy_PorosityAnalysis_Pipelines ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/PorosityAnalysis.d3dpipeline"
     COMMENT "Copying Example Pipelines into Binary Directory"
+    COMMAND_EXPAND_LISTS
     VERBATIM
   )
   set_target_properties(Copy_PorosityAnalysis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
@@ -824,6 +832,7 @@ if(COMPLEX_DOWNLOAD_TEST_FILES AND TARGET ComplexCore AND TARGET ITKImageProcess
   add_custom_target(Copy_CAxis_Pipelines ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/Combo-EBSD-osc_r0c0.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/Combo-EBSD-osc_r0c0.d3dpipeline"
     COMMENT "Copying Example Pipelines into Binary Directory"
+    COMMAND_EXPAND_LISTS
     VERBATIM
   )
   set_target_properties(Copy_CAxis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
@@ -836,6 +845,8 @@ if(COMPLEX_DOWNLOAD_TEST_FILES AND TARGET ComplexCore AND TARGET ITKImageProcess
     WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
     COMMENT "[DATA EXTRACT/COPY] 6_6_caxis_data into Binary Directory"
     DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+    COMMAND_EXPAND_LISTS
+    VERBATIM
   )
   set_target_properties(Copy_CAxis_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 endif()

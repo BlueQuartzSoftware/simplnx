@@ -320,13 +320,21 @@ endif()
 
 # -----------------------------------------------------------------------
 # Install example pipelines
-# -----------------------------------------------------------------------
+# -----------------------------------------------------------------------get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(is_multi_config)
+  set(CX_CONFIG_DIR "$<CONFIG>")
+else()
+  set(CX_CONFIG_DIR ".")
+endif()
+
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
-  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/pipelines/${PLUGIN_NAME}")
+  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipelines/${PLUGIN_NAME}")
   add_custom_target(Copy_${PLUGIN_NAME}_Pipeline_Folder ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
     ${PIPELINE_DEST_DIR}
     COMMENT "Copying Pipeline Folder into Binary Directory"
+    COMMAND_EXPAND_LISTS
+    VERBATIM
   )
   set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
@@ -346,7 +354,7 @@ endif()
 # Download Example Data Files
 # -----------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
-set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<CONFIG>/Data")
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")
 
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 
@@ -376,6 +384,8 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
     WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
     COMMENT "Copying ${PLUGIN_NAME}/Porosity_Image data into Binary Directory"
     DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+    COMMAND_EXPAND_LISTS
+    VERBATIM
   )
   set_target_properties(Copy_${PLUGIN_NAME}_Porosity_Image PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 endif()
@@ -390,6 +400,8 @@ if(FALSE)
   add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
     COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
+    COMMAND_EXPAND_LISTS
+    VERBATIM
   )
   set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
