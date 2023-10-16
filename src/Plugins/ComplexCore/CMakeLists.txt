@@ -345,12 +345,23 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 # -----------------------------------------------------------------------
 # Install example pipelines
 # -----------------------------------------------------------------------
+get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(is_multi_config)
+  set(CX_CONFIG_DIR "$<CONFIG>")
+else()
+  set(CX_CONFIG_DIR ".")
+endif()
+
+
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
-  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
+  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipelines/${PLUGIN_NAME}")
   add_custom_target(Copy_${PLUGIN_NAME}_Pipeline_Folder ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
     ${PIPELINE_DEST_DIR}
-    COMMENT "Copying Pipeline Folder into Binary Directory")
+    COMMENT "Copying Pipeline Folder into Binary Directory"
+    COMMAND_EXPAND_LISTS
+    VERBATIM
+    )
   set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   option(${PLUGIN_NAME}_INSTALL_PIPELINES "Enables install of ${PLUGIN_NAME} pipelines" ON)
@@ -369,7 +380,7 @@ endif()
 # Download Example Data Files
 # -----------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
-set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")
 
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 
@@ -390,11 +401,13 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   )
   add_custom_target(Copy_${PLUGIN_NAME}_ASCIIData ALL
     COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData.tar.gz"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData" "${DATA_DEST_DIR}/ASCIIData"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData" "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data/ASCIIData"
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData"
     WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
     COMMENT "Copying ${PLUGIN_NAME}/ASCIIData data into Binary Directory"
     DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+    COMMAND_EXPAND_LISTS
+    VERBATIM
   )
   set_target_properties(Copy_${PLUGIN_NAME}_ASCIIData PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
@@ -406,11 +419,13 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   )
   add_custom_target(Copy_${PLUGIN_NAME}_STL_Models ALL
     COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models.tar.gz"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/STL_Models" "${DATA_DEST_DIR}/STL_Models"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/STL_Models" "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data/STL_Models"
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models"
     WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
     COMMENT "Copying ${PLUGIN_NAME}/STL_Models data into Binary Directory"
     DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+    COMMAND_EXPAND_LISTS
+    VERBATIM
   )
   set_target_properties(Copy_${PLUGIN_NAME}_STL_Models PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
