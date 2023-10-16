@@ -1,4 +1,7 @@
 # --------------------------------------------------------------------------------------------------
 # message(STATUS "[DATA COPY] Copy data from @ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARCHIVE_BASE_NAME@")
 # --------------------------------------------------------------------------------------------------
-# execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARCHIVE_BASE_NAME@" "Data/@ARCHIVE_BASE_NAME@")
+# execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARCHIVE_BASE_NAME@" "Data/@ARCHIVE_BASE_NAME@"     
+#                    COMMAND_EXPAND_LISTS
+#                    VERBATIM
+#                )
