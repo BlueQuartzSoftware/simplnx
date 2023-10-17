@@ -75,10 +75,11 @@ Result<> FindAvgOrientations::operator()()
       float32 count = counts[featureId];
       QuatF curAvgQuat(avgQuats[featureIdOffset] / count, avgQuats[featureIdOffset + 1] / count, avgQuats[featureIdOffset + 2] / count, avgQuats[featureIdOffset + 3] / count);
 
-      // Get the pointer to the current voxel's Quaternion
-      QuatF voxQuat(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]); // Makes a copy into voxQuat!!!!
+      // Make a copy of the current quaternion from the DataArray into a QuatF object
+      QuatF voxQuat(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
       QuatF nearestQuat = orientationOps[crystalStructures[phase]]->getNearestQuat(curAvgQuat, voxQuat);
 
+      // Add the running average quat with the current quat
       curAvgQuat = curAvgQuat + nearestQuat;
       // Copy the new curAvgQuat back into the output array
       avgQuats[featureIdOffset] = curAvgQuat.x();
