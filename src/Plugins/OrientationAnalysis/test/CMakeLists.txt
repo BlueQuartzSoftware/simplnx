@@ -10,9 +10,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsMutualInformationTest.cpp
   BadDataNeighborOrientationCheckTest.cpp
   CAxisSegmentFeaturesTest.cpp
+  ConvertHexGridToSquareGridTest.cpp
   ConvertQuaternionTest.cpp
   ConvertOrientationsTest.cpp
-  ConvertQuaternionTest.cpp
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
@@ -55,7 +55,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteStatsGenOdfAngleFileTest.cpp
 )
 set(DISABLED_TESTS
-  # ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
   CreateLambertSphereTest.cpp
   EMsoftSO3SamplerTest.cpp
   FindDistsToCharactGBsTest.cpp
@@ -139,6 +138,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_read_ctf_data.tar.gz SHA512 e7ac4706d22574396aaa5d67b2a2b4e32db5005e841d3b6dafad65c74615441c028e4cba0ce0721c8929dace495afd6ef844585e2ce6d3b092582a258befd7c2)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stats_gen_odf_angle_file.tar.gz SHA512 be3f663aae1f78e5b789200421534ed9fe293187ec3514796ac8177128b34ded18bb9a98b8e838bb283f9818ac30dc4b19ec379bdd581b1a98eb36d967cdd319)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME INL_writer.tar.gz SHA512 7d723351e51e84540abfbc38e69a6014852ba34808f9d216a27063a616bcfbd5eb708405305fd83334e48c9ca133d3d0be797c05040e4a115cc612e385d9ada6)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME convert_hex_grid_to_square_grid_test.tar.gz SHA512 bb672ebbe2540ba493ad95bea95dac1f85b5634ac3311b5aa774ce3d2177103d1b45a13225221993dd40f0cbe02daf20ccd209d4ae0cab0bf034d97c5b234ba4)
 
 endif()
 
