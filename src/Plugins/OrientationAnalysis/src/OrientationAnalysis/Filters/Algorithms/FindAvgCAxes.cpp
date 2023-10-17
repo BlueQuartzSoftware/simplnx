@@ -85,26 +85,35 @@ Result<> FindAvgCAxes::operator()()
       if(crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low)
       {
         const usize quatIndex = i * 4;
+
+        // Create the 3x3 Orientation Matrix from the Quaternion. This represents a passive rotation matrix
         OrientationF oMatrix = OrientationTransformation::qu2om<QuatF, OrientationF>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
 
-        // Convert the quaternion matrix to a transposed g matrix so when caxis is multiplied by it, it will give the sample direction that the caxis is along
+        // Convert the passive rotation matrix to an active rotation matrix
         g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
 
+        // Multiply the active transformation matrix by the C-Axis (as Miller Index). This actively rotates
+        // the crystallographic C-Axis (which is along the <0,0,1> direction) into the physical sample
+        // reference frame
         c1 = g1T * cAxis;
 
         // normalize so that the magnitude is 1
         c1.normalize();
 
+        // Compute the running average c-axis and normalize the result
         curCAxis[0] = avgCAxes[cAxesIndex] / counter[featureIds[i]];
         curCAxis[1] = avgCAxes[cAxesIndex + 1] / counter[featureIds[i]];
         curCAxis[2] = avgCAxes[cAxesIndex + 2] / counter[featureIds[i]];
-
         curCAxis.normalize();
+
+        // Ensure that angle between the current point's sample reference frame C-Axis
+        // and the running average sample C-Axis is positive
         w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
         if(w < 0)
         {
           c1 *= -1.0f;
         }
+        // Continue summing up the rotations
         counter[featureIds[i]]++;
         avgCAxes[cAxesIndex] += c1[0];
         avgCAxes[cAxesIndex + 1] += c1[1];

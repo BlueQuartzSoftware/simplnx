@@ -68,7 +68,7 @@ Parameters ImportH5EspritDataFilter::parameters() const
   params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5 file. EDAX can store multiple scans in a single file",
                                                                 OEMEbsdScanSelectionParameter::ValueType{},
                                                                 /* OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::Bruker, EbsdLib::OEM::DREAM3D},*/
-                                                                OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5"}));
+                                                                OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5", ".hdf5"}));
   params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "Whether or not to convert the euler angles to radians", true));
