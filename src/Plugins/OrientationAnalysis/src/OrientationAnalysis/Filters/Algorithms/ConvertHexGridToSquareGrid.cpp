@@ -26,8 +26,8 @@ public:
   : m_ShouldCancel(shouldCancel)
   , m_OutputPath(outputDirPath)
   , m_FilePrefix(outputFilePrefix)
-  , m_XResolution(spacingXY.at(0))
-  , m_YResolution(spacingXY.at(1))
+  , m_SqrXStep(spacingXY.at(0))
+  , m_SqrYStep(spacingXY.at(1))
   {
   }
   ~Converter() noexcept = default;
@@ -63,7 +63,7 @@ public:
       std::string origHeader = reader.getOriginalHeader();
       if(origHeader.empty())
       {
-        return MakeErrorResult(-55001, fmt::format("Header could not be retrieved: {}", inputPath.string()));
+        return MakeErrorResult(-55001, fmt::format("Header for input hex grid file was empty: {}", inputPath.string()));
       }
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
@@ -88,17 +88,15 @@ public:
 
       m_HeaderIsComplete = false;
 
-      float32 HexXStep = reader.getXStep();
-      float32 HexYStep = reader.getYStep();
-      int32 HexNumColsOdd = reader.getNumOddCols();
-      int32 HexNumColsEven = reader.getNumEvenCols();
-      int32 HexNumRows = reader.getNumRows();
-      m_NumCols = static_cast<int32>((static_cast<float32>(HexNumColsOdd) * HexXStep) / m_XResolution);
-      m_NumRows = static_cast<int32>((static_cast<float32>(HexNumRows) * HexYStep) / m_YResolution);
-      float32 xSqr, ySqr, xHex1, yHex1, xHex2, yHex2;
-      int32 point, point1, point2;
-      int32 row1, row2, col1, col2;
-      float32 dist1, dist2;
+      float32 hexXStep = reader.getXStep();
+      float32 hexYStep = reader.getYStep();
+      int32 hexNumColsOdd = reader.getNumOddCols();
+      int32 hexNumColsEven = reader.getNumEvenCols();
+      int32 hexNumRows = reader.getNumRows();
+      m_SqrNumCols = static_cast<int32>((static_cast<float32>(hexNumColsOdd) * hexXStep) / m_SqrXStep);
+      m_SqrNumRows = static_cast<int32>((static_cast<float32>(hexNumRows) * hexYStep) / m_SqrYStep);
+
+      // Get the hex grid data from the input file
       float32* phi1 = reader.getPhi1Pointer();
       float32* PHI = reader.getPhiPointer();
       float32* phi2 = reader.getPhi2Pointer();
@@ -107,6 +105,9 @@ public:
       float32* semSig = reader.getSEMSignalPointer();
       float32* fit = reader.getFitPointer();
       int32* phase = reader.getPhaseDataPointer();
+
+      // Loop on the header part of the file and modify the header while writing to the output file
+      // the updated information
       while(!headerStream.eof())
       {
         std::string buf;
@@ -121,50 +122,69 @@ public:
           outFile << line << "\n";
         }
       }
-      for(int32 j = 0; j < m_NumRows; j++)
+
+      // Reusable variables for the loop
+      int32 hexGridIndex, hexGridIndex1, hexGridIndex2;
+      float32 xHex1, xHex2;
+
+      // Now loop on every cell in the replacement square grid
+      for(int32 j = 0; j < m_SqrNumRows; j++)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
-        for(int32 i = 0; i < m_NumCols; i++)
+        for(int32 i = 0; i < m_SqrNumCols; i++)
         {
-          xSqr = static_cast<float32>(static_cast<float32>(i) * m_XResolution);
-          ySqr = static_cast<float32>(static_cast<float32>(j) * m_YResolution);
-          row1 = static_cast<int32>(ySqr / (HexYStep));
-          yHex1 = static_cast<float32>(row1) * HexYStep;
-          row2 = row1 + 1;
-          yHex2 = static_cast<float32>(row2) * HexYStep;
-          if(row1 % 2 == 0)
+          // Calculate the center point of the current Square grid cell
+          float32 xSqr = static_cast<float32>(i) * m_SqrXStep;
+          float32 ySqr = static_cast<float32>(j) * m_SqrYStep;
+
+          // Calculate hex grid rows that will be used to for the conversion for this square grid point
+          int32 hexRowIndex1 = static_cast<int32>(ySqr / hexYStep);
+          float32 yHex1 = static_cast<float32>(hexRowIndex1) * hexYStep;
+
+          int32 hexRowIndex2 = hexRowIndex1 + 1;
+          float32 yHex2 = static_cast<float32>(hexRowIndex2) * hexYStep;
+
+          // If we are on an even row
+          if(hexRowIndex1 % 2 == 0)
           {
-            col1 = static_cast<int32>(xSqr / (HexXStep));
-            xHex1 = static_cast<float32>(col1) * HexXStep;
-            point1 = ((row1 / 2) * HexNumColsEven) + ((row1 / 2) * HexNumColsOdd) + col1;
-            col2 = static_cast<int32>((xSqr - (HexXStep / 2.0)) / (HexXStep));
-            xHex2 = static_cast<float32>(static_cast<float32>(col2) * HexXStep + (HexXStep / 2.0));
-            point2 = ((row1 / 2) * HexNumColsEven) + (((row1 / 2) + 1) * HexNumColsOdd) + col2;
+            int32 hexGridColIndex1 = static_cast<int32>(xSqr / (hexXStep));                                                  // Compute the hex column index that the square grid coord falls into
+            xHex1 = static_cast<float32>(hexGridColIndex1) * hexXStep;                                                       // Compute the X Hex Grid coordinate
+            hexGridIndex1 = ((hexRowIndex1 / 2) * hexNumColsEven) + ((hexRowIndex1 / 2) * hexNumColsOdd) + hexGridColIndex1; // Compute the index into hex grid data
+
+            int32 hexGridColIndex2 = static_cast<int32>((xSqr - (hexXStep / 2.0)) / (hexXStep));
+            xHex2 = static_cast<float32>(static_cast<float32>(hexGridColIndex2) * hexXStep + (hexXStep / 2.0));
+            hexGridIndex2 = ((hexRowIndex1 / 2) * hexNumColsEven) + (((hexRowIndex1 / 2) + 1) * hexNumColsOdd) + hexGridColIndex2;
+          }
+          else // If we are on an odd row
+          {
+            int32 hexGridColIndex1 = static_cast<int32>((xSqr - (hexXStep / 2.0)) / (hexXStep));
+            xHex1 = static_cast<float32>(static_cast<float32>(hexGridColIndex1) * hexXStep + (hexXStep / 2.0));
+            hexGridIndex1 = ((hexRowIndex1 / 2) * hexNumColsEven) + (((hexRowIndex1 / 2) + 1) * hexNumColsOdd) + hexGridColIndex1;
+
+            int32 hexGridColIndex2 = static_cast<int32>(xSqr / hexXStep);
+            xHex2 = static_cast<float32>(hexGridColIndex2) * hexXStep;
+            hexGridIndex2 = (((hexRowIndex1 / 2) + 1) * hexNumColsEven) + (((hexRowIndex1 / 2) + 1) * hexNumColsOdd) + hexGridColIndex2;
+          }
+
+          // Compute the distance from the square grid coordinate to the hex grid coordinate.
+          float32 dist1 = ((xSqr - xHex1) * (xSqr - xHex1)) + ((ySqr - yHex1) * (ySqr - yHex1));
+          float32 dist2 = ((xSqr - xHex2) * (xSqr - xHex2)) + ((ySqr - yHex2) * (ySqr - yHex2));
+          // Select the closest hex grid point.
+          if(dist1 <= dist2 || hexRowIndex1 == (hexNumRows - 1))
+          {
+            hexGridIndex = hexGridIndex1;
           }
           else
           {
-            col1 = static_cast<int32>((xSqr - (HexXStep / 2.0)) / (HexXStep));
-            xHex1 = static_cast<float32>(static_cast<float32>(col1) * HexXStep + (HexXStep / 2.0));
-            point1 = ((row1 / 2) * HexNumColsEven) + (((row1 / 2) + 1) * HexNumColsOdd) + col1;
-            col2 = static_cast<int32>(xSqr / HexXStep);
-            xHex2 = static_cast<float32>(col2) * HexXStep;
-            point2 = (((row1 / 2) + 1) * HexNumColsEven) + (((row1 / 2) + 1) * HexNumColsOdd) + col2;
+            hexGridIndex = hexGridIndex2;
           }
-          dist1 = ((xSqr - xHex1) * (xSqr - xHex1)) + ((ySqr - yHex1) * (ySqr - yHex1));
-          dist2 = ((xSqr - xHex2) * (xSqr - xHex2)) + ((ySqr - yHex2) * (ySqr - yHex2));
-          if(dist1 <= dist2 || row1 == (HexNumRows - 1))
-          {
-            point = point1;
-          }
-          else
-          {
-            point = point2;
-          }
-          outFile << "  " << phi1[point] << "	" << PHI[point] << "	" << phi2[point] << "	" << xSqr << "	" << ySqr << "	" << iq[point] << "	" << ci[point] << "	" << phase[point] << "	"
-                  << semSig[point] << "	" << fit[point] << "  "
+
+          // Write to the output file
+          outFile << "  " << phi1[hexGridIndex] << "	" << PHI[hexGridIndex] << "	" << phi2[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iq[hexGridIndex] << "	" << ci[hexGridIndex]
+                  << "	" << phase[hexGridIndex] << "	" << semSig[hexGridIndex] << "	" << fit[hexGridIndex] << "  "
                   << "\n";
         }
       }
@@ -177,11 +197,11 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const fs::path& m_OutputPath;
   const std::string& m_FilePrefix;
-  const float32 m_XResolution;
-  const float32 m_YResolution;
 
-  int32 m_NumCols = 0;
-  int32 m_NumRows = 0;
+  const float32 m_SqrXStep;
+  const float32 m_SqrYStep;
+  int32 m_SqrNumCols = 0;
+  int32 m_SqrNumRows = 0;
   bool m_HeaderIsComplete = false;
 
   // -----------------------------------------------------------------------------
@@ -232,23 +252,23 @@ private:
     }
     else if(StringUtilities::contains(buf, EbsdLib::Ang::XStep))
     {
-      line = "# " + EbsdLib::Ang::XStep + ": " + StringUtilities::number(m_XResolution);
+      line = "# " + EbsdLib::Ang::XStep + ": " + StringUtilities::number(m_SqrXStep);
     }
     else if(StringUtilities::contains(buf, EbsdLib::Ang::YStep))
     {
-      line = "# " + EbsdLib::Ang::YStep + ": " + StringUtilities::number(m_YResolution);
+      line = "# " + EbsdLib::Ang::YStep + ": " + StringUtilities::number(m_SqrYStep);
     }
     else if(StringUtilities::contains(buf, EbsdLib::Ang::NColsOdd))
     {
-      line = "# " + EbsdLib::Ang::NColsOdd + ": " + StringUtilities::number(m_NumCols);
+      line = "# " + EbsdLib::Ang::NColsOdd + ": " + StringUtilities::number(m_SqrNumCols);
     }
     else if(StringUtilities::contains(buf, EbsdLib::Ang::NColsEven))
     {
-      line = "# " + EbsdLib::Ang::NColsEven + ": " + StringUtilities::number(m_NumCols);
+      line = "# " + EbsdLib::Ang::NColsEven + ": " + StringUtilities::number(m_SqrNumCols);
     }
     else if(StringUtilities::contains(buf, EbsdLib::Ang::NRows))
     {
-      line = "# " + EbsdLib::Ang::NRows + ": " + StringUtilities::number(m_NumRows);
+      line = "# " + EbsdLib::Ang::NRows + ": " + StringUtilities::number(m_SqrNumRows);
     }
     else
     {

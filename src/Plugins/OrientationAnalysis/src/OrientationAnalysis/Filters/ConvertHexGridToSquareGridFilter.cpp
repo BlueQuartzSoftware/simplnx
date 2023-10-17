@@ -67,7 +67,7 @@ Uuid ConvertHexGridToSquareGridFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ConvertHexGridToSquareGridFilter::humanName() const
 {
-  return "Convert Hexagonal Grid Data to Square Grid Data (TSL - .ang)";
+  return "Convert EDAX Hex Grid to Square Grid (.ang)";
 }
 
 //------------------------------------------------------------------------------
