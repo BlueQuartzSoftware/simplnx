@@ -82,17 +82,19 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
 
   if(initialGeom->getGeomType() == IGeometry::Type::Triangle)
   {
-    auto createGeometryAction = std::make_unique<CreateGeometry2DAction<TriangleGeom>>(pReducedGeometryPathValue, initialGeom->getNumberOfFaces(), initialGeom->getNumberOfVertices(),
-                                                                                       initialGeom->getVertexAttributeMatrix()->getName(), initialGeom->getFaceAttributeMatrix()->getName(),
-                                                                                       initialGeom->getVertices()->getName(), initialGeom->getFaces()->getName());
+    auto createGeometryAction = std::make_unique<CreateGeometry2DAction<TriangleGeom>>(
+        pReducedGeometryPathValue, initialGeom->getNumberOfFaces(), initialGeom->getNumberOfVertices(),
+        (initialGeom->getVertexAttributeMatrix() == nullptr ? "VertexAM" : initialGeom->getVertexAttributeMatrix()->getName()),
+        (initialGeom->getFaceAttributeMatrix() == nullptr ? "FaceAM" : initialGeom->getFaceAttributeMatrix()->getName()), initialGeom->getVertices()->getName(), initialGeom->getFaces()->getName());
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
 
   if(initialGeom->getGeomType() == IGeometry::Type::Quad)
   {
-    auto createGeometryAction = std::make_unique<CreateGeometry2DAction<QuadGeom>>(pReducedGeometryPathValue, initialGeom->getNumberOfFaces(), initialGeom->getNumberOfVertices(),
-                                                                                   initialGeom->getVertexAttributeMatrix()->getName(), initialGeom->getFaceAttributeMatrix()->getName(),
-                                                                                   initialGeom->getVertices()->getName(), initialGeom->getFaces()->getName());
+    auto createGeometryAction = std::make_unique<CreateGeometry2DAction<QuadGeom>>(
+        pReducedGeometryPathValue, initialGeom->getNumberOfFaces(), initialGeom->getNumberOfVertices(),
+        (initialGeom->getVertexAttributeMatrix() == nullptr ? "VertexAM" : initialGeom->getVertexAttributeMatrix()->getName()),
+        (initialGeom->getFaceAttributeMatrix() == nullptr ? "FaceAM" : initialGeom->getFaceAttributeMatrix()->getName()), initialGeom->getVertices()->getName(), initialGeom->getFaces()->getName());
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
 
