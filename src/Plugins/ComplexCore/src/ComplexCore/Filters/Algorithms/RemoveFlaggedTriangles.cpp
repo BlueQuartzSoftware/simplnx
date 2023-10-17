@@ -79,12 +79,12 @@ const std::atomic_bool& RemoveFlaggedTriangles::getCancel()
 Result<> RemoveFlaggedTriangles::operator()()
 {
   // Remove Triangles from reduced according to removeTrianglesIndex
-  auto& originalTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometry);
+  const auto& originalTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometry);
+  const auto& mask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath);
   auto& reducedTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->ReducedTriangleGeometry);
-  auto& mask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath);
 
   // Set up allocated masks
-  auto size = originalTriangle.getNumberOfFaces();
+  usize size = originalTriangle.getNumberOfFaces();
   std::vector<usize> newTrianglesIndexList;
   newTrianglesIndexList.reserve(size);
 
@@ -150,8 +150,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   }
 
   // Set up preprocessing conditions (allocation for parallelization)
-  size = newTrianglesIndexList.size();
-  reducedTriangle.resizeFaceList(size); // resize accordingly
+  reducedTriangle.resizeFaceList(newTrianglesIndexList.size()); // resize accordingly
 
   // parse triangles and reassign indexes to match new vertex list
   ParallelDataAlgorithm dataAlg;
