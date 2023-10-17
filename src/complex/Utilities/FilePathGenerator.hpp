@@ -32,7 +32,7 @@ enum class Ordering : uint8
  * @return
  */
 COMPLEX_EXPORT std::pair<std::vector<std::string>, bool> GenerateAndValidateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix,
-                                                                                     std::string_view fileSuffix, std::string_view fileExtension, int32 paddingDigits, bool failFast = true);
+                                                                                     std::string_view fileSuffix, std::string_view fileExtension, uint32 paddingDigits, bool failFast = true);
 
 /**
  * @brief GenerateFileList This method will generate a file list in the correct order of the files that should
@@ -49,6 +49,6 @@ COMPLEX_EXPORT std::pair<std::vector<std::string>, bool> GenerateAndValidateFile
  * @return
  */
 COMPLEX_EXPORT std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix, std::string_view fileSuffix,
-                                                         std::string_view fileExtension, int32 paddingDigits);
+                                                         std::string_view fileExtension, uint32 paddingDigits);
 } // namespace FilePathGenerator
 } // namespace complex

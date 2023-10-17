@@ -31,6 +31,7 @@ set(FilterList
   AlignSectionsMutualInformationFilter
   BadDataNeighborOrientationCheckFilter
   CAxisSegmentFeaturesFilter
+  ConvertHexGridToSquareGridFilter
   ConvertOrientations
   ConvertQuaternionFilter
   CreateEnsembleInfoFilter
@@ -165,6 +166,7 @@ set(filter_algorithms
   AlignSectionsMutualInformation
   BadDataNeighborOrientationCheck
   CAxisSegmentFeatures
+  ConvertHexGridToSquareGrid
   ConvertQuaternion
   CreateEnsembleInfo
   EBSDSegmentFeatures

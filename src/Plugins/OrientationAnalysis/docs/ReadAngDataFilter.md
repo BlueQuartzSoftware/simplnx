@@ -17,6 +17,16 @@ If the data has come from a TSL acquisition system and the settings of the acqui
 
 The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The Threshold Objects **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > 0.1 or *Image Quality* > desired quality.
 
+### Note About Sample Grid
+
+OIMAnalysis can create EBSD data sampled on a hexagonal grid. The user can look in the .ang file into the header (those lines starting with the "#" character) for a line that is:
+
+```text
+# GRID: HexGrid
+```
+
+If the user's .ang files are hexagonal grid files then they will need to run the {ref}`Convert EDAX Hex Grid to Square Grid (.ang)<OrientationAnalysis/ConvertHexGridToSquareGridFilter:Description>` filter to first convert the input files square gridded files.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
