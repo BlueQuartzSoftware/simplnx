@@ -96,15 +96,16 @@ Parameters ExampleFilter1::parameters() const
   params.insert(std::make_unique<NumericTypeParameter>(k_Param6, "Numeric Type", "Example numeric type help text", NumericType::int32));
 
   params.insertSeparator({"Big Parameters"});
-  params.insert(std::make_unique<GeneratedFileListParameter>(k_Param4, "Input File List", "Data needed to generate the input file list", GeneratedFileListParameter::ValueType{}));
+  params.insert(std::make_unique<GeneratedFileListParameter>(
+      k_Param4, "Input File List", "The values that are used to generate the input file list. See GeneratedFileListParameter for more information.", GeneratedFileListParameter::ValueType{}));
 
   params.insert(std::make_unique<ArrayThresholdsParameter>(k_Param7, "Data Thresholds", "DataArray thresholds to mask", ArrayThresholdSet{}));
 
   // param10 should be active if either param8 OR param9 are the correct value
   params.insertSeparator({"Multiple Linked Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param8, "Bool Parameter", "", true));
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param9, "Choices Parameter", "", 0, ChoicesParameter::Choices{"0", "1", "2"}));
-  params.insert(std::make_unique<Int32Parameter>(k_Param10, "Int32 Parameter", "", 42));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param8, "Bool Parameter", "A boolean Parameter", true));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param9, "Choices Parameter", "A choices parameter", 0, ChoicesParameter::Choices{"0", "1", "2"}));
+  params.insert(std::make_unique<Int32Parameter>(k_Param10, "Int32 Parameter", "An Integer Parameter", 42));
   params.linkParameters(k_Param8, k_Param10, true);
   params.linkParameters(k_Param9, k_Param10, std::make_any<ChoicesParameter::ValueType>(1));
 

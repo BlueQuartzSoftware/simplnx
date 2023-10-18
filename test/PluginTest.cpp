@@ -6,6 +6,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <sstream>
 #include <string>
 
 using namespace complex;
@@ -27,9 +28,9 @@ TEST_CASE("Test Loading Plugins")
   Application app;
   app.loadPlugins(unit_test::k_BuildDir.view());
 
-  auto* filterList = Application::Instance()->getFilterList();
-  const auto& filterHandles = filterList->getFilterHandles();
-  auto plugins = filterList->getLoadedPlugins();
+  auto* filterListPtr = Application::Instance()->getFilterList();
+  const auto& filterHandles = filterListPtr->getFilterHandles();
+  auto plugins = filterListPtr->getLoadedPlugins();
 
   if(plugins.size() != COMPLEX_PLUGIN_COUNT)
   {
@@ -37,7 +38,7 @@ TEST_CASE("Test Loading Plugins")
               << "Expected: " << COMPLEX_PLUGIN_COUNT << "\nLoaded: " << plugins.size() << "\nLoaded Plugins are:\n";
     for(auto const& plugin : plugins)
     {
-      std::cout << plugin->getName() << std::endl;
+      std::cout << plugin->getName() << "\n";
     }
   }
 
@@ -47,13 +48,13 @@ TEST_CASE("Test Loading Plugins")
   DataStructure dataStructure;
   {
 
-    IFilter::UniquePointer filter = filterList->createFilter(k_TestFilterHandle);
+    IFilter::UniquePointer filter = filterListPtr->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
     filter->execute(dataStructure, {});
   }
   {
-    IFilter::UniquePointer filter2 = filterList->createFilter(k_Test2FilterHandle);
+    IFilter::UniquePointer filter2 = filterListPtr->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
     filter2->execute(dataStructure, {});
@@ -62,14 +63,14 @@ TEST_CASE("Test Loading Plugins")
 
 TEST_CASE("Test Singleton")
 {
-  Application* app = new Application();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  Application* appPtr = new Application();
+  appPtr->loadPlugins(unit_test::k_BuildDir.view());
 
-  REQUIRE(app != nullptr);
+  REQUIRE(appPtr != nullptr);
 
-  auto* filterList = app->getFilterList();
-  const auto& filterHandles = filterList->getFilterHandles();
-  auto plugins = filterList->getLoadedPlugins();
+  auto* filterListPtr = appPtr->getFilterList();
+  const auto& filterHandles = filterListPtr->getFilterHandles();
+  auto plugins = filterListPtr->getLoadedPlugins();
 
   // Check plugins were loaded
   if(plugins.size() != COMPLEX_PLUGIN_COUNT)
@@ -78,7 +79,7 @@ TEST_CASE("Test Singleton")
               << "Expected: " << COMPLEX_PLUGIN_COUNT << "\nLoaded: " << plugins.size() << "\nLoaded Plugins are:\n";
     for(auto const& plugin : plugins)
     {
-      std::cout << plugin->getName() << std::endl;
+      std::cout << plugin->getName() << "\n";
     }
   }
   REQUIRE(plugins.size() == COMPLEX_PLUGIN_COUNT);
@@ -89,13 +90,13 @@ TEST_CASE("Test Singleton")
   // Create and execute filters
   DataStructure dataStructure;
   {
-    IFilter::UniquePointer filter = filterList->createFilter(k_TestFilterHandle);
+    IFilter::UniquePointer filter = filterListPtr->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
     filter->execute(dataStructure, {});
   }
   {
-    IFilter::UniquePointer filter2 = filterList->createFilter(k_Test2FilterHandle);
+    IFilter::UniquePointer filter2 = filterListPtr->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
     filter2->execute(dataStructure, {});
@@ -103,4 +104,60 @@ TEST_CASE("Test Singleton")
 
   delete Application::Instance();
   REQUIRE(Application::Instance() == nullptr);
+}
+
+TEST_CASE("Test Filter Help Text")
+{
+  Application* appPtr = new Application();
+  REQUIRE(appPtr != nullptr);
+
+  appPtr->loadPlugins(unit_test::k_BuildDir.view());
+  auto* filterListPtr = Application::Instance()->getFilterList();
+  const auto pluginListPtr = Application::Instance()->getPluginList();
+
+  std::stringstream output;
+
+  // Loop on each Plugin
+  for(const auto& plugin : pluginListPtr)
+  {
+    const std::string plugName = plugin->getName();
+
+    const auto& pluginFilterHandles = plugin->getFilterHandles();
+
+    // Loop on each Filter
+    for(const auto& filterHandle : pluginFilterHandles)
+    {
+      const std::string filterClassName = filterHandle.getClassName();
+      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+
+      const auto& parameters = filter->parameters();
+      // Loop over each Parameter
+      for(const auto& parameter : parameters)
+      {
+        auto const& paramValue = parameter.second;
+        if(paramValue->helpText().empty())
+        {
+          output << plugName << "->" << filter->name() << "->" << paramValue->name() << ": Human Name: '" << paramValue->humanName() << "' The Help Text is empty\n";
+        }
+
+        for(const auto& letter : paramValue->name())
+        {
+          if(::isupper(letter) != 0)
+          {
+            output << plugName << "->" << filter->name() << "->" << paramValue->name() << ". This parameter key has CAPITAL Letters. All parameter keys should be 'lower_snake_case' style\n";
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  delete Application::Instance();
+  REQUIRE(Application::Instance() == nullptr);
+
+  if(!output.str().empty())
+  {
+    std::cout << output.str();
+  }
+  REQUIRE(output.str().empty() == true);
 }
