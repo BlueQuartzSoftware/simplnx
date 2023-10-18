@@ -19,7 +19,6 @@ struct COMPLEXCORE_EXPORT AddBadDataInputValues
   float32 BoundaryVolFraction;
   DataPath GBEuclideanDistancesArrayPath;
   DataPath ImageGeometryPath;
-  bool UseSeed;
   uint64 SeedValue;
 };
 
