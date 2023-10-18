@@ -61,9 +61,13 @@ Parameters FindFeatureClusteringFilter::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfBins_Key, "Number of Bins for RDF", "Number of bins to split the RDF", 1));
   params.insert(std::make_unique<Int32Parameter>(k_PhaseNumber_Key, "Phase Index", "Ensemble number for which to calculate the RDF and clustering list", 1));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveBiasedFeatures_Key, "Remove Biased Features", "Remove the biased features", false));
+
+  params.insertSeparator(Parameters::Separator{"Seeded Randomness"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_SetRandomSeed_Key, "Set Random Seed", "When checked, allows the user to set the seed value used to randomly generate the points in the RDF", true));
   params.insert(std::make_unique<UInt64Parameter>(k_SeedValue_Key, "Seed Value", "The seed value used to randomly generate the points in the RDF", std::mt19937::default_seed));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "", "_Find_Feature_Clustering_Seed_Value_"));
+
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters", "Diameter of a sphere with the same volume as the Feature", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -83,6 +87,7 @@ Parameters FindFeatureClusteringFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Cell Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_RDFArrayName_Key, "Radial Distribution Function", "A histogram of the normalized frequency at each bin", "RDF"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MaxMinArrayName_Key, "Max and Min Separation Distances", "The max and min distance found between Features", "RDFMaxMinDistances"));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RemoveBiasedFeatures_Key, k_BiasedFeaturesArrayPath_Key, true);
   params.linkParameters(k_SetRandomSeed_Key, k_SeedValue_Key, true);
@@ -109,6 +114,7 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
   auto pClusteringListArrayNameValue = filterArgs.value<std::string>(k_ClusteringListArrayName_Key);
   auto pRDFArrayNameValue = filterArgs.value<std::string>(k_RDFArrayName_Key);
   auto pMaxMinArrayNameValue = filterArgs.value<std::string>(k_MaxMinArrayName_Key);
+  auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
   const DataPath clusteringListPath = pFeaturePhasesArrayPathValue.getParent().createChildPath(pClusteringListArrayNameValue);
 
@@ -129,7 +135,7 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
   }
 
   const auto& cellEnsembleAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixNameValue);
-  const std::vector<usize> tupleShape = cellEnsembleAM.getShape();
+  const std::vector<usize>& tupleShape = cellEnsembleAM.getShape();
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)},
                                                                  pCellEnsembleAttributeMatrixNameValue.createChildPath(pRDFArrayNameValue));
@@ -146,6 +152,11 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
+  {
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({pSeedArrayNameValue}));
+    resultOutputActions.value().appendAction(std::move(createAction));
+  }
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -153,14 +164,22 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
 Result<> FindFeatureClusteringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
+  auto seed = filterArgs.value<uint64>(k_SeedValue_Key);
+  if(!filterArgs.value<bool>(k_SetRandomSeed_Key))
+  {
+    seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
+  }
+
+  // Store Seed Value in Top Level Array
+  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+
   FindFeatureClusteringInputValues inputValues;
 
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   inputValues.NumberOfBins = filterArgs.value<int32>(k_NumberOfBins_Key);
   inputValues.PhaseNumber = filterArgs.value<int32>(k_PhaseNumber_Key);
   inputValues.RemoveBiasedFeatures = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
-  inputValues.UseSeed = filterArgs.value<bool>(k_SetRandomSeed_Key);
-  inputValues.SeedValue = filterArgs.value<uint64>(k_SeedValue_Key);
+  inputValues.SeedValue = seed;
   inputValues.EquivalentDiametersArrayPath = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
