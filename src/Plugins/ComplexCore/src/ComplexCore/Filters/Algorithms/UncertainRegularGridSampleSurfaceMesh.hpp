@@ -16,7 +16,6 @@ namespace complex
 {
 struct COMPLEXCORE_EXPORT UncertainRegularGridSampleSurfaceMeshInputValues
 {
-  bool UseSeed;
   uint64 SeedValue;
   VectorUInt64Parameter::ValueType Dimensions;
   VectorFloat32Parameter::ValueType Spacing;
