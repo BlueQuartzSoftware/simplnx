@@ -11,7 +11,6 @@
 #include "EbsdLib/Core/Quaternion.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-#include <chrono>
 #include <random>
 
 using namespace complex;
@@ -54,7 +53,7 @@ int MergeTwins::getSeed(int32 newFid)
   double rangeMax = 1;
   std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
   std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  generator.seed(static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
+  generator.seed(m_InputValues->Seed);
   std::uniform_real_distribution<> distribution(rangeMin, rangeMax);
   randfeature = int32(float(distribution(generator)) * float(totalFMinus1));
   while(seed == -1 && counter < numfeatures)
@@ -181,8 +180,7 @@ Result<> MergeTwins::operator()()
     // Generate all the numbers up front
     const int32 rangeMin = 1;
     const int32 rangeMax = numParents - 1;
-    std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-    std::mt19937_64 generator(seed); // Standard mersenne_twister_engine seeded with milliseconds
+    std::mt19937_64 generator(m_InputValues->Seed); // Standard mersenne_twister_engine seeded with milliseconds
     std::uniform_int_distribution<int32_t> distribution(rangeMin, rangeMax);
 
     size_t nParents = static_cast<size_t>(numParents);

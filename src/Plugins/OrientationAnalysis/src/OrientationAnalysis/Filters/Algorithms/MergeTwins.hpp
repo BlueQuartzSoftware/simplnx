@@ -26,6 +26,7 @@ struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
   DataPath FeatureParentIdsArrayName;
   DataPath ActiveArrayName;
   bool RandomizeParentIds = true;
+  uint64 Seed;
 };
 
 /**
