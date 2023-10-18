@@ -6,8 +6,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
-#include <chrono>
-
 using namespace complex;
 
 #define CX_DEFAULT_CONSTRUCTORS(className)                                                                                                                                                             \
@@ -210,11 +208,6 @@ Result<> ScalarSegmentFeatures::operator()()
   // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
   auto totalPoints = inputDataArray->getNumberOfTuples();
 
-  const int64 rangeMin = 0;
-  const int64 rangeMax = totalPoints - 1;
-  Int64Distribution distribution;
-  initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
-
   //  // Add compare function to arguments
   //  Arguments newArgs = args;
   //  newArgs.insert(k_CompareFunctKey, compare.get());
@@ -235,6 +228,10 @@ Result<> ScalarSegmentFeatures::operator()()
   // By default we randomize grains
   if(m_InputValues->pShouldRandomizeFeatureIds)
   {
+    const int64 rangeMin = 0;
+    const int64 rangeMax = totalPoints - 1;
+    Int64Distribution distribution;
+    initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
     totalPoints = gridGeom->getNumberOfCells();
     randomizeFeatureIds(m_FeatureIdsArray, totalPoints, totalFeatures, distribution);
   }
