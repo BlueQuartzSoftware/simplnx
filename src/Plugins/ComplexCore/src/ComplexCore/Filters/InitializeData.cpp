@@ -334,7 +334,7 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   {
     seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   }
-  
+
   // Store Seed Value in Top Level Array
   data.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
