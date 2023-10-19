@@ -1,4 +1,4 @@
-# Convert Attribute Data Type
+# Convert AttributeArray DataType
 
 ## Group (Subgroup)
 
