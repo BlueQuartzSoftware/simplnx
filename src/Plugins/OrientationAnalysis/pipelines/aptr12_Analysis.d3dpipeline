@@ -108,7 +108,7 @@
     },
     {
       "args": {
-        "confidence_index_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Error",
+        "comparison_data_path": "fw-ar-IF1-aptr12-corr/Cell Data/Error",
         "loop": true,
         "min_confidence": 0.0,
         "selected_comparison": 0,

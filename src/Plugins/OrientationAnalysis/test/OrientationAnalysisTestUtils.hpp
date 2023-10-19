@@ -301,7 +301,7 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
   constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   constexpr StringLiteral k_Level_Key = "level";
-  constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "confidence_index_array_path";
+  constexpr StringLiteral k_CorrelationArrayPath_Key = "correlation_array_path";
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
@@ -313,7 +313,7 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
   args.insertOrAssign(k_MinConfidence_Key, std::make_any<float32>(0.2f));
   args.insertOrAssign(k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
   args.insertOrAssign(k_Level_Key, std::make_any<int32>(2));
-  args.insertOrAssign(k_ConfidenceIndexArrayPath_Key, std::make_any<DataPath>(Constants::k_ConfidenceIndexArrayPath));
+  args.insertOrAssign(k_CorrelationArrayPath_Key, std::make_any<DataPath>(Constants::k_ConfidenceIndexArrayPath));
   args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
   args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
   args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));

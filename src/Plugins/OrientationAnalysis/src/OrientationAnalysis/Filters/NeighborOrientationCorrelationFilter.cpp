@@ -64,7 +64,7 @@ Parameters NeighborOrientationCorrelationFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "Path to the target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ConfidenceIndexArrayPath_Key, "Confidence Index", "Specifies the confidence in the orientation of the Cell (TSL data)", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CorrelationArrayPath_Key, "Confidence Index", "Specifies the confidence in the orientation of the Cell (TSL data)", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -94,7 +94,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   auto pMinConfidenceValue = filterArgs.value<float32>(k_MinConfidence_Key);
   auto pMisorientationToleranceValue = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   auto pLevelValue = filterArgs.value<int32>(k_Level_Key);
-  auto pConfidenceIndexArrayPathValue = filterArgs.value<DataPath>(k_ConfidenceIndexArrayPath_Key);
+  auto pConfidenceIndexArrayPathValue = filterArgs.value<DataPath>(k_CorrelationArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
@@ -237,7 +237,7 @@ Result<> NeighborOrientationCorrelationFilter::executeImpl(DataStructure& dataSt
   inputValues.MinConfidence = filterArgs.value<float32>(k_MinConfidence_Key);
   inputValues.MisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   inputValues.Level = filterArgs.value<int32>(k_Level_Key);
-  inputValues.ConfidenceIndexArrayPath = filterArgs.value<DataPath>(k_ConfidenceIndexArrayPath_Key);
+  inputValues.ConfidenceIndexArrayPath = filterArgs.value<DataPath>(k_CorrelationArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);

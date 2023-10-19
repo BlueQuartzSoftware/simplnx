@@ -192,7 +192,7 @@
     },
     {
       "args": {
-        "confidence_index_array_path": "DataContainer/Cell Data/Confidence Index",
+        "comparison_data_path": "DataContainer/Cell Data/Confidence Index",
         "loop": true,
         "min_confidence": 0.10000000149011612,
         "selected_comparison": 0,
