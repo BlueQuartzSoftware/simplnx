@@ -6,12 +6,9 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
 #include <catch2/catch.hpp>
 
 #include <filesystem>
-#include <random>
 #include <string>
 
 namespace fs = std::filesystem;

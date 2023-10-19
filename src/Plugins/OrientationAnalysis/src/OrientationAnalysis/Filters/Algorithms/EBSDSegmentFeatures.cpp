@@ -43,14 +43,6 @@ Result<> EBSDSegmentFeatures::operator()()
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros
 
-  // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
-  auto totalPoints = m_QuatsArray->getNumberOfTuples();
-
-  const int64 rangeMin = 0;
-  const int64 rangeMax = static_cast<int64>(totalPoints - 1);
-  Int64Distribution distribution;
-  initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
-
   execute(gridGeom);
 
   IDataArray* activeArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->activeArrayPath);
@@ -63,6 +55,14 @@ Result<> EBSDSegmentFeatures::operator()()
   // By default we randomize grains
   if(m_InputValues->shouldRandomizeFeatureIds)
   {
+    // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
+    auto totalPoints = m_QuatsArray->getNumberOfTuples();
+
+    const int64 rangeMin = 0;
+    const auto rangeMax = static_cast<int64>(totalPoints - 1);
+    Int64Distribution distribution;
+    initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+
     totalPoints = gridGeom->getNumberOfCells();
     randomizeFeatureIds(m_FeatureIdsArray, totalPoints, totalFeatures, distribution);
   }

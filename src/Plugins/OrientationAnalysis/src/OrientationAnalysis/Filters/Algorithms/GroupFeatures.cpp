@@ -1,12 +1,7 @@
 #include "GroupFeatures.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
-
-#include <chrono>
-#include <random>
 
 using namespace complex;
 

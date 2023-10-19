@@ -12,7 +12,6 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-#include <random>
 #include <vector>
 
 namespace complex
@@ -42,8 +41,6 @@ struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
 class ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeatures : public SegmentFeatures
 {
 public:
-  using SeedGenerator = std::mt19937_64;
-  using Int64Distribution = std::uniform_int_distribution<int64>;
   using FeatureIdsArrayType = Int32Array;
 
   EBSDSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EBSDSegmentFeaturesInputValues* inputValues);
