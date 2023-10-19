@@ -104,7 +104,7 @@
     },
     {
       "args": {
-        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+        "euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
         "rotation_axis": [
           0.0,
           0.0,
