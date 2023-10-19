@@ -69,6 +69,7 @@ struct COMPLEXCORE_EXPORT PointSampleTriangleGeometryInputs
   DataPath pVertexGeometryPath;
   DataPath pVertexGroupDataPath;
   MultiArraySelectionParameter::ValueType pCreatedDataArrayPaths;
+  uint64 Seed;
 };
 
 /**
