@@ -59,7 +59,8 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Seeded Randomness"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed", "The seed fed into the random generator", std::mt19937::default_seed));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "_Uncertain_Regular_Grid_Sample_Surface_Mesh_Seed_Value_"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value",
+                                                          "_Uncertain_Regular_Grid_Sample_Surface_Mesh_Seed_Value_"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Number of Cells per Axis", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},

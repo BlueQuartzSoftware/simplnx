@@ -102,7 +102,9 @@ Parameters MergeTwinsFilter::parameters() const
       k_ActiveArrayName_Key, "Active",
       "The name of the array specifying if the Feature is still in the sample (true if the Feature is in the sample and false if it is not). At the end of the Filter, all Features will be Active",
       "Active"));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
 
   return params;
 }
