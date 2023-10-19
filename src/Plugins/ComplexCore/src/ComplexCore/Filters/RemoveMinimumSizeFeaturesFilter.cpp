@@ -6,8 +6,10 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -291,7 +293,8 @@ Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
   params.insert(std::make_unique<NumberParameter<int64>>(k_PhaseNumber_Key, "Phase Index", "Target phase to remove", 0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Input Image Geometry", "The input image geometry (cell)", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath({"FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -384,17 +387,9 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
     resultOutputActions.value().actions.emplace_back(std::move(action));
   }
 
-  result = complex::GetAllChildDataPaths(data, featureGroupDataPath);
-  if(!result.has_value())
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the children of DataGroup '{}'", featureGroupDataPath.toString())}})};
-  }
-  const std::vector<DataPath> featureDataGroupChildren = result.value();
-  for(const auto& child : featureDataGroupChildren)
-  {
-    resultOutputActions.value().modifiedActions.emplace_back(DataModifiedAction{child, DataModifiedAction::ModifiedType::DataArrayModified});
-  }
+  // Inform users that the following arrays are going to be modified in place
+  // Feature Data is going to be modified
+  complex::AppendDataModifiedActions(data, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
 
   resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
 

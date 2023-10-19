@@ -8,6 +8,7 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <filesystem>
 
@@ -91,6 +92,10 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
     return {MakeErrorResult<OutputActions>(-8941, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({},{},{})", imageGeom.getNumXCells(),
                                                               imageGeom.getNumYCells(), imageGeom.getNumZCells()))};
   }
+
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, imageGeom.getCellDataPath(), {});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

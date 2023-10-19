@@ -9,6 +9,7 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 namespace complex
 {
@@ -304,7 +305,7 @@ std::string MinNeighbors::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MinNeighbors::defaultTags() const
 {
-  return {className(), "Minimum", "Neighbors", "Memory Management", "Cleanup"};
+  return {className(), "Minimum", "Neighbors", "Memory Management", "Cleanup", "Remove Features"};
 }
 
 //------------------------------------------------------------------------------
@@ -359,6 +360,10 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataSt
   auto numNeighborsPath = args.value<DataPath>(k_NumNeighbors_Key);
   auto minNumNeighbors = args.value<uint64>(k_MinNumNeighbors_Key);
 
+  complex::Result<OutputActions> resultOutputActions;
+
+  std::vector<PreflightValue> preflightUpdatedValues;
+
   std::vector<DataPath> dataArrayPaths;
 
   std::vector<usize> cDims = {1};
@@ -386,8 +391,14 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataSt
                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  OutputActions actions;
-  return {std::move(actions)};
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), {});
+  // Feature Data is going to be modified
+  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
+
+  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -400,7 +411,7 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   // If running on a single phase, validate that the user has not entered a phase number
   // that is not in the system ; the filter would not crash otherwise, but the user should
   // be notified of unanticipated behavior ; this cannot be done in the dataCheck since
-  // we don't have acces to the data yet
+  // we don't have access to the data yet
   if(applyToSinglePhase)
   {
     auto& featurePhasesArray = data.getDataRefAs<Int32Array>(featurePhasesPath);
@@ -453,7 +464,7 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   int32 count = 0;
   for(const auto& value : activeObjects)
   {
-    value == true ? count++ : count = count;
+    value ? count++ : count = count;
   }
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
   messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});

@@ -25,7 +25,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static inline constexpr StringLiteral k_EulerAnglesArrayPath_Key = "euler_angles_array_path";
 
   /**
    * @brief Returns the name of the filter.

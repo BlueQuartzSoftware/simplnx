@@ -47,7 +47,7 @@ std::string GenerateQuaternionConjugateFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateQuaternionConjugateFilter::defaultTags() const
 {
-  return {className(), "Processing", "Crystallography"};
+  return {className(), "Processing", "Crystallography", "Orientation", "Quaternion"};
 }
 
 //------------------------------------------------------------------------------
@@ -60,8 +60,9 @@ Parameters GenerateQuaternionConjugateFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Quaternions", "Specifies the quaternions to convert", DataPath({"CellData", "Quats"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
-  params.insertSeparator(Parameters::Separator{"Output Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Output Data Array Path", "The name of the generated output DataArray", "Quaternions [Conjugate]"));
+  params.insertSeparator(Parameters::Separator{"Created Data"});
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Created Quaternion Conjugate", "The name of the generated quaternion conjugate array", "Quaternions [Conjugate]"));
 
   return params;
 }

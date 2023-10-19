@@ -4,6 +4,8 @@
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
+#include <complex/Filter/Output.hpp>
+#include <complex/Utilities/DataGroupUtilities.hpp>
 
 #include <filesystem>
 #include <stdexcept>
@@ -195,4 +197,13 @@ COMPLEX_EXPORT Result<> CreateOutputDirectories(const fs::path& outputPath);
  */
 COMPLEX_EXPORT std::vector<char> CreateDelimitersVector(bool tabAsDelimiter, bool semicolonAsDelimiter, bool commaAsDelimiter, bool spaceAsDelimiter);
 
+/**
+ * @brief This will create DataModifiedActions for each child of the parent path given
+ * @param dataStructure The DataStructure object
+ * @param modifiedActions The std::vector<> of DataModifiedAction
+ * @param parentPath The parent path
+ * @param ignoredDataPaths And specific DataPath to ignore.
+ */
+COMPLEX_EXPORT void AppendDataModifiedActions(const DataStructure& dataStructure, std::vector<DataModifiedAction>& modifiedActions, const DataPath& parentPath,
+                                              const std::vector<DataPath>& ignoredDataPaths);
 } // namespace complex

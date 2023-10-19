@@ -14,6 +14,7 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
@@ -45,13 +46,13 @@ Uuid RemoveFlaggedFeaturesFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string RemoveFlaggedFeaturesFilter::humanName() const
 {
-  return "Extract/Remove Flagged Features";
+  return "Remove/Extract Flagged Features";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> RemoveFlaggedFeaturesFilter::defaultTags() const
 {
-  return {className(), "Processing", "Cleanup"};
+  return {className(), "Processing", "Cleanup", "Remove Features"};
 }
 
 //------------------------------------------------------------------------------
@@ -60,9 +61,9 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Functionality_Key, "Selected Operation", "Whether to extract features into new geometry or remove or extract then remove",
-                                                                    to_underlying(Functionality::Remove),
-                                                                    ChoicesParameter::Choices{"Remove", "Extract", "Extract then Remove"})); // sequence dependent DO NOT REORDER
+  params.insertLinkableParameter(
+      std::make_unique<ChoicesParameter>(k_Functionality_Key, "Selected Operation", "Whether to [0] remove features, [1] extract features into new geometry or [2] extract and then remove",
+                                         to_underlying(Functionality::Remove), ChoicesParameter::Choices{"Remove", "Extract", "Extract then Remove"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<BoolParameter>(k_FillRemovedFeatures_Key, "Fill-in Removed Features", "Whether or not to fill in the gaps left by the removed Features", false));
 
   params.insertSeparator(Parameters::Separator{"Geometry"});
@@ -76,7 +77,7 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
                                                   "The prefix name for each of new cropped (extracted) geometry \n\nNOTE: a '-' will automatically be added between the prefix and number",
                                                   "Extracted_Feature"));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Cell Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FlaggedFeaturesArrayPath_Key, "Flagged Features", "Specifies whether the Feature will remain in the structure or not", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when removing flagged features",
@@ -108,13 +109,15 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pFlaggedFeaturesArrayPathValue = filterArgs.value<DataPath>(k_FlaggedFeaturesArrayPath_Key);
+  auto operationType = filterArgs.value<ChoicesParameter::ValueType>(k_Functionality_Key);
+  auto fillGaps = filterArgs.value<BoolParameter::ValueType>(k_FillRemovedFeatures_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
-  if(featureIds == nullptr)
+  auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  if(featureIdsPtr == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-9890, fmt::format("Could not find selected Feature Ids Data Array at path '{}'", pFeatureIdsArrayPathValue.toString())}})};
   }
@@ -124,20 +127,20 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     return {nonstd::make_unexpected(std::vector<Error>{Error{-9891, fmt::format("Could not find selected Flagged Features Data Array at path '{}'", pFlaggedFeaturesArrayPathValue.toString())}})};
   }
 
-  DataPath cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
-  const auto* cellFeatureAM = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
-  if(cellFeatureAM == nullptr)
+  DataPath const cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
+  const auto* cellFeatureAmPtr = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
+  if(cellFeatureAmPtr == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{
         Error{-9892, fmt::format("Could not find the parent Attribute Matrix for the selected Flagged Features Data Array at path '{}'", pFlaggedFeaturesArrayPathValue.toString())}})};
   }
 
-  std::string warningMsg = "";
-  for(const auto& [identifier, object] : *cellFeatureAM)
+  std::string warningMsg;
+  for(const auto& [identifier, object] : *cellFeatureAmPtr)
   {
-    if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
+    if(const auto* srcNeighborListArrayPtr = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArrayPtr != nullptr)
     {
-      warningMsg += "\n" + cellFeatureAttributeMatrixPath.toString() + "/" + srcNeighborListArray->getName();
+      warningMsg += "\n" + cellFeatureAttributeMatrixPath.toString() + "/" + srcNeighborListArrayPtr->getName();
     }
   }
   if(!warningMsg.empty())
@@ -149,11 +152,22 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   auto pFunctionality = filterArgs.value<ChoicesParameter::ValueType>(k_Functionality_Key);
   if(pFunctionality != to_underlying(Functionality::Remove))
   {
-    DataPath tempPath = pFlaggedFeaturesArrayPathValue.getParent().createChildPath(k_boundsName);
-    auto action = std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{featureIds->getNumberOfTuples()}, std::vector<usize>{featureIds->getNumberOfComponents() * 6}, tempPath);
+    DataPath const tempPath = pFlaggedFeaturesArrayPathValue.getParent().createChildPath(k_boundsName);
+    auto action =
+        std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{featureIdsPtr->getNumberOfTuples()}, std::vector<usize>{featureIdsPtr->getNumberOfComponents() * 6}, tempPath);
 
     // After the execute function has been done, delete the temp array
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
+  }
+
+  // If we are in any way removing features, inform the user
+  if(operationType == 0 || operationType == 2)
+  {
+    // Inform users that the following arrays are going to be modified in place
+    // Cell Data is going to be modified
+    complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), {});
+    // Feature Data is going to be modified
+    complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, pFlaggedFeaturesArrayPathValue.getParent(), {});
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

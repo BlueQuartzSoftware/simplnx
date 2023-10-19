@@ -7,6 +7,7 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
@@ -218,6 +219,10 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
     return {
         MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
+
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, pConfidenceIndexArrayPathValue.getParent(), {});
 
   return {};
 }
