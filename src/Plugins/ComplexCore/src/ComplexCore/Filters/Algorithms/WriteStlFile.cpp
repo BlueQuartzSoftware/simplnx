@@ -6,6 +6,67 @@
 
 using namespace complex;
 
+class AtomicFileSave
+{
+public:
+  AtomicFileSave(const std::string& filename, bool autoCommit = false)
+  : m_FilePath(filename)
+  , m_AutoCommit(autoCommit)
+  {
+    const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv";
+    const int stringLength = sizeof(alphanum) - 1;
+    const usize length = 16;
+
+    std::string randomExtension(length, '-');
+
+    for(usize i = 0; i < length; ++i)
+    {
+      randomExtension[i] = alphanum[rand() % stringLength];
+    }
+
+    m_TempFilePath = m_FilePath;
+    m_TempFilePath.replace_extension(randomExtension);
+  }
+
+  ~AtomicFileSave()
+  {
+    if(m_AutoCommit)
+    {
+      commit();
+    }
+  }
+
+  fs::path tempFilePath()
+  {
+    return m_TempFilePath;
+  }
+
+  void commit()
+  {
+    fs::rename(m_TempFilePath, m_FilePath);
+  }
+
+  void setAutoCommit(bool value)
+  {
+    m_AutoCommit = value;
+  }
+
+  bool getAutoCommit() const
+  {
+    return m_AutoCommit;
+  }
+
+  void removeTempFile()
+  {
+    fs::remove(m_TempFilePath);
+  }
+
+private:
+  fs::path m_FilePath;
+  fs::path m_TempFilePath;
+  bool m_AutoCommit = false;
+};
+
 namespace
 {
 int32_t writeHeader(FILE* f, const std::string& header, int32_t triCount)
@@ -110,8 +171,8 @@ Result<> WriteStlFile::operator()()
 
   int32_t triCount = 0;
 
-  // Loop over the unique Spins
-  for(const auto& [spin, value] : uniqueGrainIdToPhase)
+  // Loop over the unique feature Ids
+  for(const auto& [featureId, value] : uniqueGrainIdToPhase)
   {
     // Generate the output file name
     std::string filename = m_InputValues->OutputStlDirectory.string() + "/" + m_InputValues->OutputStlPrefix;
@@ -120,18 +181,22 @@ Result<> WriteStlFile::operator()()
       filename += "Ensemble_" + StringUtilities::number(value) + "_";
     }
 
-    filename += "Feature_" + StringUtilities::number(spin) + ".stl";
-    FILE* f = fopen(filename.c_str(), "wb");
+    filename += "Feature_" + StringUtilities::number(featureId) + ".stl";
+
+    AtomicFileSave atomicFileSave(fs::path(filename), true);
+
+    FILE* f = fopen(atomicFileSave.tempFilePath().c_str(), "wb");
 
     if(f == nullptr)
     {
       fclose(f);
-      return {MakeWarningVoidResult(-27875, fmt::format("Error Writing STL File. Unable to create file at path {}.", filename))};
+      atomicFileSave.setAutoCommit(false); // Set this to false otherwise
+      return {MakeWarningVoidResult(-27875, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", atomicFileSave.tempFilePath().string(), filename))};
     }
 
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", spin));
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
 
-    std::string header = "DREAM3D Generated For Feature ID " + StringUtilities::number(spin);
+    std::string header = "DREAM3D Generated For Feature ID " + StringUtilities::number(featureId);
     if(m_InputValues->GroupByFeature)
     {
       header += " Phase " + StringUtilities::number(value);
@@ -140,7 +205,9 @@ Result<> WriteStlFile::operator()()
     if(header.size() >= 80)
     {
       fclose(f);
-      return {MakeWarningVoidResult(-27874, fmt::format("Error Writing STL File. Header was over the 80 characters supported by STL. Length of header: {}.", header.length()))};
+      atomicFileSave.setAutoCommit(false); // Set this to false otherwise
+      atomicFileSave.removeTempFile(); // Remove the temp file
+      return {MakeWarningVoidResult(-27874, fmt::format("Error Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}.", filename, header.length()))};
     }
 
     writeHeader(f, header, 0);
@@ -158,11 +225,11 @@ Result<> WriteStlFile::operator()()
       vert1[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
       vert1[2] = static_cast<float>(vertices[nId0 * 3 + 2]);
 
-      if(featureIds[t * 2] == spin)
+      if(featureIds[t * 2] == featureId)
       {
         // winding = 0; // 0 = Write it using forward spin
       }
-      else if(featureIds[t * 2 + 1] == spin)
+      else if(featureIds[t * 2 + 1] == featureId)
       {
         // winding = 1; // Write it using backward spin
         // Switch the 2 node indices
@@ -205,12 +272,16 @@ Result<> WriteStlFile::operator()()
       if(totalWritten != 50)
       {
         fclose(f);
-        return {MakeWarningVoidResult(-27873, fmt::format("Error Writing STL File. Not enough elements written for Feature Id {}. Wrote {} of 50.", spin, totalWritten))};
+        atomicFileSave.setAutoCommit(false); // Set this to false otherwise
+        atomicFileSave.removeTempFile(); // Remove the temp file
+        return {MakeWarningVoidResult(-27873, fmt::format("Error Writing STL File '{}'. Not enough elements written for Feature Id {}. Wrote {} of 50. No file written.", filename, featureId, totalWritten))};
       }
       triCount++;
     }
+
+    fseek(f, 80L, SEEK_SET);
+    fwrite(reinterpret_cast<char*>(&triCount), 1, 4, f);
     fclose(f);
-    writeNumTrianglesToFile(filename, triCount);
   }
 
   return {};
