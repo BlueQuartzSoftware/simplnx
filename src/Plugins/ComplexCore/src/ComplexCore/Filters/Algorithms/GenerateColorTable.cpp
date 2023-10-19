@@ -164,7 +164,7 @@ private:
   const std::vector<std::vector<float64>>& m_ControlPoints;
   UInt8Array& m_ColorArray;
   const complex::IDataArray* m_GoodVoxels = nullptr;
-  std::vector<uint8> m_InvalidColor;
+  const std::vector<uint8>& m_InvalidColor;
 };
 
 struct GenerateColorArrayFunctor
