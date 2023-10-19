@@ -49,7 +49,7 @@ Result<> EBSDSegmentFeatures::operator()()
   const int64 rangeMin = 0;
   const int64 rangeMax = static_cast<int64>(totalPoints - 1);
   Int64Distribution distribution;
-  initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+  initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
 
   execute(gridGeom);
 

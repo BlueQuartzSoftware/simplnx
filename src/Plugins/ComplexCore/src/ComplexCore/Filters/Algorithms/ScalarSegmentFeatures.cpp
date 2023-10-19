@@ -231,7 +231,7 @@ Result<> ScalarSegmentFeatures::operator()()
     const int64 rangeMin = 0;
     const int64 rangeMax = totalPoints - 1;
     Int64Distribution distribution;
-    initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+    initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
     totalPoints = gridGeom->getNumberOfCells();
     randomizeFeatureIds(m_FeatureIdsArray, totalPoints, totalFeatures, distribution);
   }

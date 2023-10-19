@@ -67,7 +67,7 @@ Result<> CAxisSegmentFeatures::operator()()
   constexpr int64 rangeMin = 0;
   const int64 rangeMax = m_FeatureIdsArray->getNumberOfTuples() - 1;
   Int64Distribution distribution;
-  initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+  initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
 
   execute(imageGeometry);
 

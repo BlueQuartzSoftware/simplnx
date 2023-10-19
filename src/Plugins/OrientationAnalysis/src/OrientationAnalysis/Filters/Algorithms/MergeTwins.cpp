@@ -180,7 +180,7 @@ Result<> MergeTwins::operator()()
     // Generate all the numbers up front
     const int32 rangeMin = 1;
     const int32 rangeMax = numParents - 1;
-    std::mt19937_64 generator(m_InputValues->Seed); // Standard mersenne_twister_engine seeded with milliseconds
+    std::mt19937_64 generator(std::mt19937_64::default_seed); // Standard mersenne_twister_engine seeded with milliseconds
     std::uniform_int_distribution<int32_t> distribution(rangeMin, rangeMax);
 
     size_t nParents = static_cast<size_t>(numParents);
