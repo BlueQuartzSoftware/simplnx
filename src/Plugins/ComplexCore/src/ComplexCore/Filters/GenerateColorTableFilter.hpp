@@ -29,6 +29,9 @@ public:
   static inline constexpr StringLiteral k_SelectedPreset_Key = "selected_preset";
   static inline constexpr StringLiteral k_SelectedDataArrayPath_Key = "selected_data_array_path";
   static inline constexpr StringLiteral k_RgbArrayPath_Key = "output_rgb_array_name";
+  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_InvalidColorValue_Key = "invalid_color_value";
 
   /**
    * @brief Returns the name of the filter.
