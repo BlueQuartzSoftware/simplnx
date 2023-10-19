@@ -43,7 +43,7 @@ std::string SplitAttributeArrayFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> SplitAttributeArrayFilter::defaultTags() const
 {
-  return {className(), "Core", "Split"};
+  return {className(), "Core", "Split", "Data", "Multi-Component"};
 }
 
 //------------------------------------------------------------------------------

@@ -27,6 +27,7 @@ public:
   static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type";
   static inline constexpr StringLiteral k_ArrayToConvert_Key = "array_to_convert";
   static inline constexpr StringLiteral k_ConvertedArray_Key = "converted_array";
+  static inline constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
 
   /**
    * @brief Returns the name of the filter.
