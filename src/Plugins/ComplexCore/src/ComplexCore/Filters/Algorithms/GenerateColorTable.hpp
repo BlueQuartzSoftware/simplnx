@@ -17,6 +17,9 @@ struct COMPLEXCORE_EXPORT GenerateColorTableInputValues
   nlohmann::json SelectedPreset;
   DataPath SelectedDataArrayPath;
   DataPath RgbArrayPath;
+  bool UseGoodVoxels;
+  DataPath GoodVoxelsArrayPath;
+  std::vector<uint8> InvalidColor;
 };
 
 class COMPLEXCORE_EXPORT GenerateColorTable

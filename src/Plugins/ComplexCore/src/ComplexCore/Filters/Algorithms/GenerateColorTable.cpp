@@ -12,7 +12,7 @@ using namespace complex;
 namespace
 {
 // -----------------------------------------------------------------------------
-usize FindRightBinIndex(float32 nValue, const std::vector<float32>& binPoints)
+usize findRightBinIndex(float32 nValue, const std::vector<float32>& binPoints)
 {
   usize min = 0;
   usize max = binPoints.size() - 1;
@@ -39,7 +39,8 @@ template <typename T>
 class GenerateColorTableImpl
 {
 public:
-  GenerateColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<std::vector<float64>>& controlPoints, int numControlColors, UInt8Array& colorArray)
+  GenerateColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<std::vector<float64>>& controlPoints, int numControlColors, UInt8Array& colorArray,
+                         const complex::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
   : m_ArrayPtr(arrayPtr)
   , m_BinPoints(binPoints)
   , m_NumControlColors(numControlColors)
@@ -47,6 +48,8 @@ public:
   , m_ColorArray(colorArray)
   , m_ArrayMin(arrayPtr[0])
   , m_ArrayMax(arrayPtr[0])
+  , m_GoodVoxels(goodVoxels)
+  , m_InvalidColor(invalidColor)
   {
     for(int i = 1; i < arrayPtr.getNumberOfTuples(); i++)
     {
@@ -67,14 +70,35 @@ public:
   GenerateColorTableImpl& operator=(const GenerateColorTableImpl&) = delete;
   GenerateColorTableImpl& operator=(GenerateColorTableImpl&&) noexcept = delete;
 
+  template <typename K>
   void convert(size_t start, size_t end) const
   {
+    using MaskArrayType = DataArray<K>;
+    const MaskArrayType* maskArray = nullptr;
+    if(nullptr != m_GoodVoxels)
+    {
+      maskArray = dynamic_cast<const MaskArrayType*>(m_GoodVoxels);
+    }
+    auto& colorArrayDS = m_ColorArray.getDataStoreRef();
+
     for(size_t i = start; i < end; i++)
     {
+      // Make sure we are using a valid voxel based on the "goodVoxels" arrays
+      if(nullptr != maskArray)
+      {
+        if(!(*maskArray)[i])
+        {
+          colorArrayDS.setComponent(i, 0, m_InvalidColor[0]);
+          colorArrayDS.setComponent(i, 1, m_InvalidColor[1]);
+          colorArrayDS.setComponent(i, 2, m_InvalidColor[2]);
+          continue;
+        }
+      }
+
       // Normalize value
       const float32 nValue = (static_cast<float32>(m_ArrayPtr[i] - m_ArrayMin)) / static_cast<float32>((m_ArrayMax - m_ArrayMin));
 
-      int rightBinIndex = FindRightBinIndex(nValue, m_BinPoints);
+      int rightBinIndex = findRightBinIndex(nValue, m_BinPoints);
 
       int leftBinIndex = rightBinIndex - 1;
       if(leftBinIndex < 0)
@@ -106,7 +130,6 @@ public:
       const unsigned char greenVal = (m_ControlPoints[leftBinIndex][2] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][2] * currFraction) * 255;
       const unsigned char blueVal = (m_ControlPoints[leftBinIndex][3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][3] * currFraction) * 255;
 
-      auto& colorArrayDS = m_ColorArray.getDataStoreRef();
       colorArrayDS.setComponent(i, 0, redVal);
       colorArrayDS.setComponent(i, 1, greenVal);
       colorArrayDS.setComponent(i, 2, blueVal);
@@ -115,7 +138,21 @@ public:
 
   void operator()(const Range& range) const
   {
-    convert(range.min(), range.max());
+    if(m_GoodVoxels != nullptr)
+    {
+      if(m_GoodVoxels->getDataType() == DataType::boolean)
+      {
+        convert<bool>(range.min(), range.max());
+      }
+      else if(m_GoodVoxels->getDataType() == DataType::uint8)
+      {
+        convert<uint8>(range.min(), range.max());
+      }
+    }
+    else
+    {
+      convert<bool>(range.min(), range.max());
+    }
   }
 
 private:
@@ -126,14 +163,20 @@ private:
   int m_NumControlColors;
   const std::vector<std::vector<float64>>& m_ControlPoints;
   UInt8Array& m_ColorArray;
+  const complex::IDataArray* m_GoodVoxels = nullptr;
+  const std::vector<uint8>& m_InvalidColor;
 };
 
 struct GenerateColorArrayFunctor
 {
   template <typename ScalarType>
-  void operator()(const DataPath& selectedArrayPath, const nlohmann::json& presetControlPoints, const DataPath& rgbArrayPath, DataStructure& dataStructure)
+  void operator()(DataStructure& dataStructure, const GenerateColorTableInputValues* inputValues)
   {
-    const DataArray<ScalarType>& arrayPtr = dataStructure.getDataRefAs<DataArray<ScalarType>>(selectedArrayPath);
+
+    const nlohmann::json presetControlPoints = inputValues->SelectedPreset["RGBPoints"];
+    const DataPath rgbArrayPath = inputValues->RgbArrayPath;
+
+    const DataArray<ScalarType>& arrayPtr = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath);
     if(arrayPtr.getNumberOfTuples() <= 0)
     {
       return;
@@ -172,9 +215,15 @@ struct GenerateColorArrayFunctor
 
     auto& colorArray = dataStructure.getDataRefAs<UInt8Array>(rgbArrayPath);
 
+    complex::IDataArray* goodVoxelsArray = nullptr;
+    if(inputValues->UseGoodVoxels)
+    {
+      goodVoxelsArray = dataStructure.getDataAs<IDataArray>(inputValues->GoodVoxelsArrayPath);
+    }
+
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, arrayPtr.getNumberOfTuples());
-    dataAlg.execute(GenerateColorTableImpl(arrayPtr, binPoints, controlPoints, numControlColors, colorArray));
+    dataAlg.execute(GenerateColorTableImpl(arrayPtr, binPoints, controlPoints, numControlColors, colorArray, goodVoxelsArray, inputValues->InvalidColor));
   }
 };
 } // namespace
@@ -201,7 +250,6 @@ const std::atomic_bool& GenerateColorTable::getCancel()
 Result<> GenerateColorTable::operator()()
 {
   const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
-  ExecuteDataFunction(GenerateColorArrayFunctor{}, selectedIDataArray.getDataType(), m_InputValues->SelectedDataArrayPath, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath,
-                      m_DataStructure);
+  ExecuteDataFunction(GenerateColorArrayFunctor{}, selectedIDataArray.getDataType(), m_DataStructure, m_InputValues);
   return {};
 }
