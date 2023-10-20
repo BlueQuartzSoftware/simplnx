@@ -5,6 +5,9 @@
 This **Filter** generates a color table array for a given 1-component input array.  Each element of the input array
 is normalized and converted to a color based on where the value falls in the spectrum of the selected color preset.
 
+The user can apply an optional data mask and then set the RGB values (0-255) that will be used if the data mask has a FALSE
+value.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
