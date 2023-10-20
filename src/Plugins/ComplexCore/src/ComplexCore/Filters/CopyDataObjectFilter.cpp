@@ -7,6 +7,9 @@
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
@@ -114,5 +117,45 @@ Result<> CopyDataObjectFilter::executeImpl(DataStructure& data, const Arguments&
                                            const std::atomic_bool& shouldCancel) const
 {
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ObjectToCopyKey = "ObjectToCopy";
+constexpr StringLiteral k_DataContainerToCopyKey = "DataContainerToCopy";
+constexpr StringLiteral k_AttributeMatrixToCopyKey = "AttributeMatrixToCopy";
+constexpr StringLiteral k_AttributeArrayToCopyKey = "AttributeArrayToCopy";
+constexpr StringLiteral k_CopiedObjectNameKey = "CopiedObjectName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CopyDataObjectFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CopyDataObjectFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  switch(json[SIMPL::k_ObjectToCopyKey].get<int32>())
+  {
+  case 0:
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerToCopyKey, k_DataPath_Key));
+    break;
+  case 1:
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixToCopyKey, k_DataPath_Key));
+    break;
+  case 2:
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeArrayToCopyKey, k_DataPath_Key));
+    break;
+  default:
+    return MakeErrorResult<Arguments>(-2456, "Invalid DataObject type to copy");
+  }
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_CopiedObjectNameKey, k_NewPathSuffix_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

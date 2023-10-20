@@ -14,6 +14,8 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <fstream>
 
 using namespace complex;
@@ -545,5 +547,46 @@ Result<> ReadBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.LengthUnit = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
 
   return ReadBinaryCTNorthstar(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputHeaderFileKey = "InputHeaderFile";
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteral k_DensityArrayNameKey = "DensityArrayName";
+constexpr StringLiteral k_LengthUnitKey = "LengthUnit";
+constexpr StringLiteral k_VolumeDescriptionKey = "VolumeDescription";
+constexpr StringLiteral k_DataFileInfoKey = "DataFileInfo";
+constexpr StringLiteral k_ImportSubvolumeKey = "ImportSubvolume";
+constexpr StringLiteral k_StartVoxelCoordKey = "StartVoxelCoord";
+constexpr StringLiteral k_EndVoxelCoordKey = "EndVoxelCoord";
+constexpr StringLiteral k_ImportedVolumeDescriptionKey = "ImportedVolumeDescription";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ImportBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ImportBinaryCTNorthstarFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputHeaderFileKey, k_InputHeaderFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DensityArrayNameKey, k_DensityArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_LengthUnitKey, k_LengthUnit_Key));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_VolumeDescriptionKey, "@COMPLEX_PARAMETER_KEY@"));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_DataFileInfoKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ImportSubvolumeKey, k_ImportSubvolume_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_StartVoxelCoordKey, k_StartVoxelCoord_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_EndVoxelCoordKey, k_EndVoxelCoord_Key));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_ImportedVolumeDescriptionKey, "@COMPLEX_PARAMETER_KEY@"));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

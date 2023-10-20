@@ -3,6 +3,9 @@
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Filter/Actions/MoveDataAction.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
 
 namespace complex
@@ -84,5 +87,39 @@ IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, cons
 Result<> MoveData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_WhatToMoveKey = "WhatToMove";
+constexpr StringLiteral k_AttributeMatrixSourceKey = "AttributeMatrixSource";
+constexpr StringLiteral k_DataContainerDestinationKey = "DataContainerDestination";
+constexpr StringLiteral k_DataArraySourceKey = "DataArraySource";
+constexpr StringLiteral k_AttributeMatrixDestinationKey = "AttributeMatrixDestination";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> MoveData::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = MoveData().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  if(json[SIMPL::k_WhatToMoveKey].get<int32>() == 0)
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixSourceKey, k_Data_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerDestinationKey, k_NewParent_Key));
+  }
+  else
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_DataArraySourceKey, k_Data_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixDestinationKey, k_NewParent_Key));
+  }
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

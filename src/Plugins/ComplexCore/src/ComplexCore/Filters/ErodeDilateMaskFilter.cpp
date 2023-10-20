@@ -8,6 +8,9 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
@@ -109,5 +112,37 @@ Result<> ErodeDilateMaskFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   return ErodeDilateMask(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_DirectionKey = "Direction";
+constexpr StringLiteral k_NumIterationsKey = "NumIterations";
+constexpr StringLiteral k_XDirOnKey = "XDirOn";
+constexpr StringLiteral k_YDirOnKey = "YDirOn";
+constexpr StringLiteral k_ZDirOnKey = "ZDirOn";
+constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ErodeDilateMaskFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ErodeDilateMaskFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DirectionKey, k_Operation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumIterationsKey, k_NumIterations_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_XDirOnKey, k_XDirOn_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_YDirOnKey, k_YDirOn_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ZDirOnKey, k_ZDirOn_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_SelectedImageGeometry_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

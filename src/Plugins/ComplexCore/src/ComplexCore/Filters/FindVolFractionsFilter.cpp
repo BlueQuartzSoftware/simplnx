@@ -144,7 +144,8 @@ Result<Arguments> FindVolFractionsFilter::FromSIMPLJson(const nlohmann::json& js
   // k_CellEnsembleAttributeMatrixPath_Key missing
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_VolFractionsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_CellEnsembleAttributeMatrixPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_VolFractionsArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

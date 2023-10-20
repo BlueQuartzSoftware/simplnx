@@ -10,6 +10,8 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -457,5 +459,32 @@ Result<> ReadVolumeGraphicsFileFilter::executeImpl(DataStructure& dataStructure,
   inputValues.VGDataFile = s_HeaderCache[m_InstanceId].VgiDataFilePath;
 
   return ReadVolumeGraphicsFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_VGHeaderFileKey = "VGHeaderFile";
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteral k_DensityArrayNameKey = "DensityArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ImportVolumeGraphicsFileFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ImportVolumeGraphicsFileFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_VGHeaderFileKey, k_VGHeaderFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_NewImageGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DensityArrayNameKey, k_DensityArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

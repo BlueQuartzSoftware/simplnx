@@ -7,6 +7,9 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/StringParameter.hpp"
 
 using namespace complex;
@@ -100,5 +103,30 @@ Result<> ExecuteProcessFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.LogFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputLogFile_Key);
 
   return ExecuteProcess(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ArgumentsKey = "Arguments";
+constexpr StringLiteral k_BlockingKey = "Blocking";
+constexpr StringLiteral k_TimeoutKey = "Timeout";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ExecuteProcessFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ExecuteProcessFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ArgumentsKey, k_Arguments_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_BlockingKey, k_Blocking_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_TimeoutKey, k_Timeout_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

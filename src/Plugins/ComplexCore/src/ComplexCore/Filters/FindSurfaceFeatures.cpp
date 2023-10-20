@@ -13,6 +13,8 @@
 
 #include "complex/Utilities/SIMPLConversion.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
@@ -349,7 +351,7 @@ Result<Arguments> FindSurfaceFeatures::FromSIMPLJson(const nlohmann::json& json)
   // Check extra params
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayPathKey, k_SurfaceFeaturesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayPathKey, k_SurfaceFeaturesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

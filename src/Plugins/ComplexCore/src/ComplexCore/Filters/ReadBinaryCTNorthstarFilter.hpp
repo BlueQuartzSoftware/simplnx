@@ -42,6 +42,13 @@ public:
   static inline constexpr StringLiteral k_StartVoxelCoord_Key = "start_voxel_coord";
   static inline constexpr StringLiteral k_EndVoxelCoord_Key = "end_voxel_coord";
 
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   struct ImageGeometryInfo
   {
     std::vector<float32> Origin;

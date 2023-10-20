@@ -10,6 +10,8 @@
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <Eigen/Geometry>
 
 namespace complex
@@ -285,5 +287,36 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_MovingVertexGeometryKey = "MovingVertexGeometry";
+constexpr StringLiteral k_TargetVertexGeometryKey = "TargetVertexGeometry";
+constexpr StringLiteral k_IterationsKey = "Iterations";
+constexpr StringLiteral k_ApplyTransformKey = "ApplyTransform";
+constexpr StringLiteral k_TransformAttributeMatrixNameKey = "TransformAttributeMatrixName";
+constexpr StringLiteral k_TransformArrayNameKey = "TransformArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> IterativeClosestPointFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = IterativeClosestPointFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_MovingVertexGeometryKey, k_MovingVertexPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TargetVertexGeometryKey, k_TargetVertexPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_IterationsKey, k_NumIterations_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ApplyTransformKey, k_ApplyTransformation_Key));
+  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_TransformAttributeMatrixNameKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_TransformArrayNameKey, k_TransformArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

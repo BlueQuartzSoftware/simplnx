@@ -11,6 +11,8 @@
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <algorithm>
 
 using namespace complex;
@@ -208,5 +210,29 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
   dataAlg.execute(CalculateDihedralAnglesImpl(triangleGeom, dihedralAngles, shouldCancel));
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayPathKey = "SurfaceMeshTriangleDihedralAnglesArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> TriangleDihedralAngleFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = TriangleDihedralAngleFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey,
+                                                                                                              k_SurfaceMeshTriangleDihedralAnglesArrayName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey, k_TGeometryDataPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

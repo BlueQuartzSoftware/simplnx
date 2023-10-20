@@ -11,6 +11,9 @@
 #include "complex/Utilities/OStreamUtilities.hpp"
 
 #include <filesystem>
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -206,5 +209,38 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
                                                    includeHeaders, maxValPerLine);
   }
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_OutputStyleKey = "OutputStyle";
+constexpr StringLiteral k_OutputPathKey = "OutputPath";
+constexpr StringLiteral k_FileExtensionKey = "FileExtension";
+constexpr StringLiteral k_MaxValPerLineKey = "MaxValPerLine";
+constexpr StringLiteral k_OutputFilePathKey = "OutputFilePath";
+constexpr StringLiteral k_DelimiterKey = "Delimiter";
+constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> WriteASCIIDataFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = WriteASCIIDataFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_OutputStyleKey, k_OutputStyle_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputDir_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_FileExtensionKey, k_FileExtension_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_MaxValPerLineKey, k_MaxValPerLine_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputFilePathKey, k_OutputPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DelimiterKey, k_Delimiter_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

@@ -14,6 +14,9 @@
 #include "complex/Parameters/StringParameter.hpp"
 
 #include <filesystem>
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <tuple>
 
 namespace fs = std::filesystem;
@@ -192,4 +195,37 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& data, const Arguments& fi
   return result;
 }
 
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ScaleOutputKey = "ScaleOutput";
+constexpr StringLiteral k_ScaleFactorKey = "ScaleFactor";
+constexpr StringLiteral k_StlFilePathKey = "StlFilePath";
+constexpr StringLiteral k_SurfaceMeshDataContainerNameKey = "SurfaceMeshDataContainerName";
+constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
+constexpr StringLiteral k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> StlFileReaderFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = StlFileReaderFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ScaleOutputKey, k_ScaleOutput));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_ScaleFactorKey, k_ScaleFactor));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_StlFilePathKey, k_StlFilePath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshDataContainerNameKey, k_TriangleGeometryName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceNormalsArrayNameKey, k_FaceNormalsName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}
 } // namespace complex

@@ -42,6 +42,13 @@ public:
   static inline constexpr uint64 k_Gaussian = 1;
 
   /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief Returns the filter's name.
    * @return std::string
    */

@@ -6,6 +6,11 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -111,5 +116,28 @@ Result<> TriangleCentroidFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.CentroidsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
 
   return TriangleCentroid(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SurfaceMeshTriangleCentroidsArrayPathKey = "SurfaceMeshTriangleCentroidsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> TriangleCentroidFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = TriangleCentroidFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleCentroidsArrayPathKey, k_CentroidsArrayName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleCentroidsArrayPathKey, k_TriGeometryDataPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

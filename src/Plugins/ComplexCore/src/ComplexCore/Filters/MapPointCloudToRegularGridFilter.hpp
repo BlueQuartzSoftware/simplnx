@@ -36,6 +36,13 @@ public:
   static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
 
   /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief
    * @return
    */

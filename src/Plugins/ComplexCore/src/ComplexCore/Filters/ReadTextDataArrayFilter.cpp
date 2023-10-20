@@ -15,6 +15,8 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -198,5 +200,38 @@ Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& data, const Argumen
   default:
     return MakeErrorResult(-1001, fmt::format("ReadTextDataArrayFilter: Parameter NumericType which has a value of '{}' does not match any in complex.", to_underlying(numericType)));
   }
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputFileKey = "InputFile";
+constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteral k_SkipHeaderLinesKey = "SkipHeaderLines";
+constexpr StringLiteral k_DelimiterKey = "Delimiter";
+constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
+constexpr StringLiteral k_FirstLineKey = "FirstLine";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ImportTextFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ImportTextFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFileKey));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarTypeKey));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NCompKey));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_SkipHeaderLinesKey, k_NSkipLinesKey));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DelimiterKey, k_DelimiterChoiceKey));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeArrayPathKey, k_DataArrayKey));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_FirstLineKey, "@COMPLEX_PARAMETER_KEY@"));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
