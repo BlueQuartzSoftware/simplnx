@@ -134,7 +134,7 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPathValue.getParent(), {});
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPathValue.getParent(), {});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

@@ -110,17 +110,23 @@ private:
 /**
  * @brief
  */
-struct COMPLEX_EXPORT DataModifiedAction
+struct COMPLEX_EXPORT DataObjectModification
 {
 
   enum class ModifiedType : uint64
   {
     DataArrayModified = 0,
     DataArrayPossiblyDeleted = 1,
+    AttributeMatrixModified = 2,
+    DataGroupModified = 3,
+    AttributeMatrixPossiblyDeleted = 4,
+    DataGroupPossiblyDeleted = 5,
+    GeometryModified = 6,
+    GeometryPossiblyDeleted = 7
   };
 
-  DataPath m_ModifiedPath;
-  ModifiedType m_ModifiedType;
+  DataPath modifiedPath;
+  ModifiedType modifiedType;
 };
 
 /**
@@ -130,7 +136,7 @@ struct COMPLEX_EXPORT OutputActions
 {
   std::vector<AnyDataAction> actions = {};
   std::vector<AnyDataAction> deferredActions = {};
-  std::vector<DataModifiedAction> modifiedActions = {};
+  std::vector<DataObjectModification> modifiedActions = {};
 
   OutputActions() = default;
 
@@ -156,9 +162,9 @@ struct COMPLEX_EXPORT OutputActions
     deferredActions.emplace_back(std::move(action));
   }
 
-  void appendModifiedAction(const DataPath& dataPath, DataModifiedAction::ModifiedType modifiedType)
+  void appendDataObjectModificationNotification(const DataPath& dataPath, DataObjectModification::ModifiedType modifiedType)
   {
-    modifiedActions.emplace_back(DataModifiedAction{dataPath, modifiedType});
+    modifiedActions.push_back(DataObjectModification{dataPath, modifiedType});
   }
 
   static Result<> ApplyActions(nonstd::span<const AnyDataAction> actions, DataStructure& dataStructure, IDataAction::Mode mode);

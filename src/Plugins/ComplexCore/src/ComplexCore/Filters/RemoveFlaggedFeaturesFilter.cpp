@@ -165,9 +165,9 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   {
     // Inform users that the following arrays are going to be modified in place
     // Cell Data is going to be modified
-    complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), {});
+    complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), {});
     // Feature Data is going to be modified
-    complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, pFlaggedFeaturesArrayPathValue.getParent(), {});
+    complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFlaggedFeaturesArrayPathValue.getParent(), {});
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

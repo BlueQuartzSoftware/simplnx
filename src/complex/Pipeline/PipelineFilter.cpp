@@ -159,14 +159,9 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
     }
   }
 
-  for(const auto& action : result.outputActions.value().modifiedActions)
-  {
-    newModifiedPaths.emplace_back(action.m_ModifiedPath);
-  }
-
   // Do not clear the created paths unless the preflight succeeded
   m_CreatedPaths = newCreatedPaths;
-  m_ModifiedPaths = newModifiedPaths;
+  m_DataModifiedActions = result.outputActions.value().modifiedActions;
 
   setPreflightStructure(data);
   sendFilterFaultMessage(m_Index, getFaultState());
@@ -227,9 +222,9 @@ std::vector<DataPath> PipelineFilter::getCreatedPaths() const
   return m_CreatedPaths;
 }
 
-std::vector<DataPath> PipelineFilter::getModifiedPaths() const
+std::vector<DataObjectModification> PipelineFilter::getDataObjectModificationNotifications() const
 {
-  return m_ModifiedPaths;
+  return m_DataModifiedActions;
 }
 
 namespace

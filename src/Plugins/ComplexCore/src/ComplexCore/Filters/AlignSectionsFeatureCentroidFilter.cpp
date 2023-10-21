@@ -135,7 +135,7 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, cellDataGroupPath, {});
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataGroupPath, {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

@@ -83,7 +83,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, pComparisonDataPath.getParent(), {});
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pComparisonDataPath.getParent(), {});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

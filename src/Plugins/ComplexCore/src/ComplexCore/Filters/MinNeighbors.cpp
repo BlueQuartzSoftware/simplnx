@@ -393,9 +393,9 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataSt
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), {});
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), {});
   // Feature Data is going to be modified
-  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

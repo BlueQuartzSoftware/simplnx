@@ -171,7 +171,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPath.getParent(), {});
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

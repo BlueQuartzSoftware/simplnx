@@ -389,7 +389,7 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
 
   // Inform users that the following arrays are going to be modified in place
   // Feature Data is going to be modified
-  complex::AppendDataModifiedActions(data, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
+  complex::AppendDataObjectModifications(data, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
 
   resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
 

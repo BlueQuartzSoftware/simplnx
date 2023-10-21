@@ -150,7 +150,7 @@ public:
    * @brief Returns a vector of DataPaths that would be modified when executing the node
    * @return std::vector<DataPath>
    */
-  std::vector<DataPath> getModifiedPaths() const;
+  std::vector<DataObjectModification> getDataObjectModificationNotifications() const;
 
   /**
    * @brief Returns a collection of warnings returned by the target filter.
@@ -226,6 +226,6 @@ private:
   std::vector<complex::Error> m_Errors;
   std::vector<IFilter::PreflightValue> m_PreflightValues;
   std::vector<DataPath> m_CreatedPaths;
-  std::vector<DataPath> m_ModifiedPaths;
+  std::vector<DataObjectModification> m_DataModifiedActions;
 };
 } // namespace complex

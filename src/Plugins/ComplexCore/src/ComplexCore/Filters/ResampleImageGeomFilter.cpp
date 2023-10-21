@@ -332,7 +332,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
 
     // Inform users that the following arrays are going to be modified in place
     // Cell Data is going to be modified
-    complex::AppendDataModifiedActions(dataStructure, resultOutputActions.value().modifiedActions, srcImageGeom->getCellDataPath(), {});
+    complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, srcImageGeom->getCellDataPath(), {});
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

@@ -204,6 +204,6 @@ COMPLEX_EXPORT std::vector<char> CreateDelimitersVector(bool tabAsDelimiter, boo
  * @param parentPath The parent path
  * @param ignoredDataPaths And specific DataPath to ignore.
  */
-COMPLEX_EXPORT void AppendDataModifiedActions(const DataStructure& dataStructure, std::vector<DataModifiedAction>& modifiedActions, const DataPath& parentPath,
-                                              const std::vector<DataPath>& ignoredDataPaths);
+COMPLEX_EXPORT void AppendDataObjectModifications(const DataStructure& dataStructure, std::vector<DataObjectModification>& modifiedActions, const DataPath& parentPath,
+                                                  const std::vector<DataPath>& ignoredDataPaths);
 } // namespace complex

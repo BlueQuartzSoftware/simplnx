@@ -74,7 +74,7 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  resultOutputActions.value().modifiedActions.emplace_back(DataModifiedAction{pCellEulerAnglesArrayPathValue, DataModifiedAction::ModifiedType::DataArrayModified});
+  resultOutputActions.value().modifiedActions.emplace_back(DataObjectModification{pCellEulerAnglesArrayPathValue, DataObjectModification::ModifiedType::DataArrayModified});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
