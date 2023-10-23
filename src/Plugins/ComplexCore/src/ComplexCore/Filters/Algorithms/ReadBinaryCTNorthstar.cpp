@@ -1,4 +1,4 @@
-#include "ImportBinaryCTNorthstar.hpp"
+#include "ReadBinaryCTNorthstar.hpp"
 
 #include "complex/Common/ScopeGuard.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -27,7 +27,7 @@ Result<> SanityCheckFileSizeVersusAllocatedSize(size_t allocatedBytes, size_t fi
 }
 
 // -----------------------------------------------------------------------------
-Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ImportBinaryCTNorthstarInputValues* inputValues)
+Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ReadBinaryCTNorthstarInputValues* inputValues)
 {
   auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputValues->ImageGeometryPath);
   geom.setUnits(static_cast<IGeometry::LengthUnit>(inputValues->LengthUnit));
@@ -117,8 +117,8 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
 } // namespace
 
 // -----------------------------------------------------------------------------
-ImportBinaryCTNorthstar::ImportBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                 ImportBinaryCTNorthstarInputValues* inputValues)
+ReadBinaryCTNorthstar::ReadBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                             ReadBinaryCTNorthstarInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -127,16 +127,16 @@ ImportBinaryCTNorthstar::ImportBinaryCTNorthstar(DataStructure& dataStructure, c
 }
 
 // -----------------------------------------------------------------------------
-ImportBinaryCTNorthstar::~ImportBinaryCTNorthstar() noexcept = default;
+ReadBinaryCTNorthstar::~ReadBinaryCTNorthstar() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ImportBinaryCTNorthstar::getCancel()
+const std::atomic_bool& ReadBinaryCTNorthstar::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ImportBinaryCTNorthstar::operator()()
+Result<> ReadBinaryCTNorthstar::operator()()
 {
   Result<> result = ReadBinaryCTFiles(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
   if(result.invalid())

@@ -1,4 +1,4 @@
-#include "ImportDeformKeyFileV12.hpp"
+#include "ReadDeformKeyFileV12.hpp"
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
@@ -29,7 +29,7 @@ const std::vector<std::string> k_DataForObject = {"Data", "for", "Object", "#"};
 class IOHandler
 {
 public:
-  IOHandler(ImportDeformKeyFileV12* filter, DataStructure& dataStructure, std::ifstream& inStream, const DataPath& quadGeomPath, const DataPath& vertexAMPath, const DataPath& cellAMPath,
+  IOHandler(ReadDeformKeyFileV12* filter, DataStructure& dataStructure, std::ifstream& inStream, const DataPath& quadGeomPath, const DataPath& vertexAMPath, const DataPath& cellAMPath,
             const bool allocate)
   : m_Filter(filter)
   , m_DataStructure(dataStructure)
@@ -184,7 +184,7 @@ public:
 
 private:
   // member variables
-  ImportDeformKeyFileV12* m_Filter;
+  ReadDeformKeyFileV12* m_Filter;
   DataStructure& m_DataStructure;
   std::ifstream& m_InStream;
   const DataPath& m_QuadGeomPath;
@@ -784,8 +784,8 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-ImportDeformKeyFileV12::ImportDeformKeyFileV12(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               ImportDeformKeyFileV12InputValues* inputValues)
+ReadDeformKeyFileV12::ReadDeformKeyFileV12(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                               ReadDeformKeyFileV12InputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -795,28 +795,28 @@ ImportDeformKeyFileV12::ImportDeformKeyFileV12(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-ImportDeformKeyFileV12::~ImportDeformKeyFileV12() noexcept = default;
+ReadDeformKeyFileV12::~ReadDeformKeyFileV12() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ImportDeformKeyFileV12::getCancel()
+const std::atomic_bool& ReadDeformKeyFileV12::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-void ImportDeformKeyFileV12::updateProgress(const std::string& progressMessage)
+void ReadDeformKeyFileV12::updateProgress(const std::string& progressMessage)
 {
   m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
 }
 
 // -----------------------------------------------------------------------------
-FileCache& ImportDeformKeyFileV12::getCache()
+FileCache& ReadDeformKeyFileV12::getCache()
 {
   return m_Cache;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ImportDeformKeyFileV12::operator()(bool allocate)
+Result<> ReadDeformKeyFileV12::operator()(bool allocate)
 {
   /*
    * IF allocate is false DO NOT TOUCH DATA STRUCTURE IN ANY WAY

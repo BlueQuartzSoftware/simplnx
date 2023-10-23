@@ -168,18 +168,18 @@ set(AlgorithmList
   GenerateColorTable
   GenerateVectorColors
   ImageContouring
-  ImportDeformKeyFileV12
-  ImportVolumeGraphicsFile
-  ImportBinaryCTNorthstar
+  ReadDeformKeyFileV12
+  ReadVolumeGraphicsFile
+  ReadBinaryCTNorthstar
   KMeans
   KMedoids
   LaplacianSmoothing
-  LosAlamosFFTWriter
+  WriteLosAlamosFFT
   NearestPointFuseRegularGrids
   PartitionGeometry
   PointSampleTriangleGeometry
   QuickSurfaceMesh
-  RawBinaryReader
+  ReadRawBinary
   RegularGridSampleSurfaceMesh
   RemoveFlaggedFeatures
   ReplaceElementAttributesWithNeighborValues
@@ -189,12 +189,12 @@ set(AlgorithmList
   SharedFeatureFace
   Silhouette
   SplitAttributeArray
-  StlFileReader
+  ReadStlFile
   SurfaceNets
   TriangleCentroid
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
-  VtkRectilinearGridWriter
+  WriteVtkRectilinearGrid
   WriteAbaqusHexahedron
   WriteAvizoRectilinearCoordinate
   WriteAvizoUniformCoordinate

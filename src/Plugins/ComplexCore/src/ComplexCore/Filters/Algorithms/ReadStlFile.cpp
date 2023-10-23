@@ -1,4 +1,4 @@
-#include "StlFileReader.hpp"
+#include "ReadStlFile.hpp"
 
 #include "ComplexCore/utils/StlUtilities.hpp"
 
@@ -94,7 +94,7 @@ std::array<float, 6> CreateMinMaxCoords()
 
 } // End anonymous namespace
 
-StlFileReader::StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
+ReadStlFile::ReadStlFile(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
                              float32 scaleFactor, const std::atomic_bool& shouldCancel)
 : m_DataStructure(data)
 , m_FilePath(std::move(stlFilePath))
@@ -107,9 +107,9 @@ StlFileReader::StlFileReader(DataStructure& data, fs::path stlFilePath, const Da
 {
 }
 
-StlFileReader::~StlFileReader() noexcept = default;
+ReadStlFile::~ReadStlFile() noexcept = default;
 
-Result<> StlFileReader::operator()()
+Result<> ReadStlFile::operator()()
 {
 
   m_MinMaxCoords = ::CreateMinMaxCoords();
@@ -285,7 +285,7 @@ Result<> StlFileReader::operator()()
   // The fileSentinel will ensure the FILE* is closed.
 }
 
-Result<> StlFileReader::eliminate_duplicate_nodes()
+Result<> ReadStlFile::eliminate_duplicate_nodes()
 {
   TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
 

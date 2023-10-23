@@ -1,4 +1,4 @@
-#include "VtkRectilinearGridWriter.hpp"
+#include "WriteVtkRectilinearGrid.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -220,8 +220,8 @@ struct WriteVtkDataArrayFunctor
 } // namespace
 
 // -----------------------------------------------------------------------------
-VtkRectilinearGridWriter::VtkRectilinearGridWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                   VtkRectilinearGridWriterInputValues* inputValues)
+WriteVtkRectilinearGrid::WriteVtkRectilinearGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                   WriteVtkRectilinearGridInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -230,16 +230,16 @@ VtkRectilinearGridWriter::VtkRectilinearGridWriter(DataStructure& dataStructure,
 }
 
 // -----------------------------------------------------------------------------
-VtkRectilinearGridWriter::~VtkRectilinearGridWriter() noexcept = default;
+WriteVtkRectilinearGrid::~WriteVtkRectilinearGrid() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& VtkRectilinearGridWriter::getCancel()
+const std::atomic_bool& WriteVtkRectilinearGrid::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> VtkRectilinearGridWriter::operator()()
+Result<> WriteVtkRectilinearGrid::operator()()
 {
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
@@ -298,7 +298,7 @@ Result<> VtkRectilinearGridWriter::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void VtkRectilinearGridWriter::writeVtkHeader(FILE* outputFile) const
+void WriteVtkRectilinearGrid::writeVtkHeader(FILE* outputFile) const
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const usize xPoints = geom.getNumXCells() + 1;
@@ -322,7 +322,7 @@ void VtkRectilinearGridWriter::writeVtkHeader(FILE* outputFile) const
 
 // -----------------------------------------------------------------------------
 template <typename T>
-Result<> VtkRectilinearGridWriter::writeCoords(FILE* outputFile, const std::string& axis, const std::string& type, int64 nPoints, T min, T max, T step)
+Result<> WriteVtkRectilinearGrid::writeCoords(FILE* outputFile, const std::string& axis, const std::string& type, int64 nPoints, T min, T max, T step)
 {
   fprintf(outputFile, "%s %lld %s\n", axis.c_str(), static_cast<long long unsigned int>(nPoints), type.c_str());
   if(m_InputValues->WriteBinaryFile)

@@ -34,7 +34,7 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "RawBinaryReader.hpp"
+#include "ReadRawBinary.hpp"
 
 #include "complex/Common/Bit.hpp"
 #include "complex/Common/ComplexConstants.hpp"
@@ -100,7 +100,7 @@ Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
 
 namespace complex
 {
-RawBinaryReader::RawBinaryReader(DataStructure& dataStructure, const RawBinaryReaderInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
+ReadRawBinary::ReadRawBinary(DataStructure& dataStructure, const ReadRawBinaryInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -108,15 +108,15 @@ RawBinaryReader::RawBinaryReader(DataStructure& dataStructure, const RawBinaryRe
 {
 }
 
-RawBinaryReader::~RawBinaryReader() noexcept = default;
+ReadRawBinary::~ReadRawBinary() noexcept = default;
 
-Result<> RawBinaryReader::operator()()
+Result<> ReadRawBinary::operator()()
 {
   return execute();
 }
 
 // -----------------------------------------------------------------------------
-Result<> RawBinaryReader::execute()
+Result<> ReadRawBinary::execute()
 {
   IDataArray& binaryIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
 

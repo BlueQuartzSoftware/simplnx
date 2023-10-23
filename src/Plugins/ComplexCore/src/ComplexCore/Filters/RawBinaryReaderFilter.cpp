@@ -1,6 +1,6 @@
 #include "RawBinaryReaderFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/RawBinaryReader.hpp"
+#include "ComplexCore/Filters/Algorithms/ReadRawBinary.hpp"
 
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -169,7 +169,7 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
 Result<> RawBinaryReaderFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel) const
 {
-  RawBinaryReaderInputValues inputValues;
+  ReadRawBinaryInputValues inputValues;
 
   inputValues.inputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.scalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
@@ -179,6 +179,6 @@ Result<> RawBinaryReaderFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.createdAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
 
   // Let the Algorithm instance do the work
-  return RawBinaryReader(dataStructure, inputValues, shouldCancel, messageHandler)();
+  return ReadRawBinary(dataStructure, inputValues, shouldCancel, messageHandler)();
 }
 } // namespace complex

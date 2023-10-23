@@ -19,17 +19,17 @@ namespace complex
  * @brief This filter replaces values in the target array with a user specified value
  * where a bool mask array specifies.
  */
-class COMPLEXCORE_EXPORT StlFileReader
+class COMPLEXCORE_EXPORT ReadStlFile
 {
 public:
-  StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput, float32 scaleFactor,
+  ReadStlFile(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput, float32 scaleFactor,
                 const std::atomic_bool& shouldCancel);
-  ~StlFileReader() noexcept;
+  ~ReadStlFile() noexcept;
 
-  StlFileReader(const StlFileReader&) = delete;
-  StlFileReader(StlFileReader&&) noexcept = delete;
-  StlFileReader& operator=(const StlFileReader&) = delete;
-  StlFileReader& operator=(StlFileReader&&) noexcept = delete;
+  ReadStlFile(const ReadStlFile&) = delete;
+  ReadStlFile(ReadStlFile&&) noexcept = delete;
+  ReadStlFile& operator=(const ReadStlFile&) = delete;
+  ReadStlFile& operator=(ReadStlFile&&) noexcept = delete;
 
   Result<> operator()();
 

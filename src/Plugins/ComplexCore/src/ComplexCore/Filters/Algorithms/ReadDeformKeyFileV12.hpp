@@ -34,7 +34,7 @@ struct COMPLEXCORE_EXPORT FileCache
   }
 };
 
-struct COMPLEXCORE_EXPORT ImportDeformKeyFileV12InputValues
+struct COMPLEXCORE_EXPORT ReadDeformKeyFileV12InputValues
 {
   fs::path InputFilePath;
   DataPath QuadGeomPath;
@@ -48,16 +48,16 @@ struct COMPLEXCORE_EXPORT ImportDeformKeyFileV12InputValues
  * where a bool mask array specifies.
  */
 
-class COMPLEXCORE_EXPORT ImportDeformKeyFileV12
+class COMPLEXCORE_EXPORT ReadDeformKeyFileV12
 {
 public:
-  ImportDeformKeyFileV12(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportDeformKeyFileV12InputValues* inputValues);
-  ~ImportDeformKeyFileV12() noexcept;
+  ReadDeformKeyFileV12(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadDeformKeyFileV12InputValues* inputValues);
+  ~ReadDeformKeyFileV12() noexcept;
 
-  ImportDeformKeyFileV12(const ImportDeformKeyFileV12&) = delete;
-  ImportDeformKeyFileV12(ImportDeformKeyFileV12&&) noexcept = delete;
-  ImportDeformKeyFileV12& operator=(const ImportDeformKeyFileV12&) = delete;
-  ImportDeformKeyFileV12& operator=(ImportDeformKeyFileV12&&) noexcept = delete;
+  ReadDeformKeyFileV12(const ReadDeformKeyFileV12&) = delete;
+  ReadDeformKeyFileV12(ReadDeformKeyFileV12&&) noexcept = delete;
+  ReadDeformKeyFileV12& operator=(const ReadDeformKeyFileV12&) = delete;
+  ReadDeformKeyFileV12& operator=(ReadDeformKeyFileV12&&) noexcept = delete;
 
   Result<> operator()(bool allocate);
 
@@ -67,7 +67,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const ImportDeformKeyFileV12InputValues* m_InputValues = nullptr;
+  const ReadDeformKeyFileV12InputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   FileCache m_Cache = {};

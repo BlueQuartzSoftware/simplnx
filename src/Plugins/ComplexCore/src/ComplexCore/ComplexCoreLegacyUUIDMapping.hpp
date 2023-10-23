@@ -182,7 +182,7 @@ namespace complex
     {complex::Uuid::FromString("686d5393-2b02-5c86-b887-dd81a8ae80f2").value(), complex::FilterTraits<MultiThresholdObjects>::uuid}, // MultiThresholdObjects2
     {complex::Uuid::FromString("119861c5-e303-537e-b210-2e62936222e9").value(), complex::FilterTraits<PointSampleTriangleGeometryFilter>::uuid}, // PointSampleTriangleGeometry
     {complex::Uuid::FromString("07b49e30-3900-5c34-862a-f1fb48bad568").value(), complex::FilterTraits<QuickSurfaceMeshFilter>::uuid}, // QuickSurfaceMesh
-    {complex::Uuid::FromString("0791f556-3d73-5b1e-b275-db3f7bb6850d").value(), complex::FilterTraits<RawBinaryReaderFilter>::uuid}, // RawBinaryReader
+    {complex::Uuid::FromString("0791f556-3d73-5b1e-b275-db3f7bb6850d").value(), complex::FilterTraits<RawBinaryReaderFilter>::uuid}, // ReadRawBinary
     {complex::Uuid::FromString("379ccc67-16dd-530a-984f-177db2314bac").value(), complex::FilterTraits<RemoveFlaggedVertices>::uuid}, // RemoveFlaggedVertices
     {complex::Uuid::FromString("53ac1638-8934-57b8-b8e5-4b91cdda23ec").value(), complex::FilterTraits<RemoveMinimumSizeFeaturesFilter>::uuid}, // MinSize
     {complex::Uuid::FromString("53a5f731-2858-5e3e-bd43-8f2cf45d90ec").value(), complex::FilterTraits<RenameDataObject>::uuid}, // RenameAttributeArray
@@ -231,7 +231,7 @@ namespace complex
     {complex::Uuid::FromString("75cfeb9b-cd4b-5a20-a344-4170b39bbfaf").value(), complex::FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid}, // UncertainRegularGridSampleSurfaceMesh
     {complex::Uuid::FromString("6357243e-41a6-52c4-be2d-2f6894c39fcc").value(), complex::FilterTraits<FindBoundaryElementFractionsFilter>::uuid}, // FindBoundaryElementFractions
     {complex::Uuid::FromString("9b9fb9e1-074d-54b6-a6ce-0be21ab4496d").value(), complex::FilterTraits<ReverseTriangleWindingFilter>::uuid}, // ReverseTriangleWinding
-    {complex::Uuid::FromString("158ebe9e-f772-57e2-ac1b-71ff213cf890").value(), complex::FilterTraits<LosAlamosFFTWriterFilter>::uuid}, // LosAlamosFFTWriter
+    {complex::Uuid::FromString("158ebe9e-f772-57e2-ac1b-71ff213cf890").value(), complex::FilterTraits<LosAlamosFFTWriterFilter>::uuid}, // WriteLosAlamosFFT
     {complex::Uuid::FromString("ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc").value(), complex::FilterTraits<GenerateVectorColorsFilter>::uuid}, // GenerateVectorColors
     {complex::Uuid::FromString("3c6337da-e232-4420-a5ca-451496748d88").value(), complex::FilterTraits<ImportDeformKeyFileV12Filter>::uuid}, // ImportDeformKeyFileV12Filter
     {complex::Uuid::FromString("f7486aa6-3049-5be7-8511-ae772b70c90b").value(), complex::FilterTraits<KMedoidsFilter>::uuid}, // KMedoids

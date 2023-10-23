@@ -1,4 +1,4 @@
-#include "LosAlamosFFTWriter.hpp"
+#include "WriteLosAlamosFFT.hpp"
 
 #include "complex/Common/Constants.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -16,7 +16,7 @@ using ull = unsigned long long int;
 }
 
 // -----------------------------------------------------------------------------
-LosAlamosFFTWriter::LosAlamosFFTWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, LosAlamosFFTWriterInputValues* inputValues)
+WriteLosAlamosFFT::WriteLosAlamosFFT(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteLosAlamosFFTInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -25,16 +25,16 @@ LosAlamosFFTWriter::LosAlamosFFTWriter(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-LosAlamosFFTWriter::~LosAlamosFFTWriter() noexcept = default;
+WriteLosAlamosFFT::~WriteLosAlamosFFT() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& LosAlamosFFTWriter::getCancel()
+const std::atomic_bool& WriteLosAlamosFFT::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> LosAlamosFFTWriter::operator()()
+Result<> WriteLosAlamosFFT::operator()()
 {
   /**
    * Header print function was unimplemented in original filter so it was omitted here and condensed to just the writeFile() function

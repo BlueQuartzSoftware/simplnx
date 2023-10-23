@@ -1,6 +1,6 @@
 #include "ImportDeformKeyFileV12Filter.hpp"
 
-#include "Algorithms/ImportDeformKeyFileV12.hpp"
+#include "Algorithms/ReadDeformKeyFileV12.hpp"
 
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
@@ -109,7 +109,7 @@ IFilter::PreflightResult ImportDeformKeyFileV12Filter::preflightImpl(const DataS
   // Read from the file if the input file has changed or the input file's time stamp is out of date.
   if(pInputFilePathValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFilePathValue))
   {
-    ImportDeformKeyFileV12InputValues inputValues;
+    ReadDeformKeyFileV12InputValues inputValues;
     inputValues.InputFilePath = pInputFilePathValue;
 
     inputValues.QuadGeomPath = pQuadGeomPathValue;
@@ -118,7 +118,7 @@ IFilter::PreflightResult ImportDeformKeyFileV12Filter::preflightImpl(const DataS
 
     // Read from the file
     DataStructure throwaway = DataStructure();
-    ImportDeformKeyFileV12 algorithm(throwaway, messageHandler, shouldCancel, &inputValues);
+    ReadDeformKeyFileV12 algorithm(throwaway, messageHandler, shouldCancel, &inputValues);
     algorithm.operator()(false);
     // Cache the results from algorithm run
     s_HeaderCache[m_InstanceId] = algorithm.getCache();
@@ -172,13 +172,13 @@ IFilter::PreflightResult ImportDeformKeyFileV12Filter::preflightImpl(const DataS
 Result<> ImportDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel) const
 {
-  ImportDeformKeyFileV12InputValues inputValues;
+  ReadDeformKeyFileV12InputValues inputValues;
 
   inputValues.InputFilePath = s_HeaderCache[m_InstanceId].inputFile;
   inputValues.QuadGeomPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key);
   inputValues.CellAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_CellAMName_Key));
   inputValues.VertexAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_VertexAMName_Key));
 
-  return ImportDeformKeyFileV12(dataStructure, messageHandler, shouldCancel, &inputValues)(true);
+  return ReadDeformKeyFileV12(dataStructure, messageHandler, shouldCancel, &inputValues)(true);
 }
 } // namespace complex

@@ -11,7 +11,7 @@
 namespace complex
 {
 
-struct COMPLEXCORE_EXPORT LosAlamosFFTWriterInputValues
+struct COMPLEXCORE_EXPORT WriteLosAlamosFFTInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
   DataPath FeatureIdsArrayPath;
@@ -26,16 +26,16 @@ struct COMPLEXCORE_EXPORT LosAlamosFFTWriterInputValues
  * where a bool mask array specifies.
  */
 
-class COMPLEXCORE_EXPORT LosAlamosFFTWriter
+class COMPLEXCORE_EXPORT WriteLosAlamosFFT
 {
 public:
-  LosAlamosFFTWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, LosAlamosFFTWriterInputValues* inputValues);
-  ~LosAlamosFFTWriter() noexcept;
+  WriteLosAlamosFFT(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteLosAlamosFFTInputValues* inputValues);
+  ~WriteLosAlamosFFT() noexcept;
 
-  LosAlamosFFTWriter(const LosAlamosFFTWriter&) = delete;
-  LosAlamosFFTWriter(LosAlamosFFTWriter&&) noexcept = delete;
-  LosAlamosFFTWriter& operator=(const LosAlamosFFTWriter&) = delete;
-  LosAlamosFFTWriter& operator=(LosAlamosFFTWriter&&) noexcept = delete;
+  WriteLosAlamosFFT(const WriteLosAlamosFFT&) = delete;
+  WriteLosAlamosFFT(WriteLosAlamosFFT&&) noexcept = delete;
+  WriteLosAlamosFFT& operator=(const WriteLosAlamosFFT&) = delete;
+  WriteLosAlamosFFT& operator=(WriteLosAlamosFFT&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -43,7 +43,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const LosAlamosFFTWriterInputValues* m_InputValues = nullptr;
+  const WriteLosAlamosFFTInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

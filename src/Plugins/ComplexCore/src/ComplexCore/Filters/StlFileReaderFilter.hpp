@@ -10,7 +10,7 @@ namespace complex
 /**
  * @brief StlFileReaderFilter This filter will read a Binary STL file into a Triangle
  * Geometry including the Normal Vector for each face. The actual algorithm is
- * contained in the ComplexCore/Filters/Algorithms/StlFileReader
+ * contained in the ComplexCore/Filters/Algorithms/ReadStlFile
  *
  */
 class COMPLEXCORE_EXPORT StlFileReaderFilter : public IFilter

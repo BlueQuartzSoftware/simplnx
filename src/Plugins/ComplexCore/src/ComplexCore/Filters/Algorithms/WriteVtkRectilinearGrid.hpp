@@ -13,7 +13,7 @@ namespace complex
 class ImageGeom;
 class IDataArray;
 
-struct COMPLEXCORE_EXPORT VtkRectilinearGridWriterInputValues
+struct COMPLEXCORE_EXPORT WriteVtkRectilinearGridInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
   bool WriteBinaryFile;
@@ -26,16 +26,16 @@ struct COMPLEXCORE_EXPORT VtkRectilinearGridWriterInputValues
  * @brief This filter ...
  */
 
-class COMPLEXCORE_EXPORT VtkRectilinearGridWriter
+class COMPLEXCORE_EXPORT WriteVtkRectilinearGrid
 {
 public:
-  VtkRectilinearGridWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, VtkRectilinearGridWriterInputValues* inputValues);
-  ~VtkRectilinearGridWriter() noexcept;
+  WriteVtkRectilinearGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteVtkRectilinearGridInputValues* inputValues);
+  ~WriteVtkRectilinearGrid() noexcept;
 
-  VtkRectilinearGridWriter(const VtkRectilinearGridWriter&) = delete;
-  VtkRectilinearGridWriter(VtkRectilinearGridWriter&&) noexcept = delete;
-  VtkRectilinearGridWriter& operator=(const VtkRectilinearGridWriter&) = delete;
-  VtkRectilinearGridWriter& operator=(VtkRectilinearGridWriter&&) noexcept = delete;
+  WriteVtkRectilinearGrid(const WriteVtkRectilinearGrid&) = delete;
+  WriteVtkRectilinearGrid(WriteVtkRectilinearGrid&&) noexcept = delete;
+  WriteVtkRectilinearGrid& operator=(const WriteVtkRectilinearGrid&) = delete;
+  WriteVtkRectilinearGrid& operator=(WriteVtkRectilinearGrid&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -60,7 +60,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const VtkRectilinearGridWriterInputValues* m_InputValues = nullptr;
+  const WriteVtkRectilinearGridInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

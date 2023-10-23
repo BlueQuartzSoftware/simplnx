@@ -1,6 +1,6 @@
 #include "ImportVolumeGraphicsFileFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/ImportVolumeGraphicsFile.hpp"
+#include "ComplexCore/Filters/Algorithms/ReadVolumeGraphicsFile.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -449,13 +449,13 @@ Result<> ImportVolumeGraphicsFileFilter::executeImpl(DataStructure& dataStructur
                                                      const std::atomic_bool& shouldCancel) const
 {
 
-  ImportVolumeGraphicsFileInputValues inputValues;
+  ReadVolumeGraphicsFileInputValues inputValues;
 
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_NewImageGeometry_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.DensityArrayName = filterArgs.value<std::string>(k_DensityArrayName_Key);
   inputValues.VGDataFile = s_HeaderCache[m_InstanceId].VgiDataFilePath;
 
-  return ImportVolumeGraphicsFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ReadVolumeGraphicsFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

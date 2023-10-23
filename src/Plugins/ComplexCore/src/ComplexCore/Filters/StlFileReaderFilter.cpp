@@ -1,6 +1,6 @@
 #include "StlFileReaderFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/StlFileReader.hpp"
+#include "ComplexCore/Filters/Algorithms/ReadStlFile.hpp"
 #include "ComplexCore/utils/StlUtilities.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
@@ -187,8 +187,8 @@ Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& 
   auto scaleOutput = filterArgs.value<bool>(k_ScaleOutput);
   auto scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
 
-  // The actual STL File Reading is placed in a separate class `StlFileReader`
-  Result<> result = StlFileReader(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel)();
+  // The actual STL File Reading is placed in a separate class `ReadStlFile`
+  Result<> result = ReadStlFile(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel)();
   return result;
 }
 

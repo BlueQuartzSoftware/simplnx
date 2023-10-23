@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 namespace complex
 {
 
-struct COMPLEXCORE_EXPORT ImportBinaryCTNorthstarInputValues
+struct COMPLEXCORE_EXPORT ReadBinaryCTNorthstarInputValues
 {
   FileSystemPathParameter::ValueType InputHeaderFile;
   DataPath ImageGeometryPath;
@@ -33,16 +33,16 @@ struct COMPLEXCORE_EXPORT ImportBinaryCTNorthstarInputValues
  * where a bool mask array specifies.
  */
 
-class COMPLEXCORE_EXPORT ImportBinaryCTNorthstar
+class COMPLEXCORE_EXPORT ReadBinaryCTNorthstar
 {
 public:
-  ImportBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ImportBinaryCTNorthstarInputValues* inputValues);
-  ~ImportBinaryCTNorthstar() noexcept;
+  ReadBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ReadBinaryCTNorthstarInputValues* inputValues);
+  ~ReadBinaryCTNorthstar() noexcept;
 
-  ImportBinaryCTNorthstar(const ImportBinaryCTNorthstar&) = delete;
-  ImportBinaryCTNorthstar(ImportBinaryCTNorthstar&&) noexcept = delete;
-  ImportBinaryCTNorthstar& operator=(const ImportBinaryCTNorthstar&) = delete;
-  ImportBinaryCTNorthstar& operator=(ImportBinaryCTNorthstar&&) noexcept = delete;
+  ReadBinaryCTNorthstar(const ReadBinaryCTNorthstar&) = delete;
+  ReadBinaryCTNorthstar(ReadBinaryCTNorthstar&&) noexcept = delete;
+  ReadBinaryCTNorthstar& operator=(const ReadBinaryCTNorthstar&) = delete;
+  ReadBinaryCTNorthstar& operator=(ReadBinaryCTNorthstar&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -50,7 +50,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const ImportBinaryCTNorthstarInputValues* m_InputValues = nullptr;
+  const ReadBinaryCTNorthstarInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

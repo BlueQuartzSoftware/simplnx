@@ -1,6 +1,6 @@
 #include "ImportBinaryCTNorthstarFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/ImportBinaryCTNorthstar.hpp"
+#include "ComplexCore/Filters/Algorithms/ReadBinaryCTNorthstar.hpp"
 
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -526,7 +526,7 @@ IFilter::PreflightResult ImportBinaryCTNorthstarFilter::preflightImpl(const Data
 Result<> ImportBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                     const std::atomic_bool& shouldCancel) const
 {
-  ImportBinaryCTNorthstarInputValues inputValues;
+  ReadBinaryCTNorthstarInputValues inputValues;
 
   inputValues.InputHeaderFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputHeaderFile_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -544,6 +544,6 @@ Result<> ImportBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure
   inputValues.EndVoxelCoord = s_HeaderCache[m_InstanceId].EndVoxelCoord;
   inputValues.LengthUnit = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
 
-  return ImportBinaryCTNorthstar(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ReadBinaryCTNorthstar(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

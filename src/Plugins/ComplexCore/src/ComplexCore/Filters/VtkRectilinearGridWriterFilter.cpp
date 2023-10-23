@@ -1,6 +1,6 @@
 #include "VtkRectilinearGridWriterFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/VtkRectilinearGridWriter.hpp"
+#include "ComplexCore/Filters/Algorithms/WriteVtkRectilinearGrid.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -110,13 +110,13 @@ IFilter::PreflightResult VtkRectilinearGridWriterFilter::preflightImpl(const Dat
 Result<> VtkRectilinearGridWriterFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                      const std::atomic_bool& shouldCancel) const
 {
-  VtkRectilinearGridWriterInputValues inputValues;
+  WriteVtkRectilinearGridInputValues inputValues;
 
   inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  return VtkRectilinearGridWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return WriteVtkRectilinearGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

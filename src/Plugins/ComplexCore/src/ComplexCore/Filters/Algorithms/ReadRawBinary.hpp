@@ -9,7 +9,7 @@ namespace complex
 {
 inline constexpr int32 k_UnsupportedScalarType = -1070;
 
-struct COMPLEXCORE_EXPORT RawBinaryReaderInputValues
+struct COMPLEXCORE_EXPORT ReadRawBinaryInputValues
 {
   FileSystemPathParameter::ValueType inputFileValue;
   NumericType scalarTypeValue;
@@ -19,22 +19,22 @@ struct COMPLEXCORE_EXPORT RawBinaryReaderInputValues
   DataPath createdAttributeArrayPathValue;
 };
 
-class COMPLEXCORE_EXPORT RawBinaryReader
+class COMPLEXCORE_EXPORT ReadRawBinary
 {
 public:
-  RawBinaryReader(DataStructure& data, const RawBinaryReaderInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~RawBinaryReader() noexcept;
+  ReadRawBinary(DataStructure& data, const ReadRawBinaryInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  ~ReadRawBinary() noexcept;
 
-  RawBinaryReader(const RawBinaryReader&) = delete;
-  RawBinaryReader(RawBinaryReader&&) noexcept = delete;
-  RawBinaryReader& operator=(const RawBinaryReader&) = delete;
-  RawBinaryReader& operator=(RawBinaryReader&&) noexcept = delete;
+  ReadRawBinary(const ReadRawBinary&) = delete;
+  ReadRawBinary(ReadRawBinary&&) noexcept = delete;
+  ReadRawBinary& operator=(const ReadRawBinary&) = delete;
+  ReadRawBinary& operator=(ReadRawBinary&&) noexcept = delete;
 
   Result<> operator()();
 
 private:
   DataStructure& m_DataStructure;
-  const RawBinaryReaderInputValues& m_InputValues;
+  const ReadRawBinaryInputValues& m_InputValues;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 

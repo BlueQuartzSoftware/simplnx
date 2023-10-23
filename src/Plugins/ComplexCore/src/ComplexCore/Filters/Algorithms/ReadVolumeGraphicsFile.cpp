@@ -1,4 +1,4 @@
-#include "ImportVolumeGraphicsFile.hpp"
+#include "ReadVolumeGraphicsFile.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -13,8 +13,8 @@ inline const int32 k_VolBinaryAllocateMismatch = -91504;
 } // namespace
 
 // -----------------------------------------------------------------------------
-ImportVolumeGraphicsFile::ImportVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel,
-                                                   ImportVolumeGraphicsFileInputValues* inputValues)
+ReadVolumeGraphicsFile::ReadVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel,
+                                                   ReadVolumeGraphicsFileInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -23,16 +23,16 @@ ImportVolumeGraphicsFile::ImportVolumeGraphicsFile(DataStructure& dataStructure,
 }
 
 // -----------------------------------------------------------------------------
-ImportVolumeGraphicsFile::~ImportVolumeGraphicsFile() noexcept = default;
+ReadVolumeGraphicsFile::~ReadVolumeGraphicsFile() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ImportVolumeGraphicsFile::getCancel()
+const std::atomic_bool& ReadVolumeGraphicsFile::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ImportVolumeGraphicsFile::operator()()
+Result<> ReadVolumeGraphicsFile::operator()()
 {
   const DataPath densityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->DensityArrayName);
   auto& density = m_DataStructure.getDataRefAs<Float32Array>(densityArrayPath);

@@ -1,6 +1,6 @@
 #include "LosAlamosFFTWriterFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/LosAlamosFFTWriter.hpp"
+#include "ComplexCore/Filters/Algorithms/WriteLosAlamosFFT.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
@@ -105,7 +105,7 @@ IFilter::PreflightResult LosAlamosFFTWriterFilter::preflightImpl(const DataStruc
 Result<> LosAlamosFFTWriterFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                const std::atomic_bool& shouldCancel) const
 {
-  LosAlamosFFTWriterInputValues inputValues;
+  WriteLosAlamosFFTInputValues inputValues;
 
   inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -113,6 +113,6 @@ Result<> LosAlamosFFTWriterFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath);
 
-  return LosAlamosFFTWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return WriteLosAlamosFFT(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex
