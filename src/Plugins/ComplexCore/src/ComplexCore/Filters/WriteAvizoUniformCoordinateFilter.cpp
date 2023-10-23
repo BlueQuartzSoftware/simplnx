@@ -1,6 +1,6 @@
-#include "AvizoUniformCoordinateWriterFilter.hpp"
+#include "WriteAvizoUniformCoordinateFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/AvizoUniformCoordinateWriter.hpp"
+#include "ComplexCore/Filters/Algorithms/WriteAvizoUniformCoordinate.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
@@ -18,37 +18,37 @@ using namespace complex;
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string AvizoUniformCoordinateWriterFilter::name() const
+std::string WriteAvizoUniformCoordinateFilter::name() const
 {
-  return FilterTraits<AvizoUniformCoordinateWriterFilter>::name.str();
+  return FilterTraits<WriteAvizoUniformCoordinateFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string AvizoUniformCoordinateWriterFilter::className() const
+std::string WriteAvizoUniformCoordinateFilter::className() const
 {
-  return FilterTraits<AvizoUniformCoordinateWriterFilter>::className;
+  return FilterTraits<WriteAvizoUniformCoordinateFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid AvizoUniformCoordinateWriterFilter::uuid() const
+Uuid WriteAvizoUniformCoordinateFilter::uuid() const
 {
-  return FilterTraits<AvizoUniformCoordinateWriterFilter>::uuid;
+  return FilterTraits<WriteAvizoUniformCoordinateFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string AvizoUniformCoordinateWriterFilter::humanName() const
+std::string WriteAvizoUniformCoordinateFilter::humanName() const
 {
   return "Avizo Uniform Coordinate Exporter";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> AvizoUniformCoordinateWriterFilter::defaultTags() const
+std::vector<std::string> WriteAvizoUniformCoordinateFilter::defaultTags() const
 {
   return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------
-Parameters AvizoUniformCoordinateWriterFilter::parameters() const
+Parameters WriteAvizoUniformCoordinateFilter::parameters() const
 {
   Parameters params;
 
@@ -67,13 +67,13 @@ Parameters AvizoUniformCoordinateWriterFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AvizoUniformCoordinateWriterFilter::clone() const
+IFilter::UniquePointer WriteAvizoUniformCoordinateFilter::clone() const
 {
-  return std::make_unique<AvizoUniformCoordinateWriterFilter>();
+  return std::make_unique<WriteAvizoUniformCoordinateFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AvizoUniformCoordinateWriterFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult WriteAvizoUniformCoordinateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                            const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
@@ -89,7 +89,7 @@ IFilter::PreflightResult AvizoUniformCoordinateWriterFilter::preflightImpl(const
 }
 
 //------------------------------------------------------------------------------
-Result<> AvizoUniformCoordinateWriterFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> WriteAvizoUniformCoordinateFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                          const std::atomic_bool& shouldCancel) const
 {
   AvizoWriterInputValues inputValues;
@@ -100,6 +100,6 @@ Result<> AvizoUniformCoordinateWriterFilter::executeImpl(DataStructure& dataStru
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.Units = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
 
-  return AvizoUniformCoordinateWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return WriteAvizoUniformCoordinate(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

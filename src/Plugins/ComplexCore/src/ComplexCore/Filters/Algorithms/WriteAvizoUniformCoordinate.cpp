@@ -1,4 +1,4 @@
-#include "AvizoUniformCoordinateWriter.hpp"
+#include "WriteAvizoUniformCoordinate.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -9,23 +9,23 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-AvizoUniformCoordinateWriter::AvizoUniformCoordinateWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+WriteAvizoUniformCoordinate::WriteAvizoUniformCoordinate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                            AvizoWriterInputValues* inputValues)
 : AvizoWriter(dataStructure, mesgHandler, shouldCancel, inputValues)
 {
 }
 
 // -----------------------------------------------------------------------------
-AvizoUniformCoordinateWriter::~AvizoUniformCoordinateWriter() noexcept = default;
+WriteAvizoUniformCoordinate::~WriteAvizoUniformCoordinate() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> AvizoUniformCoordinateWriter::operator()()
+Result<> WriteAvizoUniformCoordinate::operator()()
 {
   return AvizoWriter::execute();
 }
 
 // -----------------------------------------------------------------------------
-Result<> AvizoUniformCoordinateWriter::generateHeader(FILE* outputFile) const
+Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
 
@@ -83,7 +83,7 @@ Result<> AvizoUniformCoordinateWriter::generateHeader(FILE* outputFile) const
 }
 
 // -----------------------------------------------------------------------------
-Result<> AvizoUniformCoordinateWriter::writeData(FILE* outputFile) const
+Result<> WriteAvizoUniformCoordinate::writeData(FILE* outputFile) const
 {
   fprintf(outputFile, "@1\n");
 

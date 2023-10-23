@@ -59,7 +59,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::AvizoUniformCoordinateWriterFilter",
+        "name": "complex::WriteAvizoUniformCoordinateFilter",
         "uuid": "0ed4ae48-3295-4a5d-8505-d5d2a6f2a212"
       },
       "isDisabled": false

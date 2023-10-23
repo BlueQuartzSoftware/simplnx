@@ -16,7 +16,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp
         WriteAvizoRectilinearCoordinateTest.cpp
-  AvizoUniformCoordinateWriterTest.cpp
+        WriteAvizoUniformCoordinateTest.cpp
   CalculateArrayHistogramTest.cpp
   CalculateFeatureSizesTest.cpp
   CalculateTriangleAreasFilterTest.cpp

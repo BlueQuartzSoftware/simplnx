@@ -7,7 +7,7 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/AvizoUniformCoordinateWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteAvizoUniformCoordinateFilter.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("ComplexCore::AvizoUniformCoordinateWriterFilter: Valid Filter Execution", "[ComplexCore][AvizoUniformCoordinateWriterFilter]")
+TEST_CASE("ComplexCore::WriteAvizoUniformCoordinateFilter: Valid Filter Execution", "[ComplexCore][WriteAvizoUniformCoordinateFilter]")
 {
   const std::string kDataInputArchive = "6_6_avizo_writers.tar.gz";
   const std::string kExpectedOutputTopLevel = "6_6_avizo_writers";
@@ -26,7 +26,7 @@ TEST_CASE("ComplexCore::AvizoUniformCoordinateWriterFilter: Valid Filter Executi
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  AvizoUniformCoordinateWriterFilter filter;
+  WriteAvizoUniformCoordinateFilter filter;
   Arguments args;
 
   fs::path exemplarOutputPath = fs::path(fmt::format("{}/6_6_avizo_writers/6_6_avizo_uniform_coordinate_writer.am", unit_test::k_TestFilesDir));
@@ -35,11 +35,11 @@ TEST_CASE("ComplexCore::AvizoUniformCoordinateWriterFilter: Valid Filter Executi
   fs::path computedBinaryOutputPath(fmt::format("{}/NX_AvisoUniformOutput_binary.am", unit_test::k_BinaryTestOutputDir));
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedOutputPath));
-  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
-  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_GeometryPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100})));
-  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_FeatureIds})));
-  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_Units_Key, std::make_any<StringParameter::ValueType>("microns"));
+  args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedOutputPath));
+  args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_GeometryPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100})));
+  args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_FeatureIds})));
+  args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_Units_Key, std::make_any<StringParameter::ValueType>("microns"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -49,8 +49,8 @@ TEST_CASE("ComplexCore::AvizoUniformCoordinateWriterFilter: Valid Filter Executi
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedBinaryOutputPath));
-  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_WriteBinaryFile_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedBinaryOutputPath));
+  args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_WriteBinaryFile_Key, std::make_any<bool>(true));
 
   preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

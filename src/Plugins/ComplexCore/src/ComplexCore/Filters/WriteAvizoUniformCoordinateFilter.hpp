@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class AvizoUniformCoordinateWriterFilter
+ * @class WriteAvizoUniformCoordinateFilter
  * @brief This filter writes out a native Avizo Uniform Coordinate data file
  */
-class COMPLEXCORE_EXPORT AvizoUniformCoordinateWriterFilter : public IFilter
+class COMPLEXCORE_EXPORT WriteAvizoUniformCoordinateFilter : public IFilter
 {
 public:
-  AvizoUniformCoordinateWriterFilter() = default;
-  ~AvizoUniformCoordinateWriterFilter() noexcept override = default;
+  WriteAvizoUniformCoordinateFilter() = default;
+  ~WriteAvizoUniformCoordinateFilter() noexcept override = default;
 
-  AvizoUniformCoordinateWriterFilter(const AvizoUniformCoordinateWriterFilter&) = delete;
-  AvizoUniformCoordinateWriterFilter(AvizoUniformCoordinateWriterFilter&&) noexcept = delete;
+  WriteAvizoUniformCoordinateFilter(const WriteAvizoUniformCoordinateFilter&) = delete;
+  WriteAvizoUniformCoordinateFilter(WriteAvizoUniformCoordinateFilter&&) noexcept = delete;
 
-  AvizoUniformCoordinateWriterFilter& operator=(const AvizoUniformCoordinateWriterFilter&) = delete;
-  AvizoUniformCoordinateWriterFilter& operator=(AvizoUniformCoordinateWriterFilter&&) noexcept = delete;
+  WriteAvizoUniformCoordinateFilter& operator=(const WriteAvizoUniformCoordinateFilter&) = delete;
+  WriteAvizoUniformCoordinateFilter& operator=(WriteAvizoUniformCoordinateFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
@@ -96,5 +96,5 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AvizoUniformCoordinateWriterFilter, "0ed4ae48-3295-4a5d-8505-d5d2a6f2a212");
+COMPLEX_DEF_FILTER_TRAITS(complex, WriteAvizoUniformCoordinateFilter, "0ed4ae48-3295-4a5d-8505-d5d2a6f2a212");
 /* LEGACY UUID FOR THIS FILTER 339f1349-9236-5023-9a56-c82fb8eafd12 */
