@@ -1,6 +1,6 @@
-#include "AvizoRectilinearCoordinateWriterFilter.hpp"
+#include "WriteAvizoRectilinearCoordinateFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/AvizoRectilinearCoordinateWriter.hpp"
+#include "ComplexCore/Filters/Algorithms/WriteAvizoRectilinearCoordinate.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
@@ -18,37 +18,37 @@ using namespace complex;
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string AvizoRectilinearCoordinateWriterFilter::name() const
+std::string WriteAvizoRectilinearCoordinateFilter::name() const
 {
-  return FilterTraits<AvizoRectilinearCoordinateWriterFilter>::name.str();
+  return FilterTraits<WriteAvizoRectilinearCoordinateFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string AvizoRectilinearCoordinateWriterFilter::className() const
+std::string WriteAvizoRectilinearCoordinateFilter::className() const
 {
-  return FilterTraits<AvizoRectilinearCoordinateWriterFilter>::className;
+  return FilterTraits<WriteAvizoRectilinearCoordinateFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid AvizoRectilinearCoordinateWriterFilter::uuid() const
+Uuid WriteAvizoRectilinearCoordinateFilter::uuid() const
 {
-  return FilterTraits<AvizoRectilinearCoordinateWriterFilter>::uuid;
+  return FilterTraits<WriteAvizoRectilinearCoordinateFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string AvizoRectilinearCoordinateWriterFilter::humanName() const
+std::string WriteAvizoRectilinearCoordinateFilter::humanName() const
 {
   return "Avizo Rectilinear Coordinate Exporter";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> AvizoRectilinearCoordinateWriterFilter::defaultTags() const
+std::vector<std::string> WriteAvizoRectilinearCoordinateFilter::defaultTags() const
 {
   return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------
-Parameters AvizoRectilinearCoordinateWriterFilter::parameters() const
+Parameters WriteAvizoRectilinearCoordinateFilter::parameters() const
 {
   Parameters params;
 
@@ -67,13 +67,13 @@ Parameters AvizoRectilinearCoordinateWriterFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AvizoRectilinearCoordinateWriterFilter::clone() const
+IFilter::UniquePointer WriteAvizoRectilinearCoordinateFilter::clone() const
 {
-  return std::make_unique<AvizoRectilinearCoordinateWriterFilter>();
+  return std::make_unique<WriteAvizoRectilinearCoordinateFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AvizoRectilinearCoordinateWriterFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult WriteAvizoRectilinearCoordinateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
@@ -89,7 +89,7 @@ IFilter::PreflightResult AvizoRectilinearCoordinateWriterFilter::preflightImpl(c
 }
 
 //------------------------------------------------------------------------------
-Result<> AvizoRectilinearCoordinateWriterFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> WriteAvizoRectilinearCoordinateFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                              const std::atomic_bool& shouldCancel) const
 {
   AvizoWriterInputValues inputValues;
@@ -100,6 +100,6 @@ Result<> AvizoRectilinearCoordinateWriterFilter::executeImpl(DataStructure& data
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.Units = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
 
-  return AvizoRectilinearCoordinateWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return WriteAvizoRectilinearCoordinate(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

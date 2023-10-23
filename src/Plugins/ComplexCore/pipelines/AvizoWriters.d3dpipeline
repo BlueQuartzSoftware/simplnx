@@ -74,7 +74,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::AvizoRectilinearCoordinateWriterFilter",
+        "name": "complex::WriteAvizoRectilinearCoordinateFilter",
         "uuid": "58661ea8-0322-44af-a48e-1dc80e999376"
       },
       "isDisabled": false

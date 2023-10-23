@@ -1,4 +1,4 @@
-#include "AvizoRectilinearCoordinateWriter.hpp"
+#include "WriteAvizoRectilinearCoordinate.hpp"
 
 #include "complex/Common/Bit.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -8,23 +8,23 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-AvizoRectilinearCoordinateWriter::AvizoRectilinearCoordinateWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+WriteAvizoRectilinearCoordinate::WriteAvizoRectilinearCoordinate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                    AvizoWriterInputValues* inputValues)
 : AvizoWriter(dataStructure, mesgHandler, shouldCancel, inputValues)
 {
 }
 
 // -----------------------------------------------------------------------------
-AvizoRectilinearCoordinateWriter::~AvizoRectilinearCoordinateWriter() noexcept = default;
+WriteAvizoRectilinearCoordinate::~WriteAvizoRectilinearCoordinate() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> AvizoRectilinearCoordinateWriter::operator()()
+Result<> WriteAvizoRectilinearCoordinate::operator()()
 {
   return AvizoWriter::execute();
 }
 
 // -----------------------------------------------------------------------------
-Result<> AvizoRectilinearCoordinateWriter::generateHeader(FILE* outputFile) const
+Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
 
@@ -75,7 +75,7 @@ Result<> AvizoRectilinearCoordinateWriter::generateHeader(FILE* outputFile) cons
 }
 
 // -----------------------------------------------------------------------------
-Result<> AvizoRectilinearCoordinateWriter::writeData(FILE* outputFile) const
+Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
   SizeVec3 dims = geom.getDimensions();

@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class AvizoRectilinearCoordinateWriterFilter
+ * @class WriteAvizoRectilinearCoordinateFilter
  * @brief This filter writes out a native Avizo Rectilinear Coordinate data file
  */
-class COMPLEXCORE_EXPORT AvizoRectilinearCoordinateWriterFilter : public IFilter
+class COMPLEXCORE_EXPORT WriteAvizoRectilinearCoordinateFilter : public IFilter
 {
 public:
-  AvizoRectilinearCoordinateWriterFilter() = default;
-  ~AvizoRectilinearCoordinateWriterFilter() noexcept override = default;
+  WriteAvizoRectilinearCoordinateFilter() = default;
+  ~WriteAvizoRectilinearCoordinateFilter() noexcept override = default;
 
-  AvizoRectilinearCoordinateWriterFilter(const AvizoRectilinearCoordinateWriterFilter&) = delete;
-  AvizoRectilinearCoordinateWriterFilter(AvizoRectilinearCoordinateWriterFilter&&) noexcept = delete;
+  WriteAvizoRectilinearCoordinateFilter(const WriteAvizoRectilinearCoordinateFilter&) = delete;
+  WriteAvizoRectilinearCoordinateFilter(WriteAvizoRectilinearCoordinateFilter&&) noexcept = delete;
 
-  AvizoRectilinearCoordinateWriterFilter& operator=(const AvizoRectilinearCoordinateWriterFilter&) = delete;
-  AvizoRectilinearCoordinateWriterFilter& operator=(AvizoRectilinearCoordinateWriterFilter&&) noexcept = delete;
+  WriteAvizoRectilinearCoordinateFilter& operator=(const WriteAvizoRectilinearCoordinateFilter&) = delete;
+  WriteAvizoRectilinearCoordinateFilter& operator=(WriteAvizoRectilinearCoordinateFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
@@ -96,5 +96,5 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AvizoRectilinearCoordinateWriterFilter, "58661ea8-0322-44af-a48e-1dc80e999376");
+COMPLEX_DEF_FILTER_TRAITS(complex, WriteAvizoRectilinearCoordinateFilter, "58661ea8-0322-44af-a48e-1dc80e999376");
 /* LEGACY UUID FOR THIS FILTER 2861f4b4-8d50-5e69-9575-68c9d35f1256 */

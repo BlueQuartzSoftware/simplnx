@@ -15,7 +15,6 @@ set(FilterList
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHull
   ArrayCalculatorFilter
-  AvizoRectilinearCoordinateWriterFilter
   AvizoUniformCoordinateWriterFilter
   CalculateArrayHistogramFilter
   CalculateFeatureSizesFilter
@@ -123,6 +122,7 @@ set(FilterList
   VtkRectilinearGridWriterFilter
   WriteAbaqusHexahedronFilter
   WriteASCIIDataFilter
+  WriteAvizoRectilinearCoordinateFilter
   WriteBinaryDataFilter
   WriteStlFileFilter
 )
@@ -137,7 +137,6 @@ set(AlgorithmList
   AppendImageGeometryZSlice
   ApplyTransformationToGeometry
   ArrayCalculator
-  AvizoRectilinearCoordinateWriter
   AvizoUniformCoordinateWriter
   CalculateArrayHistogram
   CalculateTriangleGroupCurvatures
@@ -198,6 +197,7 @@ set(AlgorithmList
   UncertainRegularGridSampleSurfaceMesh
   VtkRectilinearGridWriter
   WriteAbaqusHexahedron
+  WriteAvizoRectilinearCoordinate
   WriteStlFile
 )
 
