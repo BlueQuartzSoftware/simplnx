@@ -1,6 +1,6 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CalculateFeatureSizesFilter.hpp"
-#include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
+#include "ComplexCore/Filters/ReadRawBinaryFilter.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 

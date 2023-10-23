@@ -44,7 +44,7 @@
       },
       "comments": "This pipeline requires the output from the (08) Small IN100 Full Reconstruction pipeline as input",
       "filter": {
-        "name": "complex::ImportDREAM3DFilter",
+        "name": "complex::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false

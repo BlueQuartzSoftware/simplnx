@@ -38,7 +38,7 @@ Uuid WriteAvizoRectilinearCoordinateFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string WriteAvizoRectilinearCoordinateFilter::humanName() const
 {
-  return "Avizo Rectilinear Coordinate Exporter";
+  return "Write Avizo Rectilinear Coordinate";
 }
 
 //------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ Uuid WriteAvizoUniformCoordinateFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string WriteAvizoUniformCoordinateFilter::humanName() const
 {
-  return "Avizo Uniform Coordinate Exporter";
+  return "Write Avizo Uniform Coordinate";
 }
 
 //------------------------------------------------------------------------------

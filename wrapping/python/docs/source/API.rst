@@ -224,7 +224,7 @@ General Parameters
    import_data = cx.Dream3dImportParameter.ImportData()
    import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
    import_data.data_paths = None
-   result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+   result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
 
 .. _DynamicTableParameter:
 .. py:class:: DynamicTableParameter
@@ -447,7 +447,7 @@ General Parameters
 .. _ImportHDF5DatasetParameter:
 .. py:class:: ImportHDF5DatasetParameter
 
-   This parameter is used for the :ref:`complex.ImportHDF5Dataset<ImportHDF5Dataset>` and holds the information
+   This parameter is used for the :ref:`complex.ReadHDF5Dataset<ReadHDF5Dataset>` and holds the information
    to import specific data sets from within the HDF5 file into DREAM3D/complex
 
    .. py:class:: ImportHDF5DatasetParameter.ValueType
@@ -483,7 +483,7 @@ General Parameters
       import_hdf5_param.input_file = "SmallIN100_Final.dream3d"
       import_hdf5_param.datasets = [dataset1, dataset2]
       # import_hdf5_param.parent = cx.DataPath(["Imported Data"])
-      result = cx.ImportHDF5Dataset.execute(data_structure=data_structure,
+      result = cx.ReadHDF5Dataset.execute(data_structure=data_structure,
                                           import_hd_f5_file=import_hdf5_param
                                           )
 

@@ -190,7 +190,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ExportDREAM3DFilter",
+        "name": "complex::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

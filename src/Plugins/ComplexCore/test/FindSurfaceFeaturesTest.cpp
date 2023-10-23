@@ -1,7 +1,7 @@
 #include "ComplexCore/Filters/FindSurfaceFeatures.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CreateImageGeometry.hpp"
-#include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
+#include "ComplexCore/Filters/ReadRawBinaryFilter.hpp"
 
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
@@ -39,13 +39,13 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   auto result = cigFilter.execute(dataStructure, cigArgs);
   COMPLEX_RESULT_REQUIRE_VALID(result.result)
 
-  RawBinaryReaderFilter rbrFilter;
+  ReadRawBinaryFilter rbrFilter;
   Arguments rbrArgs;
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestFilesDir.str()).append(featureIdsFileName));
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(1));
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, NumericType::int32);
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{static_cast<double>(featureIdsSize)}}));
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, fs::path(unit_test::k_TestFilesDir.str()).append(featureIdsFileName));
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_NumberOfComponents_Key, std::make_any<uint64>(1));
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_ScalarType_Key, NumericType::int32);
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{static_cast<double>(featureIdsSize)}}));
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
 
   result = rbrFilter.execute(dataStructure, rbrArgs);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
@@ -62,10 +62,10 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   REQUIRE(imageGeomId.has_value());
   AttributeMatrix::Create(dataStructure, Constants::k_CellFeatureData, std::vector<usize>{maxValue + 1}, imageGeomId.value());
 
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestFilesDir.str()).append(exemplaryFileName));
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, NumericType::int8);
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{796}}));
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesExemplaryPath));
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, fs::path(unit_test::k_TestFilesDir.str()).append(exemplaryFileName));
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_ScalarType_Key, NumericType::int8);
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{796}}));
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesExemplaryPath));
 
   result = rbrFilter.execute(dataStructure, rbrArgs);
   COMPLEX_RESULT_REQUIRE_VALID(result.result)

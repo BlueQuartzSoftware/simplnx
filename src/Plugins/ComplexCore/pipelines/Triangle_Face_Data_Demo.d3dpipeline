@@ -12,7 +12,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::StlFileReaderFilter",
+        "name": "complex::ReadStlFileFilter",
         "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
       },
       "isDisabled": false

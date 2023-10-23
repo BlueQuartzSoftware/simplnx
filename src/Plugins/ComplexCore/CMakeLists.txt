@@ -21,8 +21,8 @@ set(FilterList
   ChangeAngleRepresentation
   CombineAttributeArraysFilter
   CombineStlFilesFilter
-  ComputeMomentInvariants2DFilter
   ComputeFeatureRectFilter
+  ComputeMomentInvariants2DFilter
   ConditionalSetValue
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
@@ -41,11 +41,9 @@ set(FilterList
   ErodeDilateCoordinationNumberFilter
   ErodeDilateMaskFilter
   ExecuteProcessFilter
-  ExportDREAM3DFilter
   ExtractComponentAsArrayFilter
   ExtractInternalSurfacesFromTriangleGeometry
   ExtractVertexGeometryFilter
-  FeatureDataCSVWriterFilter
   FeatureFaceCurvatureFilter
   FillBadDataFilter
   FindArrayStatisticsFilter
@@ -56,8 +54,8 @@ set(FilterList
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
   FindFeatureClusteringFilter
-  FindFeaturePhasesFilter
   FindFeaturePhasesBinaryFilter
+  FindFeaturePhasesFilter
   FindLargestCrossSectionsFilter
   FindNeighborhoodsFilter
   FindNeighborListStatistics
@@ -71,22 +69,14 @@ set(FilterList
   FindVolFractionsFilter
   GenerateColorTableFilter
   GenerateVectorColorsFilter
-  ImageContouringFilter
   IdentifySample
-  ImportBinaryCTNorthstarFilter
-  ReadCSVFileFilter
-  ImportDeformKeyFileV12Filter
-  ImportDREAM3DFilter
-  ImportHDF5Dataset
-  ReadTextDataArrayFilter
-  ImportVolumeGraphicsFileFilter
+  ImageContouringFilter
   InitializeData
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
   KMeansFilter
   KMedoidsFilter
   LaplacianSmoothingFilter
-  LosAlamosFFTWriterFilter
   MapPointCloudToRegularGridFilter
   MinNeighbors
   MoveData
@@ -95,7 +85,15 @@ set(FilterList
   PartitionGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
-  RawBinaryReaderFilter
+  ReadBinaryCTNorthstarFilter
+  ReadCSVFileFilter
+  ReadDeformKeyFileV12Filter
+  ReadDREAM3DFilter
+  ReadHDF5Dataset
+  ReadRawBinaryFilter
+  ReadStlFileFilter
+  ReadTextDataArrayFilter
+  ReadVolumeGraphicsFileFilter
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedVertices
@@ -112,19 +110,21 @@ set(FilterList
   SharedFeatureFaceFilter
   SilhouetteFilter
   SplitAttributeArrayFilter
-  StlFileReaderFilter
   SurfaceNetsFilter
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
   UncertainRegularGridSampleSurfaceMeshFilter
-  VtkRectilinearGridWriterFilter
   WriteAbaqusHexahedronFilter
   WriteASCIIDataFilter
   WriteAvizoRectilinearCoordinateFilter
   WriteAvizoUniformCoordinateFilter
   WriteBinaryDataFilter
+  WriteDREAM3DFilter
+  WriteFeatureDataCSVFilter
+  WriteLosAlamosFFTFilter
   WriteStlFileFilter
+  WriteVtkRectilinearGridFilter
 )
 
 set(ActionList
@@ -141,8 +141,8 @@ set(AlgorithmList
   CalculateTriangleGroupCurvatures
   CombineAttributeArrays
   CombineStlFiles
-  ComputeMomentInvariants2D
   ComputeFeatureRect
+  ComputeMomentInvariants2D
   ConvertColorToGrayScale
   ConvertData
   ErodeDilateBadData
@@ -168,18 +168,18 @@ set(AlgorithmList
   GenerateColorTable
   GenerateVectorColors
   ImageContouring
-  ReadDeformKeyFileV12
-  ReadVolumeGraphicsFile
-  ReadBinaryCTNorthstar
   KMeans
   KMedoids
   LaplacianSmoothing
-  WriteLosAlamosFFT
   NearestPointFuseRegularGrids
   PartitionGeometry
   PointSampleTriangleGeometry
   QuickSurfaceMesh
+  ReadBinaryCTNorthstar
+  ReadDeformKeyFileV12
   ReadRawBinary
+  ReadStlFile
+  ReadVolumeGraphicsFile
   RegularGridSampleSurfaceMesh
   RemoveFlaggedFeatures
   ReplaceElementAttributesWithNeighborValues
@@ -189,16 +189,16 @@ set(AlgorithmList
   SharedFeatureFace
   Silhouette
   SplitAttributeArray
-  ReadStlFile
   SurfaceNets
   TriangleCentroid
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
-  WriteVtkRectilinearGrid
   WriteAbaqusHexahedron
   WriteAvizoRectilinearCoordinate
   WriteAvizoUniformCoordinate
+  WriteLosAlamosFFT
   WriteStlFile
+  WriteVtkRectilinearGrid
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

@@ -74,7 +74,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportDREAM3DFilter",
+        "name": "complex::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
@@ -210,7 +210,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ExportDREAM3DFilter",
+        "name": "complex::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
