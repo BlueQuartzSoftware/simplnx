@@ -1,6 +1,6 @@
-#include "AbaqusHexahedronWriterFilter.hpp"
+#include "WriteAbaqusHexahedronFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/AbaqusHexahedronWriter.hpp"
+#include "ComplexCore/Filters/Algorithms/WriteAbaqusHexahedron.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
@@ -16,37 +16,37 @@ using namespace complex;
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string AbaqusHexahedronWriterFilter::name() const
+std::string WriteAbaqusHexahedronFilter::name() const
 {
-  return FilterTraits<AbaqusHexahedronWriterFilter>::name.str();
+  return FilterTraits<WriteAbaqusHexahedronFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string AbaqusHexahedronWriterFilter::className() const
+std::string WriteAbaqusHexahedronFilter::className() const
 {
-  return FilterTraits<AbaqusHexahedronWriterFilter>::className;
+  return FilterTraits<WriteAbaqusHexahedronFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid AbaqusHexahedronWriterFilter::uuid() const
+Uuid WriteAbaqusHexahedronFilter::uuid() const
 {
-  return FilterTraits<AbaqusHexahedronWriterFilter>::uuid;
+  return FilterTraits<WriteAbaqusHexahedronFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string AbaqusHexahedronWriterFilter::humanName() const
+std::string WriteAbaqusHexahedronFilter::humanName() const
 {
-  return "Abaqus Hexahedron Exporter";
+  return "Write Abaqus Hexahedron";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> AbaqusHexahedronWriterFilter::defaultTags() const
+std::vector<std::string> WriteAbaqusHexahedronFilter::defaultTags() const
 {
   return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------
-Parameters AbaqusHexahedronWriterFilter::parameters() const
+Parameters WriteAbaqusHexahedronFilter::parameters() const
 {
   Parameters params;
 
@@ -66,13 +66,13 @@ Parameters AbaqusHexahedronWriterFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AbaqusHexahedronWriterFilter::clone() const
+IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 {
-  return std::make_unique<AbaqusHexahedronWriterFilter>();
+  return std::make_unique<WriteAbaqusHexahedronFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AbaqusHexahedronWriterFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel) const
 {
   auto pHourglassStiffnessValue = filterArgs.value<int32>(k_HourglassStiffness_Key);
@@ -104,10 +104,10 @@ IFilter::PreflightResult AbaqusHexahedronWriterFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> AbaqusHexahedronWriterFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel) const
 {
-  AbaqusHexahedronWriterInputValues inputValues;
+  WriteAbaqusHexahedronInputValues inputValues;
 
   inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
   inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
@@ -116,6 +116,6 @@ Result<> AbaqusHexahedronWriterFilter::executeImpl(DataStructure& dataStructure,
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
 
-  return AbaqusHexahedronWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return WriteAbaqusHexahedron(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

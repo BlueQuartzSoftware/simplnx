@@ -1,4 +1,4 @@
-#include "AbaqusHexahedronWriter.hpp"
+#include "WriteAbaqusHexahedron.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -59,7 +59,7 @@ std::vector<int64> getNodeIds(usize x, usize y, usize z, const usize* pDims)
   return nodeId;
 }
 
-int32 writeNodes(AbaqusHexahedronWriter* filter, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel)
+int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel)
 {
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   usize nodeIndex = 1;
@@ -122,7 +122,7 @@ int32 writeNodes(AbaqusHexahedronWriter* filter, const std::string& fileName, us
   return err;
 }
 
-int32 writeElems(AbaqusHexahedronWriter* filter, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
+int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
 {
   usize totalPoints = cDims[0] * cDims[1] * cDims[2];
   auto increment = static_cast<usize>(totalPoints * 0.01f);
@@ -184,7 +184,7 @@ int32 writeElems(AbaqusHexahedronWriter* filter, const std::string& fileName, co
   return err;
 }
 
-int32 writeElset(AbaqusHexahedronWriter* filter, const std::string& fileName, size_t totalPoints, const Int32Array& featureIds, const std::atomic_bool& shouldCancel)
+int32 writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, size_t totalPoints, const Int32Array& featureIds, const std::atomic_bool& shouldCancel)
 {
   int32 err = 0;
   FILE* f = fopen(fileName.c_str(), "wb");
@@ -330,8 +330,8 @@ void deleteFile(const std::vector<std::string>& fileNames)
 } // namespace
 
 // -----------------------------------------------------------------------------
-AbaqusHexahedronWriter::AbaqusHexahedronWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               AbaqusHexahedronWriterInputValues* inputValues)
+WriteAbaqusHexahedron::WriteAbaqusHexahedron(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                               WriteAbaqusHexahedronInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -340,22 +340,22 @@ AbaqusHexahedronWriter::AbaqusHexahedronWriter(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-AbaqusHexahedronWriter::~AbaqusHexahedronWriter() noexcept = default;
+WriteAbaqusHexahedron::~WriteAbaqusHexahedron() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& AbaqusHexahedronWriter::getCancel()
+const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-void AbaqusHexahedronWriter::sendMessage(const std::string& message)
+void WriteAbaqusHexahedron::sendMessage(const std::string& message)
 {
   m_MessageHandler(IFilter::Message::Type::Info, message);
 }
 
 // -----------------------------------------------------------------------------
-Result<> AbaqusHexahedronWriter::operator()()
+Result<> WriteAbaqusHexahedron::operator()()
 {
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);

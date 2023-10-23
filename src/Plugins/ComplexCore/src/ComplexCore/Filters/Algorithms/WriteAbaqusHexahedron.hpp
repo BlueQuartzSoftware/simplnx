@@ -13,7 +13,7 @@
 namespace complex
 {
 
-struct COMPLEXCORE_EXPORT AbaqusHexahedronWriterInputValues
+struct COMPLEXCORE_EXPORT WriteAbaqusHexahedronInputValues
 {
   int32 HourglassStiffness;
   StringParameter::ValueType JobName;
@@ -29,16 +29,16 @@ struct COMPLEXCORE_EXPORT AbaqusHexahedronWriterInputValues
  * where a bool mask array specifies.
  */
 
-class COMPLEXCORE_EXPORT AbaqusHexahedronWriter
+class COMPLEXCORE_EXPORT WriteAbaqusHexahedron
 {
 public:
-  AbaqusHexahedronWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AbaqusHexahedronWriterInputValues* inputValues);
-  ~AbaqusHexahedronWriter() noexcept;
+  WriteAbaqusHexahedron(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteAbaqusHexahedronInputValues* inputValues);
+  ~WriteAbaqusHexahedron() noexcept;
 
-  AbaqusHexahedronWriter(const AbaqusHexahedronWriter&) = delete;
-  AbaqusHexahedronWriter(AbaqusHexahedronWriter&&) noexcept = delete;
-  AbaqusHexahedronWriter& operator=(const AbaqusHexahedronWriter&) = delete;
-  AbaqusHexahedronWriter& operator=(AbaqusHexahedronWriter&&) noexcept = delete;
+  WriteAbaqusHexahedron(const WriteAbaqusHexahedron&) = delete;
+  WriteAbaqusHexahedron(WriteAbaqusHexahedron&&) noexcept = delete;
+  WriteAbaqusHexahedron& operator=(const WriteAbaqusHexahedron&) = delete;
+  WriteAbaqusHexahedron& operator=(WriteAbaqusHexahedron&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -48,7 +48,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const AbaqusHexahedronWriterInputValues* m_InputValues = nullptr;
+  const WriteAbaqusHexahedronInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

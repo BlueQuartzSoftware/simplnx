@@ -6,7 +6,7 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  AbaqusHexahedronWriterTest.cpp
+        WriteAbaqusHexahedronTest.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp

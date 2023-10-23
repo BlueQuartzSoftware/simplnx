@@ -1,14 +1,12 @@
 #include <catch2/catch.hpp>
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/AbaqusHexahedronWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteAbaqusHexahedronFilter.hpp"
 
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include <cstdlib>
 
 namespace fs = std::filesystem;
 using namespace complex;
@@ -70,7 +68,7 @@ void CompareResults() // compare hash of both file strings
 }
 } // namespace
 
-TEST_CASE("ComplexCore::AbaqusHexahedronWriterFilter: Valid Filter Execution", "[ComplexCore][AbaqusHexahedronWriterFilter]")
+TEST_CASE("ComplexCore::WriteAbaqusHexahedronFilter: Valid Filter Execution", "[ComplexCore][WriteAbaqusHexahedronFilter]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "abaqus_hexahedron_writer_test.tar.gz",
                                                               "abaqus_hexahedron_writer_test");
@@ -79,17 +77,17 @@ TEST_CASE("ComplexCore::AbaqusHexahedronWriterFilter: Valid Filter Execution", "
                                                              "6_6_find_feature_centroids.dream3d");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  const AbaqusHexahedronWriterFilter filter;
+  const WriteAbaqusHexahedronFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(AbaqusHexahedronWriterFilter::k_HourglassStiffness_Key, std::make_any<int32>(250));
-  args.insertOrAssign(AbaqusHexahedronWriterFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
-  args.insertOrAssign(AbaqusHexahedronWriterFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
-  args.insertOrAssign(AbaqusHexahedronWriterFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("6_6_Abaqus_Hexahedron_Writer_Test"));
-  args.insertOrAssign(AbaqusHexahedronWriterFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-  args.insertOrAssign(AbaqusHexahedronWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_HourglassStiffness_Key, std::make_any<int32>(250));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("6_6_Abaqus_Hexahedron_Writer_Test"));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

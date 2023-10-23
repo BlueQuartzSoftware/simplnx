@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class AbaqusHexahedronWriterFilter
+ * @class WriteAbaqusHexahedronFilter
  * @brief This filter will ....
  */
-class COMPLEXCORE_EXPORT AbaqusHexahedronWriterFilter : public IFilter
+class COMPLEXCORE_EXPORT WriteAbaqusHexahedronFilter : public IFilter
 {
 public:
-  AbaqusHexahedronWriterFilter() = default;
-  ~AbaqusHexahedronWriterFilter() noexcept override = default;
+  WriteAbaqusHexahedronFilter() = default;
+  ~WriteAbaqusHexahedronFilter() noexcept override = default;
 
-  AbaqusHexahedronWriterFilter(const AbaqusHexahedronWriterFilter&) = delete;
-  AbaqusHexahedronWriterFilter(AbaqusHexahedronWriterFilter&&) noexcept = delete;
+  WriteAbaqusHexahedronFilter(const WriteAbaqusHexahedronFilter&) = delete;
+  WriteAbaqusHexahedronFilter(WriteAbaqusHexahedronFilter&&) noexcept = delete;
 
-  AbaqusHexahedronWriterFilter& operator=(const AbaqusHexahedronWriterFilter&) = delete;
-  AbaqusHexahedronWriterFilter& operator=(AbaqusHexahedronWriterFilter&&) noexcept = delete;
+  WriteAbaqusHexahedronFilter& operator=(const WriteAbaqusHexahedronFilter&) = delete;
+  WriteAbaqusHexahedronFilter& operator=(WriteAbaqusHexahedronFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
@@ -97,5 +97,5 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AbaqusHexahedronWriterFilter, "4bc81b8c-1594-409a-89eb-3ea8d8f061b0");
+COMPLEX_DEF_FILTER_TRAITS(complex, WriteAbaqusHexahedronFilter, "4bc81b8c-1594-409a-89eb-3ea8d8f061b0");
 /* LEGACY UUID FOR THIS FILTER 0559aa37-c5ad-549a-82d4-bff4bfcb6cc6 */
