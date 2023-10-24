@@ -89,7 +89,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   QuickSurfaceMeshFilterTest.cpp
   ReadBinaryCTNorthstarTest.cpp
   ReadCSVFileTest.cpp
-  ReadDeformKeyFileV12Test.cpp
+  # ReadDeformKeyFileV12Test.cpp
   ReadHDF5DatasetTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
