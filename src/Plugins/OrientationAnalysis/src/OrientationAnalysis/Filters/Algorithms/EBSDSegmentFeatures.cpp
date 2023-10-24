@@ -52,10 +52,11 @@ Result<> EBSDSegmentFeatures::operator()()
     return {nonstd::make_unexpected(std::vector<Error>{Error{-87000, "The number of Features was 0 or 1 which means no Features were detected. A threshold value may be set too high"}})};
   }
 
-  // By default we randomize grains
+  // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
+  // allows users visualizing the data to better discern each grain otherwise the coloring
+  // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->shouldRandomizeFeatureIds)
   {
-    // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
     auto totalPoints = m_QuatsArray->getNumberOfTuples();
 
     const int64 rangeMin = 0;

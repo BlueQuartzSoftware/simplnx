@@ -225,7 +225,9 @@ Result<> ScalarSegmentFeatures::operator()()
   activeArray->getDataStore()->fill(1);
   (*activeArray)[0] = 0;
 
-  // By default we randomize grains
+  // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
+  // allows users visualizing the data to better discern each grain otherwise the coloring
+  // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->pShouldRandomizeFeatureIds)
   {
     const int64 rangeMin = 0;
