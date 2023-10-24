@@ -47,7 +47,7 @@ std::string UncertainRegularGridSampleSurfaceMeshFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> UncertainRegularGridSampleSurfaceMeshFilter::defaultTags() const
 {
-  return {className(), "Sampling", "Spacing"};
+  return {className(), "Sampling", "Spacing", "Surface Mesh", "Grid Interpolation"};
 }
 
 //------------------------------------------------------------------------------
@@ -56,9 +56,11 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Optional Variables"});
+  params.insertSeparator(Parameters::Separator{"Seeded Randomness"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
-  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed", "The seed fed into the random generator", std::mt19937::default_seed));
+  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "UncertainRegularGridSampleSurfaceMesh SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Number of Cells per Axis", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},
@@ -81,6 +83,9 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAMName_Key, "Cell Data Name", "The name for the cell data Attribute Matrix within the Image geometry", "Cell Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Feature Ids Name", "The name for the feature ids array in cell data Attribute Matrix", "Feature Ids"));
 
+  // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
+
   return params;
 }
 
@@ -102,6 +107,7 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
   auto pImageGeomPathValue = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto pCellAMNameValue = filterArgs.value<std::string>(k_CellAMName_Key);
   auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
+  auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
@@ -125,6 +131,11 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
+  {
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({pSeedArrayNameValue}));
+    resultOutputActions.value().appendAction(std::move(createAction));
+  }
+
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -133,11 +144,18 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
 Result<> UncertainRegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel) const
 {
+  auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
+  if(!filterArgs.value<bool>(k_UseSeed_Key))
+  {
+    seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
+  }
+
+  // Store Seed Value in Top Level Array
+  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   UncertainRegularGridSampleSurfaceMeshInputValues inputValues;
 
-  inputValues.UseSeed = filterArgs.value<bool>(k_UseSeed_Key);
-  inputValues.SeedValue = filterArgs.value<uint64>(k_SeedValue_Key);
+  inputValues.SeedValue = seed;
   inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);

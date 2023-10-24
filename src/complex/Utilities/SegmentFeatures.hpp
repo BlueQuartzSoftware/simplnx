@@ -75,7 +75,7 @@ public:
    * @param rangeMax
    * @return
    */
-  virtual SeedGenerator initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax) const;
+  virtual SeedGenerator initializeStaticVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax) const;
 
   /* from http://www.newty.de/fpt/functor.html */
   /**

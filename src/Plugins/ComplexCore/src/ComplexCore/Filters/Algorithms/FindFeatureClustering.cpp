@@ -12,7 +12,7 @@ namespace
 {
 // -----------------------------------------------------------------------------
 std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 maxDistance, int32 numBins, const std::array<float32, 3>& boxDims, const std::array<float32, 3>& boxRes,
-                                                bool useSeedFromUser, uint64 userSeedValue)
+                                                uint64 userSeedValue)
 {
   std::vector<float32> freq(numBins, 0);
   std::vector<float32> randomCentroids;
@@ -36,12 +36,7 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
 
   std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
   std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937::result_type seed = userSeedValue;
-  if(!useSeedFromUser)
-  {
-    seed = static_cast<std::mt19937::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  }
-  generator.seed(seed);
+  generator.seed(userSeedValue);
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
   randomCentroids.resize(largeNumber * 3);
@@ -270,7 +265,7 @@ Result<> FindFeatureClustering::operator()()
 
   randomRDF.resize(currentNumBins + 1);
   // Call this function to generate the random distribution, which is normalized by the total number of distances
-  randomRDF = GenerateRandomDistribution(min, max, m_InputValues->NumberOfBins, boxDims, boxRes, m_InputValues->UseSeed, m_InputValues->SeedValue);
+  randomRDF = GenerateRandomDistribution(min, max, m_InputValues->NumberOfBins, boxDims, boxRes, m_InputValues->SeedValue);
 
   // Scale the random distribution by the number of distances in this particular instance
   const float32 normFactor = totalPptFeatures * (totalPptFeatures - 1);
