@@ -115,18 +115,14 @@ struct COMPLEX_EXPORT DataObjectModification
 
   enum class ModifiedType : uint64
   {
-    DataArrayModified = 0,
-    DataArrayPossiblyDeleted = 1,
-    AttributeMatrixModified = 2,
-    DataGroupModified = 3,
-    AttributeMatrixPossiblyDeleted = 4,
-    DataGroupPossiblyDeleted = 5,
-    GeometryModified = 6,
-    GeometryPossiblyDeleted = 7
+    Modified = 0,
+    PossiblyDeleted = 1,
+    Unknown = 2,
   };
 
   DataPath modifiedPath;
-  ModifiedType modifiedType;
+  ModifiedType modifiedType = ModifiedType::Unknown;
+  DataObject::Type dataObjectType = DataObject::Type::Unknown;
 };
 
 /**

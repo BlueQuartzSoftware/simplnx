@@ -189,7 +189,8 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  resultOutputActions.value().modifiedActions.emplace_back(DataObjectModification{pGoodVoxelsArrayPathValue, DataObjectModification::ModifiedType::DataArrayModified});
+  resultOutputActions.value().modifiedActions.emplace_back(
+      DataObjectModification{pGoodVoxelsArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pGoodVoxelsArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
