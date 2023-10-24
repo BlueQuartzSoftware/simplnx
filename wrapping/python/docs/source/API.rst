@@ -31,7 +31,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = cx.DataPath(["Small IN100", "Scan Data", "Data"])   
+    data_path = cx.DataPath("Small IN100/Scan Data/Data")
 
 .. _ArraySelectionParameter:
 .. py:class:: ArraySelectionParameter
@@ -41,7 +41,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = cx.DataPath(["Small IN100", "Scan Data", "Data"])   
+    data_path = cx.DataPath("Small IN100/Scan Data/Data")
 
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
