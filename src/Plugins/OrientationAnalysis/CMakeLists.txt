@@ -37,9 +37,6 @@ set(FilterList
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
   EbsdToH5EbsdFilter
-  ReadEnsembleInfoFilter
-  WriteGBCDGMTFileFilter
-  WriteGBCDTriangleDataFilter
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
   FindBoundaryStrengthsFilter
@@ -62,16 +59,19 @@ set(FilterList
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
   GenerateQuaternionConjugateFilter
-  ReadH5EspritDataFilter
-  ReadH5OimDataFilter
-  WriteINLFileFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
   ReadCtfDataFilter
+  ReadEnsembleInfoFilter
   ReadH5EbsdFilter
+  ReadH5EspritDataFilter
+  ReadH5OimDataFilter
   RodriguesConvertorFilter
   RotateEulerRefFrameFilter
+  WriteGBCDGMTFileFilter
+  WriteGBCDTriangleDataFilter
+  WriteINLFileFilter
   WritePoleFigureFilter
   WriteStatsGenOdfAngleFileFilter
 )
@@ -167,9 +167,6 @@ set(filter_algorithms
   CreateEnsembleInfo
   EBSDSegmentFeatures
   EbsdToH5Ebsd
-  ReadEnsembleInfo
-  WriteGBCDGMTFile
-  WriteGBCDTriangleData
   FindAvgCAxes
   FindAvgOrientations
   FindBoundaryStrengths
@@ -192,16 +189,19 @@ set(filter_algorithms
   GenerateIPFColors
   GenerateQuaternionConjugate
   GroupFeatures
-  ReadH5EspritData
-  ReadH5OimData
-  WriteINLFile
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
   ReadCtfData
+  ReadEnsembleInfo
   ReadH5Ebsd
+  ReadH5EspritData
+  ReadH5OimData
   RodriguesConvertor
   RotateEulerRefFrame
+  WriteGBCDGMTFile
+  WriteGBCDTriangleData
+  WriteINLFile
   WritePoleFigure
   WriteStatsGenOdfAngleFile
 )
