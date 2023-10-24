@@ -4,6 +4,7 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -52,6 +53,11 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 {
   Parameters params;
 
+  params.insertSeparator(Parameters::Separator{"Seeded Randomness"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
+  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "PointSampleTriangleGeometry SeedValue"));
+
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   // Create the parameter descriptors that are needed for this filter
   // params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplesNumberType_Key, "Source for Number of Samples", "", 0, ChoicesParameter::Choices{"Manual", "Other Geometry"}));
@@ -83,6 +89,7 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
   //  params.linkParameters(k_SamplesNumberType_Key, k_NumberOfSamples_Key, 0);
   //  params.linkParameters(k_SamplesNumberType_Key, k_ParentGeometry_Key, 1);
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
+  params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
 
   return params;
 }
@@ -97,13 +104,6 @@ IFilter::UniquePointer PointSampleTriangleGeometryFilter::clone() const
 IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                           const std::atomic_bool& shouldCancel) const
 {
-
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
-  auto pNumberOfSamples = filterArgs.value<int32>(k_NumberOfSamples_Key);
   auto pUseMask = filterArgs.value<bool>(k_UseMask_Key);
   auto pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
   auto pTriangleAreasArrayPath = filterArgs.value<DataPath>(k_TriangleAreasArrayPath_Key);
@@ -112,6 +112,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupPath_Key);
   DataPath pVertexGroupDataPath = pVertexGeometryDataPath.createChildPath(pVertexGroupDataName);
+  auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
   PreflightResult preflightResult;
 
@@ -158,6 +159,11 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     return {nonstd::make_unexpected(std::move(errors))};
   }
 
+  {
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({pSeedArrayNameValue}));
+    resultOutputActions.value().appendAction(std::move(createAction));
+  }
+
   // Return both the resultOutputActions and the preflightUpdatedValues  LinkGeometryDataFilter via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -166,9 +172,14 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
 Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
+  auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
+  if(!filterArgs.value<bool>(k_UseSeed_Key))
+  {
+    seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
+  }
+
+  // Store Seed Value in Top Level Array
+  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   PointSampleTriangleGeometryInputs inputs;
 
@@ -181,6 +192,7 @@ Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStruc
   inputs.pVertexGeometryPath = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupPath_Key);
   inputs.pVertexGroupDataPath = inputs.pVertexGeometryPath.createChildPath(pVertexGroupDataName);
+  inputs.Seed = seed;
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
   for(const auto& selectedDataPath : inputs.pSelectedDataArrayPaths)
@@ -189,10 +201,6 @@ Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStruc
     createdDataPaths.push_back(createdDataPath);
   }
   inputs.pCreatedDataArrayPaths = createdDataPaths;
-
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
 
   return PointSampleTriangleGeometry(dataStructure, &inputs, shouldCancel, messageHandler)();
 }

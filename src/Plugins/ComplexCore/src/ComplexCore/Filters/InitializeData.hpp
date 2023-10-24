@@ -28,6 +28,9 @@ public:
   static inline constexpr StringLiteral k_InitType_Key = "init_type";
   static inline constexpr StringLiteral k_InitValue_Key = "init_value";
   static inline constexpr StringLiteral k_InitRange_Key = "init_range";
+  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
 
   enum class InitType : uint64
   {
@@ -99,6 +102,9 @@ protected:
    * @return Result<>
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+
+private:
+  uint64 m_Seed = 0;
 };
 } // namespace complex
 

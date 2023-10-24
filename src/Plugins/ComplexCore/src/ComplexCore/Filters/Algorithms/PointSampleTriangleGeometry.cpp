@@ -67,8 +67,7 @@ Result<> PointSampleTriangleGeometry::operator()()
   auto tupleShape = {static_cast<usize>(m_Inputs->pNumberOfSamples)};
   vertex.getVertexAttributeMatrix()->resizeTuples(tupleShape);
 
-  std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  std::mt19937_64 generator(seed);
+  std::mt19937_64 generator(m_Inputs->Seed);
   std::uniform_real_distribution<> distribution(0.0f, 1.0f);
 
   // Create the Triangle Ids vector and fill it from zero to size-1 incrementally

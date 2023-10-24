@@ -16,7 +16,6 @@ struct COMPLEXCORE_EXPORT FindFeatureClusteringInputValues
   int32 NumberOfBins;
   int32 PhaseNumber;
   bool RemoveBiasedFeatures;
-  bool UseSeed;
   uint64 SeedValue;
   DataPath EquivalentDiametersArrayPath;
   DataPath FeaturePhasesArrayPath;

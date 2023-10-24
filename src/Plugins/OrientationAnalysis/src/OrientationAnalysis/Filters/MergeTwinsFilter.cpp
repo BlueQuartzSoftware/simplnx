@@ -13,6 +13,8 @@
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
+#include <random>
+
 using namespace complex;
 
 namespace complex
@@ -53,8 +55,12 @@ Parameters MergeTwinsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Seeded Randomness"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
+  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "MergeTwins SeedValue"));
 
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNonContiguousNeighbors_Key, "Use Non-Contiguous Neighbors",
                                                                  "Whether to use a list of non-contiguous or contiguous neighbors for each feature when merging", false));
 
@@ -96,7 +102,9 @@ Parameters MergeTwinsFilter::parameters() const
       k_ActiveArrayName_Key, "Active",
       "The name of the array specifying if the Feature is still in the sample (true if the Feature is in the sample and false if it is not). At the end of the Filter, all Features will be Active",
       "Active"));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
 
   return params;
 }
@@ -123,6 +131,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   auto pNewCellFeatureAttributeMatrixNameValue = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewCellFeatureAttributeMatrixName_Key));
   auto pFeatureParentIdsArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
   auto pActiveArrayNameValue = pNewCellFeatureAttributeMatrixNameValue.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
@@ -192,6 +201,11 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
 
   dataStructure.validateNumberOfTuples(dataArrayPaths);
 
+  {
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({pSeedArrayNameValue}));
+    resultOutputActions.value().appendAction(std::move(createAction));
+  }
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -199,6 +213,15 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
 Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                        const std::atomic_bool& shouldCancel) const
 {
+  auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
+  if(!filterArgs.value<bool>(k_UseSeed_Key))
+  {
+    seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
+  }
+
+  // Store Seed Value in Top Level Array
+  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+
   MergeTwinsInputValues inputValues;
   GroupFeaturesInputValues groupInputValues;
 
@@ -216,6 +239,7 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.NewCellFeatureAttributeMatrixName = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewCellFeatureAttributeMatrixName_Key));
   inputValues.FeatureParentIdsArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
   inputValues.ActiveArrayName = inputValues.NewCellFeatureAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.Seed = seed;
 
   return MergeTwins(dataStructure, messageHandler, shouldCancel, &inputValues, &groupInputValues)();
 }

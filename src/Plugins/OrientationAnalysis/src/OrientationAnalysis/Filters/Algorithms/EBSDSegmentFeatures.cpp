@@ -43,14 +43,6 @@ Result<> EBSDSegmentFeatures::operator()()
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros
 
-  // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
-  auto totalPoints = m_QuatsArray->getNumberOfTuples();
-
-  const int64 rangeMin = 0;
-  const int64 rangeMax = static_cast<int64>(totalPoints - 1);
-  Int64Distribution distribution;
-  initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
-
   execute(gridGeom);
 
   IDataArray* activeArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->activeArrayPath);
@@ -60,9 +52,18 @@ Result<> EBSDSegmentFeatures::operator()()
     return {nonstd::make_unexpected(std::vector<Error>{Error{-87000, "The number of Features was 0 or 1 which means no Features were detected. A threshold value may be set too high"}})};
   }
 
-  // By default we randomize grains
+  // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
+  // allows users visualizing the data to better discern each grain otherwise the coloring
+  // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->shouldRandomizeFeatureIds)
   {
+    auto totalPoints = m_QuatsArray->getNumberOfTuples();
+
+    const int64 rangeMin = 0;
+    const auto rangeMax = static_cast<int64>(totalPoints - 1);
+    Int64Distribution distribution;
+    initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+
     totalPoints = gridGeom->getNumberOfCells();
     randomizeFeatureIds(m_FeatureIdsArray, totalPoints, totalFeatures, distribution);
   }

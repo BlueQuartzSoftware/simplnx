@@ -65,11 +65,10 @@ private:
 using SeedGenerator = std::mt19937_64;
 using Int64Distribution = std::uniform_int_distribution<int64>;
 // -----------------------------------------------------------------------------
-SeedGenerator initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax)
+SeedGenerator initializeStaticVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax)
 {
-  auto seed = static_cast<SeedGenerator::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   SeedGenerator generator;
-  generator.seed(seed);
+  generator.seed(SeedGenerator::default_seed);
   distribution = std::uniform_int_distribution<int64>(rangeMin, rangeMax);
 
   return generator;
@@ -81,7 +80,7 @@ void RandomizeFaceIds(complex::Int32Array& featureIds, uint64 totalFeatures, Int
   // Generate an even distribution of numbers between the min and max range
   const int64 rangeMin = 1;
   const int64 rangeMax = totalFeatures - 1;
-  auto generator = initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+  auto generator = initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
 
   DataStructure tmpStructure;
   auto rndNumbers = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
@@ -216,7 +215,7 @@ Result<> SharedFeatureFace::operator()()
     const int64 rangeMin = 0;
     const int64 rangeMax = static_cast<int64>(surfaceMeshFeatureFaceNumTriangles.getNumberOfTuples() - 1);
     Int64Distribution distribution;
-    initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+    initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
     ::RandomizeFaceIds(surfaceMeshFeatureFaceIds, index, distribution);
   }
   return {};

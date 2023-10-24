@@ -34,6 +34,7 @@ public:
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
   static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
 
   /**
