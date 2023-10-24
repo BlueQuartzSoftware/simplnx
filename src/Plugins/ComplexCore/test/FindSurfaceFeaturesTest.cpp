@@ -52,7 +52,6 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
   // Change Feature 470 to 0
   REQUIRE(dataStructure.getDataAs<Int32Array>(k_FeatureIDsPath) != nullptr);
-  // REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath));
   Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath);
   std::replace(featureIds.begin(), featureIds.end(), 470, 0);
 

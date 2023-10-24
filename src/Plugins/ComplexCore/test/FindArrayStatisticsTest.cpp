@@ -317,13 +317,9 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
-    std::cout << "Before Execution" << std::endl;
-
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
-
-    std::cout << "After Execution" << std::endl;
   }
 
   // Check resulting values

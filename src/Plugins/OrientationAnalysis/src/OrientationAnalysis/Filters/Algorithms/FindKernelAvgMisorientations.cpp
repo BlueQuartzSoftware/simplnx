@@ -210,7 +210,6 @@ Result<> FindKernelAvgMisorientations::operator()()
 
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
-  parallelAlgorithm.setParallelizationEnabled(false);
   parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(this, m_DataStructure, m_InputValues, m_ShouldCancel));
 
   return {};
