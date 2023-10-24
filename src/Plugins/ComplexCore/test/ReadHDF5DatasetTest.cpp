@@ -1,5 +1,5 @@
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ReadHDF5Dataset.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataArray.hpp"

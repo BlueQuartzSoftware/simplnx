@@ -23,7 +23,7 @@ class ORIENTATIONANALYSIS_EXPORT ReadH5EspritData : public ReadH5Data<H5EspritRe
 {
 public:
   ReadH5EspritData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues,
-                     ReadH5EspritDataInputValues* espritInputValues);
+                   ReadH5EspritDataInputValues* espritInputValues);
   ~ReadH5EspritData() noexcept override;
 
   ReadH5EspritData(const ReadH5EspritData&) = delete;

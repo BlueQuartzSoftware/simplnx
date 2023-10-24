@@ -23,7 +23,7 @@ class COMPLEXCORE_EXPORT ReadStlFile
 {
 public:
   ReadStlFile(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput, float32 scaleFactor,
-                const std::atomic_bool& shouldCancel);
+              const std::atomic_bool& shouldCancel);
   ~ReadStlFile() noexcept;
 
   ReadStlFile(const ReadStlFile&) = delete;
