@@ -41,7 +41,7 @@ Uuid ReadH5EbsdFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ReadH5EbsdFilter::humanName() const
 {
-  return "Import H5EBSD File";
+  return "Read H5EBSD File";
 }
 
 //------------------------------------------------------------------------------

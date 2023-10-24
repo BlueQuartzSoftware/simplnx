@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "EnsembleInfoReader.d3dpipeline",
+  "name": "ReadEnsembleInfo.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -98,7 +98,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::EnsembleInfoReaderFilter",
+        "name": "complex::ReadEnsembleInfoFilter",
         "uuid": "ecf1ec45-bc27-4ddb-b2c0-3d465b8c182a"
       },
       "isDisabled": false

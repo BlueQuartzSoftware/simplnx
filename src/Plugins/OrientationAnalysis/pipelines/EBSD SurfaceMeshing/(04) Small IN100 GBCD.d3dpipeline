@@ -183,7 +183,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ExportGBCDGMTFileFilter",
+        "name": "complex::WriteGBCDGMTFileFilter",
         "uuid": "31710abf-b8a6-423f-a03f-4b8885bd3633"
       },
       "isDisabled": false
@@ -198,7 +198,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ExportGBCDTriangleDataFilter",
+        "name": "complex::WriteGBCDTriangleDataFilter",
         "uuid": "6e0da3a1-dc42-4b01-80aa-3af9e8209ee3"
       },
       "isDisabled": false

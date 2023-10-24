@@ -46,7 +46,7 @@ Uuid ReadCtfDataFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ReadCtfDataFilter::humanName() const
 {
-  return "Import Oxford Instr. EBSD Data (.ctf)";
+  return "Read Oxford Instr. EBSD Data (.ctf)";
 }
 
 //------------------------------------------------------------------------------

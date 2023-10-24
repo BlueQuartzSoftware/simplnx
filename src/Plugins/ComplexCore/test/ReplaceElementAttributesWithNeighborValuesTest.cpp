@@ -19,7 +19,7 @@ const DataPath k_ConfidenceIndexPath = k_CellAttributeMatrix.createChildPath(Con
 const std::string k_ExemplarDataContainer2("DataContainer");
 } // namespace
 
-TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValuesFilter", "[OrientationAnalysis][ReplaceElementAttributesWithNeighborValuesFilter]")
+TEST_CASE("ComplexCore::ReplaceElementAttributesWithNeighborValuesFilter", "[ComplexCore][ReplaceElementAttributesWithNeighborValuesFilter]")
 {
 
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_replace_element_attributes_with_neighbor.tar.gz",

@@ -18,9 +18,9 @@
 // #include "OrientationAnalysis/Filters/FindTwinBoundarySchmidFactors.hpp"
 // #include "OrientationAnalysis/Filters/GenerateOrientationMatrixTranspose.hpp"
 // #include "OrientationAnalysis/Filters/ImportEbsdMontage.hpp"
-// #include "OrientationAnalysis/Filters/ImportH5EspritData.hpp"
-// #include "OrientationAnalysis/Filters/ImportH5OimData.hpp"
-// #include "OrientationAnalysis/Filters/INLWriter.hpp"
+// #include "OrientationAnalysis/Filters/ReadH5EspritData.hpp"
+// #include "OrientationAnalysis/Filters/ReadH5OimData.hpp"
+// #include "OrientationAnalysis/Filters/WriteINLFile.hpp"
 // #include "OrientationAnalysis/Filters/OrientationUtility.hpp"
 // #include "OrientationAnalysis/Filters/ReplaceElementAttributesWithNeighborValues.hpp"
 // #include "OrientationAnalysis/Filters/Stereographic3D.hpp"
@@ -34,9 +34,9 @@
 #include "OrientationAnalysis/Filters/ConvertQuaternionFilter.hpp"
 #include "OrientationAnalysis/Filters/CreateEnsembleInfoFilter.hpp"
 #include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
-#include "OrientationAnalysis/Filters/EnsembleInfoReaderFilter.hpp"
-#include "OrientationAnalysis/Filters/ExportGBCDGMTFileFilter.hpp"
-#include "OrientationAnalysis/Filters/ExportGBCDTriangleDataFilter.hpp"
+#include "OrientationAnalysis/Filters/ReadEnsembleInfoFilter.hpp"
+#include "OrientationAnalysis/Filters/WriteGBCDGMTFileFilter.hpp"
+#include "OrientationAnalysis/Filters/WriteGBCDTriangleDataFilter.hpp"
 #include "OrientationAnalysis/Filters/FindAvgCAxesFilter.hpp"
 #include "OrientationAnalysis/Filters/FindAvgOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/FindFeatureReferenceCAxisMisorientationsFilter.hpp"
@@ -52,8 +52,8 @@
 #include "OrientationAnalysis/Filters/GenerateGBCDPoleFigureFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateQuaternionConjugateFilter.hpp"
-#include "OrientationAnalysis/Filters/ImportH5EspritDataFilter.hpp"
-#include "OrientationAnalysis/Filters/ImportH5OimDataFilter.hpp"
+#include "OrientationAnalysis/Filters/ReadH5EspritDataFilter.hpp"
+#include "OrientationAnalysis/Filters/ReadH5OimDataFilter.hpp"
 #include "OrientationAnalysis/Filters/MergeTwinsFilter.hpp"
 #include "OrientationAnalysis/Filters/NeighborOrientationCorrelationFilter.hpp"
 #include "OrientationAnalysis/Filters/ReadAngDataFilter.hpp"
@@ -68,7 +68,7 @@
 #include "OrientationAnalysis/Filters/FindGBPDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/Filters/FindSlipTransmissionMetricsFilter.hpp"
 #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp"
-#include "OrientationAnalysis/Filters/INLWriterFilter.hpp"
+#include "OrientationAnalysis/Filters/WriteINLFileFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -83,11 +83,11 @@ namespace complex
     {complex::Uuid::FromString("1a0848da-2edd-52c0-b111-62a4dc6d2886").value(), complex::FilterTraits<FindFeatureReferenceCAxisMisorientationsFilter>::uuid}, // FindFeatureReferenceCAxisMisorientations
     {complex::Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value(), complex::FilterTraits<FindMisorientationsFilter>::uuid}, // FindMisorientations
     {complex::Uuid::FromString("2a0bfcd3-2517-5117-b164-964dfac8fe22").value(), complex::FilterTraits<CreateEnsembleInfoFilter>::uuid}, // CreateEnsembleInfoFilter
-    {complex::Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value(), complex::FilterTraits<EnsembleInfoReaderFilter>::uuid}, // EnsembleInfoReader
+    {complex::Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value(), complex::FilterTraits<ReadEnsembleInfoFilter>::uuid}, // ReadEnsembleInfo
     {complex::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), complex::FilterTraits<FindShapesFilter>::uuid}, // FindShapes
-    {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), complex::FilterTraits<ImportH5OimDataFilter>::uuid}, // ImportH5OimData
+    {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), complex::FilterTraits<ReadH5OimDataFilter>::uuid}, // ReadH5OimData
     {complex::Uuid::FromString("428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c").value(), complex::FilterTraits<FindFeatureReferenceMisorientationsFilter>::uuid}, // FindFeatureReferenceMisorientations
-    {complex::Uuid::FromString("433976f0-710a-5dcc-938e-fcde49cd842f").value(), complex::FilterTraits<ExportGBCDTriangleDataFilter>::uuid}, // ExportGBCDTriangleDataFilter
+    {complex::Uuid::FromString("433976f0-710a-5dcc-938e-fcde49cd842f").value(), complex::FilterTraits<WriteGBCDTriangleDataFilter>::uuid}, // WriteGBCDTriangleDataFilter
     {complex::Uuid::FromString("439e31b7-3198-5d0d-aef6-65a9e9c1a016").value(), complex::FilterTraits<ConvertQuaternionFilter>::uuid}, // ConvertQuaternion
     {complex::Uuid::FromString("4ef7f56b-616e-5a80-9e68-1da8f35ad235").value(), complex::FilterTraits<ReadH5EbsdFilter>::uuid}, // ReadH5Ebsd
     {complex::Uuid::FromString("4fb2b9de-3124-534b-b914-dbbbdbc14604").value(), complex::FilterTraits<AlignSectionsMisorientationFilter>::uuid}, // AlignSectionsMisorientation
@@ -99,7 +99,7 @@ namespace complex
     {complex::Uuid::FromString("7cd30864-7bcf-5c10-aea7-d107373e2d40").value(), complex::FilterTraits<GenerateFaceMisorientationColoringFilter>::uuid}, // GenerateFaceMisorientationColoring
     {complex::Uuid::FromString("85900eba-3da9-5985-ac71-1d9d290a5d31").value(), complex::FilterTraits<GenerateGBCDPoleFigureFilter>::uuid}, // VisualizeGBCDPoleFigureFilter
     {complex::Uuid::FromString("88d332c1-cf6c-52d3-a38d-22f6eae19fa6").value(), complex::FilterTraits<FindKernelAvgMisorientationsFilter>::uuid}, // FindKernelAvgMisorientations
-    {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), complex::FilterTraits<ImportH5EspritDataFilter>::uuid}, // ImportH5EspritData
+    {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), complex::FilterTraits<ReadH5EspritDataFilter>::uuid}, // ReadH5EspritData
     {complex::Uuid::FromString("9a6677a6-b9e5-5fee-afa2-27e868cab8ca").value(), complex::FilterTraits<GenerateFZQuaternions>::uuid}, // GenerateFZQuaternions
     {complex::Uuid::FromString("a10bb78e-fcff-553d-97d6-830a43c85385").value(), complex::FilterTraits<WritePoleFigureFilter>::uuid}, // WritePoleFigure
     {complex::Uuid::FromString("a2b62395-1a7d-5058-a840-752d8f8e2430").value(), complex::FilterTraits<RodriguesConvertorFilter>::uuid}, // RodriguesConvertor
@@ -114,19 +114,19 @@ namespace complex
     {complex::Uuid::FromString("e67ca06a-176f-58fc-a676-d6ee5553511a").value(), complex::FilterTraits<FindSchmidsFilter>::uuid}, // FindSchmids
     {complex::Uuid::FromString("ef9420b2-8c46-55f3-8ae4-f53790639de4").value(), complex::FilterTraits<RotateEulerRefFrameFilter>::uuid}, // RotateEulerRefFrame
     {complex::Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value(), complex::FilterTraits<BadDataNeighborOrientationCheckFilter>::uuid}, // BadDataNeighborOrientationCheck
-    {complex::Uuid::FromString("f62065b4-54e9-53b1-bed7-2178a57d3c7a").value(), complex::FilterTraits<ExportGBCDGMTFileFilter>::uuid}, // ExportGBCDGMTFileFilter
+    {complex::Uuid::FromString("f62065b4-54e9-53b1-bed7-2178a57d3c7a").value(), complex::FilterTraits<WriteGBCDGMTFileFilter>::uuid}, // WriteGBCDGMTFileFilter
     {complex::Uuid::FromString("00d20627-5b88-56ba-ac7a-fc2a4b337903").value(), complex::FilterTraits<FindGBPDMetricBasedFilter>::uuid}, // FindGBPDMetricBased
     // {complex::Uuid::FromString("17410178-4e5f-58b9-900e-8194c69200ab").value(), complex::FilterTraits<ReplaceElementAttributesWithNeighborValues>::uuid}, // ReplaceElementAttributesWithNeighborValues
     // {complex::Uuid::FromString("179b0c7a-4e62-5070-ba49-ae58d5ccbfe8").value(), complex::FilterTraits<ImportEbsdMontage>::uuid}, // ImportEbsdMontage
     // {complex::Uuid::FromString("1a0848da-2edd-52c0-b111-62a4dc6d2886").value(), complex::FilterTraits<FindFeatureReferenceCAxisMisorientations>::uuid}, // FindFeatureReferenceCAxisMisorientations
-    // {complex::Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value(), complex::FilterTraits<INLWriter>::uuid}, // INLWriter
+    // {complex::Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value(), complex::FilterTraits<WriteINLFile>::uuid}, // WriteINLFile
     // {complex::Uuid::FromString("3630623e-724b-5154-a060-a5fca4ecfff5").value(), complex::FilterTraits<Stereographic3D>::uuid}, // Stereographic3D
-    // {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), complex::FilterTraits<ImportH5OimData>::uuid}, // ImportH5OimData
+    // {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), complex::FilterTraits<ReadH5OimData>::uuid}, // ReadH5OimData
     // {complex::Uuid::FromString("5af9c1e6-ed6f-5672-9ae0-2b931344d729").value(), complex::FilterTraits<OrientationUtility>::uuid}, // OrientationUtility
     {complex::Uuid::FromString("68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e").value(), complex::FilterTraits<FindCAxisLocationsFilter>::uuid}, // FindCAxisLocations
     // {complex::Uuid::FromString("6e332fca-0475-5fec-821e-e01f668ec1d3").value(), complex::FilterTraits<EbsdToH5Ebsd>::uuid}, // EbsdToH5Ebsd
     {complex::Uuid::FromString("8071facb-8905-5699-b345-105ae4ac33ff").value(), complex::FilterTraits<FindBoundaryStrengthsFilter>::uuid}, // FindBoundaryStrengths
-    // {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), complex::FilterTraits<ImportH5EspritData>::uuid}, // ImportH5EspritData
+    // {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), complex::FilterTraits<ReadH5EspritData>::uuid}, // ReadH5EspritData
     // {complex::Uuid::FromString("94f986fc-1295-5e32-9808-752855fa658a").value(), complex::FilterTraits<FindDistsToCharactGBs>::uuid}, // FindDistsToCharactGBs
     {complex::Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value(), complex::FilterTraits<FindSlipTransmissionMetricsFilter>::uuid}, // FindSlipTransmissionMetrics
     // {complex::Uuid::FromString("a10124f3-05d0-5f49-93a0-e93926f5b48b").value(), complex::FilterTraits<FindTwinBoundaries>::uuid}, // FindTwinBoundaries
@@ -142,7 +142,7 @@ namespace complex
     // {complex::Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value(), complex::FilterTraits<GenerateOrientationMatrixTranspose>::uuid}, // GenerateOrientationMatrixTranspose
     {complex::Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value(), complex::FilterTraits<FindGBCDMetricBasedFilter>::uuid}, // FindGBCDMetricBased
     {complex::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), complex::FilterTraits<WriteStatsGenOdfAngleFileFilter>::uuid}, // WriteStatsGenOdfAngleFile
-    {complex::Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value(), complex::FilterTraits<INLWriterFilter>::uuid}, // INLWriter
+    {complex::Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value(), complex::FilterTraits<WriteINLFileFilter>::uuid}, // WriteINLFile
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

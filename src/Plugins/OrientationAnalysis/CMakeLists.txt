@@ -37,9 +37,9 @@ set(FilterList
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
   EbsdToH5EbsdFilter
-  EnsembleInfoReaderFilter
-  ExportGBCDGMTFileFilter
-  ExportGBCDTriangleDataFilter
+  ReadEnsembleInfoFilter
+  WriteGBCDGMTFileFilter
+  WriteGBCDTriangleDataFilter
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
   FindBoundaryStrengthsFilter
@@ -62,9 +62,9 @@ set(FilterList
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
   GenerateQuaternionConjugateFilter
-  ImportH5EspritDataFilter
-  ImportH5OimDataFilter
-  INLWriterFilter
+  ReadH5EspritDataFilter
+  ReadH5OimDataFilter
+  WriteINLFileFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
@@ -77,14 +77,10 @@ set(FilterList
 )
   
 set(STUB_FILTERS
-
-  # ConvertHexGridToSquareGrid # MISSING 1 or more Parameter Implementations
   CreateLambertSphere
   EMsoftSO3Sampler
-
   FindBoundaryStrengths
   FindDistsToCharactGBs
-
   FindKernelAvgMisorientations
   FindMisorientations
   FindSchmids
@@ -171,9 +167,9 @@ set(filter_algorithms
   CreateEnsembleInfo
   EBSDSegmentFeatures
   EbsdToH5Ebsd
-  EnsembleInfoReader
-  ExportGBCDGMTFile
-  ExportGBCDTriangleData
+  ReadEnsembleInfo
+  WriteGBCDGMTFile
+  WriteGBCDTriangleData
   FindAvgCAxes
   FindAvgOrientations
   FindBoundaryStrengths
@@ -196,9 +192,9 @@ set(filter_algorithms
   GenerateIPFColors
   GenerateQuaternionConjugate
   GroupFeatures
-  ImportH5EspritData
-  ImportH5OimData
-  INLWriter
+  ReadH5EspritData
+  ReadH5OimData
+  WriteINLFile
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
@@ -238,7 +234,7 @@ set(PLUGIN_EXTRA_SOURCES
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/inicpp.h"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.cpp"
-"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ImportH5Data.hpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ReadH5Data.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.cpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/Fonts.hpp"

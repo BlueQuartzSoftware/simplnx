@@ -16,9 +16,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
-  EnsembleInfoReaderTest.cpp
-  ExportGBCDGMTFileTest.cpp
-  ExportGBCDTriangleDataTest.cpp
+        ReadEnsembleInfoTest.cpp
+        WriteGBCDGMTFileTest.cpp
+        WriteGBCDTriangleDataTest.cpp
   FindAvgCAxesTest.cpp
   FindAvgOrientationsTest.cpp
   FindBoundaryStrengthsTest.cpp
@@ -41,9 +41,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   GenerateGBCDPoleFigureTest.cpp
   GenerateIPFColorsTest.cpp
   GenerateQuaternionConjugateTest.cpp
-  ImportH5EspritDataTest.cpp
-  ImportH5OimDataTest.cpp
-  INLWriterTest.cpp
+        ReadH5EspritDataTest.cpp
+        ReadH5OimDataTest.cpp
+        WriteINLFileTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
@@ -62,7 +62,7 @@ set(DISABLED_TESTS
   FindTwinBoundariesTest.cpp
   FindTwinBoundarySchmidFactorsTest.cpp
   GenerateOrientationMatrixTransposeTest.cpp
-  INLWriterTest.cpp
+        WriteINLFileTest.cpp
 
   # ImportEbsdMontageTest.cpp    # MISSING 1 or more Parameter Implementations
   ReplaceElementAttributesWithNeighborValuesTest.cpp

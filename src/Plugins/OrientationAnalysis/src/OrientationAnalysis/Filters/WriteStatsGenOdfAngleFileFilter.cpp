@@ -38,7 +38,7 @@ Uuid WriteStatsGenOdfAngleFileFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string WriteStatsGenOdfAngleFileFilter::humanName() const
 {
-  return "Export StatsGenerator ODF Angle File";
+  return "Write StatsGenerator ODF Angle File";
 }
 
 //------------------------------------------------------------------------------
