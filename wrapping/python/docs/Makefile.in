@@ -4,7 +4,7 @@
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINXOPTS    ?=
-SPHINXBUILD   ?= ${SPHINX_EXECUTABLE}
+SPHINXBUILD   ?= ${SPHINX_BUILD_EXECUTABLE}
 SOURCEDIR     = ${COMPLEX_SPHINX_DOCS_DIR}/source
 BUILDDIR      = ${COMPLEX_SPHINX_DOCS_DIR}/build
 
