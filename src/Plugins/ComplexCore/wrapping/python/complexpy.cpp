@@ -256,7 +256,7 @@ Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
   return result;
 }
 
-complex::DataPath CreateDataPath(const std::string& path)
+complex::DataPath CreateDataPath(std::string_view path)
 {
   auto result = DataPath::FromString(path);
   return result.value();
