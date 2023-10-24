@@ -5,13 +5,10 @@ import orientationanalysis as cxor
 
 import numpy as np
 
-# ------------------------------------------------------------------------------
-# Create a DataArray that is as long as my CSV file (99 Rows in this case)
-# ------------------------------------------------------------------------------
-# Create a Data Structure
+#Create a Data Structure
+data_structure = cx.DataStructure()
 
 #Filter 1
-data_structure = cx.DataStructure()
 
 import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"

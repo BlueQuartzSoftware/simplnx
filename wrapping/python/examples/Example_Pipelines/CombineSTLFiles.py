@@ -5,10 +5,7 @@ import orientationanalysis as cxor
 
 import numpy as np
 
-# ------------------------------------------------------------------------------
-# Create a DataArray that is as long as my CSV file (99 Rows in this case)
-# ------------------------------------------------------------------------------
-# Create a Data Structure
+#Create a Data Structure
 data_structure = cx.DataStructure()
 
 #Filter 1

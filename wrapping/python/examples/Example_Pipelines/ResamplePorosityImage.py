@@ -5,7 +5,7 @@ import orientationanalysis as cxor
 
 import numpy as np
 
-# Create a Data Structure
+#Create a Data Structure
 data_structure = cx.DataStructure()
 
 #Filter 1
@@ -37,8 +37,8 @@ result = cx.ResampleImageGeomFilter.execute(
     #cell_feature_attribute_matrix_path: DataPath = ...,
     #exact_dimensions: List[int] = ...,
     #feature_ids_path: DataPath = ...,
-    #new_data_container_path: DataPath = ...,
-    #remove_original_geometry: bool = ...,
+    new_data_container_path=cx.DataPath("Porosity_Image_Resampled_Spacing"),
+    remove_original_geometry=False,
     renumber_features=False,
     resampling_mode=0,
     #scaling: List[float] = ...,
@@ -51,8 +51,8 @@ result = cx.ResampleImageGeomFilter.execute(
     #cell_feature_attribute_matrix_path: DataPath = ...,
     #exact_dimensions: List[int] = ...,
     #feature_ids_path: DataPath = ...,
-    #new_data_container_path: DataPath = ...,
-    #remove_original_geometry: bool = ...,
+    new_data_container_path=cx.DataPath("Porosity_Image_Resampled_Scaled"),
+    remove_original_geometry=False,
     renumber_features=False,
     resampling_mode=1,
     scaling=[0.5, 0.5, 0.5],
@@ -65,8 +65,8 @@ result = cx.ResampleImageGeomFilter.execute(
     #cell_feature_attribute_matrix_path: DataPath = ...,
     exact_dimensions=[262, 195, 82],
     #feature_ids_path: DataPath = ...,
-    #new_data_container_path: DataPath = ...,
-    #remove_original_geometry: bool = ...,
+    new_data_container_path=cx.DataPath("Porosity_Image_Resampled_Exact_Dims"),
+    remove_original_geometry=False,
     renumber_features=False,
     resampling_mode=2,
     #scaling: List[float] = ...,
@@ -74,8 +74,12 @@ result = cx.ResampleImageGeomFilter.execute(
     #spacing: List[float] = ...
 )
 #Filter 5
-result =cx.ExportDREAM3DFilter.execute(
-    data_structure=data_structure,
-    export_file_path=cx.DataPath("Data/Output/ResamplePorosityImage.dream3d"),
-    write_xdmf_file=True,
-)
+output_file_path = "Data/Output/ResamplePorosityImage.dream3d"
+result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+                                        export_file_path=output_file_path, 
+                                        write_xdmf_file=True)
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running the filter")

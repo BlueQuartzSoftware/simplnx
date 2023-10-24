@@ -5,6 +5,7 @@ import orientationanalysis as cxor
 
 import numpy as np
 
+#Create a Data Structure
 data_structure = cx.DataStructure()
 
 #Filter 1
