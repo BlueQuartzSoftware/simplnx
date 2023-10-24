@@ -30,6 +30,7 @@ This is the abstract base class for all other objects that can be inserted into 
 DataStructure_ . It should never be used as the appropriate class from the list
 below should be used instead.
 
+.. _DataPath:
 
 DataPath
 ---------
@@ -59,8 +60,6 @@ any needed DataGroups.
 
    result = cx.CreateDataGroup.execute(data_structure=data_structure,
                                     Data_Object_Path=cx.DataPath(['Group']))
-
-.. _DataPath:
 
 
 .. _DataArray:
