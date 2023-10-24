@@ -335,11 +335,11 @@ function(cmpBuildDateRevisionString)
   cmake_parse_arguments(GVS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
   if(NOT DEFINED GVS_STRING_CLASS)
-    set(GVS_STRING_CLASS "QString")
+    set(GVS_STRING_CLASS "std::string")
   endif()
 
   if(NOT DEFINED GVS_STRING_INCLUDE)
-    set(GVS_STRING_INCLUDE "<QtCore/QString>")
+    set(GVS_STRING_INCLUDE "<string>")
   endif()
 
   if(0)
