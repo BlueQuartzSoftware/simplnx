@@ -77,7 +77,7 @@ IFilter::UniquePointer WriteGBCDGMTFileFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+                                                               const std::atomic_bool& shouldCancel) const
 {
   auto pPhaseOfInterestValue = filterArgs.value<int32>(k_PhaseOfInterest_Key);
   auto pMisorientationRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
@@ -119,7 +119,7 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
 
 //------------------------------------------------------------------------------
 Result<> WriteGBCDGMTFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                             const std::atomic_bool& shouldCancel) const
 {
   WriteGBCDGMTFileInputValues inputValues;
   inputValues.PhaseOfInterest = filterArgs.value<int32>(k_PhaseOfInterest_Key);

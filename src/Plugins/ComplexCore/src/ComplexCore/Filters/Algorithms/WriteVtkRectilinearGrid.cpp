@@ -221,7 +221,7 @@ struct WriteVtkDataArrayFunctor
 
 // -----------------------------------------------------------------------------
 WriteVtkRectilinearGrid::WriteVtkRectilinearGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                   WriteVtkRectilinearGridInputValues* inputValues)
+                                                 WriteVtkRectilinearGridInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

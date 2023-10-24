@@ -74,7 +74,7 @@ IFilter::UniquePointer WriteAvizoUniformCoordinateFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteAvizoUniformCoordinateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel) const
+                                                                          const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWriteBinaryFileValue = filterArgs.value<bool>(k_WriteBinaryFile_Key);
@@ -90,7 +90,7 @@ IFilter::PreflightResult WriteAvizoUniformCoordinateFilter::preflightImpl(const 
 
 //------------------------------------------------------------------------------
 Result<> WriteAvizoUniformCoordinateFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel) const
+                                                        const std::atomic_bool& shouldCancel) const
 {
   AvizoWriterInputValues inputValues;
 

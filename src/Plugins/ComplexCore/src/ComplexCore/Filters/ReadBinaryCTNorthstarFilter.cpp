@@ -397,7 +397,7 @@ IFilter::UniquePointer ReadBinaryCTNorthstarFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto pInputHeaderFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputHeaderFile_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -524,7 +524,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> ReadBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel) const
 {
   ReadBinaryCTNorthstarInputValues inputValues;
 

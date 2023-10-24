@@ -14,7 +14,7 @@ inline const int32 k_VolBinaryAllocateMismatch = -91504;
 
 // -----------------------------------------------------------------------------
 ReadVolumeGraphicsFile::ReadVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel,
-                                                   ReadVolumeGraphicsFileInputValues* inputValues)
+                                               ReadVolumeGraphicsFileInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

@@ -73,7 +73,7 @@ IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto pHourglassStiffnessValue = filterArgs.value<int32>(k_HourglassStiffness_Key);
   auto pJobNameValue = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
@@ -105,7 +105,7 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel) const
 {
   WriteAbaqusHexahedronInputValues inputValues;
 

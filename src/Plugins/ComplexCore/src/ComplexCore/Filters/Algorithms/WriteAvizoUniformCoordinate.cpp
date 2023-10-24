@@ -10,7 +10,7 @@ using namespace complex;
 
 // -----------------------------------------------------------------------------
 WriteAvizoUniformCoordinate::WriteAvizoUniformCoordinate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                           AvizoWriterInputValues* inputValues)
+                                                         AvizoWriterInputValues* inputValues)
 : AvizoWriter(dataStructure, mesgHandler, shouldCancel, inputValues)
 {
 }

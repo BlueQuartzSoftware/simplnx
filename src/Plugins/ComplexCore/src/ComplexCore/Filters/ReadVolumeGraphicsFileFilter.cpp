@@ -406,7 +406,7 @@ IFilter::UniquePointer ReadVolumeGraphicsFileFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                       const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pVGHeaderFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_VGHeaderFile_Key);
   auto pNewImageGeometryPathValue = filterArgs.value<DataPath>(k_NewImageGeometry_Key);
@@ -446,7 +446,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> ReadVolumeGraphicsFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel) const
 {
 
   ReadVolumeGraphicsFileInputValues inputValues;

@@ -784,8 +784,7 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-ReadDeformKeyFileV12::ReadDeformKeyFileV12(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               ReadDeformKeyFileV12InputValues* inputValues)
+ReadDeformKeyFileV12::ReadDeformKeyFileV12(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadDeformKeyFileV12InputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

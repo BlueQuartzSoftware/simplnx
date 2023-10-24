@@ -77,7 +77,7 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
 
 //------------------------------------------------------------------------------
 Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+                                         const std::atomic_bool& shouldCancel) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   auto writeXdmf = args.value<bool>(k_WriteXdmf);

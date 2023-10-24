@@ -76,7 +76,7 @@ IFilter::UniquePointer WriteFeatureDataCSVFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel) const
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   PreflightResult preflightResult;
 
@@ -89,7 +89,7 @@ IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStru
 
 //------------------------------------------------------------------------------
 Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key);
   auto pWriteNeighborListDataValue = filterArgs.value<bool>(k_WriteNeighborListData_Key);

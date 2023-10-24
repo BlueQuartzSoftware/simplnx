@@ -95,7 +95,7 @@ std::array<float, 6> CreateMinMaxCoords()
 } // End anonymous namespace
 
 ReadStlFile::ReadStlFile(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
-                             float32 scaleFactor, const std::atomic_bool& shouldCancel)
+                         float32 scaleFactor, const std::atomic_bool& shouldCancel)
 : m_DataStructure(data)
 , m_FilePath(std::move(stlFilePath))
 , m_GeometryDataPath(geometryPath)

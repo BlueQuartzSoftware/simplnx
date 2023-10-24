@@ -7,7 +7,7 @@ using namespace complex;
 
 // -----------------------------------------------------------------------------
 WriteGBCDTriangleData::WriteGBCDTriangleData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               WriteGBCDTriangleDataInputValues* inputValues)
+                                             WriteGBCDTriangleDataInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

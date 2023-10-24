@@ -90,7 +90,7 @@ IFilter::UniquePointer ReadDeformKeyFileV12Filter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pInputFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
 
@@ -170,7 +170,7 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
 
 //------------------------------------------------------------------------------
 Result<> ReadDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel) const
 {
   ReadDeformKeyFileV12InputValues inputValues;
 

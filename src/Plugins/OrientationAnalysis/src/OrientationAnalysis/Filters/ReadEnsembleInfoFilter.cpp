@@ -78,7 +78,7 @@ IFilter::UniquePointer ReadEnsembleInfoFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                               const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key).string();
   auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
@@ -129,7 +129,7 @@ IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructu
 
 //------------------------------------------------------------------------------
 Result<> ReadEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                             const std::atomic_bool& shouldCancel) const
 {
   ReadEnsembleInfoInputValues inputValues;
 

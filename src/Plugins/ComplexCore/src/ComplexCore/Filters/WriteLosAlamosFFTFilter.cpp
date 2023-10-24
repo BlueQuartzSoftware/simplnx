@@ -77,7 +77,7 @@ IFilter::UniquePointer WriteLosAlamosFFTFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteLosAlamosFFTFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                                const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -103,7 +103,7 @@ IFilter::PreflightResult WriteLosAlamosFFTFilter::preflightImpl(const DataStruct
 
 //------------------------------------------------------------------------------
 Result<> WriteLosAlamosFFTFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel) const
 {
   WriteLosAlamosFFTInputValues inputValues;
 

@@ -88,7 +88,7 @@ IFilter::UniquePointer ReadRawBinaryFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+                                                            const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pScalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
@@ -167,7 +167,7 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 
 //------------------------------------------------------------------------------
 Result<> ReadRawBinaryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+                                          const std::atomic_bool& shouldCancel) const
 {
   ReadRawBinaryInputValues inputValues;
 

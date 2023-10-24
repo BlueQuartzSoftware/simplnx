@@ -331,7 +331,7 @@ void deleteFile(const std::vector<std::string>& fileNames)
 
 // -----------------------------------------------------------------------------
 WriteAbaqusHexahedron::WriteAbaqusHexahedron(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               WriteAbaqusHexahedronInputValues* inputValues)
+                                             WriteAbaqusHexahedronInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

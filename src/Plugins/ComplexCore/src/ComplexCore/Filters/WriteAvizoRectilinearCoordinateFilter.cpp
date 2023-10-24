@@ -74,7 +74,7 @@ IFilter::UniquePointer WriteAvizoRectilinearCoordinateFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteAvizoRectilinearCoordinateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                               const std::atomic_bool& shouldCancel) const
+                                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWriteBinaryFileValue = filterArgs.value<bool>(k_WriteBinaryFile_Key);
@@ -90,7 +90,7 @@ IFilter::PreflightResult WriteAvizoRectilinearCoordinateFilter::preflightImpl(co
 
 //------------------------------------------------------------------------------
 Result<> WriteAvizoRectilinearCoordinateFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                            const std::atomic_bool& shouldCancel) const
 {
   AvizoWriterInputValues inputValues;
 

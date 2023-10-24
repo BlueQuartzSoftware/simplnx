@@ -95,7 +95,7 @@ IFilter::UniquePointer ReadStlFileFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+                                                          const std::atomic_bool& shouldCancel) const
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryName_Key);
@@ -172,7 +172,7 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
 
 //------------------------------------------------------------------------------
 Result<> ReadStlFileFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+                                        const std::atomic_bool& shouldCancel) const
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryName_Key);
