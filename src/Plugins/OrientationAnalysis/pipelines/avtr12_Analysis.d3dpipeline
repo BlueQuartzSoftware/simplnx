@@ -127,13 +127,13 @@
         "cell_ipf_colors_array_name": "IPF_001",
         "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
         "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
-        "good_voxels_array_path": "",
+        "mask_array_path": "",
         "reference_dir": [
           0.0,
           0.0,
           1.0
         ],
-        "use_good_voxels": false
+        "use_mask": false
       },
       "comments": "",
       "filter": {
@@ -163,13 +163,13 @@
         "cell_ipf_colors_array_name": "IPF_010",
         "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
         "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
-        "good_voxels_array_path": "",
+        "mask_array_path": "",
         "reference_dir": [
           0.0,
           1.0,
           0.0
         ],
-        "use_good_voxels": false
+        "use_mask": false
       },
       "comments": "",
       "filter": {
@@ -199,13 +199,13 @@
         "cell_ipf_colors_array_name": "IPF_100",
         "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
         "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
-        "good_voxels_array_path": "",
+        "mask_array_path": "",
         "reference_dir": [
           1.0,
           0.0,
           0.0
         ],
-        "use_good_voxels": false
+        "use_mask": false
       },
       "comments": "",
       "filter": {
@@ -236,12 +236,12 @@
         "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
         "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
-        "good_voxels_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray",
+        "mask_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray",
         "grid_geometry_path": "fw-ar-IF1-avtr12-corr",
         "misorientation_tolerance": 5.0,
         "quats_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
         "randomize_features": false,
-        "use_good_voxels": true
+        "use_mask": true
       },
       "comments": "",
       "filter": {

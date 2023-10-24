@@ -55,11 +55,11 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_WriteAlignmentShifts_Key, std::make_any<bool>(true));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
-    args.insertOrAssign(AlignSectionsMutualInformationFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
+    args.insertOrAssign(AlignSectionsMutualInformationFilter::k_UseMask_Key, std::make_any<bool>(true));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
-    args.insertOrAssign(AlignSectionsMutualInformationFilter::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+    args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
 
     // Preflight the filter and check result
@@ -165,17 +165,17 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: InValid fi
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_AlignmentShiftFileName_Key,
                       std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/AlignSectionsMutualInformation_2.txt", unit_test::k_BinaryDir))));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
-  args.insertOrAssign(AlignSectionsMutualInformationFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
+  args.insertOrAssign(AlignSectionsMutualInformationFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
-  args.insertOrAssign(AlignSectionsMutualInformationFilter::k_GoodVoxelsArrayPath_Key,
+  args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MaskArrayPath_Key,
                       std::make_any<DataPath>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData, Constants::k_ActiveName})));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
 
   SECTION("Mismatching cell data tuples")
   {
-    args.insertOrAssign(AlignSectionsMutualInformationFilter::k_GoodVoxelsArrayPath_Key,
+    args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MaskArrayPath_Key,
                         std::make_any<DataPath>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData, Constants::k_ActiveName})));
   }
 

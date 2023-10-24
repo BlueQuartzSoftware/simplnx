@@ -28,10 +28,10 @@ public:
   static inline constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
   static inline constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
   static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
-  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
 

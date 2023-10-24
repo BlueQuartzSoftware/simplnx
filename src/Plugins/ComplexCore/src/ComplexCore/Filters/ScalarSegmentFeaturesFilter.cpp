@@ -67,10 +67,10 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Segmentation Parameters"});
   params.insert(std::make_unique<NumberParameter<int>>(k_ScalarToleranceKey, "Scalar Tolerance", "Tolerance for segmenting input Cell Data", 1));
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatures_Key, "Randomize Feature IDs", "Specifies if feature IDs should be randomized during calculations", false));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxelsKey, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsPath_Key, "Mask", "Path to the DataArray Mask", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean},
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the DataArray Mask", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.linkParameters(k_UseGoodVoxelsKey, k_GoodVoxelsPath_Key, std::make_any<bool>(true));
+  params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, std::make_any<bool>(true));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_GridGeomPath_Key, "Grid Geometry", "DataPath to target Grid Geometry", DataPath{}));
@@ -102,11 +102,11 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   auto activeArrayName = args.value<std::string>(k_ActiveArrayPathKey);
   DataPath featureIdsPath = inputDataPath.getParent().createChildPath(featureIdsName);
 
-  bool useGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
+  bool useGoodVoxels = args.value<bool>(k_UseMask_Key);
   DataPath goodVoxelsPath;
   if(useGoodVoxels)
   {
-    goodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPath_Key);
+    goodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
   }
 
   auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
@@ -193,8 +193,8 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arg
   inputValues.pScalarTolerance = args.value<int>(k_ScalarToleranceKey);
   inputValues.pShouldRandomizeFeatureIds = args.value<bool>(k_RandomizeFeatures_Key);
   inputValues.pFeatureIdsPath = inputValues.pInputDataPath.getParent().createChildPath(args.value<std::string>(k_FeatureIdsPathKey));
-  inputValues.pUseGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
-  inputValues.pGoodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPath_Key);
+  inputValues.pUseGoodVoxels = args.value<bool>(k_UseMask_Key);
+  inputValues.pGoodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.pGridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
   inputValues.pCellFeaturesPath = inputValues.pGridGeomPath.createChildPath(args.value<std::string>(k_CellFeaturePathKey));
   inputValues.pActiveArrayPath = inputValues.pCellFeaturesPath.createChildPath(args.value<std::string>(k_ActiveArrayPathKey));

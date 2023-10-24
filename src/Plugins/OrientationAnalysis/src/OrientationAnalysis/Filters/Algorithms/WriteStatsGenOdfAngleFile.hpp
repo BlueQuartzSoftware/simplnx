@@ -18,10 +18,10 @@ struct ORIENTATIONANALYSIS_EXPORT WriteStatsGenOdfAngleFileInputValues
   int32 Sigma;
   ChoicesParameter::ValueType Delimiter;
   bool ConvertToDegrees;
-  bool UseGoodVoxels;
+  bool UseMask;
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
-  DataPath GoodVoxelsArrayPath;
+  DataPath MaskArrayPath;
 };
 
 /**

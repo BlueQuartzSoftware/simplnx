@@ -146,7 +146,6 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
                     std::to_string(pSkipHeaderBytesValue), pInputFileValue.string()))};
   }
 
-
   // Create the CreateArray action and add it to the resultOutputActions object
   {
     auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), tupleDims, std::vector<usize>{pNumberOfComponentsValue}, pCreatedAttributeArrayPathValue);

@@ -29,7 +29,7 @@ public:
   static inline constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
   static inline constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
   static inline constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
   static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 

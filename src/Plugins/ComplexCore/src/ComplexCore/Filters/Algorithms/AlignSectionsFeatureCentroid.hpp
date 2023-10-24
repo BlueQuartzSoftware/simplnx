@@ -17,7 +17,7 @@ struct COMPLEXCORE_EXPORT AlignSectionsFeatureCentroidInputValues
   FileSystemPathParameter::ValueType AlignmentShiftFileName;
   bool UseReferenceSlice;
   int32 ReferenceSlice;
-  DataPath GoodVoxelsArrayPath;
+  DataPath MaskArrayPath;
   DataPath inputImageGeometry;
   DataPath cellDataGroupPath;
 };

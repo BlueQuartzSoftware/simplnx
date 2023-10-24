@@ -14,12 +14,12 @@ namespace complex
 struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
 {
   float32 MisorientationTolerance;
-  bool UseGoodVoxels;
+  bool UseMask;
   bool RandomizeFeatureIds;
   DataPath ImageGeometryPath;
   DataPath QuatsArrayPath;
   DataPath CellPhasesArrayPath;
-  DataPath GoodVoxelsArrayPath;
+  DataPath MaskArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath FeatureIdsArrayName;
   DataPath CellFeatureAttributeMatrixName;

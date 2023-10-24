@@ -216,9 +216,9 @@ struct GenerateColorArrayFunctor
     auto& colorArray = dataStructure.getDataRefAs<UInt8Array>(rgbArrayPath);
 
     complex::IDataArray* goodVoxelsArray = nullptr;
-    if(inputValues->UseGoodVoxels)
+    if(inputValues->UseMask)
     {
-      goodVoxelsArray = dataStructure.getDataAs<IDataArray>(inputValues->GoodVoxelsArrayPath);
+      goodVoxelsArray = dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath);
     }
 
     ParallelDataAlgorithm dataAlg;

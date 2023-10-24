@@ -13,9 +13,9 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT GenerateVectorColorsInputValues
 {
-  bool UseGoodVoxels;
+  bool UseMask;
   DataPath VectorsArrayPath;
-  DataPath GoodVoxelsArrayPath;
+  DataPath MaskArrayPath;
   DataPath CellVectorColorsArrayPath;
 };
 

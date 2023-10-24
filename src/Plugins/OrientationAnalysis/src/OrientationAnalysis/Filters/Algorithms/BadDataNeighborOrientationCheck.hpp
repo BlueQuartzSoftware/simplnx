@@ -13,7 +13,7 @@
   inputValues.MisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   inputValues.NumberOfNeighbors = filterArgs.value<int32>(k_NumberOfNeighbors_Key);
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  inputValues.GoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
@@ -29,7 +29,7 @@ struct ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckInputValues
   int32 NumberOfNeighbors;
   DataPath ImageGeomPath;
   DataPath QuatsArrayPath;
-  DataPath GoodVoxelsArrayPath;
+  DataPath MaskArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
 };

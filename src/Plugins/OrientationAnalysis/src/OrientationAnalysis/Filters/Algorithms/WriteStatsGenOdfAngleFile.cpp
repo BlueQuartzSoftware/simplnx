@@ -48,9 +48,9 @@ Result<> WriteStatsGenOdfAngleFile::operator()()
 
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   BoolArray* maskPtr = nullptr;
-  if(m_InputValues->UseGoodVoxels)
+  if(m_InputValues->UseMask)
   {
-    maskPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->GoodVoxelsArrayPath);
+    maskPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->MaskArrayPath);
   }
 
   // Figure out how many unique phase values we have by looping over all the phase values
@@ -107,7 +107,7 @@ int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPh
   {
     if(cellPhases[i] == phase)
     {
-      if(!m_InputValues->UseGoodVoxels || (m_InputValues->UseGoodVoxels && (*mask)[i]))
+      if(!m_InputValues->UseMask || (m_InputValues->UseMask && (*mask)[i]))
       {
         lineCount++;
       }
@@ -147,7 +147,7 @@ Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const In
 
     if(cellPhases[i] == phase)
     {
-      if(!m_InputValues->UseGoodVoxels || (m_InputValues->UseGoodVoxels && (*mask)[i]))
+      if(!m_InputValues->UseMask || (m_InputValues->UseMask && (*mask)[i]))
       {
         writeLine = true;
       }

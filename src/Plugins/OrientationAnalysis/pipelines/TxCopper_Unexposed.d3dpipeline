@@ -116,13 +116,13 @@
         "cell_ipf_colors_array_name": "IPF_Unexposed_001",
         "cell_phases_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases",
         "crystal_structures_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures",
-        "good_voxels_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",
+        "mask_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",
         "reference_dir": [
           0.0,
           0.0,
           1.0
         ],
-        "use_good_voxels": true
+        "use_mask": true
       },
       "comments": "",
       "filter": {
@@ -152,7 +152,7 @@
         "cell_phases_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases",
         "crystal_structures_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures",
         "generation_algorithm": 0,
-        "good_voxels_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",
+        "mask_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",
         "image_geometry_path": "PoleFigure",
         "image_layout": 2,
         "image_prefix": "Cugrid_after 2nd_15kv_2kx_2_Unexposed_",
@@ -163,7 +163,7 @@
         "output_path": "Data/Output/TexturedCopper",
         "save_as_image_geometry": true,
         "title": "Cugrid_after 2nd_15kv_2kx_2 Unexposed",
-        "use_good_voxels": true,
+        "use_mask": true,
         "write_image_to_disk": true
       },
       "comments": "",

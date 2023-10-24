@@ -31,8 +31,8 @@ public:
   static inline constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
   static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar_tolerance";
   static inline constexpr StringLiteral k_InputArrayPathKey = "input_array_path";
-  static inline constexpr StringLiteral k_UseGoodVoxelsKey = "use_mask";
-  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "mask_path";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_path";
   static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature_ids_path";
   static inline constexpr StringLiteral k_CellFeaturePathKey = "cell_feature_group_path";
   static inline constexpr StringLiteral k_ActiveArrayPathKey = "active_array_path";
