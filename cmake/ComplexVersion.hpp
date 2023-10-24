@@ -47,4 +47,4 @@ private:
   int m_MinorNum = -1;
   int m_PatchNum = -1;
 };
-} // namespace DREAM3DNX::Version
+} // namespace complex::Version
