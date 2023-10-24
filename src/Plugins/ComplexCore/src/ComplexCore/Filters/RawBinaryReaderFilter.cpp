@@ -146,19 +146,21 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
                     std::to_string(pSkipHeaderBytesValue), pInputFileValue.string()))};
   }
 
-  usize numTuples = totalElements / pNumberOfComponentsValue;
-
-  size_t tupleCountFromTable = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
-  if(numTuples != tupleCountFromTable)
-  {
-    return {MakeErrorResult<OutputActions>(k_RbrTupleDimsInconsistent, fmt::format("Total Tuples based on file '{}' does not match total tuples entered. '{}' ", numTuples, tupleCountFromTable))};
-  }
 
   // Create the CreateArray action and add it to the resultOutputActions object
   {
     auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), tupleDims, std::vector<usize>{pNumberOfComponentsValue}, pCreatedAttributeArrayPathValue);
 
     resultOutputActions.value().appendAction(std::move(action));
+  }
+
+  usize numTuples = totalElements / pNumberOfComponentsValue;
+  size_t tupleCountFromTable = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
+  if(numTuples != tupleCountFromTable)
+  {
+    const std::string warningMessage = fmt::format("Total Tuples based on file '{}' does not match total tuples entered. '{}'. Reading a subsection of the file.", numTuples, tupleCountFromTable);
+
+    resultOutputActions.warnings().push_back({k_RbrTupleDimsInconsistent, warningMessage});
   }
 
   return {std::move(resultOutputActions)};
