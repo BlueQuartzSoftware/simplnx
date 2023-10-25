@@ -9,6 +9,9 @@
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -146,5 +149,35 @@ Result<> FindVertexToTriangleDistancesFilter::executeImpl(DataStructure& dataStr
   inputValues.TriBoundsDataPath = DataPath({::k_TriangleBounds});
 
   return FindVertexToTriangleDistances(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_VertexDataContainerKey = "VertexDataContainer";
+constexpr StringLiteral k_TriangleDataContainerKey = "TriangleDataContainer";
+constexpr StringLiteral k_TriangleNormalsArrayPathKey = "TriangleNormalsArrayPath";
+constexpr StringLiteral k_DistancesArrayPathKey = "DistancesArrayPath";
+constexpr StringLiteral k_ClosestTriangleIdArrayPathKey = "ClosestTriangleIdArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindVertexToTriangleDistancesFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindVertexToTriangleDistancesFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_VertexDataContainerKey, k_VertexDataContainer_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerKey, k_TriangleDataContainer_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleNormalsArrayPathKey, k_TriangleNormalsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_DistancesArrayPathKey, k_DistancesArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_ClosestTriangleIdArrayPathKey, k_ClosestTriangleIdArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

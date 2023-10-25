@@ -14,6 +14,8 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <random>
 
 using namespace complex;
@@ -190,5 +192,54 @@ Result<> FindFeatureClusteringFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.MaxMinArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_MaxMinArrayName_Key));
 
   return FindFeatureClustering(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_NumberOfBinsKey = "NumberOfBins";
+constexpr StringLiteral k_PhaseNumberKey = "PhaseNumber";
+constexpr StringLiteral k_RemoveBiasedFeaturesKey = "RemoveBiasedFeatures";
+constexpr StringLiteral k_UseRandomSeedKey = "UseRandomSeed";
+constexpr StringLiteral k_RandomSeedValueKey = "RandomSeedValue";
+constexpr StringLiteral k_EquivalentDiametersArrayPathKey = "EquivalentDiametersArrayPath";
+constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
+constexpr StringLiteral k_BiasedFeaturesArrayPathKey = "BiasedFeaturesArrayPath";
+constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteral k_ClusteringListArrayNameKey = "ClusteringListArrayName";
+constexpr StringLiteral k_NewEnsembleArrayArrayNameKey = "NewEnsembleArrayArrayName";
+constexpr StringLiteral k_MaxMinArrayNameKey = "MaxMinArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindFeatureClusteringFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindFeatureClusteringFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumberOfBinsKey, k_NumberOfBins_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_PhaseNumberKey, k_PhaseNumber_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_RemoveBiasedFeaturesKey, k_RemoveBiasedFeatures_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseRandomSeedKey, k_SetRandomSeed_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64FilterParameterConverter>(args, json, SIMPL::k_RandomSeedValueKey, k_SeedValue_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_EquivalentDiametersArrayPathKey, k_SelectedImageGeometry_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_EquivalentDiametersArrayPathKey, k_EquivalentDiametersArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_BiasedFeaturesArrayPathKey, k_BiasedFeaturesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey,
+                                                                                                                         k_CellEnsembleAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ClusteringListArrayNameKey, k_ClusteringListArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewEnsembleArrayArrayNameKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MaxMinArrayNameKey, k_MaxMinArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

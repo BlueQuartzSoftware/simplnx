@@ -16,6 +16,7 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GenerateColorTableParameter.hpp"
+#include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
@@ -312,6 +313,76 @@ struct ScalarTypeParameterConverter
     }
     case 11: {
       return {DataType::uint64};
+    }
+    }
+
+    return MakeErrorResult<ValueType>(-2, fmt::format("Unknown ScalarTypeParameter value '{}'", value));
+  }
+};
+
+struct NumericTypeFilterParameterConverter
+{
+  using ParameterType = NumericTypeParameter;
+  using ValueType = ParameterType::ValueType;
+
+  /**
+  {
+    int8,
+    uint8,
+    int16,
+    uint16,
+    int32,
+    uint32,
+    int64,
+    uint64,
+    float32,
+    float64
+  };
+  */
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("NumericTypeParameter json '{}' is not an integer", json.dump()));
+    }
+
+    auto value = json.get<int32>();
+
+    switch(value)
+    {
+    case 0: {
+      return {NumericType::int8};
+    }
+    case 1: {
+      return {NumericType::uint8};
+    }
+    case 2: {
+      return {NumericType::int16};
+    }
+    case 3: {
+      return {NumericType::uint16};
+    }
+    case 4: {
+      return {NumericType::int32};
+    }
+    case 5: {
+      return {NumericType::uint32};
+    }
+    case 6: {
+      return {NumericType::int64};
+    }
+    case 7: {
+      return {NumericType::uint64};
+    }
+    case 8: {
+      return {NumericType::float32};
+    }
+    case 9: {
+      return {NumericType::float64};
+    }
+    case 10: {
+      return {NumericType::uint64};
     }
     }
 
@@ -644,8 +715,57 @@ struct Vec3FilterParameterConverter
 
 using IntVec3FilterParameterConverter = Vec3FilterParameterConverter<int32>;
 using UInt64Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint64>;
+using UInt64Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint64>;
 using FloatVec3FilterParameterConverter = Vec3FilterParameterConverter<float32>;
 using DoubleVec3FilterParameterConverter = Vec3FilterParameterConverter<float64>;
+
+template <typename T>
+struct Vec4FilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    static const std::string x = "x";
+    static const std::string y = "y";
+    static const std::string z = "z";
+    static const std::string w = "w";
+
+    if(!json.is_object())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("Vec4FilterParameter json '{}' is not an object", json.dump()));
+    }
+
+    if(!json.contains(x))
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("Vec4FilterParameter json '{}' does not contain an X value", json.dump()));
+    }
+    if(!json.contains(y))
+    {
+      return MakeErrorResult<ValueType>(-3, fmt::format("Vec4FilterParameter json '{}' does not contain a Y value", json.dump()));
+    }
+    if(!json.contains(z))
+    {
+      return MakeErrorResult<ValueType>(-4, fmt::format("Vec4FilterParameter json '{}' does not contain an Z value", json.dump()));
+    }
+    if(!json.contains(w))
+    {
+      return MakeErrorResult<ValueType>(-4, fmt::format("Vec4FilterParameter json '{}' does not contain an W value", json.dump()));
+    }
+
+    std::vector<T> value(4);
+    value[0] = json[x].get<T>();
+    value[1] = json[y].get<T>();
+    value[2] = json[z].get<T>();
+    value[3] = json[w].get<T>();
+
+    return {std::move(value)};
+  }
+};
+
+using FloatVec4FilterParameterConverter = Vec4FilterParameterConverter<float32>;
+using AxisAngleFilterParameterConverter = Vec4FilterParameterConverter<float32>;
 
 template <typename T>
 struct Vec3p1FilterParameterConverter
@@ -795,7 +915,7 @@ struct StringToDataPathFilterParameterConverter
   {
     if(!json.is_string())
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("LinkedPathCreationFilterParameterConverter json '{}' is not a string", json.dump()));
+      return MakeErrorResult<ValueType>(-1, fmt::format("StringToDataPathFilterParameterConverter json '{}' is not a string", json.dump()));
     }
 
     DataPath dataPath({json.get<std::string>()});
@@ -961,6 +1081,34 @@ struct MultiDataArraySelectionFilterParameterConverter
     }
 
     return {std::move(dataPaths)};
+  }
+};
+
+struct DataContainerFromMultiSelectionFilterParameterConverter
+{
+  using ParameterType = DataGroupSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("DataContainerFromMultiSelectionFilterParameterConverter json '{}' is not an array", json.dump()));
+    }
+
+    for(auto& iter : json)
+    {
+      auto dataContainerNameResult = ReadDataContainerName(iter, "DataContainerSelectionFilterParameter");
+      if(dataContainerNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+      }
+      DataPath value({std::move(dataContainerNameResult.value())});
+
+      return {std::move(value)};
+    }
+
+    return {DataPath()};
   }
 };
 
@@ -1162,6 +1310,25 @@ struct OutputFileFilterParameterConverter
     return {filePathReult.value()};
   }
 };
+
+#if 0
+struct FileListInfoFilterParameterConverter
+{
+  using ParameterType = GeneratedFileListParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    auto filePathReult = ReadInputFilePath(json, "OutputFileFilterParameter");
+    if(filePathReult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(filePathReult));
+    }
+
+    return {filePathReult.value()};
+  }
+};
+#endif
 
 #if 0
 struct GenerateColorTableFilterParameterConverter

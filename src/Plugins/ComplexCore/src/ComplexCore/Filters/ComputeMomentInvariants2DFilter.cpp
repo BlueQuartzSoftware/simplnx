@@ -10,6 +10,9 @@
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -151,5 +154,40 @@ Result<> ComputeMomentInvariants2DFilter::executeImpl(DataStructure& dataStructu
   }
 
   return ComputeMomentInvariants2D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_FeatureRectArrayPathKey = "FeatureRectArrayPath";
+constexpr StringLiteral k_NormalizeMomentInvariantsKey = "NormalizeMomentInvariants";
+constexpr StringLiteral k_Omega1ArrayPathKey = "Omega1ArrayPath";
+constexpr StringLiteral k_Omega2ArrayPathKey = "Omega2ArrayPath";
+constexpr StringLiteral k_SaveCentralMomentsKey = "SaveCentralMoments";
+constexpr StringLiteral k_CentralMomentsArrayPathKey = "CentralMomentsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ComputeMomentInvariants2DFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ComputeMomentInvariants2DFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureRectArrayPathKey, k_FeatureRectArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_NormalizeMomentInvariantsKey, k_NormalizeMomentInvariants_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_Omega1ArrayPathKey, k_FeatureAttributeMatrixPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_Omega1ArrayPathKey, k_Omega1ArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_Omega2ArrayPathKey, k_Omega2ArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveCentralMomentsKey, k_SaveCentralMoments_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_CentralMomentsArrayPathKey, k_CentralMomentsArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
