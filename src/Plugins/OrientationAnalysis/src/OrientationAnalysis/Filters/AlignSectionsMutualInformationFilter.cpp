@@ -10,6 +10,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -130,6 +131,10 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   {
     return {MakeErrorResult<OutputActions>(-3542, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
+
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPathValue.getParent(), {});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

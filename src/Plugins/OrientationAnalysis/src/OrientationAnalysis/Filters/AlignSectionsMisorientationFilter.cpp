@@ -10,6 +10,7 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <filesystem>
 
@@ -167,6 +168,10 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   {
     return {MakeErrorResult<OutputActions>(k_OutputFilePathEmpty, "Write Alignment Shifts is TRUE but the output file path is empty. Please ensure the file path is set for the alignment file.")};
   }
+
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

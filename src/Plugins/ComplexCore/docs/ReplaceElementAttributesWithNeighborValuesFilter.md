@@ -12,8 +12,8 @@ maximum or minimum value. The attributes of the neighbor with the maximum/minimu
 reference **Cell**.
 
 *Note:* By default, the **Filter** will run only one iteration of the cleanup. If the user selects the *Loop Until Gone*
-option, then the **Filter** will run iteratively until no **Cells** exist that meet the users criteria. So, if a **Cell
-** meets the threshold and so are all of its neighbors, then that **Cell** will not be changed during that iteration and
+option, then the **Filter** will run iteratively until no **Cells** exist that meet the users criteria. So, if a **Cell**
+meets the threshold and so are all of its neighbors, then that **Cell** will not be changed during that iteration and
 will remain unchanged until one of its neighbors gets changed by a **Cell** further away.
 
 ## Examples

@@ -28,7 +28,7 @@ public:
   static inline constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
   static inline constexpr StringLiteral k_SelectedComparison_Key = "selected_comparison";
   static inline constexpr StringLiteral k_Loop_Key = "loop";
-  static inline constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "confidence_index_array_path";
+  static inline constexpr StringLiteral k_ComparisonDataPath = "comparison_data_path";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**
