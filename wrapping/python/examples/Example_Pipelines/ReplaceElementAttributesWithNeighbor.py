@@ -90,3 +90,36 @@ result = cx.CropImageGeometry.execute(
     selected_image_geometry=cx.DataPath("DataContainer"),
     update_origin=False,
 )
+#Filter 7
+
+result = cxor.GenerateIPFColorsFilter.execute(
+    data_structure=data_structure,
+    cell_euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
+    cell_ipf_colors_array_name=("IPFColors"),
+    cell_phases_array_path=cx.DataPath("DataContainer/Cell Data/Phases"),
+    crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    good_voxels_array_path=cx.DataPath("DataContainer/Cell Data/Mask"),
+    reference_dir=[0.0, 0.0, 1.0],
+    use_good_voxels=True,
+)
+#Filter 8
+
+result = cx.ReplaceElementAttributesWithNeighborValuesFilter.execute(
+    data_structure=data_structure,
+    confidence_index_array_path=cx.DataPath("DataContainer/Cell Data/Confidence Index"),
+    loop=True,
+    min_confidence=0.1,
+    selected_comparison=0,
+    selected_image_geometry=cx.DataPath("DataContainer"),
+)
+#Filter 9
+
+output_file_path = "Data/Output/Examples/ReplaceElementAttributesWithNeighbor.dream3d"
+result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+                                        export_file_path=output_file_path, 
+                                        write_xdmf_file=True),
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running the filter")
