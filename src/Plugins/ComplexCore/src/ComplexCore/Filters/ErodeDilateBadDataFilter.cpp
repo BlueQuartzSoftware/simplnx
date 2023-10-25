@@ -10,6 +10,8 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
@@ -101,6 +103,10 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   {
     MakeErrorResult(-16700, fmt::format("Operation Selection must be 0 (Dilate) or 1 (Erode). {} was passed into the filter. ", pOperationValue));
   }
+
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), pIgnoredDataArrayPathsValue);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

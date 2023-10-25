@@ -42,7 +42,7 @@ TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValuesFilter
     args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_MinConfidence_Key, std::make_any<float32>(0.1F));
     args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedComparison_Key, std::make_any<ChoicesParameter::ValueType>(0));
     args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_Loop_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_ConfidenceIndexArrayPath_Key, std::make_any<DataPath>(k_ConfidenceIndexPath));
+    args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_ComparisonDataPath, std::make_any<DataPath>(k_ConfidenceIndexPath));
     args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
 
     // Preflight the filter and check result

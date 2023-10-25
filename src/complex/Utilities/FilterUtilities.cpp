@@ -23,4 +23,20 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   }
   return {};
 }
+
+// -----------------------------------------------------------------------------
+void AppendDataObjectModifications(const DataStructure& dataStructure, std::vector<DataObjectModification>& modifiedActions, const DataPath& parentPath, const std::vector<DataPath>& ignoredDataPaths)
+{
+  std::optional<std::vector<DataPath>> result = complex::GetAllChildArrayDataPaths(dataStructure, parentPath, ignoredDataPaths);
+  if(!result)
+  {
+    return;
+  }
+
+  for(const auto& child : result.value())
+  {
+    modifiedActions.push_back(DataObjectModification{child, DataObjectModification::ModifiedType::Modified, dataStructure.getDataRef(child).getDataObjectType()});
+  }
+}
+
 } // namespace complex

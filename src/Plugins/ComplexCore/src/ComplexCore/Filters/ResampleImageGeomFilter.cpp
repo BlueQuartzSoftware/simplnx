@@ -19,6 +19,7 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
@@ -77,7 +78,8 @@ Parameters ResampleImageGeomFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ResamplingMode_Key, "Resampling Mode", "Mode can be 'Spacing (0)' or 'Scaling (1)'", k_SpacingModeIndex, ::k_Choices));
+  params.insertLinkableParameter(
+      std::make_unique<ChoicesParameter>(k_ResamplingMode_Key, "Resampling Mode", "Mode can be [0] Spacing, [1] Scaling as Percent, [2] Exact Dimensions as voxels", k_SpacingModeIndex, ::k_Choices));
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "New Spacing",
                                                          "The new spacing values (dx, dy, dz). Larger spacing will cause less voxels, smaller spacing will cause more voxels.",
@@ -86,7 +88,7 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_Scaling_Key, "Scale Factor (percentages)",
                                                "The scale factor values (dx, dy, dz) to resample the geometry, in percentages. Larger percentages will cause more voxels, smaller percentages "
-                                               "will cause less voxels.  A percentage of 100 in any dimension will not resample the geometry in that dimension.  Percentages must be larger than 0.",
+                                               "will cause less voxels.  A percentage of 100 in any dimension will not resample the geometry in that dimension. Percentages must be larger than 0.",
                                                std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}));
 
   params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactDimensions_Key, "Exact Dimensions (pixels)", "The exact dimension size values (dx, dy, dz) to resample the geometry, in pixels.",
@@ -98,14 +100,14 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry to resample", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
-  params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Renumber Features (Optional)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature IDs", "DataPath to Cell Feature IDs array", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"CellFeatureData"})));
 
-  params.insertSeparator({"Output Image Geometry"});
+  params.insertSeparator({"Created Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the resampled geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -327,6 +329,10 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   if(pRemoveOriginalGeometry)
   {
     resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
+
+    // Inform users that the following arrays are going to be modified in place
+    // Cell Data is going to be modified
+    complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, srcImageGeom->getCellDataPath(), {});
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

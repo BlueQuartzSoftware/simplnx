@@ -9,6 +9,7 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
@@ -41,7 +42,7 @@ std::string ReplaceElementAttributesWithNeighborValuesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReplaceElementAttributesWithNeighborValuesFilter::defaultTags() const
 {
-  return {className(), "Processing", "Cleanup"};
+  return {className(), "Processing", "Cleanup", "Replace Values"};
 }
 
 //------------------------------------------------------------------------------
@@ -58,7 +59,7 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ConfidenceIndexArrayPath_Key, "Input Comparison Array", "The DataPath to the input array to use for comparison", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ComparisonDataPath, "Input Comparison Array", "The DataPath to the input array to use for comparison", DataPath{},
                                                           complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   return params;
@@ -74,11 +75,15 @@ IFilter::UniquePointer ReplaceElementAttributesWithNeighborValuesFilter::clone()
 IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                          const std::atomic_bool& shouldCancel) const
 {
-  auto pConfidenceIndexArrayPathValue = filterArgs.value<DataPath>(k_ConfidenceIndexArrayPath_Key);
+  auto pComparisonDataPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
 
   complex::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pComparisonDataPath.getParent(), {});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -93,7 +98,7 @@ Result<> ReplaceElementAttributesWithNeighborValuesFilter::executeImpl(DataStruc
   inputValues.MinConfidence = filterArgs.value<float32>(k_MinConfidence_Key);
   inputValues.SelectedComparison = filterArgs.value<ChoicesParameter::ValueType>(k_SelectedComparison_Key);
   inputValues.Loop = filterArgs.value<bool>(k_Loop_Key);
-  inputValues.InputArrayPath = filterArgs.value<DataPath>(k_ConfidenceIndexArrayPath_Key);
+  inputValues.InputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
   inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   return ReplaceElementAttributesWithNeighborValues(dataStructure, messageHandler, shouldCancel, &inputValues)();

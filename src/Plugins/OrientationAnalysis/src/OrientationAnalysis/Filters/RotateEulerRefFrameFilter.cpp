@@ -51,7 +51,7 @@ Parameters RotateEulerRefFrameFilter::parameters() const
                                                          VectorFloat32Parameter::ValueType{0.0f, 0.0f, 0.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z)", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_EulerAnglesArrayPath_Key, "Input Euler Angles", "Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z)", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   return params;
@@ -68,11 +68,14 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pRotationAxisAngleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
-  auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_EulerAnglesArrayPath_Key);
 
   complex::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  resultOutputActions.value().modifiedActions.emplace_back(
+      DataObjectModification{pCellEulerAnglesArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pCellEulerAnglesArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -84,7 +87,7 @@ Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, co
 {
   complex::RotateEulerRefFrameInputValues inputValues;
 
-  inputValues.eulerAngleDataPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  inputValues.eulerAngleDataPath = filterArgs.value<DataPath>(k_EulerAnglesArrayPath_Key);
   inputValues.rotationAxis = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
 
   // Let the Algorithm instance do the work

@@ -7,6 +7,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
@@ -97,6 +98,10 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
+  complex::Result<OutputActions> resultOutputActions;
+
+  std::vector<PreflightValue> preflightUpdatedValues;
+
   std::vector<DataPath> dataArrayPaths;
 
   auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeomPathValue);
@@ -184,7 +189,11 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  return {};
+  resultOutputActions.value().modifiedActions.emplace_back(
+      DataObjectModification{pGoodVoxelsArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pGoodVoxelsArrayPathValue)->getDataObjectType()});
+
+  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

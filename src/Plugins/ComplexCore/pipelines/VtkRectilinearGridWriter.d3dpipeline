@@ -192,7 +192,7 @@
             {
               "args": {
                 "cell_phases_array_path": "DataContainer/CellData/Phases",
-                "confidence_index_array_path": "DataContainer/CellData/Confidence Index",
+                "correlation_array_path": "DataContainer/CellData/Confidence Index",
                 "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
                 "ignored_data_array_paths": [],
                 "image_geometry_path": "DataContainer",

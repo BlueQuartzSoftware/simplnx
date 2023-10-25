@@ -6,8 +6,10 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -277,7 +279,7 @@ std::string RemoveMinimumSizeFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RemoveMinimumSizeFeaturesFilter::defaultTags() const
 {
-  return {className(), "Processing", "Cleanup", "MinSize"};
+  return {className(), "Processing", "Cleanup", "MinSize", "Feature Removal"};
 }
 
 Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
@@ -291,7 +293,8 @@ Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
   params.insert(std::make_unique<NumberParameter<int64>>(k_PhaseNumber_Key, "Phase Index", "Target phase to remove", 0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Input Image Geometry", "The input image geometry (cell)", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath({"FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -363,10 +366,8 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   }
 
   // Create the preflightResult object
-  IFilter::PreflightResult preflightResult;
-
-  // Create our OutputActions Object
-  OutputActions outputActions;
+  complex::Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
   std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
@@ -383,12 +384,17 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   {
     ss.append("  " + featureNeighborList.toString() + "\n");
     auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
-    outputActions.appendAction(std::move(action));
+    resultOutputActions.value().actions.emplace_back(std::move(action));
   }
 
-  preflightResult.outputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+  // Inform users that the following arrays are going to be modified in place
+  // Feature Data is going to be modified
+  complex::AppendDataObjectModifications(data, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
 
-  return preflightResult;
+  resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+
+  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------
