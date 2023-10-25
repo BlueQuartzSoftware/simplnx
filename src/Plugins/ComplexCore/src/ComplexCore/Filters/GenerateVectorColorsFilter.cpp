@@ -7,6 +7,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
@@ -128,5 +131,32 @@ Result<> GenerateVectorColorsFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.CellVectorColorsArrayPath = inputValues.VectorsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CellVectorColorsArrayName_Key));
 
   return GenerateVectorColors(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_UseGoodVoxelsKey = "UseGoodVoxels";
+constexpr StringLiteral k_VectorsArrayPathKey = "VectorsArrayPath";
+constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+constexpr StringLiteral k_CellVectorColorsArrayNameKey = "CellVectorColorsArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> GenerateVectorColorsFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = GenerateVectorColorsFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseGoodVoxelsKey, k_UseGoodVoxels_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_VectorsArrayPathKey, k_VectorsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_GoodVoxelsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellVectorColorsArrayNameKey, k_CellVectorColorsArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

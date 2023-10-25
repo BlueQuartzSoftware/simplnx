@@ -8,6 +8,8 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -180,5 +182,34 @@ Result<> ReadDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure, c
   inputValues.VertexAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_VertexAMName_Key));
 
   return ReadDeformKeyFileV12(dataStructure, messageHandler, shouldCancel, &inputValues)(true);
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_DEFORMInputFileKey = "DEFORMInputFile";
+constexpr StringLiteral k_VerboseOutputKey = "VerboseOutput";
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ImportDeformKeyFileV12Filter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ImportDeformKeyFileV12Filter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_DEFORMInputFileKey, k_InputFilePath_Key));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_VerboseOutputKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_QuadGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAMName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

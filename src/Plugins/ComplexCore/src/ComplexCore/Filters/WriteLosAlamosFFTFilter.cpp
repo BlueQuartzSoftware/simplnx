@@ -8,6 +8,8 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -114,5 +116,33 @@ Result<> WriteLosAlamosFFTFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath);
 
   return WriteLosAlamosFFT(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_OutputFileKey = "OutputFile";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> LosAlamosFFTWriterFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = LosAlamosFFTWriterFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputFileKey, k_OutputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeomPath));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

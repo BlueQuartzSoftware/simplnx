@@ -924,6 +924,72 @@ struct StringToDataPathFilterParameterConverter
   }
 };
 
+struct StringsToDataPathFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2)
+  {
+    if(!json1.is_string())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("StringsToDataPathFilterParameterConverter json '{}' is not a string", json1.dump()));
+    }
+    if(!json2.is_string())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("StringsToDataPathFilterParameterConverter json '{}' is not a string", json2.dump()));
+    }
+
+    DataPath dataPath({json1.get<std::string>(), json2.get<std::string>()});
+
+    return {std::move(dataPath)};
+  }
+};
+
+struct AMPathBuilderFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2)
+  {
+    std::string dcName;
+    std::string amName;
+
+    if(json1.is_string())
+    {
+      dcName = json1.get<std::string>();
+    }
+    else
+    {
+      auto dataContainerNameResult = ReadDataContainerName(json1, "AMPathBuilderFilterParameterConverter");
+      if(dataContainerNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+      }
+      dcName = std::move(dataContainerNameResult.value());
+    }
+
+    if(json2.is_string())
+    {
+      amName = json2.get<std::string>();
+    }
+    else
+    {
+      auto attributeMatrixNameResult = ReadAttributeMatrixName(json2, "AMPathBuilderFilterParameterConverter");
+      if(attributeMatrixNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+      }
+      amName = std::move(attributeMatrixNameResult.value());
+    }
+
+    DataPath dataPath({dcName, amName});
+
+    return {std::move(dataPath)};
+  }
+};
+
 struct DataContainerNameFilterParameterConverter
 {
   using ParameterType = DataObjectNameParameter;
