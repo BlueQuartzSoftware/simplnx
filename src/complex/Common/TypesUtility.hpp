@@ -375,6 +375,63 @@ inline constexpr DataType StringToDataType(std::string_view dataTypeString)
 }
 
 /**
+ * @brief Returns a DataType for the passed in string representation
+ * @param dataTypeString
+ * @return
+ */
+inline constexpr DataType HumanStringToDataType(std::string_view dataTypeString)
+{
+  if(dataTypeString == DataTypeToHumanString(DataType::int8).view())
+  {
+    return DataType::int8;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::uint8).view())
+  {
+    return DataType::uint8;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::int16).view())
+  {
+    return DataType::int16;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::uint16).view())
+  {
+    return DataType::uint16;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::int32).view())
+  {
+    return DataType::int32;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::uint32).view())
+  {
+    return DataType::uint32;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::int64).view())
+  {
+    return DataType::int64;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::uint64).view())
+  {
+    return DataType::uint64;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::float32).view())
+  {
+    return DataType::float32;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::float64).view())
+  {
+    return DataType::float64;
+  }
+  else if(dataTypeString == DataTypeToHumanString(DataType::boolean).view())
+  {
+    return DataType::boolean;
+  }
+  else
+  {
+    throw std::runtime_error("complex::HumanStringToDataType: No known DataType matches the given string value.");
+  }
+}
+
+/**
  * @brief Converts DataType to NumericType. Fails on DataType::bool and DataType::error.
  * @param dataType
  * @return
