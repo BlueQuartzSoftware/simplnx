@@ -1,23 +1,25 @@
 #pragma once
 
+#include "complex/complex_export.hpp"
+
 #include <string>
 
 namespace complex::Version
 {
 
-std::string ApplicationName();
-std::string Complete();
-std::string Major();
-std::string Minor();
-std::string Patch();
-std::string Suffix();
-std::string Package();
-std::string PackageComplete();
-std::string BuildDate();
-std::string GitHashShort();
-std::string GitHash();
+COMPLEX_EXPORT std::string ApplicationName();
+COMPLEX_EXPORT std::string Complete();
+COMPLEX_EXPORT std::string Major();
+COMPLEX_EXPORT std::string Minor();
+COMPLEX_EXPORT std::string Patch();
+COMPLEX_EXPORT std::string Suffix();
+COMPLEX_EXPORT std::string Package();
+COMPLEX_EXPORT std::string PackageComplete();
+COMPLEX_EXPORT std::string BuildDate();
+COMPLEX_EXPORT std::string GitHashShort();
+COMPLEX_EXPORT std::string GitHash();
 
-class AppVersion
+class COMPLEX_EXPORT AppVersion
 {
 public:
   AppVersion();
