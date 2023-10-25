@@ -1,0 +1,73 @@
+name: Documentation Report
+description: File a report for additional sections or discrepancies, missing, or comment errors in our documentation.
+title: "DOC: "
+labels: ["documentation", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping to better our documentation! By filling out the following form in its entirety, we will be able to better what needs to be fixed or improved on. Thank you in advance for taking the time to fill out the form!
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered.
+      options:
+        - label: I have searched the existing issues, known issues in release notes, and documentation.
+          required: true
+  - type: textarea
+    id: brief-description
+    attributes:
+      label: Brief Description of the Documentation Issue or Improvement
+      description: Briefly describe the issue you found and what you expected.
+      placeholder: Tell us what you see!
+      value: "The discrepancy can be found at ___ and I think it should be ___"
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of our software are you running? [Further details may be required during triage process]
+      options:
+        - DREAM3D NX (version 7)
+        - NXRunner built from source - Please provide git hash of commit in description
+        - other (Please enter in the extended description at the bottom)
+    validations:
+      required: true
+  - type: dropdown
+    id: error-type
+    attributes:
+      label: What section of the documentation did you encounter the discrepancy in? [Further details may be required during triage process]
+      multiple: true
+      options:
+        - Filter Documentation
+        - Python Bindings Documentation
+        - Release Notes
+        - Acknowledgements
+        - Licensing
+        - README.md
+        - CONTRIBUTING.md
+        - SUPPORT.md
+        - Other - Please provide additional information in the "Anything Else?" Section
+    validations:
+      required: false
+  - type: textarea
+    id: further-detail
+    attributes:
+      label: Anything else?
+      description: |
+        Is this in relation to multilingual support?
+        Is there sections you think should be added to help other users?
+        Is there a missing reference?
+
+        Tip: You can attach images or log files by clicking this area to highlight it and then dragging files in.
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you understand that your issue may be closed if you do not remain cordial, do not provide further detail if prompted, or do not engage with responses from the developers in a reasonable time.
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
