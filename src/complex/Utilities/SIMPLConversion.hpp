@@ -714,7 +714,7 @@ struct Vec3FilterParameterConverter
 };
 
 using IntVec3FilterParameterConverter = Vec3FilterParameterConverter<int32>;
-using UInt64Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint64>;
+using UInt32Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint32>;
 using UInt64Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint64>;
 using FloatVec3FilterParameterConverter = Vec3FilterParameterConverter<float32>;
 using DoubleVec3FilterParameterConverter = Vec3FilterParameterConverter<float64>;
@@ -985,6 +985,65 @@ struct AMPathBuilderFilterParameterConverter
     }
 
     DataPath dataPath({dcName, amName});
+
+    return {std::move(dataPath)};
+  }
+};
+
+struct DAPathBuilderFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
+  {
+    std::string dcName;
+    std::string amName;
+    std::string daName;
+
+    if(json1.is_string())
+    {
+      dcName = json1.get<std::string>();
+    }
+    else
+    {
+      auto dataContainerNameResult = ReadDataContainerName(json1, "DAPathBuilderFilterParameterConverter");
+      if(dataContainerNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+      }
+      dcName = std::move(dataContainerNameResult.value());
+    }
+
+    if(json2.is_string())
+    {
+      amName = json2.get<std::string>();
+    }
+    else
+    {
+      auto attributeMatrixNameResult = ReadAttributeMatrixName(json2, "DAPathBuilderFilterParameterConverter");
+      if(attributeMatrixNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+      }
+      amName = std::move(attributeMatrixNameResult.value());
+    }
+
+    if(json3.is_string())
+    {
+      daName = json3.get<std::string>();
+    }
+    else
+    {
+      auto dataArrayNameResult = ReadDataArrayName(json3, "DAPathBuilderFilterParameterConverter");
+      if(dataArrayNameResult.invalid())
+      {
+        return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+      }
+      daName = std::move(dataArrayNameResult.value());
+    }
+
+    DataPath dataPath({dcName, amName, daName});
 
     return {std::move(dataPath)};
   }
@@ -1377,24 +1436,151 @@ struct OutputFileFilterParameterConverter
   }
 };
 
-#if 0
 struct FileListInfoFilterParameterConverter
 {
   using ParameterType = GeneratedFileListParameter;
   using ValueType = ParameterType::ValueType;
 
+  static constexpr StringLiteral k_EndIndex = "EndIndex";
+  static constexpr StringLiteral k_FileExtension = "FileExtension";
+  static constexpr StringLiteral k_FilePrefix = "FilePrefix";
+  static constexpr StringLiteral k_FileSuffix = "FileSuffix";
+  static constexpr StringLiteral k_IncrementIndex = "IncrementIndex";
+  static constexpr StringLiteral k_InputPath = "InputPath";
+  static constexpr StringLiteral k_Ordering = "Ordering";
+  static constexpr StringLiteral k_PaddingDigits = "PaddingDigits";
+  static constexpr StringLiteral k_StartIndex = "StartIndex";
+
   static Result<ValueType> convert(const nlohmann::json& json)
   {
-    auto filePathReult = ReadInputFilePath(json, "OutputFileFilterParameter");
-    if(filePathReult.invalid())
+    if(!json.contains(k_EndIndex))
     {
-      return ConvertInvalidResult<ValueType>(std::move(filePathReult));
+      return MakeErrorResult<ValueType>(-1, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_EndIndex));
     }
 
-    return {filePathReult.value()};
+    if(!json[k_EndIndex].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an integer '{}'", json.dump(), k_EndIndex));
+    }
+
+    ValueType value;
+    value.endIndex = json[k_EndIndex].get<int32>();
+
+    {
+      if(!json.contains(k_FileExtension))
+      {
+        return MakeErrorResult<ValueType>(-3, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_FileExtension));
+      }
+
+      if(!json[k_FileExtension].is_string())
+      {
+        return MakeErrorResult<ValueType>(-4, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FileExtension));
+      }
+
+      value.fileExtension = json[k_FileExtension].get<std::string>();
+    }
+
+    {
+      if(!json.contains(k_FilePrefix))
+      {
+        return MakeErrorResult<ValueType>(-5, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_FilePrefix));
+      }
+
+      if(!json[k_FilePrefix].is_string())
+      {
+        return MakeErrorResult<ValueType>(-6, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FilePrefix));
+      }
+
+      value.filePrefix = json[k_FilePrefix].get<std::string>();
+    }
+
+    {
+      if(!json.contains(k_FileSuffix))
+      {
+        return MakeErrorResult<ValueType>(-7, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_FileSuffix));
+      }
+
+      if(!json[k_FileSuffix].is_string())
+      {
+        return MakeErrorResult<ValueType>(-8, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FileSuffix));
+      }
+
+      value.fileSuffix = json[k_FileSuffix].get<std::string>();
+    }
+
+    {
+      if(!json.contains(k_IncrementIndex))
+      {
+        return MakeErrorResult<ValueType>(-9, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_IncrementIndex));
+      }
+
+      if(!json[k_IncrementIndex].is_number_integer())
+      {
+        return MakeErrorResult<ValueType>(-10, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an integer '{}'", json.dump(), k_IncrementIndex));
+      }
+
+      value.incrementIndex = json[k_IncrementIndex].get<int32>();
+    }
+
+    {
+      if(!json.contains(k_InputPath))
+      {
+        return MakeErrorResult<ValueType>(-11, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_InputPath));
+      }
+
+      if(!json[k_InputPath].is_string())
+      {
+        return MakeErrorResult<ValueType>(-12, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_InputPath));
+      }
+
+      value.inputPath = json[k_InputPath].get<std::string>();
+    }
+
+    {
+      if(!json.contains(k_Ordering))
+      {
+        return MakeErrorResult<ValueType>(-13, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_Ordering));
+      }
+
+      if(!json[k_Ordering].is_number_unsigned())
+      {
+        return MakeErrorResult<ValueType>(-14, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an unsigned integer '{}'", json.dump(), k_Ordering));
+      }
+
+      value.ordering = static_cast<ParameterType::Ordering>(json[k_Ordering].get<uint8>());
+    }
+
+    {
+      if(!json.contains(k_PaddingDigits))
+      {
+        return MakeErrorResult<ValueType>(-15, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_PaddingDigits));
+      }
+
+      if(!json[k_PaddingDigits].is_number_unsigned())
+      {
+        return MakeErrorResult<ValueType>(-16, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an unsigned integer '{}'", json.dump(), k_PaddingDigits));
+      }
+
+      value.paddingDigits = json[k_PaddingDigits].get<uint32>();
+    }
+
+    {
+      if(!json.contains(k_StartIndex))
+      {
+        return MakeErrorResult<ValueType>(-17, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_StartIndex));
+      }
+
+      if(!json[k_StartIndex].is_number_integer())
+      {
+        return MakeErrorResult<ValueType>(-18, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an integer '{}'", json.dump(), k_StartIndex));
+      }
+
+      value.startIndex = json[k_StartIndex].get<int32>();
+    }
+
+    return {std::move(value)};
   }
 };
-#endif
 
 #if 0
 struct GenerateColorTableFilterParameterConverter
