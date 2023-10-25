@@ -29,7 +29,7 @@ body:
       label: Version
       description: What version of our software are you running? [Further details may be required during triage process]
       options:
-        - 7.0.x (DREAM3DNX beta)
+        - DREAM3D NX (version 7)
         - NXRunner built from source - Please provide git hash of commit in description
         - other (Please enter in the extended description at the bottom)
     validations:

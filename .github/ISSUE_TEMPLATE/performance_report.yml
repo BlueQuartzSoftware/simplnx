@@ -29,7 +29,7 @@ body:
       label: Version
       description: What version of our software are you running? [Further details may be required during triage process]
       options:
-        - 7.0.x (DREAM3DNX beta)
+        - DREAM3D NX (version 7)
         - NXRunner built from source - Please provide git hash of commit in description
         - other (Please enter in the extended description at the bottom)
     validations:
@@ -41,12 +41,22 @@ body:
       options:
         - Windows 10
         - Windows 11
-        - macOS 10.15 Catalina
         - macOS 11.00 Big Sur
         - macOS 12.00 Monterey
         - macOS 13.00 Ventura
         - Linux - Ubuntu 20.04 LTS
         - Linux - Ubuntu 22.04 LTS
+        - other (Please enter in the extended description at the bottom)
+    validations:
+      required: true
+  - type: dropdown
+    id: hardware-architecture
+    attributes:
+      label: What hardware architecture are you using? [Further details may be required during triage process]
+      options:
+        - x86_64
+        - x64
+        - ARM64
         - other (Please enter in the extended description at the bottom)
     validations:
       required: true
