@@ -10,6 +10,8 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <itkWhiteTopHatImageFilter.h>
 
 using namespace complex;
@@ -135,5 +137,35 @@ Result<> ITKWhiteTopHatImage::executeImpl(DataStructure& dataStructure, const Ar
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKWhiteTopHatImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_KernelTypeKey = "KernelType";
+constexpr StringLiteral k_SafeBorderKey = "SafeBorder";
+constexpr StringLiteral k_KernelRadiusKey = "KernelRadius";
+constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ITKWhiteTopHatImage::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ITKWhiteTopHatImage().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_KernelTypeKey, k_KernelType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_SafeBorderKey, k_SafeBorder_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt32Vec3FilterParameterConverter>(args, json, SIMPL::k_KernelRadiusKey, k_KernelRadius_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_SelectedImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_SelectedImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageDataPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
