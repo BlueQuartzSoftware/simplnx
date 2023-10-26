@@ -217,7 +217,7 @@ Result<Arguments> ConditionalSetValue::FromSIMPLJson(const nlohmann::json& json)
 
   if(json.contains(SIMPL::k_RemoveValueKey))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_RemoveValueKey, k_RemoveValue_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, SIMPL::k_RemoveValueKey, k_RemoveValue_Key));
     results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayKey, k_SelectedArrayPath_Key));
   }
   else
@@ -225,7 +225,7 @@ Result<Arguments> ConditionalSetValue::FromSIMPLJson(const nlohmann::json& json)
     results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
     results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_ReplaceValueKey, k_ReplaceValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, SIMPL::k_ReplaceValueKey, k_ReplaceValue_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

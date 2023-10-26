@@ -14,6 +14,7 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataTypeParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
+#include "complex/Parameters/EnsembleInfoParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GenerateColorTableParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
@@ -549,6 +550,27 @@ struct LinkedChoicesFilterParameterConverter
   }
 };
 
+template <typename T>
+struct NumberToStringFilterParameterConverter
+{
+  using ParameterType = StringParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_number())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("NumberToStringFilterParameterConverter json '{}' is not a number", json.dump()));
+    }
+
+    auto value = json.get<T>();
+
+    return {std::to_string(value)};
+  }
+};
+
+using DoubleToStringFilterParameterConverter = NumberToStringFilterParameterConverter<float64>;
+
 struct StringFilterParameterConverter
 {
   using ParameterType = StringParameter;
@@ -765,7 +787,51 @@ struct Vec4FilterParameterConverter
 };
 
 using FloatVec4FilterParameterConverter = Vec4FilterParameterConverter<float32>;
-using AxisAngleFilterParameterConverter = Vec4FilterParameterConverter<float32>;
+
+template <typename T>
+struct AxisAngleFilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    static const std::string angle = "angle";
+    static const std::string h = "h";
+    static const std::string k = "k";
+    static const std::string l = "l";
+
+    if(!json.is_object())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("AxisAngleFilterParameterConverter json '{}' is not an object", json.dump()));
+    }
+
+    if(!json.contains(angle))
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("AxisAngleFilterParameterConverter json '{}' does not contain an X value", json.dump()));
+    }
+    if(!json.contains(h))
+    {
+      return MakeErrorResult<ValueType>(-3, fmt::format("AxisAngleFilterParameterConverter json '{}' does not contain a Y value", json.dump()));
+    }
+    if(!json.contains(k))
+    {
+      return MakeErrorResult<ValueType>(-4, fmt::format("AxisAngleFilterParameterConverter json '{}' does not contain an Z value", json.dump()));
+    }
+    if(!json.contains(l))
+    {
+      return MakeErrorResult<ValueType>(-4, fmt::format("AxisAngleFilterParameterConverter json '{}' does not contain an W value", json.dump()));
+    }
+
+    std::vector<T> value(4);
+    value[0] = json[angle].get<T>();
+    value[1] = json[h].get<T>();
+    value[2] = json[k].get<T>();
+    value[3] = json[l].get<T>();
+
+    return {std::move(value)};
+  }
+};
 
 template <typename T>
 struct Vec3p1FilterParameterConverter
@@ -1576,6 +1642,56 @@ struct FileListInfoFilterParameterConverter
       }
 
       value.startIndex = json[k_StartIndex].get<int32>();
+    }
+
+    return {std::move(value)};
+  }
+};
+
+struct EnsembleInfoFilterParameterConverter
+{
+  using ParameterType = EnsembleInfoParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_CrystalStructureKey = "CrystalStructure";
+  static constexpr StringLiteral k_PhaseNameKey = "PhaseName";
+  static constexpr StringLiteral k_PhaseTypeKey = "PhaseType";
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not an array", json.dump()));
+    }
+
+    ValueType value;
+
+    for(const auto& iter : json)
+    {
+      if(!iter.is_object())
+      {
+        return MakeErrorResult<ValueType>(-2, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not an object", iter.dump()));
+      }
+
+      if(!iter[k_CrystalStructureKey].is_number_integer())
+      {
+        return MakeErrorResult<ValueType>(-3, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not an integer '{}'", iter.dump(), iter[k_CrystalStructureKey].dump()));
+      }
+      if(!iter[k_PhaseNameKey].is_string())
+      {
+        return MakeErrorResult<ValueType>(-4, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not a string '{}'", iter.dump(), iter[k_PhaseNameKey].dump()));
+      }
+      if(!iter[k_PhaseTypeKey].is_number_integer())
+      {
+        return MakeErrorResult<ValueType>(-5, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not an integer '{}'", iter.dump(), iter[k_PhaseTypeKey].dump()));
+      }
+
+      ParameterType::RowType row;
+      row[0] = ParameterType::k_CrystalStructures[iter[k_CrystalStructureKey].get<int32>()];
+      row[1] = ParameterType::k_PhaseTypes[iter[k_PhaseTypeKey].get<int32>()];
+      row[2] = iter[k_PhaseNameKey].get<std::string>();
+
+      value.push_back(std::move(row));
     }
 
     return {std::move(value)};

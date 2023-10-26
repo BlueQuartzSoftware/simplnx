@@ -10,6 +10,8 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <string>
 
 using namespace complex;
@@ -474,4 +476,30 @@ Result<> AlignGeometries::executeImpl(DataStructure& data, const Arguments& args
 
   return {};
 }
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_AlignmentTypeKey = "AlignmentType";
+constexpr StringLiteral k_MovingGeometryKey = "MovingGeometry";
+constexpr StringLiteral k_TargetGeometryKey = "TargetGeometry";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> AlignGeometries::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = AlignGeometries().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_AlignmentTypeKey, k_AlignmentType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_MovingGeometryKey, k_MovingGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TargetGeometryKey, k_TargetGeometry_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}
+
 } // namespace complex

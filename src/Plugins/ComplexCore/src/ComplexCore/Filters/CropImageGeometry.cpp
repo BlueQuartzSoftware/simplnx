@@ -594,21 +594,15 @@ Result<Arguments> CropImageGeometry::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  // Cannot convert 6 DataArray inputs to 2 DataAray inputs.
-  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter>(args, json, SIMPL::k_XMinKey, "@COMPLEX_PARAMETER_KEY@"));
-  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter>(args, json, SIMPL::k_YMinKey, "@COMPLEX_PARAMETER_KEY@"));
-  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter>(args, json, SIMPL::k_ZMinKey, "@COMPLEX_PARAMETER_KEY@"));
-  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter>(args, json, SIMPL::k_XMaxKey, "@COMPLEX_PARAMETER_KEY@"));
-  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter>(args, json, SIMPL::k_YMaxKey, "@COMPLEX_PARAMETER_KEY@"));
-  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter>(args, json, SIMPL::k_ZMaxKey, "@COMPLEX_PARAMETER_KEY@"));
-
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_OldBoxDimensionsKey, "@COMPLEX_PARAMETER_KEY@"));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_NewBoxDimensionsKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XMinKey, SIMPL::k_YMinKey, SIMPL::k_ZMinKey, k_MinVoxel_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XMaxKey, SIMPL::k_YMaxKey, SIMPL::k_ZMaxKey, k_MaxVoxel_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UpdateOriginKey, k_UpdateOrigin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveAsNewDataContainerKey, "@COMPLEX_PARAMETER_KEY@"));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, "@COMPLEX_PARAMETER_KEY@"));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InvertedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_CreatedImageGeometry_Key));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey,
+  // "@COMPLEX_PARAMETER_KEY@"));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometry_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));

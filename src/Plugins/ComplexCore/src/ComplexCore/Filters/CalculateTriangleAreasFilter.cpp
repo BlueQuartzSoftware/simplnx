@@ -173,7 +173,6 @@ Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure,
 
   return {};
 }
-} // namespace complex
 
 namespace
 {
@@ -190,9 +189,12 @@ Result<Arguments> CalculateTriangleAreasFilter::FromSIMPLJson(const nlohmann::js
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_CalculatedAreasDataPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_TriangleGeometryDataPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_CalculatedAreasDataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
+} // namespace complex

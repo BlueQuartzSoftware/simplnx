@@ -27,6 +27,9 @@
 #include "complex/Utilities/ImageRotationUtilities.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
@@ -443,5 +446,49 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputValues.RemoveOriginalGeometry = true;
 
   return ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_TransformationMatrixTypeKey = "TransformationMatrixType";
+constexpr StringLiteral k_InterpolationTypeKey = "InterpolationType";
+constexpr StringLiteral k_UseDataArraySelectionKey = "UseDataArraySelection";
+constexpr StringLiteral k_ManualTransformationMatrixKey = "ManualTransformationMatrix";
+constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
+constexpr StringLiteral k_RotationAxisKey = "RotationAxis";
+constexpr StringLiteral k_TranslationKey = "Translation";
+constexpr StringLiteral k_ScaleKey = "Scale";
+constexpr StringLiteral k_ComputedTransformationMatrixKey = "ComputedTransformationMatrix";
+constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+constexpr StringLiteral k_DataArraySelectionKey = "DataArraySelection";
+constexpr StringLiteral k_GeometryToTransformnKey = "GeometryToTransform";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ApplyTransformationToGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ApplyTransformationToGeometryFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_TransformationMatrixTypeKey, k_TransformationType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_InterpolationTypeKey, k_InterpolationType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseDataArraySelectionKey, "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_ManualTransformationMatrixKey, k_ManualTransformationMatrix_Key));
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, SIMPL::k_RotationAxisKey, SIMPL::k_RotationAngleKey, k_Rotation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_TranslationKey, k_Translation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ScaleKey, k_Scale_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ComputedTransformationMatrixKey, k_ComputedTransformationMatrix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_GeometryToTransformnKey, k_SelectedImageGeometry_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_CellAttributeMatrixPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_DataArraySelectionKey, "@COMPLEX_PARAMETER_KEY@"));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
