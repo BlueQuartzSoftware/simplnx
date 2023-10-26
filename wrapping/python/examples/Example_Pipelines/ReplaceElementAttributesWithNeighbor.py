@@ -56,7 +56,7 @@ result = cx.RotateSampleRefFrameFilter.execute(
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180],
     #rotation_matrix: List[List[float]] = ...,
-    rotation_representation=0
+    rotation_representation=0,
     selected_image_geometry=cx.DataPath("DataContainer"),
 )
 #Filter 4

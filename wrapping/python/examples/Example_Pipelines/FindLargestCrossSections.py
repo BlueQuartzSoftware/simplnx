@@ -58,7 +58,7 @@ result = cx.MultiThresholdObjects.execute(
 result = cxor.ConvertOrientations.execute(
     data_structure=data_structure,
     input_orientation_array_path=cx.DataPath("DataContainer/CellData/EulerAngles"),
-    input_type=0
+    input_type=0,
     output_orientation_array_name="Quats",
     output_type=2
 )
@@ -71,9 +71,9 @@ result = cx.ScalarSegmentFeaturesFilter.execute(
     feature_ids_path="FeatureIds",
     grid_geometry_path=cx.DataPath("DataContainer"),
     #input_array_path: DataPath = ...,
-    mask_path=cx.DataPath("DataContainer/CellData/Mask")
+    mask_path=cx.DataPath("DataContainer/CellData/Mask"),
     randomize_features=True,
-    scalar_tolerance=5
+    scalar_tolerance=5,
     use_mask=True,
 )
 #Filter 5
