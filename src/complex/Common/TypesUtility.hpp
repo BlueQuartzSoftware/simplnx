@@ -375,6 +375,32 @@ inline constexpr DataType StringToDataType(std::string_view dataTypeString)
 }
 
 /**
+ * @brief Returns a DataType for the passed in index
+ * @param index
+ * @return
+ */
+inline std::optional<DataType> IndexToDataType(usize index)
+{
+  switch(index)
+  {
+  case static_cast<int>(DataType::int8):
+  case static_cast<int>(DataType::uint8):
+  case static_cast<int>(DataType::int16):
+  case static_cast<int>(DataType::uint16):
+  case static_cast<int>(DataType::int32):
+  case static_cast<int>(DataType::uint32):
+  case static_cast<int>(DataType::int64):
+  case static_cast<int>(DataType::uint64):
+  case static_cast<int>(DataType::float32):
+  case static_cast<int>(DataType::float64):
+  case static_cast<int>(DataType::boolean):
+    return static_cast<DataType>(index);
+  default:
+    return {};
+  }
+}
+
+/**
  * @brief Converts DataType to NumericType. Fails on DataType::bool and DataType::error.
  * @param dataType
  * @return
