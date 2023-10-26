@@ -1,8 +1,0 @@
-#pragma once
-
-// Since we are only using this to print versions in the files a lot of functionality from the main applications version is not necessary
-#define COMPLEX_PACKAGE_COMPLETE "Complex Version @complex_VERSION_MAJOR@.@complex_VERSION_MINOR@.@complex_VERSION_PATCH@"
-#define COMPLEX_VERSION_COMPLETE "@complex_VERSION_MAJOR@.@complex_VERSION_MINOR@.@complex_VERSION_PATCH@"
-#define COMPLEX_VERSION_MAJOR "@complex_VERSION_MAJOR@"
-#define COMPLEX_VERSION_MINOR "@complex_VERSION_MINOR@"
-#define COMPLEX_VERSION_PATCH "@complex_VERSION_PATCH@"

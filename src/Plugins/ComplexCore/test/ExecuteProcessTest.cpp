@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "complex/ComplexVersion.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -45,10 +46,14 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
 
   std::ifstream processOutputFile(processOutput);
   REQUIRE(processOutputFile.is_open());
+  std::stringstream buffer;
+  buffer << processOutputFile.rdbuf();
+
   std::string firstLine;
-  std::getline(processOutputFile, firstLine);
-  firstLine = StringUtilities::rtrim(firstLine);
-  REQUIRE(firstLine == "nxrunner version 1.0.0");
+  std::vector<std::string> outputLines = complex::StringUtilities::split(buffer.str(), '\n');
+  firstLine = StringUtilities::trimmed(outputLines[0]);
+  const std::string correctOutput = fmt::format("nxrunner: Version {} Build Date:{}", complex::Version::Package(), complex::Version::BuildDate());
+  REQUIRE(firstLine == correctOutput);
 }
 
 TEST_CASE("ComplexCore::ExecuteProcessFilter: InValid filter execution")

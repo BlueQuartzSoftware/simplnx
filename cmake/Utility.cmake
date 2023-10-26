@@ -283,4 +283,180 @@ function(create_pipeline_tests)
 
 endfunction()
 
-#set_tests_properties(dependsTest12 PROPERTIES DEPENDS "baseTest1;baseTest2")
+#-------------------------------------------------------------------------------
+# This function generates a file ONLY if the MD5 between the "to be" generated file
+# and the current file are different. This will help reduce recompiles based on
+# the generation of files that are really the same.
+#-------------------------------------------------------------------------------
+function(cmpConfigureFileWithMD5Check)
+    set(options)
+    set(oneValueArgs CONFIGURED_TEMPLATE_PATH GENERATED_FILE_PATH )
+    cmake_parse_arguments(GVS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+ #   message(STATUS "   GVS_CONFIGURED_TEMPLATE_PATH: ${GVS_CONFIGURED_TEMPLATE_PATH}")
+ #   message(STATUS "   GVS_GENERATED_FILE_PATH: ${GVS_GENERATED_FILE_PATH}")
+
+    # Only Generate a file if it is different than what is already there.
+    if(EXISTS ${GVS_GENERATED_FILE_PATH} )
+        file(MD5 ${GVS_GENERATED_FILE_PATH} VERSION_HDR_MD5)
+        configure_file(${GVS_CONFIGURED_TEMPLATE_PATH}   ${GVS_GENERATED_FILE_PATH}_tmp  )
+
+        file(MD5 ${GVS_GENERATED_FILE_PATH}_tmp VERSION_GEN_HDR_MD5)
+        #message(STATUS "  File Exists, doing MD5 Comparison")
+
+        # Compare the MD5 checksums. If they are different then configure the file into the proper location
+        if(NOT "${VERSION_HDR_MD5}" STREQUAL "${VERSION_GEN_HDR_MD5}")
+            #message(STATUS "   ${VERSION_GEN_HDR_MD5}")
+            #message(STATUS "   ${VERSION_HDR_MD5}")
+            #message(STATUS "  Files differ: Replacing with newly generated file")
+            configure_file(${GVS_CONFIGURED_TEMPLATE_PATH}  ${GVS_GENERATED_FILE_PATH} )
+        else()
+            #message(STATUS "  NO Difference in Files")
+        endif()
+        file(REMOVE ${GVS_GENERATED_FILE_PATH}_tmp)
+    else()
+      # message(STATUS "  File does NOT Exist, Generating one...")
+      configure_file(${GVS_CONFIGURED_TEMPLATE_PATH} ${GVS_GENERATED_FILE_PATH} )
+    endif()
+
+endfunction()
+
+
+
+#-------------------------------------------------------------------------------
+# We are going to use Git functionality to create a version number for our package
+# The MAJOR.MINOR.PATCH is based off of YYYY.MM.DD
+# The TWEAK is the git hash of project.
+#-------------------------------------------------------------------------------
+function(cmpBuildDateRevisionString)
+  set(options)
+  set(oneValueArgs GENERATED_HEADER_FILE_PATH GENERATED_SOURCE_FILE_PATH
+                   NAMESPACE PROJECT_NAME EXPORT_MACRO VERSION_MACRO_PATH STRING_CLASS STRING_INCLUDE)
+  cmake_parse_arguments(GVS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+  if(NOT DEFINED GVS_STRING_CLASS)
+    set(GVS_STRING_CLASS "std::string")
+  endif()
+
+  if(NOT DEFINED GVS_STRING_INCLUDE)
+    set(GVS_STRING_INCLUDE "<string>")
+  endif()
+
+  if(0)
+    message(STATUS "--------------------------------------------")
+    message(STATUS "GVS_NAMESPACE: ${GVS_NAMESPACE}")
+    message(STATUS "GVS_PROJECT_NAME: ${GVS_PROJECT_NAME}")
+    message(STATUS "GVS_GENERATED_HEADER_FILE_PATH: ${GVS_GENERATED_HEADER_FILE_PATH}")
+    message(STATUS "GVS_GENERATED_SOURCE_FILE_PATH: ${GVS_GENERATED_SOURCE_FILE_PATH}")
+    message(STATUS "GVS_PROJECT_VERSION_MAJOR: ${GVS_PROJECT_VERSION_MAJOR}")
+    message(STATUS "GVS_EXPORT_MACRO: ${GVS_EXPORT_MACRO}")
+    message(STATUS "${GVS_PROJECT_NAME}_BUILD_DATE: ${${GVS_PROJECT_NAME}_BUILD_DATE}")
+    message(STATUS "${GVS_PROJECT_NAME}_SOURCE_DIR: ${${GVS_PROJECT_NAME}_SOURCE_DIR}")
+    message(STATUS "--------------------------------------------")
+  endif()
+
+  string(STRIP "${${GVS_PROJECT_NAME}_BUILD_DATE}" DVERS)
+  string(REPLACE  "/" "-" DVERS "${DVERS}")
+  # Run 'git describe' to get our tag offset
+  # execute_process(COMMAND ${GIT_EXECUTABLE} describe --long
+  #                 OUTPUT_VARIABLE DVERS
+  #                 RESULT_VARIABLE did_run
+  #                 ERROR_VARIABLE git_error
+  #                 WORKING_DIRECTORY ${${GVS_PROJECT_NAME}_SOURCE_DIR} )
+
+  #message(STATUS "DVERS: ${DVERS}")
+  set(PROJECT_PREFIX "${GVS_PROJECT_NAME}")
+  set(VERSION_GEN_NAME "${GVS_PROJECT_NAME}")
+  set(VERSION_GEN_NAMESPACE "${GVS_NAMESPACE}")
+  string(TOLOWER "${VERSION_GEN_NAMESPACE}" VERSION_INCLUDE_GUARD)
+  set(VERSION_GEN_NAMESPACE_EXPORT "${GVS_EXPORT_MACRO}")
+  set(VERSION_GEN_VER_MAJOR   ${${GVS_PROJECT_NAME}_VERSION_MAJOR})
+  set(VERSION_GEN_VER_MINOR   ${${GVS_PROJECT_NAME}_VERSION_MINOR})
+  set(VERSION_GEN_VER_PATCH   ${${GVS_PROJECT_NAME}_VERSION_PATCH})
+  set(VERSION_GEN_VER_SUFFIX  ${${GVS_PROJECT_NAME}_VERSION_SUFFIX})
+  set(VERSION_GEN_GIT_HASH_SHORT "0")
+
+  string(TIMESTAMP VERSION_BUILD_DATE "%Y/%m/%d")
+
+  set(VERSION_GEN_HEADER_FILE_NAME ${GVS_GENERATED_HEADER_FILE_PATH})
+
+  #-- Make sure that actually worked and if not just generate some dummy values
+  if(NOT "${DVERS}" STREQUAL "")
+    string(STRIP ${DVERS} DVERS)
+    string(REPLACE  "-" ";" VERSION_LIST ${DVERS})
+    list(LENGTH VERSION_LIST VERSION_LIST_LENGTH)
+
+    set(VERSION_GEN_VER_PATCH "0")
+    set(VERSION_GEN_GIT_HASH_SHORT "0")
+
+    list(LENGTH VERSION_LIST LIST_LENGTH)
+    if(LIST_LENGTH GREATER 1)
+      list(GET VERSION_LIST 0 VERSION_GEN_VER_MAJOR)
+      list(GET VERSION_LIST 1 VERSION_GEN_VER_MINOR)
+      list(GET VERSION_LIST 2 VERSION_GEN_VER_PATCH)
+    endif()
+
+  endif()
+
+  find_package(Git)
+  # Run 'git rev-parse --short HEAD' to get our revision
+  execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+                  OUTPUT_VARIABLE DVERS
+                  RESULT_VARIABLE did_run
+                  ERROR_VARIABLE git_error
+                  WORKING_DIRECTORY ${${GVS_PROJECT_NAME}_SOURCE_DIR} )
+  string(STRIP "${DVERS}" DVERS)
+  if(DVERS STREQUAL "")
+    message(STATUS "[${GVS_PROJECT_NAME}] 'git rev-parse --short HEAD' did not return anything valid")
+    set(VERSION_GEN_GIT_HASH_SHORT "000000000000")
+  else()
+    set(VERSION_GEN_GIT_HASH_SHORT "${DVERS}")
+  endif()
+
+  set(${GVS_PROJECT_NAME}_VERSION_MAJOR "${VERSION_GEN_VER_MAJOR}" PARENT_SCOPE)
+  set(${GVS_PROJECT_NAME}_VERSION_MINOR "${VERSION_GEN_VER_MINOR}" PARENT_SCOPE)
+  set(${GVS_PROJECT_NAME}_VERSION_PATCH "${VERSION_GEN_VER_PATCH}" PARENT_SCOPE)
+  set(${GVS_PROJECT_NAME}_VERSION_TWEAK "${VERSION_GEN_GIT_HASH_SHORT}" PARENT_SCOPE)
+
+  set(CMP_TOP_HEADER_INCLUDE_STATMENT "")
+  if(NOT "${CMP_TOP_HEADER_FILE}" STREQUAL "")
+    set(CMP_TOP_HEADER_INCLUDE_STATMENT "#include \"${CMP_TOP_HEADER_FILE}\"")
+  endif()
+
+  execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --verify HEAD
+                  OUTPUT_VARIABLE GVS_GIT_HASH
+                  RESULT_VARIABLE did_run
+                  ERROR_VARIABLE git_error
+                  WORKING_DIRECTORY ${${GVS_PROJECT_NAME}_SOURCE_DIR} 
+  )
+  string(REPLACE "\n" "" GVS_GIT_HASH "${GVS_GIT_HASH}")
+  set_property(GLOBAL PROPERTY ${GVS_PROJECT_NAME}_GIT_HASH ${GVS_GIT_HASH})
+
+  execute_process(COMMAND ${GIT_EXECUTABLE} log -1 --pretty='%cd' --date=format:%Y-%m-%d-%H:%M:%S
+                  OUTPUT_VARIABLE GVS_GIT_COMMIT_DATE
+                  RESULT_VARIABLE did_run
+                  ERROR_VARIABLE git_error
+                  WORKING_DIRECTORY ${${GVS_PROJECT_NAME}_SOURCE_DIR} 
+  )
+  string(REPLACE "\n" "" GVS_GIT_COMMIT_DATE "${GVS_GIT_COMMIT_DATE}")
+  set_property(GLOBAL PROPERTY ${GVS_PROJECT_NAME}_GIT_COMMIT_DATE ${GVS_GIT_COMMIT_DATE})
+
+  if(NOT "${GVS_GENERATED_HEADER_FILE_PATH}" STREQUAL "")
+    # message(STATUS "Generating: ${${GVS_PROJECT_NAME}_BINARY_DIR}/${GVS_GENERATED_HEADER_FILE_PATH}")
+    cmpConfigureFileWithMD5Check( GENERATED_FILE_PATH        ${${GVS_PROJECT_NAME}_BINARY_DIR}/${GVS_GENERATED_HEADER_FILE_PATH}
+                                  CONFIGURED_TEMPLATE_PATH     ${CMP_VERSION_HDR_TEMPLATE_FILE} )
+  endif()
+  
+  if(NOT "${GVS_GENERATED_SOURCE_FILE_PATH}" STREQUAL "")
+    # message(STATUS "Generating: ${${GVS_PROJECT_NAME}_BINARY_DIR}/${GVS_GENERATED_SOURCE_FILE_PATH}")
+    cmpConfigureFileWithMD5Check( GENERATED_FILE_PATH        ${${GVS_PROJECT_NAME}_BINARY_DIR}/${GVS_GENERATED_SOURCE_FILE_PATH}
+                                  CONFIGURED_TEMPLATE_PATH     ${CMP_VERSION_SRC_TEMPLATE_FILE} )
+  endif()
+  
+  if(NOT "${GVS_VERSION_MACRO_PATH}" STREQUAL "")
+    # message(STATUS "Generating: ${${GVS_PROJECT_NAME}_BINARY_DIR}/${GVS_VERSION_MACRO_PATH}")
+    cmpConfigureFileWithMD5Check( GENERATED_FILE_PATH        ${${GVS_PROJECT_NAME}_BINARY_DIR}/${GVS_VERSION_MACRO_PATH}
+                                  CONFIGURED_TEMPLATE_PATH     ${CMP_CONFIGURED_FILES_SOURCE_DIR}/cmpVersionMacro.h.in )
+  endif()
+  
+endfunction()

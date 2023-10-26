@@ -1,11 +1,11 @@
 #include "CliObserver.hpp"
 
 #include "complex/Common/Result.hpp"
+#include "complex/ComplexPython.hpp"
+#include "complex/ComplexVersion.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-
-#include "complex/ComplexPython.hpp"
 
 #include <fmt/format.h>
 
@@ -402,8 +402,7 @@ std::vector<std::string> GetPythonPluginList()
 
 int main(int argc, char* argv[])
 {
-
-  cliOut << "nxrunner version 1.0.0\n";
+  cliOut << fmt::format("nxrunner: Version {} Build Date:{}\n\n", complex::Version::Package(), complex::Version::BuildDate());
   // cliOut.endline();
   // cliOut << "ARGUMENT LISTING START\n";
   // for(int argIndex = 0; argIndex < argc; argIndex++)
