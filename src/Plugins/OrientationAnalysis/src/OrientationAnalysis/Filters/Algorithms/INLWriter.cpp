@@ -1,6 +1,6 @@
 #include "INLWriter.hpp"
 
-#include "complex/ComplexVersion.h"
+#include "complex/ComplexVersion.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -105,7 +105,7 @@ Result<> INLWriter::operator()()
   FloatVec3 origin = imageGeom.getOrigin();
 
   // Write the header, Each line starts with a "#" symbol
-  fout << "# File written from " << COMPLEX_PACKAGE_COMPLETE << "\n";
+  fout << "# File written from " << complex::Version::PackageComplete() << "\n";
   fout << "# X_STEP: " << std::fixed << res[0] << "\n";
   fout << "# Y_STEP: " << std::fixed << res[1] << "\n";
   fout << "# Z_STEP: " << std::fixed << res[2] << "\n";

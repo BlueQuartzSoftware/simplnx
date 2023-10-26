@@ -721,11 +721,29 @@ list(APPEND COMPLEX_GENERATED_HEADERS
   ${COMPLEX_GENERATED_PYTHON_HEADER}
 )
 
-set(COMPLEX_GENERATED_VERSION_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/ComplexVersion.h)
-configure_file(${complex_SOURCE_DIR}/cmake/ComplexVersion.h.in ${COMPLEX_GENERATED_VERSION_HEADER})
+# set(COMPLEX_GENERATED_VERSION_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/ComplexVersion.h)
+# configure_file(${complex_SOURCE_DIR}/cmake/ComplexVersion.h.in ${COMPLEX_GENERATED_VERSION_HEADER})
+
+
+set(CMP_VERSION_HDR_TEMPLATE_FILE ${complex_SOURCE_DIR}/cmake/ComplexVersion.hpp)
+set(CMP_VERSION_SRC_TEMPLATE_FILE ${complex_SOURCE_DIR}/cmake/ComplexVersion.cpp.in)
+set(VERSION_GEN_HEADER_FILE_NAME "ComplexVersion.hpp")
+
+cmpBuildDateRevisionString(GENERATED_HEADER_FILE_PATH "generated/complex/ComplexVersion.hpp"
+      GENERATED_SOURCE_FILE_PATH "generated/complex/ComplexVersion.cpp"
+      NAMESPACE complex
+      PROJECT_NAME complex
+      EXPORT_MACRO ""
+      VERSION_MACRO_PATH ""
+      STRING_CLASS std::string
+      STRING_INCLUDE "#include <string>"
+)
+
+
 
 list(APPEND COMPLEX_GENERATED_HEADERS
-  ${COMPLEX_GENERATED_VERSION_HEADER}
+  ${COMPLEX_GENERATED_HEADER_DIR}/ComplexVersion.hpp
+  ${COMPLEX_GENERATED_HEADER_DIR}/ComplexVersion.cpp
 )
 
 set(COMPLEX_ALL_HDRS
