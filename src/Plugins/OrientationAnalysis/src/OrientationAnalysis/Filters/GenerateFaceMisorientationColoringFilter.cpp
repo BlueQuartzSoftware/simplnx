@@ -6,6 +6,9 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
@@ -120,5 +123,37 @@ Result<> GenerateFaceMisorientationColoringFilter::executeImpl(DataStructure& da
   inputValues.SurfaceMeshFaceMisorientationColorsArrayName = filterArgs.value<std::string>(k_SurfaceMeshFaceMisorientationColorsArrayName_Key);
 
   return GenerateFaceMisorientationColoring(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
+constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteral k_SurfaceMeshFaceMisorientationColorsArrayNameKey = "SurfaceMeshFaceMisorientationColorsArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> GenerateFaceMisorientationColoringFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = GenerateFaceMisorientationColoringFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceMisorientationColorsArrayNameKey,
+                                                                                                                   k_SurfaceMeshFaceMisorientationColorsArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

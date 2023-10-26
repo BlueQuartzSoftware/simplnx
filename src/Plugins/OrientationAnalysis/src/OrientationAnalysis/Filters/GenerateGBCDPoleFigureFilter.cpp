@@ -12,6 +12,8 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 using namespace complex;
@@ -145,5 +147,42 @@ Result<> GenerateGBCDPoleFigureFilter::executeImpl(DataStructure& dataStructure,
   inputValues.CellIntensityArrayName = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
 
   return GenerateGBCDPoleFigure(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_PhaseOfInterestKey = "PhaseOfInterest";
+constexpr StringLiteral k_MisorientationRotationKey = "MisorientationRotation";
+constexpr StringLiteral k_OutputFileKey = "OutputFile";
+constexpr StringLiteral k_OutputDimensionKey = "OutputDimension";
+constexpr StringLiteral k_GBCDArrayPathKey = "GBCDArrayPath";
+constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteral k_IntensityArrayNameKey = "IntensityArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> GenerateGBCDPoleFigureFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = GenerateGBCDPoleFigureFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_PhaseOfInterestKey, k_PhaseOfInterest_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AxisAngleFilterParameterConverter<float32>>(args, json, SIMPL::k_MisorientationRotationKey, k_MisorientationRotation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_OutputDimensionKey, k_OutputImageDimension_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeometryName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_IntensityArrayNameKey, k_CellIntensityArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

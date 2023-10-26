@@ -10,6 +10,8 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -140,5 +142,36 @@ Result<> ReadEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.PhaseTypesArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_PhaseTypesArrayName_Key));
 
   return ReadEnsembleInfo(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputFileKey = "InputFile";
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteral k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
+constexpr StringLiteral k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> EnsembleInfoReaderFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = EnsembleInfoReaderFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataContainerName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
