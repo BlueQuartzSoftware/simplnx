@@ -163,7 +163,7 @@ endif()
 #   add_custom_target(complexpy_docs
 #     COMMAND
 #       ${CMAKE_COMMAND} -E env "PYTHONPATH=$<TARGET_FILE_DIR:complex>"
-#       ${SPHINX_EXECUTABLE} -b html ${SPHINX_SOURCE} ${SPHINX_BUILD}
+#       ${SPHINX_BUILD_EXECUTABLE} -b html ${SPHINX_SOURCE} ${SPHINX_BUILD}
 #     WORKING_DIRECTORY $<TARGET_FILE_DIR:complex>
 #     COMMENT "Generating complexpy docs with Sphinx"
 #     VERBATIM

@@ -5,7 +5,7 @@ pushd %~dp0
 REM Command file for Sphinx documentation
 
 if "%SPHINXBUILD%" == "" (
-	set SPHINXBUILD=${SPHINX_EXECUTABLE}
+	set SPHINXBUILD=${SPHINX_BUILD_EXECUTABLE}
 )
 set SOURCEDIR=${COMPLEX_SPHINX_DOCS_DIR}/source
 set BUILDDIR=${COMPLEX_SPHINX_DOCS_DIR}/build
