@@ -16,6 +16,8 @@
 #include "EbsdLib/IO/TSL/AngPhase.h"
 #include "EbsdLib/IO/TSL/AngReader.h"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -216,5 +218,33 @@ Result<> ReadAngDataFilter::executeImpl(DataStructure& dataStructure, const Argu
 
   ReadAngData readAngData(dataStructure, messageHandler, shouldCancel, &inputValues);
   return readAngData();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputFileKey = "InputFile";
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ReadAngDataFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ReadAngDataFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataContainerName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

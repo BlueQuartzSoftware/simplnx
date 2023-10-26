@@ -4,6 +4,9 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/VectorParameter.hpp"
 
 using namespace complex;
@@ -92,5 +95,30 @@ Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, co
 
   // Let the Algorithm instance do the work
   return RotateEulerRefFrame(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
+constexpr StringLiteral k_RotationAxisKey = "RotationAxis";
+constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RotateEulerRefFrameFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RotateEulerRefFrameFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(
+      SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, SIMPL::k_RotationAxisKey, SIMPL::k_RotationAngleKey, k_RotationAxisAngle_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

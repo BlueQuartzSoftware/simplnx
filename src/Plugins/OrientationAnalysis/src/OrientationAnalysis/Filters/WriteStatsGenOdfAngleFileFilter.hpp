@@ -34,6 +34,13 @@ public:
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   static inline constexpr uint64 k_CommaDelimiter = 0;
   static inline constexpr uint64 k_SemiColonDelimiter = 1;
   static inline constexpr uint64 k_SpaceDelimiter = 2;

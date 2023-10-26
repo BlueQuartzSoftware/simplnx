@@ -9,6 +9,8 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/WriteGBCDGMTFile.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -129,5 +131,35 @@ Result<> WriteGBCDGMTFileFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   return WriteGBCDGMTFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_PhaseOfInterestKey = "PhaseOfInterest";
+constexpr StringLiteral k_MisorientationRotationKey = "MisorientationRotation";
+constexpr StringLiteral k_OutputFileKey = "OutputFile";
+constexpr StringLiteral k_GBCDArrayPathKey = "GBCDArrayPath";
+constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ExportGBCDGMTFileFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ExportGBCDGMTFileFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_PhaseOfInterestKey, k_PhaseOfInterest_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AxisAngleFilterParameterConverter<float32>>(args, json, SIMPL::k_MisorientationRotationKey, k_MisorientationRotation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputFileKey, k_OutputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

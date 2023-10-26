@@ -8,6 +8,9 @@
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
@@ -117,5 +120,30 @@ Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return RodriguesConvertor(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_RodriguesDataArrayPathKey = "RodriguesDataArrayPath";
+constexpr StringLiteral k_OutputDataArrayPathKey = "OutputDataArrayPath";
+constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RodriguesConvertorFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RodriguesConvertorFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_RodriguesDataArrayPathKey, k_RodriguesDataArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_OutputDataArrayPathKey, k_OutputDataArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
