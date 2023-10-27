@@ -56,8 +56,8 @@ Parameters ExtractVertexGeometryFilter::parameters() const
   params.insert(
       std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "Move or Copy input data arrays", 0, ChoicesParameter::Choices{"Move Attribute Arrays", "Copy Attribute Arrays"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_InputGeometryPath_Key, "Input Geometry", "The input Image/RectilinearGrid Geometry to convert", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::ImageGeom, BaseGroup::GroupType::RectGridGeom}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array",
@@ -104,12 +104,12 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   usize geomElementCount = dims[0] * dims[1] * dims[2];
   if(pUseMaskValue)
   {
-    const BoolArray& maskArray = dataStructure.getDataRefAs<BoolArray>(pMaskArrayPathValue);
-    if(maskArray.getNumberOfTuples() != geomElementCount)
+    const BoolArray* maskArray = dataStructure.getDataAs<BoolArray>(pMaskArrayPathValue);
+    if(maskArray->getNumberOfTuples() != geomElementCount)
     {
       return {MakeErrorResult<OutputActions>(-2003, fmt::format("{0}: The data array with path '{1}' has a tuple count of {2}, but this does not match the "
                                                                 "number of tuples required by geometry '{3}' ({4})",
-                                                                humanName(), pMaskArrayPathValue.toString(), maskArray.getNumberOfTuples(), geometry.getName(), geomElementCount))};
+                                                                humanName(), pMaskArrayPathValue.toString(), maskArray->getNumberOfTuples(), geometry.getName(), geomElementCount))};
     }
   }
 
@@ -119,7 +119,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
     DataPath parentPath = dataPath.getParent();
     if(parentPath.empty())
     {
-      return {MakeErrorResult<OutputActions>(-2004, fmt::format("{}: The data array with path '{}' has no parent.  It must have an AttributeMatrix as a parent.", humanName(), dataPath.toString()))};
+      return {MakeErrorResult<OutputActions>(-2004, fmt::format("{}: The data array with path '{}' has no parent. It must have an AttributeMatrix as a parent.", humanName(), dataPath.toString()))};
     }
     if(dataStructure.getDataAs<AttributeMatrix>(parentPath) == nullptr)
     {
@@ -168,13 +168,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
     }
   }
 
-  PreflightResult preflightResult;
-
   std::vector<PreflightValue> preflightUpdatedValues;
-
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

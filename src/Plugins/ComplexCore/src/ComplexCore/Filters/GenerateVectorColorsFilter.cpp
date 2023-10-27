@@ -56,8 +56,8 @@ Parameters GenerateVectorColorsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Apply to Good Voxels Only (Bad Voxels Will Be Black)", "Whether or not to assign colors to bad voxels or leave them black", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "Used to define Elements as good or bad ", DataPath{},
+      std::make_unique<BoolParameter>(k_UseMask_Key, "Apply to Good Voxels Only (Bad Voxels Will Be Black)", "Whether or not to assign colors to bad voxels or leave them black", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Used to define Elements as good or bad ", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
@@ -68,7 +68,7 @@ Parameters GenerateVectorColorsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellVectorColorsArrayName_Key, "Vector Colors", "RGB colors", "Vector Colors Array"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsArrayPath_Key, true);
+  params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   return params;
 }
@@ -83,9 +83,9 @@ IFilter::UniquePointer GenerateVectorColorsFilter::clone() const
 IFilter::PreflightResult GenerateVectorColorsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                    const std::atomic_bool& shouldCancel) const
 {
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseGoodVoxels_Key);
+  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pVectorsArrayPathValue = filterArgs.value<DataPath>(k_VectorsArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCellVectorColorsArrayNameValue = filterArgs.value<std::string>(k_CellVectorColorsArrayName_Key);
 
   PreflightResult preflightResult;
@@ -114,16 +114,16 @@ Result<> GenerateVectorColorsFilter::executeImpl(DataStructure& dataStructure, c
 {
   GenerateVectorColorsInputValues inputValues;
 
-  inputValues.UseGoodVoxels = filterArgs.value<bool>(k_UseGoodVoxels_Key);
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.VectorsArrayPath = filterArgs.value<DataPath>(k_VectorsArrayPath_Key);
-  if(!inputValues.UseGoodVoxels)
+  if(!inputValues.UseMask)
   {
-    inputValues.GoodVoxelsArrayPath = k_MaskArrayPath;
+    inputValues.MaskArrayPath = k_MaskArrayPath;
     dataStructure.getDataAs<BoolArray>(k_MaskArrayPath)->fill(true);
   }
   else
   {
-    inputValues.GoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+    inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   }
   inputValues.CellVectorColorsArrayPath = inputValues.VectorsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CellVectorColorsArrayName_Key));
 

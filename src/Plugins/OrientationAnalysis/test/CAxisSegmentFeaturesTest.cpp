@@ -35,11 +35,11 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Executi
     // Create default Parameters for the filter.
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
-    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(true));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
-    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_ComputedFeatureIds));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_ComputedCellFeatureData));
@@ -84,7 +84,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Invalid Filter Execu
   // Invalid crystal structure type : should fail in execute
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));

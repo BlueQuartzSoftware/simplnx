@@ -41,8 +41,8 @@ TEST_CASE("ComplexCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentF
     // Create default Parameters for the filter.
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(gridGeomDataPath));
     // Turn off the use of a Mask Array
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseGoodVoxelsKey, std::make_any<bool>(false));
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GoodVoxelsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
     // Set the input array and the tolerance
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(inputDataArrayPath));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(scalarTolerance));

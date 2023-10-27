@@ -90,9 +90,9 @@ result = cxor.GenerateIPFColorsFilter.execute(    data_structure=data_structure,
     cell_ipf_colors_array_name="IPFColors",
     cell_phases_array_path=cx.DataPath(["Small IN100", "Scan Data", "Phases"]),
     crystal_structures_array_path=cx.DataPath(["Small IN100", "Phase Data", "CrystalStructures"]),
-    good_voxels_array_path=cx.DataPath(["Small IN100", "Scan Data", "Mask"]),
+    mask_array_path=cx.DataPath(["Small IN100", "Scan Data", "Mask"]),
     reference_dir=[0,0,1],
-    use_good_voxels=True
+    use_mask=True
 )
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
@@ -157,7 +157,7 @@ result = cxor.WritePoleFigureFilter.execute(data_structure=data_structure,
                                             cell_phases_array_path=cx.DataPath(["Small IN100", "Scan Data", "Phases"]),
                                             crystal_structures_array_path=cx.DataPath(["Small IN100", "Phase Data", "CrystalStructures"]),
                                             generation_algorithm=1, # Discrete = 1 
-                                            good_voxels_array_path=cx.DataPath(["Small IN100", "Scan Data", "Mask"]), 
+                                            mask_array_path=cx.DataPath(["Small IN100", "Scan Data", "Mask"]), 
                                             image_geometry_path=cx.DataPath(["Small IN100 Pole Figure"]), 
                                             image_layout=0, # O = Horizontal Layout 
                                             image_prefix=prefix, 
@@ -168,7 +168,7 @@ result = cxor.WritePoleFigureFilter.execute(data_structure=data_structure,
                                             output_path="small_in100_pole_figure", 
                                             save_as_image_geometry=True, 
                                             title="Small IN100 Slice 1", 
-                                            use_good_voxels=True, 
+                                            use_mask=True, 
                                             write_image_to_disk=True)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)

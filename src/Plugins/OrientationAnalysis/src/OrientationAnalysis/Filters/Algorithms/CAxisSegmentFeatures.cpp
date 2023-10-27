@@ -34,16 +34,16 @@ Result<> CAxisSegmentFeatures::operator()()
   auto* imageGeometry = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  if(m_InputValues->UseGoodVoxels)
+  if(m_InputValues->UseMask)
   {
     try
     {
-      m_GoodVoxelsArray = InstantiateMaskCompare(m_DataStructure, m_InputValues->GoodVoxelsArrayPath);
+      m_GoodVoxelsArray = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range&)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
-      return MakeErrorResult(-8362, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->GoodVoxelsArrayPath.toString()));
+      return MakeErrorResult(-8362, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
     }
   }
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
@@ -100,7 +100,7 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   {
     if(featureIds[randPoint] == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if((!m_InputValues->UseGoodVoxels || m_GoodVoxelsArray->isTrue(randPoint)) && cellPhases[randPoint] > 0)
+      if((!m_InputValues->UseMask || m_GoodVoxelsArray->isTrue(randPoint)) && cellPhases[randPoint] > 0)
       {
         seed = static_cast<int64>(randPoint);
       }
@@ -145,7 +145,7 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
   {
     neighborPointIsGood = m_GoodVoxelsArray->isTrue(neighborpoint);
   }
-  if(featureIds[neighborpoint] == 0 && (!m_InputValues->UseGoodVoxels || neighborPointIsGood))
+  if(featureIds[neighborpoint] == 0 && (!m_InputValues->UseMask || neighborPointIsGood))
   {
     const QuatF q1(currentQuat[referencepoint * 4], currentQuat[referencepoint * 4 + 1], currentQuat[referencepoint * 4 + 2], currentQuat[referencepoint * 4 + 3]);
     const QuatF q2(currentQuat[neighborpoint * 4 + 0], currentQuat[neighborpoint * 4 + 1], currentQuat[neighborpoint * 4 + 2], currentQuat[neighborpoint * 4 + 3]);

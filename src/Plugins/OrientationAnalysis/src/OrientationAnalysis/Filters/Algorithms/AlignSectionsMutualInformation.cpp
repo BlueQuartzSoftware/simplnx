@@ -247,7 +247,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
   auto orientationOps = LaueOps::GetAllOrientationOps();
 
   Float32Array& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  BoolArray* goodVoxelsPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->GoodVoxelsArrayPath);
+  BoolArray* goodVoxelsPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->MaskArrayPath);
   Int32Array& m_CellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   UInt32Array& m_CrystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
@@ -276,7 +276,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
 
       for(int64 point = currentStartPoint; point < endPoint; point++)
       {
-        if((!m_InputValues->UseGoodVoxels || (goodVoxelsPtr != nullptr && (*goodVoxelsPtr)[point])) && miFeatureIds[point] == 0 && m_CellPhases[point] > 0)
+        if((!m_InputValues->UseMask || (goodVoxelsPtr != nullptr && (*goodVoxelsPtr)[point])) && miFeatureIds[point] == 0 && m_CellPhases[point] > 0)
         {
           seed = point;
           currentStartPoint = point;

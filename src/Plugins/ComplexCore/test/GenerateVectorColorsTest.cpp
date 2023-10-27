@@ -24,7 +24,7 @@ TEST_CASE("ComplexCore::GenerateVectorColorsFilter: Valid Filter Execution", "[C
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(GenerateVectorColorsFilter::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+    args.insertOrAssign(GenerateVectorColorsFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(GenerateVectorColorsFilter::k_VectorsArrayPath_Key, std::make_any<DataPath>(eulerAnglesPath));
     args.insertOrAssign(GenerateVectorColorsFilter::k_CellVectorColorsArrayName_Key, std::make_any<std::string>(k_VecColorsNX));
 

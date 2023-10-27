@@ -51,7 +51,7 @@ Parameters FindFeaturePhasesBinaryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "Data Array that specifies if the Cell is to be counted in the algorithm", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Data Array that specifies if the Cell is to be counted in the algorithm", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellDataAMPath_Key, "Cell Data Attribute Matrix",
                                                                     "The Cell Data Attribute Matrix within the Image Geometry where the Binary Phases Array will be created", DataPath{}));
@@ -100,12 +100,12 @@ Result<> FindFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure
   std::unique_ptr<MaskCompare> goodVoxelsMask;
   try
   {
-    goodVoxelsMask = InstantiateMaskCompare(dataStructure, filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key));
+    goodVoxelsMask = InstantiateMaskCompare(dataStructure, filterArgs.value<DataPath>(k_MaskArrayPath_Key));
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key).toString());
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", filterArgs.value<DataPath>(k_MaskArrayPath_Key).toString());
     return MakeErrorResult(-53800, message);
   }
 

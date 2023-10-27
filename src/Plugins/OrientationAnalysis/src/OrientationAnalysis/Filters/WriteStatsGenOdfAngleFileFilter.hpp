@@ -29,10 +29,10 @@ public:
   static inline constexpr StringLiteral k_Sigma_Key = "sigma";
   static inline constexpr StringLiteral k_Delimiter_Key = "delimiter";
   static inline constexpr StringLiteral k_ConvertToDegrees_Key = "convert_to_degrees";
-  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   static inline constexpr uint64 k_CommaDelimiter = 0;
   static inline constexpr uint64 k_SemiColonDelimiter = 1;

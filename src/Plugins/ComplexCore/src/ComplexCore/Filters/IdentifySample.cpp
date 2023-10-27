@@ -264,7 +264,7 @@ Parameters IdentifySample::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_FillHoles_Key, "Fill Holes in Largest Feature", "Whether to fill holes within sample after it is identified", true));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "DataPath to the target ImageGeom", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxels_Key, "Mask", "DataPath to the mask array defining what is sample and what is not", DataPath(),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the mask array defining what is sample and what is not", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{complex::DataType::boolean, complex::DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   return params;
@@ -280,7 +280,7 @@ IFilter::UniquePointer IdentifySample::clone() const
 IFilter::PreflightResult IdentifySample::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   const auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
-  const auto goodVoxelsArrayPath = args.value<DataPath>(k_GoodVoxels_Key);
+  const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
 
   const auto& inputData = data.getDataRefAs<IDataArray>(goodVoxelsArrayPath);
   const DataType arrayType = inputData.getDataType();
@@ -299,7 +299,7 @@ Result<> IdentifySample::executeImpl(DataStructure& data, const Arguments& args,
 {
   const auto fillHoles = args.value<bool>(k_FillHoles_Key);
   const auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
-  const auto goodVoxelsArrayPath = args.value<DataPath>(k_GoodVoxels_Key);
+  const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
 
   const auto& inputData = data.getDataRefAs<IDataArray>(goodVoxelsArrayPath);
   const DataType arrayType = inputData.getDataType();

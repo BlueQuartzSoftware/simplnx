@@ -136,10 +136,10 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
   // Parameter Keys
   constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
-  constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  constexpr StringLiteral k_UseMask_Key = "use_mask";
   constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  constexpr StringLiteral k_GoodVoxelsPath_Key = "good_voxels_array_path";
+  constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
   constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
@@ -150,11 +150,11 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
 
   // Create default Parameters for the filter.
   args.insertOrAssign(k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
-  args.insertOrAssign(k_UseGoodVoxels_Key, std::make_any<bool>(true));
+  args.insertOrAssign(k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(k_GridGeomPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
   args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
-  args.insertOrAssign(k_GoodVoxelsPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
   args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
   args.insertOrAssign(k_FeatureIdsArrayName_Key, std::make_any<std::string>(Constants::k_FeatureIds));
   args.insertOrAssign(k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Grain_Data));
@@ -183,8 +183,8 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
 
-  constexpr StringLiteral k_GoodVoxels_Key = "use_good_voxels";
-  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  constexpr StringLiteral k_UseMask_Key = "use_mask";
+  constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
@@ -200,8 +200,8 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 
   args.insertOrAssign(k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
 
-  args.insertOrAssign(k_GoodVoxels_Key, std::make_any<bool>(true));
-  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
 
   args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
   args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
@@ -231,7 +231,7 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
   constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
   constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
-  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
   constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
@@ -241,7 +241,7 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   args.insertOrAssign(k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(shiftsFile));
   args.insertOrAssign(k_UseReferenceSlice_Key, std::make_any<bool>(true));
   args.insertOrAssign(k_ReferenceSlice_Key, std::make_any<int32>(0));
-  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
   args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(k_SelectedCellDataGroup_Key, std::make_any<DataPath>(Constants::k_CellAttributeMatrix));
 
@@ -266,7 +266,7 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
   constexpr StringLiteral k_NumberOfNeighbors_Key = "number_of_neighbors";
   constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
   constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
@@ -276,7 +276,7 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
   args.insertOrAssign(k_NumberOfNeighbors_Key, std::make_any<int32>(4));
   args.insertOrAssign(k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
-  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
   args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
   args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
 

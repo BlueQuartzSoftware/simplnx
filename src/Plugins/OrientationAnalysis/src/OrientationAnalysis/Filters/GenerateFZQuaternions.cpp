@@ -154,8 +154,8 @@ Parameters GenerateFZQuaternions::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Input Phases", "The phases of the data. The data should be the indices into the Crystal Structures Data Array.",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Apply to Good Elements Only (Bad Elements Will Be Black)", "Whether to assign a black color to 'bad' Elements", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Input Mask [Optional]", "Optional Mask array where valid data is TRUE or 1.", DataPath{},
+      std::make_unique<BoolParameter>(k_UseMask_Key, "Apply to Good Elements Only (Bad Elements Will Be Black)", "Whether to assign a black color to 'bad' Elements", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Input Mask [Optional]", "Optional Mask array where valid data is TRUE or 1.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int8, DataType::uint8, DataType::boolean},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Ensemble Data"});
@@ -166,7 +166,7 @@ Parameters GenerateFZQuaternions::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_FZQuatsArrayPath_Key, "Created FZ Quaternions",
                                                           "The name of the array containing the Quaternion that represents an orientation within the fundamental zone for each Element", ""));
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsArrayPath_Key, true);
+  params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
   return params;
 }
 
@@ -181,10 +181,10 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
                                                               const std::atomic_bool& shouldCancel) const
 {
 
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseGoodVoxels_Key);
+  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pFZQuatsArrayPathValue = pQuatsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_FZQuatsArrayPath_Key));
 
@@ -248,10 +248,10 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
 Result<> GenerateFZQuaternions::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel) const
 {
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseGoodVoxels_Key);
+  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pFZQuatsArrayPathValue = pQuatsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_FZQuatsArrayPath_Key));
 

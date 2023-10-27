@@ -24,9 +24,9 @@ public:
   GenerateVectorColorsFilter& operator=(GenerateVectorColorsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_VectorsArrayPath_Key = "vectors_array_path";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_CellVectorColorsArrayName_Key = "cell_vector_colors_array_name";
 
   /**

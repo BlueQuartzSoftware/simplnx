@@ -76,8 +76,8 @@ TEST_CASE("OrientationAnalysis::GenerateFZQuaternions", "[OrientationAnalysis][G
   args.insertOrAssign(GenerateFZQuaternions::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(scanDataPath.createChildPath(k_Phases)));
   args.insertOrAssign(GenerateFZQuaternions::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_PhaseData, k_LaueClass})));
 
-  args.insertOrAssign(GenerateFZQuaternions::k_UseGoodVoxels_Key, std::make_any<bool>(false));
-  args.insertOrAssign(GenerateFZQuaternions::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFZQuaternions::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateFZQuaternions::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

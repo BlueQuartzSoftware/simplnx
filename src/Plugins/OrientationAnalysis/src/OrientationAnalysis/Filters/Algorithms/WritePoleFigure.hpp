@@ -29,10 +29,10 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
   FileSystemPathParameter::ValueType OutputPath;
   StringParameter::ValueType ImagePrefix;
   int32 ImageSize;
-  bool UseGoodVoxels;
+  bool UseMask;
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
-  DataPath GoodVoxelsArrayPath;
+  DataPath MaskArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath MaterialNameArrayPath;
 

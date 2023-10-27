@@ -33,10 +33,10 @@ public:
   static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
   static inline constexpr StringLiteral k_ImagePrefix_Key = "image_prefix";
   static inline constexpr StringLiteral k_ImageSize_Key = "image_size";
-  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static inline constexpr StringLiteral k_MaterialNameArrayPath_Key = "material_name_array_path";
   static inline constexpr StringLiteral k_SaveAsImageGeometry_Key = "save_as_image_geometry";

@@ -37,10 +37,10 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Valid Filter Ex
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_Sigma_Key, std::make_any<int32>(1));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(WriteStatsGenOdfAngleFileFilter::k_SpaceDelimiter));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_ConvertToDegrees_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(Constants::k_EulersArrayPath));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
-  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
   auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   auto executeResult = filter.execute(dataStructure, args);
@@ -49,7 +49,7 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Valid Filter Ex
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_OutputFile_Key,
                       std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/StatsGenODF_RadiansNoMask.txt", unit_test::k_BinaryTestOutputDir))));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_ConvertToDegrees_Key, std::make_any<bool>(false));
-  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseGoodVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseMask_Key, std::make_any<bool>(false));
   preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   executeResult = filter.execute(dataStructure, args);
@@ -82,9 +82,9 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter 
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_Sigma_Key, std::make_any<int32>(1));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(WriteStatsGenOdfAngleFileFilter::k_SpaceDelimiter));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_ConvertToDegrees_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(Constants::k_EulersArrayPath));
-  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
 
   SECTION("default weight < 1")
   {
