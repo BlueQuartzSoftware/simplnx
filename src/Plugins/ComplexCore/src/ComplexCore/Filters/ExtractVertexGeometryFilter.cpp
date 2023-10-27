@@ -6,15 +6,28 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
+#include "complex/Filter/Actions/MoveDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
 using namespace complex;
+namespace
+{
+
+using FeatureIdsArrayType = Int32Array;
+using GoodVoxelsArrayType = BoolArray;
+
+inline constexpr int32 k_MissingGeomError = -72440;
+inline constexpr int32 k_IncorrectInputArray = -72441;
+inline constexpr int32 k_MissingInputArray = -72442;
+inline constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -72443;
+} // namespace
 
 namespace complex
 {
@@ -45,7 +58,7 @@ std::string ExtractVertexGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExtractVertexGeometryFilter::defaultTags() const
 {
-  return {className(), "Core", "Conversion"};
+  return {className(), "Core", "Geometry", "Conversion", "Image", "Generate", "Create", "Vertex"};
 }
 
 //------------------------------------------------------------------------------
@@ -53,18 +66,26 @@ Parameters ExtractVertexGeometryFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(
-      std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "Move or Copy input data arrays", 0, ChoicesParameter::Choices{"Move Attribute Arrays", "Copy Attribute Arrays"}));
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Move or [1] Copy input data arrays", 0,
+                                                   ChoicesParameter::Choices{"Move Attribute Arrays", "Copy Attribute Arrays"}));
+
+  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_InputGeometryPath_Key, "Input Geometry", "The input Image/RectilinearGrid Geometry to convert", DataPath{},
-                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::ImageGeom, BaseGroup::GroupType::RectGridGeom}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  params.insertSeparator(Parameters::Separator{"Input Image or RectilinearGrid Geometry"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_InputGeometryPath_Key, "Input Geometry", "The input Image/RectilinearGrid Geometry to convert", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
+
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
                                                                complex::GetAllDataTypes()));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Output Vertex Geometry", "The complete path to the vertex geometry that will be created",
-                                                             DataPath({"[Vertex Geometry]"})));
+
+  params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Output Vertex Geometry", "The complete path to the vertex geometry that will be created", DataPath({"Vertex Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttrMatrixName_Key, "Output Vertex Attribute Matrix Name", "The name of the vertex attribute matrix that will be created",
                                                           std::string{"VertexData"}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SharedVertexListName_Key, "Output Shared Vertex List Name", "The name of the shared vertex list that will be created",
@@ -87,7 +108,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pArrayHandlingValue = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
-  auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
+  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pInputGeometryPathValue = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
   auto pIncludedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IncludedDataArrayPaths_Key);
@@ -97,77 +118,76 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
 
   complex::Result<OutputActions> resultOutputActions;
 
-  ArrayHandlingType arrayHandlingType = static_cast<ArrayHandlingType>(pArrayHandlingValue);
+  const ExtractVertexGeometry::ArrayHandlingType arrayHandlingType = static_cast<ExtractVertexGeometry::ArrayHandlingType>(pArrayHandlingValue);
 
   const IGridGeometry& geometry = dataStructure.getDataRefAs<IGridGeometry>({pInputGeometryPathValue});
   SizeVec3 dims = geometry.getDimensions();
   usize geomElementCount = dims[0] * dims[1] * dims[2];
-  if(pUseMaskValue)
+
+  // Create the Vertex Geometry
+  auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryPathValue, geomElementCount, pVertexAttrMatrixNameValue, pSharedVertexListNameValue);
+  resultOutputActions.value().appendAction(std::move(createVertexGeometryAction));
+
+  std::vector<DataPath> dataPaths = pIncludedDataArrayPathsValue;
+
+  // Validate the GoodVoxels/Mask Array combination
+  if(pUseGoodVoxelsValue)
   {
-    const BoolArray* maskArray = dataStructure.getDataAs<BoolArray>(pMaskArrayPathValue);
-    if(maskArray->getNumberOfTuples() != geomElementCount)
+    const complex::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
+    if(nullptr == goodVoxelsArray)
     {
-      return {MakeErrorResult<OutputActions>(-2003, fmt::format("{0}: The data array with path '{1}' has a tuple count of {2}, but this does not match the "
-                                                                "number of tuples required by geometry '{3}' ({4})",
-                                                                humanName(), pMaskArrayPathValue.toString(), maskArray->getNumberOfTuples(), geometry.getName(), geomElementCount))};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", pMaskArrayPathValue.toString())}})};
     }
+
+    if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)
+    {
+      return {nonstd::make_unexpected(
+          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool or UInt8", pMaskArrayPathValue.toString())}})};
+    }
+    dataPaths.push_back(pMaskArrayPathValue);
   }
 
-  std::optional<DataPath> cellAttrMatrixPathR;
-  for(const DataPath& dataPath : pIncludedDataArrayPathsValue)
+  // Validate the number of tuples for each of the DataArrays that are to be moved/copied
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
+  if(!tupleValidityCheck)
   {
-    DataPath parentPath = dataPath.getParent();
-    if(parentPath.empty())
-    {
-      return {MakeErrorResult<OutputActions>(-2004, fmt::format("{}: The data array with path '{}' has no parent. It must have an AttributeMatrix as a parent.", humanName(), dataPath.toString()))};
-    }
-    if(dataStructure.getDataAs<AttributeMatrix>(parentPath) == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-2005, fmt::format("{}: The data array with path '{}' does not have an AttributeMatrix as a parent.", humanName(), dataPath.toString()))};
-    }
+    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+  }
 
-    const IDataArray& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+  // Validate the number of tuples in the arrays (if any) and the number of tuples in the input grid geometry (which is also the same
+  // as the output Vertex Geometry
+  if(!dataPaths.empty())
+  {
+    const IDataArray& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPaths.front());
     if(dataArray.getNumberOfTuples() != geomElementCount)
     {
-      return {MakeErrorResult<OutputActions>(-2006, fmt::format("{}: The data array with path '{}' has a tuple count of {}, but this does not match the "
-                                                                "number of vertices required by geometry with path '{}' ({})",
-                                                                humanName(), dataPath.toString(), dataArray.getNumberOfTuples(), pVertexGeometryPathValue.toString(), geomElementCount))};
-    }
-
-    if(cellAttrMatrixPathR.has_value())
-    {
-      DataPath cellAttrMatrixPath = *cellAttrMatrixPathR;
-      if(parentPath != *cellAttrMatrixPathR)
-      {
-        return {MakeErrorResult<OutputActions>(
-            -2007, fmt::format("{}: The data array with path '{}' does not have the AttributeMatrix at path '{}' as a parent.  All data arrays must have the same AttributeMatrix parent.", humanName(),
-                               dataPath.toString(), cellAttrMatrixPath.toString()))};
-      }
-    }
-    else
-    {
-      cellAttrMatrixPathR = parentPath;
-      {
-        auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryPathValue, geomElementCount, parentPath.getTargetName(), pSharedVertexListNameValue);
-        resultOutputActions.value().appendAction(std::move(createVertexGeometryAction));
-      }
-    }
-
-    DataPath newDataPath = pVertexGeometryPathValue.createChildPath(parentPath.getTargetName()).createChildPath(dataArray.getName());
-
-    auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), dataArray.getTupleShape(), dataArray.getComponentShape(), newDataPath);
-    resultOutputActions.value().appendAction(std::move(createArrayAction));
-
-    if(arrayHandlingType == ArrayHandlingType::MoveArrays)
-    {
-      if(!pUseMaskValue)
-      {
-        auto deleteDataAction = std::make_unique<DeleteDataAction>(dataPath, DeleteDataAction::DeleteType::JustObject);
-        resultOutputActions.value().appendDeferredAction(std::move(deleteDataAction));
-      }
+      return {MakeErrorResult<OutputActions>(-2006, fmt::format("The selected DataArrays do not have the correct number of tuples. The Input Geometry ({}) has {} tuples but the "
+                                                                " selected DataArrays have {} tuples.)",
+                                                                pInputGeometryPathValue.toString(), geomElementCount, dataArray.getNumberOfTuples()))};
     }
   }
 
+  // Create appropriate actions to either copy or move the data
+  const DataPath vertexAttrMatrixPath = pVertexGeometryPathValue.createChildPath(pVertexAttrMatrixNameValue);
+  for(const DataPath& dataPath : pIncludedDataArrayPathsValue)
+  {
+    const IDataArray& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+
+    if(arrayHandlingType == ExtractVertexGeometry::ArrayHandlingType::CopyArrays)
+    {
+      DataPath newDataPath = vertexAttrMatrixPath.createChildPath(dataPath.getTargetName());
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), dataArray.getTupleShape(), dataArray.getComponentShape(), newDataPath);
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
+    }
+    else if(arrayHandlingType == ExtractVertexGeometry::ArrayHandlingType::MoveArrays)
+    {
+      auto moveDataAction = std::make_unique<MoveDataAction>(dataPath, vertexAttrMatrixPath);
+      resultOutputActions.value().appendAction(std::move(moveDataAction));
+    }
+  }
+
+  //  PreflightResult preflightResult;
+  //
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

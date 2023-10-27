@@ -2,13 +2,16 @@
 
 ## Group (Subgroup)
 
-Core Filters (Conversion)
+Core Filters (Geometry)
 
 ## Description
 
 This filter will extract all the voxel centers of an Image Geometry or a RectilinearGrid geometry
-into a new VertexGeometry. The user is given the option to copy or move cell arrays over to the
-newly created VertexGeometry.
+into a new Vertex Geometry. The user is given the option to copy or move cell arrays over to the
+newly created VertexGeometry. The user can also supply a mask array which has the effect of only
+creating a vertex if the mask value = TRUE.
+
+![Example showing the use of a Mask array to only generate specific points.](Images/ExtractVertexGeometry_1.png)
 
 % Auto generated parameter table will be inserted here
 

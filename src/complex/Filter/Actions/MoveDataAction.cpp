@@ -46,7 +46,7 @@ Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode mode) const
   for(const auto parentId : parentIds)
   {
     auto parentPaths = dataStructure.getDataPathsForId(parentId);
-    for(const auto parentPath : parentPaths)
+    for(const auto& parentPath : parentPaths)
     {
       if(m_NewParentPath == parentPath)
       {

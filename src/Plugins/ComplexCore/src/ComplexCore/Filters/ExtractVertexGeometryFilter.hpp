@@ -31,15 +31,9 @@ public:
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_InputGeometryPath_Key = "input_geometry_path";
   static inline constexpr StringLiteral k_IncludedDataArrayPaths_Key = "included_data_array_paths";
-  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "vertex_geometry_path";
-  static inline constexpr StringLiteral k_VertexAttrMatrixName_Key = "vertex_attr_matrix_name";
-  static inline constexpr StringLiteral k_SharedVertexListName_Key = "shared_vertex_list_name";
-
-  enum class ArrayHandlingType : usize
-  {
-    MoveArrays,
-    CopyArrays
-  };
+  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "output_vertex_geometry_path";
+  static inline constexpr StringLiteral k_VertexAttrMatrixName_Key = "output_vertex_attr_matrix_name";
+  static inline constexpr StringLiteral k_SharedVertexListName_Key = "output_shared_vertex_list_name";
 
   /**
    * @brief Returns the name of the filter.
