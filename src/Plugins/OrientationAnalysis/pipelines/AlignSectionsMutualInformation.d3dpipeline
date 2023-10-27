@@ -86,11 +86,11 @@
         "alignment_shift_file_name": "Data/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-        "good_voxels_array_path": "DataContainer/CellData/Mask",
+        "mask_array_path": "DataContainer/CellData/Mask",
         "misorientation_tolerance": 5.0,
         "quats_array_path": "DataContainer/CellData/Quats",
         "selected_image_geometry_path": "DataContainer",
-        "use_good_voxels": true,
+        "use_mask": true,
         "write_alignment_shifts": true
       },
       "comments": "",

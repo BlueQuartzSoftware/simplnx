@@ -70,13 +70,13 @@ Parameters GenerateColorTableFilter::parameters() const
                                                           complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Use Mask Array", "Whether to assign a black color to 'bad' Elements", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsPath_Key, "Mask", "Path to the data array used to define Elements as good or bad.", DataPath(),
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign a black color to 'bad' Elements", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the data array used to define Elements as good or bad.", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<VectorUInt8Parameter>(k_InvalidColorValue_Key, "Masked Voxel Color (RGB)", "The color to assign to voxels that have a mask value of FALSE",
                                                        VectorUInt8Parameter::ValueType{0, 0, 0}, std::vector<std::string>{"Red", "Green", "Blue"}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsPath_Key, true);
+  params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   params.insertSeparator({"Created Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(
@@ -99,8 +99,8 @@ IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStruc
   auto pSelectedDataArrayPathValue = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   auto pRgbArrayPathValue = pSelectedDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
 
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseGoodVoxels_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsPath_Key);
+  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
+  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -116,7 +116,7 @@ IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStruc
   DataPath goodVoxelsPath;
   if(pUseGoodVoxelsValue)
   {
-    goodVoxelsPath = filterArgs.value<DataPath>(k_GoodVoxelsPath_Key);
+    goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
     const complex::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
     if(nullptr == goodVoxelsArray)
@@ -150,8 +150,8 @@ Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.SelectedPreset = filterArgs.value<nlohmann::json>(k_SelectedPreset_Key);
   inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
-  inputValues.UseGoodVoxels = filterArgs.value<bool>(k_UseGoodVoxels_Key);
-  inputValues.GoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsPath_Key);
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.InvalidColor = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);
 
   return GenerateColorTable(dataStructure, messageHandler, shouldCancel, &inputValues)();

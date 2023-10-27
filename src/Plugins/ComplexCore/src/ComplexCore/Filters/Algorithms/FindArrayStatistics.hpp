@@ -30,6 +30,7 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
   bool FindStdDeviation;
   bool FindSummation;
   bool UseMask;
+  ;
   bool ComputeByIndex;
   bool StandardizeData;
   bool FindNumUniqueValues;

@@ -343,16 +343,16 @@ Result<> WritePoleFigure::operator()()
   complex::StringArray& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
 
   std::unique_ptr<MaskCompare> maskCompare = nullptr;
-  if(m_InputValues->UseGoodVoxels)
+  if(m_InputValues->UseMask)
   {
     try
     {
-      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->GoodVoxelsArrayPath);
+      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // some other context that is NOT going through the normal complex::IFilter API of Preflight and Execute
-      return MakeErrorResult(-53900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->GoodVoxelsArrayPath.toString()));
+      return MakeErrorResult(-53900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
     }
   }
 
@@ -388,7 +388,7 @@ Result<> WritePoleFigure::operator()()
     {
       if(phases[i] == phase)
       {
-        if(!m_InputValues->UseGoodVoxels || maskCompare->isTrue(i))
+        if(!m_InputValues->UseMask || maskCompare->isTrue(i))
         {
           count++;
         }
@@ -405,7 +405,7 @@ Result<> WritePoleFigure::operator()()
     {
       if(phases[i] == phase)
       {
-        if(!m_InputValues->UseGoodVoxels || maskCompare->isTrue(i))
+        if(!m_InputValues->UseMask || maskCompare->isTrue(i))
         {
           subEulers[count * 3] = eulers[i * 3];
           subEulers[count * 3 + 1] = eulers[i * 3 + 1];

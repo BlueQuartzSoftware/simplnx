@@ -28,7 +28,7 @@ TEST_CASE("ComplexCore::FindFeaturePhasesBinaryFilter: Valid Filter Execution", 
 
     // Create default Parameters for the filter.
     args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
-    args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_Mask})));
+    args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_Mask})));
     args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_CellDataAMPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData})));
 
     args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_BinaryFeaturePhasesName));

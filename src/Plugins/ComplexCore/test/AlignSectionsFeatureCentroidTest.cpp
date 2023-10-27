@@ -56,7 +56,7 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
     constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
     constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
     constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
-    constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+    constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
     constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
     constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
@@ -66,7 +66,7 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
     args.insertOrAssign(k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
     args.insertOrAssign(k_UseReferenceSlice_Key, std::make_any<bool>(true));
     args.insertOrAssign(k_ReferenceSlice_Key, std::make_any<int32>(0));
-    args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
+    args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
     args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
     args.insertOrAssign(k_SelectedCellDataGroup_Key, std::make_any<DataPath>(k_CellAttributeMatrix));
 

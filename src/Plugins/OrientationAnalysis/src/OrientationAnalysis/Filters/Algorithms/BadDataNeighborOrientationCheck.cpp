@@ -45,12 +45,12 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   std::unique_ptr<MaskCompare> maskCompare = nullptr;
   try
   {
-    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->GoodVoxelsArrayPath);
+    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->GoodVoxelsArrayPath.toString());
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
     return MakeErrorResult(-54900, message);
   }
 

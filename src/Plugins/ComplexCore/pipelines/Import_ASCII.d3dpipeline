@@ -149,13 +149,13 @@
         "cell_ipf_colors_array_name": "IPFColors",
         "cell_phases_array_path": "[Image Geometry]/CellData/Phase",
         "crystal_structures_array_path": "[Image Geometry]/CellEnsembleData/CrystalStructures",
-        "good_voxels_array_path": "",
+        "mask_array_path": "",
         "reference_dir": [
           0.0,
           0.0,
           1.0
         ],
-        "use_good_voxels": false
+        "use_mask": false
       },
       "comments": "",
       "filter": {

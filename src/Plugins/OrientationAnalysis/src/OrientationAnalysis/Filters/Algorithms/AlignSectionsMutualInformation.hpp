@@ -18,11 +18,11 @@ struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationInputValues
   bool WriteAlignmentShifts;
   FileSystemPathParameter::ValueType AlignmentShiftFileName;
   float32 MisorientationTolerance;
-  bool UseGoodVoxels;
+  bool UseMask;
   DataPath ImageGeometryPath;
   DataPath QuatsArrayPath;
   DataPath CellPhasesArrayPath;
-  DataPath GoodVoxelsArrayPath;
+  DataPath MaskArrayPath;
   DataPath CrystalStructuresArrayPath;
 };
 

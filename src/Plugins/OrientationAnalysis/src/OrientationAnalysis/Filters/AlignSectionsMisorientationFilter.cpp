@@ -75,11 +75,11 @@ Parameters AlignSectionsMisorientationFilter::parameters() const
                                                    5.0f));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_GoodVoxels_Key, "Use Mask Array", "Whether to remove some Cells from consideration in the alignment process", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "Path to the DataArray Mask", DataPath({"Mask"}),
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to remove some Cells from consideration in the alignment process", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the DataArray Mask", DataPath({"Mask"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_GoodVoxels_Key, k_GoodVoxelsArrayPath_Key, true);
+  params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath({"Data Container"}),
@@ -117,10 +117,10 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   auto pWriteAlignmentShifts = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
   auto pAlignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
   auto pMisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
-  auto pUseGoodVoxels = filterArgs.value<bool>(k_GoodVoxels_Key);
+  auto pUseGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
   auto pQuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pGoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+  auto pGoodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
@@ -188,10 +188,10 @@ Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStruc
   inputValues.writeAlignmentShifts = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
   inputValues.alignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
   inputValues.misorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
-  inputValues.useGoodVoxels = filterArgs.value<bool>(k_GoodVoxels_Key);
+  inputValues.useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.quatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
+  inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   return AlignSectionsMisorientation(dataStructure, messageHandler, shouldCancel, &inputValues)();

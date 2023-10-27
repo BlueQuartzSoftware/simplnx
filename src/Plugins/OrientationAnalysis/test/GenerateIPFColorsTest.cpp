@@ -71,10 +71,10 @@ TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][Gener
 
     // Create default Parameters for the filter.
     args.insertOrAssign(GenerateIPFColorsFilter::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F}));
-    args.insertOrAssign(GenerateIPFColorsFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
+    args.insertOrAssign(GenerateIPFColorsFilter::k_UseMask_Key, std::make_any<bool>(true));
     args.insertOrAssign(GenerateIPFColorsFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(cellEulerAnglesPath));
     args.insertOrAssign(GenerateIPFColorsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellPhasesArrayPath));
-    args.insertOrAssign(GenerateIPFColorsFilter::k_GoodVoxelsPath_Key, std::make_any<DataPath>(goodVoxelsPath));
+    args.insertOrAssign(GenerateIPFColorsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(goodVoxelsPath));
     args.insertOrAssign(GenerateIPFColorsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresArrayPath));
     args.insertOrAssign(GenerateIPFColorsFilter::k_CellIPFColorsArrayName_Key, std::make_any<std::string>(Constants::k_OutputIPFColors));
 

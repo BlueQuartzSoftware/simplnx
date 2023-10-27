@@ -1258,12 +1258,12 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
   // Parameter Keys
   constexpr StringLiteral k_FillHoles_Key = "fill_holes";
   constexpr StringLiteral k_ImageGeom_Key = "image_geometry";
-  constexpr StringLiteral k_GoodVoxels_Key = "good_voxels";
+  constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   Arguments args;
   args.insertOrAssign(k_FillHoles_Key, std::make_any<BoolParameter::ValueType>(false));
   args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(Constants::k_DataContainerPath));
-  args.insertOrAssign(k_GoodVoxels_Key, std::make_any<ArraySelectionParameter::ValueType>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(Constants::k_MaskArrayPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
