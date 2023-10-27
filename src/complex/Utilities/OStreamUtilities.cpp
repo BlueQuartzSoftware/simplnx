@@ -150,6 +150,7 @@ struct PrintDataArray
       maxLine = static_cast<size_t>(dataArray.getNumberOfComponents());
     }
 
+    usize numComps = dataArray.getNumberOfComponents();
     for(size_t tuple = 0; tuple < numTuples; tuple++)
     {
       auto now = std::chrono::steady_clock::now();
@@ -163,19 +164,19 @@ struct PrintDataArray
           return {};
         }
       }
-      for(size_t index = 0; index < dataArray.getNumberOfComponents(); index++)
+      for(size_t index = 0; index < numComps; index++)
       {
         if constexpr(std::is_same_v<ScalarType, int8> || std::is_same_v<ScalarType, uint8>)
         {
-          outputStrm << static_cast<int32>(dataArray[index]);
+          outputStrm << static_cast<int32>(dataArray[tuple * numComps + index]);
         }
         else if constexpr(std::is_same_v<ScalarType, float32> || std::is_same_v<ScalarType, float64>)
         {
-          outputStrm << fmt::format("{}", dataArray[index]);
+          outputStrm << fmt::format("{}", dataArray[tuple * numComps + index]);
         }
         else
         {
-          outputStrm << dataArray[index];
+          outputStrm << dataArray[tuple * numComps + index];
         }
         if(index != maxLine - 1)
         {
