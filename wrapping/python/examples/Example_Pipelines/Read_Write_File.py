@@ -54,3 +54,8 @@ result = cx.MultiThresholdObjects.execute(data_structure=data_structure,
                                     array_thresholds=threshold_set,
                                     created_data_path="Mask",
                                     created_mask_type=cx.DataType.boolean)
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running the MultiThresholdObjects")
