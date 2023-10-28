@@ -193,17 +193,17 @@ General Parameters
 
    .. code:: python
 
-    cx.DataType.boolean
-    cx.DataType.uint8
-    cx.DataType.int8
-    cx.DataType.uint16
-    cx.DataType.int16
-    cx.DataType.uint32
-    cx.DataType.int32
-    cx.DataType.uint64
-    cx.DataType.int64
-    cx.DataType.float32
-    cx.DataType.float64
+      cx.DataType.int8
+      cx.DataType.uint8
+      cx.DataType.int16
+      cx.DataType.uint16
+      cx.DataType.int32
+      cx.DataType.uint32
+      cx.DataType.int64
+      cx.DataType.uint64
+      cx.DataType.float32
+      cx.DataType.float64
+      cx.DataType.boolean
 
 .. _Dream3dImportParameter:
 .. py:class:: Dream3dImportParameter
@@ -405,14 +405,14 @@ General Parameters
       correctly.
 
    :ivar input_file_path: "PathLike".  The path to the input file on the file system.
-   :ivar start_import_row: Int.  What line number does the data start on. 1 Based numbering scheme.
+   :ivar start_import_row: Int.  What line number does the data start on. ONE (1) Based numbering scheme.
    :ivar delimiters: List[string]. List of delimiters that will be used to separate the lines of the file into columns.
    :ivar consecutive_delimiters: Bool. Should consecutive delimiters be counted as a single delimiter.
    :ivar custom_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of the created  :ref:`DataArray<DataArray>`.
-   :ivar data_types: List[cx.DataType]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`.
+   :ivar data_types: List[:ref:`cx.DataType<DataTypeParameter>`]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`.
    :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray <DataArray>`.
    :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArrays <DataArray>`.
-   :ivar headers_line: Int. The line number of the headers.
+   :ivar headers_line: Int. The line number of the file that has the headers listed on a single line. ONE (1) based indexing.
    :ivar header_mode: 'cx.ReadCSVData.HeaderMode.'. Can be one of 'cx.ReadCSVData.HeaderMode.Line' or 'cx.ReadCSVData.HeaderMode.Custom'.
 
 
