@@ -789,9 +789,11 @@ struct MaskCompare
 
   virtual void setValue(usize index, bool val) = 0;
 
-  virtual usize getNumberOfTuples() = 0;
+  virtual usize getNumberOfTuples() const = 0;
 
-  virtual usize getNumberOfComponents() = 0;
+  virtual usize getNumberOfComponents() const = 0;
+
+  virtual usize countTrueValues() const = 0;
 };
 
 struct BoolMaskCompare : public MaskCompare
@@ -819,13 +821,18 @@ struct BoolMaskCompare : public MaskCompare
   {
     m_Array[index] = val;
   }
-  usize getNumberOfTuples() override
+  usize getNumberOfTuples() const override
   {
     return m_Array.getNumberOfTuples();
   }
-  usize getNumberOfComponents() override
+  usize getNumberOfComponents() const override
   {
     return m_Array.getNumberOfComponents();
+  }
+
+  usize countTrueValues() const override
+  {
+    return std::count(m_Array.begin(), m_Array.end(), true);
   }
 };
 
@@ -853,13 +860,19 @@ struct UInt8MaskCompare : public MaskCompare
   {
     m_Array[index] = static_cast<uint8>(val);
   }
-  usize getNumberOfTuples() override
+  usize getNumberOfTuples() const override
   {
     return m_Array.getNumberOfTuples();
   }
-  usize getNumberOfComponents() override
+  usize getNumberOfComponents() const override
   {
     return m_Array.getNumberOfComponents();
+  }
+
+  usize countTrueValues() const override
+  {
+    const usize falseCount = std::count(m_Array.begin(), m_Array.end(), 0);
+    return getNumberOfTuples() - falseCount;
   }
 };
 
