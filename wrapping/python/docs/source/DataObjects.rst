@@ -43,6 +43,7 @@ called *Euler Angles* within that group the **DataPath** object that would be co
 .. code:: python
 
   array_path = cx.DataPath(['MyGroup', 'Euler Angles'])
+  array_path = cx.DataPath("MyGroup/Euler Angles")
 
 
 .. _DataGroup:
