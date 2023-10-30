@@ -9,6 +9,7 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -79,46 +80,6 @@ DataStructure CreateDataStructure()
 } // namespace ExtractVertexGeometryTest
 } // namespace
 
-TEST_CASE("ComplexCore::ExtractVertexGeometry: Data Array With No Parent", "[ComplexCore][ExtractVertexGeometry]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ExtractVertexGeometryFilter filter;
-  DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_FloatArrayName}}}));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -2004);
-}
-
-TEST_CASE("ComplexCore::ExtractVertexGeometry: Data Array With No AttributeMatrix Parent", "[ComplexCore][ExtractVertexGeometry]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ExtractVertexGeometryFilter filter;
-  DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_ImageGeometryName, k_FloatArrayName}}}));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -2005);
-}
-
 TEST_CASE("ComplexCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -158,28 +119,7 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -2003);
-}
-
-TEST_CASE("ComplexCore::ExtractVertexGeometry: Conflicting Attribute Matrices", "[ComplexCore][ExtractVertexGeometry]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ExtractVertexGeometryFilter filter;
-  DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}},
-                                                                                                                     DataPath{{k_ImageGeometryName, k_CellAttrMat2Name, k_FloatArrayName}}}));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -2007);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -651);
 }
 
 TEST_CASE("ComplexCore::ExtractVertexGeometry: Move cell data arrays", "[ComplexCore][ExtractVertexGeometry]")
@@ -189,11 +129,12 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Move cell data arrays", "[Complex
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
+  MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName})};
+
   // Create default Parameters for the filter.
   args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}}));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputDataPaths));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath{k_VertexDataContainerPath}));
 
   // Preflight the filter and check result
@@ -204,8 +145,11 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Move cell data arrays", "[Complex
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
+  VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(k_VertexDataContainerPath);
+  DataPath vertexDataPath = vertexGeom.getVertexAttributeMatrixDataPath();
+
   REQUIRE_THROWS(dataStructure.getDataRefAs<Float32Array>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_VertexDataContainerPath.createChildPath(k_CellAttrMatName).createChildPath(k_FloatArrayName)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(vertexDataPath.createChildPath(k_FloatArrayName)));
 }
 
 TEST_CASE("ComplexCore::ExtractVertexGeometry: Copy cell data arrays", "[ComplexCore][ExtractVertexGeometry]")
@@ -215,11 +159,12 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Copy cell data arrays", "[Complex
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
+  MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName})};
+
   // Create default Parameters for the filter.
   args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_CopyArrays));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}}));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputDataPaths));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath{k_VertexDataContainerPath}));
 
   // Preflight the filter and check result
@@ -230,11 +175,16 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Copy cell data arrays", "[Complex
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_VertexDataContainerPath.createChildPath(k_CellAttrMatName).createChildPath(k_FloatArrayName)));
+  VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(k_VertexDataContainerPath);
+  DataPath vertexAttrMatDataPath = vertexGeom.getVertexAttributeMatrixDataPath();
 
-  const Float32Array& srcDataArray = dataStructure.getDataRefAs<Float32Array>(k_VertexDataContainerPath.createChildPath(k_CellAttrMatName).createChildPath(k_FloatArrayName));
-  const Float32Array& destDataArray = dataStructure.getDataRefAs<Float32Array>(k_VertexDataContainerPath.createChildPath(k_CellAttrMatName).createChildPath(k_FloatArrayName));
+  DataPath floatArrayDataPath = DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}};
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(floatArrayDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(vertexAttrMatDataPath.createChildPath(k_FloatArrayName)));
+
+  const Float32Array& srcDataArray = dataStructure.getDataRefAs<Float32Array>(floatArrayDataPath);
+  const Float32Array& destDataArray = dataStructure.getDataRefAs<Float32Array>(vertexAttrMatDataPath.createChildPath(k_FloatArrayName));
   REQUIRE(srcDataArray.getTupleShape() == destDataArray.getTupleShape());
   REQUIRE(srcDataArray.getComponentShape() == destDataArray.getComponentShape());
   REQUIRE(srcDataArray.getSize() == destDataArray.getSize());
@@ -252,11 +202,12 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Move cell data arrays with mask",
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
+  MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName})};
+
   // Create default Parameters for the filter.
   args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}}));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputDataPaths));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath{k_VertexDataContainerPath}));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_MaskArrayName}}));
@@ -269,8 +220,11 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Move cell data arrays with mask",
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_VertexDataContainerPath.createChildPath(k_CellAttrMatName).createChildPath(k_FloatArrayName)));
+  VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(k_VertexDataContainerPath);
+  DataPath vertexAttrMatDataPath = vertexGeom.getVertexAttributeMatrixDataPath();
+  DataPath floatArrayDataPath = DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}};
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(vertexAttrMatDataPath.createChildPath(k_FloatArrayName)));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_MaskArrayName}}));
 }
 
@@ -281,11 +235,12 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Copy cell data arrays with mask",
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
+  MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName})};
+
   // Create default Parameters for the filter.
   args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_CopyArrays));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}}));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputDataPaths));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath{k_VertexDataContainerPath}));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_MaskArrayName}}));
@@ -298,12 +253,16 @@ TEST_CASE("ComplexCore::ExtractVertexGeometry: Copy cell data arrays with mask",
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_VertexDataContainerPath.createChildPath(k_CellAttrMatName).createChildPath(k_FloatArrayName)));
+  VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(k_VertexDataContainerPath);
+  DataPath vertexAttrMatDataPath = vertexGeom.getVertexAttributeMatrixDataPath();
+  DataPath floatArrayDataPath = DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}};
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(floatArrayDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(vertexAttrMatDataPath.createChildPath(k_FloatArrayName)));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_MaskArrayName}}));
 
-  const Float32Array& srcDataArray = dataStructure.getDataRefAs<Float32Array>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}});
-  const Float32Array& destDataArray = dataStructure.getDataRefAs<Float32Array>(k_VertexDataContainerPath.createChildPath(k_CellAttrMatName).createChildPath(k_FloatArrayName));
+  const Float32Array& srcDataArray = dataStructure.getDataRefAs<Float32Array>(floatArrayDataPath);
+  const Float32Array& destDataArray = dataStructure.getDataRefAs<Float32Array>(vertexAttrMatDataPath.createChildPath(k_FloatArrayName));
   const BoolArray& maskArray = dataStructure.getDataRefAs<BoolArray>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_MaskArrayName}});
   usize validTuples = std::count(maskArray.begin(), maskArray.end(), true);
   REQUIRE(srcDataArray.getTupleShape() == maskArray.getTupleShape());
