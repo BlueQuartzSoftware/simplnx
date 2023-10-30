@@ -1,5 +1,5 @@
 {% set name = "complex" %}
-{% set version = "1.0.0" %}
+{% set version = "1.1.0" %}
 
 package:
   name: {{ name|lower }}
@@ -9,7 +9,7 @@ source:
   - path: ../
     folder: complex
   - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
-    git_rev: v1.0.25
+    git_rev: v1.0.26
     folder: EbsdLib
   - git_url: https://github.com/BlueQuartzSoftware/H5Support
     git_rev: v1.0.13
