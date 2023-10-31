@@ -315,7 +315,7 @@ std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArray)
 }
 
 //-----------------------------------------------------------------------------
-bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, std::string dataFormat)
+bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::string& dataFormat)
 {
   auto dataType = dataArray->getDataType();
   switch(dataType)

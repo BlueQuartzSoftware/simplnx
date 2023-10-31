@@ -470,7 +470,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 }
 
 template <typename T>
-std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T>& dataStore, std::string dataFormat)
+std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T>& dataStore, const std::string& dataFormat)
 {
   if(dataStore.getDataFormat() == dataFormat)
   {
@@ -489,7 +489,7 @@ std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T
 }
 
 template <typename T>
-bool ConvertDataArray(const std::shared_ptr<DataArray<T>> dataArray, std::string dataFormat)
+bool ConvertDataArray(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
 {
   if(dataArray == nullptr)
   {
@@ -506,7 +506,7 @@ bool ConvertDataArray(const std::shared_ptr<DataArray<T>> dataArray, std::string
   return true;
 }
 
-bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, std::string dataFormat);
+bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::string& dataFormat);
 
 /**
  * @brief Creates a NeighborList array with the given properties
