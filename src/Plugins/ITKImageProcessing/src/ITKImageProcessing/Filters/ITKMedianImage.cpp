@@ -122,12 +122,6 @@ Result<> ITKMedianImage::executeImpl(DataStructure& dataStructure, const Argumen
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
-  }
-
   auto radius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_Radius_Key);
 
   const cxITKMedianImage::ITKMedianImageFunctor itkFunctor = {radius};

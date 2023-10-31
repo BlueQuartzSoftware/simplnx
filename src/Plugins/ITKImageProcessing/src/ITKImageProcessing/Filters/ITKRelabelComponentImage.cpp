@@ -125,12 +125,6 @@ Result<> ITKRelabelComponentImage::executeImpl(DataStructure& dataStructure, con
   auto minimumObjectSize = filterArgs.value<uint64>(k_MinimumObjectSize_Key);
   auto sortByObjectSize = filterArgs.value<bool>(k_SortByObjectSize_Key);
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
-  }
-
   const cxITKRelabelComponentImage::ITKRelabelComponentImageFunctor itkFunctor = {minimumObjectSize, sortByObjectSize};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

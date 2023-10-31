@@ -123,12 +123,6 @@ Result<> ITKMorphologicalGradientImage::executeImpl(DataStructure& dataStructure
   auto kernelRadius = filterArgs.value<VectorParameter<uint32>::ValueType>(k_KernelRadius_Key);
   auto kernelType = static_cast<itk::simple::KernelEnum>(filterArgs.value<uint64>(k_KernelType_Key));
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
-  }
-
   const cxITKMorphologicalGradientImage::ITKMorphologicalGradientImageFunctor itkFunctor = {kernelRadius, kernelType};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

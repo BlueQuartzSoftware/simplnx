@@ -202,12 +202,6 @@ Result<> ITKMaskImage::executeImpl(DataStructure& dataStructure, const Arguments
   IDataArray& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
   IDataStore& maskStore = maskArray.getIDataStoreRef();
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
-  }
-
   cxITKMaskImage::ITKMaskImageFunctor itkFunctor = {outsideValue, imageGeom, maskStore};
 
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

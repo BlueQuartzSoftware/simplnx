@@ -143,12 +143,6 @@ Result<> ITKBinaryOpeningByReconstructionImage::executeImpl(DataStructure& dataS
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
-  }
-
   const cxITKBinaryOpeningByReconstructionImage::ITKBinaryOpeningByReconstructionImageFunctor itkFunctor = {kernelRadius, kernelType, foregroundValue, backgroundValue, fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

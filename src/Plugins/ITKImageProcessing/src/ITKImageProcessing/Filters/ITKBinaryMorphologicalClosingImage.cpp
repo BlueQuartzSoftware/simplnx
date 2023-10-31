@@ -136,12 +136,6 @@ Result<> ITKBinaryMorphologicalClosingImage::executeImpl(DataStructure& dataStru
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto safeBorder = filterArgs.value<bool>(k_SafeBorder_Key);
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
-  }
-
   cxITKBinaryMorphologicalClosingImage::ITKBinaryMorphologicalClosingImageFunctor itkFunctor = {kernelRadius, kernelType, foregroundValue, safeBorder};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

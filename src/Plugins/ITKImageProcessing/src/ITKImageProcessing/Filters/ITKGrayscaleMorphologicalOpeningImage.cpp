@@ -129,12 +129,6 @@ Result<> ITKGrayscaleMorphologicalOpeningImage::executeImpl(DataStructure& dataS
   auto kernelType = static_cast<itk::simple::KernelEnum>(filterArgs.value<uint64>(k_KernelType_Key));
   auto safeBorder = filterArgs.value<bool>(k_SafeBorder_Key);
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
-  }
-
   const cxITKGrayscaleMorphologicalOpeningImage::ITKGrayscaleMorphologicalOpeningImageFunctor itkFunctor = {kernelRadius, kernelType, safeBorder};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

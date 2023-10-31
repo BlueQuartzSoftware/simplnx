@@ -121,12 +121,6 @@ Result<> ITKGradientMagnitudeImage::executeImpl(DataStructure& dataStructure, co
 
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(selectedInputArray);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", selectedInputArray.toString()));
-  }
-
   cxITKGradientMagnitudeImage::ITKGradientMagnitudeImageFunctor itkFunctor = {useImageSpacing};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
