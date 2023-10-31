@@ -25,7 +25,7 @@ else:
 #Filter 2
 
 result = cx.DeleteData.execute(
-    data_structure=data_structure,
+    data_structure=data_structure
     #removed_data_path: List[DataPath] = ...
 )
 
@@ -39,8 +39,9 @@ result = cxor.FindAvgOrientationsFilter.execute(
     cell_feature_ids_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     cell_quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
-    crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures")
 )
+
 #Filter 4
 
 result = cxor.FindMisorientationsFilter.execute(
@@ -51,8 +52,9 @@ result = cxor.FindMisorientationsFilter.execute(
     feature_phases_array_path=cx.DataPath("DataContainer/CellFeatureData/Phases"),
     find_avg_misors=False,
     misorientation_list_array_name=("MisorientationList"),
-    neighbor_list_array_path=cx.DataPath("DataContainer/CellFeatureData/NeighborhoodList"),
+    neighbor_list_array_path=cx.DataPath("DataContainer/CellFeatureData/NeighborhoodList")
 )
+
 #Filter 5
 
 result = cxor.FindSchmidsFilter.execute(
@@ -69,8 +71,9 @@ result = cxor.FindSchmidsFilter.execute(
     #slip_direction: List[float] = ...,
     #slip_plane: List[float] = ...,
     slip_systems_array_name=("SlipSystems"),
-    store_angle_components=False,
+    store_angle_components=False
 )
+
 #Filter 6
 
 result = cxor.FindFeatureReferenceMisorientationsFilter.execute(
@@ -84,8 +87,9 @@ result = cxor.FindFeatureReferenceMisorientationsFilter.execute(
     feature_reference_misorientations_array_name=("FeatureReferenceMisorientations"),
     g_beuclidean_distances_array_path=cx.DataPath("DataContainer/"),
     quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
-    reference_orientation=0,
+    reference_orientation=0
 )
+
 #Filter 7
 
 result = cxor.FindKernelAvgMisorientationsFilter.execute(
@@ -96,8 +100,9 @@ result = cxor.FindKernelAvgMisorientationsFilter.execute(
     kernel_average_misorientations_array_name=("KernelAverageMisorientations"),
     kernel_size=[1, 1, 1],
     quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
-    selected_image_geometry_path=cx.DataPath("DataContainer"),
+    selected_image_geometry_path=cx.DataPath("DataContainer")
 )
+
 #Filter 8
 
 output_file_path = "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"

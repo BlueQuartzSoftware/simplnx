@@ -18,15 +18,17 @@ result = cx.StlFileReaderFilter.execute(
     scale_output=False,
     stl_file_path=cx.DataPath("Data/STL_Models/Cylinder.stl"),
     triangle_geometry_name=cx.DataPath("[Triangle Geometry]"),
-    vertex_attribute_matrix="Vertex Data",
+    vertex_attribute_matrix="Vertex Data"
 )
+
 #Filter 2
 
 result = cx.CalculateTriangleAreasFilter.execute(
     data_structure=data_structure,
     triangle_areas_array_path="Areas",
-    triangle_geometry_data_path=cx.DataPath("[Triangle Geometry]"),
+    triangle_geometry_data_path=cx.DataPath("[Triangle Geometry]")
 )
+
 #Filter 3
 
 result = cx.CreateDataArray.execute(
@@ -37,5 +39,5 @@ result = cx.CreateDataArray.execute(
     initialization_value="0",
     numeric_type=8,
     output_data_array=cx.DataPath("Node Type"),
-    tuple_dimensions=[0.0, 1.0],
+    tuple_dimensions=[0.0, 1.0]
 )

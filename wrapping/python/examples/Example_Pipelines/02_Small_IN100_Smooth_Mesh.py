@@ -36,8 +36,9 @@ result = cx.LaplacianSmoothingFilter.execute(
     surface_triple_line_lambda=0.0,
     triangle_geometry_data_path=cx.DataPath("TriangleDataContainer"),
     triple_line_lambda=0.2,
-    use_taubin_smoothing=True,
+    use_taubin_smoothing=True
 )
+
 #Filter 3
 
 output_file_path = "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"

@@ -15,8 +15,9 @@ result = cxor.ReadH5EbsdFilter.execute(
     cell_attribute_matrix_name=("CellData"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd"),
+    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd")
 )
+
 #Filter 2
 
 threshold_1 = cx.ArrayThreshold()
@@ -42,8 +43,9 @@ result = cxor.ConvertOrientations.execute(
     data_structure=data_structure,
     input_orientation_array_path=cx.DataPath("DataContainer/CellData/EulerAngles"),
     input_type=0,
-    output_orientation_array_name=("Quats"),
+    output_orientation_array_name=("Quats")
 )
+
 #Filter 4
 
 result = cxor.AlignSectionsMisorientationFilter.execute(
@@ -56,16 +58,18 @@ result = cxor.AlignSectionsMisorientationFilter.execute(
     quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
     selected_image_geometry_path=cx.DataPath("DataContainer"),
     use_good_voxels=True,
-    write_alignment_shifts=False,
+    write_alignment_shifts=False
 )
+
 #Filter 5
 
 result = cx.IdentifySample.execute(
     data_structure=data_structure,
     fill_holes=False,
     good_voxels=cx.DataPath("DataContainer/CellData/Mask"),
-    image_geometry=cx.DataPath("DataContainer"),
+    image_geometry=cx.DataPath("DataContainer")
 )
+
 #Filter 6
 
 result = cx.AlignSectionsFeatureCentroidFilter.execute(
@@ -76,8 +80,9 @@ result = cx.AlignSectionsFeatureCentroidFilter.execute(
     selected_cell_data_path=cx.DataPath("DataContainer/CellData"),
     selected_image_geometry_path=cx.DataPath("DataContainer"),
     use_reference_slice=True,
-    write_alignment_shifts=False,
+    write_alignment_shifts=False
 )
+
 #Filter 7
 
 result = cxor.BadDataNeighborOrientationCheckFilter.execute(
@@ -88,8 +93,9 @@ result = cxor.BadDataNeighborOrientationCheckFilter.execute(
     image_geometry_path=cx.DataPath("DataContainer"),
     misorientation_tolerance=5.0,
     number_of_neighbors=4,
-    quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
+    quats_array_path=cx.DataPath("DataContainer/CellData/Quats")
 )
+
 #Filter 8
 
 result = cxor.NeighborOrientationCorrelationFilter.execute(
@@ -102,8 +108,9 @@ result = cxor.NeighborOrientationCorrelationFilter.execute(
     level=2,
     min_confidence=0.2,
     misorientation_tolerance=5.0,
-    quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
+    quats_array_path=cx.DataPath("DataContainer/CellData/Quats")
 )
+
 #Filter 9
 
 result = cxor.EBSDSegmentFeaturesFilter.execute(
@@ -118,8 +125,9 @@ result = cxor.EBSDSegmentFeaturesFilter.execute(
     misorientation_tolerance=5.0,
     quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
     randomize_features=True,
-    use_good_voxels=True,
+    use_good_voxels=True
 )
+
 #Filter 10
 
 result = cx.FindFeaturePhasesFilter.execute(
@@ -127,8 +135,9 @@ result = cx.FindFeaturePhasesFilter.execute(
     cell_features_attribute_matrix_path=cx.DataPath("DataContainer/CellFeatureData"),
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     feature_ids_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
-    feature_phases_array_path=("Phases"),
+    feature_phases_array_path=("Phases")
 )
+
 #Filter 11
 
 result = cxor.FindAvgOrientationsFilter.execute(
@@ -139,8 +148,9 @@ result = cxor.FindAvgOrientationsFilter.execute(
     cell_feature_ids_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     cell_quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
-    crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures")
 )
+
 #Filter 12
 
 result = cx.FindNeighbors.execute(
@@ -153,9 +163,10 @@ result = cx.FindNeighbors.execute(
     number_of_neighbors=("NumNeighbors2"),
     shared_surface_area_list=("SharedSurfaceAreaList2"),
     store_boundary_cells=False,
-    store_surface_features=False,
+    store_surface_features=False
     #surface_features: str = ...
 )
+
 #Filter 13
 
 result = cxor.MergeTwinsFilter.execute(
@@ -172,8 +183,9 @@ result = cxor.MergeTwinsFilter.execute(
     feature_phases_array_path=cx.DataPath("DataContainer/CellFeatureData/Phases"),
     new_cell_feature_attribute_matrix_name=("NewGrain Data"),
     #non_contiguous_neighbor_list_array_path: DataPath = ...,
-    use_non_contiguous_neighbors=False,
+    use_non_contiguous_neighbors=False
 )
+
 #Filter 14
 
 result = cx.CalculateFeatureSizesFilter.execute(
@@ -184,8 +196,9 @@ result = cx.CalculateFeatureSizesFilter.execute(
     geometry_path=cx.DataPath("DataContainer"),
     num_elements_path=("NumElements"),
     save_element_sizes=False,
-    volumes_path=("Volumes"),
+    volumes_path=("Volumes")
 )
+
 #Filter 15
 
 result = cx.RemoveMinimumSizeFeaturesFilter.execute(
@@ -195,9 +208,10 @@ result = cx.RemoveMinimumSizeFeaturesFilter.execute(
     #feature_phases_path: DataPath = ...,
     image_geom_path=cx.DataPath("DataContainer"),
     min_allowed_features_size=16,
-    num_cells_path=cx.DataPath("DataContainer/CellFeatureData/NumElements"),
+    num_cells_path=cx.DataPath("DataContainer/CellFeatureData/NumElements")
     #phase_number: int = ...
 )
+
 #Filter 16
 
 result = cx.FindNeighbors.execute(
@@ -210,9 +224,10 @@ result = cx.FindNeighbors.execute(
     number_of_neighbors=("NumNeighbors"),
     shared_surface_area_list=("SharedSurfaceAreaList"),
     store_boundary_cells=False,
-    store_surface_features=False,
+    store_surface_features=False
     #surface_features: str = ...
 )
+
 #Filter 17
 
 result = cx.MinNeighbors.execute(
@@ -225,8 +240,9 @@ result = cx.MinNeighbors.execute(
     image_geom=cx.DataPath("DataContainer"),
     min_num_neighbors=2,
     num_neighbors=cx.DataPath("DataContainer/CellFeatureData/NumNeighbors"),
-    phase_number=0,
+    phase_number=0
 )
+
 #Filter 18
 
 result = cx.FillBadDataFilter.execute(
@@ -236,8 +252,9 @@ result = cx.FillBadDataFilter.execute(
     #ignored_data_array_paths: List[DataPath] = ...,
     min_allowed_defect_size=1000,
     selected_image_geometry=cx.DataPath("DataContainer"),
-    store_as_new_phase=False,
+    store_as_new_phase=False
 )
+
 #Filter 19
 
 result = cx.ErodeDilateBadDataFilter.execute(
@@ -249,8 +266,9 @@ result = cx.ErodeDilateBadDataFilter.execute(
     selected_image_geometry=cx.DataPath("DataContainer"),
     x_dir_on=True,
     y_dir_on=True,
-    z_dir_on=True,
+    z_dir_on=True
 )
+
 #Filter 20
 
 result = cx.ErodeDilateBadDataFilter.execute(
@@ -262,8 +280,9 @@ result = cx.ErodeDilateBadDataFilter.execute(
     selected_image_geometry=cx.DataPath("DataContainer"),
     x_dir_on=True,
     y_dir_on=True,
-    z_dir_on=True,
+    z_dir_on=True
 )
+
 #Filter 21
 
 result = cxor.GenerateIPFColorsFilter.execute(
@@ -274,8 +293,9 @@ result = cxor.GenerateIPFColorsFilter.execute(
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     good_voxels_array_path=cx.DataPath("DataContainer/CellData/Mask"),
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=True,
+    use_good_voxels=True
 )
+
 #Filter 22
 
 output_file_path = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"

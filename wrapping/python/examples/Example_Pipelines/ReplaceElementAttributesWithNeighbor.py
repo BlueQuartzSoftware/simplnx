@@ -15,8 +15,9 @@ result = cxor.ReadAngDataFilter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("DataContainer"),
-    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang"),
+    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
 )
+
 #Filter 2
 
 threshold_1 = cx.ArrayThreshold()
@@ -44,7 +45,7 @@ result = cx.MultiThresholdObjects.execute(
     #custom_false_value: float = ...,
     #custom_true_value: float = ...,
     use_custom_false_value=False,
-    use_custom_true_value=False,
+    use_custom_true_value=False
 )
 
 #Filter 3
@@ -57,15 +58,17 @@ result = cx.RotateSampleRefFrameFilter.execute(
     rotation_axis=[0.0, 1.0, 0.0, 180],
     #rotation_matrix: List[List[float]] = ...,
     rotation_representation=0,
-    selected_image_geometry=cx.DataPath("DataContainer"),
+    selected_image_geometry=cx.DataPath("DataContainer")
 )
+
 #Filter 4
 
 result = cxor.RotateEulerRefFrameFilter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
-    rotation_axis=[0.0, 0.0, 1.0, 90.0],
+    rotation_axis=[0.0, 0.0, 1.0, 90.0]
 )
+
 #Filter 5
 
 result = cx.SetImageGeomOriginScalingFilter.execute(
@@ -74,8 +77,9 @@ result = cx.SetImageGeomOriginScalingFilter.execute(
     change_resolution=True,
     image_geom=cx.DataPath("DataContainer"),
     origin=[0.0, 0.0, 0.0],
-    spacing=[1.0, 1.0, 1.0],
+    spacing=[1.0, 1.0, 1.0]
 )
+
 #Filter 6
 
 result = cx.CropImageGeometry.execute(
@@ -88,8 +92,9 @@ result = cx.CropImageGeometry.execute(
     remove_original_geometry=True,
     renumber_features=False,
     selected_image_geometry=cx.DataPath("DataContainer"),
-    update_origin=False,
+    update_origin=False
 )
+
 #Filter 7
 
 result = cxor.GenerateIPFColorsFilter.execute(
@@ -100,8 +105,9 @@ result = cxor.GenerateIPFColorsFilter.execute(
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     good_voxels_array_path=cx.DataPath("DataContainer/Cell Data/Mask"),
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=True,
+    use_good_voxels=True
 )
+
 #Filter 8
 
 result = cx.ReplaceElementAttributesWithNeighborValuesFilter.execute(
@@ -110,8 +116,9 @@ result = cx.ReplaceElementAttributesWithNeighborValuesFilter.execute(
     loop=True,
     min_confidence=0.1,
     selected_comparison=0,
-    selected_image_geometry=cx.DataPath("DataContainer"),
+    selected_image_geometry=cx.DataPath("DataContainer")
 )
+
 #Filter 9
 
 output_file_path = "Data/Output/Examples/ReplaceElementAttributesWithNeighbor.dream3d"

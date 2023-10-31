@@ -15,9 +15,10 @@ result = cx.ImportCSVDataFilter.execute(
     created_data_group=cx.DataPath("Bounds"),
     #selected_data_group: DataPath = ...,
     tuple_dimensions=[14.0],
-    use_existing_group=False,
+    use_existing_group=False
     #wizard_data: CSVWizardData = ...
 )
+
 #Filter 2
 
 result = cx.CreateGeometryFilter.execute(
@@ -42,8 +43,9 @@ result = cx.CreateGeometryFilter.execute(
     warnings_as_errors=False,
     x_bounds=cx.DataPath("Bounds/x"),
     y_bounds=cx.DataPath("Bounds/y"),
-    z_bounds=cx.DataPath("Bounds/z"),
+    z_bounds=cx.DataPath("Bounds/z")
 )
+
 #Filter 3
 
 result = cx.ImportTextFilter.execute(
@@ -56,8 +58,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("ConfidenceIndex"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 4
 
 result = cx.ImportTextFilter.execute(
@@ -70,8 +73,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("ImageQuality"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 5
 
 result = cx.ImportTextFilter.execute(
@@ -84,8 +88,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("SEM Signal"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 6
 
 result = cx.ImportTextFilter.execute(
@@ -98,8 +103,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("Fit"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 7
 
 result = cx.ImportTextFilter.execute(
@@ -112,8 +118,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("EulerAngles"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 8
 
 result = cx.ImportTextFilter.execute(
@@ -126,8 +133,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("Phases"),
-    scalar_type=4,
+    scalar_type=4
 )
+
 #Filter 9
 
 result = cx.ResampleRectGridToImageGeomFilter.execute(
@@ -143,6 +151,7 @@ result = cx.ResampleRectGridToImageGeomFilter.execute(
                                cx.DataPath("RectGridGeometry/CellData/Phases"),
                                cx.DataPath("RectGridGeometry/CellData/SEM Signal")]
 )
+
 #Filter 10
 
 output_file_path = "Data/Examples/ResampleRectGridToImageGeom.dream3d"

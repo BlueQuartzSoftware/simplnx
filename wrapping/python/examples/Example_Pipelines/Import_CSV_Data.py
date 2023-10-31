@@ -16,8 +16,9 @@ result = cx.CreateImageGeometry.execute(
     dimensions=[60, 80, 100],
     geometry_data_path=cx.DataPath("[Image Geometry]"),
     origin=[100.0, 100.0, 0.0],
-    spacing=[1.0, 1.0, 1.0],
+    spacing=[1.0, 1.0, 1.0]
 )
+
 #Filter 2
 
 result = cx.ImportTextFilter.execute(
@@ -30,8 +31,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("Confidence Index"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 3
 
 result = cx.ImportTextFilter.execute(
@@ -44,8 +46,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("FeatureIds"),
-    scalar_type=4,
+    scalar_type=4
 )
+
 #Filter 4
 
 result = cx.ImportTextFilter.execute(
@@ -58,8 +61,9 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("Image Quality"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 5
 
 result = cx.ImportTextFilter.execute(
@@ -72,5 +76,5 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     #n_tuples: List[List[float]] = ...,
     output_data_array=cx.DataPath("IPFColors"),
-    scalar_type=1,
+    scalar_type=1
 )

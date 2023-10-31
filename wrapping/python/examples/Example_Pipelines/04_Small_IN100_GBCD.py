@@ -35,8 +35,9 @@ result = cxor.FindGBCDFilter.execute(
     surface_mesh_face_areas_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
     surface_mesh_face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
-    triangle_geometry=cx.DataPath("TriangleDataContainer"),
+    triangle_geometry=cx.DataPath("TriangleDataContainer")
 )
+
 #Filter 3
 
 result = cxor.GenerateGBCDPoleFigureFilter.execute(
@@ -48,8 +49,9 @@ result = cxor.GenerateGBCDPoleFigureFilter.execute(
     image_geometry_name=cx.DataPath("GBCD Pole Figure [Sigma 3]"),
     misorientation_rotation=[60.0, 1.0, 1.0, 1.0],
     output_image_dimension=100,
-    phase_of_interest=1,
+    phase_of_interest=1
 )
+
 #Filter 4
 
 result = cxor.GenerateGBCDPoleFigureFilter.execute(
@@ -61,8 +63,9 @@ result = cxor.GenerateGBCDPoleFigureFilter.execute(
     image_geometry_name=cx.DataPath("GBCD Pole Figure [Sigma 9]"),
     misorientation_rotation=[39.0, 1.0, 1.0, 1.0],
     output_image_dimension=100,
-    phase_of_interest=1,
+    phase_of_interest=1
 )
+
 #Filter 5
 
 result = cxor.GenerateGBCDPoleFigureFilter.execute(
@@ -74,8 +77,9 @@ result = cxor.GenerateGBCDPoleFigureFilter.execute(
     image_geometry_name=cx.DataPath("GBCD Pole Figure [Sigma 11]"),
     misorientation_rotation=[50.5, 1.0, 1.0, 1.0],
     output_image_dimension=100,
-    phase_of_interest=1,
+    phase_of_interest=1
 )
+
 #Filter 6
 
 result = cxor.ExportGBCDGMTFileFilter.execute(
@@ -84,8 +88,9 @@ result = cxor.ExportGBCDGMTFileFilter.execute(
     gbcd_array_path=cx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
     misorientation_rotation=[60.0, 1.0, 1.0, 1.0],
     output_file=cx.DataPath("Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat"),
-    phase_of_interest=1,
+    phase_of_interest=1
 )
+
 #Filter 7
 
 result = cxor.ExportGBCDTriangleDataFilter.execute(
@@ -94,8 +99,9 @@ result = cxor.ExportGBCDTriangleDataFilter.execute(
     output_file=cx.DataPath("Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph"),
     surface_mesh_face_areas_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
     surface_mesh_face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
-    surface_mesh_face_normals_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
+    surface_mesh_face_normals_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceNormals")
 )
+
 #Filter 8
 
 output_file_path = "Data/Output/SurfaceMesh/SmallIN100_GBCD.dream3d"

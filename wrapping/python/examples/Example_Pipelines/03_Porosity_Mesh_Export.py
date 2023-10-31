@@ -18,8 +18,9 @@ result = cxitk.ITKImportImageStack.execute(
     image_transform_choice=0,
     input_file_list_info=cx.DataPath("Data/Porosity_Image/"),
     origin=[0.0, 0.0, 0.0],
-    spacing=[1.0, 1.0, 1.0],
+    spacing=[1.0, 1.0, 1.0]
 )
+
 #Filter 2
 
 threshold_1 = cx.ArrayThreshold()
@@ -39,8 +40,9 @@ result = cx.MultiThresholdObjects.execute(
     #custom_false_value: float = ...,
     #custom_true_value: float = ...,
     use_custom_false_value=False,
-    use_custom_true_value=False,
+    use_custom_true_value=False
 )
+
 #Filter 3
 
 result = cx.ScalarSegmentFeaturesFilter.execute(
@@ -53,8 +55,9 @@ result = cx.ScalarSegmentFeaturesFilter.execute(
     mask_path=cx.DataPath("ImageDataContainer/Cell Data/Mask"),
     randomize_features=True,
     scalar_tolerance=0,
-    use_mask=True,
+    use_mask=True
 )
+
 #Filter 4
 
 result = cx.QuickSurfaceMeshFilter.execute(
@@ -69,8 +72,9 @@ result = cx.QuickSurfaceMeshFilter.execute(
     node_types_array_name=("NodeTypes"),
     selected_data_array_paths=[],
     triangle_geometry_name=cx.DataPath("TriangleDataContainer"),
-    vertex_data_group_name=("Vertex Data"),
+    vertex_data_group_name=("Vertex Data")
 )
+
 #Filter 5
 
 result = cx.LaplacianSmoothingFilter.execute(
@@ -85,8 +89,9 @@ result = cx.LaplacianSmoothingFilter.execute(
     surface_triple_line_lambda=0.0,
     triangle_geometry_data_path=cx.DataPath("TriangleDataContainer"),
     triple_line_lambda=0.1,
-    use_taubin_smoothing=True,
+    use_taubin_smoothing=True
 )
+
 #Filter 6
 
 result = cx.SplitAttributeArrayFilter.execute(
@@ -95,8 +100,9 @@ result = cx.SplitAttributeArrayFilter.execute(
     delete_original_array=True,
     multicomponent_array=cx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
     postfix=("-"),
-    select_components_to_extract=False,
+    select_components_to_extract=False
 )
+
 #Filter 7
 
 threshold_1 = cx.ArrayThreshold()
@@ -116,8 +122,9 @@ result = cx.MultiThresholdObjects.execute(
     #custom_false_value: float = ...,
     #custom_true_value: float = ...,
     use_custom_false_value=False,
-    use_custom_true_value=False,
+    use_custom_true_value=False
 )
+
 #Filter 8
 
 threshold_1 = cx.ArrayThreshold()
@@ -137,9 +144,11 @@ result = cx.MultiThresholdObjects.execute(
     #custom_false_value: float = ...,
     #custom_true_value: float = ...,
     use_custom_false_value=False,
-    use_custom_true_value=False,
+    use_custom_true_value=False
 )
+
 #Filter 9
+
 result = cx.ConditionalSetValue.execute(
     data_structure=data_structure,
     conditional_array_path=cx.DataPath("TriangleDataContainer/Face Data/FaceLabels-0 Mask"),
@@ -147,8 +156,9 @@ result = cx.ConditionalSetValue.execute(
     #remove_value: str = ...,
     replace_value=("1"),
     selected_array_path=cx.DataPath("TriangleDataContainer/Face Data/FaceLabels-0"),
-    use_conditional=True,
+    use_conditional=True
 )
+
 #Filter 10
 
 result = cx.ConditionalSetValue.execute(
@@ -158,7 +168,7 @@ result = cx.ConditionalSetValue.execute(
     #remove_value: str = ...,
     replace_value=("1"),
     selected_array_path=cx.DataPath("TriangleDataContainer/Face Data/FaceLabels-1"),
-    use_conditional=True,
+    use_conditional=True
 )
 
 #Filter 11
@@ -171,6 +181,7 @@ result = cx.CombineAttributeArraysFilter.execute(
     selected_data_array_paths=[cx.DataPath("TriangleDataContainer/Face Data/FaceLabels-0"),
                                 cx.DataPath("TriangleDataContainer/Face Data/FaceLabels-1")]
 )
+
 #Filter 12
 
 output_file_path = "Data/Output/Porosity_Analysis.dream3d"

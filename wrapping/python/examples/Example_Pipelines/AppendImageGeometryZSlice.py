@@ -9,15 +9,18 @@ import numpy as np
 data_structure = cx.DataStructure()
 
 #Filter 1
+
 result = cx.CreateImageGeometry.execute(
     data_structure=data_structure,
     cell_data_name="Cell Data",
     dimensions=[60, 80, 100],
     geometry_data_path=cx.DataPath("[Image Geometry]"),
     origin=[100.0, 100.0, 0.0],
-    spacing=[1.0, 1.0, 1.0],
+    spacing=[1.0, 1.0, 1.0]
 )
+
 #Filter 2
+
 result = cx.ImportTextFilter.execute(
     data_structure=data_structure,
     advanced_options=True,
@@ -28,9 +31,11 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     n_tuples=[0, 480000],
     output_data_array=cx.DataPath("Confidence Index"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 3
+
 result = cx.ImportTextFilter.execute(
     data_structure=data_structure,
     advanced_options=True,
@@ -41,9 +46,11 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     n_tuples=[0, 480000],
     output_data_array=cx.DataPath("FeatureIds"),
-    scalar_type=4,
+    scalar_type=4
 )
+
 #Filter 4
+
 result = cx.ImportTextFilter.execute(
     data_structure=data_structure,
     advanced_options=True,
@@ -54,9 +61,11 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     n_tuples=[0, 480000],
     output_data_array=cx.DataPath("Image Quality"),
-    scalar_type=8,
+    scalar_type=8
 )
+
 #Filter 5
+
 result = cx.ImportTextFilter.execute(
     data_structure=data_structure,
     advanced_options=True,
@@ -67,9 +76,11 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     n_tuples=[0, 480000],
     output_data_array=cx.DataPath("IPFColors"),
-    scalar_type=0,
+    scalar_type=0
 )
+
 #Filter 6
+
 result = cx.CropImageGeometry.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix: DataPath = ...,
@@ -80,9 +91,11 @@ result = cx.CropImageGeometry.execute(
     remove_original_geometry=False,
     renumber_features=False,
     selected_image_geometry=cx.DataPath("[Image Geometry]"),
-    update_origin=False,
+    update_origin=False
 )
+
 #Filter 7
+
 result = cx.CropImageGeometry.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix: DataPath = ...,
@@ -93,20 +106,28 @@ result = cx.CropImageGeometry.execute(
     remove_original_geometry=False,
     renumber_features=False,
     selected_image_geometry=cx.DataPath("[Image Geometry]"),
-    update_origin=True,
+    update_origin=True
 )
+
 #Filter 8
+
 result = cx.AppendImageGeometryZSliceFilter.execute(
     data_structure=data_structure,
     check_resolution=True,
     destination_geometry=cx.DataPath("CroppedBottomHalf"),
     input_geometry=cx.DataPath("CroppedTopHalf"),
     new_geometry=cx.DataPath("AppendedImageGeom"),
-    save_as_new_geometry=True,
+    save_as_new_geometry=True
 )
+
 #Filter 9
-result =cx.ExportDREAM3DFilter.execute(
-    data_structure=data_structure,
-    export_file_path=cx.DataPath("Data/Output/Examples/AppendImageGeometryZSlice.dream3d"),
-    write_xdmf_file=True,
-)
+
+output_file_path = "Data/Output/Examples/AppendImageGeometryZSlice.dream3d"
+result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+                                        export_file_path=output_file_path, 
+                                        write_xdmf_file=True)
+if len(result.errors) != 0:
+    print('Errors: {}', result.errors)
+    print('Warnings: {}', result.warnings)
+else:
+    print("No errors running the filter")

@@ -24,14 +24,17 @@ else:
 
 
 #Filter 2
+
 result = cx.FindFeatureCentroidsFilter.execute(
     data_structure=data_structure,
     centroids_array_path="Centroids",
     feature_attribute_matrix=cx.DataPath(["DataContainer/CellFeatureData"]),
     feature_ids_path=cx.DataPath(["DataContainer/CellData/FeatureIds"]),
-    selected_image_geometry=cx.DataPath(["DataContainer"]))
+    selected_image_geometry=cx.DataPath(["DataContainer"])
+)
 
 #Filter 3
+
 result = cx.FindBiasedFeaturesFilter.execute(
     data_structure=data_structure,
     biased_features_array_name="BiasedFeatures",
@@ -39,9 +42,11 @@ result = cx.FindBiasedFeaturesFilter.execute(
     centroids_array_path=cx.DataPath(["DataContainer/CellFeatureData/Centroids"]),
     image_geometry_path=cx.DataPath(["DataContainer"]),
     phases_array_path=cx.DataPath(["DataContainer/CellFeatureData/Phases"]),
-    surface_features_array_path=cx.DataPath(["DataContainer/CellFeatureData/SurfaceFeatures"])),
+    surface_features_array_path=cx.DataPath(["DataContainer/CellFeatureData/SurfaceFeatures"])
+)
 
 #Filter 4
+
 output_file_path = "Data/Output/Examples/FindBiasedFeatures.dream3d",
 result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 

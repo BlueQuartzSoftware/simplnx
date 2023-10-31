@@ -15,8 +15,9 @@ result = cxor.ReadH5EbsdFilter.execute(
     cell_attribute_matrix_name=("CellData"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd"),
+    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd")
 )
+
 #Filter 2
 
 threshold_1 = cx.ArrayThreshold()
@@ -43,8 +44,9 @@ result = cxor.ConvertOrientations.execute(
     input_orientation_array_path=cx.DataPath("DataContainer/CellData/EulerAngles"),
     input_type=0,
     output_orientation_array_name=("Quats"),
-    output_type=2,
+    output_type=2
 )
+
 #Filter 4
 
 result = cxor.AlignSectionsMutualInformationFilter.execute(
@@ -57,8 +59,9 @@ result = cxor.AlignSectionsMutualInformationFilter.execute(
     quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
     selected_image_geometry_path=cx.DataPath("DataContainer"),
     use_good_voxels=True,
-    write_alignment_shifts=True,
+    write_alignment_shifts=True
 )
+
 #Filter 5
 
 output_file_path = "Data/Output/OrientationAnalysis/SmallIN100_AlignSectionsMutualInformation.dream3d"

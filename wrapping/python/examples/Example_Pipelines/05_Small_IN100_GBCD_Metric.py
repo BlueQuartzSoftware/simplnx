@@ -32,8 +32,9 @@ result = cx.SharedFeatureFaceFilter.execute(
     feature_num_triangles_array_name=("NumTriangles"),
     grain_boundary_attribute_matrix_name=("SharedFeatureFace"),
     randomize_features=False,
-    triangle_geometry_path=cx.DataPath("TriangleDataContainer"),
+    triangle_geometry_path=cx.DataPath("TriangleDataContainer")
 )
+
 #Filter 3
 
 result = cxor.FindGBCDMetricBasedFilter.execute(
@@ -54,8 +55,9 @@ result = cxor.FindGBCDMetricBasedFilter.execute(
     surface_mesh_face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
     surface_mesh_feature_face_labels_array_path=cx.DataPath("TriangleDataContainer/SharedFeatureFace/FaceLabels"),
-    triangle_geometry_path=cx.DataPath("TriangleDataContainer"),
+    triangle_geometry_path=cx.DataPath("TriangleDataContainer")
 )
+
 #Filter 4
 
 output_file_path = "Data/Output/SurfaceMesh/SmallIN100_GBCD_Metric.dream3d"

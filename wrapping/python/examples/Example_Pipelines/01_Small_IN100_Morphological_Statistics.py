@@ -29,8 +29,9 @@ result = cx.FindFeatureCentroidsFilter.execute(
     centroids_array_path=("Centroids"),
     feature_attribute_matrix=cx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
-    selected_image_geometry=cx.DataPath("DataContainer"),
+    selected_image_geometry=cx.DataPath("DataContainer")
 )
+
 #Filter 3
 
 result = cx.CalculateFeatureSizesFilter.execute(
@@ -41,8 +42,9 @@ result = cx.CalculateFeatureSizesFilter.execute(
     geometry_path=cx.DataPath("DataContainer"),
     num_elements_path=("NumElements"),
     save_element_sizes=False,
-    volumes_path=("Size Volumes"),
+    volumes_path=("Size Volumes")
 )
+
 #Filter 4
 
 result = cxor.FindShapesFilter.execute(
@@ -54,8 +56,9 @@ result = cxor.FindShapesFilter.execute(
     feature_ids_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
     omega3s_array_name=("Omega3s"),
     selected_image_geometry=cx.DataPath("DataContainer"),
-    volumes_array_name=("Shape Volumes"),
+    volumes_array_name=("Shape Volumes")
 )
+
 #Filter 5
 
 result = cx.FindNeighbors.execute(
@@ -68,9 +71,10 @@ result = cx.FindNeighbors.execute(
     number_of_neighbors=("NumNeighbors"),
     shared_surface_area_list=("SharedSurfaceAreaList"),
     store_boundary_cells=False,
-    store_surface_features=False,
+    store_surface_features=False
     #surface_features: str = ...
 )
+
 #Filter 6
 
 result = cx.FindNeighborhoodsFilter.execute(
@@ -81,8 +85,9 @@ result = cx.FindNeighborhoodsFilter.execute(
     multiples_of_average=1.0,
     neighborhood_list_array_name=("NeighborhoodList"),
     neighborhoods_array_name=("Neighborhoods"),
-    selected_image_geometry_path=cx.DataPath("DataContainer"),
+    selected_image_geometry_path=cx.DataPath("DataContainer")
 )
+
 #Filter 7
 
 result = cx.FindEuclideanDistMapFilter.execute(
@@ -97,8 +102,9 @@ result = cx.FindEuclideanDistMapFilter.execute(
     q_pdistances_array_name=("QPManhattanDistances"),
     save_nearest_neighbors=False,
     selected_image_geometry=cx.DataPath("DataContainer"),
-    t_jdistances_array_name=("TJManhattanDistances"),
+    t_jdistances_array_name=("TJManhattanDistances")
 )
+
 #Filter 8
 
 result = cx.FindSurfaceAreaToVolumeFilter.execute(
@@ -108,8 +114,9 @@ result = cx.FindSurfaceAreaToVolumeFilter.execute(
     num_cells_array_path=cx.DataPath("DataContainer/CellFeatureData/NumElements"),
     selected_image_geometry=cx.DataPath("DataContainer"),
     sphericity_array_name=("Sphericity"),
-    surface_area_volume_ratio_array_name=("SurfaceAreaVolumeRatio"),
+    surface_area_volume_ratio_array_name=("SurfaceAreaVolumeRatio")
 )
+
 #Filter 9
 
 output_file_path = "Data/Output/Statistics/SmallIN100_Morph.dream3d"

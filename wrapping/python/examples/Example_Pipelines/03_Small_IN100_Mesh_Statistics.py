@@ -27,22 +27,25 @@ else:
 result = cx.CalculateTriangleAreasFilter.execute(
     data_structure=data_structure,
     triangle_areas_array_path=("FaceAreas"),
-    triangle_geometry_data_path=cx.DataPath("TriangleDataContainer"),
+    triangle_geometry_data_path=cx.DataPath("TriangleDataContainer")
 )
+
 #Filter 3
 
 result = cx.TriangleNormalFilter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_normals_array_path=("FaceNormals"),
-    tri_geometry_data_path=cx.DataPath("TriangleDataContainer"),
+    tri_geometry_data_path=cx.DataPath("TriangleDataContainer")
 )
+
 #Filter 4
 
 result = cx.TriangleDihedralAngleFilter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_dihedral_angles_array_name=("FaceDihedralAngles"),
-    tri_geometry_data_path=cx.DataPath("TriangleDataContainer"),
+    tri_geometry_data_path=cx.DataPath("TriangleDataContainer")
 )
+
 #Filter 5
 
 result = cxor.GenerateFaceIPFColoringFilter.execute(
@@ -52,8 +55,9 @@ result = cxor.GenerateFaceIPFColoringFilter.execute(
     feature_phases_array_path=cx.DataPath("DataContainer/CellFeatureData/Phases"),
     surface_mesh_face_ipf_colors_array_name=("FaceIPFColors"),
     surface_mesh_face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
-    surface_mesh_face_normals_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
+    surface_mesh_face_normals_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceNormals")
 )
+
 #Filter 6
 
 result = cxor.GenerateFaceMisorientationColoringFilter.execute(
@@ -62,8 +66,9 @@ result = cxor.GenerateFaceMisorientationColoringFilter.execute(
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_phases_array_path=cx.DataPath("DataContainer/CellFeatureData/Phases"),
     surface_mesh_face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
-    surface_mesh_face_misorientation_colors_array_name=("FaceMisorientationColors"),
+    surface_mesh_face_misorientation_colors_array_name=("FaceMisorientationColors")
 )
+
 #Filter 7
 
 result = cx.SharedFeatureFaceFilter.execute(
@@ -74,8 +79,9 @@ result = cx.SharedFeatureFaceFilter.execute(
     feature_num_triangles_array_name=("NumTriangles"),
     grain_boundary_attribute_matrix_name=("SharedFeatureFace"),
     randomize_features=False,
-    triangle_geometry_path=cx.DataPath("TriangleDataContainer"),
+    triangle_geometry_path=cx.DataPath("TriangleDataContainer")
 )
+
 #Filter 8
 
 output_file_path = "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"

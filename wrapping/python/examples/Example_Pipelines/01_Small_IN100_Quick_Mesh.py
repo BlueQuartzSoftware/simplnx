@@ -34,15 +34,17 @@ result = cx.CropImageGeometry.execute(
     remove_original_geometry=True,
     renumber_features=True,
     selected_image_geometry=cx.DataPath("DataContainer"),
-    update_origin=True,
+    update_origin=True
 )
+
 #Filter 3
 
 result = cx.MoveData.execute(
     data_structure=data_structure,
     data=[cx.DataPath("DataContainer/CellEnsembleData")],
-    new_parent=cx.DataPath("DataContainer"),
+    new_parent=cx.DataPath("DataContainer")
 )
+
 #Filter 4
 
 result = cx.QuickSurfaceMeshFilter.execute(
@@ -57,8 +59,9 @@ result = cx.QuickSurfaceMeshFilter.execute(
     node_types_array_name=("NodeType"),
     #selected_data_array_paths=[cx.DataPath("DataContainer")]
     triangle_geometry_name=cx.DataPath("TriangleDataContainer"),
-    vertex_data_group_name=("VertexData"),
+    vertex_data_group_name=("VertexData")
 )
+
 #Filter 5
 
 output_file_path = "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"

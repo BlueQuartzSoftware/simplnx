@@ -15,8 +15,9 @@ result = cxor.ReadH5EbsdFilter.execute(
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd"),
+    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd")
 )
+
 #FIlter 2
 
 threshold_1 = cx.ArrayThreshold()
@@ -53,6 +54,7 @@ result = cxor.ConvertOrientations.execute(
     output_orientation_array_name="Quats",
     output_type=2
 )
+
 #Filter 4
 
 result = cx.ScalarSegmentFeaturesFilter.execute(
@@ -65,8 +67,9 @@ result = cx.ScalarSegmentFeaturesFilter.execute(
     mask_path=cx.DataPath("DataContainer/CellData/Mask"),
     randomize_features=True,
     scalar_tolerance=5,
-    use_mask=True,
+    use_mask=True
 )
+
 #Filter 5
 
 result = cx.FindLargestCrossSectionsFilter.execute(
@@ -77,6 +80,7 @@ result = cx.FindLargestCrossSectionsFilter.execute(
     largest_cross_sections_array_path="LargestCrossSections",
     plane=0
 )
+
 #Filter 6
 
 output_file_path = "Data/Output/Examples/SmallIN100_LargestCrossSections.dream3d"

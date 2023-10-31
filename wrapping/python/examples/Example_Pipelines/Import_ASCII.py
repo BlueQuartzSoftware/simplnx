@@ -16,8 +16,9 @@ result = cx.CreateImageGeometry.execute(
     dimensions=[189, 201, 1],
     geometry_data_path=cx.DataPath("[Image Geometry]"),
     origin=[0.0, 0.0, 0.0],
-    spacing=[0.25, 0.25, 1.0],
+    spacing=[0.25, 0.25, 1.0]
 )
+
 #Filter 2
 
 result = cx.ImportCSVDataFilter.execute(
@@ -25,24 +26,31 @@ result = cx.ImportCSVDataFilter.execute(
     #created_data_group: DataPath = ...,
     selected_data_group=cx.DataPath("[Image Geometry]/CellData"),
     tuple_dimensions=[1.0, 201.0, 189,0],
-    use_existing_group=True,
+    use_existing_group=True
     #wizard_data=CSVWizardData
 )
+
 #Filter 3
 
 result = cx.CombineAttributeArraysFilter.execute(
     data_structure=data_structure,
     move_values=False,
     normalize_data=False,
-    selected_data_array_paths=[cx.DataPath(["[Image Geometry]/CellData/phil"]),cx.DataPath(["[Image Geometry]/CellData/Phi"]),cx.DataPath(["[Image Geometry]/CellData/phi2"])],
-    stacked_data_array_name="Eulers",
+    selected_data_array_paths=[cx.DataPath(["[Image Geometry]/CellData/phil"]),
+                               cx.DataPath(["[Image Geometry]/CellData/Phi"]),
+                               cx.DataPath(["[Image Geometry]/CellData/phi2"])],
+    stacked_data_array_name="Eulers"
 )
+
 #Filter 4
 
 result = cx.DeleteData.execute(
     data_structure=data_structure,
-    removed_data_path=[cx.DataPath(["[Image Geometry]/CellData/phi1"]),cx.DataPath(["[Image Geometry]/CellData/Phi"]),cx.DataPath(["[Image Geometry]/CellData/phi2"])],
+    removed_data_path=[cx.DataPath(["[Image Geometry]/CellData/phi1"]),
+                       cx.DataPath(["[Image Geometry]/CellData/Phi"]),
+                       cx.DataPath(["[Image Geometry]/CellData/phi2"])]
 )
+
 #Filter 5
 
 ensemble_info_parameter = []
@@ -55,6 +63,7 @@ phase_names_array_name="PhaseNames",
 phase_types_array_name="PhaseTypes",
 ensemble=ensemble_info_parameter
 )
+
 #Filter 6
 
 result = cxor.GenerateIPFColorsFilter.execute(
@@ -65,8 +74,9 @@ result = cxor.GenerateIPFColorsFilter.execute(
     crystal_structures_array_path=cx.DataPath("[Image Geometry]/CellEnsembleData/CrystalStructures"),
     #good_voxels_array_path: DataPath = ...,
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=False,
+    use_good_voxels=False
 )
+
 #Filter 7
 
 result = cxitk.ITKImageWriter.execute(
@@ -74,9 +84,10 @@ result = cxitk.ITKImageWriter.execute(
     file_name=cx.DataPath("Data/Output/Import_ASCII_IPF.png"),
     image_array_path=cx.DataPath("[Image Geometry]/CellData/IPFColors"),
     image_geom_path=cx.DataPath("[Image Geometry]"),
-    index_offset=0
+    index_offset=0,
     plane=0
 )
+
 #Filter 8
 
 output_file_path = "Data/Output/Small_IN100/EnsembleData.dream3d"

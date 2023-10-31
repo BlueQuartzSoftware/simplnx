@@ -18,7 +18,7 @@ result = cxitk.ITKImportImageStack.execute(
     image_transform_choice=0,
     input_file_list_info=cx.DataPath("Data/Porosity_Image/"),
     origin=[0.0, 0.0, 0.0],
-    spacing=[1.0, 1.0, 1.0],
+    spacing=[1.0, 1.0, 1.0]
 )
 
 #Filter 2
@@ -40,8 +40,9 @@ result = cx.MultiThresholdObjects.execute(
     #custom_false_value: float = ...,
     #custom_true_value: float = ...,
     use_custom_false_value=False,
-    use_custom_true_value=False,
+    use_custom_true_value=False
 )
+
 #Filter 3
 
 result = cx.ScalarSegmentFeaturesFilter.execute(
@@ -54,8 +55,9 @@ result = cx.ScalarSegmentFeaturesFilter.execute(
     mask_path=cx.DataPath("ImageDataContainer/Cell Data/Mask"),
     randomize_features=True,
     scalar_tolerance=0,
-    use_mask=True,
+    use_mask=True
 )
+
 #Filter 4
 
 result = cx.CalculateFeatureSizesFilter.execute(
@@ -66,8 +68,9 @@ result = cx.CalculateFeatureSizesFilter.execute(
     geometry_path=cx.DataPath("ImageDataContainer"),
     num_elements_path=("NumElements"),
     save_element_sizes=False,
-    volumes_path=("Volumes"),
+    volumes_path=("Volumes")
 )
+
 #Filter 5
 
 result = cx.CopyFeatureArrayToElementArray.execute(
@@ -76,6 +79,7 @@ result = cx.CopyFeatureArrayToElementArray.execute(
     feature_ids_path=cx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     selected_feature_array_path=[cx.DataPath("ImageDataContainer/CellFeatureData/EquivalentDiameters")]
 )
+
 #Filter 6
 
 result = cx.CreateDataArray.execute(
@@ -85,9 +89,10 @@ result = cx.CreateDataArray.execute(
     data_format=("Unknown"),
     initialization_value=("1"),
     numeric_type=4,
-    output_data_array=cx.DataPath("Phases"),
+    output_data_array=cx.DataPath("Phases")
     #tuple_dimensions: List[List[float]] = ...
 )
+
 #Filter 7
 
 result = cx.ConditionalSetValue.execute(
@@ -97,8 +102,9 @@ result = cx.ConditionalSetValue.execute(
     #remove_value: str = ...,
     replace_value=("2"),
     selected_array_path=cx.DataPath("ImageDataContainer/Cell Data/Phases"),
-    use_conditional=True,
+    use_conditional=True
 )
+
 #Filter 8
 
 result = cx.FindFeaturePhasesFilter.execute(
@@ -106,8 +112,9 @@ result = cx.FindFeaturePhasesFilter.execute(
     cell_features_attribute_matrix_path=("ImageDataContainer/CellFeatureData"),
     cell_phases_array_path=cx.DataPath("ImageDataContainer/Cell Data/Phases"),
     feature_ids_path=("ImageDataContainer/Cell Data/FeatureIds"),
-    feature_phases_array_path=("Phases"),
+    feature_phases_array_path=("Phases")
 )
+
 #Filter 9
 
 result = cx.FindFeatureCentroidsFilter.execute(
@@ -115,15 +122,17 @@ result = cx.FindFeatureCentroidsFilter.execute(
     centroids_array_path=("Centroids"),
     feature_attribute_matrix=cx.DataPath("ImageDataContainer/CellFeatureData"),
     feature_ids_path=cx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
-    selected_image_geometry=cx.DataPath("ImageDataContainer"),
+    selected_image_geometry=cx.DataPath("ImageDataContainer")
 )
+
 #Filter 10
 
 result = cx.CreateAttributeMatrixFilter.execute(
     data_structure=data_structure,
     data_object_path=cx.DataPath("Ensemble AttributeMatrix"),
-    tuple_dimensions=[3.0],
+    tuple_dimensions=[3.0]
 )
+
 #Filter 11
 
 output_file_path = "Data/Output/ImagesStack/Images.dream3d"

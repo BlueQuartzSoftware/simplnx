@@ -9,6 +9,7 @@ import numpy as np
 data_structure = cx.DataStructure()
 
 #Filter 1
+
 generated_file_list_value = cx.GeneratedFileListParameter.ValueType()
 generated_file_list_value.input_path = "Data/Porosity_Image"
 generated_file_list_value.ordering = cx.GeneratedFileListParameter.Ordering.LowToHigh
@@ -29,9 +30,11 @@ result = cxitk.ITKImportImageStack.execute(
     image_transform_choice=0,
     input_file_list_info=generated_file_list_value,
     origin=[0.0, 0.0, 0.0],
-    spacing=[1.0, 1.0, 1.0],
+    spacing=[1.0, 1.0, 1.0]
 )
+
 #Filter 2
+
 result = cx.ResampleImageGeomFilter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
@@ -43,9 +46,11 @@ result = cx.ResampleImageGeomFilter.execute(
     resampling_mode=0,
     #scaling: List[float] = ...,
     selected_image_geometry=cx.DataPath("Porosity_Image"),
-    spacing=[2.0, 2.0, 2.0],
+    spacing=[2.0, 2.0, 2.0]
 )
+
 #Filter 3
+
 result = cx.ResampleImageGeomFilter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
@@ -56,10 +61,12 @@ result = cx.ResampleImageGeomFilter.execute(
     renumber_features=False,
     resampling_mode=1,
     scaling=[0.5, 0.5, 0.5],
-    selected_image_geometry=cx.DataPath("Porosity_Image"),
+    selected_image_geometry=cx.DataPath("Porosity_Image")
     #spacing: List[float] = ...
 )
+
 #Filter 4
+
 result = cx.ResampleImageGeomFilter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
@@ -70,10 +77,12 @@ result = cx.ResampleImageGeomFilter.execute(
     renumber_features=False,
     resampling_mode=2,
     #scaling: List[float] = ...,
-    selected_image_geometry=cx.DataPath("Porosity_Image"),
+    selected_image_geometry=cx.DataPath("Porosity_Image")
     #spacing: List[float] = ...
 )
+
 #Filter 5
+
 output_file_path = "Data/Output/ResamplePorosityImage.dream3d"
 result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
