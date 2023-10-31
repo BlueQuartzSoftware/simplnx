@@ -139,7 +139,7 @@ Result<> ITKClosingByReconstructionImage::executeImpl(DataStructure& dataStructu
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto preserveIntensities = filterArgs.value<bool>(k_PreserveIntensities_Key);
 
-  cxITKClosingByReconstructionImage::ITKClosingByReconstructionImageFunctor itkFunctor = {kernelRadius, kernelType, fullyConnected, preserveIntensities};
+  const cxITKClosingByReconstructionImage::ITKClosingByReconstructionImageFunctor itkFunctor = {kernelRadius, kernelType, fullyConnected, preserveIntensities};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

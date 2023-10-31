@@ -116,7 +116,7 @@ Result<> ITKInvertIntensityImage::executeImpl(DataStructure& dataStructure, cons
 
   auto maximum = filterArgs.value<float64>(k_Maximum_Key);
 
-  cxITKInvertIntensityImage::ITKInvertIntensityImageFunctor itkFunctor = {maximum};
+  const cxITKInvertIntensityImage::ITKInvertIntensityImageFunctor itkFunctor = {maximum};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

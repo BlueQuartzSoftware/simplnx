@@ -110,7 +110,7 @@ Result<> ITKNormalizeImage::executeImpl(DataStructure& dataStructure, const Argu
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  cxITKNormalizeImage::ITKNormalizeImageFunctor itkFunctor = {};
+  const cxITKNormalizeImage::ITKNormalizeImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

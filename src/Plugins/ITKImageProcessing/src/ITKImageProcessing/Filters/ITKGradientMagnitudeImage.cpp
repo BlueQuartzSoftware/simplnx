@@ -121,7 +121,7 @@ Result<> ITKGradientMagnitudeImage::executeImpl(DataStructure& dataStructure, co
 
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
 
-  cxITKGradientMagnitudeImage::ITKGradientMagnitudeImageFunctor itkFunctor = {useImageSpacing};
+  const cxITKGradientMagnitudeImage::ITKGradientMagnitudeImageFunctor itkFunctor = {useImageSpacing};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

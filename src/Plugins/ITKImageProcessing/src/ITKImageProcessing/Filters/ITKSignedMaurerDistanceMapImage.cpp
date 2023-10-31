@@ -135,7 +135,7 @@ Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& dataStructu
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
 
-  cxITKSignedMaurerDistanceMapImage::ITKSignedMaurerDistanceMapImageFunctor itkFunctor = {insideIsPositive, squaredDistance, useImageSpacing, backgroundValue};
+  const cxITKSignedMaurerDistanceMapImage::ITKSignedMaurerDistanceMapImageFunctor itkFunctor = {insideIsPositive, squaredDistance, useImageSpacing, backgroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

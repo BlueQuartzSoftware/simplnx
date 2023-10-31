@@ -106,7 +106,7 @@ Result<> ITKLogImage::executeImpl(DataStructure& dataStructure, const Arguments&
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  cxITKLogImage::ITKLogImageFunctor itkFunctor = {};
+  const cxITKLogImage::ITKLogImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

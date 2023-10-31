@@ -118,7 +118,7 @@ Result<> ITKGrayscaleFillholeImage::executeImpl(DataStructure& dataStructure, co
 
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
 
-  cxITKGrayscaleFillholeImage::ITKGrayscaleFillholeImageFunctor itkFunctor = {fullyConnected};
+  const cxITKGrayscaleFillholeImage::ITKGrayscaleFillholeImageFunctor itkFunctor = {fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

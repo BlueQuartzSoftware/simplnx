@@ -106,7 +106,7 @@ Result<> ITKTanImage::executeImpl(DataStructure& dataStructure, const Arguments&
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  cxITKTanImage::ITKTanImageFunctor itkFunctor = {};
+  const cxITKTanImage::ITKTanImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

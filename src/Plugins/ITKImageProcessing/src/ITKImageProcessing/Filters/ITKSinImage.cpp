@@ -106,7 +106,7 @@ Result<> ITKSinImage::executeImpl(DataStructure& dataStructure, const Arguments&
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  cxITKSinImage::ITKSinImageFunctor itkFunctor = {};
+  const cxITKSinImage::ITKSinImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

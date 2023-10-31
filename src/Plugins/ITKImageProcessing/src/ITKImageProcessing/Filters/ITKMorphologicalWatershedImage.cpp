@@ -134,7 +134,7 @@ Result<> ITKMorphologicalWatershedImage::executeImpl(DataStructure& dataStructur
   auto markWatershedLine = filterArgs.value<bool>(k_MarkWatershedLine_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
 
-  cxITKMorphologicalWatershedImage::ITKMorphologicalWatershedImageFunctor itkFunctor = {level, markWatershedLine, fullyConnected};
+  const cxITKMorphologicalWatershedImage::ITKMorphologicalWatershedImageFunctor itkFunctor = {level, markWatershedLine, fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);

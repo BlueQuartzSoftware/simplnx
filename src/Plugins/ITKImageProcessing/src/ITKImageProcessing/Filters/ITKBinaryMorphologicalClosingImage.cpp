@@ -136,7 +136,7 @@ Result<> ITKBinaryMorphologicalClosingImage::executeImpl(DataStructure& dataStru
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto safeBorder = filterArgs.value<bool>(k_SafeBorder_Key);
 
-  cxITKBinaryMorphologicalClosingImage::ITKBinaryMorphologicalClosingImageFunctor itkFunctor = {kernelRadius, kernelType, foregroundValue, safeBorder};
+  const cxITKBinaryMorphologicalClosingImage::ITKBinaryMorphologicalClosingImageFunctor itkFunctor = {kernelRadius, kernelType, foregroundValue, safeBorder};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
