@@ -959,6 +959,9 @@ option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
 
 if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
-endif() # ------------------------------------------------------------------------------# Print Summary Information
-# ------------------------------------------------------------------------------
+endif()
+
+#------------------------------------------------------------------------------
+# Print Summary Information
+#------------------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Summary.cmake)
