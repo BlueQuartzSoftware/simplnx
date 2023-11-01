@@ -14,10 +14,10 @@ result = cxor.ReadCtfDataFilter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
-    data_container_name=cx.DataPath("fw-ar-IF1-aptr12-corr/"),
+    data_container_name=cx.DataPath("fw-ar-IF1-avtr12-corr/"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
-    input_file=cx.DataPath("Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf")
+    input_file=cx.DataPath("Data/T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf")
 )
 
 #Filter 2
@@ -30,13 +30,13 @@ result = cx.RotateSampleRefFrameFilter.execute(
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
     #rotation_matrix: List[List[float]] = ...,
     rotation_representation=0,
-    selected_image_geometry=cx.DataPath("fw-ar-IF1-aptr12-corr/")
+    selected_image_geometry=cx.DataPath("fw-ar-IF1-avtr12-corr/")
 )
 
 #Filter 3
 
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["fw-ar-IF1-aptr12-corr/Cell Data/Error"])
+threshold_1.array_path = cx.DataPath(["fw-ar-IF1-avtr12-corr/Cell Data/Error"])
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.Equal
 threshold_1.value = 0.0
 
@@ -56,7 +56,7 @@ else:
 
 result = cxor.ConvertOrientations.execute(
     data_structure=data_structure,
-    input_orientation_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles"),
+    input_orientation_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles"),
     input_type=0,
     output_orientation_array_name=("Quats"),
     output_type=2
@@ -66,21 +66,21 @@ result = cxor.ConvertOrientations.execute(
 
 result = cx.ReplaceElementAttributesWithNeighborValuesFilter.execute(
     data_structure=data_structure,
-    confidence_index_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Error"),
+    confidence_index_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Error"),
     loop=False,
     min_confidence=0,
     selected_comparison=0,
-    selected_image_geometry=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Error")
+    selected_image_geometry=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Error")
 )
 
 #Filter 6
 
 result = cxor.GenerateIPFColorsFilter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles"),
+    cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPF_001"),
-    cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    cell_phases_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
+    crystal_structures_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
     #good_voxels_array_path=cx.DataPath(""),
     reference_dir=[0.0, 0.0, 1.0],
     use_good_voxels=False
@@ -90,9 +90,9 @@ result = cxor.GenerateIPFColorsFilter.execute(
 
 result = cxitk.ITKImageWriter.execute(
     data_structure=data_structure,
-    file_name=cx.DataPath("Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_001.png"),
-    image_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_001"),
-    image_geom_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
+    file_name=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_001.png"),
+    image_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_001"),
+    image_geom_path=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
     plane=0
 )
@@ -101,10 +101,10 @@ result = cxitk.ITKImageWriter.execute(
 
 result = cxor.GenerateIPFColorsFilter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles"),
+    cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPF_010"),
-    cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    cell_phases_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
+    crystal_structures_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
     #good_voxels_array_path=cx.DataPath(""),
     reference_dir=[0.0, 0.0, 1.0],
     use_good_voxels=False
@@ -114,9 +114,9 @@ result = cxor.GenerateIPFColorsFilter.execute(
 
 result = cxitk.ITKImageWriter.execute(
     data_structure=data_structure,
-    file_name=cx.DataPath("Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_010.png"),
-    image_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_010"),
-    image_geom_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
+    file_name=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_010.png"),
+    image_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_010"),
+    image_geom_path=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
     plane=0
 )
@@ -125,10 +125,10 @@ result = cxitk.ITKImageWriter.execute(
 
 result = cxor.GenerateIPFColorsFilter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles"),
+    cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPF_100"),
-    cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    cell_phases_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
+    crystal_structures_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
     #good_voxels_array_path=cx.DataPath(""),
     reference_dir=[1.0, 0.0, 0.0],
     use_good_voxels=False
@@ -138,9 +138,9 @@ result = cxor.GenerateIPFColorsFilter.execute(
 
 result = cxitk.ITKImageWriter.execute(
     data_structure=data_structure,
-    file_name=cx.DataPath("Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_100.png"),
-    image_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_100"),
-    image_geom_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
+    file_name=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_100.png"),
+    image_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_100"),
+    image_geom_path=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
     plane=0
 )
@@ -151,13 +151,13 @@ result = cxor.CAxisSegmentFeaturesFilter.execute(
     data_structure=data_structure,
     active_array_name=("Active"),
     cell_feature_attribute_matrix_name=("CellFeatureData"),
-    cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    cell_phases_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
+    crystal_structures_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
     feature_ids_array_name=("FeatureIds"),
-    good_voxels_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/ThresholdArray"),
-    image_geometry_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
+    good_voxels_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray"),
+    image_geometry_path=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     misorientation_tolerance=5.0,
-    quats_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Quats"),
+    quats_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Quats"),
     randomize_feature_ids=True,
     use_good_voxels=True
 )
@@ -167,10 +167,10 @@ result = cxor.CAxisSegmentFeaturesFilter.execute(
 result = cx.FillBadDataFilter.execute(
     data_structure=data_structure,
     #cell_phases_array_path=cx.DataPath(""),
-    feature_ids_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
+    feature_ids_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
     #ignored_data_array_paths: List[DataPath] = ...,
     min_allowed_defect_size=10,
-    selected_image_geometry=cx.DataPath("fw-ar-IF1-aptr12-corr"),
+    selected_image_geometry=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     store_as_new_phase=False
 )
 
@@ -179,9 +179,9 @@ result = cx.FillBadDataFilter.execute(
 result = cx.CalculateFeatureSizesFilter.execute(
     data_structure=data_structure,
     equivalent_diameters_path=("EquivalentDiameters"),
-    feature_attribute_matrix=cx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData"),
-    feature_ids_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
-    geometry_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
+    feature_attribute_matrix=cx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
+    feature_ids_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
+    geometry_path=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     num_elements_path=("NumElements"),
     save_element_sizes=False,
     volumes_path=("Volumes")
@@ -192,11 +192,11 @@ result = cx.CalculateFeatureSizesFilter.execute(
 result = cx.RemoveMinimumSizeFeaturesFilter.execute(
     data_structure=data_structure,
     apply_single_phase=False,
-    feature_ids_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
+    feature_ids_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
     #feature_phases_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/Phases"),
-    image_geom_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
+    image_geom_path=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     min_allowed_features_size=5,
-    num_cells_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData/NumElements")
+    num_cells_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData/NumElements")
     #phase_number: int = ...
 )
 
@@ -275,7 +275,7 @@ result = cx.FeatureDataCSVWriterFilter.execute(
     data_structure=data_structure,
     cell_feature_attribute_matrix_path=cx.DataPath("fw-ar-IF1-aptr-corr/CellFeatureData"),
     delimiter_choice_int=2,
-    feature_data_file=cx.DataPath("Data/Output/fw-ar-IF1-aptr12-corr/FeatureData.csv"),
+    feature_data_file=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/FeatureData.csv"),
     write_neighborlist_data=False,
     write_num_features_line=True
 )
@@ -291,7 +291,7 @@ result = cx.CalculateArrayHistogramFilter.execute(
     new_data_group=True,
     new_data_group_name=cx.DataPath("Histograms"),
     number_of_bins=256,
-    selected_array_paths=[cx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData/EquivalentDiameters")],
+    selected_array_paths=[cx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData/EquivalentDiameters")],
     user_defined_range=False
 )
 
@@ -304,14 +304,14 @@ result = cx.WriteASCIIDataFilter.execute(
     includes=1,
     #max_val_per_line: int = ...,
     #output_dir=cx.DataPath(""),
-    output_path=cx.DataPath("Data/Output/fw-ar-IF1-aptr12-corr/EqDiamHistogram.csv"),
+    output_path=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/EqDiamHistogram.csv"),
     output_style=1,
-    selected_data_array_paths=[cx.DataPath("fw-ar-IF1-aptr12-corr/Histograms/EquivalentDiameters Histogram")]
+    selected_data_array_paths=[cx.DataPath("fw-ar-IF1-avtr12-corr/Histograms/EquivalentDiameters Histogram")]
 )
 
 #Filter 24
 
-output_file_path = "Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr.dream3d"
+output_file_path = "Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr.dream3d"
 result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
