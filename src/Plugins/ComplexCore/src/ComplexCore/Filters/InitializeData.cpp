@@ -240,22 +240,10 @@ IFilter::UniquePointer InitializeData::clone() const
 IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);
-  auto minPoint = args.value<std::vector<uint64>>(k_MinPoint_Key);
-  auto maxPoint = args.value<std::vector<uint64>>(k_MaxPoint_Key);
-  auto initTypeIndex = args.value<uint64>(k_InitType_Key);
   auto initValue = args.value<float64>(k_InitValue_Key);
   auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
   auto pSeedArrayNameValue = args.value<std::string>(k_SeedArrayName_Key);
-  auto initilizeTypeValue = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitilaizeType_Key));
-
-  uint64 xMin = minPoint.at(0);
-  uint64 yMin = minPoint.at(1);
-  uint64 zMin = minPoint.at(2);
-
-  uint64 xMax = maxPoint.at(0);
-  uint64 yMax = maxPoint.at(1);
-  uint64 zMax = maxPoint.at(2);
+  auto initilizeTypeValue = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
 
   InitType initType = ConvertIndexToInitType(initTypeIndex);
   RangeType initRange = {initRangeVec.at(0), initRangeVec.at(1)};
@@ -263,63 +251,6 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
   if(cellArrayPaths.empty())
   {
     return {MakeErrorResult<OutputActions>(-5550, "At least one data array must be selected.")};
-  }
-
-  std::vector<Error> errors;
-
-  if(xMax < xMin)
-  {
-    errors.push_back(Error{-5551, fmt::format("X Max ({}) less than X Min ({})", xMax, xMin)});
-  }
-  if(yMax < yMin)
-  {
-    errors.push_back(Error{-5552, fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin)});
-  }
-  if(zMax < zMin)
-  {
-    errors.push_back(Error{-5553, fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin)});
-  }
-
-  const auto& imageGeom = data.getDataRefAs<ImageGeom>(imageGeomPath);
-
-  if(xMax > (static_cast<int64>(imageGeom.getNumXCells()) - 1))
-  {
-    errors.push_back(Error{-5557, fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXCells()) - 1)});
-  }
-  if(yMax > (static_cast<int64>(imageGeom.getNumYCells()) - 1))
-  {
-    errors.push_back(Error{-5558, fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYCells()) - 1)});
-  }
-  if(zMax > (static_cast<int64>(imageGeom.getNumZCells()) - 1))
-  {
-    errors.push_back(Error{-5559, fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
-  }
-
-  SizeVec3 imageDims = imageGeom.getDimensions();
-
-  std::vector<usize> reversedImageDims(std::make_reverse_iterator(imageDims.end()), std::make_reverse_iterator(imageDims.begin()));
-
-  for(const DataPath& path : cellArrayPaths)
-  {
-    const auto& dataArray = data.getDataRefAs<IDataArray>(path);
-    std::vector<usize> tupleShape = dataArray.getIDataStoreRef().getTupleShape();
-
-    if(tupleShape.size() != reversedImageDims.size())
-    {
-      errors.push_back(Error{-5560, fmt::format("DataArray at '{}' does not match dimensions of ImageGeometry at '{}'", path.toString(), imageGeomPath.toString())});
-      continue;
-    }
-
-    std::optional<Error> maybeError = ExecuteNeighborFunction(CheckInitializationFunctor{}, dataArray.getDataType(), dataArray, initType, initValue, initRange); // NO BOOL
-    if(maybeError.has_value())
-    {
-      errors.push_back(std::move(*maybeError));
-    }
-  }
-
-  if(!errors.empty())
-  {
-    return {nonstd::make_unexpected(std::move(errors))};
   }
 
   complex::Result<OutputActions> resultOutputActions;
@@ -337,9 +268,6 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);
-  auto minPoint = args.value<std::vector<uint64>>(k_MinPoint_Key);
-  auto maxPoint = args.value<std::vector<uint64>>(k_MaxPoint_Key);
   auto initTypeIndex = args.value<uint64>(k_InitType_Key);
   auto initValue = args.value<float64>(k_InitValue_Key);
   auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
@@ -353,20 +281,8 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   // Store Seed Value in Top Level Array
   data.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
-  uint64 xMin = minPoint.at(0);
-  uint64 yMin = minPoint.at(1);
-  uint64 zMin = minPoint.at(2);
-
-  uint64 xMax = maxPoint.at(0);
-  uint64 yMax = maxPoint.at(1);
-  uint64 zMax = maxPoint.at(2);
-
   InitType initType = ConvertIndexToInitType(initTypeIndex);
   RangeType initRange = {initRangeVec.at(0), initRangeVec.at(1)};
-
-  const ImageGeom& imageGeom = data.getDataRefAs<ImageGeom>(imageGeomPath);
-
-  std::array<usize, 3> dims = imageGeom.getDimensions().toArray();
 
   for(const DataPath& path : cellArrayPaths)
   {
