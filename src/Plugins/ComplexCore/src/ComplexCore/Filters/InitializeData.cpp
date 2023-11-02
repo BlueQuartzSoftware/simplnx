@@ -186,7 +186,7 @@ Uuid InitializeData::uuid() const
 //------------------------------------------------------------------------------
 std::string InitializeData::humanName() const
 {
-  return "Initialize Image Geometry Cell Data";
+  return "Initialize Data";
 }
 
 //------------------------------------------------------------------------------
@@ -202,12 +202,17 @@ Parameters InitializeData::parameters() const
 
   // TODO: restrict types
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMultiCompArrays_Key, "Use Multiple Component Arrays", "When true options for multiple component arrays will be visible", false));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SingleCompArrayPaths_Key, "Single Component Arrays", "The data arrays in which to initialize the data", std::vector<DataPath>{},
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllNumericTypes(), MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_MultiCompArrayPaths_Key, "Multi Component Arrays", "The data arrays in which to initialize the data", std::vector<DataPath>{},
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllNumericTypes()));
 
   params.insertSeperator("Data Initialization");
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Array Data Initialization", "Method for detemining the what values of the data in the array should be initialized to",
-                                                    0ULL, ChoicesParameter::Choices{"Default", "Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
-  params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
-  params.insert(std::make_unique<StringParameter>(k_MultiFillValue_key, "Component Fill Values [Seperated with ;]",
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for detemining the what values of the data in the array should be initialized to",
+                                                    0ULL, ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
+  params.insert(std::make_unique<Float64Parameter>(k_InitValue_Key, "Initialization Value", "This value will be used to fill the new array", 0.0));
+  params.insert(std::make_unique<StringParameter>(k_MultiFillValue_key, "Multi Component Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
   
   params.insert(std::make_unique<Float64Parameter>(k_StartingFillValue_Key, "Starting Value", "The value to start incrementing from", 0.0));
@@ -219,13 +224,28 @@ Parameters InitializeData::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
                                                          VectorFloat64Parameter::ValueType{0.0, 0.0}));
-
-  params.linkParameters(k_InitType_Key, k_InitValue_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  params.linkParameters(k_InitType_Key, k_InitRange_Key, std::make_any<ChoicesParameter::ValueType>(2));
   
-
   // Associate the Linkable Parameter(s) to the children parameters that they control
+  /* Using Multiple Components */
+  params.linkParameters(k_UseMultiCompArrays_Key, k_MultiCompArraysPaths_Key, true);
+  params.linkParameters(k_UseMultiCompArrays_Key, k_SingleCompArraysPaths_Key, false);
+  params.linkParameters(k_UseMultiCompArrays_Key, k_MultiFillValue_Key, true);
+
+  /* Using Fill Value */
+  params.linkParameters(k_InitType_key, k_InitValue_Key, 0ULL);
+
+  /* Using Incremental */
+  params.linkParameters(k_InitType_key, k_StartingFillValue_Key, 1ULL);
+  params.linkParameters(k_InitType_key, k_StepOperation_Key, 1ULL);
+  params.linkParameters(k_InitType_key, k_StepValue_Key, 1ULL);
+
+  /* Random */
   params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
+  /* Random - Using Random */
+  params.linkParameters(k_InitType_key, k_UseSeed_Key, 2ULL);
+  /* Random - Using Random With Range */
+  params.linkParameters(k_InitType_key, k_UseSeed_Key, 3ULL);
+  params.linkParameters(k_InitType_key, k_InitRange_Key, 3ULL);
 
   return params;
 }
