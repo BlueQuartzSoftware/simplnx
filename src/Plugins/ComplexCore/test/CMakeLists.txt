@@ -73,6 +73,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ImageContouringTest.cpp
   ImageGeomTest.cpp
   InitializeDataTest.cpp
+  InitializeImageGeomCellDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
   KMeansTest.cpp

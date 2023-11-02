@@ -27,20 +27,6 @@ namespace
 {
 using RangeType = std::pair<float64, float64>;
 
-enum InitializeType : uint64
-{
-  Default,
-  FillValue,
-  Incremental,
-  Random
-}
-
-enum StepType : uint64
-{
-  Addition,
-  Subtraction
-}
-
 InitializeData::InitType ConvertIndexToInitType(uint64 index)
 {
   switch(index)
@@ -201,28 +187,29 @@ Parameters InitializeData::parameters() const
   Parameters params;
 
   // TODO: restrict types
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-
-  params.insertSeperator("Data Initialization");
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Array Data Initialization", "Method for detemining the what values of the data in the array should be initialized to",
-                                                    0ULL, ChoicesParameter::Choices{"Default", "Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
-  params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
-  params.insert(std::make_unique<StringParameter>(k_MultiFillValue_key, "Component Fill Values [Seperated with ;]",
-                                                  "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
-  
-  params.insert(std::make_unique<Float64Parameter>(k_StartingFillValue_Key, "Starting Value", "The value to start incrementing from", 0.0));
-  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Starting Value", "The type of step operation to preform", 0ULL, ChoicesParameter::Choices{"Addition", "Subtraction"}));
-  params.insert(std::make_unique<Float64Parameter>(k_StepValue_Key, "Increment/Step Value", "The number to increment/decrement the fill value by", 1.0));
-
+  params.insertSeparator(Parameters::Separator{"Seeded Randomness"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_MinPoint_Key, "Min Point", "The minimum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
+                                                        std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxPoint_Key, "Max Point", "The maximum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
+                                                        std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+  params.insertLinkableParameter(
+      std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Tells how to initialize the data", 0, ChoicesParameter::Choices{"Manual", "Random", "Random With Range"}));
+  params.insert(std::make_unique<Float64Parameter>(k_InitValue_Key, "Initialization Value", "The initialization value if Manual Initialization Type is selected", 0.0f));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
                                                          VectorFloat64Parameter::ValueType{0.0, 0.0}));
-
   params.linkParameters(k_InitType_Key, k_InitValue_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_InitType_Key, k_InitRange_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  
+
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "The cell data arrays in which to initialize a sub-volume to zeros", std::vector<DataPath>{},
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllDataTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The geometry containing the cell data for which to initialize", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
@@ -247,7 +234,6 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
   auto initValue = args.value<float64>(k_InitValue_Key);
   auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
   auto pSeedArrayNameValue = args.value<std::string>(k_SeedArrayName_Key);
-  auto initilizeTypeValue = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitilaizeType_Key));
 
   uint64 xMin = minPoint.at(0);
   uint64 yMin = minPoint.at(1);
@@ -324,9 +310,8 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 
   complex::Result<OutputActions> resultOutputActions;
 
-  if(initializeTypeValue == InitializeType::Random)
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({pSeedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
