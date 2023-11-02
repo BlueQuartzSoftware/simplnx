@@ -287,7 +287,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 //------------------------------------------------------------------------------
 Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
+  auto cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ? args.value<MultiArraySelectionParameter::ValueType>(k_MultiCompArraysPaths_Key) : args.value<MultiArraySelectionParameter::ValueType>(k_SingleCompArraysPaths_Key);
   auto initTypeIndex = args.value<uint64>(k_InitType_Key);
   auto initValue = args.value<float64>(k_InitValue_Key);
   auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
