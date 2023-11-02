@@ -4,7 +4,7 @@ Release Notes
 The `complex` library is under activate development and while we strive to maintain a stable API bugs are
 found the necessitate the changing of the API.
 
-Version 1.1.0
+Version 1.2.0
 -------------
 
 API Additions
