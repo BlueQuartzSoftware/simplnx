@@ -24,6 +24,14 @@ public:
   ReverseTriangleWindingFilter& operator=(ReverseTriangleWindingFilter&&) noexcept = delete;
 
   // Parameter Keys
+
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   static inline constexpr StringLiteral k_TriGeomPath_Key = "triangle_geometry_path";
 
   /**

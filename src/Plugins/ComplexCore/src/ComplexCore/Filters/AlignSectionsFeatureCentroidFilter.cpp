@@ -11,6 +11,8 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -156,5 +158,35 @@ Result<> AlignSectionsFeatureCentroidFilter::executeImpl(DataStructure& dataStru
   inputValues.cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
   return AlignSectionsFeatureCentroid(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_WriteAlignmentShiftsKey = "WriteAlignmentShifts";
+constexpr StringLiteral k_AlignmentShiftFileNameKey = "AlignmentShiftFileName";
+constexpr StringLiteral k_UseReferenceSliceKey = "UseReferenceSlice";
+constexpr StringLiteral k_ReferenceSliceKey = "ReferenceSlice";
+constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> AlignSectionsFeatureCentroidFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = AlignSectionsFeatureCentroidFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_WriteAlignmentShiftsKey, k_WriteAlignmentShifts_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_AlignmentShiftFileNameKey, k_AlignmentShiftFileName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseReferenceSliceKey, k_UseReferenceSlice_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_ReferenceSliceKey, k_ReferenceSlice_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_SelectedCellDataGroup_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_GoodVoxelsArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

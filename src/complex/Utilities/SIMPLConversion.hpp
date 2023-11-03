@@ -6,25 +6,32 @@
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/ArrayThresholdsParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/CalculatorParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataTypeParameter.hpp"
+#include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/EnsembleInfoParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GenerateColorTableParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Parameters/ImportCSVDataParameter.hpp"
+#include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+
+// #include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
 
 #include <nlohmann/json.hpp>
 
@@ -75,6 +82,23 @@ Result<> Convert3Parameters(Arguments& args, const nlohmann::json& json, std::st
   if(json.contains(simplKey1) && json.contains(simplKey2) && json.contains(simplKey3))
   {
     auto result = ConverterT::convert(json[simplKey1], json[simplKey2], json[simplKey3]);
+    if(result.valid())
+    {
+      args.insertOrAssign(complexKey, std::make_any<typename ConverterT::ValueType>(std::move(result.value())));
+    }
+
+    return ConvertResult(std::move(result));
+  }
+
+  return {};
+}
+
+//------------------------------------------------------------------------------
+template <class ConverterT>
+Result<> ConvertTopParameters(Arguments& args, const nlohmann::json& json, const std::string& complexKey)
+{
+  {
+    auto result = ConverterT::convert(json);
     if(result.valid())
     {
       args.insertOrAssign(complexKey, std::make_any<typename ConverterT::ValueType>(std::move(result.value())));
@@ -1368,6 +1392,41 @@ struct DynamicTableFilterParameterConverter
   }
 };
 
+struct ArrayToDynamicTableFilterParameterConverter
+{
+  using ParameterType = DynamicTableParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    const auto& tableDataJson = json;
+    if(!tableDataJson.is_array())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("ArrayToDynamicTableFilterParameterConverter '{}' value is not an array", json.dump()));
+    }
+
+    DynamicTableInfo::TableDataType table;
+    DynamicTableInfo::RowType row;
+
+    for(usize j = 0; j < tableDataJson.size(); j++)
+    {
+      const auto& elementValue = tableDataJson.at(j);
+
+      if(!elementValue.is_number())
+      {
+        return MakeErrorResult<ValueType>(-4, fmt::format("ArrayToDynamicTableFilterParameterConverter index ({}, {}) with value '{}' is not a number", 0, j, tableDataJson.dump()));
+      }
+
+      auto value = elementValue.get<float64>();
+      row.push_back(value);
+    }
+
+    table.push_back(row);
+
+    return {std::move(table)};
+  }
+};
+
 struct AttributeMatrixCreationFilterParameterConverter
 {
   using ParameterType = DataGroupCreationParameter;
@@ -1698,21 +1757,559 @@ struct EnsembleInfoFilterParameterConverter
   }
 };
 
-#if 0
 struct GenerateColorTableFilterParameterConverter
 {
   using ParameterType = GenerateColorTableParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json)
+  static constexpr StringLiteral k_SelectedPresetKey = "SelectedPresetName";
+  static constexpr StringLiteral k_RGBPointsKey = "RGBPoints";
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2)
   {
-    auto filePathReult = ReadInputFilePath(json, "GenerateColorTableParameter");
-    if(filePathReult.invalid())
+    if(!json1.is_string())
     {
-      return ConvertInvalidResult<ValueType>(std::move(filePathReult));
+      return MakeErrorResult<ValueType>(-2, fmt::format("GenerateColorTableFilterParameterConverter json1 '{}' is not a string", json2.dump()));
+    }
+    if(!json2.is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("GenerateColorTableFilterParameterConverter json2 '{}' is not an array", json1.dump()));
     }
 
-    return {filePathReult.value()};
+    nlohmann::json value = nlohmann::json::object();
+    value[k_SelectedPresetKey] = json1;
+    value[k_RGBPointsKey] = json2;
+
+    return {std::move(value)};
+  }
+};
+
+struct ReadASCIIWizardDataFilterParameterConverter
+{
+  using ParameterType = ImportCSVDataParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_InputFilePathKey = "Wizard_InputFilePath";
+  static constexpr StringLiteral k_DataHeadersKey = "Wizard_DataHeaders";
+  static constexpr StringLiteral k_BeginIndexKey = "Wizard_BeginIndex";
+  static constexpr StringLiteral k_NumberOfLinesKey = "Wizard_NumberOfLines";
+  static constexpr StringLiteral k_DataTypesKey = "Wizard_DataTypes";
+  static constexpr StringLiteral k_DelimitersKey = "Wizard_Delimiters";
+  static constexpr StringLiteral k_HeaderLineKey = "Wizard_HeaderLine";
+  static constexpr StringLiteral k_HeaderIsCustomKey = "Wizard_HeaderIsCustom";
+  static constexpr StringLiteral k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
+  static constexpr StringLiteral k_ConsecutiveDelimitersKey = "Wizard_ConsecutiveDelimiters";
+
+  static std::vector<std::optional<DataType>> ConvertDataTypeStrings(const std::vector<std::string>& dataTypes)
+  {
+    std::vector<std::optional<DataType>> output;
+
+    for(usize i = 0; i < dataTypes.size(); i++)
+    {
+      try
+      {
+        output.push_back(complex::StringToDataType(dataTypes[i]));
+      } catch(const std::exception& e)
+      {
+        output.push_back({});
+      }
+    }
+
+    return output;
+  }
+
+  static std::vector<char> ConvertToChars(const std::string& string)
+  {
+    std::vector<char> chars(string.length());
+    for(usize i = 0; i < string.size(); i++)
+    {
+      chars[i] = string[i];
+    }
+    return chars;
+  }
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    std::vector<std::string> dataTypeStrings = json[k_DataTypesKey].get<std::vector<std::string>>();
+
+    ValueType value;
+    value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
+    value.dataHeaders = json[k_DataHeadersKey].get<std::vector<std::string>>();
+    value.beginIndex = json[k_BeginIndexKey].get<int32>();
+    value.numberOfLines = json[k_NumberOfLinesKey].get<int32>();
+    value.dataTypes = ConvertDataTypeStrings(dataTypeStrings);
+    value.delimiters = ConvertToChars(json[k_DelimitersKey].get<std::string>());
+    value.headerLine = json[k_HeaderLineKey].get<int32>();
+
+    bool headerIsCustom = json[k_HeaderIsCustomKey].get<bool>();
+    bool headerUsesDefaults = json[k_HeaderUsesDefaultsKey].get<bool>();
+
+    if(headerIsCustom)
+    {
+      value.headerMode = ValueType::HeaderMode::CUSTOM;
+    }
+    else if(headerUsesDefaults)
+    {
+      value.headerMode = ValueType::HeaderMode::DEFAULTS;
+    }
+    else
+    {
+      value.headerMode = ValueType::HeaderMode::LINE;
+    }
+
+    const auto& delimiters = value.delimiters;
+
+    value.tabAsDelimiter = std::find(delimiters.begin(), delimiters.end(), '\t') != delimiters.end();
+    value.semicolonAsDelimiter = std::find(delimiters.begin(), delimiters.end(), ';') != delimiters.end();
+    value.commaAsDelimiter = std::find(delimiters.begin(), delimiters.end(), ',') != delimiters.end();
+    value.spaceAsDelimiter = std::find(delimiters.begin(), delimiters.end(), ' ') != delimiters.end();
+    value.consecutiveDelimiters = static_cast<bool>(json[k_ConsecutiveDelimitersKey].get<int32>());
+
+    return {std::move(value)};
+  }
+};
+
+struct ImportHDF5DatasetFilterParameterConverter
+{
+  using ParameterType = ImportHDF5DatasetParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_DatasetPathKey = "dataset_path";
+  static constexpr StringLiteral k_ComponentDimensionsKey = "component_dimensions";
+  static constexpr StringLiteral k_TupleDimensionsKey = "tuple_dimensions";
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
+  {
+    if(!json1.is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("ImportHDF5DatasetFilterParameter json '{}' is not an array", json1.dump()));
+    }
+
+    if(!json2.is_string())
+    {
+      return MakeErrorResult<ValueType>(-3, fmt::format("ImportHDF5DatasetFilterParameter json '{}' is not a string", json2.dump()));
+    }
+
+    auto dataContainerNameResult = ReadDataContainerName(json3, "ImportHDF5DatasetFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(json3, "ImportHDF5DatasetFilterParameter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+
+    ValueType value;
+    value.inputFile = json2.get<std::string>();
+    value.parent = DataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+    for(const auto& iter : json1)
+    {
+      if(!iter.is_object())
+      {
+        return MakeErrorResult<ValueType>(-2, fmt::format("ImportHDF5DatasetFilterParameter json '{}' is not an object", iter.dump()));
+      }
+
+      ParameterType::DatasetImportInfo info;
+      info.dataSetPath = iter[k_DatasetPathKey].get<std::string>();
+      info.componentDimensions = iter[k_ComponentDimensionsKey].get<std::string>();
+      value.datasets.push_back(std::move(info));
+    }
+
+    return {std::move(value)};
+  }
+};
+
+struct DataArraysToRemoveConverter
+{
+  using ParameterType = MultiPathSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_DataContainersKey = "Data Containers";
+  static constexpr StringLiteral k_AttributeMatricesKey = "Attribute Matrices";
+  static constexpr StringLiteral k_DataArraysKey = "Data Arrays";
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_object())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("DataArraysToRemove json '{}' is not an object", json.dump()));
+    }
+
+    ValueType value;
+
+    if(json.contains(k_DataContainersKey))
+    {
+      const auto& dcJson = json[k_DataContainersKey];
+      if(!dcJson.is_array())
+      {
+        return MakeErrorResult<ValueType>(-2, fmt::format("DataArraysToRemove DataContainer json '{}' is not an array", dcJson.dump()));
+      }
+
+      for(const auto& iter : dcJson)
+      {
+        if(!iter.is_object())
+        {
+          return MakeErrorResult<ValueType>(-3, fmt::format("DataArraysToRemove DataContainer json '{}' is not an object", iter.dump()));
+        }
+
+        auto dataContainerNameResult = ReadDataContainerName(json, "DataArraysToRemove");
+        if(dataContainerNameResult.invalid())
+        {
+          return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+        }
+
+        DataPath dataPath({std::move(dataContainerNameResult.value())});
+        value.push_back(std::move(dataPath));
+      }
+    }
+
+    if(json.contains(k_AttributeMatricesKey))
+    {
+      const auto& amJson = json[k_AttributeMatricesKey];
+      if(!amJson.is_array())
+      {
+        return MakeErrorResult<ValueType>(-4, fmt::format("DataArraysToRemove DataContainer json '{}' is not an array", amJson.dump()));
+      }
+
+      for(const auto& iter : amJson)
+      {
+        if(!iter.is_object())
+        {
+          return MakeErrorResult<ValueType>(-5, fmt::format("DataArraysToRemove AttributeMatrix json '{}' is not an object", iter.dump()));
+        }
+
+        auto dataContainerNameResult = ReadDataContainerName(json, "DataArraysToRemove");
+        if(dataContainerNameResult.invalid())
+        {
+          return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+        }
+
+        auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArraysToRemove");
+        if(attributeMatrixNameResult.invalid())
+        {
+          return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+        }
+
+        DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+        value.push_back(std::move(dataPath));
+      }
+    }
+
+    if(json.contains(k_DataArraysKey))
+    {
+      const auto& daJson = json[k_DataArraysKey];
+      if(!daJson.is_array())
+      {
+        return MakeErrorResult<ValueType>(-6, fmt::format("DataArraysToRemove DataArray json '{}' is not an array", daJson.dump()));
+      }
+
+      for(const auto& iter : daJson)
+      {
+        if(!iter.is_object())
+        {
+          return MakeErrorResult<ValueType>(-7, fmt::format("DataArraysToRemove DataArray json '{}' is not an object", iter.dump()));
+        }
+
+        auto dataContainerNameResult = ReadDataContainerName(json, "DataArraysToRemove");
+        if(dataContainerNameResult.invalid())
+        {
+          return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+        }
+
+        auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArraysToRemove");
+        if(attributeMatrixNameResult.invalid())
+        {
+          return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+        }
+
+        auto dataArrayNameResult = ReadDataArrayName(json, "DataArraysToRemove");
+        if(dataArrayNameResult.invalid())
+        {
+          return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+        }
+
+        DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
+        value.push_back(std::move(dataPath));
+      }
+    }
+
+    return {std::move(value)};
+  }
+};
+
+struct CalculatorFilterParameterConverter
+{
+  using ParameterType = CalculatorParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_InfixEquationKey = "InfixEquation";
+  static constexpr StringLiteral k_UnitsKey = "Units";
+  static constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.contains(k_InfixEquationKey))
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("CalculatorParameter json '{}' does not contain '{}'", json.dump(), k_InfixEquationKey));
+    }
+    if(!json.contains(k_UnitsKey))
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("CalculatorParameter json '{}' does not contain '{}'", json.dump(), k_UnitsKey));
+    }
+    if(!json.contains(k_SelectedAttributeMatrixKey))
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("CalculatorParameter json '{}' does not contain '{}'", json.dump(), k_SelectedAttributeMatrixKey));
+    }
+
+    if(!json[k_InfixEquationKey].is_string())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("CalculatorParameter json[InfixEquation] '{}' is not a string", json[k_InfixEquationKey].dump()));
+    }
+    if(!json[k_UnitsKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("CalculatorParameter json[ScalarType] '{}' is not an integer", json[k_UnitsKey].dump()));
+    }
+    if(!json[k_SelectedAttributeMatrixKey].is_object())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("CalculatorParameter json[SelectedAttributeMatrix] '{}' is not an object", json[k_SelectedAttributeMatrixKey].dump()));
+    }
+
+    const auto& amJson = json[k_SelectedAttributeMatrixKey];
+    auto dataContainerNameResult = ReadDataContainerName(amJson, "AttributeMatrixCreationFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(amJson, "AttributeMatrixCreationFilterParameter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+    ValueType value;
+    value.m_Equation = json[k_InfixEquationKey].get<std::string>();
+    value.m_Units = static_cast<ParameterType::AngleUnits>(json[k_UnitsKey].get<int32>());
+    value.m_SelectedGroup = dataPath;
+
+    return {std::move(value)};
+  }
+};
+
+#if 0
+struct ReadH5EbsdFilterParameterConverter
+{
+  using ParameterType = H5EbsdReaderParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_InputFileKey = "InputFile";
+  static constexpr StringLiteral k_SelectedArrayNamesKey = "SelectedArrayNames";
+  static constexpr StringLiteral k_ZStartIndexKey = "ZStartIndex";
+  static constexpr StringLiteral k_ZEndIndexKey = "ZEndIndex";
+  static constexpr StringLiteral k_RefFrameZDirKey = "RefFrameZDir";
+  static constexpr StringLiteral k_UseTransformationsKey = "UseTransformations";
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json[k_InputFileKey].is_string())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter json '{}' is not a string", json[k_InputFileKey].dump()));
+    }
+    if(!json[k_SelectedArrayNamesKey].is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an array", json[k_SelectedArrayNamesKey].dump()));
+    }
+    if(!json[k_ZStartIndexKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_ZStartIndexKey].dump()));
+    }
+    if(!json[k_ZEndIndexKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_ZEndIndexKey].dump()));
+    }
+    if(!json[k_RefFrameZDirKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_RefFrameZDirKey].dump()));
+    }
+    if(!json[k_UseTransformationsKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_UseTransformationsKey].dump()));
+    }
+
+    for(const auto& iter : json[k_SelectedArrayNamesKey])
+    {
+      if(!iter.is_string())
+      {
+        return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter array name json '{}' is not a string", iter.dump()));
+      }
+    }
+
+    ParameterType::ValueType value;
+    value.inputFilePath = json[k_InputFileKey].get<std::string>();
+    value.startSlice = json[k_ZStartIndexKey].get<int32>();
+    value.endSlice = json[k_ZEndIndexKey].get<int32>();
+    value.eulerRepresentation = json[k_RefFrameZDirKey].get<int32>();
+    value.useRecommendedTransform = static_cast<bool>(json[k_UseTransformationsKey].get<int32>());
+    value.hdf5DataPaths = json[k_SelectedArrayNamesKey].get<std::vector<std::string>>();
+
+    return {std::move(value)};
+  }
+};
+#endif
+
+struct DataContainerReaderFilterParameterConverter
+{
+  using ParameterType = Dream3dImportParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_InputFileKey = "InputFile";
+  static constexpr StringLiteral k_InputFileDataContainerArrayProxyKey = "InputFileDataContainerArrayProxy";
+  static constexpr StringLiteral k_DataContainerProxyKey = "Data Containers";
+  static constexpr StringLiteral k_AttributeMatrixProxyKey = "Attribute Matricies";
+  static constexpr StringLiteral k_DataArrayProxyKey = "Data Arrays";
+  static constexpr StringLiteral k_DataObjectNameKey = "Name";
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json[k_InputFileKey].is_string())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter json '{}' is not a string", json[k_InputFileKey].dump()));
+    }
+    if(!json[k_InputFileDataContainerArrayProxyKey].is_object())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an object", json[k_InputFileDataContainerArrayProxyKey].dump()));
+    }
+
+    std::string inputFilePath = json[k_InputFileKey].get<std::string>();
+    std::vector<complex::DataPath> dataPaths;
+
+    auto dcaProxyJson = json[k_InputFileDataContainerArrayProxyKey];
+    if(!dcaProxyJson[k_DataContainerProxyKey].is_array())
+    {
+      return MakeErrorResult<ValueType>(-3, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an array", dcaProxyJson[k_DataContainerProxyKey].dump()));
+    }
+
+    for(const auto& dcIter : dcaProxyJson[k_DataContainerProxyKey])
+    {
+      std::string dcName = dcIter[k_DataObjectNameKey].get<std::string>();
+      DataPath dcPath({dcName});
+      dataPaths.push_back(dcPath);
+
+      for(const auto& amIter : dcIter[k_AttributeMatrixProxyKey])
+      {
+        std::string amName = amIter[k_DataObjectNameKey].get<std::string>();
+        DataPath amPath = dcPath.createChildPath(amName);
+        dataPaths.push_back(amPath);
+
+        for(const auto& daIter : amIter[k_DataArrayProxyKey])
+        {
+          std::string daName = daIter[k_DataObjectNameKey].get<std::string>();
+          DataPath daPath = amPath.createChildPath(daName);
+          dataPaths.push_back(daPath);
+        }
+      }
+    }
+
+    ParameterType::ValueType value;
+    value.FilePath = std::filesystem::path(inputFilePath);
+    value.DataPaths = dataPaths;
+
+    return {std::move(value)};
+  }
+};
+
+struct ComparisonSelectionFilterParameterConverter
+{
+  using ParameterType = ArrayThresholdsParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_DataArrayNameKey = "Attribute Array Name";
+  static constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
+  static constexpr StringLiteral k_DataContainerNameKey = "Data Container Name";
+  static constexpr StringLiteral k_ComparisonValueKey = "Comparison Value";
+  static constexpr StringLiteral k_ComparisonOperatorKey = "Comparison Operator";
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("ComparisonSelectionFilterParameterConverter json '{}' is not an array", json.dump()));
+    }
+
+    ParameterType::ValueType::CollectionType thresholdSet;
+    // ArrayThreshold;
+    for(const auto& iter : json)
+    {
+      auto comparisonType = static_cast<ArrayThreshold::ComparisonType>(iter[k_ComparisonOperatorKey].get<int32>());
+      float64 comparisonValue = iter[k_ComparisonValueKey].get<float64>();
+      auto dcName = iter[k_DataContainerNameKey].get<std::string>();
+      auto amName = iter[k_AttributeMatrixNameKey].get<std::string>();
+      auto daName = iter[k_DataArrayNameKey].get<std::string>();
+      DataPath arrayPath({dcName, amName, daName});
+
+      auto thresholdPtr = std::make_shared<ArrayThreshold>();
+      thresholdPtr->setArrayPath(arrayPath);
+      thresholdPtr->setComparisonType(comparisonType);
+      thresholdPtr->setComparisonValue(comparisonValue);
+
+      thresholdSet.push_back(thresholdPtr);
+    }
+
+    ParameterType::ValueType value;
+    value.setArrayThresholds(thresholdSet);
+
+    return {std::move(value)};
+  }
+};
+
+#if 0
+struct ComparisonSelectionAdvancedFilterParameterConverter
+{
+  using ParameterType = ArrayThresholdsParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_DataArrayNameKey = "Attribute Array Name";
+  static constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
+  static constexpr StringLiteral k_DataContainerNameKey = "Data Container Name";
+  static constexpr StringLiteral k_ComparisonValueKey = "Comparison Value";
+  static constexpr StringLiteral k_ComparisonOperatorKey = "Comparison Operator";
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json.is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("ComparisonSelectionFilterParameterConverter json '{}' is not an array", json.dump()));
+    }
+
+    ParameterType::ValueType::CollectionType thresholdSet;
+    // ArrayThreshold;
+    for(const auto& iter : json)
+    {
+      auto comparisonType = static_cast<ArrayThreshold::ComparisonType>(iter[k_ComparisonOperatorKey].get<int32>());
+      float64 comparisonValue = iter[k_ComparisonValueKey].get<float64>();
+      auto dcName = iter[k_DataContainerNameKey].get<std::string>();
+      auto amName = iter[k_AttributeMatrixNameKey].get<std::string>();
+      auto daName = iter[k_DataArrayNameKey].get<std::string>();
+      DataPath arrayPath({dcName, amName, daName});
+
+      auto thresholdPtr = std::make_shared<ArrayThreshold>();
+      thresholdPtr->setArrayPath(arrayPath);
+      thresholdPtr->setComparisonType(comparisonType);
+      thresholdPtr->setComparisonValue(comparisonValue);
+
+      thresholdSet.push_back(thresholdPtr);
+    }
+
+    ParameterType::ValueType value;
+    value.setArrayThresholds(thresholdSet);
+
+    return {std::move(value)};
   }
 };
 #endif

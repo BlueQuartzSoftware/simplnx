@@ -28,6 +28,13 @@ public:
   static inline constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
   static inline constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
 
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   enum ErrorCodes : int64
   {
     PathNotFoundError = -178,

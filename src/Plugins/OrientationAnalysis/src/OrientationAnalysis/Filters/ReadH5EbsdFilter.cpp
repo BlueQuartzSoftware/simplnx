@@ -14,6 +14,9 @@
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/H5CtfVolumeReader.h"
 #include "EbsdLib/IO/TSL/AngFields.h"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "EbsdLib/IO/TSL/H5AngVolumeReader.h"
 
 using namespace complex;
@@ -255,5 +258,95 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
 
   ReadH5Ebsd readH5Ebsd(dataStructure, messageHandler, shouldCancel, &inputValues);
   return readH5Ebsd();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ReadH5EbsdKey = "ReadH5Ebsd";
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+} // namespace SIMPL
+
+namespace SIMPLConversionCustom
+{
+struct ReadH5EbsdFilterParameterConverter
+{
+  using ParameterType = H5EbsdReaderParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static constexpr StringLiteral k_InputFileKey = "InputFile";
+  static constexpr StringLiteral k_SelectedArrayNamesKey = "SelectedArrayNames";
+  static constexpr StringLiteral k_ZStartIndexKey = "ZStartIndex";
+  static constexpr StringLiteral k_ZEndIndexKey = "ZEndIndex";
+  static constexpr StringLiteral k_RefFrameZDirKey = "RefFrameZDir";
+  static constexpr StringLiteral k_UseTransformationsKey = "UseTransformations";
+
+  static Result<ValueType> convert(const nlohmann::json& json)
+  {
+    if(!json[k_InputFileKey].is_string())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter json '{}' is not a string", json[k_InputFileKey].dump()));
+    }
+    if(!json[k_SelectedArrayNamesKey].is_array())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an array", json[k_SelectedArrayNamesKey].dump()));
+    }
+    if(!json[k_ZStartIndexKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_ZStartIndexKey].dump()));
+    }
+    if(!json[k_ZEndIndexKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_ZEndIndexKey].dump()));
+    }
+    if(!json[k_RefFrameZDirKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_RefFrameZDirKey].dump()));
+    }
+    if(!json[k_UseTransformationsKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_UseTransformationsKey].dump()));
+    }
+
+    for(const auto& iter : json[k_SelectedArrayNamesKey])
+    {
+      if(!iter.is_string())
+      {
+        return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter array name json '{}' is not a string", iter.dump()));
+      }
+    }
+
+    ParameterType::ValueType value;
+    value.inputFilePath = json[k_InputFileKey].get<std::string>();
+    value.startSlice = json[k_ZStartIndexKey].get<int32>();
+    value.endSlice = json[k_ZEndIndexKey].get<int32>();
+    value.eulerRepresentation = json[k_RefFrameZDirKey].get<int32>() - 1;
+    value.useRecommendedTransform = static_cast<bool>(json[k_UseTransformationsKey].get<int32>());
+    value.hdf5DataPaths = json[k_SelectedArrayNamesKey].get<std::vector<std::string>>();
+
+    return {std::move(value)};
+  }
+};
+} // namespace SIMPLConversionCustom
+} // namespace
+
+Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ReadH5EbsdFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, k_ReadH5EbsdFilter_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataContainerName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

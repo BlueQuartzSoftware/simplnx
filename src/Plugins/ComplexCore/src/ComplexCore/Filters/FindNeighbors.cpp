@@ -13,6 +13,8 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <sstream>
 
 namespace complex
@@ -413,5 +415,43 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_StoreBoundaryCellsKey = "StoreBoundaryCells";
+constexpr StringLiteral k_StoreSurfaceFeaturesKey = "StoreSurfaceFeatures";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
+constexpr StringLiteral k_BoundaryCellsArrayNameKey = "BoundaryCellsArrayName";
+constexpr StringLiteral k_NumNeighborsArrayNameKey = "NumNeighborsArrayName";
+constexpr StringLiteral k_NeighborListArrayNameKey = "NeighborListArrayName";
+constexpr StringLiteral k_SharedSurfaceAreaListArrayNameKey = "SharedSurfaceAreaListArrayName";
+constexpr StringLiteral k_SurfaceFeaturesArrayNameKey = "SurfaceFeaturesArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindNeighbors::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindNeighbors().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_StoreBoundaryCellsKey, k_StoreBoundary_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_StoreSurfaceFeaturesKey, k_StoreSurface_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeom_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIds_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_CellFeatures_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellsArrayNameKey, k_BoundaryCells_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NumNeighborsArrayNameKey, k_NumNeighbors_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NeighborListArrayNameKey, k_NeighborList_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SharedSurfaceAreaListArrayNameKey, k_SharedSurfaceArea_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayNameKey, k_SurfaceFeatures_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

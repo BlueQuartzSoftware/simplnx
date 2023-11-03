@@ -9,6 +9,8 @@
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 using namespace complex;
 
 namespace
@@ -172,5 +174,29 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
   dataAlg.execute(CalculateNormalsImpl(triangleGeom, normals, shouldCancel));
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SurfaceMeshTriangleNormalsArrayPathKey = "SurfaceMeshTriangleNormalsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> TriangleNormalFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = TriangleNormalFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleNormalsArrayPathKey, k_TriGeometryDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleNormalsArrayPathKey,
+                                                                                                                   k_SurfaceMeshTriangleNormalsArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

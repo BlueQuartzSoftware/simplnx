@@ -8,6 +8,9 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/StringParameter.hpp"
 
 using namespace complex;
@@ -159,5 +162,43 @@ Result<> CalculateArrayHistogramFilter::executeImpl(DataStructure& dataStructure
   inputValues.CreatedHistogramDataPaths = createdDataPaths;
 
   return CalculateArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_NumberOfBinsKey = "NumberOfBins";
+constexpr StringLiteral k_UserDefinedRangeKey = "UserDefinedRange";
+constexpr StringLiteral k_MinRangeKey = "MinRange";
+constexpr StringLiteral k_MaxRangeKey = "MaxRange";
+constexpr StringLiteral k_NewDataContainerKey = "NewDataContainer";
+constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
+constexpr StringLiteral k_NewAttributeMatrixNameKey = "NewAttributeMatrixName";
+constexpr StringLiteral k_NewDataArrayNameKey = "NewDataArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CalculateArrayHistogramFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CalculateArrayHistogramFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumberOfBinsKey, k_NumberOfBins_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UserDefinedRangeKey, k_UserDefinedRange_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MinRangeKey, k_MinRange_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MaxRangeKey, k_MaxRange_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerKey, k_NewDataGroup_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPaths_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_NewDataGroupName_Key));
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey,
+                                                                                                                             SIMPL::k_NewAttributeMatrixNameKey, k_DataGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataArrayNameKey, k_HistoName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

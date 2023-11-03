@@ -33,6 +33,13 @@ public:
   static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
 
   /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief
    * @return
    */

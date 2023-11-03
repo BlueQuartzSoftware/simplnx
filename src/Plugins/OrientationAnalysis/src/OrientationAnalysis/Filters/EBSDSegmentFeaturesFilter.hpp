@@ -35,6 +35,14 @@ public:
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
   static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
+
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   /**
    * @brief Returns the name of the filter.
    * @return
