@@ -45,7 +45,8 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 template <typename T>
 Result<> fillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const complex::HDF5::DatasetReader& datasetReader)
 {
-  DataStore<T>& dataStore = dataArray.getIDataStoreRefAs<DataStore<T>>();
+  using StoreType = DataStore<T>;
+  StoreType& dataStore = dataArray.template getIDataStoreRefAs<StoreType>();
   if(!datasetReader.readIntoSpan<T>(dataStore.createSpan()))
   {
     return {MakeErrorResult(-21002, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
