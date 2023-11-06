@@ -171,10 +171,10 @@ struct COMPLEX_EXPORT Uuid
 
   static inline Uuid GenerateV4()
   {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(0, 15);
-    static std::uniform_int_distribution<> dis2(8, 11);
+    static thread_local std::random_device rd;
+    static thread_local std::mt19937 gen(rd());
+    static thread_local std::uniform_int_distribution<> dis(0, 15);
+    static thread_local std::uniform_int_distribution<> dis2(8, 11);
 
     std::stringstream ss;
     int i;

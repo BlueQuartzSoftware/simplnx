@@ -12,6 +12,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CAxisSegmentFeaturesTest.cpp
   ConvertHexGridToSquareGridTest.cpp
   ConvertOrientationsTest.cpp
+  ConvertQuaternionTest.cpp
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp

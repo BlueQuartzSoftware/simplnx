@@ -134,11 +134,11 @@ public:
   ParallelWrapper& operator=(ParallelWrapper&&) = delete;      // Move Assignment Not Implemented
 
   template <typename T>
-  static void Run(T impl, size_t totalPoints)
+  static void Run(T impl, size_t totalPoints, typename IParallelAlgorithm::AlgorithmArrays algArrays)
   {
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, totalPoints);
-    dataAlg.setParallelizationEnabled(false);
+    dataAlg.requireArraysInMemory(algArrays);
     dataAlg.execute(impl);
   }
 
@@ -186,19 +186,23 @@ Result<> ConvertColorToGrayScale::operator()()
     size_t comp = inputColorData.getNumberOfComponents();
     size_t totalPoints = inputColorData.getNumberOfTuples();
 
+    typename IParallelAlgorithm::AlgorithmArrays algArrays;
+    algArrays.push_back(&inputColorData);
+    algArrays.push_back(&outputGrayData);
+
     switch(convType)
     {
     case ConversionType::Luminosity:
-      ParallelWrapper::Run<LuminosityImpl>(LuminosityImpl(inputColorData, outputGrayData, m_InputValues->ColorWeights, comp), totalPoints);
+      ParallelWrapper::Run<LuminosityImpl>(LuminosityImpl(inputColorData, outputGrayData, m_InputValues->ColorWeights, comp), totalPoints, algArrays);
       break;
     case ConversionType::Average:
-      ParallelWrapper::Run<LuminosityImpl>(LuminosityImpl(inputColorData, outputGrayData, {0.3333f, 0.3333f, 0.3333f}, comp), totalPoints);
+      ParallelWrapper::Run<LuminosityImpl>(LuminosityImpl(inputColorData, outputGrayData, {0.3333f, 0.3333f, 0.3333f}, comp), totalPoints, algArrays);
       break;
     case ConversionType::Lightness:
-      ParallelWrapper::Run<LightnessImpl>(LightnessImpl(inputColorData, outputGrayData, comp), totalPoints);
+      ParallelWrapper::Run<LightnessImpl>(LightnessImpl(inputColorData, outputGrayData, comp), totalPoints, algArrays);
       break;
     case ConversionType::SingleChannel:
-      ParallelWrapper::Run<SingleChannelImpl>(SingleChannelImpl(inputColorData, outputGrayData, comp, m_InputValues->ColorChannel), totalPoints);
+      ParallelWrapper::Run<SingleChannelImpl>(SingleChannelImpl(inputColorData, outputGrayData, comp, m_InputValues->ColorChannel), totalPoints, algArrays);
       break;
     }
   }

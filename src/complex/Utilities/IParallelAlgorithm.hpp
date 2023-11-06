@@ -11,6 +11,8 @@ namespace complex
 class COMPLEX_EXPORT IParallelAlgorithm
 {
 public:
+  using AlgorithmArrays = std::vector<const IDataArray*>;
+
   IParallelAlgorithm(const IParallelAlgorithm&) = default;
   IParallelAlgorithm(IParallelAlgorithm&&) noexcept = default;
   IParallelAlgorithm& operator=(const IParallelAlgorithm&) = default;
@@ -28,7 +30,7 @@ public:
    */
   void setParallelizationEnabled(bool doParallel);
 
-  void requireArraysInMemory(const std::vector<const IDataArray*>& arrays);
+  void requireArraysInMemory(const AlgorithmArrays& arrays);
 
 protected:
   IParallelAlgorithm();

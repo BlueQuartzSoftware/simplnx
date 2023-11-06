@@ -127,7 +127,7 @@ public:
    * @param loader
    * @return bool
    */
-  bool addPlugin(const std::shared_ptr<IPluginLoader>& loader);
+  Result<> addPlugin(const std::shared_ptr<IPluginLoader>& loader);
 
   /**
    * @brief Attempts to add the plugin at the specified filepath. Returns true
@@ -135,7 +135,7 @@ public:
    * @param path
    * @return bool
    */
-  bool addPlugin(const std::string& path);
+  Result<> addPlugin(const std::string& path);
 
   /**
    * @brief Removes the plugin with the given uuid.

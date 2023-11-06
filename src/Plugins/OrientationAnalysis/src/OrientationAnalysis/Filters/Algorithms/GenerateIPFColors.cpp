@@ -159,15 +159,24 @@ Result<> GenerateIPFColors::operator()()
 
   MatrixMath::Normalize3x1(normRefDir[0], normRefDir[1], normRefDir[2]);
 
+  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&eulers);
+  algArrays.push_back(&phases);
+  algArrays.push_back(&crystalStructures);
+  algArrays.push_back(&ipfColors);
+
   complex::IDataArray* goodVoxelsArray = nullptr;
   if(m_InputValues->useGoodVoxels)
   {
     goodVoxelsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->goodVoxelsArrayPath);
+    algArrays.push_back(goodVoxelsArray);
   }
+
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, totalPoints);
-  dataAlg.setParallelizationEnabled(false);
+  dataAlg.requireArraysInMemory(algArrays);
+
   dataAlg.execute(GenerateIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, goodVoxelsArray, ipfColors));
 
   if(m_PhaseWarningCount > 0)

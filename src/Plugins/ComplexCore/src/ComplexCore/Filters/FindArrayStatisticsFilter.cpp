@@ -404,11 +404,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
 Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
-  std::cout << "Values: 0" << std::endl;
-
   FindArrayStatisticsInputValues inputValues;
-
-  std::cout << "Values: 1" << std::endl;
 
   inputValues.FindHistogram = filterArgs.value<bool>(k_FindHistogram_Key);
   inputValues.MinRange = filterArgs.value<float64>(k_MinRange_Key);
@@ -446,8 +442,6 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.SummationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_SummationArrayName_Key));
   inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
   inputValues.NumUniqueValuesName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_NumUniqueValues_Key));
-
-  std::cout << "Values: 2" << std::endl;
 
   return FindArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

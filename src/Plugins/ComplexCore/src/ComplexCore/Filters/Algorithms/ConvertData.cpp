@@ -72,9 +72,13 @@ Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues*
   DataArray<T>& inputArray = dataStructure.getDataRefAs<DataArray<T>>(inputValues->SelectedArrayPath);
   AbstractDataStore<T>& inputStore = inputArray.getDataStoreRef();
 
+  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&inputArray);
+  algArrays.push_back(dataStructure.getDataAs<IDataArray>(inputValues->OutputArrayName));
+
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, inputArray.size());
-  dataAlg.setParallelizationEnabled(false);
+  dataAlg.requireArraysInMemory(algArrays);
 
   switch(inputValues->ScalarType)
   {

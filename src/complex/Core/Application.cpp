@@ -283,7 +283,7 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
     fmt::print("Loading Plugin: {}\n", path.string());
   }
   auto pluginLoader = std::make_shared<PluginLoader>(path);
-  if(!getFilterList()->addPlugin(pluginLoader))
+  if(getFilterList()->addPlugin(pluginLoader).invalid())
   {
     return;
   }

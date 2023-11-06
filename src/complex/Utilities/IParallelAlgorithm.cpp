@@ -26,10 +26,20 @@ void IParallelAlgorithm::setParallelizationEnabled(bool doParallel)
   m_RunParallel = doParallel;
 }
 // -----------------------------------------------------------------------------
-void IParallelAlgorithm::requireArraysInMemory(const std::vector<const IDataArray*>& arrays)
+void IParallelAlgorithm::requireArraysInMemory(const AlgorithmArrays& arrays)
 {
+  if(arrays.size() == 0)
+  {
+    return;
+  }
+
   for(const auto* array : arrays)
   {
+    if(array == nullptr)
+    {
+      continue;
+    }
+
     if(array->getIDataStoreRef().getDataFormat().empty() == false)
     {
       setParallelizationEnabled(false);

@@ -324,9 +324,14 @@ Result<> GenerateGBCDPoleFigure::operator()()
 
   m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Intensity Plot for phase {}", m_InputValues->PhaseOfInterest)});
 
+  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&poleFigure);
+  algArrays.push_back(&gbcd);
+
   ParallelData2DAlgorithm dataAlg;
   dataAlg.setRange(0, xPoints, 0, yPoints);
-  dataAlg.setParallelizationEnabled(false);
+  dataAlg.requireArraysInMemory(algArrays);
+
   dataAlg.execute(
       GenerateGBCDPoleFigureImpl(poleFigure, {xPoints, yPoints}, orientOps, gbcdDeltas, gbcdLimits, gbcdSizes, gbcd, m_InputValues->PhaseOfInterest, m_InputValues->MisorientationRotation));
 
