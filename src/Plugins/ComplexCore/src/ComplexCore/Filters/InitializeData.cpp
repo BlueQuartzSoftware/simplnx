@@ -10,7 +10,9 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
 #include <fmt/core.h>
@@ -25,6 +27,20 @@ using namespace complex;
 
 namespace
 {
+enum InitializeType : uint64
+{
+  FillValue,
+  Incremental,
+  Random,
+  RangedRandom
+};
+
+enum StepType : uint64
+{
+  Addition,
+  Subtraction
+};
+
 struct InitializeDataInputValues
 {
   InitializeType initType;
@@ -34,49 +50,35 @@ struct InitializeDataInputValues
   std::string stepValue;
   uint64 seed;
   std::vector<float64> range;
-}
+};
 
-enum InitializeType : uint64
-{
-  FillValue,
-  Incremental,
-  Random,
-  RangedRandom
-}
-
-enum StepType : uint64
-{
-  Addition,
-  Subtraction
-}
-
-template<bool UseAddition, bool UseSubtraction>
+template <bool UseAddition, bool UseSubtraction>
 struct IncrementalOptions
 {
   static inline constexpr bool UsingAddition = UseAddition;
   static inline constexpr bool UsingSubtraction = UseSubtraction;
-}
+};
 
-Using AdditionT = IncrementalOptions<true, false>;
-Using SubtractionT = IncrementalOptions<false, true>;
+using AdditionT = IncrementalOptions<true, false>;
+using SubtractionT = IncrementalOptions<false, true>;
 
 template <typename T>
-void ValueFill(DataStore<T>& dataStore, const std::string& initValue)
+void ValueFill(DataArray<T>& dataArray, const std::string& initValue)
 {
   Result<T> result = ConvertTo<T>::convert(initValue);
   T value = result.value();
-  dataStore.fill(value);
+  dataArray.fill(value);
 }
 
 template <typename T, class IncrementalOptions = AdditionT>
-void IncrementalFill(DataStore<T>& dataStore, const std::string& startValue, const std::string& stepValue)
+void IncrementalFill(DataArray<T>& dataArray, const std::string& startValue, const std::string& stepValue)
 {
   Result<T> result = ConvertTo<T>::convert(startValue);
   T value = result.value();
   result = ConvertTo<T>::convert(stepValue);
   T step = result.value();
 
-  for(auto& cell : dataStore)
+  for(auto& cell : dataArray)
   {
     cell = value;
 
@@ -92,81 +94,75 @@ void IncrementalFill(DataStore<T>& dataStore, const std::string& startValue, con
 }
 
 template <typename T, class DistributionT>
-void RandomFill(const DistributionT& dist, DataStore<T>& dataStore, uint64 seed)
+void RandomFill(DistributionT& dist, DataArray<T>& dataArray, const uint64 seed)
 {
   std::mt19937_64 gen(seed);
 
-  for(auto& cell : dataStore)
+  for(auto& cell : dataArray)
   {
     cell = dist(gen);
   }
 }
 
-template<typename T, class... ArgsT>
+template <typename T, class... ArgsT>
 void FillIncForwarder(const StepType& stepType, ArgsT&&... args)
 {
-  swtich(stepType)
+  switch(stepType)
   {
-    case StepType::Addition :
-    {
-      IncrementalFill<T, AdditionT>(std::forward<ArgsT>(args)...);
-      return;
-    }
-    case StepType::Subtraction :
-    {
-      IncrementalFill<T, SubtractionT>(std::forward<ArgsT>(args)...);
-      return;
-    }
+  case StepType::Addition: {
+    ::IncrementalFill<T, AdditionT>(std::forward<ArgsT>(args)...);
+    return;
+  }
+  case StepType::Subtraction: {
+    ::IncrementalFill<T, SubtractionT>(std::forward<ArgsT>(args)...);
+    return;
+  }
   }
 }
 
-template<typename T, class... ArgsT, class = std::enable_if_t<std::is_floating_point_v<T>>>
+template <typename T, class... ArgsT>
 void FillRandomForwarder(const std::vector<float64>& range, ArgsT&&... args)
 {
-  std::uniform_real_distribution<T> dist(static_cast<T>(range.at(0)), static_cast<T>(range.at(1)));
-  RandomFill(dist, std::forward<ArgsT>(args)...);
-}
-
-template<typename T, class... ArgsT, class = std::enable_if_t<!std::is_floating_point_v<T>>>
-void FillRandomForwarder(const std::vector<float64>& range, ArgsT&&... args)
-{
-  std::uniform_int_distribution<T> dist(static_cast<T>(range.at(0)), static_cast<T>(range.at(1)));
-  RandomFill(dist, std::forward<ArgsT>(args)...);
+  if constexpr(std::is_floating_point_v<T>)
+  {
+    std::uniform_real_distribution<T> dist(static_cast<T>(range.at(0)), static_cast<T>(range.at(1)));
+    ::RandomFill<T, std::uniform_real_distribution<T>>(dist, std::forward<ArgsT>(args)...);
+  }
+  if constexpr(!std::is_floating_point_v<T>)
+  {
+    std::uniform_int_distribution<T> dist(static_cast<T>(range.at(0)), static_cast<T>(range.at(1)));
+    ::RandomFill<T, std::uniform_int_distribution<T>>(dist, std::forward<ArgsT>(args)...);
+  }
 }
 
 struct FillArrayFunctor
 {
-template<typename T>
-void operator()(DataStructure& dataStructure,  const InitializeDataInputValues& inputValues, const DataPath& path)
-{
-  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(path);
-  auto& dataStore = dataArray.getDataStoreRef();
-
-  swtich(inputValues.initType)
+  template <typename T>
+  void operator()(DataStructure& dataStructure, const InitializeDataInputValues& inputValues, const DataPath& path)
   {
-    case InitializeType::FillValue :
+    auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(path);
+
+    switch(inputValues.initType)
     {
-      return ValueFill<T>(dataStore, inputValues.initValue);
+    case InitializeType::FillValue: {
+      return ::ValueFill<T>(dataArray, inputValues.initValue);
     }
-    case InitializeType::Incremental :
-    {
-      return FillIncForwarder<T>(inputValues.stepType, dataStore, inputValues.startValue, inputValues.stepValue);
+    case InitializeType::Incremental: {
+      return ::FillIncForwarder<T>(inputValues.stepType, dataArray, inputValues.startValue, inputValues.stepValue);
     }
-    case InitializeType::Random :
-    {
-      return FillRandomForwarder<T>({std::numeric_limits<T>.min(), std::numeric_limits<T>.max()}, dataStore, inputValues.seed);
+    case InitializeType::Random: {
+      return ::FillRandomForwarder<T>({std::numeric_limits<float64>::min(), std::numeric_limits<float64>::max()}, dataArray, inputValues.seed);
     }
-    case InitializeType::RangedRandom :
-    {
-      return FillRandomForwarder<T>(inputValues.range, dataStore, inputValues.seed);
+    case InitializeType::RangedRandom: {
+      return ::FillRandomForwarder<T>(inputValues.range, dataArray, inputValues.seed);
+    }
     }
   }
-}
 };
 } // namespace
 
 namespace complex
-{ 
+{
 //------------------------------------------------------------------------------
 std::string InitializeData::name() const
 {
@@ -206,17 +202,18 @@ Parameters InitializeData::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMultiCompArrays_Key, "Use Multiple Component Arrays", "When true options for multiple component arrays will be visible", false));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SingleCompArrayPaths_Key, "Single Component Arrays", "The data arrays in which to initialize the data", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllNumericTypes(), MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllNumericTypes(),
+                                                               MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_MultiCompArrayPaths_Key, "Multi Component Arrays", "The data arrays in which to initialize the data", std::vector<DataPath>{},
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllNumericTypes()));
 
-  params.insertSeperator("Data Initialization");
+  params.insertSeparator(Parameters::Separator{"Data Initialization"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for detemining the what values of the data in the array should be initialized to",
-                                                    0ULL, ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
+                                                                    0ULL, ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
-  params.insert(std::make_unique<StringParameter>(k_MultiFillValue_key, "Multi Component Fill Values [Seperated with ;]",
+  params.insert(std::make_unique<StringParameter>(k_MultiFillValue_Key, "Multi Component Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
-  
+
   params.insert(std::make_unique<StringParameter>(k_StartingFillValue_Key, "Starting Value", "The value to start incrementing from", "0"));
   params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Starting Value", "The type of step operation to preform", 0ULL, ChoicesParameter::Choices{"Addition", "Subtraction"}));
   params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Increment/Step Value", "The number to increment/decrement the fill value by", "1"));
@@ -226,28 +223,28 @@ Parameters InitializeData::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
                                                          VectorFloat64Parameter::ValueType{0.0, 0.0}));
-  
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   /* Using Multiple Components */
-  params.linkParameters(k_UseMultiCompArrays_Key, k_MultiCompArraysPaths_Key, true);
-  params.linkParameters(k_UseMultiCompArrays_Key, k_SingleCompArraysPaths_Key, false);
+  params.linkParameters(k_UseMultiCompArrays_Key, k_MultiCompArrayPaths_Key, true);
+  params.linkParameters(k_UseMultiCompArrays_Key, k_SingleCompArrayPaths_Key, false);
   params.linkParameters(k_UseMultiCompArrays_Key, k_MultiFillValue_Key, true);
 
   /* Using Fill Value */
-  params.linkParameters(k_InitType_key, k_InitValue_Key, 0ULL);
+  params.linkParameters(k_InitType_Key, k_InitValue_Key, 0ULL);
 
   /* Using Incremental */
-  params.linkParameters(k_InitType_key, k_StartingFillValue_Key, 1ULL);
-  params.linkParameters(k_InitType_key, k_StepOperation_Key, 1ULL);
-  params.linkParameters(k_InitType_key, k_StepValue_Key, 1ULL);
+  params.linkParameters(k_InitType_Key, k_StartingFillValue_Key, 1ULL);
+  params.linkParameters(k_InitType_Key, k_StepOperation_Key, 1ULL);
+  params.linkParameters(k_InitType_Key, k_StepValue_Key, 1ULL);
 
   /* Random */
   params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
   /* Random - Using Random */
-  params.linkParameters(k_InitType_key, k_UseSeed_Key, 2ULL);
+  params.linkParameters(k_InitType_Key, k_UseSeed_Key, 2ULL);
   /* Random - Using Random With Range */
-  params.linkParameters(k_InitType_key, k_UseSeed_Key, 3ULL);
-  params.linkParameters(k_InitType_key, k_InitRange_Key, 3ULL);
+  params.linkParameters(k_InitType_Key, k_UseSeed_Key, 3ULL);
+  params.linkParameters(k_InitType_Key, k_InitRange_Key, 3ULL);
 
   return params;
 }
@@ -261,20 +258,10 @@ IFilter::UniquePointer InitializeData::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
-  if(!filterArgs.value<bool>(k_UseSeed_Key))
-  {
-    seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  }
-
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
-  auto initValue = args.value<float64>(k_InitValue_Key);
   auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
-  auto pSeedArrayNameValue = args.value<std::string>(k_SeedArrayName_Key);
-  auto initilizeTypeValue = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
-
-  InitType initType = ConvertIndexToInitType(initTypeIndex);
-  RangeType initRange = {initRangeVec.at(0), initRangeVec.at(1)};
+  auto seedArrayNameValue = args.value<std::string>(k_SeedArrayName_Key);
+  auto initializeTypeValue = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
 
   if(cellArrayPaths.empty())
   {
@@ -306,17 +293,18 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
 
   InitializeDataInputValues inputValues;
 
-  inputValues.initType = static_cast<IntializeType>(args.value<uint64>(k_InitType_Key));
+  inputValues.initType = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
   StepType stepType = static_cast<StepType>(args.value<uint64>(k_StepOperation_Key));
   inputValues.initValue = args.value<std::string>(k_InitValue_Key);
   std::string startValue = args.value<std::string>(k_StartingFillValue_Key);
-  std::string stepValue  = args.value<std::string>(k_StepValue_Key);
+  std::string stepValue = args.value<std::string>(k_StepValue_Key);
   inputValues.seed = seed;
   inputValues.range = args.value<std::vector<float64>>(k_InitRange_Key);
 
-  auto cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ? args.value<MultiArraySelectionParameter::ValueType>(k_MultiCompArraysPaths_Key) : args.value<MultiArraySelectionParameter::ValueType>(k_SingleCompArraysPaths_Key);
+  auto cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ? args.value<MultiArraySelectionParameter::ValueType>(k_MultiCompArraysPaths_Key) :
+                                                                     args.value<MultiArraySelectionParameter::ValueType>(k_SingleCompArraysPaths_Key);
 
-  std::vector<std::string> cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ?  : {""};
+  std::vector<std::string> cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ?: {""};
 
   for(const DataPath& path : cellArrayPaths)
   {

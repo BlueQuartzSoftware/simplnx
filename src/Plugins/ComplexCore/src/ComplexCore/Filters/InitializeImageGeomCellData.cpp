@@ -1,4 +1,4 @@
-#include "InitializeData.hpp"
+#include "InitializeImageGeomCellData.hpp"
 
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/AbstractDataStore.hpp"
@@ -27,21 +27,21 @@ namespace
 {
 using RangeType = std::pair<float64, float64>;
 
-InitializeData::InitType ConvertIndexToInitType(uint64 index)
+InitializeImageGeomCellData::InitType ConvertIndexToInitType(uint64 index)
 {
   switch(index)
   {
-  case to_underlying(InitializeData::InitType::Manual): {
-    return InitializeData::InitType::Manual;
+  case to_underlying(InitializeImageGeomCellData::InitType::Manual): {
+    return InitializeImageGeomCellData::InitType::Manual;
   }
-  case to_underlying(InitializeData::InitType::Random): {
-    return InitializeData::InitType::Random;
+  case to_underlying(InitializeImageGeomCellData::InitType::Random): {
+    return InitializeImageGeomCellData::InitType::Random;
   }
-  case to_underlying(InitializeData::InitType::RandomWithRange): {
-    return InitializeData::InitType::RandomWithRange;
+  case to_underlying(InitializeImageGeomCellData::InitType::RandomWithRange): {
+    return InitializeImageGeomCellData::InitType::RandomWithRange;
   }
   default: {
-    throw std::runtime_error("InitializeData: Invalid value for InitType");
+    throw std::runtime_error("InitializeImageGeomCellData: Invalid value for InitType");
   }
   }
 }
@@ -49,18 +49,18 @@ InitializeData::InitType ConvertIndexToInitType(uint64 index)
 struct CheckInitializationFunctor
 {
   template <class T>
-  std::optional<Error> operator()(const IDataArray& dataArray, InitializeData::InitType initType, float64 initValue, const std::pair<float64, float64>& initRange)
+  std::optional<Error> operator()(const IDataArray& dataArray, InitializeImageGeomCellData::InitType initType, float64 initValue, const std::pair<float64, float64>& initRange)
   {
     std::string arrayName = dataArray.getName();
 
-    if(initType == InitializeData::InitType::Manual)
+    if(initType == InitializeImageGeomCellData::InitType::Manual)
     {
       if(initValue < static_cast<double>(std::numeric_limits<T>().lowest()) || initValue > static_cast<double>(std::numeric_limits<T>().max()))
       {
         return Error{-4000, fmt::format("{}: The initialization value could not be converted. The valid range is {} to {}", arrayName, std::numeric_limits<T>::min(), std::numeric_limits<T>::max())};
       }
     }
-    else if(initType == InitializeData::InitType::RandomWithRange)
+    else if(initType == InitializeImageGeomCellData::InitType::RandomWithRange)
     {
       float64 min = initRange.first;
       float64 max = initRange.second;
@@ -104,12 +104,12 @@ auto CreateRandomGenerator(T rangeMin, T rangeMax, uint64 seed)
 struct InitializeArrayFunctor
 {
   template <class T>
-  void operator()(IDataArray& dataArray, const std::array<usize, 3>& dims, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, InitializeData::InitType initType,
+  void operator()(IDataArray& dataArray, const std::array<usize, 3>& dims, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, InitializeImageGeomCellData::InitType initType,
                   float64 initValue, const RangeType& initRange, uint64 seed)
   {
     T rangeMin;
     T rangeMax;
-    if(initType == InitializeData::InitType::RandomWithRange)
+    if(initType == InitializeImageGeomCellData::InitType::RandomWithRange)
     {
       rangeMin = static_cast<T>(initRange.first);
       rangeMax = static_cast<T>(initRange.second);
@@ -132,7 +132,7 @@ struct InitializeArrayFunctor
         {
           usize index = (k * dims[0] * dims[1]) + (j * dims[0]) + i;
 
-          if(initType == InitializeData::InitType::Manual)
+          if(initType == InitializeImageGeomCellData::InitType::Manual)
           {
             T num = static_cast<T>(initValue);
             dataStore.fillTuple(index, num);
@@ -152,37 +152,37 @@ struct InitializeArrayFunctor
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string InitializeData::name() const
+std::string InitializeImageGeomCellData::name() const
 {
-  return FilterTraits<InitializeData>::name;
+  return FilterTraits<InitializeImageGeomCellData>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string InitializeData::className() const
+std::string InitializeImageGeomCellData::className() const
 {
-  return FilterTraits<InitializeData>::className;
+  return FilterTraits<InitializeImageGeomCellData>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid InitializeData::uuid() const
+Uuid InitializeImageGeomCellData::uuid() const
 {
-  return FilterTraits<InitializeData>::uuid;
+  return FilterTraits<InitializeImageGeomCellData>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string InitializeData::humanName() const
+std::string InitializeImageGeomCellData::humanName() const
 {
   return "Initialize Image Geometry Cell Data";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> InitializeData::defaultTags() const
+std::vector<std::string> InitializeImageGeomCellData::defaultTags() const
 {
   return {className(), "Memory Management", "Initialize", "Create", "Generate", "Data"};
 }
 
 //------------------------------------------------------------------------------
-Parameters InitializeData::parameters() const
+Parameters InitializeImageGeomCellData::parameters() const
 {
   Parameters params;
 
@@ -190,7 +190,7 @@ Parameters InitializeData::parameters() const
   params.insertSeparator(Parameters::Separator{"Seeded Randomness"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeImageGeomCellData SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MinPoint_Key, "Min Point", "The minimum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
@@ -218,13 +218,13 @@ Parameters InitializeData::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer InitializeData::clone() const
+IFilter::UniquePointer InitializeImageGeomCellData::clone() const
 {
-  return std::make_unique<InitializeData>();
+  return std::make_unique<InitializeImageGeomCellData>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult InitializeImageGeomCellData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);
@@ -319,7 +319,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> InitializeImageGeomCellData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);

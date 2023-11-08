@@ -28,7 +28,13 @@ public:
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-  static inline constexpr StringLiteral k_InitalizeType_Key = "initialize_type";
+  static inline constexpr StringLiteral k_UseMultiCompArrays_Key = "use_multi_comp_arrays";
+  static inline constexpr StringLiteral k_SingleCompArrayPaths_Key = "single_comp_array_paths";
+  static inline constexpr StringLiteral k_MultiCompArrayPaths_Key = "multi_comp_array_paths";
+  static inline constexpr StringLiteral k_MultiFillValue_Key = "multi_fill_value";
+  static inline constexpr StringLiteral k_StartingFillValue_Key = "starting_fill_value";
+  static inline constexpr StringLiteral k_StepOperation_Key = "step_operation";
+  static inline constexpr StringLiteral k_StepValue_Key = "step_value";
 
   enum class InitType : uint64
   {

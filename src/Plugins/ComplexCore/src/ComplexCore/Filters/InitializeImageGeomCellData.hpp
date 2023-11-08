@@ -8,17 +8,17 @@
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT InitializeData : public IFilter
+class COMPLEXCORE_EXPORT InitializeImageGeomCellData : public IFilter
 {
 public:
-  InitializeData() = default;
-  ~InitializeData() noexcept override = default;
+  InitializeImageGeomCellData() = default;
+  ~InitializeImageGeomCellData() noexcept override = default;
 
-  InitializeData(const InitializeData&) = delete;
-  InitializeData(InitializeData&&) noexcept = delete;
+  InitializeImageGeomCellData(const InitializeImageGeomCellData&) = delete;
+  InitializeImageGeomCellData(InitializeImageGeomCellData&&) noexcept = delete;
 
-  InitializeData& operator=(const InitializeData&) = delete;
-  InitializeData& operator=(InitializeData&&) noexcept = delete;
+  InitializeImageGeomCellData& operator=(const InitializeImageGeomCellData&) = delete;
+  InitializeImageGeomCellData& operator=(InitializeImageGeomCellData&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_CellArrayPaths_Key = "cell_arrays";
@@ -108,4 +108,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, InitializeData, "447b8909-661f-446a-8c1f-72e0cb568fcf");
+COMPLEX_DEF_FILTER_TRAITS(complex, InitializeImageGeomCellData, "447b8909-661f-446a-8c1f-72e0cb568fcf");
