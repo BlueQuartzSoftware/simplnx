@@ -660,26 +660,42 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* modalBinsArrayPtr = dynamic_cast<NeighborList<float32>*>(arrays[11]);
     auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[12]);
 
-// #ifdef COMPLEX_ENABLE_MULTICORE
-#if 0
-    const tbb::simple_partitioner simplePartitioner;
-    const size_t grainSize = 500;
-    const tbb::blocked_range<size_t> tbbRange(0, numFeatures, grainSize);
-    tbb::parallel_for(tbbRange,
-                      FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
-                                                        inputValues->FindStdDeviation, inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
-                                                        inputValues->UseFullRange, inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr,
-                                                        minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr,
-                                                        filter),
-                      simplePartitioner);
-#else
-    ParallelDataAlgorithm indexAlg;
-    indexAlg.setRange(0, numFeatures);
-    indexAlg.execute(FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation,
-                                                       inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
-                                                       inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr,
-                                                       meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr, filter));
-    indexAlg.setParallelizationEnabled(false);
+    IParallelAlgorithm::AlgorithmArrays indexAlgArrays;
+    indexAlgArrays.push_back(&source);
+    indexAlgArrays.push_back(featureHasDataPtr);
+    indexAlgArrays.push_back(lengthArrayPtr);
+    indexAlgArrays.push_back(minArrayPtr);
+    indexAlgArrays.push_back(maxArrayPtr);
+    indexAlgArrays.push_back(meanArrayPtr);
+    indexAlgArrays.push_back(stdDevArrayPtr);
+    indexAlgArrays.push_back(summationArrayPtr);
+    indexAlgArrays.push_back(histArrayPtr);
+    indexAlgArrays.push_back(mostPopulatedBinPtr);
+
+#ifdef COMPLEX_ENABLE_MULTICORE
+    if(IParallelAlgorithm::CheckArraysInMemory(indexAlgArrays))
+    {
+      const tbb::simple_partitioner simplePartitioner;
+      const size_t grainSize = 500;
+      const tbb::blocked_range<size_t> tbbRange(0, numFeatures, grainSize);
+      tbb::parallel_for(tbbRange,
+                        FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
+                                                          inputValues->FindStdDeviation, inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
+                                                          inputValues->UseFullRange, inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr,
+                                                          minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr,
+                                                          filter),
+                        simplePartitioner);
+    }
+    else
+    {
+      ParallelDataAlgorithm indexAlg;
+      indexAlg.setRange(0, numFeatures);
+      indexAlg.requireArraysInMemory(indexAlgArrays);
+      indexAlg.execute(FindArrayStatisticsByIndexImpl<T>(
+          inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation, inputValues->FindSummation,
+          inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange, inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source,
+          featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr, filter));
+    }
 #endif
 
     if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
@@ -689,8 +705,15 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
       auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
       auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[9]);
 
+      IParallelAlgorithm::AlgorithmArrays medianAlgArrays;
+      medianAlgArrays.push_back(featureIds);
+      medianAlgArrays.push_back(&source);
+      medianAlgArrays.push_back(medianArrayPtr);
+      medianAlgArrays.push_back(numUniqueValuesArrayPtr);
+      medianAlgArrays.push_back(lengthArrayPtr);
+
       ParallelDataAlgorithm medianDataAlg;
-      medianDataAlg.setParallelizationEnabled(false);
+      medianDataAlg.requireArraysInMemory(medianAlgArrays);
       medianDataAlg.setRange(0, numFeatures);
       medianDataAlg.execute(
           FindArrayMedianUniqueByIndexImpl<T>(mask, featureIds, source, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, lengthArrayPtr, filter));

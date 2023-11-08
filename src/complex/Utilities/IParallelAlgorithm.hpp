@@ -13,6 +13,8 @@ class COMPLEX_EXPORT IParallelAlgorithm
 public:
   using AlgorithmArrays = std::vector<const IDataArray*>;
 
+  static bool CheckArraysInMemory(const AlgorithmArrays& arrays);
+
   IParallelAlgorithm(const IParallelAlgorithm&) = default;
   IParallelAlgorithm(IParallelAlgorithm&&) noexcept = default;
   IParallelAlgorithm& operator=(const IParallelAlgorithm&) = default;

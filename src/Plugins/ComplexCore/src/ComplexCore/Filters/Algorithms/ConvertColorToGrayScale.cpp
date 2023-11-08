@@ -2,6 +2,8 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/Common/Range.hpp"
+#include "complex/Core/Application.hpp"
+#include "complex/Core/Preferences.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
@@ -35,8 +37,8 @@ public:
     for(size_t i = start; i < end; i++)
     {
       auto temp = static_cast<int32>(
-          roundf((m_ImageData[m_NumComp * i] * m_ColorWeights.getX()) + (m_ImageData[m_NumComp * i + 1] * m_ColorWeights.getY()) + (m_ImageData[m_NumComp * i + 2] * m_ColorWeights.getZ())));
-      m_FlatImageData[i] = static_cast<uint8>(temp);
+          roundf((m_ImageData.at(m_NumComp * i) * m_ColorWeights.getX()) + (m_ImageData.at(m_NumComp * i + 1) * m_ColorWeights.getY()) + (m_ImageData.at(m_NumComp * i + 2) * m_ColorWeights.getZ())));
+      m_FlatImageData.setValue(i, static_cast<uint8>(temp));
     }
   }
 
@@ -72,7 +74,7 @@ public:
     for(size_t i = start; i < end; i++)
     {
       auto minmax = std::minmax_element(m_ImageData.begin() + (i * m_NumComp), m_ImageData.begin() + (i * m_NumComp + 3));
-      m_FlatImageData[i] = static_cast<uint8_t>(roundf(static_cast<float>(static_cast<int16_t>(*(minmax.first)) + static_cast<int16_t>(*(minmax.second))) / 2.0f));
+      m_FlatImageData.setValue(i, static_cast<uint8_t>(roundf(static_cast<float>(static_cast<int16_t>(*(minmax.first)) + static_cast<int16_t>(*(minmax.second))) / 2.0f)));
     }
   }
 
@@ -108,7 +110,7 @@ public:
   {
     for(size_t i = start; i < end; i++)
     {
-      m_FlatImageData[i] = static_cast<uint8_t>((m_ImageData[m_NumComp * i + static_cast<size_t>(m_Channel)]));
+      m_FlatImageData.setValue(i, static_cast<uint8_t>((m_ImageData.at(m_NumComp * i + static_cast<size_t>(m_Channel)))));
     }
   }
 
@@ -198,9 +200,10 @@ Result<> ConvertColorToGrayScale::operator()()
     case ConversionType::Average:
       ParallelWrapper::Run<LuminosityImpl>(LuminosityImpl(inputColorData, outputGrayData, {0.3333f, 0.3333f, 0.3333f}, comp), totalPoints, algArrays);
       break;
-    case ConversionType::Lightness:
+    case ConversionType::Lightness: {
       ParallelWrapper::Run<LightnessImpl>(LightnessImpl(inputColorData, outputGrayData, comp), totalPoints, algArrays);
       break;
+    }
     case ConversionType::SingleChannel:
       ParallelWrapper::Run<SingleChannelImpl>(SingleChannelImpl(inputColorData, outputGrayData, comp, m_InputValues->ColorChannel), totalPoints, algArrays);
       break;
