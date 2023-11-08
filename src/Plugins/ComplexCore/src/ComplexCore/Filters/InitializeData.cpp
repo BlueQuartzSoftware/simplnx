@@ -159,6 +159,27 @@ struct FillArrayFunctor
     }
   }
 };
+
+template <typename T>
+Result<> FillMultiComponentArray(DataArray<T>& dataArray, const std::vector<std::string>& stringValues)
+{
+  std::vector<T> values;
+
+  for(const auto& str : stringValues)
+  {
+    auto result = ConvertTo<T>::convert(str);
+    if(result.invalid())
+    {
+      return MakeErrorResult(fmt::format("{} was unable to be translated to the data arrays type", str));
+    }
+    values.emplace_back(ConvertTo<T>::convert(str).value())
+  }
+
+  usize numComp = dataArray.getNumberOfComponents();
+
+  if(numComp > )
+
+}
 } // namespace
 
 namespace complex
@@ -268,6 +289,28 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     return {MakeErrorResult<OutputActions>(-5550, "At least one data array must be selected.")};
   }
 
+if(multiCompArrays)
+{
+  std::vector<T> values;
+
+  for(const auto& str : stringValues)
+  {
+    auto result = ConvertTo<T>::convert(str);
+    if(result.invalid())
+    {
+      return MakePreflightErrorResult(fmt::format("{} was unable to be translated to the data arrays type", str));
+    }
+    values.emplace_back(ConvertTo<T>::convert(str).value())
+  }
+
+  usize numComp = dataArray.getNumberOfComponents();
+
+  if(numComp > values.size() - 1)
+  {
+    MakePreflightErrorResult(fmt::format("one of the arrays ", str));
+  }
+}
+
   complex::Result<OutputActions> resultOutputActions;
 
   if(initializeTypeValue == InitializeType::Random)
@@ -304,7 +347,7 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   auto cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ? args.value<MultiArraySelectionParameter::ValueType>(k_MultiCompArraysPaths_Key) :
                                                                      args.value<MultiArraySelectionParameter::ValueType>(k_SingleCompArraysPaths_Key);
 
-  std::vector<std::string> cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ?: {""};
+  std::vector<std::string> cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ? StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_MultiFillValue_Key)), ';') : {""};
 
   for(const DataPath& path : cellArrayPaths)
   {
