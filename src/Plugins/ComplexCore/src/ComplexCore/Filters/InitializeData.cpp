@@ -138,9 +138,9 @@ void FillRandomForwarder(const std::vector<float64>& range, ArgsT&&... args)
 struct FillArrayFunctor
 {
   template <typename T>
-  void operator()(DataStructure& dataStructure, const InitializeDataInputValues& inputValues, const DataPath& path)
+  void operator()(IDataArray& iDataArray, const InitializeDataInputValues& inputValues)
   {
-    auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(path);
+    auto& dataArray = dynamic_cast<DataArray<T>&>(iDataArray);
 
     switch(inputValues.initType)
     {
@@ -160,26 +160,39 @@ struct FillArrayFunctor
   }
 };
 
-template <typename T>
-Result<> FillMultiComponentArray(DataArray<T>& dataArray, const std::vector<std::string>& stringValues)
+struct FillMultiCompArrayFunctor
 {
-  std::vector<T> values;
+template <typename T>
+auto operator()(IDataArray& iDataArray, const std::vector<std::string>& stringValues)
+{
+    auto& dataArray = dynamic_cast<DataArray<T>&>(iDataArray);
 
-  for(const auto& str : stringValues)
-  {
-    auto result = ConvertTo<T>::convert(str);
-    if(result.invalid())
+    std::vector<T> values;
+
+    for(const auto& str : stringValues)
     {
-      return MakeErrorResult(fmt::format("{} was unable to be translated to the data arrays type", str));
-    }
-    values.emplace_back(ConvertTo<T>::convert(str).value())
+      auto result = ConvertTo<T>::convert(str);
+      if(result.invalid())
+      {
+        return MakeErrorResult(fmt::format("{} was unable to be translated to the data arrays type", str));
+      }
+      values.emplace_back(ConvertTo<T>::convert(str).value())
   }
 
-  usize numComp = dataArray.getNumberOfComponents();
+  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
+  usize numTup = dataArray.getNumberOfTuples();
 
-  if(numComp > )
+  for(usize tup = 0; tup < numTup; tup++)
+  {
+    for(usize comp = 0; comp < numComp; comp++)
+    {
+      dataArray[tup * numComp + comp] = values[comp];
+    }
+  }
 
+  return {};
 }
+};
 } // namespace
 
 namespace complex
@@ -347,7 +360,7 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   auto cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ? args.value<MultiArraySelectionParameter::ValueType>(k_MultiCompArraysPaths_Key) :
                                                                      args.value<MultiArraySelectionParameter::ValueType>(k_SingleCompArraysPaths_Key);
 
-  std::vector<std::string> cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ? StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_MultiFillValue_Key)), ';') : {""};
+  std::vector<std::string> multiFillValues = args.value<bool>(k_UseMultiCompArrays_Key) ? StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_MultiFillValue_Key)), ';') : {""};
 
   for(const DataPath& path : cellArrayPaths)
   {
@@ -356,10 +369,11 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
     if(iDataArray.getNumberOfComponents() > 1)
     {
       // Work out multi component arrays
+      ExecuteNeighborFunction(::FillMultiCompArrayFunctor{}, iDataArray.getDataType(), iDataArray, multiFillValues);
     }
     else
     {
-      ExecuteNeighborFunction(::FillArrayFunctor{}, iDataArray.getDataType(), data, inputValues, path); // NO BOOL
+      ExecuteNeighborFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, inputValues); // NO BOOL
 
       // Avoid the exact same seeding for each array
       inputValues.seed++;
