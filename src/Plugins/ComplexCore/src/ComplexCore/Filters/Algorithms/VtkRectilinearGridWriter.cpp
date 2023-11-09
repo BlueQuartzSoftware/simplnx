@@ -11,6 +11,8 @@ using namespace complex;
 
 namespace
 {
+static constexpr usize k_BufferDumpVal = 2000000;
+
 // -----------------------------------------------------------------------------
 template <typename T>
 std::string TypeForPrimitive(T value, const IFilter::MessageHandler& messageHandler)
@@ -178,6 +180,7 @@ struct WriteVtkDataArrayFunctor
     else
     {
       std::stringstream ss;
+      usize nextDump = k_BufferDumpVal;
       for(size_t i = 0; i < totalElements; i++)
       {
         if(i % 20 == 0 && i > 0)
@@ -191,6 +194,14 @@ struct WriteVtkDataArrayFunctor
         else
         {
           ss << " " << dataArray[i];
+        }
+
+        if(i > nextDump)
+        {
+          fprintf(outputFile, "%s", ss.str().c_str());
+          ss.clear();
+
+          nextDump += k_BufferDumpVal;
         }
       }
       ss << "\n";
