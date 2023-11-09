@@ -186,6 +186,15 @@ struct WriteVtkDataArrayFunctor
         if(i % 20 == 0 && i > 0)
         {
           ss << "\n";
+
+          if(i > nextDump)
+          {
+            fprintf(outputFile, "%s", ss.str().c_str());
+
+            ss = std::stringstream();
+
+            nextDump += k_BufferDumpVal;
+          }
         }
         if(useIntCast)
         {
@@ -194,14 +203,6 @@ struct WriteVtkDataArrayFunctor
         else
         {
           ss << " " << dataArray[i];
-        }
-
-        if(i > nextDump)
-        {
-          fprintf(outputFile, "%s", ss.str().c_str());
-          ss.clear();
-
-          nextDump += k_BufferDumpVal;
         }
       }
       ss << "\n";
