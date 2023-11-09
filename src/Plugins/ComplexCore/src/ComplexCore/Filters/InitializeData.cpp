@@ -348,8 +348,7 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   std::vector<std::string> multiFillValues =
       args.value<bool>(k_UseMultiCompArrays_Key) ? StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_MultiFillValue_Key)), ';') : std::vector<std::string>{""};
 
-  
-  auto& iDataArray = data.getDataRefAs<IDataArray>(path);
+  auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
 
   if(iDataArray.getNumberOfComponents() > 1)
   {
