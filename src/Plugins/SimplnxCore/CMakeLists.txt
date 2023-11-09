@@ -75,6 +75,7 @@ set(FilterList
   InitializeData
   InitializeImageGeomCellData
   InterpolatePointCloudToRegularGridFilter
+  InterpolateValuesToUnstructuredGridFilter
   IterativeClosestPointFilter
   KMeansFilter
   KMedoidsFilter
@@ -171,6 +172,7 @@ set(AlgorithmList
   GenerateVectorColors
   GeneratePythonSkeleton
   ImageContouring
+  InterpolateValuesToUnstructuredGrid
   KMeans
   KMedoids
   LaplacianSmoothing
