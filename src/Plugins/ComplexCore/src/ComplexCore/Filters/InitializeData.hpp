@@ -21,27 +21,18 @@ public:
   InitializeData& operator=(InitializeData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellArrayPaths_Key = "cell_arrays";
+  static inline constexpr StringLiteral k_ArrayPath_Key = "array_path";
   static inline constexpr StringLiteral k_InitType_Key = "init_type";
   static inline constexpr StringLiteral k_InitValue_Key = "init_value";
+  static inline constexpr StringLiteral k_StartingFillValue_Key = "starting_fill_value";
+  static inline constexpr StringLiteral k_StepOperation_Key = "step_operation";
+  static inline constexpr StringLiteral k_StepValue_Key = "step_value";
   static inline constexpr StringLiteral k_InitRange_Key = "init_range";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-  static inline constexpr StringLiteral k_UseMultiCompArrays_Key = "use_multi_comp_arrays";
-  static inline constexpr StringLiteral k_SingleCompArrayPaths_Key = "single_comp_array_paths";
-  static inline constexpr StringLiteral k_MultiCompArrayPaths_Key = "multi_comp_array_paths";
-  static inline constexpr StringLiteral k_MultiFillValue_Key = "multi_fill_value";
-  static inline constexpr StringLiteral k_StartingFillValue_Key = "starting_fill_value";
-  static inline constexpr StringLiteral k_StepOperation_Key = "step_operation";
-  static inline constexpr StringLiteral k_StepValue_Key = "step_value";
-
-  enum class InitType : uint64
-  {
-    Manual = 0,
-    Random,
-    RandomWithRange
-  };
+  static inline constexpr StringLiteral k_InitStartRange_Key = "init_start_range";
+  static inline constexpr StringLiteral k_InitEndRange_Key = "init_end_range";
 
   /**
    * @brief

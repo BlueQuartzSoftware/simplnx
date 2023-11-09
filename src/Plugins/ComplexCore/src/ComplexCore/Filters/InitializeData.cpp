@@ -1,24 +1,19 @@
 #include "InitializeData.hpp"
 
 #include "complex/Common/TypeTraits.hpp"
-#include "complex/DataStructure/AbstractDataStore.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 
-#include <array>
 #include <chrono>
 #include <limits>
 #include <random>
@@ -235,51 +230,43 @@ Parameters InitializeData::parameters() const
 
   // TODO: restrict types
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMultiCompArrays_Key, "Use Multiple Component Arrays", "When true options for multiple component arrays will be visible", false));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SingleCompArrayPaths_Key, "Single Component Arrays", "The data arrays in which to initialize the data", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllNumericTypes(),
-                                                               MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_MultiCompArrayPaths_Key, "Any Component Arrays", "The data arrays in which to initialize the data", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayPath_Key, "Any Component Arrays", "The data arrays in which to initialize the data", std::vector<DataPath>{},
+                                                              ArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Data Initialization"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to",
-                                                                    0ULL, ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
-  params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
-  params.insert(std::make_unique<StringParameter>(k_MultiFillValue_Key, "Multi Component Fill Values [Seperated with ;]",
-                                                  "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
+                                                                    static_cast<ChoicesParameter::ValueType>(0), ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
 
-  params.insert(std::make_unique<StringParameter>(k_StartingFillValue_Key, "Starting Value", "The value to start incrementing from", "0"));
-  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Starting Value", "The type of step operation to preform", 0ULL, ChoicesParameter::Choices{"Addition", "Subtraction"}));
-  params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Increment/Step Value", "The number to increment/decrement the fill value by", "1"));
+  params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]", "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
 
-  params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
+  params.insert(std::make_unique<StringParameter>(k_StartingFillValue_Key, "Starting Value [Seperated with ;]", "The value to start incrementing from", "0;1;2"));
+  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Starting Value", "The type of step operation to preform", static_cast<ChoicesParameter::ValueType>(0), ChoicesParameter::Choices{"Addition", "Subtraction"}));
+  params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Increment/Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
+
+  params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
-                                                         VectorFloat64Parameter::ValueType{0.0, 0.0}));
+  
+  params.insert(std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
+  params.insert(std::make_unique<StringParameter>(k_InitEndRange_Key, "Initialization End Range [Seperated with ;]", "[Inclusive]  The upper bound initialization range for random values", "1;1;1"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  /* Using Multiple Components */
-  params.linkParameters(k_UseMultiCompArrays_Key, k_MultiCompArrayPaths_Key, true);
-  params.linkParameters(k_UseMultiCompArrays_Key, k_SingleCompArrayPaths_Key, false);
-  params.linkParameters(k_UseMultiCompArrays_Key, k_MultiFillValue_Key, true);
+   /* Using Fill Value */
+   params.linkParameters(k_InitType_Key, k_InitValue_Key, static_cast<ChoicesParameter::ValueType>(0));
+  
+   /* Using Incremental */
+   params.linkParameters(k_InitType_Key, k_StartingFillValue_Key, static_cast<ChoicesParameter::ValueType>(1));
+   params.linkParameters(k_InitType_Key, k_StepOperation_Key, static_cast<ChoicesParameter::ValueType>(1));
+   params.linkParameters(k_InitType_Key, k_StepValue_Key, static_cast<ChoicesParameter::ValueType>(1));
 
-  //  /* Using Fill Value */
-  //  params.linkParameters(k_InitType_Key, k_InitValue_Key, 0ULL);
-  //
-  //  /* Using Incremental */
-  //  params.linkParameters(k_InitType_Key, k_StartingFillValue_Key, 1ULL);
-  //  params.linkParameters(k_InitType_Key, k_StepOperation_Key, 1ULL);
-  //  params.linkParameters(k_InitType_Key, k_StepValue_Key, 1ULL);
-  //
-  //  /* Random */
-  //  params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
-  //  /* Random - Using Random */
-  //  params.linkParameters(k_InitType_Key, k_UseSeed_Key, 2ULL);
-  //  /* Random - Using Random With Range */
-  //  params.linkParameters(k_InitType_Key, k_UseSeed_Key, 3ULL);
-  //  params.linkParameters(k_InitType_Key, k_InitRange_Key, 3ULL);
+   /* Random - Using Random */
+   params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(2));
+   params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(2));
+
+   /* Random - Using Random With Range */
+   params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(3));
+   params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(3));
+   params.linkParameters(k_InitType_Key, k_InitRange_Key, static_cast<ChoicesParameter::ValueType>(3));
 
   return params;
 }
@@ -358,28 +345,20 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   inputValues.seed = seed;
   inputValues.range = args.value<std::vector<float64>>(k_InitRange_Key);
 
-  auto cellArrayPaths = args.value<bool>(k_UseMultiCompArrays_Key) ? args.value<MultiArraySelectionParameter::ValueType>(k_MultiCompArrayPaths_Key) :
-                                                                     args.value<MultiArraySelectionParameter::ValueType>(k_SingleCompArrayPaths_Key);
-
   std::vector<std::string> multiFillValues =
       args.value<bool>(k_UseMultiCompArrays_Key) ? StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_MultiFillValue_Key)), ';') : std::vector<std::string>{""};
 
-  for(const DataPath& path : cellArrayPaths)
+  
+  auto& iDataArray = data.getDataRefAs<IDataArray>(path);
+
+  if(iDataArray.getNumberOfComponents() > 1)
   {
-    auto& iDataArray = data.getDataRefAs<IDataArray>(path);
-
-    if(iDataArray.getNumberOfComponents() > 1)
-    {
-      // Work out multi component arrays
-      ExecuteNeighborFunction(::FillMultiCompArrayFunctor{}, iDataArray.getDataType(), iDataArray, multiFillValues);
-    }
-    else
-    {
-      ExecuteNeighborFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, inputValues); // NO BOOL
-
-      // Avoid the exact same seeding for each array
-      inputValues.seed++;
-    }
+    // Work out multi component arrays
+    ExecuteNeighborFunction(::FillMultiCompArrayFunctor{}, iDataArray.getDataType(), iDataArray, multiFillValues);
+  }
+  else
+  {
+    ExecuteNeighborFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, inputValues); // NO BOOL
   }
 
   return {};
