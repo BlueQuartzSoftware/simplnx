@@ -22,12 +22,12 @@
 #include "complex/Parameters/GenerateColorTableParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/ImportCSVDataParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
+#include "complex/Parameters/ReadCSVFileParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
@@ -1790,7 +1790,7 @@ struct GenerateColorTableFilterParameterConverter
 
 struct ReadASCIIWizardDataFilterParameterConverter
 {
-  using ParameterType = ImportCSVDataParameter;
+  using ParameterType = ReadCSVFileParameter;
   using ValueType = ParameterType::ValueType;
 
   static constexpr StringLiteral k_InputFilePathKey = "Wizard_InputFilePath";
@@ -1847,7 +1847,9 @@ struct ReadASCIIWizardDataFilterParameterConverter
       }
     }
 
+    // REDO: Filter was redesigned
     ValueType value;
+#if 0
     value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
     value.dataHeaders = json[k_DataHeadersKey].get<std::vector<std::string>>();
     value.beginIndex = json[k_BeginIndexKey].get<int32>();
@@ -1879,6 +1881,7 @@ struct ReadASCIIWizardDataFilterParameterConverter
     value.commaAsDelimiter = std::find(delimiters.begin(), delimiters.end(), ',') != delimiters.end();
     value.spaceAsDelimiter = std::find(delimiters.begin(), delimiters.end(), ' ') != delimiters.end();
     value.consecutiveDelimiters = static_cast<bool>(json[k_ConsecutiveDelimitersKey].get<int32>());
+#endif
 
     return {std::move(value)};
   }
