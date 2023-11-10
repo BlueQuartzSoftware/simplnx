@@ -1,26 +1,25 @@
 #include "IParallelAlgorithm.hpp"
 
 #include "complex/Core/Application.hpp"
-#include "complex/Core/Preferences.hpp"
 
 namespace complex
 {
 // -----------------------------------------------------------------------------
 bool IParallelAlgorithm::CheckArraysInMemory(const AlgorithmArrays& arrays)
 {
-  if(arrays.size() == 0)
+  if(arrays.empty())
   {
-    true;
+    return true;
   }
 
-  for(const auto* array : arrays)
+  for(const auto* arrayPtr : arrays)
   {
-    if(array == nullptr)
+    if(arrayPtr == nullptr)
     {
       continue;
     }
 
-    if(array->getIDataStoreRef().getDataFormat().empty() == false)
+    if(!arrayPtr->getIDataStoreRef().getDataFormat().empty())
     {
       return false;
     }
@@ -57,7 +56,6 @@ void IParallelAlgorithm::setParallelizationEnabled(bool doParallel)
 // -----------------------------------------------------------------------------
 void IParallelAlgorithm::requireArraysInMemory(const AlgorithmArrays& arrays)
 {
-  bool inMemory = CheckArraysInMemory(arrays);
-  setParallelizationEnabled(!inMemory);
+  setParallelizationEnabled(!CheckArraysInMemory(arrays));
 }
 } // namespace complex
