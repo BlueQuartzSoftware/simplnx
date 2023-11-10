@@ -20,7 +20,7 @@ DataPath::DataPath(std::vector<std::string> path)
 {
   for(const auto& item : m_Path)
   {
-    if(!DataObject::IsValidName(item))
+    if(!DataObject::IsValidName(item) && !item.empty())
     {
       throw std::invalid_argument("DataPath: Invalid DataObject name");
     }

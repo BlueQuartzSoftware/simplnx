@@ -19,6 +19,8 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <fstream>
 
 using namespace complex;
@@ -695,5 +697,29 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SelectedPathKey = "Wizard_SelectedPath";
+constexpr StringLiteral k_TupleDimsKey = "Wizard_TupleDims";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ImportCSVDataFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ImportCSVDataFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter>(args, json, k_WizardData_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ArrayToDynamicTableFilterParameterConverter>(args, json, SIMPL::k_TupleDimsKey, k_TupleDims_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

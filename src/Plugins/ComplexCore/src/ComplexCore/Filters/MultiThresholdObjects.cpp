@@ -585,11 +585,11 @@ Result<Arguments> MultiThresholdObjects::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  bool isAdvanced = json[k_FilterUuidKey].get<std::string>() == v1Uuid;
+  bool isAdvanced = json[k_FilterUuidKey].get<std::string>() != v1Uuid;
 
   if(isAdvanced)
   {
-    // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionAdvancedFilterParameterConverter>(args, json, SIMPL::k_SelectedThresholdsKey, k_ArrayThresholds_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionAdvancedFilterParameterConverter>(args, json, SIMPL::k_SelectedThresholdsKey, k_ArrayThresholds_Key));
   }
   else
   {

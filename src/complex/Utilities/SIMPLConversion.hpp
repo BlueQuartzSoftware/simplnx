@@ -1763,6 +1763,7 @@ struct GenerateColorTableFilterParameterConverter
   using ValueType = ParameterType::ValueType;
 
   static constexpr StringLiteral k_SelectedPresetKey = "SelectedPresetName";
+  static constexpr StringLiteral k_PresetNameKey = "Name";
   static constexpr StringLiteral k_RGBPointsKey = "RGBPoints";
 
   static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2)
@@ -1776,9 +1777,12 @@ struct GenerateColorTableFilterParameterConverter
       return MakeErrorResult<ValueType>(-1, fmt::format("GenerateColorTableFilterParameterConverter json2 '{}' is not an array", json1.dump()));
     }
 
+    auto presetName = json1.get<std::string>();
+    auto rgbPoints = json2.get<std::vector<float64>>();
+
     nlohmann::json value = nlohmann::json::object();
-    value[k_SelectedPresetKey] = json1;
-    value[k_RGBPointsKey] = json2;
+    value[k_PresetNameKey] = presetName;
+    value[k_RGBPointsKey] = rgbPoints;
 
     return {std::move(value)};
   }
@@ -1831,6 +1835,17 @@ struct ReadASCIIWizardDataFilterParameterConverter
   static Result<ValueType> convert(const nlohmann::json& json)
   {
     std::vector<std::string> dataTypeStrings = json[k_DataTypesKey].get<std::vector<std::string>>();
+    for(auto& dataTypeStr : dataTypeStrings)
+    {
+      if(dataTypeStr == "double")
+      {
+        dataTypeStr = "float64";
+      }
+      else if(dataTypeStr == "float")
+      {
+        dataTypeStr = "float32";
+      }
+    }
 
     ValueType value;
     value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
@@ -1929,8 +1944,37 @@ struct DataArraysToRemoveConverter
   using ValueType = ParameterType::ValueType;
 
   static constexpr StringLiteral k_DataContainersKey = "Data Containers";
-  static constexpr StringLiteral k_AttributeMatricesKey = "Attribute Matrices";
+  static constexpr StringLiteral k_AttributeMatricesKey = "Attribute Matricies";
   static constexpr StringLiteral k_DataArraysKey = "Data Arrays";
+  static constexpr StringLiteral k_NameKey = "Name";
+  static constexpr StringLiteral k_FlagKey = "Flag";
+
+  static Result<std::string> FindName(const nlohmann::json& json)
+  {
+    if(!json.contains(k_NameKey))
+    {
+      return MakeErrorResult<std::string>(-55, fmt::format("DataArrayToRemove json '{}' does not contain '{}'", json.dump(), k_NameKey));
+    }
+    if(!json[k_NameKey].is_string())
+    {
+      return MakeErrorResult<std::string>(-55, fmt::format("DataArrayToRemove json '{}' is not a string", json[k_NameKey].dump(), k_NameKey));
+    }
+
+    return {json[k_NameKey].get<std::string>()};
+  }
+
+  static bool IsFlagged(const nlohmann::json& json)
+  {
+    if(!json.contains(k_FlagKey))
+    {
+      return false;
+    }
+    if(!json[k_FlagKey].is_number_integer())
+    {
+      return false;
+    }
+    return json[k_FlagKey].get<int32>() != 0;
+  }
 
   static Result<ValueType> convert(const nlohmann::json& json)
   {
@@ -1943,97 +1987,90 @@ struct DataArraysToRemoveConverter
 
     if(json.contains(k_DataContainersKey))
     {
-      const auto& dcJson = json[k_DataContainersKey];
-      if(!dcJson.is_array())
+      const auto& dcaJson = json[k_DataContainersKey];
+      if(!dcaJson.is_array())
       {
-        return MakeErrorResult<ValueType>(-2, fmt::format("DataArraysToRemove DataContainer json '{}' is not an array", dcJson.dump()));
+        return MakeErrorResult<ValueType>(-2, fmt::format("DataArraysToRemove DataContainer json '{}' is not an array", dcaJson.dump()));
       }
 
-      for(const auto& iter : dcJson)
+      // Data Containers
+      for(const auto& dcJson : dcaJson)
       {
-        if(!iter.is_object())
+        if(!dcJson.is_object())
         {
-          return MakeErrorResult<ValueType>(-3, fmt::format("DataArraysToRemove DataContainer json '{}' is not an object", iter.dump()));
+          return MakeErrorResult<ValueType>(-3, fmt::format("DataArraysToRemove DataContainer json '{}' is not an object", dcJson.dump()));
         }
 
-        auto dataContainerNameResult = ReadDataContainerName(json, "DataArraysToRemove");
+        auto dataContainerNameResult = FindName(dcJson);
         if(dataContainerNameResult.invalid())
         {
           return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
         }
-
-        DataPath dataPath({std::move(dataContainerNameResult.value())});
-        value.push_back(std::move(dataPath));
-      }
-    }
-
-    if(json.contains(k_AttributeMatricesKey))
-    {
-      const auto& amJson = json[k_AttributeMatricesKey];
-      if(!amJson.is_array())
-      {
-        return MakeErrorResult<ValueType>(-4, fmt::format("DataArraysToRemove DataContainer json '{}' is not an array", amJson.dump()));
-      }
-
-      for(const auto& iter : amJson)
-      {
-        if(!iter.is_object())
+        if(IsFlagged(dcJson))
         {
-          return MakeErrorResult<ValueType>(-5, fmt::format("DataArraysToRemove AttributeMatrix json '{}' is not an object", iter.dump()));
+          DataPath dcPath({std::move(dataContainerNameResult.value())});
+          value.push_back(std::move(dcPath));
         }
 
-        auto dataContainerNameResult = ReadDataContainerName(json, "DataArraysToRemove");
-        if(dataContainerNameResult.invalid())
+        // Attribute Matrix
+        if(dcJson.contains(k_AttributeMatricesKey))
         {
-          return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+          const auto& amJson = dcJson[k_AttributeMatricesKey];
+          if(!amJson.is_array())
+          {
+            return MakeErrorResult<ValueType>(-4, fmt::format("DataArraysToRemove DataContainer json '{}' is not an array", amJson.dump()));
+          }
+
+          for(const auto& amIter : amJson)
+          {
+            if(!amIter.is_object())
+            {
+              return MakeErrorResult<ValueType>(-5, fmt::format("DataArraysToRemove AttributeMatrix json '{}' is not an object", amIter.dump()));
+            }
+
+            auto attributeMatrixNameResult = FindName(amIter);
+            if(attributeMatrixNameResult.invalid())
+            {
+              return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+            }
+
+            if(IsFlagged(amIter))
+            {
+              DataPath amPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+              value.push_back(std::move(amPath));
+            }
+
+            // Data Arrays
+            if(amIter.contains(k_DataArraysKey))
+            {
+              const auto& daJson = amIter[k_DataArraysKey];
+              if(!daJson.is_array())
+              {
+                return MakeErrorResult<ValueType>(-6, fmt::format("DataArraysToRemove DataArray json '{}' is not an array", daJson.dump()));
+              }
+
+              for(const auto& daIter : daJson)
+              {
+                if(!daIter.is_object())
+                {
+                  return MakeErrorResult<ValueType>(-7, fmt::format("DataArraysToRemove DataArray json '{}' is not an object", daIter.dump()));
+                }
+
+                auto dataArrayNameResult = FindName(daIter);
+                if(dataArrayNameResult.invalid())
+                {
+                  return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+                }
+
+                if(IsFlagged(daIter))
+                {
+                  DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
+                  value.push_back(std::move(dataPath));
+                }
+              }
+            }
+          }
         }
-
-        auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArraysToRemove");
-        if(attributeMatrixNameResult.invalid())
-        {
-          return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
-        }
-
-        DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
-        value.push_back(std::move(dataPath));
-      }
-    }
-
-    if(json.contains(k_DataArraysKey))
-    {
-      const auto& daJson = json[k_DataArraysKey];
-      if(!daJson.is_array())
-      {
-        return MakeErrorResult<ValueType>(-6, fmt::format("DataArraysToRemove DataArray json '{}' is not an array", daJson.dump()));
-      }
-
-      for(const auto& iter : daJson)
-      {
-        if(!iter.is_object())
-        {
-          return MakeErrorResult<ValueType>(-7, fmt::format("DataArraysToRemove DataArray json '{}' is not an object", iter.dump()));
-        }
-
-        auto dataContainerNameResult = ReadDataContainerName(json, "DataArraysToRemove");
-        if(dataContainerNameResult.invalid())
-        {
-          return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
-        }
-
-        auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArraysToRemove");
-        if(attributeMatrixNameResult.invalid())
-        {
-          return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
-        }
-
-        auto dataArrayNameResult = ReadDataArrayName(json, "DataArraysToRemove");
-        if(dataArrayNameResult.invalid())
-        {
-          return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
-        }
-
-        DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
-        value.push_back(std::move(dataPath));
       }
     }
 
@@ -2247,6 +2284,14 @@ struct ComparisonSelectionFilterParameterConverter
     for(const auto& iter : json)
     {
       auto comparisonType = static_cast<ArrayThreshold::ComparisonType>(iter[k_ComparisonOperatorKey].get<int32>());
+      if(comparisonType == ArrayThreshold::ComparisonType::LessThan)
+      {
+        comparisonType = ArrayThreshold::ComparisonType::GreaterThan;
+      }
+      else if(comparisonType == ArrayThreshold::ComparisonType::GreaterThan)
+      {
+        comparisonType = ArrayThreshold::ComparisonType::LessThan;
+      }
       float64 comparisonValue = iter[k_ComparisonValueKey].get<float64>();
       auto dcName = iter[k_DataContainerNameKey].get<std::string>();
       auto amName = iter[k_AttributeMatrixNameKey].get<std::string>();
@@ -2268,7 +2313,6 @@ struct ComparisonSelectionFilterParameterConverter
   }
 };
 
-#if 0
 struct ComparisonSelectionAdvancedFilterParameterConverter
 {
   using ParameterType = ArrayThresholdsParameter;
@@ -2279,31 +2323,150 @@ struct ComparisonSelectionAdvancedFilterParameterConverter
   static constexpr StringLiteral k_DataContainerNameKey = "Data Container Name";
   static constexpr StringLiteral k_ComparisonValueKey = "Comparison Value";
   static constexpr StringLiteral k_ComparisonOperatorKey = "Comparison Operator";
+  static constexpr StringLiteral k_ThresholdValuesKey = "Comparison Values";
+  static constexpr StringLiteral k_UnionOperatorKey = "Union Operator";
+  static constexpr StringLiteral k_ThresholdsKey = "Thresholds";
+  static constexpr StringLiteral k_InvertedKey = "Invert Comparison";
+
+  static bool isArrayThreshold(const nlohmann::json& json)
+  {
+    return !json.contains(k_ThresholdValuesKey);
+  }
+
+  static ArrayThreshold::ComparisonType invertComparison(ArrayThreshold::ComparisonType comparison)
+  {
+    switch(comparison)
+    {
+    case ArrayThreshold::ComparisonType::GreaterThan:
+      return ArrayThreshold::ComparisonType::LessThan;
+    case ArrayThreshold::ComparisonType::LessThan:
+      return ArrayThreshold::ComparisonType::GreaterThan;
+    case ArrayThreshold::ComparisonType::Operator_Equal:
+      return ArrayThreshold::ComparisonType::Operator_NotEqual;
+    default:
+      return comparison;
+    }
+  }
+
+  static std::shared_ptr<ArrayThreshold> convertArrayThreshold(const DataPath& amPath, const nlohmann::json& json)
+  {
+    auto comparisonType = static_cast<ArrayThreshold::ComparisonType>(json[k_ComparisonOperatorKey].get<int32>());
+    if(comparisonType == ArrayThreshold::ComparisonType::LessThan)
+    {
+      comparisonType = ArrayThreshold::ComparisonType::GreaterThan;
+    }
+    else if(comparisonType == ArrayThreshold::ComparisonType::GreaterThan)
+    {
+      comparisonType = ArrayThreshold::ComparisonType::LessThan;
+    }
+    float64 comparisonValue = json[k_ComparisonValueKey].get<float64>();
+    auto daName = json[k_DataArrayNameKey].get<std::string>();
+    auto daPath = amPath.createChildPath(daName);
+
+    auto value = std::make_shared<ArrayThreshold>();
+    value->setArrayPath(daPath);
+    value->setComparisonType(comparisonType);
+    value->setComparisonValue(comparisonValue);
+    return value;
+  }
+
+  static std::vector<std::shared_ptr<ArrayThreshold>> flattenSetThreshold(const std::shared_ptr<ArrayThresholdSet>& thresholdSet, bool parentInverted = false)
+  {
+    std::vector<std::shared_ptr<ArrayThreshold>> flattenedArrays;
+    auto thresholds = thresholdSet->getArrayThresholds();
+    if(thresholds.empty())
+    {
+      return {};
+    }
+
+    bool inverted = thresholdSet->isInverted();
+    if(parentInverted)
+    {
+      inverted = !inverted;
+    }
+    auto unionOperator = thresholdSet->getUnionOperator();
+
+    for(const auto& threshold : thresholds)
+    {
+      if(auto set = std::dynamic_pointer_cast<ArrayThresholdSet>(threshold); set != nullptr)
+      {
+        auto flattened = flattenSetThreshold(set, inverted);
+        flattenedArrays.insert(flattenedArrays.end(), flattened.begin(), flattened.end());
+      }
+      else
+      {
+        auto arrayThreshold = std::dynamic_pointer_cast<ArrayThreshold>(threshold);
+        if(inverted)
+        {
+          auto comparisonType = invertComparison(arrayThreshold->getComparisonType());
+          arrayThreshold->setComparisonType(comparisonType);
+          arrayThreshold->setUnionOperator(unionOperator);
+        }
+        flattenedArrays.push_back(arrayThreshold);
+      }
+    }
+
+    return flattenedArrays;
+  }
+
+  static std::shared_ptr<ArrayThresholdSet> convertSetThreshold(const DataPath& amPath, const nlohmann::json& json)
+  {
+    ParameterType::ValueType::CollectionType thresholdSet;
+
+    const auto& arrayThresholdsJson = json[k_ThresholdValuesKey];
+
+    for(const auto& iter : arrayThresholdsJson)
+    {
+      if(isArrayThreshold(iter))
+      {
+        thresholdSet.push_back(convertArrayThreshold(amPath, iter));
+      }
+      else
+      {
+        thresholdSet.push_back(convertSetThreshold(amPath, iter));
+      }
+    }
+
+    auto unionOperator = static_cast<IArrayThreshold::UnionOperator>(json[k_UnionOperatorKey].get<int32>());
+    bool inverted = json[k_InvertedKey].get<bool>();
+
+    auto value = std::make_shared<ArrayThresholdSet>();
+    value->setUnionOperator(unionOperator);
+    value->setInverted(inverted);
+    value->setArrayThresholds(thresholdSet);
+    return value;
+  }
 
   static Result<ValueType> convert(const nlohmann::json& json)
   {
-    if(!json.is_array())
+    if(!json.is_object())
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("ComparisonSelectionFilterParameterConverter json '{}' is not an array", json.dump()));
+      return MakeErrorResult<ValueType>(-1, fmt::format("ComparisonSelectionFilterParameterConverter json '{}' is not an object", json.dump()));
     }
+
+    if(!json[k_ThresholdsKey].is_array())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("ComparisonSelectionFilterParameterConverter json '{}' is not an object", json[k_ThresholdsKey].dump()));
+    }
+
+    auto dcName = json[k_DataContainerNameKey].get<std::string>();
+    auto amName = json[k_AttributeMatrixNameKey].get<std::string>();
+    DataPath amPath({dcName, amName});
 
     ParameterType::ValueType::CollectionType thresholdSet;
     // ArrayThreshold;
-    for(const auto& iter : json)
+    for(const auto& iter : json[k_ThresholdsKey])
     {
-      auto comparisonType = static_cast<ArrayThreshold::ComparisonType>(iter[k_ComparisonOperatorKey].get<int32>());
-      float64 comparisonValue = iter[k_ComparisonValueKey].get<float64>();
-      auto dcName = iter[k_DataContainerNameKey].get<std::string>();
-      auto amName = iter[k_AttributeMatrixNameKey].get<std::string>();
-      auto daName = iter[k_DataArrayNameKey].get<std::string>();
-      DataPath arrayPath({dcName, amName, daName});
-
-      auto thresholdPtr = std::make_shared<ArrayThreshold>();
-      thresholdPtr->setArrayPath(arrayPath);
-      thresholdPtr->setComparisonType(comparisonType);
-      thresholdPtr->setComparisonValue(comparisonValue);
-
-      thresholdSet.push_back(thresholdPtr);
+      if(isArrayThreshold(iter))
+      {
+        thresholdSet.push_back(convertArrayThreshold(amPath, iter));
+      }
+      else
+      {
+        auto arrayThresholdSet = convertSetThreshold(amPath, iter);
+        auto flattenedThresholds = flattenSetThreshold(arrayThresholdSet);
+        thresholdSet.insert(thresholdSet.end(), flattenedThresholds.begin(), flattenedThresholds.end());
+      }
     }
 
     ParameterType::ValueType value;
@@ -2312,5 +2475,4 @@ struct ComparisonSelectionAdvancedFilterParameterConverter
     return {std::move(value)};
   }
 };
-#endif
 } // namespace complex::SIMPLConversion

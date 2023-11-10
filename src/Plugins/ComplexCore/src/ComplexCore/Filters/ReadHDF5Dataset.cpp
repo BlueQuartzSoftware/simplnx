@@ -10,6 +10,8 @@
 #include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <nonstd/span.hpp>
 
 using namespace complex;
@@ -429,5 +431,29 @@ Result<> ReadHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argume
   } // End For Loop over dataset imoprt info list
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ImportHDF5FileKey = "ImportHDF5File";
+constexpr StringLiteral k_ImportInfoArrayKey = "Dataset Import Info Array";
+constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ImportHDF5Dataset::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ImportHDF5Dataset().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::ImportHDF5DatasetFilterParameterConverter>(args, json, SIMPL::k_ImportInfoArrayKey, SIMPL::k_ImportHDF5FileKey,
+                                                                                                                    SIMPL::k_SelectedAttributeMatrixKey, k_ImportHDF5File_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
