@@ -11,6 +11,8 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter execution", "[OrientationAnalysis][CreateEnsembleInfoFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateEnsembleInfoFilter filter;
   DataStructure dataStructure;
@@ -79,6 +81,8 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
 
 TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Valid filter execution", "[OrientationAnalysis][CreateEnsembleInfoFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",
                                                              "so3_cubic_high_ipf_001.dream3d");
 

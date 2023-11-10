@@ -25,6 +25,7 @@ const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTes
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz", "FindSurfaceFeaturesTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -47,10 +48,10 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
 
   result = rbrFilter.execute(dataStructure, rbrArgs);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result)
+  COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   // Change Feature 470 to 0
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath));
+  REQUIRE(dataStructure.getDataAs<Int32Array>(k_FeatureIDsPath) != nullptr);
   Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath);
   std::replace(featureIds.begin(), featureIds.end(), 470, 0);
 
@@ -106,6 +107,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
 TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[ComplexCore][FindSurfaceFeatures]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1");
 
   // Read the Small IN100 Data set

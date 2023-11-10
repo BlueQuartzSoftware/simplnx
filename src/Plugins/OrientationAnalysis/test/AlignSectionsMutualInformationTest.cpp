@@ -21,6 +21,7 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filter execution")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_align_sections_mutual_information.tar.gz",
                                                              "6_5_align_sections_mutual_information");
 
@@ -29,8 +30,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
   // would be responsible to create.
   const uint64_t millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
   const DataPath k_ExemplarShiftsPath = k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
@@ -153,6 +153,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: InValid filter execution")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_stats_test.tar.gz", "6_6_stats_test.dream3d");
 
   // Read the Small IN100 Data set

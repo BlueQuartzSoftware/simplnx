@@ -144,7 +144,7 @@ public:
    * @param index
    * @return value_type
    */
-  const_reference getValue(usize index) const override
+  value_type getValue(usize index) const override
   {
     throw std::runtime_error("");
   }

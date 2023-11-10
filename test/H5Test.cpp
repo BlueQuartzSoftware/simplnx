@@ -85,7 +85,7 @@ bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
 #if TEST_LEGACY
 TEST_CASE("Read Legacy DREAM.3D Data")
 {
-  Application app;
+  auto app = Application::GetOrCreateInstance();
   std::filesystem::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
   Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
@@ -566,7 +566,7 @@ void checkNodeGeomData(const DataStructure& dataStructure, const NodeBasedGeomDa
 
 TEST_CASE("Node Based Geometry IO")
 {
-  Application app;
+  auto app = Application::GetOrCreateInstance();
 
   fs::path dataDir = GetDataDir();
 
@@ -618,7 +618,7 @@ TEST_CASE("Node Based Geometry IO")
 
 TEST_CASE("NeighborList IO")
 {
-  Application app;
+  auto app = Application::GetOrCreateInstance();
 
   fs::path dataDir = GetDataDir();
 
@@ -671,7 +671,7 @@ TEST_CASE("NeighborList IO")
 
 TEST_CASE("DataArray<bool> IO")
 {
-  Application app;
+  auto app = Application::GetOrCreateInstance();
 
   fs::path dataDir = GetDataDir();
 

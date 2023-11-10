@@ -320,6 +320,12 @@ Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Argumen
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
+  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(imageDataArrayPath);
+  if(inputArray->getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataArrayPath.toString()));
+  }
+
   std::string fileNameString = fileName.string();
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);

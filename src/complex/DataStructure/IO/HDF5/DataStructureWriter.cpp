@@ -14,7 +14,7 @@ namespace complex::HDF5
 {
 DataStructureWriter::DataStructureWriter()
 {
-  auto* instance = Application::GetOrCreateInstance();
+  auto instance = Application::GetOrCreateInstance();
   m_IOManager = std::dynamic_pointer_cast<DataIOManager>(instance->getIOManager("HDF5"));
 }
 

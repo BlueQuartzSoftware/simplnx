@@ -75,11 +75,13 @@ public:
   CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctor<T>)
 
   using DataArrayType = DataArray<T>;
+  using DataStoreType = AbstractDataStore<T>;
+
   TSpecificCompareFunctor(IDataArray* data, int64 length, T tolerance, AbstractDataStore<int32>* featureIds)
   : m_Length(length)
   , m_Tolerance(tolerance)
   , m_FeatureIdsArray(featureIds)
-  , m_Data(dynamic_cast<DataArrayType*>(data))
+  , m_Data(dynamic_cast<DataArrayType*>(data)->getDataStoreRef())
   {
   }
   ~TSpecificCompareFunctor() override = default;
@@ -92,9 +94,9 @@ public:
       return false;
     }
 
-    if((*m_Data)[referencePoint] >= (*m_Data)[neighborPoint])
+    if(m_Data[referencePoint] >= m_Data[neighborPoint])
     {
-      if(((*m_Data)[referencePoint] - (*m_Data)[neighborPoint]) <= m_Tolerance)
+      if((m_Data[referencePoint] - m_Data[neighborPoint]) <= m_Tolerance)
       {
         m_FeatureIdsArray->setValue(neighborPoint, gnum);
         return true;
@@ -102,7 +104,7 @@ public:
     }
     else
     {
-      if(((*m_Data)[neighborPoint] - (*m_Data)[referencePoint]) <= m_Tolerance)
+      if((m_Data[neighborPoint] - m_Data[referencePoint]) <= m_Tolerance)
       {
         m_FeatureIdsArray->setValue(neighborPoint, gnum);
         return true;
@@ -118,7 +120,7 @@ private:
   int64 m_Length = 0;                                    // Length of the Data Array
   T m_Tolerance = static_cast<T>(0);                     // The tolerance of the comparison
   AbstractDataStore<int32>* m_FeatureIdsArray = nullptr; // The Feature Ids
-  DataArrayType* m_Data = nullptr;                       // The data that is being compared
+  DataStoreType& m_Data;                                 // The data that is being compared
 };
 } // namespace
 

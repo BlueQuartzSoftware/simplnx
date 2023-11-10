@@ -253,6 +253,8 @@ public:
    */
   virtual void flush() const;
 
+  virtual uint64 memoryUsage() const;
+
 protected:
   /**
    * @brief DataObject constructor takes a reference to the DataStructure and

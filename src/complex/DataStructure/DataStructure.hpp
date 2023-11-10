@@ -709,6 +709,14 @@ public:
    */
   void flush() const;
 
+  uint64 memoryUsage() const;
+
+  /**
+   * @brief Transfers array data to OOC if available.
+   * @return Result with Warnings and errors
+   */
+  Result<> transferDataArraysOoc();
+
 protected:
   /**
    * @brief Returns a new ID for use constructing a DataObject.

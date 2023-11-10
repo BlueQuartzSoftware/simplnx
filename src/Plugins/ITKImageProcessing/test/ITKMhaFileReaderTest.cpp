@@ -17,8 +17,7 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_rev2.tar.gz", "ITKMhaFileReaderTest");
 
   // Load plugins (this is needed because ITKMhaFileReader needs access to the ComplexCore plugin)
-  const std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Test reading 2D & 3D image data
   const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest/ExemplarySmallIN100.dream3d";

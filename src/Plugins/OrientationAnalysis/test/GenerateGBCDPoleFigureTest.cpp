@@ -35,6 +35,8 @@ inline constexpr int32 k_Dimension = 300;
 
 TEST_CASE("OrientationAnalysis::GenerateGBCDPoleFigureFilter", "[OrientationAnalysis][GenerateGBCDPoleFigureFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   // Read the Small IN100 Data set

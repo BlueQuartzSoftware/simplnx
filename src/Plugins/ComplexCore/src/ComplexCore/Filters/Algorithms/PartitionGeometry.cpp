@@ -55,10 +55,12 @@ public:
           if(partitionIndexResult.has_value())
           {
             partitionIdsStore.setValue(index, static_cast<int32>(*partitionIndexResult) + m_StartingPartitionId);
+            // partitionIdsStore[index] = static_cast<int32>(*partitionIndexResult) + m_StartingPartitionId;
           }
           else
           {
             partitionIdsStore.setValue(index, m_OutOfBoundsValue);
+            // partitionIdsStore[index] = m_OutOfBoundsValue;
           }
         }
       }
@@ -242,8 +244,12 @@ Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inpu
 {
   SizeVec3 dims = inputGeometry.getDimensions();
 
+  IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&partitionIds);
+
   ParallelData3DAlgorithm dataAlg;
   dataAlg.setRange(dims[0], dims[1], dims[2]);
+  dataAlg.requireArraysInMemory(algArrays);
   dataAlg.execute(PartitionCellBasedGeometryImpl(inputGeometry, partitionIds, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, m_ShouldCancel));
 
   return {};
@@ -255,9 +261,18 @@ Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inpu
 Result<> PartitionGeometry::partitionNodeBasedGeometry(const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue,
                                                        const std::optional<const BoolArray>& maskArrayOpt)
 {
+  IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&vertexList);
+  algArrays.push_back(&partitionIds);
+  if(maskArrayOpt.has_value())
+  {
+    algArrays.push_back(&(maskArrayOpt.value()));
+  }
+
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, vertexList.getNumberOfTuples());
+  dataAlg.requireArraysInMemory(algArrays);
   dataAlg.execute(PartitionNodeBasedGeometryImpl(vertexList, partitionIds, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, maskArrayOpt, m_ShouldCancel));
 
   return {};

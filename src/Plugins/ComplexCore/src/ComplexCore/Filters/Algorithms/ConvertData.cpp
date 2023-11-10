@@ -2,89 +2,128 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
 
 namespace Detail
 {
 template <typename O, typename D>
-void ConvertData(DataArray<O>& inputArray, DataArray<D>& outputArray)
+class ConvertDataAlg
 {
-  size_t size = inputArray.getSize();
-  for(size_t v = 0; v < size; ++v)
+public:
+  using InputStoreType = AbstractDataStore<O>;
+  using OutputStoreType = AbstractDataStore<D>;
+
+  ConvertDataAlg(InputStoreType& inputStore, OutputStoreType& outputStore)
+  : m_InputStore(inputStore)
+  , m_OutputStore(outputStore)
   {
-    if constexpr(std::is_same<O, D>::value)
+  }
+
+  void convert(size_t start, size_t end) const
+  {
+    // std::cout << "\tConvertDataAlg: " << start << " to " << end << std::endl;
+
+    for(size_t v = start; v < end; ++v)
     {
-      // inputArray and destination arrays have the same type
-      outputArray[v] = inputArray[v];
-    }
-    else if constexpr(std::is_same<O, bool>::value)
-    {
-      // inputArray array is a boolean array
-      outputArray[v] = (inputArray[v] ? 1 : 0);
-    }
-    else if constexpr(std::is_same<D, bool>::value)
-    {
-      // Destination array is a boolean array
-      outputArray[v] = (inputArray[v] != 0);
-    }
-    else
-    {
-      // All other cases
-      outputArray[v] = static_cast<D>(inputArray[v]);
+      // std::cout << "\tConvertDataAlg: index " << v << std::endl;
+
+      if constexpr(std::is_same<O, D>::value)
+      {
+        // inputArray and destination arrays have the same type
+        m_OutputStore.setValue(v, m_InputStore.getValue(v));
+      }
+      else if constexpr(std::is_same<O, bool>::value)
+      {
+        // inputArray array is a boolean array
+        m_OutputStore.setValue(v, (m_InputStore.getValue(v) ? 1 : 0));
+      }
+      else if constexpr(std::is_same<D, bool>::value)
+      {
+        // Destination array is a boolean array
+        m_OutputStore.setValue(v, (m_InputStore.getValue(v) != 0));
+      }
+      else
+      {
+        // All other cases
+        m_OutputStore.setValue(v, static_cast<D>(m_InputStore.getValue(v)));
+      }
     }
   }
-}
+
+  /**
+   * @brief operator () This is called from the TBB stye of code
+   * @param range The range to compute the values
+   */
+  void operator()(const Range& range) const
+  {
+    convert(range.min(), range.max());
+  }
+
+private:
+  InputStoreType& m_InputStore;
+  OutputStoreType& m_OutputStore;
+};
 
 template <typename T>
 Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues* inputValues)
 {
   DataArray<T>& inputArray = dataStructure.getDataRefAs<DataArray<T>>(inputValues->SelectedArrayPath);
+  AbstractDataStore<T>& inputStore = inputArray.getDataStoreRef();
+
+  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&inputArray);
+  algArrays.push_back(dataStructure.getDataAs<IDataArray>(inputValues->OutputArrayName));
+
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0, inputArray.size());
+  dataAlg.requireArraysInMemory(algArrays);
 
   switch(inputValues->ScalarType)
   {
   case DataType::int8: {
-    ConvertData<T, int8>(inputArray, dataStructure.getDataRefAs<Int8Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, int8>(inputStore, dataStructure.getDataRefAs<Int8Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::uint8: {
-    ConvertData<T, uint8>(inputArray, dataStructure.getDataRefAs<UInt8Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, uint8>(inputStore, dataStructure.getDataRefAs<UInt8Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::int16: {
-    ConvertData<T, int16>(inputArray, dataStructure.getDataRefAs<Int16Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, int16>(inputStore, dataStructure.getDataRefAs<Int16Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::uint16: {
-    ConvertData<T, uint16>(inputArray, dataStructure.getDataRefAs<UInt16Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, uint16>(inputStore, dataStructure.getDataRefAs<UInt16Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::int32: {
-    ConvertData<T, int32>(inputArray, dataStructure.getDataRefAs<Int32Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, int32>(inputStore, dataStructure.getDataRefAs<Int32Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::uint32: {
-    ConvertData<T, uint32>(inputArray, dataStructure.getDataRefAs<UInt32Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, uint32>(inputStore, dataStructure.getDataRefAs<UInt32Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::int64: {
-    ConvertData<T, int64>(inputArray, dataStructure.getDataRefAs<Int64Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, int64>(inputStore, dataStructure.getDataRefAs<Int64Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::uint64: {
-    ConvertData<T, uint64>(inputArray, dataStructure.getDataRefAs<UInt64Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, uint64>(inputStore, dataStructure.getDataRefAs<UInt64Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::float32: {
-    ConvertData<T, float32>(inputArray, dataStructure.getDataRefAs<Float32Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, float32>(inputStore, dataStructure.getDataRefAs<Float32Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::float64: {
-    ConvertData<T, float64>(inputArray, dataStructure.getDataRefAs<Float64Array>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, float64>(inputStore, dataStructure.getDataRefAs<Float64Array>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   case DataType::boolean: {
-    ConvertData<T, bool>(inputArray, dataStructure.getDataRefAs<BoolArray>(inputValues->OutputArrayName));
+    dataAlg.execute(ConvertDataAlg<T, bool>(inputStore, dataStructure.getDataRefAs<BoolArray>(inputValues->OutputArrayName).getDataStoreRef()));
     break;
   }
   default: {

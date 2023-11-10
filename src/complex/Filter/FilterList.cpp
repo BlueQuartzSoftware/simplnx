@@ -91,26 +91,26 @@ AbstractPlugin* FilterList::getPlugin(const FilterHandle& handle) const
   return nullptr;
 }
 
-bool FilterList::addPlugin(const std::shared_ptr<IPluginLoader>& loader)
+Result<> FilterList::addPlugin(const std::shared_ptr<IPluginLoader>& loader)
 {
   if(!loader->isLoaded())
   {
-    return false;
+    return MakeErrorResult(-444, "Plugin was not loaded");
   }
   AbstractPlugin* plugin = loader->getPlugin();
   Uuid pluginUuid = plugin->getId();
   if(m_PluginMap.count(pluginUuid) > 0)
   {
-    throw std::runtime_error(fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", plugin->getName(), pluginUuid.str(),
-                                         m_PluginMap[pluginUuid]->getPlugin()->getName()));
+    return MakeErrorResult(-445, fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", plugin->getName(), pluginUuid.str(),
+                                             m_PluginMap[pluginUuid]->getPlugin()->getName()));
   }
   auto pluginHandles = plugin->getFilterHandles();
   m_FilterHandles.merge(pluginHandles);
   m_PluginMap[pluginUuid] = loader;
-  return true;
+  return {};
 }
 
-bool FilterList::addPlugin(const std::string& path)
+Result<> FilterList::addPlugin(const std::string& path)
 {
   return addPlugin(std::dynamic_pointer_cast<IPluginLoader>(std::make_shared<PluginLoader>(path)));
 }

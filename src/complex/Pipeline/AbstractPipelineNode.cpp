@@ -1,5 +1,7 @@
 #include "AbstractPipelineNode.hpp"
 
+#include "complex/Core/Application.hpp"
+#include "complex/Core/Preferences.hpp"
 #include "complex/Pipeline/Messaging/NodeStatusMessage.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 
@@ -64,6 +66,23 @@ const DataStructure& AbstractPipelineNode::getDataStructure() const
 void AbstractPipelineNode::setDataStructure(const DataStructure& dataStructure)
 {
   m_DataStructure = dataStructure;
+}
+
+void AbstractPipelineNode::checkDataStructureSize(DataStructure& dataStructure)
+{
+  const uint64 largeDataStructureSize = Application::Instance()->getPreferences()->largeDataStructureSize();
+  if(dataStructure.memoryUsage() > largeDataStructureSize)
+  {
+    auto result = dataStructure.transferDataArraysOoc();
+    if(result.warnings().size() > 0)
+    {
+      std::cout << "Some DataArrays not converted to out-of-core:" << std::endl;
+      for(const auto& warning : result.warnings())
+      {
+        std::cout << "\tWarning: " << warning.message << std::endl;
+      }
+    }
+  }
 }
 
 const DataStructure& AbstractPipelineNode::getPreflightStructure() const

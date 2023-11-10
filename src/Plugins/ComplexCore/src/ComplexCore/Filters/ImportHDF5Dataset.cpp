@@ -43,18 +43,54 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 }
 
 template <typename T>
-Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const complex::HDF5::DatasetReader& datasetReader)
+Result<> fillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const complex::HDF5::DatasetReader& datasetReader)
 {
-  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
-  auto& absDataStore = dataArray.getDataStoreRef();
-  auto& dataStore = dynamic_cast<DataStore<T>&>(absDataStore);
+  using StoreType = DataStore<T>;
+  StoreType& dataStore = dataArray.template getIDataStoreRefAs<StoreType>();
   if(!datasetReader.readIntoSpan<T>(dataStore.createSpan()))
   {
     return {MakeErrorResult(-21002, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
                                                 dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
                                                 dataArray.getNumberOfComponents()))};
   }
+
   return {};
+}
+
+template <typename T>
+Result<> fillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const complex::HDF5::DatasetReader& datasetReader)
+{
+  if(Memory::GetTotalMemory() <= dataArray.getSize() * sizeof(T))
+  {
+    return MakeErrorResult(-21004, fmt::format("Error reading dataset '{}' with '{}' total elements. Not enough memory to import data.", dataArray.getName(), datasetReader.getNumElements()));
+  }
+
+  auto& absDataStore = dataArray.getDataStoreRef();
+  std::vector<T> data(absDataStore.getSize());
+  nonstd::span<T> span{data.data(), data.size()};
+  if(!datasetReader.readIntoSpan<T>(span))
+  {
+    return {MakeErrorResult(-21003, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
+                                                dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
+                                                dataArray.getNumberOfComponents()))};
+  }
+  std::copy(data.begin(), data.end(), absDataStore.begin());
+
+  return {};
+}
+
+template <typename T>
+Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const complex::HDF5::DatasetReader& datasetReader)
+{
+  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
+  if(dataArray.getDataFormat().empty())
+  {
+    return fillDataStore(dataArray, dataArrayPath, datasetReader);
+  }
+  else
+  {
+    return fillOocDataStore(dataArray, dataArrayPath, datasetReader);
+  }
 }
 } // namespace
 

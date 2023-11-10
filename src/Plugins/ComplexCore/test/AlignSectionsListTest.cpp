@@ -15,9 +15,9 @@ using namespace complex;
 
 TEST_CASE("ComplexCore::AlignSectionsListFilter: Valid filter execution", "[ComplexCore][AlignSectionsListFilter]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
+  auto app = Application::GetOrCreateInstance();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_align_sections_misorientation.tar.gz",
                                                              "6_6_align_sections_misorientation");

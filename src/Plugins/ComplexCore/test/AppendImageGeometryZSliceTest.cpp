@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "complex/Core/Application.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
@@ -29,6 +30,8 @@ const DataPath k_SmallIN100Path({k_SmallIN100});
 
 TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution", "[ComplexCore][AppendImageGeometryZSliceFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
   // Read in starting/exemplar image geometry
   const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
@@ -151,6 +154,7 @@ TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
 
 TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: InValid Filter Execution", "[ComplexCore][AppendImageGeometryZSliceFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
                                                              "ResampleImageGeom_Exemplar.dream3d");
 

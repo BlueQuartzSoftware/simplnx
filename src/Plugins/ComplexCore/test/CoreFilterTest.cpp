@@ -41,9 +41,9 @@ struct StringMaker<Warning>
 
 TEST_CASE("CoreFilterTest:Create Core Filter")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
-  auto filterList = app.getFilterList();
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
+  auto filterList = app->getFilterList();
   REQUIRE(filterList != nullptr);
 
   // Only core filters should exist since plugins were not loaded
@@ -65,6 +65,8 @@ TEST_CASE("CoreFilterTest:Create Core Filter")
 
 TEST_CASE("CoreFilterTest:RunCoreFilter")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   static const fs::path k_FileName = fmt::format("{}/ascii_data.txt", complex::unit_test::k_BinaryTestOutputDir);
   static constexpr uint64 k_NLines = 25;
 
@@ -130,6 +132,8 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
 
 TEST_CASE("CoreFilterTest:CreateDataGroup")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure data;
   CreateDataGroup filter;
   Arguments args;

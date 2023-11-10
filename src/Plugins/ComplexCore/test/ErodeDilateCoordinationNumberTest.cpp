@@ -29,8 +29,7 @@ const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataCont
 
 TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter", "[ComplexCore][ErodeDilateCoordinationNumberFilter]")
 {
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
 

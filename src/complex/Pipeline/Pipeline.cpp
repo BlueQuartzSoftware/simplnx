@@ -151,6 +151,7 @@ bool Pipeline::execute(const std::atomic_bool& shouldCancel)
 
 bool Pipeline::preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
+  m_MemoryRequired = 0;
   return preflightFrom(0, dataStructure, renamedPaths, shouldCancel, allowRenaming);
 }
 
@@ -211,6 +212,7 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
     PipelineFilter::RenamedPaths renamedPathsRef;
     bool succeeded = node->preflight(dataStructure, renamedPathsRef, shouldCancel, allowRenaming);
     stopObservingNode();
+    m_MemoryRequired = std::max(m_MemoryRequired, dataStructure.memoryUsage());
 
     if(allowRenaming)
     {
@@ -314,6 +316,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
     }
   }
 
+  // checkDataStructureSize(dataStructure);
   setDataStructure(dataStructure);
 
   sendPipelineFaultMessage(m_FaultState);
@@ -759,8 +762,7 @@ Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filt
 
 Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path)
 {
-  auto* app = Application::Instance();
-
+  auto app = Application::Instance();
   return FromFile(path, app->getFilterList());
 }
 
@@ -789,4 +791,10 @@ Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, FilterLis
 void Pipeline::onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg)
 {
   notify(std::make_shared<PipelineNodeMessage>(node, msg));
+}
+
+uint64 Pipeline::checkMemoryRequired()
+{
+  preflight();
+  return m_MemoryRequired;
 }

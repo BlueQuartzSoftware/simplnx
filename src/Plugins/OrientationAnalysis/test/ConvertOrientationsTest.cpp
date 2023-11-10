@@ -84,6 +84,8 @@ void _make_code()
 
 TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[OrientationAnalysis][ConvertOrientations]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   //------------------------------
   // This code is commented out because it generates a bunch of code. See the comment
   // at the top of the _make_code function. This should stay in here in case it is

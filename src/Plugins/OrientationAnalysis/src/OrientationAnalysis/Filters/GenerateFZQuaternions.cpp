@@ -264,10 +264,21 @@ Result<> GenerateFZQuaternions::executeImpl(DataStructure& dataStructure, const 
   std::atomic_int32_t warningCount = 0;
   int32_t numPhases = static_cast<int32_t>(xtalArray.getNumberOfTuples());
 
+  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&phaseArray);
+  algArrays.push_back(&quatArray);
+  algArrays.push_back(&xtalArray);
+  algArrays.push_back(&fzQuatArray);
+
+  if(pUseGoodVoxelsValue)
+  {
+    algArrays.push_back(maskArray);
+  }
+
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0ULL, static_cast<size_t>(quatArray.getNumberOfTuples()));
-  dataAlg.setParallelizationEnabled(false);
+  dataAlg.requireArraysInMemory(algArrays);
 
   if(pUseGoodVoxelsValue)
   {

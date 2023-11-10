@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Range.hpp"
+#include "complex/Utilities/IParallelAlgorithm.hpp"
 #include "complex/complex_export.hpp"
 
 #ifdef COMPLEX_ENABLE_MULTICORE
@@ -20,7 +21,7 @@ namespace complex
  * utilizes TBB for parallelization and will fallback to non-parallelization if it is not
  * available or the parallelization is disabled.
  */
-class COMPLEX_EXPORT ParallelDataAlgorithm
+class COMPLEX_EXPORT ParallelDataAlgorithm : public IParallelAlgorithm
 {
 public:
   using RangeType = Range;
@@ -32,18 +33,6 @@ public:
   ParallelDataAlgorithm(ParallelDataAlgorithm&&) noexcept = default;
   ParallelDataAlgorithm& operator=(const ParallelDataAlgorithm&) = default;
   ParallelDataAlgorithm& operator=(ParallelDataAlgorithm&&) noexcept = default;
-
-  /**
-   * @brief Returns true if parallelization is enabled.  Returns false otherwise.
-   * @return
-   */
-  bool getParallelizationEnabled() const;
-
-  /**
-   * @brief Sets whether parallelization is enabled.
-   * @param doParallel
-   */
-  void setParallelizationEnabled(bool doParallel);
 
   /**
    * @brief Returns the range to operate over.
@@ -72,7 +61,7 @@ public:
   void execute(const Body& body)
   {
 #ifdef COMPLEX_ENABLE_MULTICORE
-    if(m_RunParallel)
+    if(getParallelizationEnabled())
     {
       tbb::auto_partitioner partitioner;
       tbb::blocked_range<size_t> tbbRange(m_Range[0], m_Range[1]);
@@ -88,10 +77,5 @@ public:
 
 private:
   RangeType m_Range;
-#ifdef COMPLEX_ENABLE_MULTICORE
-  bool m_RunParallel = true;
-#else
-  bool m_RunParallel = false;
-#endif
 };
 } // namespace complex

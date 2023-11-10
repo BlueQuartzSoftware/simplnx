@@ -36,6 +36,8 @@ using namespace FindTriangleGeomShapesFilterTest;
 
 TEST_CASE("OrientationAnalysis::FindTriangleGeomShapes", "[OrientationAnalysis][FindTriangleGeomShapes]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
 
   // Read Exemplar DREAM3D File Filter

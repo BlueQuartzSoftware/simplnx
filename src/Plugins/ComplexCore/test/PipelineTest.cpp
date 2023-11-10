@@ -108,17 +108,17 @@ protected:
 
 TEST_CASE("PipelineTest:Execute Pipeline")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
-  auto filterList = app.getFilterList();
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
+  auto filterList = app->getFilterList();
 
-  const AbstractPlugin* test1Plugin = app.getPlugin(k_Test1PluginId);
+  const AbstractPlugin* test1Plugin = app->getPlugin(k_Test1PluginId);
   REQUIRE(test1Plugin != nullptr);
   auto testFilter1 = filterList->createFilter(k_Test1FilterHandle);
   REQUIRE(testFilter1 != nullptr);
   FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
 
-  const AbstractPlugin* test2Plugin = app.getPlugin(k_Test2PluginId);
+  const AbstractPlugin* test2Plugin = app->getPlugin(k_Test2PluginId);
   REQUIRE(test2Plugin != nullptr);
   auto testFilter2 = filterList->createFilter(k_Test2FilterHandle);
   REQUIRE(testFilter2 != nullptr);
@@ -156,13 +156,13 @@ TEST_CASE("PipelineTest:Execute Pipeline")
 
 TEST_CASE("PipelineTest:Complex Pipeline")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
 
-  auto filterList = app.getFilterList();
+  auto filterList = app->getFilterList();
   REQUIRE(filterList->size() != 0);
 
-  const AbstractPlugin* test1Plugin = app.getPlugin(k_Test1PluginId);
+  const AbstractPlugin* test1Plugin = app->getPlugin(k_Test1PluginId);
   REQUIRE(test1Plugin != nullptr);
 
   auto testFilter1 = filterList->createFilter(k_Test1FilterHandle);
@@ -210,8 +210,8 @@ TEST_CASE("PipelineTest:Complex Pipeline")
 
 TEST_CASE("PipelineTest:PipelineJson")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
 
   Pipeline pipeline("test");
 
@@ -274,8 +274,8 @@ TEST_CASE("PipelineTest:PipelineJson")
 
 TEST_CASE("PipelineTest:Rename Output")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
 
   std::string group1Name = "Foo";
   std::string group2Name = "Bar";
@@ -317,8 +317,8 @@ TEST_CASE("PipelineTest:Rename Output")
 
 TEST_CASE("PipelineTest:Not Renaming")
 {
-  Application app;
-  app.loadPlugins(unit_test::k_BuildDir.view());
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(unit_test::k_BuildDir.view());
 
   std::string group1Name = "Foo";
   std::string group2Name = "Bar";

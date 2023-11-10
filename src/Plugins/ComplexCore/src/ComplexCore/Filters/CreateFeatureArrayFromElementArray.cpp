@@ -21,9 +21,11 @@ struct CopyCellDataFunctor
                       const std::atomic_bool& shouldCancel)
   {
     const DataArray<T>& selectedCellArray = dataStructure.getDataRefAs<DataArray<T>>(selectedCellArrayPathValue);
-    const DataStore<T> selectedCellArrayStore = selectedCellArray.template getIDataStoreRefAs<DataStore<T>>();
-    const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
+    const auto& selectedCellArrayStore = selectedCellArray.getDataStoreRef();
+    const Int32Array& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
+    const Int32AbstractDataStore& featureIds = featureIdsArray.getDataStoreRef();
     auto& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdArrayNameValue);
+    auto& createdDataStore = createdArray.getDataStoreRef();
 
     // Initialize the output array with a default value
     createdArray.fill(0);
@@ -54,8 +56,8 @@ struct CopyCellDataFunctor
       usize firstInstanceCellTupleIdx = featureMap[featureIdx];
       for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
       {
-        T firstInstanceCellVal = selectedCellArray[firstInstanceCellTupleIdx + cellCompIdx];
-        T currentCellVal = selectedCellArray[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
+        T firstInstanceCellVal = selectedCellArrayStore[firstInstanceCellTupleIdx + cellCompIdx];
+        T currentCellVal = selectedCellArrayStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
         if(currentCellVal != firstInstanceCellVal && result.warnings().empty())
         {
           // The values are inconsistent with the first values for this feature identifier, so throw a warning
@@ -63,7 +65,7 @@ struct CopyCellDataFunctor
               Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
         }
 
-        createdArray[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellArray[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
+        createdDataStore[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellArrayStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
       }
     }
 
@@ -177,7 +179,8 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
 
   const DataPath createdArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue);
   const IDataArray& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const Int32Array& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const Int32AbstractDataStore& featureIds = featureIdsArray.getDataStoreRef();
   auto& createdArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
 
   // Resize the created array to the proper size

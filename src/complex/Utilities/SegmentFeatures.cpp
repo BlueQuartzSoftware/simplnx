@@ -155,12 +155,12 @@ void SegmentFeatures::randomizeFeatureIds(complex::Int32Array* featureIds, uint6
   auto generator = initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
 
   DataStructure tmpStructure;
-  auto rndNumbers = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
-  auto rndStore = rndNumbers->getDataStore();
+  auto* rndNumbers = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
+  auto& rndStore = rndNumbers->getDataStoreRef();
 
   for(int64 i = 0; i < totalFeatures; ++i)
   {
-    rndStore->setValue(i, i);
+    rndStore.setValue(i, i);
   }
 
   int64 r = 0;
@@ -174,15 +174,15 @@ void SegmentFeatures::randomizeFeatureIds(complex::Int32Array* featureIds, uint6
     {
       continue;
     }
-    temp = rndStore->getValue(i);
-    rndStore->setValue(i, rndStore->getValue(r));
-    rndStore->setValue(r, temp);
+    temp = rndStore.getValue(i);
+    rndStore.setValue(i, rndStore.getValue(r));
+    rndStore.setValue(r, temp);
   }
 
   // Now adjust all the Grain Id values for each Voxel
-  auto featureIdsStore = featureIds->getDataStore();
+  auto& featureIdsStore = featureIds->getDataStoreRef();
   for(int64 i = 0; i < totalPoints; ++i)
   {
-    featureIdsStore->setValue(i, rndStore->getValue(featureIdsStore->getValue(i)));
+    featureIdsStore[i] = rndStore[featureIdsStore[i]];
   }
 }

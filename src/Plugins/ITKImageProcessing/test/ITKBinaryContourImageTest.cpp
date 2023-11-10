@@ -19,6 +19,8 @@ using namespace complex;
 
 TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(default)", "[ITKImageProcessing][ITKBinaryContourImage][default]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   ITKBinaryContourImage filter;
 
@@ -51,6 +53,8 @@ TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(default)", "[ITKImage
 
 TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(custom)", "[ITKImageProcessing][ITKBinaryContourImage][custom]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   ITKBinaryContourImage filter;
 

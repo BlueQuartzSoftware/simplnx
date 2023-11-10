@@ -29,7 +29,7 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "fiji_montage_test.tar.gz", "fiji_montage_test");
 
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
+  auto app = Application::GetOrCreateInstance();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/fiji_montage_test/2x2_fiji_montage_test.dream3d", unit_test::k_TestFilesDir)));

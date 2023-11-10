@@ -9,18 +9,6 @@ ParallelData2DAlgorithm::ParallelData2DAlgorithm() = default;
 ParallelData2DAlgorithm::~ParallelData2DAlgorithm() = default;
 
 // -----------------------------------------------------------------------------
-bool ParallelData2DAlgorithm::getParallelizationEnabled() const
-{
-  return m_RunParallel;
-}
-
-// -----------------------------------------------------------------------------
-void ParallelData2DAlgorithm::setParallelizationEnabled(bool doParallel)
-{
-  m_RunParallel = doParallel;
-}
-
-// -----------------------------------------------------------------------------
 Range2D ParallelData2DAlgorithm::getRange() const
 {
   return m_Range;

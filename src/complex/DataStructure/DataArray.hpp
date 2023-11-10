@@ -369,7 +369,7 @@ public:
    * @param index
    * @return const_reference
    */
-  const_reference at(usize index) const
+  value_type at(usize index) const
   {
     if(m_DataStore == nullptr)
     {
@@ -686,6 +686,11 @@ public:
   void flush() const override
   {
     m_DataStore->flush();
+  }
+
+  uint64 memoryUsage() const override
+  {
+    return m_DataStore->memoryUsage();
   }
 
 protected:

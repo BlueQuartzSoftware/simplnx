@@ -2,6 +2,7 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
+#include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
@@ -50,6 +51,8 @@ DataStructure CreateDataStructure()
 
 TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImageGeometry]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const std::vector<uint64> k_MinVector{0, 0, 0};
   const std::vector<uint64> k_MaxVector{0, 0, 0};
 
@@ -82,6 +85,8 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
 
 TEST_CASE("ComplexCore::CropImageGeometry Invalid Params", "[ComplexCore][CropImageGeometry]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   std::vector<uint64> k_MinVector{0, 0, 0};
   std::vector<uint64> k_MaxVector{500, 20, 30};
 
@@ -159,6 +164,8 @@ TEST_CASE("ComplexCore::CropImageGeometry Invalid Params", "[ComplexCore][CropIm
 
 TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropImageGeometry]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const std::vector<uint64> k_MinVector{10, 15, 0};
   const std::vector<uint64> k_MaxVector{60, 40, 50};
 

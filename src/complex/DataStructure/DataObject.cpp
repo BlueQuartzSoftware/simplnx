@@ -332,4 +332,9 @@ std::vector<DataPath> DataObject::getDataPaths() const
 void DataObject::flush() const
 {
 }
+
+uint64 DataObject::memoryUsage() const
+{
+  return 0;
+}
 } // namespace complex

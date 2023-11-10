@@ -265,12 +265,13 @@ void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructur
   arrayName = arrayName.createChildPath(m_outputArrayPrefix + m_DataArrayName);
   auto* testArray = dataStructure.getDataAs<UInt8Array>(arrayName);
   REQUIRE(testArray != nullptr);
+  auto& testData = testArray->getDataStoreRef();
 
   std::vector<uint8> colorArray{algorithmMap[algoMapIndex]};
 
   for(size_t index = 0; index < colorArray.size(); ++index)
   {
-    uint8 testVal = (*testArray)[index];
+    uint8 testVal = testData[index];
     uint8 exemplarVal = colorArray[index];
     REQUIRE(testVal == exemplarVal);
   }
@@ -332,6 +333,8 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
 
 TEST_CASE("ComplexCore::ConvertColorToGrayScale: Valid Execution", "[ComplexCore][ConvertColorToGrayScaleFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   // Luminosity Algorithm testing
   // Test defaults
   std::cout << "Testing luminosity algorithm..." << std::endl;

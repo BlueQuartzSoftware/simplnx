@@ -560,6 +560,12 @@ public:
    */
   void setFilterList(complex::FilterList* filterList);
 
+  /**
+   * @brief Preflights the pipeline and checks the maximum amount of memory required to run the pipeline.
+   * @return Memory size in Bytes
+   */
+  uint64 checkMemoryRequired();
+
 protected:
   /**
    * @brief Returns implementation-specific json value for the node.
@@ -610,5 +616,6 @@ private:
   std::string m_Name;
   collection_type m_Collection;
   FilterList* m_FilterList = nullptr;
+  uint64 m_MemoryRequired = 0;
 };
 } // namespace complex

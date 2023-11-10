@@ -32,6 +32,8 @@ void WriteTestFile(const std::string& filePath, const std::string& groups)
 
 TEST_CASE("OrientationAnalysis::EnsembleInfoReaderFilter: Valid Filter Execution", "[OrientationAnalysis][EnsembleInfoReaderFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EnsembleInfoReaderFilter filter;
   DataStructure ds;
@@ -82,6 +84,8 @@ TEST_CASE("OrientationAnalysis::EnsembleInfoReaderFilter: Valid Filter Execution
 
 TEST_CASE("OrientationAnalysis::EnsembleInfoReaderFilter: InValid Filter Execution")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EnsembleInfoReaderFilter filter;
   DataStructure ds;

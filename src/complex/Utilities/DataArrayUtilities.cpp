@@ -143,6 +143,37 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
 }
 
 //-----------------------------------------------------------------------------
+bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, std::string& format)
+{
+  static const uint64 k_AvailableMemory = Memory::GetTotalMemory();
+
+  // Only check if format is set to in-memory
+  if(!format.empty())
+  {
+    return true;
+  }
+
+  Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
+
+  const uint64 memoryUsage = dataStructure.memoryUsage() + requiredMemory;
+  const uint64 largeDataStructureSize = preferences->largeDataStructureSize();
+  std::string largeDataFormat = preferences->largeDataFormat();
+
+  if(memoryUsage >= largeDataStructureSize)
+  {
+    // Check if out-of-core is available / enabled
+    if(largeDataFormat.empty() && memoryUsage >= k_AvailableMemory)
+    {
+      return false;
+    }
+    // Use out-of-core
+    format = largeDataFormat;
+  }
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
 Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, bool invertMask)
 {
   const IDataArray& iDataArray = dynamic_cast<IDataArray&>(inputDataObject);
@@ -283,4 +314,36 @@ std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArray)
   }
 }
 
+//-----------------------------------------------------------------------------
+bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::string& dataFormat)
+{
+  auto dataType = dataArray->getDataType();
+  switch(dataType)
+  {
+  case DataType::int8:
+    return ConvertDataArray<int8>(std::dynamic_pointer_cast<DataArray<int8>>(dataArray), dataFormat);
+  case DataType::int16:
+    return ConvertDataArray<int16>(std::dynamic_pointer_cast<DataArray<int16>>(dataArray), dataFormat);
+  case DataType::int32:
+    return ConvertDataArray<int32>(std::dynamic_pointer_cast<DataArray<int32>>(dataArray), dataFormat);
+  case DataType::int64:
+    return ConvertDataArray<int64>(std::dynamic_pointer_cast<DataArray<int64>>(dataArray), dataFormat);
+  case DataType::uint8:
+    return ConvertDataArray<uint8>(std::dynamic_pointer_cast<DataArray<uint8>>(dataArray), dataFormat);
+  case DataType::uint16:
+    return ConvertDataArray<uint16>(std::dynamic_pointer_cast<DataArray<uint16>>(dataArray), dataFormat);
+  case DataType::uint32:
+    return ConvertDataArray<uint32>(std::dynamic_pointer_cast<DataArray<uint32>>(dataArray), dataFormat);
+  case DataType::uint64:
+    return ConvertDataArray<uint64>(std::dynamic_pointer_cast<DataArray<uint64>>(dataArray), dataFormat);
+  case DataType::boolean:
+    return ConvertDataArray<bool>(std::dynamic_pointer_cast<DataArray<bool>>(dataArray), dataFormat);
+  case DataType::float32:
+    return ConvertDataArray<float32>(std::dynamic_pointer_cast<DataArray<float32>>(dataArray), dataFormat);
+  case DataType::float64:
+    return ConvertDataArray<float64>(std::dynamic_pointer_cast<DataArray<float64>>(dataArray), dataFormat);
+  default:
+    return false;
+  }
+}
 } // namespace complex
