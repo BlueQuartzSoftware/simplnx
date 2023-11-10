@@ -11,7 +11,7 @@ using namespace complex;
 
 namespace
 {
-static constexpr usize k_BufferDumpVal = 2000000;
+static constexpr usize k_BufferDumpVal = 1000000;
 
 // -----------------------------------------------------------------------------
 template <typename T>
@@ -179,34 +179,41 @@ struct WriteVtkDataArrayFunctor
     }
     else
     {
-      std::stringstream ss;
-      usize nextDump = k_BufferDumpVal;
+      std::string buffer;
+      buffer.reserve(k_BufferDumpVal);
       for(size_t i = 0; i < totalElements; i++)
       {
         if(i % 20 == 0 && i > 0)
         {
-          ss << "\n";
-
-          if(i > nextDump)
-          {
-            fprintf(outputFile, "%s", ss.str().c_str());
-
-            ss = std::stringstream();
-
-            nextDump += k_BufferDumpVal;
-          }
+          buffer.append("\n");
         }
         if(useIntCast)
         {
-          ss << " " << static_cast<int>(dataArray[i]);
+          buffer.append(fmt::format(" {:d}", static_cast<int>(dataArray[i])));
+        }
+        else if constexpr(std::is_same_v<T, float32>)
+        {
+          buffer.append(fmt::format(" {:f}", dataArray[i]));
+        }
+        else if constexpr(std::is_same_v<T, float64>)
+        {
+          buffer.append(fmt::format(" {:f}", dataArray[i]));
         }
         else
         {
-          ss << " " << dataArray[i];
+          buffer.append(fmt::format(" {}", dataArray[i]));
+        }
+        // If the buffer is within 32 bytes of the reserved size, then dump
+        // the contents to the file.
+        if(buffer.size() > (k_BufferDumpVal - 32))
+        {
+          fprintf(outputFile, "%s", buffer.c_str());
+          buffer.clear();
+          buffer.reserve(k_BufferDumpVal);
         }
       }
-      ss << "\n";
-      fprintf(outputFile, "%s", ss.str().c_str());
+      buffer.append("\n");
+      fprintf(outputFile, "%s", buffer.c_str());
     }
   }
 };
