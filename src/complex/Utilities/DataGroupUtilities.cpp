@@ -78,7 +78,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
 
       // Loop over all the points and correct all the feature names
       size_t totalPoints = cellFeatureIds.getNumberOfTuples();
-      auto& featureIds = cellFeatureIds.getIDataStoreRefAs<Int32DataStore>();
+      auto& featureIds = cellFeatureIds.getDataStoreRef();
       bool featureIdsChanged = false;
       for(size_t i = 0; i < totalPoints; i++)
       {

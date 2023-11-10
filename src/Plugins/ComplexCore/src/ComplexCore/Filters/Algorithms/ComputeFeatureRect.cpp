@@ -36,7 +36,7 @@ Result<> ComputeFeatureRect::operator()()
 {
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto& corners = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FeatureRectArrayPath);
-  auto& cornersDataStore = corners.getIDataStoreRefAs<UInt32DataStore>();
+  auto& cornersDataStore = corners.getDataStoreRef();
 
   // Create corners array, which stores pixel coordinates for the top-left and bottom-right coordinates of each feature object
   for(usize i = 0; i < corners.getNumberOfTuples(); i++)

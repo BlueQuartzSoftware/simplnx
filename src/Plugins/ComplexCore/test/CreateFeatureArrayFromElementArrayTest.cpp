@@ -1,6 +1,7 @@
 #include "ComplexCore/Filters/CreateFeatureArrayFromElementArray.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
+#include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
@@ -17,6 +18,7 @@ const std::string k_Computed_CellData("Computed_CellData");
 template <typename T>
 void testElementArray(const DataPath& cellDataPath)
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1");
 
   // Read the Small IN100 Data set
@@ -72,6 +74,8 @@ void testElementArray(const DataPath& cellDataPath)
 
 TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Valid filter execution - 1 Component")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
   DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData).createChildPath(complex::Constants::k_ConfidenceIndex);
   testElementArray<float32>(cellDataPath);
@@ -79,6 +83,8 @@ TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Valid filter executi
 
 TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Valid filter execution - 3 Component")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
   DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData).createChildPath(complex::Constants::k_IPFColors);
   testElementArray<uint8>(cellDataPath);

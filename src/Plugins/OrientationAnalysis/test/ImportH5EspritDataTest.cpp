@@ -25,6 +25,8 @@ const std::string k_ScanName = "Section_435";
 
 TEST_CASE("OrientationAnalysis::ImportH5EspritDataFilter: Valid Filter Execution", "[OrientationAnalysis][ImportH5EspritDataFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 
   // Read Exemplar DREAM3D File
@@ -81,6 +83,8 @@ TEST_CASE("OrientationAnalysis::ImportH5EspritDataFilter: Valid Filter Execution
 
 TEST_CASE("OrientationAnalysis::ImportH5EspritDataFilter: InValid Filter Execution", "[OrientationAnalysis][ImportH5EspritDataFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object

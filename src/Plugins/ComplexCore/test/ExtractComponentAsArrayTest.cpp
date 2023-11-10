@@ -22,6 +22,8 @@ const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_find_feature_ce
 
 TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Valid filter execution", "[ComplexCore][ExtractComponentAsArrayFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;
 
@@ -93,6 +95,8 @@ TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Valid filter execution", 
 
 TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: InValid filter execution", "[ComplexCore][ExtractComponentAsArrayFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
                                                              "6_6_find_feature_centroids.dream3d");
 

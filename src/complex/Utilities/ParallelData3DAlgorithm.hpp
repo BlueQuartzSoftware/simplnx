@@ -2,6 +2,7 @@
 
 #include "complex/Common/Range3D.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/Utilities/IParallelAlgorithm.hpp"
 #include "complex/complex_export.hpp"
 
 #ifdef COMPLEX_ENABLE_MULTICORE
@@ -22,7 +23,7 @@ namespace complex
  * utilizes TBB for parallelization and will fallback to non-parallelization if it is not
  * available or the parallelization is disabled.
  */
-class COMPLEX_EXPORT ParallelData3DAlgorithm
+class COMPLEX_EXPORT ParallelData3DAlgorithm : public IParallelAlgorithm
 {
 public:
   using RangeType = Range3D;
@@ -34,18 +35,6 @@ public:
   ParallelData3DAlgorithm(ParallelData3DAlgorithm&&) noexcept = default;
   ParallelData3DAlgorithm& operator=(const ParallelData3DAlgorithm&) = default;
   ParallelData3DAlgorithm& operator=(ParallelData3DAlgorithm&&) noexcept = default;
-
-  /**
-   * @brief Returns true if parallelization is enabled.  Returns false otherwise.
-   * @return
-   */
-  bool getParallelizationEnabled() const;
-
-  /**
-   * @brief Sets whether parallelization is enabled.
-   * @param doParallel
-   */
-  void setParallelizationEnabled(bool doParallel);
 
   /**
    * @brief Returns the range to operate over.
@@ -138,7 +127,7 @@ protected:
   void executeRange(const Body& body, const RangeType& range)
   {
 #ifdef COMPLEX_ENABLE_MULTICORE
-    if(m_RunParallel)
+    if(getParallelizationEnabled())
     {
       tbb::auto_partitioner partitioner;
       tbb::blocked_range3d<size_t, size_t, size_t> tbbRange(range[4], range[5], range[2], range[3], range[0], range[1]);
@@ -155,10 +144,5 @@ protected:
 private:
   RangeType m_Range;
   std::optional<RangeType> m_ChunkSize;
-#ifdef COMPLEX_ENABLE_MULTICORE
-  bool m_RunParallel = true;
-#else
-  bool m_RunParallel = false;
-#endif
 };
 } // namespace complex

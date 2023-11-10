@@ -10,8 +10,7 @@
  */
 TEST_CASE("Filter List Instantiation")
 {
-  std::shared_ptr<complex::UnitTest::make_shared_enabler> app = std::make_shared<complex::UnitTest::make_shared_enabler>();
-  app->loadPlugins(complex::unit_test::k_BuildDir.view(), true);
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = complex::Application::Instance()->getFilterList();
   REQUIRE(filterList != nullptr);
 

@@ -1,5 +1,6 @@
 #include "DataStructure.hpp"
 
+#include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
@@ -10,6 +11,7 @@
 #include "complex/DataStructure/Messaging/DataReparentedMessage.hpp"
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 #include "complex/Filter/ValueParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 
 #include <fmt/core.h>
@@ -965,5 +967,47 @@ void DataStructure::flush() const
     }
     sharedObj->flush();
   }
+}
+
+uint64 DataStructure::memoryUsage() const
+{
+  uint64 memory = 0;
+  for(const auto& dataIter : m_DataObjects)
+  {
+    auto dataPtr = dataIter.second.lock();
+    if(dataPtr == nullptr)
+    {
+      continue;
+    }
+    memory += dataPtr->memoryUsage();
+  }
+  return memory;
+}
+
+Result<> DataStructure::transferDataArraysOoc()
+{
+  auto* preferences = Application::GetOrCreateInstance()->getPreferences();
+  if(!preferences->useOocData())
+  {
+    return MakeErrorResult(-3567, "Out-of-core not available");
+  }
+
+  Result<> result;
+  std::string targetFormat = preferences->largeDataFormat();
+  for(const auto& dataIter : m_DataObjects)
+  {
+    auto dataPtr = dataIter.second.lock();
+    auto dataArrayPtr = std::dynamic_pointer_cast<IDataArray>(dataPtr);
+    if(dataArrayPtr == nullptr)
+    {
+      continue;
+    }
+    if(!ConvertIDataArray(dataArrayPtr, targetFormat))
+    {
+      result.warnings().emplace_back(Warning{-3570, fmt::format("Cannot convert DataArray: '{}' to out-of-core", dataArrayPtr->getName())});
+    }
+  }
+
+  return result;
 }
 } // namespace complex

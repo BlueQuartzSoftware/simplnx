@@ -208,10 +208,6 @@ namespace UnitTest
 {
 inline constexpr float EPSILON = 0.0001;
 
-struct make_shared_enabler : public complex::Application
-{
-};
-
 /**
  * @brief This class will decompress a tar.gz file using the locally installed copy of cmake and when
  * then class goes out of scope the extracted contents will be deleted from disk.

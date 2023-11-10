@@ -296,7 +296,7 @@ Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Ar
   // Resize the surface features array to the proper size
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
   auto& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue);
-  auto& surfaceFeaturesStore = surfaceFeatures.getIDataStoreRefAs<DataStore<bool>>();
+  auto& surfaceFeaturesStore = surfaceFeatures.getDataStoreRef();
 
   const usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
   const usize maxFeature = featureIds[featureIdsMaxIdx];

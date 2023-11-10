@@ -12,6 +12,7 @@
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Filter/Output.hpp"
+#include "complex/Utilities/MemoryUtilities.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
 #include "complex/complex_export.hpp"
@@ -364,6 +365,11 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
   }
   case IDataAction::Mode::Execute: {
     uint64 dataSize = CalculateDataSize<T>(tupleShape, componentShape);
+    auto* preferences = Application::GetOrCreateInstance()->getPreferences();
+    if(preferences->forceOocData())
+    {
+      dataFormat = preferences->largeDataFormat();
+    }
     auto ioCollection = Application::GetOrCreateInstance()->getIOCollection();
     ioCollection->checkStoreDataFormat(dataSize, dataFormat);
     return ioCollection->createDataStoreWithType<T>(dataFormat, tupleShape, componentShape);
@@ -373,6 +379,8 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
   }
   }
 }
+
+COMPLEX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, std::string& format);
 
 /**
  * @brief Creates a DataArray with the given properties
@@ -423,8 +431,18 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   std::string name = path[last];
 
+  const usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+  uint64 requiredMemory = numTuples * numComponents * sizeof(T);
+  if(!CheckMemoryRequirement(dataStructure, requiredMemory, dataFormat))
+  {
+    uint64 totalMemory = requiredMemory + dataStructure.memoryUsage();
+    uint64 availableMemory = Memory::GetTotalMemory();
+    return MakeErrorResult(
+        -267, fmt::format("CreateArray: Cannot create DataArray '{}'.\n\tTotal memory required for DataStructure: '{}' Bytes.\n\tTotal memory: '{}' Bytes", name, totalMemory, availableMemory));
+  }
+
   auto store = CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
-  auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), dataObjectId);
+  auto dataArray = DataArray<T>::Create(dataStructure, name, store, dataObjectId);
   if(dataArray == nullptr)
   {
     if(dataStructure.getId(path).has_value())
@@ -436,7 +454,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
     {
       auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
-      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(tupleShape, " x "));
+      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(store->getTupleShape(), " x "));
       return MakeErrorResult(-265,
                              fmt::format("CreateArray: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
                                          "dimensions or the same total number of tuples.\n{}\n{}",
@@ -450,6 +468,45 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   return {};
 }
+
+template <typename T>
+std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T>& dataStore, const std::string& dataFormat)
+{
+  if(dataStore.getDataFormat() == dataFormat)
+  {
+    return nullptr;
+  }
+
+  auto ioCollection = Application::GetOrCreateInstance()->getIOCollection();
+  std::shared_ptr<AbstractDataStore<T>> newStore = ioCollection->createDataStoreWithType<T>(dataFormat, dataStore.getTupleShape(), dataStore.getComponentShape());
+  if(newStore == nullptr)
+  {
+    return nullptr;
+  }
+
+  newStore->copy(dataStore);
+  return newStore;
+}
+
+template <typename T>
+bool ConvertDataArray(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
+{
+  if(dataArray == nullptr)
+  {
+    return false;
+  }
+  const AbstractDataStore<T>& dataStore = dataArray->getDataStoreRef();
+  auto convertedDataStore = ConvertDataStore<T>(dataStore, dataFormat);
+  if(convertedDataStore == nullptr)
+  {
+    return false;
+  }
+
+  dataArray->setDataStore(convertedDataStore);
+  return true;
+}
+
+bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::string& dataFormat);
 
 /**
  * @brief Creates a NeighborList array with the given properties

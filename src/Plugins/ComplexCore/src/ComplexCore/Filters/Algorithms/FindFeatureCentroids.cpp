@@ -20,7 +20,7 @@ public:
   , m_Count(count)
   , m_Dims(dims)
   , m_ImageGeom(imageGeom)
-  , m_FeatureIds(featureIds)
+  , m_FeatureIds(featureIds.getDataStoreRef())
   {
   }
   ~FindFeatureCentroidsImpl1() = default;
@@ -82,7 +82,7 @@ private:
   size_t m_TotalFeatures = 0;
   std::array<size_t, 3> m_Dims = {0, 0, 0};
   const complex::ImageGeom& m_ImageGeom;
-  const Int32Array& m_FeatureIds;
+  const Int32AbstractDataStore& m_FeatureIds;
 };
 
 } // namespace
@@ -112,12 +112,13 @@ Result<> FindFeatureCentroids::operator()()
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
   // Output Feature Data
-  auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+  auto& centroidsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+  auto& centroids = centroidsArray.getDataStoreRef();
 
   // Required Geometry
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  size_t totalFeatures = centroids.getNumberOfTuples();
+  size_t totalFeatures = centroidsArray.getNumberOfTuples();
 
   size_t xPoints = imageGeom.getNumXCells();
   size_t yPoints = imageGeom.getNumYCells();
@@ -146,13 +147,13 @@ Result<> FindFeatureCentroids::operator()()
       centroids[featureId_idx] = static_cast<float>(sum[featureId_idx] / static_cast<double>(count[featureId_idx]));
     }
 
-    featureId_idx = static_cast<size_t>(featureId * 3 + 1);
+    featureId_idx++; // featureId * 3 + 1
     if(static_cast<float>(count[featureId_idx]) > 0.0f)
     {
       centroids[featureId_idx] = static_cast<float>(sum[featureId_idx] / static_cast<double>(count[featureId_idx]));
     }
 
-    featureId_idx = static_cast<size_t>(featureId * 3 + 2);
+    featureId_idx++; // featureId * 3 + 2
     if(static_cast<float>(count[featureId_idx]) > 0.0f)
     {
       centroids[featureId_idx] = static_cast<float>(sum[featureId_idx] / static_cast<double>(count[featureId_idx]));

@@ -16,6 +16,8 @@ using namespace complex;
 
 TEST_CASE("ITKImageProcessing::ITKAbsImageFilter(float)", "[ITKImageProcessing][ITKAbsImage][float]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   ITKAbsImage filter;
 
@@ -52,6 +54,8 @@ TEST_CASE("ITKImageProcessing::ITKAbsImageFilter(float)", "[ITKImageProcessing][
 
 TEST_CASE("ITKImageProcessing::ITKAbsImageFilter(short)", "[ITKImageProcessing][ITKAbsImage][short]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   ITKAbsImage filter;
 

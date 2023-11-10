@@ -718,6 +718,11 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
 
   using ResultT = detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>;
 
+  if(inputArray.getDataFormat() != "")
+  {
+    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
+  }
+
   try
   {
     return ArraySwitchFunc<detail::ITKFilterFunctor, ArrayOptionsT, ResultT, OutputT>(inputDataStore, imageGeom, -1, inputDataStore, imageGeom, outputDataStore, shouldCancel, progressObserver,

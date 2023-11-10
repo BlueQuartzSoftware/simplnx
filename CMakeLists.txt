@@ -465,7 +465,9 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/IParallelAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.hpp
@@ -661,6 +663,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp

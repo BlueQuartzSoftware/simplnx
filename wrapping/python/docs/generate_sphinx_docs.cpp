@@ -886,8 +886,8 @@ int main(int32_t argc, char** argv)
   {
     GenerateParameterList();
 
-    Application app;
-    app.loadPlugins(COMPLEX_BIN_DIR, true);
+    auto appPtr = complex::Application::GetOrCreateInstance();
+    appPtr->loadPlugins(COMPLEX_BIN_DIR, true);
 
     GeneratePythonRstFiles();
     GeneratePythonSphinxIndex();

@@ -23,7 +23,6 @@ using namespace complex;
 
 namespace ITKImageProcessingUnitTest
 {
-std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
 bool s_PluginsLoaded = false;
 FilterList* s_FilterList = nullptr;
 
@@ -31,7 +30,7 @@ void InitApplicationAndPlugins()
 {
   if(!s_PluginsLoaded)
   {
-    Application::Instance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+    Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
     s_FilterList = Application::Instance()->getFilterList();
     s_PluginsLoaded = true;
   }

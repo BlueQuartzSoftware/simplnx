@@ -25,6 +25,8 @@ const std::string k_mPrimes = "SurfaceMeshmPrimes";
 
 TEST_CASE("OrientationAnalysis::FindBoundaryStrengthsFilter: Valid Filter Execution", "[OrientationAnalysis][FindBoundaryStrengthsFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission.tar.gz",
                                                              "feature_boundary_neighbor_slip_transmission");
 

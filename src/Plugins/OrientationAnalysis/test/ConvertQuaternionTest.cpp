@@ -25,6 +25,8 @@ constexpr ChoicesParameter::ValueType k_ToVectorScalar = 1;
 
 TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter", "[OrientationAnalysis][ConvertQuaternionFilter]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
 
   // Build up a simple Float32Array and place default data into the array

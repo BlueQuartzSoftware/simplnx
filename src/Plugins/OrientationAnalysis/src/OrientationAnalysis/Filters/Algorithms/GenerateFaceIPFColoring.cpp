@@ -183,8 +183,17 @@ Result<> GenerateFaceIPFColoring::operator()()
   auto& faceIpfColors = m_DataStructure.getDataRefAs<UInt8Array>(faceIpfColorsArrayPath);
   int64 numTriangles = faceLabels.getNumberOfTuples();
 
+  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&faceLabels);
+  algArrays.push_back(&faceNormals);
+  algArrays.push_back(&eulerAngles);
+  algArrays.push_back(&phases);
+  algArrays.push_back(&crystalStructures);
+  algArrays.push_back(&faceIpfColors);
+
   ParallelDataAlgorithm parallelTask;
   parallelTask.setRange(0, numTriangles);
+  parallelTask.requireArraysInMemory(algArrays);
   parallelTask.execute(CalculateFaceIPFColorsImpl(faceLabels, phases, faceNormals, eulerAngles, crystalStructures, faceIpfColors));
 
   return {};

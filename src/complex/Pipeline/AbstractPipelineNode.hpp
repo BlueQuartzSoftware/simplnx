@@ -283,6 +283,12 @@ protected:
   void setDataStructure(const DataStructure& dataStructure);
 
   /**
+   * @brief Checks the DataStructure memory size and moves DataArrays to out-of-core if required.
+   * @param dataStructure
+   */
+  void checkDataStructureSize(DataStructure& dataStructure);
+
+  /**
    * @brief Updates the stored DataStructure from preflighting the node. This
    * should only be called from within the preflight(DataStructure&) method.
    * @param dataStructure

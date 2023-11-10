@@ -81,6 +81,7 @@ protected:
   void convert() const
   {
     size_t numComps = m_OldCellArray.getNumberOfComponents();
+    const auto& oldCellData = m_OldCellArray.getDataStoreRef();
 
     auto& dataStore = m_NewCellArray.getDataStoreRef();
     std::fill(dataStore.begin(), dataStore.end(), static_cast<T>(-1));
@@ -101,7 +102,7 @@ protected:
           uint64 srcIndex = (srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex) + xIndex;
           for(size_t compIndex = 0; compIndex < numComps; compIndex++)
           {
-            m_NewCellArray[destTupleIndex * numComps + compIndex] = m_OldCellArray[srcIndex * numComps + compIndex];
+            dataStore.setValue(destTupleIndex * numComps + compIndex, oldCellData.getValue(srcIndex * numComps + compIndex));
           }
           destTupleIndex++;
         }
