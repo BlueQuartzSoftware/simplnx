@@ -8,9 +8,11 @@ import numpy as np
 #Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
-
-result = cx.CreateImageGeometry.execute(
+# Filter 1
+# Instantiate Filter
+filter = cx.CreateImageGeometry()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_data_name=("Cell Data"),
     dimensions=[100, 100, 2],
@@ -18,10 +20,19 @@ result = cx.CreateImageGeometry.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
-
-result = cx.RawBinaryReaderFilter.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.RawBinaryReaderFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     created_attribute_array_path=cx.DataPath("Quats"),
     endian=0,
@@ -31,20 +42,39 @@ result = cx.RawBinaryReaderFilter.execute(
     skip_header_bytes=0,
     tuple_dimensions=[[2.0, 100.0, 100.0]]
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 3
-
-result = cxor.ConvertOrientations.execute(
+# Filter 3
+# Instantiate Filter
+filter = cxor.ConvertOrientations()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=cx.DataPath("[Image Geometry]/Cell Data/Quats"),
     input_type=2,
     output_orientation_array_name=("Eulers"),
     output_type=0
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 4
 
-result = cx.CreateDataArray.execute(
+# Filter 4
+# Instantiate Filter
+filter = cx.CreateDataArray()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     component_count=1,
@@ -54,10 +84,19 @@ result = cx.CreateDataArray.execute(
     output_data_array=cx.DataPath("Phases"),
     tuple_dimensions=[[2.0, 100.0, 100.0]]
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 5
-
-result = cxor.EnsembleInfoReaderFilter.execute(
+# Filter 5
+# Instantiate Filter
+filter = cxor.EnsembleInfoReaderFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_ensemble_attribute_matrix_name=("Cell Ensemble"),
     crystal_structures_array_name=("CrystalStructures"),
@@ -65,10 +104,20 @@ result = cxor.EnsembleInfoReaderFilter.execute(
     input_file=cx.DataPath("Data/OrientationAnalysis/Ensemble.ini"),
     phase_types_array_name=("PhaseTypes")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 6
 
-result = cxor.GenerateIPFColorsFilter.execute(
+# Filter 6
+# Instantiate Filter
+filter = cxor.GenerateIPFColorsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=cx.DataPath("[Image Geometry]/Cell Data/Eulers"),
     cell_ipf_colors_array_name=("IPFColors"),
@@ -78,15 +127,29 @@ result = cxor.GenerateIPFColorsFilter.execute(
     reference_dir=[0.0, 0.0, 1.0],
     use_good_voxels=False
 )
-
-#Filter 7
-
-output_file_path = "Data/Output/Examples/EnsembleInfoReaderExample.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
-                                        export_file_path=output_file_path, 
-                                        write_xdmf_file=True)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the filter")
+
+# Filter 7
+# Instantiate Filter
+filter = cx.ExportDREAM3DFilter()
+# Set Output file path
+output_file_path = "Data/Output/Examples/EnsembleInfoReaderExample.dream3d"
+# Execute Filter with Parameters
+result = filter.execute(
+    data_structure=data_structure,
+    export_file_path=output_file_path,
+    write_xdmf_file=True
+)
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+elif len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+else:
+    print(f"{filter.name()} No errors running the filter")

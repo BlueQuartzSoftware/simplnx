@@ -8,9 +8,11 @@ import numpy as np
 #Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
-
-result = cxor.ReadCtfDataFilter.execute(
+# Filter 1
+# Instantiate Filter
+filter = cxor.ReadCtfDataFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
@@ -19,52 +21,91 @@ result = cxor.ReadCtfDataFilter.execute(
     edax_hexagonal_alignment=True,
     input_file=cx.DataPath("Data/T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
-
-result = cx.RotateSampleRefFrameFilter.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.RotateSampleRefFrameFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    #created_image_geometry=cx.DataPath(),
     remove_original_geometry=False,
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
-    #rotation_matrix: List[List[float]] = ...,
     rotation_representation=0,
     selected_image_geometry=cx.DataPath("fw-ar-IF1-avtr12-corr/")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 3
 
+# Filter 3
+# Instantiate Filter
+filter = cx.MultiThresholdObjects()
+
+# Set Threshold Conditions
 threshold_1 = cx.ArrayThreshold()
 threshold_1.array_path = cx.DataPath(["fw-ar-IF1-avtr12-corr/Cell Data/Error"])
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.Equal
 threshold_1.value = 0.0
 
+# Create a Threshold Set
 threshold_set = cx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1]
-result = cx.MultiThresholdObjects.execute(data_structure=data_structure,
-                                    array_thresholds=threshold_set,
-                                    created_data_path="ThresholdArray",
-                                    created_mask_type=cx.DataType.boolean)
+dt = cx.DataType.boolean
+
+# Execute Filter with Parameters
+result = filter.execute(
+    data_structure=data_structure,
+    array_thresholds=threshold_set,
+    created_data_path="ThresholdArray",
+    created_mask_type=cx.DataType.boolean
+)
+
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the MultiThresholdObjects")
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 4
 
-result = cxor.ConvertOrientations.execute(
+# Filter 4
+# Instantiate Filter
+filter = cxor.ConvertOrientations()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles"),
     input_type=0,
     output_orientation_array_name=("Quats"),
     output_type=2
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 5
-
-result = cx.ReplaceElementAttributesWithNeighborValuesFilter.execute(
+# Filter 5
+# Instantiate Filter
+filter = cx.ReplaceElementAttributesWithNeighborValuesFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     confidence_index_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Error"),
     loop=False,
@@ -72,23 +113,41 @@ result = cx.ReplaceElementAttributesWithNeighborValuesFilter.execute(
     selected_comparison=0,
     selected_image_geometry=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Error")
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 6
-
-result = cxor.GenerateIPFColorsFilter.execute(
+# Filter 6
+# Instantiate Filter
+filter = cxor.GenerateIPFColorsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPF_001"),
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
-    #good_voxels_array_path=cx.DataPath(""),
     reference_dir=[0.0, 0.0, 1.0],
     use_good_voxels=False
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 7
 
-result = cxitk.ITKImageWriter.execute(
+# Filter 7
+# Instantiate Filter
+filter = cxitk.ITKImageWriter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     file_name=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_001.png"),
     image_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_001"),
@@ -96,23 +155,40 @@ result = cxitk.ITKImageWriter.execute(
     index_offset=0,
     plane=0
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 8
-
-result = cxor.GenerateIPFColorsFilter.execute(
+# Filter 8
+# Instantiate Filter
+filter = cxor.GenerateIPFColorsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPF_010"),
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
-    #good_voxels_array_path=cx.DataPath(""),
     reference_dir=[0.0, 0.0, 1.0],
     use_good_voxels=False
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 9
-
-result = cxitk.ITKImageWriter.execute(
+# Filter 9
+# Instantiate Filter
+filter = cxitk.ITKImageWriter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     file_name=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_010.png"),
     image_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_010"),
@@ -120,23 +196,41 @@ result = cxitk.ITKImageWriter.execute(
     index_offset=0,
     plane=0
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 10
 
-result = cxor.GenerateIPFColorsFilter.execute(
+# Filter 10
+# Instantiate Filter
+filter = cxor.GenerateIPFColorsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPF_100"),
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
-    #good_voxels_array_path=cx.DataPath(""),
     reference_dir=[1.0, 0.0, 0.0],
     use_good_voxels=False
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 11
-
-result = cxitk.ITKImageWriter.execute(
+# Filter 11
+# Instantiate Filter
+filter = cxitk.ITKImageWriter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     file_name=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_100.png"),
     image_array_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_100"),
@@ -144,10 +238,20 @@ result = cxitk.ITKImageWriter.execute(
     index_offset=0,
     plane=0
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 12
 
-result = cxor.CAxisSegmentFeaturesFilter.execute(
+# Filter 12
+# Instantiate Filter
+filter = cxor.CAxisSegmentFeaturesFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     active_array_name=("Active"),
     cell_feature_attribute_matrix_name=("CellFeatureData"),
@@ -161,22 +265,39 @@ result = cxor.CAxisSegmentFeaturesFilter.execute(
     randomize_feature_ids=True,
     use_good_voxels=True
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 13
-
-result = cx.FillBadDataFilter.execute(
+# Filter 13
+# Instantiate Filter
+filter = cx.FillBadDataFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    #cell_phases_array_path=cx.DataPath(""),
     feature_ids_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
-    #ignored_data_array_paths: List[DataPath] = ...,
     min_allowed_defect_size=10,
     selected_image_geometry=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     store_as_new_phase=False
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 14
 
-result = cx.CalculateFeatureSizesFilter.execute(
+# Filter 14
+# Instantiate Filter
+filter = cx.CalculateFeatureSizesFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     equivalent_diameters_path=("EquivalentDiameters"),
     feature_attribute_matrix=cx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
@@ -186,23 +307,39 @@ result = cx.CalculateFeatureSizesFilter.execute(
     save_element_sizes=False,
     volumes_path=("Volumes")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 15
-
-result = cx.RemoveMinimumSizeFeaturesFilter.execute(
+# Filter 15
+# Instantiate Filter
+filter = cx.RemoveMinimumSizeFeaturesFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     apply_single_phase=False,
     feature_ids_path=cx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
-    #feature_phases_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/Phases"),
     image_geom_path=cx.DataPath("fw-ar-IF1-avtr12-corr"),
     min_allowed_features_size=5,
     num_cells_path=cx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData/NumElements")
-    #phase_number: int = ...
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 16
-
-result = cxor.FindAvgOrientationsFilter.execute(
+# Filter 16
+# Instantiate Filter
+filter = cxor.FindAvgOrientationsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     avg_euler_angles_array_path=("AvgEulerAngles"),
     avg_quats_array_path=("AvgQuats"),
@@ -212,10 +349,20 @@ result = cxor.FindAvgOrientationsFilter.execute(
     cell_quats_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/Quats"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/CellEnsembleData/CrystalStructures")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 17
 
-result = cxor.FindKernelAvgMisorientationsFilter.execute(
+# Filter 17
+# Instantiate Filter
+filter = cxor.FindKernelAvgMisorientationsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/CellEnsembleData/CrystalStructures"),
@@ -225,20 +372,39 @@ result = cxor.FindKernelAvgMisorientationsFilter.execute(
     quats_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/Quats"),
     selected_image_geometry_path=cx.DataPath("fw-ar-IF1-aptr-corr")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 18
-
-result = cx.FindFeatureCentroidsFilter.execute(
+# Filter 18
+# Instantiate Filter
+filter = cx.FindFeatureCentroidsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     centroids_array_path=("Centroids"),
     feature_attribute_matrix=cx.DataPath("fw-ar-IF1-aptr-corr/CellFeatureData"),
     feature_ids_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/FeatureIds"),
     selected_image_geometry=cx.DataPath("fw-ar-IF1-aptr-corr")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 19
 
-result = cx.FindEuclideanDistMapFilter.execute(
+# Filter 19
+# Instantiate Filter
+filter = cx.FindEuclideanDistMapFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     calc_manhattan_dist=True,
     do_boundaries=True,
@@ -252,71 +418,121 @@ result = cx.FindEuclideanDistMapFilter.execute(
     selected_image_geometry=cx.DataPath("fw-ar-IF1-aptr-corr")
     #t_jdistances_array_name: str = ...
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 20
 
-result = cxor.FindFeatureReferenceMisorientationsFilter.execute(
+# Filter 20
+# Instantiate Filter
+filter = cxor.FindFeatureReferenceMisorientationsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     avg_quats_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/CellFeatureData/AvgQuats"),
-    #cell_feature_attribute_matrix_path=cx.DataPath("fw-ar-IF1-aptr-corr"),
+    #cell_feature_attribute_matrix_path=cx.DataPath("fw-ar-IF1-aptr-corr"),  # (not used)
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/CellEnsembleData/CrystalStructures"),
     feature_avg_misorientations_array_name=("FeatureAvgMisorientations"),
     feature_ids_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/FeatureIds"),
     feature_reference_misorientations_array_name=("FeatureReferenceMisorientations"),
-    #g_beuclidean_distances_array_path=cx.DataPath("fw-ar-IF1-aptr-corr"),
+    #g_beuclidean_distances_array_path=cx.DataPath("fw-ar-IF1-aptr-corr"),  # (not used)
     quats_array_path=cx.DataPath("fw-ar-IF1-aptr-corr/Cell Data/Quats"),
     reference_orientation=0
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 21
-
-result = cx.FeatureDataCSVWriterFilter.execute(
+# Filter 21
+# Instantiate Filter
+filter = cx.FeatureDataCSVWriterFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix_path=cx.DataPath("fw-ar-IF1-aptr-corr/CellFeatureData"),
+    #cell_feature_attribute_matrix_path=cx.DataPath("fw-ar-IF1-aptr-corr/CellFeatureData"),  # (not used)
     delimiter_choice_int=2,
     feature_data_file=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/FeatureData.csv"),
     write_neighborlist_data=False,
     write_num_features_line=True
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 22
 
-result = cx.CalculateArrayHistogramFilter.execute(
+
+# Filter 22
+# Instantiate Filter
+filter = cx.CalculateArrayHistogramFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    #data_group_name: DataPath = ...,
+    #data_group_name: DataPath = ...,  # (not used)
     histogram_suffix=("Histogram"),
-    #max_range: float = ...,
-    #min_range: float = ...,
+    #max_range: float = ...,  # (not used)
+    #min_range: float = ...,  # (not used)
     new_data_group=True,
     new_data_group_name=cx.DataPath("Histograms"),
     number_of_bins=256,
     selected_array_paths=[cx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData/EquivalentDiameters")],
     user_defined_range=False
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 23
-
-result = cx.WriteASCIIDataFilter.execute(
+# Filter 23
+# Instantiate Filter
+filter = cx.WriteASCIIDataFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     delimiter=2,
-    #file_extension: str = ...,
+    #file_extension: str = ...,  # (not used)
     includes=1,
-    #max_val_per_line: int = ...,
-    #output_dir=cx.DataPath(""),
+    #max_val_per_line: int = ...,  # (not used)
+    #output_dir=cx.DataPath(""),  # (not used)
     output_path=cx.DataPath("Data/Output/fw-ar-IF1-avtr12-corr/EqDiamHistogram.csv"),
     output_style=1,
     selected_data_array_paths=[cx.DataPath("fw-ar-IF1-avtr12-corr/Histograms/EquivalentDiameters Histogram")]
 )
-
-#Filter 24
-
-output_file_path = "Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
-                                        export_file_path=output_file_path, 
-                                        write_xdmf_file=True)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the filter")
+
+# Filter 24
+output_file_path = "Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr.dream3d"
+# Instantiate Filter
+filter = cx.ExportDREAM3DFilter()
+# Execute Filter with Parameters
+result = filter.execute(data_structure=data_structure, 
+                        export_file_path=output_file_path, 
+                        write_xdmf_file=True)
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")

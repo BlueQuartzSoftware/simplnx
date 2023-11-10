@@ -8,23 +8,29 @@ import numpy as np
 #Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
-
+# Filter 1
+# Instantiate Import Data
 import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
 import_data.data_paths = None
-
-result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure,
-                                         import_file_data=import_data)
+# Instantiate Filter
+filter = cx.ImportDREAM3DFilter()
+# Execute Filter with Parameters
+result = filter.execute(data_structure=data_structure,
+                        import_file_data=import_data)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the ImportDREAM3DFilter filter")
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
-
-result = cx.SharedFeatureFaceFilter.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.SharedFeatureFaceFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     feature_face_ids_array_name=("FeatureFaceId"),
@@ -34,10 +40,20 @@ result = cx.SharedFeatureFaceFilter.execute(
     randomize_features=False,
     triangle_geometry_path=cx.DataPath("TriangleDataContainer")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 3
 
-result = cxor.FindGBCDMetricBasedFilter.execute(
+# Filter 3
+# Instantiate Filter
+filter = cxor.FindGBCDMetricBasedFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     chosen_limit_dists=2,
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
@@ -57,10 +73,20 @@ result = cxor.FindGBCDMetricBasedFilter.execute(
     surface_mesh_feature_face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceFeatureData/FaceLabels"),
     triangle_geometry_path=cx.DataPath("TriangleDataContainer")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 4
 
-result = cxor.FindGBCDMetricBasedFilter.execute(
+# Filter 4
+# Instantiate Filter
+filter = cxor.FindGBCDMetricBasedFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     chosen_limit_dists=7,
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
@@ -80,3 +106,10 @@ result = cxor.FindGBCDMetricBasedFilter.execute(
     surface_mesh_feature_face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceFeatureData/FaceLabels"),
     triangle_geometry_path=cx.DataPath("TriangleDataContainer")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")

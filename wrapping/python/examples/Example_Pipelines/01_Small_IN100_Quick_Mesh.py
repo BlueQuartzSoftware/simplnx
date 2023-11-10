@@ -5,29 +5,33 @@ import orientationanalysis as cxor
 
 import numpy as np
 
-#Create a Data Structure
+# Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
-
+# Filter 1
+# Instantiate Import Data Parameter
 import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
 import_data.data_paths = None
-
-result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure,
-                                         import_file_data=import_data)
+# Instantiate Filter
+filter = cx.ImportDREAM3DFilter()
+# Execute Filter with Parameters
+result = filter.execute(data_structure=data_structure, import_file_data=import_data)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the ImportDREAM3DFilter filter")
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
-
-result = cx.CropImageGeometry.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.CropImageGeometry()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_feature_attribute_matrix=cx.DataPath("DataContainer/CellFeatureData"),
-    #created_image_geometry=cx.DataPath("DataContainer/"),
     feature_ids=cx.DataPath("DataContainer/CellData/FeatureIds"),
     max_voxel=[140, 140, 99],
     min_voxel=[41, 41, 0],
@@ -36,18 +40,36 @@ result = cx.CropImageGeometry.execute(
     selected_image_geometry=cx.DataPath("DataContainer"),
     update_origin=True
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 3
-
-result = cx.MoveData.execute(
+# Filter 3
+# Instantiate Filter
+filter = cx.MoveData()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     data=[cx.DataPath("DataContainer/CellEnsembleData")],
     new_parent=cx.DataPath("DataContainer")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 4
-
-result = cx.QuickSurfaceMeshFilter.execute(
+# Filter 4
+# Instantiate Filter
+filter = cx.QuickSurfaceMeshFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     face_data_group_name=("FaceData"),
     face_feature_attribute_matrix_name=("Face Feature Data"),
@@ -57,19 +79,32 @@ result = cx.QuickSurfaceMeshFilter.execute(
     generate_triple_lines=False,
     grid_geometry_data_path=cx.DataPath("DataContainer"),
     node_types_array_name=("NodeType"),
-    #selected_data_array_paths=[cx.DataPath("DataContainer")]
     triangle_geometry_name=cx.DataPath("TriangleDataContainer"),
     vertex_data_group_name=("VertexData")
 )
-
-#Filter 5
-
-output_file_path = "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
-                                        export_file_path=output_file_path, 
-                                        write_xdmf_file=True)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the filter")
+
+# Filter 5
+# Set Output File Path
+output_file_path = "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
+# Instantiate Filter
+filter = cx.ExportDREAM3DFilter()
+# Execute Filter with Parameters
+result = filter.execute(
+    data_structure=data_structure,
+    export_file_path=output_file_path,
+    write_xdmf_file=True
+)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")

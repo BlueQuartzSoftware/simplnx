@@ -8,9 +8,11 @@ import numpy as np
 #Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
-
-result = cxitk.ITKImportImageStack.execute(
+# Filter 1
+# Instantiate Filter
+filter = cxitk.ITKImportImageStack()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_data_name="Optical Data",
     image_data_array_path="ImageData",
@@ -20,37 +22,48 @@ result = cxitk.ITKImportImageStack.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
-
+# Filter 2
+# Instantiate ArrayThreshold objects
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["RoboMet.3D Imgage Stack/Optical Data/ImageData"]),
+threshold_1.array_path = cx.DataPath(["RoboMet.3D Imgage Stack/Optical Data/ImageData"])
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_1.value = 0.0
 
+# Define ArrayThresholdSet object
 threshold_set = cx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1]
 dt = cx.DataType.boolean
 
-result = cx.MultiThresholdObjects.execute(data_structure=data_structure,
-                                        array_thresholds=threshold_set,
-                                        created_data_path="Mask",
-                                        created_mask_type=cx.DataType.boolean)
-
-result = cx.MultiThresholdObjects.execute(
+# Instantiate Filter
+filter = cx.MultiThresholdObjects()
+# Execute filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="Mask",
-    created_mask_type=9,
-    #custom_false_value: float = ...,
-    #custom_true_value: float = ...,
-    use_custom_false_value=False,
-    use_custom_true_value=False
+    created_mask_type=cx.DataType.boolean
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 3
-
-result = cx.ScalarSegmentFeaturesFilter.execute(
+# Filter 3
+# Instantiate Filter
+filter = cx.ScalarSegmentFeaturesFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     active_array_path="Active",
     cell_feature_group_path="Pore Data",
@@ -62,10 +75,19 @@ result = cx.ScalarSegmentFeaturesFilter.execute(
     scalar_tolerance=0,
     use_mask=False
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 4
-
-result = cx.SurfaceNetsFilter.execute(
+# Filter 4
+# Instantiate Filter
+filter = cx.SurfaceNetsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     apply_smoothing=True,
     face_data_group_name="Face Data",
@@ -81,15 +103,24 @@ result = cx.SurfaceNetsFilter.execute(
     triangle_geometry_name=cx.DataPath("TriangleDataContainer"),
     vertex_data_group_name="Vertex Data"
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 5
-
+# Filter 5
 output_file_path = "Data/Output/SurfaceMesh/SurfaceNets_Demo.dream3d"
 result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
+
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the filter")

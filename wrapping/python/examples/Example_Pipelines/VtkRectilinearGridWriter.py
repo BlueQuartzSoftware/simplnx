@@ -8,23 +8,30 @@ import numpy as np
 #Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
+# Filter 1
 
 import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_data.data_paths = None
 
-result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure,
+# Instantiate Filter
+filter = cx.ImportDREAM3DFilter()
+# Execute Filter with Parameters
+result = filter.execute(data_structure=data_structure,
                                          import_file_data=import_data)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the ImportDREAM3DFilter filter")
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
-
-result = cx.VtkRectilinearGridWriterFilter.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.VtkRectilinearGridWriterFilter
+# Execute Filter
+result = filter.execute(
     data_structure=data_structure,
     image_geometry_path=cx.DataPath("DataContainer"),
     output_file=cx.DataPath("Data/Output/Examples/SmallIN100_Final.vtk"),
@@ -44,3 +51,10 @@ result = cx.VtkRectilinearGridWriterFilter.execute(
  cx.DataPath("DataContainer/CellData/X Position"),
  cx.DataPath("DataContainer/CellData/Y Position")]
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")

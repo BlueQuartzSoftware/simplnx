@@ -22,20 +22,33 @@ generated_file_list_value.end_index = 174
 generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 2
 
-result = cxitk.ITKImportImageStack.execute(
+# Instantiate Filter
+filter = cxitk.ITKImportImageStack()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    cell_data_name = "Cell Data",
-    image_data_array_path = "ImageData",
+    cell_data_name="Cell Data",
+    image_data_array_path="ImageData",
     image_geometry_path=cx.DataPath("Porosity_Image"),
     image_transform_choice=0,
     input_file_list_info=generated_file_list_value,
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
 
-result = cx.ResampleImageGeomFilter.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.ResampleImageGeomFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
     #exact_dimensions: List[int] = ...,
@@ -48,10 +61,20 @@ result = cx.ResampleImageGeomFilter.execute(
     selected_image_geometry=cx.DataPath("Porosity_Image"),
     spacing=[2.0, 2.0, 2.0]
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 3
 
-result = cx.ResampleImageGeomFilter.execute(
+# Filter 3
+# Instantiate Filter
+filter = cx.ResampleImageGeomFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
     #exact_dimensions: List[int] = ...,
@@ -64,10 +87,21 @@ result = cx.ResampleImageGeomFilter.execute(
     selected_image_geometry=cx.DataPath("Porosity_Image")
     #spacing: List[float] = ...
 )
+# Error/Result Handling for Filter
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 4
 
-result = cx.ResampleImageGeomFilter.execute(
+# Filter 4
+# Instantiate Filter
+filter = cx.ResampleImageGeomFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
     exact_dimensions=[262, 195, 82],
@@ -80,15 +114,27 @@ result = cx.ResampleImageGeomFilter.execute(
     selected_image_geometry=cx.DataPath("Porosity_Image")
     #spacing: List[float] = ...
 )
+# Error/Result Handling for Filter
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 5
 
+# Filter 5
+# Define output file path
 output_file_path = "Data/Output/ResamplePorosityImage.dream3d"
+# Execute ExportDREAM3DFilter with Parameters
 result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the filter")

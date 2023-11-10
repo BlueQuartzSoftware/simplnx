@@ -5,12 +5,14 @@ import orientationanalysis as cxor
 
 import numpy as np
 
-#Create a Data Structure
+# Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
-
-result = cx.CreateImageGeometry.execute(
+# Filter 1
+# Instantiate Filter
+filter = cx.CreateImageGeometry()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_data_name="Cell Data",
     dimensions=[60, 80, 100],
@@ -18,10 +20,19 @@ result = cx.CreateImageGeometry.execute(
     origin=[100.0, 100.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
-
-result = cx.ImportTextFilter.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.ImportTextFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     data_format="Unknown",
@@ -33,10 +44,19 @@ result = cx.ImportTextFilter.execute(
     output_data_array=cx.DataPath("Confidence Index"),
     scalar_type=8
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 3
-
-result = cx.ImportTextFilter.execute(
+# Filter 3
+# Instantiate Filter
+filter = cx.ImportTextFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     data_format="Unknown",
@@ -48,10 +68,20 @@ result = cx.ImportTextFilter.execute(
     output_data_array=cx.DataPath("FeatureIds"),
     scalar_type=4
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 4
 
-result = cx.ImportTextFilter.execute(
+# Filter 4
+# Instantiate Filter
+filter = cx.ImportTextFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     data_format="Unknown",
@@ -63,10 +93,19 @@ result = cx.ImportTextFilter.execute(
     output_data_array=cx.DataPath("Image Quality"),
     scalar_type=8
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the ImportTextFilter for Image Quality")
 
-#Filter 5
-
-result = cx.ImportTextFilter.execute(
+# Filter 5
+# Instantiate Filter
+filter = cx.ImportTextFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     data_format="Unknown",
@@ -76,42 +115,70 @@ result = cx.ImportTextFilter.execute(
     n_skip_lines=0,
     n_tuples=[0, 480000],
     output_data_array=cx.DataPath("IPFColors"),
-    scalar_type=0
+    scalar_type=0  # Assuming scalar_type 0 is for a data format like RGB
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the ImportTextFilter for IPFColors")
 
-#Filter 6
-
-result = cx.CropImageGeometry.execute(
+# Filter 6
+# Instantiate Filter
+filter = cx.CropImageGeometry()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    #cell_feature_attribute_matrix: DataPath = ...,
     created_image_geometry=cx.DataPath("CroppedBottomHalf"),
-    #feature_ids: DataPath = ...,
     max_voxel=[59, 79, 50],
     min_voxel=[0, 0, 0],
     remove_original_geometry=False,
     renumber_features=False,
     selected_image_geometry=cx.DataPath("[Image Geometry]"),
     update_origin=False
+    # cell_feature_attribute_matrix: DataPath = ...,  # Not currently part of the code
+    # feature_ids: DataPath = ...,  # Not currently part of the code
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the CropImageGeometry")
 
-#Filter 7
 
-result = cx.CropImageGeometry.execute(
+# Filter 7
+# Instantiate Filter
+filter = cx.CropImageGeometry()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    #cell_feature_attribute_matrix: DataPath = ...,
     created_image_geometry=cx.DataPath("CroppedTopHalf"),
-    #feature_ids: DataPath = ...,
     max_voxel=[59, 79, 99],
     min_voxel=[0, 0, 51],
     remove_original_geometry=False,
     renumber_features=False,
     selected_image_geometry=cx.DataPath("[Image Geometry]"),
     update_origin=True
+    # cell_feature_attribute_matrix: DataPath = ...,  # Not currently part of the code
+    # feature_ids: DataPath = ...,  # Not currently part of the code
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the CropImageGeometry for the top half")
 
-#Filter 8
-
-result = cx.AppendImageGeometryZSliceFilter.execute(
+# Filter 8
+# Instantiate Filter
+filter = cx.AppendImageGeometryZSliceFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     check_resolution=True,
     destination_geometry=cx.DataPath("CroppedBottomHalf"),
@@ -119,15 +186,30 @@ result = cx.AppendImageGeometryZSliceFilter.execute(
     new_geometry=cx.DataPath("AppendedImageGeom"),
     save_as_new_geometry=True
 )
-
-#Filter 9
-
-output_file_path = "Data/Output/Examples/AppendImageGeometryZSlice.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
-                                        export_file_path=output_file_path, 
-                                        write_xdmf_file=True)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the AppendImageGeometryZSliceFilter")
+
+# Filter 9
+# Instantiate Filter
+filter = cx.ExportDREAM3DFilter()
+# Set Output File Path
+output_file_path = "Data/Output/Examples/AppendImageGeometryZSlice.dream3d"
+# Execute Filter with Parameters
+result = filter.execute(
+    data_structure=data_structure,
+    export_file_path=output_file_path,
+    write_xdmf_file=True
+)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print('Errors: {}'.format(result.errors))
+    print('Warnings: {}'.format(result.warnings))
+    quit()
+else:
+    print(f"{filter.name()} No errors running the ExportDREAM3DFilter")

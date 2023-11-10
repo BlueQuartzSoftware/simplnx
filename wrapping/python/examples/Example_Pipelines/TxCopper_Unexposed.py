@@ -8,9 +8,11 @@ import numpy as np
 #Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
-
-result = cxor.ReadCtfDataFilter.execute(
+# Filter 1
+# Instantiate Filter
+filter = cxor.ReadCtfDataFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("EBSD Scan Data"),
     cell_ensemble_attribute_matrix_name=("Phase Data"),
@@ -19,27 +21,40 @@ result = cxor.ReadCtfDataFilter.execute(
     edax_hexagonal_alignment=True,
     input_file=cx.DataPath("Data/Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 2
-
-result = cx.RotateSampleRefFrameFilter.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.RotateSampleRefFrameFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    #created_image_geometry=cx.DataPath("DataContainer/"),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
-    #rotation_matrix: List[List[float]] = ...,
     rotation_representation=("Axis Angle"),
     selected_image_geometry=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2")
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 3
-
-result = cx.CropImageGeometry.execute(
+# Filter 3
+# Instantiate Filter
+filter = cx.CropImageGeometry()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
-    #cell_feature_attribute_matrix=cx.DataPath("DataContainer"),
-    #created_image_geometry=cx.DataPath("DataContainer"),
-    #feature_ids=cx.DataPath("DataContainer"),
     max_voxel=[488, 0, 0],
     min_voxel=[549, 399, 0],
     remove_original_geometry=True,
@@ -47,9 +62,16 @@ result = cx.CropImageGeometry.execute(
     selected_image_geometry=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
     update_origin=True
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 4
-
+# Filter 4
+# Instantiate Filter
 threshold_1 = cx.ArrayThreshold()
 threshold_1.array_path = cx.DataPath(["Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Error"])
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.Equal
@@ -61,15 +83,19 @@ result = cx.MultiThresholdObjects.execute(data_structure=data_structure,
                                     array_thresholds=threshold_set,
                                     created_data_path="Mask",
                                     created_mask_type=cx.DataType.boolean)
+
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
 else:
-    print("No errors running the MultiThresholdObjects")
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 5
-
-result = cxor.GenerateIPFColorsFilter.execute(
+# Filter 5
+# Instantiate Filter
+filter = cxor.GenerateIPFColorsFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPF_Exposed_001"),
@@ -79,10 +105,19 @@ result = cxor.GenerateIPFColorsFilter.execute(
     reference_dir=[0.0, 0.0, 1.0],
     use_good_voxels=True
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 6
-
-result = cxitk.ITKImageWriter.execute(
+# Filter 6
+# Instantiate Filter
+filter = cxitk.ITKImageWriter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     file_name=cx.DataPath("Data/Output/TexturedCopper/IPF_Unexposed.png"),
     image_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/IPF_Exposed_001"),
@@ -90,10 +125,19 @@ result = cxitk.ITKImageWriter.execute(
     index_offset=0,
     plane=0
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
-#Filter 7
-
-result = cxor.WritePoleFigureFilter.execute(
+# Filter 7
+# Instantiate Filter
+filter = cxor.WritePoleFigureFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
     cell_phases_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
@@ -113,3 +157,10 @@ result = cxor.WritePoleFigureFilter.execute(
     use_good_voxels=True,
     write_image_to_disk=True
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")

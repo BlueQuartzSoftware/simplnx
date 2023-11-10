@@ -25,7 +25,7 @@ result = cx.ImportTextFilter.execute(
 
 #Filter 2
 
-result = cx.ImportTextFilter.execute(
+result = cx.ReadCSVData.execute(
     data_structure=data_structure,
     #advanced_options: bool = ...,
     #data_format: str = ...,
@@ -37,3 +37,6 @@ result = cx.ImportTextFilter.execute(
     #output_data_array: DataPath = ...,
     scalar_type=4
 )
+
+
+#This filter is currently under construction and will be updated at a future time

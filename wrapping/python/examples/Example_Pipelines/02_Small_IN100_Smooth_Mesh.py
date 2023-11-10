@@ -5,26 +5,31 @@ import orientationanalysis as cxor
 
 import numpy as np
 
-#Create a Data Structure
+# Create a Data Structure
 data_structure = cx.DataStructure()
 
-#Filter 1
-
+# Filter 1
+# Instantiate Import Data Parameter
 import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
 import_data.data_paths = None
-
-result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure,
-                                         import_file_data=import_data)
+# Instantiate Filter
+filter = cx.ImportDREAM3DFilter()
+# Execute Filter with Parameters
+result = filter.execute(data_structure=data_structure, import_file_data=import_data)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the ImportDREAM3DFilter filter")
+    print(f"{filter.name()} No errors running the ImportDREAM3DFilter filter")
 
-#Filter 2
-
-result = cx.LaplacianSmoothingFilter.execute(
+# Filter 2
+# Instantiate Filter
+filter = cx.LaplacianSmoothingFilter()
+# Execute Filter with Parameters
+result = filter.execute(
     data_structure=data_structure,
     iteration_steps=100,
     lambda_value=0.25,
@@ -38,15 +43,27 @@ result = cx.LaplacianSmoothingFilter.execute(
     triple_line_lambda=0.2,
     use_taubin_smoothing=True
 )
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the LaplacianSmoothingFilter")
 
-#Filter 3
-
+# Filter 3
+# Instantiate Filter
+filter = cx.ExportDREAM3DFilter()
+# Set Output File Path
 output_file_path = "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+# Execute Filter with Parameters
+result = filter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
