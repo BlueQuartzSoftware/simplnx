@@ -10,6 +10,15 @@ data_structure = cx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
+
+filter_parameter = cxor.H5EbsdReaderParameter.ValueType()
+filter_parameter.euler_representation=0
+filter_parameter.end_slice=117
+filter_parameter.hdf5_data_paths=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
+filter_parameter.input_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/Small_IN100.h5ebsd"
+filter_parameter.start_slice=6
+filter_parameter.use_recommended_transform=True
+
 filter = cxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
 result = filter.execute(
@@ -17,7 +26,7 @@ result = filter.execute(
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd")
+    read_h5_ebsd_filter=filter_parameter
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -516,3 +525,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+
+print("===> Pipeline Complete")

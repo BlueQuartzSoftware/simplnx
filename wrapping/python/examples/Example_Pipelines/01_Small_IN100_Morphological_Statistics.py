@@ -11,7 +11,7 @@ data_structure = cx.DataStructure()
 # Filter 1
 # Instantiate Import Data Parameter
 import_data = cx.Dream3dImportParameter.ImportData()
-import_data.file_path = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_data.data_paths = None
 
 # Instantiate Filter
@@ -26,8 +26,26 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-    
 # Filter 2
+# Instantiate Filter
+filter = cx.DeleteData()
+# Execute Filter With Parameters
+result = filter.execute(
+    data_structure=data_structure,
+    removed_data_path=[cx.DataPath("DataContainer/CellFeatureData/EquivalentDiameters"),
+                       cx.DataPath("DataContainer/CellFeatureData/NumElements"),
+                       cx.DataPath("DataContainer/CellFeatureData/NumNeighbors"),
+                       cx.DataPath("DataContainer/CellFeatureData/NumNeighbors2")]
+)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
+    
+# Filter 3
 # Instantiate Filter
 filter = cx.FindFeatureCentroidsFilter()
 # Execute Filter with Parameters
@@ -47,7 +65,7 @@ else:
     print(f"{filter.name()} No errors running the filter")
 
 
-# Filter 3
+# Filter 4
 # Instantiate Filter
 filter = cx.CalculateFeatureSizesFilter()
 # Execute Filter with Parameters
@@ -70,7 +88,7 @@ else:
     print(f"{filter.name()} No errors running the filter")
 
 
-# Filter 4
+# Filter 5
 # Instantiate Filter
 filter = cxor.FindShapesFilter()
 # Execute Filter with Parameters
@@ -94,7 +112,7 @@ else:
     print(f"{filter.name()} No errors running the filter")
 
 
-# Filter 5
+# Filter 6
 # Instantiate Filter
 filter = cx.FindNeighbors()
 # Execute Filter with Parameters
@@ -123,7 +141,7 @@ else:
 
 
 
-# Filter 6
+# Filter 7
 # Instantiate Filter
 filter = cx.FindNeighborhoodsFilter()
 # Execute Filter with Parameters
@@ -146,7 +164,7 @@ else:
     print(f"{filter.name()} No errors running the filter")
 
 
-# Filter 7
+# Filter 8
 # Instantiate Filter
 filter = cx.FindEuclideanDistMapFilter()
 # Execute Filter with Parameters
@@ -174,7 +192,7 @@ else:
     print(f"{filter.name()} No errors running the filter")
 
 
-# Filter 8
+# Filter 9
 # Instantiate Filter
 filter = cx.FindSurfaceAreaToVolumeFilter()
 # Execute Filter with Parameters
@@ -196,7 +214,7 @@ else:
     print(f"{filter.name()} No errors running the filter")
 
 
-# Filter 9
+# Filter 10
 # Set Output File Path
 output_file_path = "Data/Output/Statistics/SmallIN100_Morph.dream3d"
 # Instantiate Filter
@@ -214,3 +232,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

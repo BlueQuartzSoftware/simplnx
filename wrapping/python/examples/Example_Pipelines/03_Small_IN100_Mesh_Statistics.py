@@ -123,7 +123,7 @@ filter = cx.SharedFeatureFaceFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabel"),
+    face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     feature_face_ids_array_name="SharedFeatureFaceId",
     feature_face_labels_array_name="FaceLabels",
     feature_num_triangles_array_name="NumTriangles",
@@ -157,3 +157,6 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+
+
+print("===> Pipeline Complete")

@@ -16,7 +16,9 @@ import_data.data_paths = None
 # Instantiate Filter
 filter = cx.ImportDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure, import_file_data=import_data)
+result = filter.execute(data_structure=data_structure,
+                         import_file_data=import_data)
+
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
@@ -50,20 +52,20 @@ else:
 
 # Filter 3
 # Instantiate Filter
-filter = cx.MoveData()
+#filter = cx.MoveData()
 # Execute Filter with Parameters
-result = filter.execute(
-    data_structure=data_structure,
-    data=[cx.DataPath("DataContainer/CellEnsembleData")],
-    new_parent=cx.DataPath("DataContainer")
-)
-if len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
-if len(result.errors) != 0:
-    print(f'{filter.name()} Errors: {result.errors}')
-    quit()
-else:
-    print(f"{filter.name()} No errors running the filter")
+#result = filter.execute(
+#    data_structure=data_structure,
+#     data=[cx.DataPath("DataContainer/CellEnsembleData")],
+#     new_parent=cx.DataPath("DataContainer")
+# )
+# if len(result.warnings) != 0:
+#     print(f'{filter.name()} Warnings: {result.warnings}')
+# if len(result.errors) != 0:
+#     print(f'{filter.name()} Errors: {result.errors}')
+#     quit()
+# else:
+#     print(f"{filter.name()} No errors running the filter")
 
 # Filter 4
 # Instantiate Filter
@@ -108,3 +110,6 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+
+print("===> Pipeline Complete")

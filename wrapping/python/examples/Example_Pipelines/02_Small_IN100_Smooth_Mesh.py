@@ -67,3 +67,6 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+
+
+print("===> Pipeline Complete")

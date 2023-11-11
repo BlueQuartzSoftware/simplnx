@@ -26,6 +26,24 @@ else:
     print(f"{filter.name()} No errors running the ImportDREAM3DFilter filter")
 
 # Filter 2
+# Instantiate Filter
+filter = cx.DeleteData()
+# Execute Filter With Parameters
+result = filter.execute(
+    data_structure=data_structure,
+    removed_data_path=[cx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
+                       cx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles")]
+
+)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
+
+# Filter 3
 # Instantiate and Execute Filter
 # Note: This filter might need additional parameters depending on the intended data removal.
 filter = cx.DeleteData()
@@ -41,7 +59,7 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-# Filter 3
+# Filter 4
 # Instantiate Filter
 filter = cxor.FindAvgOrientationsFilter()
 # Execute Filter with Parameters
@@ -63,7 +81,7 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the FindAvgOrientationsFilter")
 
-# Filter 4
+# Filter 5
 # Instantiate Filter
 filter = cxor.FindMisorientationsFilter()
 # Execute Filter with Parameters
@@ -85,7 +103,7 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-# Filter 5
+# Filter 6
 # Instantiate Filter
 filter = cxor.FindSchmidsFilter()
 # Execute Filter with Parameters
@@ -113,7 +131,7 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-# Filter 6
+# Filter 7
 # Instantiate Filter
 filter = cxor.FindFeatureReferenceMisorientationsFilter()
 # Execute Filter with Parameters
@@ -138,7 +156,7 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-# Filter 7
+# Filter 8
 # Instantiate Filter
 filter = cxor.FindKernelAvgMisorientationsFilter()
 # Execute Filter with Parameters
@@ -160,7 +178,7 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-# Filter 8
+# Filter 9
 # Instantiate Filter
 filter = cx.ExportDREAM3DFilter()
 # Set Output File Path
@@ -178,3 +196,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+
+print("===> Pipeline Complete")

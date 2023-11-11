@@ -12,11 +12,71 @@ data_structure = cx.DataStructure()
 # Instantiate Import Data Parameter
 import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
-import_data.data_paths = None
+import_data.data_paths =[
+            cx.DataPath("DataContainer"),
+            cx.DataPath("DataContainer/CellData"),
+            cx.DataPath("DataContainer/CellData/Image Quality"),
+            cx.DataPath("DataContainer/CellData/Confidence Index"),
+            cx.DataPath("DataContainer/CellData/SEM Signal"),
+            cx.DataPath("DataContainer/CellData/Fit"),
+            cx.DataPath("DataContainer/CellData/EulerAngles"),
+            cx.DataPath("DataContainer/CellData/Phases"),
+            cx.DataPath("DataContainer/CellData/Mask"),
+            cx.DataPath("DataContainer/CellData/Quats"),
+            cx.DataPath("DataContainer/CellData/FeatureIds"),
+            cx.DataPath("DataContainer/CellData/ParentIds"),
+            cx.DataPath("DataContainer/CellData/IPFColors"),
+            cx.DataPath("DataContainer/CellData/GBManhattanDistances"),
+            cx.DataPath("DataContainer/CellData/TJManhattanDistances"),
+            cx.DataPath("DataContainer/CellData/QPManhattanDistances"),
+            cx.DataPath("DataContainer/CellData/FeatureReferenceMisorientations"),
+            cx.DataPath("DataContainer/CellData/KernelAverageMisorientations"),
+            cx.DataPath("DataContainer/CellFeatureData"),
+            cx.DataPath("DataContainer/CellEnsembleData"),
+            cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+            cx.DataPath("DataContainer/CellEnsembleData/LatticeConstants"),
+            cx.DataPath("DataContainer/NewGrain Data"),
+            cx.DataPath("DataContainer/NewGrain Data/Active"),
+            cx.DataPath("DataContainer/CellFeatureData/Active"),
+            cx.DataPath("DataContainer/CellFeatureData/AspectRatios"),
+            cx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
+            cx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
+            cx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
+            cx.DataPath("DataContainer/CellFeatureData/AxisLengths"),
+            cx.DataPath("DataContainer/CellFeatureData/Centroids"),
+            cx.DataPath("DataContainer/CellFeatureData/EquivalentDiameters"),
+            cx.DataPath("DataContainer/CellFeatureData/FeatureAvgMisorientations"),
+            cx.DataPath("DataContainer/CellFeatureData/Neighborhoods"),
+            cx.DataPath("DataContainer/CellFeatureData/NumElements"),
+            cx.DataPath("DataContainer/CellFeatureData/NumNeighbors"),
+            #cx.DataPath("DataContainer/CellFeatureData/NumNeighbors2"),
+            cx.DataPath("DataContainer/CellFeatureData/Omega3s"),
+            cx.DataPath("DataContainer/CellFeatureData/ParentIds"),
+            cx.DataPath("DataContainer/CellFeatureData/Phases"),
+            cx.DataPath("DataContainer/CellFeatureData/Poles"),
+            cx.DataPath("DataContainer/CellFeatureData/Schmids"),
+            cx.DataPath("DataContainer/CellFeatureData/Shape Volumes"),
+            cx.DataPath("DataContainer/CellFeatureData/SlipSystems"),
+            cx.DataPath("DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"),
+            cx.DataPath("TriangleDataContainer"),
+            cx.DataPath("TriangleDataContainer/SharedTriList"),
+            cx.DataPath("TriangleDataContainer/SharedVertexList"),
+            cx.DataPath("TriangleDataContainer/FaceData"),
+            cx.DataPath("TriangleDataContainer/VertexData"),
+            cx.DataPath("TriangleDataContainer/VertexData/NodeType"),
+            cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
+            cx.DataPath("TriangleDataContainer/Edge List"),
+            cx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
+            cx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
+            cx.DataPath("TriangleDataContainer/FaceData/FaceDihedralAngles")
+          ]
+
 # Instantiate Filter
 filter = cx.ImportDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure, import_file_data=import_data)
+result = filter.execute(data_structure=data_structure,
+                        import_file_data=import_data)
+
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
@@ -55,8 +115,8 @@ result = filter.execute(
     data_structure=data_structure,
     chosen_limit_dists=0,
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    dist_output_file=cx.DataPath("Data/Output/SurfaceMesh/7_0_small_in100_distribution_1.dat"),
-    err_output_file=cx.DataPath("Data/Output/SurfaceMesh/7_0_small_in100_distribution_errors_1.dat"),
+    dist_output_file="Data/Output/SurfaceMesh/7_0_small_in100_distribution_1.dat",
+    err_output_file="Data/Output/SurfaceMesh/7_0_small_in100_distribution_errors_1.dat",
     exclude_triple_lines=False,
     feature_euler_angles_array_path=cx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
     feature_phases_array_path=cx.DataPath("DataContainer/CellFeatureData/Phases"),
@@ -97,3 +157,6 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+
+
+print("===> Pipeline Complete")

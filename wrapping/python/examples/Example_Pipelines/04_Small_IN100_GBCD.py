@@ -126,10 +126,10 @@ filter = cxor.ExportGBCDGMTFileFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/GBCD"),
+    crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     gbcd_array_path=cx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
     misorientation_rotation=[60.0, 1.0, 1.0, 1.0],
-    output_file=cx.DataPath("Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat"),
+    output_file="Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat",
     phase_of_interest=1
 )
 if len(result.warnings) != 0:
@@ -147,7 +147,7 @@ filter = cxor.ExportGBCDTriangleDataFilter()
 result = filter.execute(
     data_structure=data_structure,
     feature_euler_angles_array_path=cx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
-    output_file=cx.DataPath("Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph"),
+    output_file="Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph",
     surface_mesh_face_areas_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
     surface_mesh_face_labels_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=cx.DataPath("TriangleDataContainer/FaceData/FaceNormals")
@@ -166,10 +166,9 @@ filter = cx.ExportDREAM3DFilter()
 # Set Output File Path
 output_file_path = "Data/Output/SurfaceMesh/SmallIN100_GBCD.dream3d"
 # Execute Filter with Parameters
-result = filter.execute(
-    data_structure=data_structure,
-    export_file_path=output_file_path,
-    write_xdmf_file=True
+result = filter.execute(data_structure=data_structure,
+                        export_file_path=output_file_path,
+                        write_xdmf_file=True
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -178,3 +177,6 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+
+
+print("===> Pipeline Complete")
