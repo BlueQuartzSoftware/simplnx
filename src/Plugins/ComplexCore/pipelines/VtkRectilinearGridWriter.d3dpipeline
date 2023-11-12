@@ -50,7 +50,7 @@
                 "cell_attribute_matrix_name": "CellData",
                 "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
                 "data_container_name": "DataContainer",
-                "read_h5_ebsd_filter": {
+                "read_h5_ebsd_parameter": {
                   "end_slice": 117,
                   "euler_representation": 0,
                   "hdf5_data_paths": [

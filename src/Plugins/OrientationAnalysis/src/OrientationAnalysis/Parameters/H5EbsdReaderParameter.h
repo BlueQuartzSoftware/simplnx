@@ -24,7 +24,7 @@ public:
     int32 startSlice = 0;
     int32 endSlice = 0;
     int32 eulerRepresentation = EbsdLib::AngleRepresentation::Radians;
-    std::vector<std::string> hdf5DataPaths = {};
+    std::vector<std::string> selectedArrayNames = {};
     bool useRecommendedTransform = {true};
   };
 

@@ -76,7 +76,7 @@ message(STATUS "* -------------- Complex Python Configuration Options ----------
 message(STATUS "* COMPLEX_BUILD_PYTHON: ${COMPLEX_BUILD_PYTHON}")
 message(STATUS "* COMPLEX_EMBED_PYTHON: ${COMPLEX_EMBED_PYTHON}")
 message(STATUS "* Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
-message(STATUS "* MKDOCS_EXECUTABLE: ${MKDOCS_EXECUTABLE}")
+message(STATUS "* COMPLEX_ENABLE_SPHINX_DOCS: ${COMPLEX_ENABLE_SPHINX_DOCS}")
 
 message(STATUS "* -------------- Known Plugins ------------------------------------------------------")
 foreach(plugin ${COMPLEX_PLUGIN_LIST})

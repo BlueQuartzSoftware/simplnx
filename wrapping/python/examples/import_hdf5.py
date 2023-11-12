@@ -7,6 +7,23 @@ import numpy as np
 # Create the DataStructure object
 data_structure = cx.DataStructure()
 
+# Create the H5EbsdReaderParameter and assign values to it.
+h5ebsdParameter = cxor.H5EbsdReaderParameter.ValueType()
+h5ebsdParameter.euler_representation=0
+h5ebsdParameter.end_slice=117
+h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
+h5ebsdParameter.input_file_path="Data/Output/Reconstruction/Small_IN100.h5ebsd"
+h5ebsdParameter.start_slice=1
+h5ebsdParameter.use_recommended_transform=True
+
+# Execute Filter with Parameters
+result = cxor.ReadH5EbsdFilter.execute(
+    data_structure=data_structure,
+    cell_attribute_matrix_name="CellData",
+    cell_ensemble_attribute_matrix_name="CellEnsembleData",
+    data_container_name=cx.DataPath("DataContainer"),
+    read_h5_ebsd_parameter=h5ebsdParameter
+)
 
 dataset1 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
 dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"

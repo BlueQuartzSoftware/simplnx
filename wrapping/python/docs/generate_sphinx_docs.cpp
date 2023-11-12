@@ -43,8 +43,8 @@ const std::string k_WebServerFilterFolder = "Filters";
 void GenerateParameterList()
 {
   ::s_ParameterMap.clear();
-  ADD_PARAMETER_TRAIT(orientationanalysis.OEMEbsdScanSelectionParameter, "3935c833-aa51-4a58-81e9-3a51972c05ea")
-  ADD_PARAMETER_TRAIT(orientationanalysis.H5EbsdReaderParameter, "FAC15aa6-b367-508e-bf73-94ab6be0058b")
+  ADD_PARAMETER_TRAIT(complex.OEMEbsdScanSelectionParameter, "3935c833-aa51-4a58-81e9-3a51972c05ea")
+  ADD_PARAMETER_TRAIT(complex.H5EbsdReaderParameter, "FAC15aa6-b367-508e-bf73-94ab6be0058b")
   ADD_PARAMETER_TRAIT(complex.NumericTypeParameter, "a8ff9dbd-45e7-4ed6-8537-12dd53069bce")
   ADD_PARAMETER_TRAIT(complex.StringParameter, "5d6d1868-05f8-11ec-9a03-0242ac130003")
   ADD_PARAMETER_TRAIT(complex.DataStoreFormatParameter, "cfd5c150-2938-42a7-b023-4a9288fb6899")

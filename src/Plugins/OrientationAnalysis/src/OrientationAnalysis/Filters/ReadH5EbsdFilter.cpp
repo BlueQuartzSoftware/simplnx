@@ -56,7 +56,7 @@ Parameters ReadH5EbsdFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<H5EbsdReaderParameter>(k_ReadH5EbsdFilter_Key, "Import H5Ebsd File", "The input .h5ebsd file path", H5EbsdReaderParameter::ValueType{}));
+  params.insert(std::make_unique<H5EbsdReaderParameter>(k_ReadH5EbsdParameter_Key, "Import H5Ebsd File", "Object that holds all relevant information to import data from the file.", H5EbsdReaderParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Created Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));
@@ -81,7 +81,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
                                                          const std::atomic_bool& shouldCancel) const
 {
 
-  auto pReadH5EbsdFilterValue = filterArgs.value<H5EbsdReaderParameter::ValueType>(k_ReadH5EbsdFilter_Key);
+  auto pReadH5EbsdFilterValue = filterArgs.value<H5EbsdReaderParameter::ValueType>(k_ReadH5EbsdParameter_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_DataContainerName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   DataPath cellAttributeMatrixPath = imageGeomPath.createChildPath(pCellAttributeMatrixNameValue);
@@ -153,7 +153,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   }
 
   std::set<std::string> m_SelectedArrayNames;
-  for(const auto& selectedArrayName : pReadH5EbsdFilterValue.hdf5DataPaths)
+  for(const auto& selectedArrayName : pReadH5EbsdFilterValue.selectedArrayNames)
   {
     m_SelectedArrayNames.insert(selectedArrayName);
   }
@@ -232,7 +232,7 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pReadH5EbsdFilterValue = filterArgs.value<H5EbsdReaderParameter::ValueType>(k_ReadH5EbsdFilter_Key);
+  auto pReadH5EbsdFilterValue = filterArgs.value<H5EbsdReaderParameter::ValueType>(k_ReadH5EbsdParameter_Key);
   auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pCellEnsembleAttributeMatrixNameValue = pDataContainerNameValue.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
@@ -246,7 +246,7 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.startSlice = pReadH5EbsdFilterValue.startSlice;
   inputValues.endSlice = pReadH5EbsdFilterValue.endSlice;
   inputValues.eulerRepresentation = pReadH5EbsdFilterValue.eulerRepresentation;
-  inputValues.hdf5DataPaths = pReadH5EbsdFilterValue.hdf5DataPaths;
+  inputValues.hdf5DataPaths = pReadH5EbsdFilterValue.selectedArrayNames;
   inputValues.useRecommendedTransform = pReadH5EbsdFilterValue.useRecommendedTransform;
   inputValues.dataContainerPath = pDataContainerNameValue;
   inputValues.cellAttributeMatrixPath = pDataContainerNameValue.createChildPath(pCellAttributeMatrixNameValue);

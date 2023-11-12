@@ -59,10 +59,10 @@ nlohmann::json H5EbsdReaderParameter::toJson(const std::any& value) const
   json[k_UseRecommendedTransform] = data.useRecommendedTransform;
 
   // DataPaths
-  if(!data.hdf5DataPaths.empty())
+  if(!data.selectedArrayNames.empty())
   {
     nlohmann::json dataPathsJson = nlohmann::json::array();
-    for(const auto& dataPath : data.hdf5DataPaths)
+    for(const auto& dataPath : data.selectedArrayNames)
     {
       dataPathsJson.push_back(dataPath);
     }
@@ -144,7 +144,7 @@ Result<std::any> H5EbsdReaderParameter::fromJson(const nlohmann::json& json) con
   const auto& jsonDataPaths = json[k_HDF5DataPaths];
   if(jsonDataPaths.is_null())
   {
-    value.hdf5DataPaths = {};
+    value.selectedArrayNames = {};
   }
   else
   {
@@ -170,7 +170,7 @@ Result<std::any> H5EbsdReaderParameter::fromJson(const nlohmann::json& json) con
       return {{nonstd::make_unexpected(std::move(errors))}};
     }
 
-    value.hdf5DataPaths = std::move(dataPaths);
+    value.selectedArrayNames = std::move(dataPaths);
   }
 
   return {{std::move(value)}};
@@ -208,7 +208,7 @@ Result<> H5EbsdReaderParameter::validate(const std::any& valueRef) const
 
   if(value.startSlice > value.endSlice)
   {
-    errors.push_back({-2002, fmt::format("StartSlice '{}' must be less than or equal EndSlice'{}'", value.startSlice, value.endSlice)});
+    errors.push_back({-2002, fmt::format("StartSlice '{}' must be less than or equal EndSlice '{}'", value.startSlice, value.endSlice)});
     return {nonstd::make_unexpected(std::move(errors))};
   }
 

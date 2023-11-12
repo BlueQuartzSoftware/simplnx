@@ -435,7 +435,7 @@ PYBIND11_MODULE(complex, mod)
   arrayThresholdSet.def_property("thresholds", &ArrayThresholdSet::getArrayThresholds, &ArrayThresholdSet::setArrayThresholds);
   arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet& self) { return "ArrayThresholdSet()"; });
 
-  py::class_<ReadCSVData> readCSVData(mod, "ReadCSVData");
+  py::class_<ReadCSVData> readCSVData(mod, "ReadCSVDataParameter");
 
   py::enum_<ReadCSVData::HeaderMode> csvHeaderMode(readCSVData, "HeaderMode");
   csvHeaderMode.value("Line", ReadCSVData::HeaderMode::LINE);
@@ -452,7 +452,7 @@ PYBIND11_MODULE(complex, mod)
   readCSVData.def_readwrite("tuple_dims", &ReadCSVData::tupleDims);
   readCSVData.def_readwrite("delimiters", &ReadCSVData::delimiters);
   readCSVData.def_readwrite("consecutive_delimiters", &ReadCSVData::consecutiveDelimiters);
-  readCSVData.def("__repr__", [](const ReadCSVData& self) { return "ReadCSVData()"; });
+  readCSVData.def("__repr__", [](const ReadCSVData& self) { return "ReadCSVDataParameter()"; });
 
   py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
   py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
@@ -1009,9 +1009,21 @@ PYBIND11_MODULE(complex, mod)
         return pipelineResult.value();
       },
       "path"_a);
+  pipeline.def(
+    "to_file",
+    [](Pipeline& self, const std::string& name, const std::filesystem::path& path) {
+        nlohmann::json pipelineJson = self.toJson();
+        pipelineJson["name"] = name;
+        std::ofstream file(path, std::ios_base::binary);
+        file << pipelineJson;
+      },
+      "name"_a,
+      "path"_a);
   pipeline.def("execute", &ExecutePipeline);
   pipeline.def(
-      "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
+      "__getitem__",
+      [](Pipeline& self, Pipeline::index_type index) { return self.at(index); },
+      py::return_value_policy::reference_internal);
   pipeline.def("__len__", &Pipeline::size);
   pipeline.def("size", &Pipeline::size);
   pipeline.def(

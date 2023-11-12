@@ -8,11 +8,17 @@ import numpy as np
 
 data_structure = cx.DataStructure()
 
-pipeline = cx.Pipeline()
-pipeline.append(cx.CreateDataArray(), {'numeric_type': cx.NumericType.int32})
-pipeline[0].set_args({'numeric_type': cx.NumericType.int32})
+pipeline = cx.Pipeline().from_file("/Users/mjackson/Workspace1/complex/src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline")
 
-did_execute = pipeline.execute(data_structure)
+pipeline.to_file( "test pipeline", "/tmp/python_pipeline.d3dpipeline")
 
-print('Pipeline Execute: {}'.format(did_execute))
+
+
+# pipeline.append(cx.CreateDataArray(), {'numeric_type': cx.NumericType.int32})
+# pipeline[0].set_args({'numeric_type': cx.NumericType.int32})
+
+# did_execute = pipeline.execute(data_structure)
+
+# print('Pipeline Execute: {}'.format(did_execute))
+
 

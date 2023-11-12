@@ -28,9 +28,9 @@ PYBIND11_MODULE(orientationanalysis, mod)
   h5EbsdReaderValueType.def(py::init<>());
   h5EbsdReaderValueType.def_readwrite("input_file_path", &H5EbsdReaderParameter::ValueType::inputFilePath);
   h5EbsdReaderValueType.def_readwrite("start_slice", &H5EbsdReaderParameter::ValueType::startSlice);
-  h5EbsdReaderValueType.def_readwrite("end_slice", &H5EbsdReaderParameter::ValueType::startSlice);
+  h5EbsdReaderValueType.def_readwrite("end_slice", &H5EbsdReaderParameter::ValueType::endSlice);
   h5EbsdReaderValueType.def_readwrite("euler_representation", &H5EbsdReaderParameter::ValueType::eulerRepresentation);
-  h5EbsdReaderValueType.def_readwrite("hdf5_data_paths", &H5EbsdReaderParameter::ValueType::hdf5DataPaths);
+  h5EbsdReaderValueType.def_readwrite("selected_array_names", &H5EbsdReaderParameter::ValueType::selectedArrayNames);
   h5EbsdReaderValueType.def_readwrite("use_recommended_transform", &H5EbsdReaderParameter::ValueType::useRecommendedTransform);
 
   py::class_<OEMEbsdScanSelectionParameter::ValueType> oemEbsdScanSelectionValueType(oemEbsdScanSelectionParameter, "ValueType");

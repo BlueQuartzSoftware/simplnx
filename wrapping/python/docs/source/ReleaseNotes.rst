@@ -7,8 +7,70 @@ found the necessitate the changing of the API.
 Version 1.2.0
 -------------
 
-API Additions
-^^^^^^^^^^^^^
+API Additions 1.2.0
+^^^^^^^^^^^^^^^^^^^
+
+None
+
+Filter Changes 1.2.0
+^^^^^^^^^^^^^^^^^^^^
+
+- All import and export filters have been renamed to either *ReadXXXX* or *WriteXXXX*. This will effect the python filter classes. 
+
+- ComplexCore
+
++----------------------------------------+---------------------------------------+-----------+
+| Old File Name                          | New File Name                         | Type      |
++========================================+=======================================+===========+
+| AbaqusHexahedronWriterFilter           | WriteAbaqusHexahedronFilter           | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| AvizoRectilinearCoordinateWriterFilter | WriteAvizoRectilinearCoordinateFilter | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| AvizoUniformCoordinateWriterFilter     | WriteAvizoUniformCoordinateFilter     | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| ExportDREAM3DFilter                    | WriteDREAM3DFilter                    | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| FeatureDataCSVWriterFilter             | WriteFeatureDataCSVFilter             | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| ImportDeformKeyFileV12Filter           | ReadDeformKeyFileV12Filter            | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| ImportVolumeGraphicsFileFilter         | ReadVolumeGraphicsFileFilter          | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| ImportBinaryCTNorthstarFilter          | ReadBinaryCTNorthstarFilter           | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| LosAlamosFFTWriterFilter               | WriteLosAlamosFFTFilter               | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| RawBinaryReaderFilter                  | ReadRawBinaryFilter                   | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| StlFileReaderFilter                    | ReadStlFileFilter                     | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+| VtkRectilinearGridWriterFilter         | WriteVtkRectilinearGridFilter         | Filter    |
++----------------------------------------+---------------------------------------+-----------+
+
+- OrientationAnalysis
+
++------------------------------+-----------------------------+-----------+
+| Old File Name                | New File Name               | Type      |
++==============================+=============================+===========+
+| EnsembleInfoReaderFilter     | ReadEnsembleInfoFilter      | Filter    |
++------------------------------+-----------------------------+-----------+
+| ExportGBCDGMTFileFilter      | WriteGBCDGMTFileFilter      | Filter    |
++------------------------------+-----------------------------+-----------+
+| ExportGBCDTriangleDataFilter | WriteGBCDTriangleDataFilter | Filter    |
++------------------------------+-----------------------------+-----------+
+| ImportH5Data                 | ReadH5Data                  | Utility   |
++------------------------------+-----------------------------+-----------+
+| ImportH5OimDataFilter        | ReadH5OimDataFilter         | Filter    |
++------------------------------+-----------------------------+-----------+
+| INLWriterFilter              | WriteINLFileFilter          | Filter    |
++------------------------------+-----------------------------+-----------+
+
+
+Version 1.1.0
+-------------
+
+API Additions 1.1.0
+^^^^^^^^^^^^^^^^^^^
 
 - DataPath: A :ref:`DataPath<DataPath>` object can now be constructed with a "/" separated string in addition to a list of strings.
 
@@ -17,8 +79,8 @@ API Additions
     some_path = complex.DataPath("DataContainer/AttributeMatrix/DataArray")
 
 
-Filter Changes
-^^^^^^^^^^^^^^
+Filter Changes 1.1.0
+^^^^^^^^^^^^^^^^^^^^
 
 - Filters that used a "Mask Array" or a "Good Voxels" array have all been changed to use following terms:
    
@@ -28,11 +90,11 @@ Filter Changes
 
 - ImportCSVDataFilter:
 
-    This filter has been changed to "ReadCSVFilter". The input parameter has also changed. See the :ref:`ReadCSVFileParameter<ReadCSVFileParameter>` for more information.
+    This filter has been changed to "ReadCSVFilter". The input parameter has also changed. See the :ref:`ReadCSVDataParameter<ReadCSVDataParameter>` for more information.
 
 
-Git Log
-^^^^^^^
+Git Log 1.1.0
+^^^^^^^^^^^^^
 
 - BUG: Export ASCII Data now exports multiple arrays correctly. (#756) - [2023-10-27]
 - ENH: Use "Mask" instead of "GoodVoxels" consistently for human facing strings. (#755) - [2023-10-27]
