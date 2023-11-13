@@ -24,13 +24,14 @@ by creating a new virtual environment
    :caption: Contents:
 
    Installation
-   ReleaseNotes
    Overview
    DataObjects
    Geometry
    API
    Python_Introduction
    Reference_Frame_Notes
+   ReleaseNotes_110
+   ReleaseNotes_120
 @PLUGIN_LIST@
 
 Indices and tables
