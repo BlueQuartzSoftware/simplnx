@@ -108,7 +108,7 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 # include directories that are needed for the parameter.
 # ------------------------------------------------------------------------------
 set(complex_injected_parameters
-  H5EbsdReaderParameter
+  ReadH5EbsdFileParameter
   OEMEbsdScanSelectionParameter
   #EbsdToH5EbsdParameter
 )

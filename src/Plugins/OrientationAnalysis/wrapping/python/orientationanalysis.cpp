@@ -2,8 +2,8 @@
 
 #include <OrientationAnalysis/OrientationAnalysisPlugin.hpp>
 
-#include <OrientationAnalysis/Parameters/H5EbsdReaderParameter.h>
 #include <OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h>
+#include <OrientationAnalysis/Parameters/ReadH5EbsdFileParameter.h>
 
 #include "OrientationAnalysis/OrientationAnalysisFilterBinding.hpp"
 
@@ -21,17 +21,17 @@ PYBIND11_MODULE(orientationanalysis, mod)
 
   auto* plugin = internals.addPlugin<OrientationAnalysisPlugin>();
 
-  auto h5EbsdReaderParameter = COMPLEX_PY_BIND_PARAMETER(mod, H5EbsdReaderParameter);
+  auto h5EbsdReaderParameter = COMPLEX_PY_BIND_PARAMETER(mod, ReadH5EbsdFileParameter);
   auto oemEbsdScanSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, OEMEbsdScanSelectionParameter);
 
-  py::class_<H5EbsdReaderParameter::ValueType> h5EbsdReaderValueType(h5EbsdReaderParameter, "ValueType");
+  py::class_<ReadH5EbsdFileParameter::ValueType> h5EbsdReaderValueType(h5EbsdReaderParameter, "ValueType");
   h5EbsdReaderValueType.def(py::init<>());
-  h5EbsdReaderValueType.def_readwrite("input_file_path", &H5EbsdReaderParameter::ValueType::inputFilePath);
-  h5EbsdReaderValueType.def_readwrite("start_slice", &H5EbsdReaderParameter::ValueType::startSlice);
-  h5EbsdReaderValueType.def_readwrite("end_slice", &H5EbsdReaderParameter::ValueType::endSlice);
-  h5EbsdReaderValueType.def_readwrite("euler_representation", &H5EbsdReaderParameter::ValueType::eulerRepresentation);
-  h5EbsdReaderValueType.def_readwrite("selected_array_names", &H5EbsdReaderParameter::ValueType::selectedArrayNames);
-  h5EbsdReaderValueType.def_readwrite("use_recommended_transform", &H5EbsdReaderParameter::ValueType::useRecommendedTransform);
+  h5EbsdReaderValueType.def_readwrite("input_file_path", &ReadH5EbsdFileParameter::ValueType::inputFilePath);
+  h5EbsdReaderValueType.def_readwrite("start_slice", &ReadH5EbsdFileParameter::ValueType::startSlice);
+  h5EbsdReaderValueType.def_readwrite("end_slice", &ReadH5EbsdFileParameter::ValueType::endSlice);
+  h5EbsdReaderValueType.def_readwrite("euler_representation", &ReadH5EbsdFileParameter::ValueType::eulerRepresentation);
+  h5EbsdReaderValueType.def_readwrite("selected_array_names", &ReadH5EbsdFileParameter::ValueType::selectedArrayNames);
+  h5EbsdReaderValueType.def_readwrite("use_recommended_transform", &ReadH5EbsdFileParameter::ValueType::useRecommendedTransform);
 
   py::class_<OEMEbsdScanSelectionParameter::ValueType> oemEbsdScanSelectionValueType(oemEbsdScanSelectionParameter, "ValueType");
   oemEbsdScanSelectionValueType.def(py::init<>());
@@ -49,7 +49,7 @@ PYBIND11_MODULE(orientationanalysis, mod)
                                              OEMEbsdScanSelectionParameter::ExtensionsType>(),
                                     "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "reader_type"_a, "extensions_type"_a);
 
-  internals.addConversion<H5EbsdReaderParameter>();
+  internals.addConversion<ReadH5EbsdFileParameter>();
   internals.addConversion<OEMEbsdScanSelectionParameter>();
 
   OrientationAnalysis::BindFilters(mod, internals);

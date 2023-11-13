@@ -445,17 +445,17 @@ General Parameters
                                          )
 
 .. _H5EbsdReaderParameter:
-.. py:class:: H5EbsdReaderParameter
+.. py:class:: ReadH5EbsdFileParameter
    
    This parameter is used for the :ref:`orientationAnalysis.ReadH5EbsdFilter() <ReadH5EbsdFilter>` and holds the information to import the EBSD data from the file.
 
-   The primary python object that will hold the information to pass to the filter is the H5EbsdReaderParameter class described below.
+   The primary python object that will hold the information to pass to the filter is the ReadH5EbsdFileParameter class described below.
 
-   :ivar ValueType: H5EbsdReaderParameter
+   :ivar ValueType: ReadH5EbsdFileParameter
 
-   .. py:class:: H5EbsdReaderParameter
+   .. py:class:: ReadH5EbsdFileParameter
 
-      The H5EbsdReaderParameter class holds all the necessary information to import EBSD data stored in the H5Ebsd file.
+      The ReadH5EbsdFileParameter class holds all the necessary information to import EBSD data stored in the H5Ebsd file.
 
    :ivar euler_representation: Int.  0=Radians, 1=Degrees
    :ivar start_slice: Int. The starting slice of EBSD data to import
@@ -467,8 +467,8 @@ General Parameters
    .. code:: python
 
       data_structure = cx.DataStructure()
-      # Create the H5EbsdReaderParameter and assign values to it.
-      h5ebsdParameter = cxor.H5EbsdReaderParameter.ValueType()
+      # Create the ReadH5EbsdFileParameter and assign values to it.
+      h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
       h5ebsdParameter.euler_representation=0
       h5ebsdParameter.end_slice=117
       h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]

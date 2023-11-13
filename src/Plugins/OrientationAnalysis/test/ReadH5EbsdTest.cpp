@@ -1,6 +1,6 @@
 #include "OrientationAnalysis/Filters/ReadH5EbsdFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-#include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
+#include "OrientationAnalysis/Parameters/ReadH5EbsdFileParameter.h"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -35,7 +35,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
     ReadH5EbsdFilter filter;
     Arguments args;
 
-    H5EbsdReaderParameter::ValueType h5ebsdParamVal;
+    ReadH5EbsdFileParameter::ValueType h5ebsdParamVal;
     h5ebsdParamVal.inputFilePath = fmt::format("{}/Small_IN100.h5ebsd", unit_test::k_TestFilesDir);
     h5ebsdParamVal.startSlice = 1;
     h5ebsdParamVal.endSlice = 117;
@@ -43,7 +43,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
     h5ebsdParamVal.selectedArrayNames = {Constants::k_ConfidenceIndex, Constants::k_EulerAngles, Constants::k_Fit, Constants::k_ImageQuality, Constants::k_Phases, Constants::k_SEMSignal};
     h5ebsdParamVal.useRecommendedTransform = true;
 
-    args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<H5EbsdReaderParameter::ValueType>(h5ebsdParamVal));
+    args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(h5ebsdParamVal));
     args.insertOrAssign(ReadH5EbsdFilter::k_DataContainerName_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
     args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_CellData));
     args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));

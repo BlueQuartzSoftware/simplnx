@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
-#include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
+#include "OrientationAnalysis/Parameters/ReadH5EbsdFileParameter.h"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"

@@ -7,8 +7,8 @@ import numpy as np
 # Create the DataStructure object
 data_structure = cx.DataStructure()
 
-# Create the H5EbsdReaderParameter and assign values to it.
-h5ebsdParameter = cxor.H5EbsdReaderParameter.ValueType()
+# Create the ReadH5EbsdFileParameter and assign values to it.
+h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
 h5ebsdParameter.euler_representation=0
 h5ebsdParameter.end_slice=117
 h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
