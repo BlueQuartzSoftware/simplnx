@@ -224,7 +224,7 @@ General Parameters
    import_data = cx.Dream3dImportParameter.ImportData()
    import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
    import_data.data_paths = None
-   result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+   result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
 
 .. _DynamicTableParameter:
 .. py:class:: DynamicTableParameter
@@ -383,8 +383,8 @@ General Parameters
 
    This parameter represents the :ref:`DataPath<DataPath>` to a valid :ref:`complex.Geometry() <Geometry Descriptions>`
 
-.. _ReadCSVFileParameter:
-.. py:class:: ReadCSVFileParameter
+.. _ReadCSVDataParameter:
+.. py:class:: ReadCSVDataParameter
 
    This parameter is used for the :ref:`complex.ReadCSVFileFilter() <ReadCSVFileFilter>` and holds
    the information to import a file formatted as table data where each 
@@ -394,13 +394,13 @@ General Parameters
    + The file optionally can have a line of headers. The user can specify what line number the header is located.
    + The import can start at a user specified line number but will continue to the end of the file.
 
-   The primary python object that will hold the information to pass to the filter is the ReadCSVData class described below.
+   The primary python object that will hold the information to pass to the filter is the ReadCSVDataParameter class described below.
 
-   :ivar ValueType: ReadCSVData
+   :ivar ValueType: ReadCSVDataParameter
 
-   .. py:class:: ReadCSVFileParameter.ReadCSVData
+   .. py:class:: ReadCSVDataParameter
 
-      The ReadCSVData class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are
+      The ReadCSVDataParameter class holds all the necessary information to import a CSV formatted file into DREAM3D-NX. There are
       a number of member variables that need to be set correctly before the filter will execute
       correctly.
 
@@ -413,14 +413,15 @@ General Parameters
    :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray <DataArray>`.
    :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArrays <DataArray>`.
    :ivar headers_line: Int. The line number of the file that has the headers listed on a single line. ONE (1) based indexing.
-   :ivar header_mode: 'cx.ReadCSVData.HeaderMode.'. Can be one of 'cx.ReadCSVData.HeaderMode.Line' or 'cx.ReadCSVData.HeaderMode.Custom'.
+   :ivar header_mode: 'cx.ReadCSVDataParameter.HeaderMode.'. Can be one of 'cx.ReadCSVDataParameter.HeaderMode.Line' or 'cx.ReadCSVDataParameter.HeaderMode.Custom'.
 
 
 .. code:: python
 
    data_structure = cx.DataStructure()
+   
    # Example File has 7 columns to import
-   read_csv_data = cx.ReadCSVData()
+   read_csv_data = cx.ReadCSVDataParameter()
    read_csv_data.input_file_path = "/tmp/test_csv_data.csv"
    read_csv_data.start_import_row = 2
    read_csv_data.delimiters = [',']
@@ -429,7 +430,7 @@ General Parameters
    read_csv_data.skipped_array_mask = [False,False,False,False,False,False,False ]
    read_csv_data.tuple_dims = [37989]
    read_csv_data.headers_line = 1
-   read_csv_data.header_mode = cx.ReadCSVData.HeaderMode.Line
+   read_csv_data.header_mode = cx.ReadCSVDataParameter.HeaderMode.Line
 
    # This will store the imported arrays into a newly generated DataGroup
    result = cx.ReadCSVFileFilter.execute(data_structure=data_structure,
@@ -443,22 +444,63 @@ General Parameters
                                          read_csv_data=read_csv_data # The ReadCSVData object with all member variables set.
                                          )
 
+.. _H5EbsdReaderParameter:
+.. py:class:: ReadH5EbsdFileParameter
+   
+   This parameter is used for the :ref:`orientationAnalysis.ReadH5EbsdFilter() <ReadH5EbsdFilter>` and holds the information to import the EBSD data from the file.
 
-.. _ImportHDF5DatasetParameter:
-.. py:class:: ImportHDF5DatasetParameter
+   The primary python object that will hold the information to pass to the filter is the ReadH5EbsdFileParameter class described below.
 
-   This parameter is used for the :ref:`complex.ImportHDF5Dataset<ImportHDF5Dataset>` and holds the information
+   :ivar ValueType: ReadH5EbsdFileParameter
+
+   .. py:class:: ReadH5EbsdFileParameter
+
+      The ReadH5EbsdFileParameter class holds all the necessary information to import EBSD data stored in the H5Ebsd file.
+
+   :ivar euler_representation: Int.  0=Radians, 1=Degrees
+   :ivar start_slice: Int. The starting slice of EBSD data to import
+   :ivar end_slice: Int.  The ending slice (inclusive) of EBSD data to import
+   :ivar selected_array_names: List[string]. The names of the EBSD data to import. These may differ slightly between the various OEMs.
+   :ivar input_file_path: PathLike. The path to the .h5ebsd file to read.
+   :ivar use_recommended_transform: Bool. Apply the stored sample and crystal reference frame transformations.
+
+   .. code:: python
+
+      data_structure = cx.DataStructure()
+      # Create the ReadH5EbsdFileParameter and assign values to it.
+      h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
+      h5ebsdParameter.euler_representation=0
+      h5ebsdParameter.end_slice=117
+      h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
+      h5ebsdParameter.input_file_path="Data/Output/Reconstruction/Small_IN100.h5ebsd"
+      h5ebsdParameter.start_slice=1
+      h5ebsdParameter.use_recommended_transform=True
+
+      # Execute Filter with Parameters
+      result = cxor.ReadH5EbsdFilter.execute(
+         data_structure=data_structure,
+         cell_attribute_matrix_name="CellData",
+         cell_ensemble_attribute_matrix_name="CellEnsembleData",
+         data_container_name=cx.DataPath("DataContainer"),
+         read_h5_ebsd_parameter=h5ebsdParameter
+      )
+
+
+.. _ReadHDF5DatasetParameter:
+.. py:class:: ReadHDF5DatasetParameter
+
+   This parameter is used for the :ref:`complex.ReadHDF5Dataset<ReadHDF5Dataset>` and holds the information
    to import specific data sets from within the HDF5 file into DREAM3D/complex
 
-   .. py:class:: ImportHDF5DatasetParameter.ValueType
+   .. py:class:: ReadHDF5DatasetParameter.ValueType
 
       This holds the main parameter values which consist of the following data members
 
       :ivar input_file: A "PathLike" value to the HDF5 file on the file system
-      :ivar datasets: list[ImportHDF5DatasetParameter.DatasetImportInfo, ....]
+      :ivar datasets: list[ReadHDF5DatasetParameter.DatasetImportInfo, ....]
       :ivar parent: Optional: The :ref:`DataPath<DataPath>` object to a parente group to create the :ref:`DataArray<DataArray>` into. If left blank the :ref:`DataArray<DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`
 
-   .. py:class:: ImportHDF5DatasetParameter.DatasetImportInfo
+   .. py:class:: ReadHDF5DatasetParameter.DatasetImportInfo
 
       The DatasetImportInfo class has 3 data members that hold information on a specific data set
       inside the HDF5 file that the programmer wants to import.
@@ -469,21 +511,21 @@ General Parameters
 
    .. code:: python
 
-      dataset1 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
+      dataset1 = cx.ReadHDF5DatasetParameter.DatasetImportInfo()
       dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
       dataset1.tuple_dims = "117,201,189"
       dataset1.component_dims = "1"
 
-      dataset2 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
+      dataset2 = cx.ReadHDF5DatasetParameter.DatasetImportInfo()
       dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
       dataset2.tuple_dims = "117,201,189"
       dataset2.component_dims = "3"
 
-      import_hdf5_param = cx.ImportHDF5DatasetParameter.ValueType()
+      import_hdf5_param = cx.ReadHDF5DatasetParameter.ValueType()
       import_hdf5_param.input_file = "SmallIN100_Final.dream3d"
       import_hdf5_param.datasets = [dataset1, dataset2]
       # import_hdf5_param.parent = cx.DataPath(["Imported Data"])
-      result = cx.ImportHDF5Dataset.execute(data_structure=data_structure,
+      result = cx.ReadHDF5Dataset.execute(data_structure=data_structure,
                                           import_hd_f5_file=import_hdf5_param
                                           )
 

@@ -32,10 +32,10 @@
 #include "ComplexCore/Filters/ErodeDilateMaskFilter.hpp"
 #include "ComplexCore/Filters/ErodeDilateBadDataFilter.hpp"
 #include "ComplexCore/Filters/ExecuteProcessFilter.hpp"
-#include "ComplexCore/Filters/ExportDREAM3DFilter.hpp"
+#include "ComplexCore/Filters/WriteDREAM3DFilter.hpp"
 #include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
 #include "ComplexCore/Filters/ExtractInternalSurfacesFromTriangleGeometry.hpp"
-#include "ComplexCore/Filters/FeatureDataCSVWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteFeatureDataCSVFilter.hpp"
 #include "ComplexCore/Filters/FillBadDataFilter.hpp"
 #include "ComplexCore/Filters/FindArrayStatisticsFilter.hpp"
 #include "ComplexCore/Filters/FindBoundaryCellsFilter.hpp"
@@ -54,13 +54,13 @@
 #include "ComplexCore/Filters/FindVolFractionsFilter.hpp"
 #include "ComplexCore/Filters/GenerateColorTableFilter.hpp"
 #include "ComplexCore/Filters/IdentifySample.hpp"
-#include "ComplexCore/Filters/ImportBinaryCTNorthstarFilter.hpp"
+#include "ComplexCore/Filters/ReadBinaryCTNorthstarFilter.hpp"
 #include "ComplexCore/Filters/ReadCSVFileFilter.hpp"
-#include "ComplexCore/Filters/ImportDeformKeyFileV12Filter.hpp"
-#include "ComplexCore/Filters/ImportDREAM3DFilter.hpp"
-#include "ComplexCore/Filters/ImportHDF5Dataset.hpp"
+#include "ComplexCore/Filters/ReadDeformKeyFileV12Filter.hpp"
+#include "ComplexCore/Filters/ReadDREAM3DFilter.hpp"
+#include "ComplexCore/Filters/ReadHDF5Dataset.hpp"
 #include "ComplexCore/Filters/ReadTextDataArrayFilter.hpp"
-#include "ComplexCore/Filters/ImportVolumeGraphicsFileFilter.hpp"
+#include "ComplexCore/Filters/ReadVolumeGraphicsFileFilter.hpp"
 #include "ComplexCore/Filters/InitializeData.hpp"
 #include "ComplexCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 #include "ComplexCore/Filters/IterativeClosestPointFilter.hpp"
@@ -71,7 +71,7 @@
 #include "ComplexCore/Filters/MultiThresholdObjects.hpp"
 #include "ComplexCore/Filters/PointSampleTriangleGeometryFilter.hpp"
 #include "ComplexCore/Filters/QuickSurfaceMeshFilter.hpp"
-#include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
+#include "ComplexCore/Filters/ReadRawBinaryFilter.hpp"
 #include "ComplexCore/Filters/RemoveFlaggedVertices.hpp"
 #include "ComplexCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp"
 #include "ComplexCore/Filters/RenameDataObject.hpp"
@@ -82,7 +82,7 @@
 #include "ComplexCore/Filters/ScalarSegmentFeaturesFilter.hpp"
 #include "ComplexCore/Filters/SetImageGeomOriginScalingFilter.hpp"
 #include "ComplexCore/Filters/SplitAttributeArrayFilter.hpp"
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include "ComplexCore/Filters/ReadStlFileFilter.hpp"
 #include "ComplexCore/Filters/TriangleCentroidFilter.hpp"
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
@@ -98,18 +98,18 @@
 #include "ComplexCore/Filters/AddBadDataFilter.hpp"
 #include "ComplexCore/Filters/AppendImageGeometryZSliceFilter.hpp"
 #include "ComplexCore/Filters/FindFeatureClusteringFilter.hpp"
-#include "ComplexCore/Filters/AbaqusHexahedronWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteAbaqusHexahedronFilter.hpp"
 #include "ComplexCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
 #include "ComplexCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
 #include "ComplexCore/Filters/CombineStlFilesFilter.hpp"
-#include "ComplexCore/Filters/AvizoUniformCoordinateWriterFilter.hpp"
-#include "ComplexCore/Filters/AvizoRectilinearCoordinateWriterFilter.hpp"
-#include "ComplexCore/Filters/VtkRectilinearGridWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteAvizoUniformCoordinateFilter.hpp"
+#include "ComplexCore/Filters/WriteAvizoRectilinearCoordinateFilter.hpp"
+#include "ComplexCore/Filters/WriteVtkRectilinearGridFilter.hpp"
 #include "ComplexCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
 #include "ComplexCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp"
 #include "ComplexCore/Filters/FindBoundaryElementFractionsFilter.hpp"
 #include "ComplexCore/Filters/ReverseTriangleWindingFilter.hpp"
-#include "ComplexCore/Filters/LosAlamosFFTWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteLosAlamosFFTFilter.hpp"
 #include "ComplexCore/Filters/GenerateVectorColorsFilter.hpp"
 #include "ComplexCore/Filters/KMedoidsFilter.hpp"
 #include "ComplexCore/Filters/KMeansFilter.hpp"
@@ -145,9 +145,9 @@ namespace complex
     {complex::Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf").value(), complex::FilterTraits<CropImageGeometry>::uuid}, // CropImageGeometry
     {complex::Uuid::FromString("f28cbf07-f15a-53ca-8c7f-b41a11dae6cc").value(), complex::FilterTraits<CropVertexGeometry>::uuid}, // CropVertexGeometry
     {complex::Uuid::FromString("7b1c8f46-90dd-584a-b3ba-34e16958a7d0").value(), complex::FilterTraits<DeleteData>::uuid}, // RemoveArrays   
-    {complex::Uuid::FromString("3fcd4c43-9d75-5b86-aad4-4441bc914f37").value(), complex::FilterTraits<ExportDREAM3DFilter>::uuid}, // DataContainerWriter
+    {complex::Uuid::FromString("3fcd4c43-9d75-5b86-aad4-4441bc914f37").value(), complex::FilterTraits<WriteDREAM3DFilter>::uuid}, // DataContainerWriter
     {complex::Uuid::FromString("52a069b4-6a46-5810-b0ec-e0693c636034").value(), complex::FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid}, // ExtractInternalSurfacesFromTriangleGeometry
-    {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), complex::FilterTraits<FeatureDataCSVWriterFilter>::uuid}, // FeatureDataCSVWriter
+    {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), complex::FilterTraits<WriteFeatureDataCSVFilter>::uuid}, // FeatureDataCSVWriter
     {complex::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), complex::FilterTraits<FindArrayStatisticsFilter>::uuid}, // FindArrayStatistics
     {complex::Uuid::FromString("8a1106d4-c67f-5e09-a02a-b2e9b99d031e").value(), complex::FilterTraits<FindBoundaryCellsFilter>::uuid}, // FindBoundaryCellsFilter
     {complex::Uuid::FromString("450c2f00-9ddf-56e1-b4c1-0e74e7ad2349").value(), complex::FilterTraits<FindBiasedFeaturesFilter>::uuid}, // FindBiasedFeaturesFilter
@@ -165,12 +165,12 @@ namespace complex
     {complex::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), complex::FilterTraits<FindVolFractionsFilter>::uuid}, // FindVolFractions
     {complex::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), complex::FilterTraits<GenerateColorTableFilter>::uuid}, // GenerateColorTable
     {complex::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), complex::FilterTraits<IdentifySample>::uuid}, // IdentifySample
-    {complex::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), complex::FilterTraits<ImportBinaryCTNorthstarFilter>::uuid}, // ImportBinaryCTNorthstarFilter
+    {complex::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), complex::FilterTraits<ReadBinaryCTNorthstarFilter>::uuid}, // ReadBinaryCTNorthstarFilter
     {complex::Uuid::FromString("bdb978bc-96bf-5498-972c-b509c38b8d50").value(), complex::FilterTraits<ReadCSVFileFilter>::uuid}, // ReadASCIIData
-    {complex::Uuid::FromString("043cbde5-3878-5718-958f-ae75714df0df").value(), complex::FilterTraits<ImportDREAM3DFilter>::uuid}, // DataContainerReader
-    {complex::Uuid::FromString("9e98c3b0-5707-5a3b-b8b5-23ef83b02896").value(), complex::FilterTraits<ImportHDF5Dataset>::uuid}, // ImportHDF5Dataset
+    {complex::Uuid::FromString("043cbde5-3878-5718-958f-ae75714df0df").value(), complex::FilterTraits<ReadDREAM3DFilter>::uuid}, // DataContainerReader
+    {complex::Uuid::FromString("9e98c3b0-5707-5a3b-b8b5-23ef83b02896").value(), complex::FilterTraits<ReadHDF5Dataset>::uuid}, // ReadHDF5Dataset
     {complex::Uuid::FromString("a7007472-29e5-5d0a-89a6-1aed11b603f8").value(), complex::FilterTraits<ReadTextDataArrayFilter>::uuid}, // ImportAsciDataArray
-    {complex::Uuid::FromString("5fa10d81-94b4-582b-833f-8eabe659069e").value(), complex::FilterTraits<ImportVolumeGraphicsFileFilter>::uuid}, // ImportVolumeGraphicsFileFilter
+    {complex::Uuid::FromString("5fa10d81-94b4-582b-833f-8eabe659069e").value(), complex::FilterTraits<ReadVolumeGraphicsFileFilter>::uuid}, // ReadVolumeGraphicsFileFilter
     {complex::Uuid::FromString("dfab9921-fea3-521c-99ba-48db98e43ff8").value(), complex::FilterTraits<InitializeData>::uuid}, // InitializeData
     {complex::Uuid::FromString("4b551c15-418d-5081-be3f-d3aeb62408e5").value(), complex::FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid}, // InterpolatePointCloudToRegularGrid
     {complex::Uuid::FromString("6c8fb24b-5b12-551c-ba6d-ae2fa7724764").value(), complex::FilterTraits<IterativeClosestPointFilter>::uuid}, // IterativeClosestPoint
@@ -182,7 +182,7 @@ namespace complex
     {complex::Uuid::FromString("686d5393-2b02-5c86-b887-dd81a8ae80f2").value(), complex::FilterTraits<MultiThresholdObjects>::uuid}, // MultiThresholdObjects2
     {complex::Uuid::FromString("119861c5-e303-537e-b210-2e62936222e9").value(), complex::FilterTraits<PointSampleTriangleGeometryFilter>::uuid}, // PointSampleTriangleGeometry
     {complex::Uuid::FromString("07b49e30-3900-5c34-862a-f1fb48bad568").value(), complex::FilterTraits<QuickSurfaceMeshFilter>::uuid}, // QuickSurfaceMesh
-    {complex::Uuid::FromString("0791f556-3d73-5b1e-b275-db3f7bb6850d").value(), complex::FilterTraits<RawBinaryReaderFilter>::uuid}, // RawBinaryReader
+    {complex::Uuid::FromString("0791f556-3d73-5b1e-b275-db3f7bb6850d").value(), complex::FilterTraits<ReadRawBinaryFilter>::uuid}, // ReadRawBinary
     {complex::Uuid::FromString("379ccc67-16dd-530a-984f-177db2314bac").value(), complex::FilterTraits<RemoveFlaggedVertices>::uuid}, // RemoveFlaggedVertices
     {complex::Uuid::FromString("53ac1638-8934-57b8-b8e5-4b91cdda23ec").value(), complex::FilterTraits<RemoveMinimumSizeFeaturesFilter>::uuid}, // MinSize
     {complex::Uuid::FromString("53a5f731-2858-5e3e-bd43-8f2cf45d90ec").value(), complex::FilterTraits<RenameDataObject>::uuid}, // RenameAttributeArray
@@ -192,7 +192,7 @@ namespace complex
     {complex::Uuid::FromString("2c5edebf-95d8-511f-b787-90ee2adf485c").value(), complex::FilterTraits<ScalarSegmentFeaturesFilter>::uuid}, // ScalarSegmentFeatures
     {complex::Uuid::FromString("6d3a3852-6251-5d2e-b749-6257fd0d8951").value(), complex::FilterTraits<SetImageGeomOriginScalingFilter>::uuid}, // SetOriginResolutionImageGeom
     {complex::Uuid::FromString("5ecf77f4-a38a-52ab-b4f6-0fb8a9c5cb9c").value(), complex::FilterTraits<SplitAttributeArrayFilter>::uuid}, // SplitAttributeArray
-    {complex::Uuid::FromString("980c7bfd-20b2-5711-bc3b-0190b9096c34").value(), complex::FilterTraits<StlFileReaderFilter>::uuid}, // ReadStlFile
+    {complex::Uuid::FromString("980c7bfd-20b2-5711-bc3b-0190b9096c34").value(), complex::FilterTraits<ReadStlFileFilter>::uuid}, // ReadStlFile
     {complex::Uuid::FromString("5fbf9204-2c6c-597b-856a-f4612adbac38").value(), complex::FilterTraits<WriteASCIIDataFilter>::uuid}, // WriteASCIIData
     {complex::Uuid::FromString("0541c5eb-1976-5797-9468-be50a93d44e2").value(), complex::FilterTraits<TriangleDihedralAngleFilter>::uuid}, // TriangleDihedralAngleFilter
     {complex::Uuid::FromString("8133d419-1919-4dbf-a5bf-1c97282ba63f").value(), complex::FilterTraits<TriangleNormalFilter>::uuid}, // TriangleNormalFilter
@@ -220,20 +220,20 @@ namespace complex
     {complex::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), complex::FilterTraits<AddBadDataFilter>::uuid}, // AddBadData
     {complex::Uuid::FromString("52b2918a-4fb5-57aa-97d4-ccc084b89572").value(), complex::FilterTraits<AppendImageGeometryZSliceFilter>::uuid}, // AppendImageGeometryZSlice
     {complex::Uuid::FromString("a1e9cf6d-2d1b-573e-98b8-0314c993d2b6").value(), complex::FilterTraits<FindFeatureClusteringFilter>::uuid}, // FindFeatureClustering
-    {complex::Uuid::FromString("0559aa37-c5ad-549a-82d4-bff4bfcb6cc6").value(), complex::FilterTraits<AbaqusHexahedronWriterFilter>::uuid}, // AbaqusHexahedronWriter
+    {complex::Uuid::FromString("0559aa37-c5ad-549a-82d4-bff4bfcb6cc6").value(), complex::FilterTraits<WriteAbaqusHexahedronFilter>::uuid}, // WriteAbaqusHexahedron
     {complex::Uuid::FromString("cbaf9e68-5ded-560c-9440-509289100ea8").value(), complex::FilterTraits<NearestPointFuseRegularGridsFilter>::uuid}, // NearestPointFuseRegularGrids
     {complex::Uuid::FromString("77befd69-4536-5856-9f81-02996d038f73").value(), complex::FilterTraits<ResampleRectGridToImageGeomFilter>::uuid}, // ResampleRectGridToImageGeom
     {complex::Uuid::FromString("71d46128-1d2d-58fd-9924-1714695768c3").value(), complex::FilterTraits<CombineStlFilesFilter>::uuid}, // CombineStlFiles
-    {complex::Uuid::FromString("339f1349-9236-5023-9a56-c82fb8eafd12").value(), complex::FilterTraits<AvizoUniformCoordinateWriterFilter>::uuid}, // AvizoUniformCoordinateWriter
-    {complex::Uuid::FromString("2861f4b4-8d50-5e69-9575-68c9d35f1256").value(), complex::FilterTraits<AvizoRectilinearCoordinateWriterFilter>::uuid}, // AvizoRectilinearCoordinateWriter
-    {complex::Uuid::FromString("a043bd66-2681-5126-82e1-5fdc46694bf4").value(), complex::FilterTraits<VtkRectilinearGridWriterFilter>::uuid}, // VtkRectilinearGridWriter
+    {complex::Uuid::FromString("339f1349-9236-5023-9a56-c82fb8eafd12").value(), complex::FilterTraits<WriteAvizoUniformCoordinateFilter>::uuid}, // WriteAvizoUniformCoordinate
+    {complex::Uuid::FromString("2861f4b4-8d50-5e69-9575-68c9d35f1256").value(), complex::FilterTraits<WriteAvizoRectilinearCoordinateFilter>::uuid}, // WriteAvizoRectilinearCoordinate
+    {complex::Uuid::FromString("a043bd66-2681-5126-82e1-5fdc46694bf4").value(), complex::FilterTraits<WriteVtkRectilinearGridFilter>::uuid}, // VtkRectilinearGridWriter
     {complex::Uuid::FromString("0df3da89-9106-538e-b1a9-6bbf1cf0aa92").value(), complex::FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid}, // RegularGridSampleSurfaceMesh
     {complex::Uuid::FromString("75cfeb9b-cd4b-5a20-a344-4170b39bbfaf").value(), complex::FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid}, // UncertainRegularGridSampleSurfaceMesh
     {complex::Uuid::FromString("6357243e-41a6-52c4-be2d-2f6894c39fcc").value(), complex::FilterTraits<FindBoundaryElementFractionsFilter>::uuid}, // FindBoundaryElementFractions
     {complex::Uuid::FromString("9b9fb9e1-074d-54b6-a6ce-0be21ab4496d").value(), complex::FilterTraits<ReverseTriangleWindingFilter>::uuid}, // ReverseTriangleWinding
-    {complex::Uuid::FromString("158ebe9e-f772-57e2-ac1b-71ff213cf890").value(), complex::FilterTraits<LosAlamosFFTWriterFilter>::uuid}, // LosAlamosFFTWriter
+    {complex::Uuid::FromString("158ebe9e-f772-57e2-ac1b-71ff213cf890").value(), complex::FilterTraits<WriteLosAlamosFFTFilter>::uuid}, // WriteLosAlamosFFT
     {complex::Uuid::FromString("ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc").value(), complex::FilterTraits<GenerateVectorColorsFilter>::uuid}, // GenerateVectorColors
-    {complex::Uuid::FromString("3c6337da-e232-4420-a5ca-451496748d88").value(), complex::FilterTraits<ImportDeformKeyFileV12Filter>::uuid}, // ImportDeformKeyFileV12Filter
+    {complex::Uuid::FromString("3c6337da-e232-4420-a5ca-451496748d88").value(), complex::FilterTraits<ReadDeformKeyFileV12Filter>::uuid}, // ReadDeformKeyFileV12Filter
     {complex::Uuid::FromString("f7486aa6-3049-5be7-8511-ae772b70c90b").value(), complex::FilterTraits<KMedoidsFilter>::uuid}, // KMedoids
     {complex::Uuid::FromString("b56a04de-0ca0-509d-809f-52219fca9c98").value(), complex::FilterTraits<KMeansFilter>::uuid}, // KMeans
     {complex::Uuid::FromString("f84d4d69-9ea5-54b6-a71c-df76d76d50cf").value(), complex::FilterTraits<SilhouetteFilter>::uuid}, // Silhouette

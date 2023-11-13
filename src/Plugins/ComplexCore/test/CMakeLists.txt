@@ -6,7 +6,6 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  AbaqusHexahedronWriterTest.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
@@ -15,16 +14,14 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ApplyTransformationToGeometryTest.cpp
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp
-  AvizoRectilinearCoordinateWriterTest.cpp
-  AvizoUniformCoordinateWriterTest.cpp
   CalculateArrayHistogramTest.cpp
   CalculateFeatureSizesTest.cpp
   CalculateTriangleAreasFilterTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   CombineStlFilesTest.cpp
-  ComputeMomentInvariants2DTest.cpp
   ComputeFeatureRectTest.cpp
+  ComputeMomentInvariants2DTest.cpp
   ConditionalSetValueTest.cpp
   ConvertColorToGrayScaleTest.cpp
   ConvertDataTest.cpp
@@ -47,7 +44,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExtractComponentAsArrayTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
-  FeatureDataCSVWriterTest.cpp
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
   FindArrayStatisticsTest.cpp
@@ -58,8 +54,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindEuclideanDistMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
   FindFeatureClusteringTest.cpp
-  FindFeaturePhasesFilterTest.cpp
   FindFeaturePhasesBinaryTest.cpp
+  FindFeaturePhasesFilterTest.cpp
   FindLargestCrossSectionsTest.cpp
   FindNeighborhoodsTest.cpp
   FindNeighborListStatisticsTest.cpp
@@ -76,30 +72,29 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   IdentifySampleTest.cpp
   ImageContouringTest.cpp
   ImageGeomTest.cpp
-  ImportBinaryCTNorthstarTest.cpp
-  ReadCSVFileTest.cpp
-
-  # ImportDeformKeyFileV12Test.cpp
-  ImportHDF5DatasetTest.cpp
-  ReadTextDataArrayTest.cpp
-  ImportVolumeGraphicsFileTest.cpp
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
   KMeansTest.cpp
   KMedoidsTest.cpp
   LaplacianSmoothingFilterTest.cpp
-  LosAlamosFFTWriterTest.cpp
-  MultiThresholdObjectsTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
   MoveDataTest.cpp
+  MultiThresholdObjectsTest.cpp
   NearestPointFuseRegularGridsTest.cpp
   PartitionGeometryTest.cpp
   PipelineTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
-  RawBinaryReaderTest.cpp
+  ReadBinaryCTNorthstarTest.cpp
+  ReadCSVFileTest.cpp
+  # ReadDeformKeyFileV12Test.cpp
+  ReadHDF5DatasetTest.cpp
+  ReadRawBinaryTest.cpp
+  ReadStlFileTest.cpp
+  ReadTextDataArrayTest.cpp
+  ReadVolumeGraphicsFileTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedVerticesTest.cpp
@@ -116,16 +111,20 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SharedFeatureFaceTest.cpp
   SilhouetteTest.cpp
   SplitAttributeArrayTest.cpp
-  StlFileReaderTest.cpp
   SurfaceNetsTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
   UncertainRegularGridSampleSurfaceMeshTest.cpp
-  VtkRectilinearGridWriterTest.cpp
+  WriteAbaqusHexahedronTest.cpp
   WriteASCIIDataTest.cpp
+  WriteAvizoRectilinearCoordinateTest.cpp
+  WriteAvizoUniformCoordinateTest.cpp
   WriteBinaryDataTest.cpp
+  WriteFeatureDataCSVTest.cpp
+  WriteLosAlamosFFTTest.cpp
   WriteStlFileTest.cpp
+  WriteVtkRectilinearGridTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

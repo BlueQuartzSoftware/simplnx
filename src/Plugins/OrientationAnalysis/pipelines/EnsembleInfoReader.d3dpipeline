@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "EnsembleInfoReader.d3dpipeline",
+  "name": "ReadEnsembleInfo.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -48,7 +48,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::RawBinaryReaderFilter",
+        "name": "complex::ReadRawBinaryFilter",
         "uuid": "dd159366-5f12-42db-af6d-a33592ae8a89"
       },
       "isDisabled": false
@@ -98,7 +98,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::EnsembleInfoReaderFilter",
+        "name": "complex::ReadEnsembleInfoFilter",
         "uuid": "ecf1ec45-bc27-4ddb-b2c0-3d465b8c182a"
       },
       "isDisabled": false
@@ -131,7 +131,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ExportDREAM3DFilter",
+        "name": "complex::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

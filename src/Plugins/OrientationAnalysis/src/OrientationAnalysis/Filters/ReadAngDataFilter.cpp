@@ -43,7 +43,7 @@ Uuid ReadAngDataFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ReadAngDataFilter::humanName() const
 {
-  return "Import EDAX EBSD Data (.ang)";
+  return "Read EDAX EBSD Data (.ang)";
 }
 
 //------------------------------------------------------------------------------

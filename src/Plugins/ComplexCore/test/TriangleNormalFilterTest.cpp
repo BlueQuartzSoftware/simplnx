@@ -1,6 +1,6 @@
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include "ComplexCore/Filters/ReadStlFileFilter.hpp"
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
@@ -34,7 +34,7 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
 
   {
     Arguments args;
-    StlFileReaderFilter filter;
+    ReadStlFileFilter filter;
 
     DataPath triangleGeomDataPath({triangleGeometryName});
     DataPath triangleFaceDataGroupDataPath({triangleGeometryName, triangleFaceDataGroupName});
@@ -43,8 +43,8 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
     std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_ComplexTestDataSourceDir.view());
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-    args.insertOrAssign(StlFileReaderFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeomDataPath));
+    args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
+    args.insertOrAssign(ReadStlFileFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

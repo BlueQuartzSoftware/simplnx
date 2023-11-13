@@ -13,7 +13,7 @@ Result<FileWriter> FileWriter::CreateFile(const std::filesystem::path& filepath)
   auto parentPath = filepath.parent_path();
   try
   {
-    if(!std::filesystem::exists(parentPath))
+    if(!parentPath.empty() && !std::filesystem::exists(parentPath))
     {
       if(!std::filesystem::create_directories(parentPath))
       {

@@ -1,16 +1,16 @@
-# Read CSV File 
+# Read CSV File
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 IO (Input)
 
-## Description ##
+## Description
 
 This **Filter** reads text data from any text-based file and imports the data into DREAM3D-NX-style arrays.  The user specifies which file to import, how the data is formatted, what to call each array, and what type each array should be.
 
 *Note:* This **Filter** is intended to read data that is column-oriented, such that each created DREAM3D-NX array corresponds to a column of data in the text file. Therefore, this **Filter** will only import scalar arrays. If multiple columns are in fact different components of the same array, then the columns may be imported as separate arrays and then combined in the correct order using the Combine Attribute Arrays **Filter**.
 
-### Filling Out The Inputs ###
+### Filling Out The Inputs
 
 The user first selects the **Input Text File** path, which then enables the rest of the interface.
 
@@ -54,40 +54,12 @@ Afterwards, you end up with a data structure that looks like this:
 
 ![Input Text File Field](Images/Read_CSV_10.png)
 
-## Parameters ##
+% Auto generated parameter table will be inserted here
 
-| Name                                                           | Type             | Description                                                                                                                                                                                                                                                 |
-|----------------------------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Importer Data Object                                           | ReadCSVData  | The object that holds all data relevant to importing the data, such as input file path, custom headers, start import line number, data types for all the imported arrays, headers line number, header mode, imported array tuple dimensions, delimiters, etc. |
-| Use Existing Attribute Matrix                                  | bool             | Determines whether or not to store the imported data arrays in an existing attribute matrix                                                                                                                                                                 |
-| Existing Attribute Matrix (Use Existing Attribute Matrix - ON) | DataPath         | The data path to the existing attribute matrix where the imported arrays will be stored                                                                                                                                                                     |
-| New Attribute Matrix (Use Existing Attribute Matrix - OFF)     | DataPath         | The data path to the newly created attribute matrix where the imported arrays will be stored                                                                                                                                                                |
-
-## Required Geometry ##
-
-Not Applicable
-
-## Required Objects ##
-
-| Kind | Default Name | Description |
-|------|--------------|------|
-| **Attribute Matrix** | None | The existing attribute matrix to store the imported data arrays (only if Existing Attribute Matrix is turned ON) |
-
-## Created Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description                                                    |
-|------|--------------|------|----------------------|----------------------------------------------------------------|
-| One or more **Element/Feature/Ensemble/etc. Data Arrays** | None | Any | 1 | One or more arrays that are created due to importing text data |
-
-## Example Pipelines ##
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3DNX Help
+## DREAM3D-NX Help
 
-Check out our GitHub community page at [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) to report bugs, ask the community for help, discuss features, or get help from the developers.
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.

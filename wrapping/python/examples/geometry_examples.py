@@ -215,9 +215,9 @@ else:
 
 
 output_file_path = "geometry_examples.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, export_file_path=output_file_path, write_xdmf_file=True)
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, export_file_path=output_file_path, write_xdmf_file=True)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
-    print("No errors running the ExportDREAM3DFilter filter")
+    print("No errors running the WriteDREAM3DFilter filter")

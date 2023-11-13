@@ -5,7 +5,7 @@
 DREAM3D-NX Python Docs
 =======================
 
-Latest Version: 1.1.0
+Latest Version: 1.2.0
 ---------------------
 
 The *complex* library can be installed through an Anaconda packages from the *BlueQuartzSoftware* channel. This can be achieved
@@ -24,13 +24,14 @@ by creating a new virtual environment
    :caption: Contents:
 
    Installation
-   ReleaseNotes
    Overview
    DataObjects
    Geometry
    API
    Python_Introduction
    Reference_Frame_Notes
+   ReleaseNotes_110
+   ReleaseNotes_120
 @PLUGIN_LIST@
 
 Indices and tables

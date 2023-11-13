@@ -49,7 +49,7 @@ Parameters FindFeaturePhasesFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Element belongs", DataPath({"Phases"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Element belongs", DataPath({"Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -58,7 +58,7 @@ Parameters FindFeaturePhasesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "The name of the feature attribute matrix in which to store the found feature phases array", "Phases"));
+      std::make_unique<DataObjectNameParameter>(k_FeaturePhasesArrayName_Key, "Feature Phases", "The name of the feature attribute matrix in which to store the found feature phases array", "Phases"));
 
   return params;
 }
@@ -76,7 +76,7 @@ IFilter::PreflightResult FindFeaturePhasesFilter::preflightImpl(const DataStruct
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellFeatureAMPathValue = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
-  auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayPath_Key));
+  auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key));
 
   complex::Result<OutputActions> resultOutputActions;
 
@@ -107,7 +107,7 @@ Result<> FindFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, cons
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellFeatureAMPathValue = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
-  auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayPath_Key));
+  auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key));
 
   const Int32Array& cellPhases = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);

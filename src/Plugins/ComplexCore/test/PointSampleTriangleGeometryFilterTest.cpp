@@ -1,7 +1,7 @@
 #include "ComplexCore/Filters/PointSampleTriangleGeometryFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include "ComplexCore/Filters/ReadStlFileFilter.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -81,7 +81,7 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
   // Read in the STL File to load a Triangle Geometry to sample
   {
     Arguments args;
-    StlFileReaderFilter filter;
+    ReadStlFileFilter filter;
 
     DataPath triangleGeomDataPath({triangleGeometryName});
     DataPath triangleFaceDataGroupDataPath({triangleGeometryName, triangleFaceDataGroupName});
@@ -90,8 +90,8 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_ComplexTestDataSourceDir.view());
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-    args.insertOrAssign(StlFileReaderFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeomDataPath));
+    args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
+    args.insertOrAssign(ReadStlFileFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

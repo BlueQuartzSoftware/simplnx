@@ -39,14 +39,14 @@ npview[npview < 120] = 0
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
 output_file_path = "/tmp/import_data.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
-    print("No errors running the ExportDREAM3DFilter")
+    print("No errors running the WriteDREAM3DFilter")
 
 
 #------------------------------------------------------------------------------

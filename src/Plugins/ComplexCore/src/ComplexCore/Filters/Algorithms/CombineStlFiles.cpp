@@ -1,6 +1,6 @@
 #include "CombineStlFiles.hpp"
 
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include "ComplexCore/Filters/ReadStlFileFilter.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -91,10 +91,10 @@ Result<> CombineStlFiles::operator()()
     const fs::path& stlFilePath = dirEntry.path();
     if(fs::is_regular_file(stlFilePath) && StringUtilities::toLower(stlFilePath.extension().string()) == ".stl")
     {
-      StlFileReaderFilter stlFileReader;
+      ReadStlFileFilter stlFileReader;
       Arguments args;
-      args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(stlFilePath));
-      args.insertOrAssign(StlFileReaderFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(DataPath({stlFilePath.stem().string()})));
+      args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(stlFilePath));
+      args.insertOrAssign(ReadStlFileFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(DataPath({stlFilePath.stem().string()})));
       auto executeResult = stlFileReader.execute(tempDataStructure, args);
       if(executeResult.result.invalid())
       {

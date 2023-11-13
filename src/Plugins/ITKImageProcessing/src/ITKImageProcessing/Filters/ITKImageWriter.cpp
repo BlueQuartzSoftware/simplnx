@@ -236,7 +236,7 @@ Uuid ITKImageWriter::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKImageWriter::humanName() const
 {
-  return "ITK Image Export";
+  return "Write Image (ITK)";
 }
 
 //------------------------------------------------------------------------------

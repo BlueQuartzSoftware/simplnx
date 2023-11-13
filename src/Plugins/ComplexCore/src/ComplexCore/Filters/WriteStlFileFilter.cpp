@@ -39,7 +39,7 @@ Uuid WriteStlFileFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string WriteStlFileFilter::humanName() const
 {
-  return "Export STL Files from Triangle Geometry";
+  return "Write STL Files from Triangle Geometry";
 }
 
 //------------------------------------------------------------------------------

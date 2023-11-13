@@ -155,13 +155,13 @@ In order to import a .dream3d file, we need to tell **complex** which data to im
     # import EVERY piece of data from the file.
     import_data.data_paths = None
     # Instantiate and execte the filter immediately.
-    result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+    result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
     # Check for any execution warnings or errors
     if len(result.errors) != 0:
         print('Errors: {}', result.errors)
         print('Warnings: {}', result.warnings)
     else:
-        print("No errors running the ImportDREAM3DFilter filter")
+        print("No errors running the ReadDREAM3DFilter filter")
 
 If you want to only import specific data sets from the file you can set the **import_data.data_paths** to a *List[DataPath]* objects.
 Once the filter executes, you can fetch data from the DataStructure using the usual methods shown in the `Creating a DataArray`_ section.
@@ -176,13 +176,13 @@ Exporting a .dream3d File
 -------------------------
 
 After processing the data if you would like to store your data in the native HDF5 file format, then the
-:ref:`complex.ExportDREAM3DFilter.Execute() <ExportDREAM3DFilter>` can be used to accomplish this goal. 
+:ref:`complex.WriteDREAM3DFilter.Execute() <WriteDREAM3DFilter>` can be used to accomplish this goal.
 The filter will write the **complete** contents of the DataStructure to the HDF5 file.
 
 .. code:: python
 
     output_file_path = "output_file_example.dream3d"
-    result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+    result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure,
                                             export_file_path=output_file_path, 
                                             write_xdmf_file=True)
     if len(result.errors) != 0:
