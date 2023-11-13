@@ -1,4 +1,4 @@
-#include "H5EbsdReaderParameter.h"
+#include "ReadH5EbsdFileParameter.h"
 
 #include "complex/Common/Any.hpp"
 #include "complex/Common/StringLiteral.hpp"
@@ -29,26 +29,26 @@ constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
 } // namespace
 
 //-----------------------------------------------------------------------------
-H5EbsdReaderParameter::H5EbsdReaderParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ReadH5EbsdFileParameter::ReadH5EbsdFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 {
 }
 
 //-----------------------------------------------------------------------------
-Uuid H5EbsdReaderParameter::uuid() const
+Uuid ReadH5EbsdFileParameter::uuid() const
 {
-  return ParameterTraits<H5EbsdReaderParameter>::uuid;
+  return ParameterTraits<ReadH5EbsdFileParameter>::uuid;
 }
 
 //-----------------------------------------------------------------------------
-IParameter::AcceptedTypes H5EbsdReaderParameter::acceptedTypes() const
+IParameter::AcceptedTypes ReadH5EbsdFileParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
 
 //-----------------------------------------------------------------------------
-nlohmann::json H5EbsdReaderParameter::toJson(const std::any& value) const
+nlohmann::json ReadH5EbsdFileParameter::toJson(const std::any& value) const
 {
   const auto& data = GetAnyRef<ValueType>(value);
   nlohmann::json json;
@@ -77,9 +77,9 @@ nlohmann::json H5EbsdReaderParameter::toJson(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> H5EbsdReaderParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ReadH5EbsdFileParameter::fromJson(const nlohmann::json& json) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'H5EbsdReaderParameter' Error: ";
+  static constexpr StringLiteral prefix = "FilterParameter 'ReadH5EbsdFileParameter' Error: ";
 
   if(!json.is_object())
   {
@@ -177,19 +177,19 @@ Result<std::any> H5EbsdReaderParameter::fromJson(const nlohmann::json& json) con
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer H5EbsdReaderParameter::clone() const
+IParameter::UniquePointer ReadH5EbsdFileParameter::clone() const
 {
-  return std::make_unique<H5EbsdReaderParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<ReadH5EbsdFileParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
 
 //-----------------------------------------------------------------------------
-std::any H5EbsdReaderParameter::defaultValue() const
+std::any ReadH5EbsdFileParameter::defaultValue() const
 {
   return m_DefaultValue;
 }
 
 //-----------------------------------------------------------------------------
-Result<> H5EbsdReaderParameter::validate(const std::any& valueRef) const
+Result<> ReadH5EbsdFileParameter::validate(const std::any& valueRef) const
 {
   std::vector<Error> errors;
 

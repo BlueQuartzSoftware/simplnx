@@ -72,7 +72,7 @@ void GenerateParameterList()
 
   ADD_PARAMETER_TRAIT(complex.FileSystemPathParameter, "f9a93f3d-21ef-43a1-a958-e57cbf3b2909")
   ADD_PARAMETER_TRAIT(complex.BoolParameter, "b6936d18-7476-4855-9e13-e795d717c50f")
-  ADD_PARAMETER_TRAIT(complex.ImportHDF5DatasetParameter, "32e83e13-ee4c-494e-8bab-4e699df74a5a")
+  ADD_PARAMETER_TRAIT(complex.ReadHDF5DatasetParameter, "32e83e13-ee4c-494e-8bab-4e699df74a5a")
   ADD_PARAMETER_TRAIT(complex.Dream3dImportParameter, "170a257d-5952-4854-9a91-4281cd06f4f5")
   ADD_PARAMETER_TRAIT(complex.DynamicTableParameter, "eea76f1a-fab9-4704-8da5-4c21057cf44e")
 

@@ -262,7 +262,7 @@ set(CoreParameters
   NumberParameter
   NumericTypeParameter
   ReadCSVFileParameter
-  ImportHDF5DatasetParameter
+  ReadHDF5DatasetParameter
   StringParameter
   VectorParameter
 )

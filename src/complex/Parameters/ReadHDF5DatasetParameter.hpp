@@ -43,7 +43,7 @@
 
 namespace complex
 {
-class COMPLEX_EXPORT ImportHDF5DatasetParameter : public ValueParameter
+class COMPLEX_EXPORT ReadHDF5DatasetParameter : public ValueParameter
 {
 public:
   struct DatasetImportInfo
@@ -113,15 +113,15 @@ public:
     std::list<DatasetImportInfo> datasets;
   };
 
-  ImportHDF5DatasetParameter() = delete;
-  ImportHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
-  ~ImportHDF5DatasetParameter() override = default;
+  ReadHDF5DatasetParameter() = delete;
+  ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ~ReadHDF5DatasetParameter() override = default;
 
-  ImportHDF5DatasetParameter(const ImportHDF5DatasetParameter&) = delete;
-  ImportHDF5DatasetParameter(ImportHDF5DatasetParameter&&) noexcept = delete;
+  ReadHDF5DatasetParameter(const ReadHDF5DatasetParameter&) = delete;
+  ReadHDF5DatasetParameter(ReadHDF5DatasetParameter&&) noexcept = delete;
 
-  ImportHDF5DatasetParameter& operator=(const ImportHDF5DatasetParameter&) = delete;
-  ImportHDF5DatasetParameter& operator=(ImportHDF5DatasetParameter&&) noexcept = delete;
+  ReadHDF5DatasetParameter& operator=(const ReadHDF5DatasetParameter&) = delete;
+  ReadHDF5DatasetParameter& operator=(ReadHDF5DatasetParameter&&) noexcept = delete;
 
   /**
    * @brief Returns the parameter's uuid.
@@ -174,4 +174,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::ImportHDF5DatasetParameter, "32e83e13-ee4c-494e-8bab-4e699df74a5a");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::ReadHDF5DatasetParameter, "32e83e13-ee4c-494e-8bab-4e699df74a5a");

@@ -486,21 +486,21 @@ General Parameters
       )
 
 
-.. _ImportHDF5DatasetParameter:
-.. py:class:: ImportHDF5DatasetParameter
+.. _ReadHDF5DatasetParameter:
+.. py:class:: ReadHDF5DatasetParameter
 
    This parameter is used for the :ref:`complex.ReadHDF5Dataset<ReadHDF5Dataset>` and holds the information
    to import specific data sets from within the HDF5 file into DREAM3D/complex
 
-   .. py:class:: ImportHDF5DatasetParameter.ValueType
+   .. py:class:: ReadHDF5DatasetParameter.ValueType
 
       This holds the main parameter values which consist of the following data members
 
       :ivar input_file: A "PathLike" value to the HDF5 file on the file system
-      :ivar datasets: list[ImportHDF5DatasetParameter.DatasetImportInfo, ....]
+      :ivar datasets: list[ReadHDF5DatasetParameter.DatasetImportInfo, ....]
       :ivar parent: Optional: The :ref:`DataPath<DataPath>` object to a parente group to create the :ref:`DataArray<DataArray>` into. If left blank the :ref:`DataArray<DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`
 
-   .. py:class:: ImportHDF5DatasetParameter.DatasetImportInfo
+   .. py:class:: ReadHDF5DatasetParameter.DatasetImportInfo
 
       The DatasetImportInfo class has 3 data members that hold information on a specific data set
       inside the HDF5 file that the programmer wants to import.
@@ -511,17 +511,17 @@ General Parameters
 
    .. code:: python
 
-      dataset1 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
+      dataset1 = cx.ReadHDF5DatasetParameter.DatasetImportInfo()
       dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
       dataset1.tuple_dims = "117,201,189"
       dataset1.component_dims = "1"
 
-      dataset2 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
+      dataset2 = cx.ReadHDF5DatasetParameter.DatasetImportInfo()
       dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
       dataset2.tuple_dims = "117,201,189"
       dataset2.component_dims = "3"
 
-      import_hdf5_param = cx.ImportHDF5DatasetParameter.ValueType()
+      import_hdf5_param = cx.ReadHDF5DatasetParameter.ValueType()
       import_hdf5_param.input_file = "SmallIN100_Final.dream3d"
       import_hdf5_param.datasets = [dataset1, dataset2]
       # import_hdf5_param.parent = cx.DataPath(["Imported Data"])

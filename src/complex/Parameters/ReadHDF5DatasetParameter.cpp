@@ -28,7 +28,7 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "ImportHDF5DatasetParameter.hpp"
+#include "ReadHDF5DatasetParameter.hpp"
 
 using namespace complex;
 namespace
@@ -41,26 +41,26 @@ constexpr StringLiteral k_ParentGroupKey = "parent_group";
 namespace complex
 {
 // -----------------------------------------------------------------------------
-ImportHDF5DatasetParameter::ImportHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ReadHDF5DatasetParameter::ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 {
 }
 
 // -----------------------------------------------------------------------------
-Uuid ImportHDF5DatasetParameter::uuid() const
+Uuid ReadHDF5DatasetParameter::uuid() const
 {
-  return ParameterTraits<ImportHDF5DatasetParameter>::uuid;
+  return ParameterTraits<ReadHDF5DatasetParameter>::uuid;
 }
 
 // -----------------------------------------------------------------------------
-IParameter::AcceptedTypes ImportHDF5DatasetParameter::acceptedTypes() const
+IParameter::AcceptedTypes ReadHDF5DatasetParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
 
 // -----------------------------------------------------------------------------
-nlohmann::json ImportHDF5DatasetParameter::toJson(const std::any& value) const
+nlohmann::json ReadHDF5DatasetParameter::toJson(const std::any& value) const
 {
   const auto& datasetImportInfo = GetAnyRef<ValueType>(value);
   nlohmann::json json;
@@ -79,7 +79,7 @@ nlohmann::json ImportHDF5DatasetParameter::toJson(const std::any& value) const
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ImportHDF5DatasetParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ReadHDF5DatasetParameter::fromJson(const nlohmann::json& json) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
   if(!json.is_object())
@@ -126,19 +126,19 @@ Result<std::any> ImportHDF5DatasetParameter::fromJson(const nlohmann::json& json
 }
 
 // -----------------------------------------------------------------------------
-IParameter::UniquePointer ImportHDF5DatasetParameter::clone() const
+IParameter::UniquePointer ReadHDF5DatasetParameter::clone() const
 {
-  return std::make_unique<ImportHDF5DatasetParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<ReadHDF5DatasetParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
 
 // -----------------------------------------------------------------------------
-std::any ImportHDF5DatasetParameter::defaultValue() const
+std::any ReadHDF5DatasetParameter::defaultValue() const
 {
   return m_DefaultValue;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ImportHDF5DatasetParameter::validate(const std::any& value) const
+Result<> ReadHDF5DatasetParameter::validate(const std::any& value) const
 {
   [[maybe_unused]] auto data = std::any_cast<ValueType>(value);
   return {};

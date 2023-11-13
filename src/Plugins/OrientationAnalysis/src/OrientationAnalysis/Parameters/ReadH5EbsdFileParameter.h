@@ -11,7 +11,7 @@
 
 namespace complex
 {
-class COMPLEX_EXPORT H5EbsdReaderParameter : public ValueParameter
+class COMPLEX_EXPORT ReadH5EbsdFileParameter : public ValueParameter
 {
 
 public:
@@ -28,7 +28,7 @@ public:
     bool useRecommendedTransform = {true};
   };
 
-  H5EbsdReaderParameter() = delete;
+  ReadH5EbsdFileParameter() = delete;
 
   /**
    * @brief Constructor
@@ -37,14 +37,14 @@ public:
    * @param helpText The help text that should be displayed to a user
    * @param defaultValue The default value for the parameter
    */
-  H5EbsdReaderParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ReadH5EbsdFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
 
-  ~H5EbsdReaderParameter() override = default;
+  ~ReadH5EbsdFileParameter() override = default;
 
-  H5EbsdReaderParameter(const H5EbsdReaderParameter&) = delete;
-  H5EbsdReaderParameter(H5EbsdReaderParameter&&) noexcept = delete;
-  H5EbsdReaderParameter& operator=(const H5EbsdReaderParameter&) = delete;
-  H5EbsdReaderParameter& operator=(H5EbsdReaderParameter&&) noexcept = delete;
+  ReadH5EbsdFileParameter(const ReadH5EbsdFileParameter&) = delete;
+  ReadH5EbsdFileParameter(ReadH5EbsdFileParameter&&) noexcept = delete;
+  ReadH5EbsdFileParameter& operator=(const ReadH5EbsdFileParameter&) = delete;
+  ReadH5EbsdFileParameter& operator=(ReadH5EbsdFileParameter&&) noexcept = delete;
 
   /**
    * @brief
@@ -94,4 +94,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::H5EbsdReaderParameter, "FAC15aa6-b367-508e-bf73-94ab6be0058b");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::ReadH5EbsdFileParameter, "FAC15aa6-b367-508e-bf73-94ab6be0058b");

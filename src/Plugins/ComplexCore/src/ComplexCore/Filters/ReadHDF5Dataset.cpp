@@ -4,7 +4,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
+#include "complex/Parameters/ReadHDF5DatasetParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
@@ -132,7 +132,7 @@ Parameters ReadHDF5Dataset::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<ImportHDF5DatasetParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "The HDF5 file data to import", ImportHDF5DatasetParameter::ValueType{}));
+  params.insert(std::make_unique<ReadHDF5DatasetParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "The HDF5 file data to import", ReadHDF5DatasetParameter::ValueType{}));
 
   return params;
 }
@@ -147,7 +147,7 @@ IFilter::UniquePointer ReadHDF5Dataset::clone() const
 IFilter::PreflightResult ReadHDF5Dataset::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel) const
 {
-  auto pImportHDF5FileValue = filterArgs.value<ImportHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
+  auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
   auto inputFile = pImportHDF5FileValue.inputFile;
   auto datasetImportInfoList = pImportHDF5FileValue.datasets;
@@ -351,7 +351,7 @@ IFilter::PreflightResult ReadHDF5Dataset::preflightImpl(const DataStructure& dat
 Result<> ReadHDF5Dataset::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                       const std::atomic_bool& shouldCancel) const
 {
-  auto pImportHDF5FileValue = filterArgs.value<ImportHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
+  auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
   auto inputFile = pImportHDF5FileValue.inputFile;
   fs::path inputFilePath(inputFile);
