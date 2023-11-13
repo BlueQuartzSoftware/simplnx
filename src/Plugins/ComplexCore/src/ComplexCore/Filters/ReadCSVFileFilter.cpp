@@ -708,15 +708,15 @@ constexpr StringLiteral k_TupleDimsKey = "Wizard_TupleDims";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportCSVDataFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportCSVDataFilter().getDefaultArguments();
+  Arguments args = ReadCSVFileFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter>(args, json, k_WizardData_Key));
+  // results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter>(args, json, k_WizardData_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ArrayToDynamicTableFilterParameterConverter>(args, json, SIMPL::k_TupleDimsKey, k_TupleDims_Key));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ArrayToDynamicTableFilterParameterConverter>(args, json, SIMPL::k_TupleDimsKey, k_TupleDims_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

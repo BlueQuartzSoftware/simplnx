@@ -216,9 +216,9 @@ constexpr StringLiteral k_FirstLineKey = "FirstLine";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportTextFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadTextDataArrayFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportTextFilter().getDefaultArguments();
+  Arguments args = ReadTextDataArrayFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 
@@ -228,7 +228,6 @@ Result<Arguments> ImportTextFilter::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_SkipHeaderLinesKey, k_NSkipLinesKey));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DelimiterKey, k_DelimiterChoiceKey));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeArrayPathKey, k_DataArrayKey));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_FirstLineKey, "@COMPLEX_PARAMETER_KEY@"));
 
   Result<> conversionResult = MergeResults(std::move(results));
 
