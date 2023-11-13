@@ -16,11 +16,11 @@ result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     component_count=1,
-    data_format="Unknown",
+    data_format="",
     initialization_value="2",
-    numeric_type=4,
+    numeric_type=cx.NumericType.int32,
     output_data_array=cx.DataPath("TestArray"),
-    tuple_dimensions=[0.0, 10.0]
+    tuple_dimensions=[[10.0]]
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -39,11 +39,11 @@ result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     component_count=1,
-    data_format="Unknown",
+    data_format="",
     initialization_value="1.23878",
-    numeric_type=8,
+    numeric_type=cx.NumericType.float32,
     output_data_array=cx.DataPath("Confidence Index"),
-    tuple_dimensions=[0.0, 10.0]
+    tuple_dimensions=[[10.0]]
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')

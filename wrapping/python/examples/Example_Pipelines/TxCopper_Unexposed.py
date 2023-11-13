@@ -101,9 +101,9 @@ result = filter.execute(
     cell_ipf_colors_array_name=("IPF_Exposed_001"),
     cell_phases_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases"),
     crystal_structures_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures"),
-    good_voxels_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"),
+    mask_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"),
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=True
+    use_mask=True
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -143,7 +143,7 @@ result = filter.execute(
     cell_phases_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
     crystal_structures_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures"),
     generation_algorithm=0,
-    good_voxels_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"),
+    mask_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"),
     image_geometry_path=cx.DataPath("PoleFigure"),
     image_layout=2,
     image_prefix=("Cugrid_after 2nd_15kv_2kx_2_Unexposed_"),
@@ -154,7 +154,7 @@ result = filter.execute(
     output_path=cx.DataPath("Data/Output/TexturedCopper"),
     save_as_image_geometry=True,
     title=("Cugrid_after 2nd_15kv_2kx_2 Unexposed"),
-    use_good_voxels=True,
+    use_mask=True,
     write_image_to_disk=True
 )
 if len(result.warnings) != 0:

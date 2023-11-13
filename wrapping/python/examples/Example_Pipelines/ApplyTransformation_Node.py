@@ -17,7 +17,7 @@ result = filter.execute(
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
     scale_output=False,
-    stl_file_path=cx.DataPath("Data/STL_Models/ASTMD638_specimen.stl"),
+    stl_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/STL_Models/ASTMD638_specimen.stl",
     triangle_geometry_name=cx.DataPath("Blade"),
     vertex_attribute_matrix="Vertex Data"
 )
@@ -37,8 +37,9 @@ result = filter.execute(
     data_structure=data_structure,
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
+    #scale_factor: float = ...,
     scale_output=False,
-    stl_file_path=cx.DataPath("Data/STL_Models/ASTMD638_specimen.stl"),
+    stl_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/STL_Models/ASTMD638_specimen.stl",
     triangle_geometry_name=cx.DataPath("Blade (Rotation)"),
     vertex_attribute_matrix="Vertex Data"
 )
@@ -56,12 +57,16 @@ filter = cx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
+    #cell_attribute_matrix_path: DataPath = ...,
+    #computed_transformation_matrix: DataPath = ...,
     interpolation_type=0,
+    #manual_transformation_matrix: List[List[float]] = ...,
     rotation=[1.0, 0.0, 0.0, 180],
-    selected_image_geometry=cx.DataPath("Blade Rotation"),
+    #scale: List[float] = ...,
+    selected_image_geometry=cx.DataPath("Blade [Rotation]"),
     transformation_type=3,
     translate_geometry_to_global_origin=False
-    # translation: List[float] = ...  # Not used here
+    #translation: List[float] = ...
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')

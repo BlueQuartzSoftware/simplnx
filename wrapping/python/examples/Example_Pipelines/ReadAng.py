@@ -96,7 +96,7 @@ result = filter.execute(
     cell_phases_array_path=cx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=False
+    use_mask=False
 )
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')

@@ -142,9 +142,9 @@ result = filter.execute(
     cell_ipf_colors_array_name="IPFColors",
     cell_phases_array_path=cx.DataPath("[Image Geometry]/CellData/Phase"),
     crystal_structures_array_path=cx.DataPath("[Image Geometry]/CellEnsembleData/CrystalStructures"),
-    #good_voxels_array_path: DataPath = ...,
+    #mask_array_path: DataPath = ...,
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=False
+    use_mask=False
     )
 if len(result.errors) != 0:
     print(f'Errors: {result.errors}')

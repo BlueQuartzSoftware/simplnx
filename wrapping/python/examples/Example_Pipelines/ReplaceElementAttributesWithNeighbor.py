@@ -147,9 +147,9 @@ result = filter.execute(
     cell_ipf_colors_array_name=("IPFColors"),
     cell_phases_array_path=cx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    good_voxels_array_path=cx.DataPath("DataContainer/Cell Data/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/Cell Data/Mask"),
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=True
+    use_mask=True
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')

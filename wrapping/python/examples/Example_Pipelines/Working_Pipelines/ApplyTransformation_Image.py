@@ -17,7 +17,7 @@ result = filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("Small IN100"),
-    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100/Slice_1.ang"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -25,7 +25,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ReadAngDataFilter for 'Small IN100'")
+    print(f"{filter.name()} No errors running filter'")
 
 # Filter 2
 # Instantiate Filter
@@ -35,8 +35,8 @@ result = filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=cx.DataPath("Transform (Rotate)"),
-    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
+    data_container_name=cx.DataPath("Transform [Rotate]"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100/Slice_1.ang"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -44,7 +44,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ReadAngDataFilter for 'Transform (Rotate)'")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 3
 # Instantiate Filter
@@ -54,8 +54,8 @@ result = filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_path=cx.DataPath("Transform [Rotate]/Cell Data"),
     interpolation_type=1,
-    rotation=[0.0, 1.0, 0, 180],
-    selected_image_geometry=cx.DataPath("Transform (Rotate)"),
+    rotation=[0.0, 1.0, 0.0, 180.0],
+    selected_image_geometry=cx.DataPath("Transform [Rotate]"),
     transformation_type=3,
     translate_geometry_to_global_origin=False
     # computed_transformation_matrix: DataPath = ...,  # Not used here
@@ -69,7 +69,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ApplyTransformationToGeometryFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 
 # Filter 4
@@ -80,8 +80,8 @@ result = filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=cx.DataPath("Transform (Scale)"),
-    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
+    data_container_name=cx.DataPath("Transform [Scale]"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100/Slice_1.ang"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -89,7 +89,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ReadAngDataFilter for 'Transform (Scale)'")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 5
 # Instantiate Filter
@@ -100,13 +100,13 @@ result = filter.execute(
     cell_attribute_matrix_path=cx.DataPath("Transform [Scale]/Cell Data"),
     interpolation_type=1,
     scale=[2.0, 2.0, 1.0],  # Scale transformation
-    selected_image_geometry=cx.DataPath("Transform (Scale)"),
+    selected_image_geometry=cx.DataPath("Transform [Scale]"),
     transformation_type=5,  # Type for scale transformation
     translate_geometry_to_global_origin=False
-    # computed_transformation_matrix: DataPath = ...,  # Not used here
-    # manual_transformation_matrix: List[List[float]] = ...,  # Not used here
-    # rotation: List[float] = ...,  # Not used here
-    # translation: List[float] = ...  # Not used here
+    # computed_transformation_matrix: DataPath = ...,
+    # manual_transformation_matrix: List[List[float]] = ...,
+    # rotation: List[float] = ...,
+    # translation: List[float] = ...
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -114,7 +114,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ApplyTransformationToGeometryFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 6
 # Instantiate Filter
@@ -124,8 +124,8 @@ result = filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=cx.DataPath("Transform (Translate)"),
-    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
+    data_container_name=cx.DataPath("Transform [Translate]"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100/Slice_1.ang"
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -158,7 +158,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ApplyTransformationToGeometryFilter for translation")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 8
 # Instantiate Filter
@@ -169,7 +169,7 @@ result = filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("Transform [Rotation-Interpolation]"),
-    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100/Slice_1.ang"
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -189,12 +189,12 @@ result = filter.execute(
     interpolation_type=0,
     rotation=[0.0, 0.0, 1.0, 45.0],
     selected_image_geometry=cx.DataPath("Transform [Rotation-Interpolation]"),
-    transformation_type=3,  # Type for rotation transformation
+    transformation_type=3,
     translate_geometry_to_global_origin=False
-    # computed_transformation_matrix: DataPath = ...,  # Not used here
-    # manual_transformation_matrix: List[List[float]] = ...,  # Not used here
-    # scale: List[float] = ...  # Not used here
-    # translation: List[float] = ...  # Not used here
+    # computed_transformation_matrix: DataPath = ...,
+    # manual_transformation_matrix: List[List[float]] = ...,
+    # scale: List[float] = ...,
+    # translation: List[float] = ...
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -214,7 +214,7 @@ result = filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("Transform [Scale-Interpolation]"),
-    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100/Slice_1.ang"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -222,7 +222,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ReadAngDataFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 11
 # Instantiate Filter
@@ -234,12 +234,12 @@ result = filter.execute(
     interpolation_type=0,
     scale=[3.0, 3.0, 1.0],
     selected_image_geometry=cx.DataPath("Transform [Scale-Interpolation]"),
-    transformation_type=5,  # Type for scale transformation
+    transformation_type=5,
     translate_geometry_to_global_origin=False
-    # computed_transformation_matrix: DataPath = ...,  # Not used here
-    # manual_transformation_matrix: List[List[float]] = ...,  # Not used here
-    # rotation: List[float] = ...,  # Not used here
-    # translation: List[float] = ...  # Not used here
+    # computed_transformation_matrix: DataPath = ...,
+    # manual_transformation_matrix: List[List[float]] = ...,
+    # rotation: List[float] = ...,
+    # translation: List[float] = ...
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -253,7 +253,7 @@ else:
 # Instantiate Filter
 filter = cx.ExportDREAM3DFilter()
 # Set Output File Path
-output_file_path = "Data/Output/Transformation/ApplyTransformation_Image.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Transformation/ApplyTransformation_Image.dream3d"
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -267,3 +267,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

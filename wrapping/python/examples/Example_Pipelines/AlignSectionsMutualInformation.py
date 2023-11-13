@@ -88,11 +88,11 @@ result = filter.execute(
     alignment_shift_file_name=cx.DataPath("Data/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt"),
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    good_voxels_array_path=cx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
     misorientation_tolerance=5.0,
     quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
     selected_image_geometry_path=cx.DataPath("DataContainer"),
-    use_good_voxels=True,
+    use_mask=True,
     write_alignment_shifts=True
 )
 if len(result.warnings) != 0:

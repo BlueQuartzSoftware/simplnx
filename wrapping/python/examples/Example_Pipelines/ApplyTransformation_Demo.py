@@ -84,11 +84,11 @@ filter = cx.CreateDataArray()
 result = filter.execute(
     data_structure=data_structure,
     component_count=1,
-    data_format="Unknown",
+    data_format="",
     initialization_value="2",
-    numeric_type=4.0,
-    output_data_array=cx.DataPath("Data"),
-    tuple_dimensions=[0.0, 2.0, 10.0, 10.0]
+    numeric_type=cx.NumericType.int32,
+    output_data_array=cx.DataPath("Group 1/Group 2/[Geometry]/Cell Data/Data"),
+    tuple_dimensions=[[2.0, 10.0, 10.0]]
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -107,7 +107,7 @@ result = filter.execute(
     cell_attribute_matrix_path=cx.DataPath("Group 1/Group 2/[Geometry]/Cell Data"),
     interpolation_type=1,
     scale=[2.0, 2.0, 2.0],
-    selected_image_geometry=cx.DataPath("Group 1/Group 2/[Geometry]/Cell Data"),
+    selected_image_geometry=cx.DataPath("Group 1/Group 2/[Geometry]"),
     transformation_type=5,
     translate_geometry_to_global_origin=False
 )
@@ -118,3 +118,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

@@ -10,7 +10,7 @@ data_structure = cx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cx.ImportCSVDataFilter()
+filter = cx.ReadCSVFileFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -68,7 +68,7 @@ else:
 
 # Filter 3
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -92,7 +92,7 @@ else:
 
 # Filter 4
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -117,7 +117,7 @@ else:
 
 # Filter 5
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -141,7 +141,7 @@ else:
 
 # Filter 6
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -166,7 +166,7 @@ else:
 
 # Filter 7
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -190,7 +190,7 @@ else:
 
 # Filter 8
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,

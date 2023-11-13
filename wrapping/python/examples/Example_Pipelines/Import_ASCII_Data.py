@@ -10,7 +10,7 @@ data_structure = cx.DataStructure()
 
 #Filter 1
 
-result = cx.ImportTextFilter.execute(
+result = cx.ReadTextDataArrayFilter.execute(
     data_structure=data_structure,
     #advanced_options: bool = ...,
     #data_format: str = ...,

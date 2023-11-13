@@ -95,11 +95,11 @@ result = filter.execute(
     data_structure=data_structure,
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    good_voxels_array_path=cx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
     misorientation_tolerance=5.0,
     quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
     selected_image_geometry_path=cx.DataPath("DataContainer"),
-    use_good_voxels=True,
+    use_mask=True,
     write_alignment_shifts=False
     # alignment_shift_file_name: PathLike = ...,  # Not currently part of the code
 )
@@ -135,7 +135,7 @@ filter = cx.AlignSectionsFeatureCentroidFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    good_voxels_array_path=cx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
     reference_slice=0,
     selected_cell_data_path=cx.DataPath("DataContainer/CellData"),
     selected_image_geometry_path=cx.DataPath("DataContainer"),
@@ -160,7 +160,7 @@ result = filter.execute(
     data_structure=data_structure,
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    good_voxels_array_path=cx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
     image_geometry_path=cx.DataPath("DataContainer"),
     misorientation_tolerance=5.0,
     number_of_neighbors=4,
@@ -209,12 +209,12 @@ result = filter.execute(
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
-    good_voxels_array_path=cx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
     grid_geometry_path=cx.DataPath("DataContainer"),
     misorientation_tolerance=5.0,
     quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
     randomize_features=True,
-    use_good_voxels=True
+    use_mask=True
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -492,9 +492,9 @@ result = filter.execute(
     cell_ipf_colors_array_name="IPFColors",
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    good_voxels_array_path=cx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=True
+    use_mask=True
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')

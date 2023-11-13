@@ -21,7 +21,7 @@ result = cx.CreateImageGeometry.execute(
 
 #Filter 2
 
-result = cx.ImportTextFilter.execute(
+result = cx.ReadTextDataArrayFilter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="Unknown",
@@ -36,7 +36,7 @@ result = cx.ImportTextFilter.execute(
 
 #Filter 3
 
-result = cx.ImportTextFilter.execute(
+result = cx.ReadTextDataArrayFilter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="Unknown",
@@ -51,7 +51,7 @@ result = cx.ImportTextFilter.execute(
 
 #Filter 4
 
-result = cx.ImportTextFilter.execute(
+result = cx.ReadTextDataArrayFilter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="Unknown",
@@ -66,7 +66,7 @@ result = cx.ImportTextFilter.execute(
 
 #Filter 5
 
-result = cx.ImportTextFilter.execute(
+result = cx.ReadTextDataArrayFilter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="Unknown",

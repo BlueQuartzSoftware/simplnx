@@ -128,7 +128,7 @@ result = filter.execute(
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=False
+    use_mask=False
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -168,9 +168,9 @@ result = filter.execute(
     cell_ipf_colors_array_name="IPF_010",
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
-    #good_voxels_array_path=cx.DataPath("")
+    #mask_array_path=cx.DataPath("")
     reference_dir=[0.0, 0.0, 1.0],
-    use_good_voxels=False
+    use_mask=False
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -211,7 +211,7 @@ result = filter.execute(
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
     reference_dir=[1.0, 0.0, 0.0],
-    use_good_voxels=False
+    use_mask=False
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -252,12 +252,12 @@ result = filter.execute(
     cell_phases_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
-    good_voxels_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/ThresholdArray"),
+    mask_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/ThresholdArray"),
     image_geometry_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
     misorientation_tolerance=5.0,
     quats_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Quats"),
     randomize_feature_ids=True,
-    use_good_voxels=True
+    use_mask=True
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')

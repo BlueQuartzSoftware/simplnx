@@ -1,3 +1,6 @@
+#THIS IS NOT MEANT TO BE RUN -- PURELY FOR PRODUCTION
+
+
 import complex as cx
 
 import itkimageprocessing as cxitk
@@ -83,3 +86,5 @@ else:
 
 
 #Change PathLike to Strings
+
+print("===> Pipeline Complete")

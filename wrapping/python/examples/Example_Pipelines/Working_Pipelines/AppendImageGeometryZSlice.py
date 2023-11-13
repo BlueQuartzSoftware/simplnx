@@ -30,19 +30,19 @@ else:
 
 # Filter 2
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file=cx.DataPath("Data/ASCIIData/ConfidenceIndex.csv"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/ConfidenceIndex.csv",
     n_comp=1,
     n_skip_lines=0,
-    n_tuples=[0, 480000],
+    n_tuples=[[480000.0]],
     output_data_array=cx.DataPath("Confidence Index"),
-    scalar_type=8
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -54,19 +54,19 @@ else:
 
 # Filter 3
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file=cx.DataPath("Data/ASCIIData/FeatureIds.csv"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/FeatureIds.csv",
     n_comp=1,
     n_skip_lines=0,
-    n_tuples=[0, 480000],
-    output_data_array=cx.DataPath("FeatureIds"),
-    scalar_type=4
+    n_tuples=[[480000.0]],
+    output_data_array=cx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
+    scalar_type=cx.NumericType.int32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -79,19 +79,19 @@ else:
 
 # Filter 4
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file=cx.DataPath("Data/ASCIIData/ImageQuality.csv"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/ImageQuality.csv",
     n_comp=1,
     n_skip_lines=0,
-    n_tuples=[0, 480000],
-    output_data_array=cx.DataPath("Image Quality"),
-    scalar_type=8
+    n_tuples=[[480000.0]],
+    output_data_array=cx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -99,23 +99,23 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ImportTextFilter for Image Quality")
+    print(f"{filter.name()} No errors running ReadTextDataArrayFilter")
 
 # Filter 5
 # Instantiate Filter
-filter = cx.ImportTextFilter()
+filter = cx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file=cx.DataPath("Data/ASCIIData/IPFColor.csv"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/IPFColor.csv",
     n_comp=3,
     n_skip_lines=0,
-    n_tuples=[0, 480000],
-    output_data_array=cx.DataPath("IPFColors"),
-    scalar_type=0  # Assuming scalar_type 0 is for a data format like RGB
+    n_tuples=[[480000.0]],
+    output_data_array=cx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
+    scalar_type=cx.NumericType.int16 #Temporary Switch: 'int8' disabled, use 'int16' instead until fix can be deployed
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -123,7 +123,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ImportTextFilter for IPFColors")
+    print(f"{filter.name()} No errors running ReadTextDataArrayFilter")
 
 # Filter 6
 # Instantiate Filter
@@ -198,18 +198,19 @@ else:
 # Instantiate Filter
 filter = cx.ExportDREAM3DFilter()
 # Set Output File Path
-output_file_path = "Data/Output/Examples/AppendImageGeometryZSlice.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/AppendImageGeometryZSlice.dream3d"
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print('Errors: {}'.format(result.errors))
-    print('Warnings: {}'.format(result.warnings))
+    print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+    print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")
