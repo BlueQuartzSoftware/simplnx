@@ -28,7 +28,7 @@ else:
 # Rotate the Euler Reference Frame
 #------------------------------------------------------------------------------
 result = cxor.RotateEulerRefFrameFilter.execute(data_structure=data_structure, 
-                                                cell_euler_angles_array_path=cx.DataPath(["Small IN100", "Scan Data", "EulerAngles"]), 
+                                                euler_angles_array_path=cx.DataPath(["Small IN100", "Scan Data", "EulerAngles"]), 
                                                 rotation_axis=[0,0,1,90])
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
@@ -139,7 +139,7 @@ else:
 #------------------------------------------------------------------------------
 color_control_points = cx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
 result = cx.GenerateColorTableFilter.execute(data_structure=data_structure,
-                                              rgb_array_path="CI Color", 
+                                              output_rgb_array_name="CI Color", 
                                               selected_data_array_path=cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
                                               selected_preset=color_control_points)
 if len(result.errors) != 0:
@@ -181,14 +181,14 @@ else:
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
 output_file_path = "basic_ebsd_example.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
-    print("No errors running the ExportDREAM3DFilter")
+    print("No errors running the WriteDREAM3DFilter")
 
 
 

@@ -125,7 +125,7 @@ else:
 
 
 output_file_path = "/tmp/output_file_example.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.errors) != 0:

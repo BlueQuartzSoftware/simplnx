@@ -68,7 +68,7 @@ Uuid WritePoleFigureFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string WritePoleFigureFilter::humanName() const
 {
-  return "Generate Pole Figure Images";
+  return "Generate and Write Pole Figure Images";
 }
 
 //------------------------------------------------------------------------------

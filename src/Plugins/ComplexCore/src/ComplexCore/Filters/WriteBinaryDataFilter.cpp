@@ -57,7 +57,7 @@ Uuid WriteBinaryDataFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string WriteBinaryDataFilter::humanName() const
 {
-  return "Export Binary Data";
+  return "Write Binary Data";
 }
 
 //------------------------------------------------------------------------------

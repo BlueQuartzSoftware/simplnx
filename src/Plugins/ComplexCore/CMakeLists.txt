@@ -7,7 +7,6 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
-  AbaqusHexahedronWriterFilter
   AddBadDataFilter
   AlignGeometries
   AlignSectionsFeatureCentroidFilter
@@ -16,16 +15,14 @@ set(FilterList
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHull
   ArrayCalculatorFilter
-  AvizoRectilinearCoordinateWriterFilter
-  AvizoUniformCoordinateWriterFilter
   CalculateArrayHistogramFilter
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
   ChangeAngleRepresentation
   CombineAttributeArraysFilter
   CombineStlFilesFilter
-  ComputeMomentInvariants2DFilter
   ComputeFeatureRectFilter
+  ComputeMomentInvariants2DFilter
   ConditionalSetValue
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
@@ -44,11 +41,9 @@ set(FilterList
   ErodeDilateCoordinationNumberFilter
   ErodeDilateMaskFilter
   ExecuteProcessFilter
-  ExportDREAM3DFilter
   ExtractComponentAsArrayFilter
   ExtractInternalSurfacesFromTriangleGeometry
   ExtractVertexGeometryFilter
-  FeatureDataCSVWriterFilter
   FeatureFaceCurvatureFilter
   FillBadDataFilter
   FindArrayStatisticsFilter
@@ -59,8 +54,8 @@ set(FilterList
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
   FindFeatureClusteringFilter
-  FindFeaturePhasesFilter
   FindFeaturePhasesBinaryFilter
+  FindFeaturePhasesFilter
   FindLargestCrossSectionsFilter
   FindNeighborhoodsFilter
   FindNeighborListStatistics
@@ -74,22 +69,14 @@ set(FilterList
   FindVolFractionsFilter
   GenerateColorTableFilter
   GenerateVectorColorsFilter
-  ImageContouringFilter
   IdentifySample
-  ImportBinaryCTNorthstarFilter
-  ReadCSVFileFilter
-  ImportDeformKeyFileV12Filter
-  ImportDREAM3DFilter
-  ImportHDF5Dataset
-  ReadTextDataArrayFilter
-  ImportVolumeGraphicsFileFilter
+  ImageContouringFilter
   InitializeData
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
   KMeansFilter
   KMedoidsFilter
   LaplacianSmoothingFilter
-  LosAlamosFFTWriterFilter
   MapPointCloudToRegularGridFilter
   MinNeighbors
   MoveData
@@ -98,7 +85,15 @@ set(FilterList
   PartitionGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
-  RawBinaryReaderFilter
+  ReadBinaryCTNorthstarFilter
+  ReadCSVFileFilter
+  ReadDeformKeyFileV12Filter
+  ReadDREAM3DFilter
+  ReadHDF5Dataset
+  ReadRawBinaryFilter
+  ReadStlFileFilter
+  ReadTextDataArrayFilter
+  ReadVolumeGraphicsFileFilter
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedVertices
@@ -115,37 +110,39 @@ set(FilterList
   SharedFeatureFaceFilter
   SilhouetteFilter
   SplitAttributeArrayFilter
-  StlFileReaderFilter
   SurfaceNetsFilter
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
   UncertainRegularGridSampleSurfaceMeshFilter
-  VtkRectilinearGridWriterFilter
+  WriteAbaqusHexahedronFilter
   WriteASCIIDataFilter
+  WriteAvizoRectilinearCoordinateFilter
+  WriteAvizoUniformCoordinateFilter
   WriteBinaryDataFilter
+  WriteDREAM3DFilter
+  WriteFeatureDataCSVFilter
+  WriteLosAlamosFFTFilter
   WriteStlFileFilter
+  WriteVtkRectilinearGridFilter
 )
 
 set(ActionList
 )
 
 set(AlgorithmList
-  AbaqusHexahedronWriter
   AddBadData
   AlignSectionsFeatureCentroid
   AlignSectionsList
   AppendImageGeometryZSlice
   ApplyTransformationToGeometry
   ArrayCalculator
-  AvizoRectilinearCoordinateWriter
-  AvizoUniformCoordinateWriter
   CalculateArrayHistogram
   CalculateTriangleGroupCurvatures
   CombineAttributeArrays
   CombineStlFiles
-  ComputeMomentInvariants2D
   ComputeFeatureRect
+  ComputeMomentInvariants2D
   ConvertColorToGrayScale
   ConvertData
   ErodeDilateBadData
@@ -171,18 +168,18 @@ set(AlgorithmList
   GenerateColorTable
   GenerateVectorColors
   ImageContouring
-  ImportDeformKeyFileV12
-  ImportVolumeGraphicsFile
-  ImportBinaryCTNorthstar
   KMeans
   KMedoids
   LaplacianSmoothing
-  LosAlamosFFTWriter
   NearestPointFuseRegularGrids
   PartitionGeometry
   PointSampleTriangleGeometry
   QuickSurfaceMesh
-  RawBinaryReader
+  ReadBinaryCTNorthstar
+  ReadDeformKeyFileV12
+  ReadRawBinary
+  ReadStlFile
+  ReadVolumeGraphicsFile
   RegularGridSampleSurfaceMesh
   RemoveFlaggedFeatures
   ReplaceElementAttributesWithNeighborValues
@@ -192,13 +189,16 @@ set(AlgorithmList
   SharedFeatureFace
   Silhouette
   SplitAttributeArray
-  StlFileReader
   SurfaceNets
   TriangleCentroid
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
-  VtkRectilinearGridWriter
+  WriteAbaqusHexahedron
+  WriteAvizoRectilinearCoordinate
+  WriteAvizoUniformCoordinate
+  WriteLosAlamosFFT
   WriteStlFile
+  WriteVtkRectilinearGrid
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

@@ -44,7 +44,7 @@
       },
       "comments": "This pipeline requires the output from the (08) Small IN100 Full Reconstruction pipeline as input",
       "filter": {
-        "name": "complex::ImportDREAM3DFilter",
+        "name": "complex::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
@@ -59,7 +59,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::AvizoUniformCoordinateWriterFilter",
+        "name": "complex::WriteAvizoUniformCoordinateFilter",
         "uuid": "0ed4ae48-3295-4a5d-8505-d5d2a6f2a212"
       },
       "isDisabled": false
@@ -74,7 +74,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::AvizoRectilinearCoordinateWriterFilter",
+        "name": "complex::WriteAvizoRectilinearCoordinateFilter",
         "uuid": "58661ea8-0322-44af-a48e-1dc80e999376"
       },
       "isDisabled": false

@@ -8,7 +8,7 @@
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
         "data_container_name": "DataContainer",
-        "read_h5_ebsd_filter": {
+        "read_h5_ebsd_parameter": {
           "end_slice": 117,
           "euler_representation": 0,
           "hdf5_data_paths": [
@@ -192,7 +192,7 @@
         "cell_features_attribute_matrix_path": "DataContainer/CellFeatureData",
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "feature_phases_array_path": "Phases"
+        "feature_phases_array_name": "Phases"
       },
       "comments": "",
       "filter": {
@@ -417,7 +417,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ExportDREAM3DFilter",
+        "name": "complex::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

@@ -37,9 +37,6 @@ set(FilterList
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
   EbsdToH5EbsdFilter
-  EnsembleInfoReaderFilter
-  ExportGBCDGMTFileFilter
-  ExportGBCDTriangleDataFilter
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
   FindBoundaryStrengthsFilter
@@ -62,29 +59,28 @@ set(FilterList
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
   GenerateQuaternionConjugateFilter
-  ImportH5EspritDataFilter
-  ImportH5OimDataFilter
-  INLWriterFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
   ReadCtfDataFilter
+  ReadEnsembleInfoFilter
   ReadH5EbsdFilter
+  ReadH5EspritDataFilter
+  ReadH5OimDataFilter
   RodriguesConvertorFilter
   RotateEulerRefFrameFilter
+  WriteGBCDGMTFileFilter
+  WriteGBCDTriangleDataFilter
+  WriteINLFileFilter
   WritePoleFigureFilter
   WriteStatsGenOdfAngleFileFilter
 )
   
 set(STUB_FILTERS
-
-  # ConvertHexGridToSquareGrid # MISSING 1 or more Parameter Implementations
   CreateLambertSphere
   EMsoftSO3Sampler
-
   FindBoundaryStrengths
   FindDistsToCharactGBs
-
   FindKernelAvgMisorientations
   FindMisorientations
   FindSchmids
@@ -112,7 +108,7 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 # include directories that are needed for the parameter.
 # ------------------------------------------------------------------------------
 set(complex_injected_parameters
-  H5EbsdReaderParameter
+  ReadH5EbsdFileParameter
   OEMEbsdScanSelectionParameter
   #EbsdToH5EbsdParameter
 )
@@ -171,9 +167,6 @@ set(filter_algorithms
   CreateEnsembleInfo
   EBSDSegmentFeatures
   EbsdToH5Ebsd
-  EnsembleInfoReader
-  ExportGBCDGMTFile
-  ExportGBCDTriangleData
   FindAvgCAxes
   FindAvgOrientations
   FindBoundaryStrengths
@@ -196,16 +189,19 @@ set(filter_algorithms
   GenerateIPFColors
   GenerateQuaternionConjugate
   GroupFeatures
-  ImportH5EspritData
-  ImportH5OimData
-  INLWriter
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
   ReadCtfData
+  ReadEnsembleInfo
   ReadH5Ebsd
+  ReadH5EspritData
+  ReadH5OimData
   RodriguesConvertor
   RotateEulerRefFrame
+  WriteGBCDGMTFile
+  WriteGBCDTriangleData
+  WriteINLFile
   WritePoleFigure
   WriteStatsGenOdfAngleFile
 )
@@ -238,7 +234,7 @@ set(PLUGIN_EXTRA_SOURCES
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/inicpp.h"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.cpp"
-"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ImportH5Data.hpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ReadH5Data.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.cpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/Fonts.hpp"

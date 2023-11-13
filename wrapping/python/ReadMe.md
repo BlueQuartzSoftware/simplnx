@@ -70,3 +70,14 @@ conda install -c bluequartzsoftware complex
 ```
 
 If you plan to use jupyter notebooks, then any other kernels and such will also need to be installed. VS Code does this for you.
+
+## Test Python Bindings from Build Directory
+
+Ensure you are building the python bindings.
+
+```shell
+COMPLEX_BUILD_PYTHON=ON
+COMPLEX_EMBED_PYTHON=OFF
+COMPLEX_ENABLE_SPHINX_DOCS=ON
+Python3_EXECUTABLE=/path/to/python
+```

@@ -32,7 +32,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ImportH5OimDataFilter",
+        "name": "complex::ReadH5OimDataFilter",
         "uuid": "4ad3d47c-b1e1-4429-bc65-5e021be62ba0"
       },
       "isDisabled": false
@@ -108,7 +108,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ExportDREAM3DFilter",
+        "name": "complex::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

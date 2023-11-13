@@ -45,7 +45,7 @@ Uuid WriteASCIIDataFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string WriteASCIIDataFilter::humanName() const
 {
-  return "Export ASCII Data";
+  return "Write ASCII Data";
 }
 
 //------------------------------------------------------------------------------

@@ -63,7 +63,7 @@ option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
 project(complex
-  VERSION 1.1.0
+  VERSION 1.2.0
   DESCRIPTION "SIMPL Redesign"
   HOMEPAGE_URL "https://github.com/BlueQuartzSoftware/complex"
   LANGUAGES CXX
@@ -262,7 +262,7 @@ set(CoreParameters
   NumberParameter
   NumericTypeParameter
   ReadCSVFileParameter
-  ImportHDF5DatasetParameter
+  ReadHDF5DatasetParameter
   StringParameter
   VectorParameter
 )

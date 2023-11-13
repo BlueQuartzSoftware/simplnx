@@ -68,13 +68,13 @@
 #include <complex/Parameters/GenerateColorTableParameter.hpp>
 #include <complex/Parameters/GeneratedFileListParameter.hpp>
 #include <complex/Parameters/GeometrySelectionParameter.hpp>
-#include <complex/Parameters/ImportHDF5DatasetParameter.hpp>
 #include <complex/Parameters/MultiArraySelectionParameter.hpp>
 #include <complex/Parameters/MultiPathSelectionParameter.hpp>
 #include <complex/Parameters/NeighborListSelectionParameter.hpp>
 #include <complex/Parameters/NumberParameter.hpp>
 #include <complex/Parameters/NumericTypeParameter.hpp>
 #include <complex/Parameters/ReadCSVFileParameter.hpp>
+#include <complex/Parameters/ReadHDF5DatasetParameter.hpp>
 #include <complex/Parameters/StringParameter.hpp>
 #include <complex/Parameters/VectorParameter.hpp>
 #include <complex/Pipeline/AbstractPipelineNode.hpp>
@@ -435,7 +435,7 @@ PYBIND11_MODULE(complex, mod)
   arrayThresholdSet.def_property("thresholds", &ArrayThresholdSet::getArrayThresholds, &ArrayThresholdSet::setArrayThresholds);
   arrayThresholdSet.def("__repr__", [](const ArrayThresholdSet& self) { return "ArrayThresholdSet()"; });
 
-  py::class_<ReadCSVData> readCSVData(mod, "ReadCSVData");
+  py::class_<ReadCSVData> readCSVData(mod, "ReadCSVDataParameter");
 
   py::enum_<ReadCSVData::HeaderMode> csvHeaderMode(readCSVData, "HeaderMode");
   csvHeaderMode.value("Line", ReadCSVData::HeaderMode::LINE);
@@ -452,7 +452,7 @@ PYBIND11_MODULE(complex, mod)
   readCSVData.def_readwrite("tuple_dims", &ReadCSVData::tupleDims);
   readCSVData.def_readwrite("delimiters", &ReadCSVData::delimiters);
   readCSVData.def_readwrite("consecutive_delimiters", &ReadCSVData::consecutiveDelimiters);
-  readCSVData.def("__repr__", [](const ReadCSVData& self) { return "ReadCSVData()"; });
+  readCSVData.def("__repr__", [](const ReadCSVData& self) { return "ReadCSVDataParameter()"; });
 
   py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
   py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
@@ -720,7 +720,7 @@ PYBIND11_MODULE(complex, mod)
   auto generatedFileListParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeneratedFileListParameter);
   auto geometrySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeometrySelectionParameter);
   auto importTextDataParameter = COMPLEX_PY_BIND_PARAMETER(mod, ReadCSVFileParameter);
-  auto importHDF5DatasetParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportHDF5DatasetParameter);
+  auto importHDF5DatasetParameter = COMPLEX_PY_BIND_PARAMETER(mod, ReadHDF5DatasetParameter);
   auto multiArraySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiArraySelectionParameter);
   auto multiPathSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiPathSelectionParameter);
   auto neighborListSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, NeighborListSelectionParameter);
@@ -747,18 +747,18 @@ PYBIND11_MODULE(complex, mod)
   auto vectorFloat32Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorFloat32Parameter);
   auto vectorFloat64Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorFloat64Parameter);
 
-  py::class_<ImportHDF5DatasetParameter::DatasetImportInfo> datasetImportInfo(importHDF5DatasetParameter, "DatasetImportInfo");
+  py::class_<ReadHDF5DatasetParameter::DatasetImportInfo> datasetImportInfo(importHDF5DatasetParameter, "DatasetImportInfo");
   datasetImportInfo.def(py::init<>());
-  datasetImportInfo.def_readwrite("dataset_path", &ImportHDF5DatasetParameter::DatasetImportInfo::dataSetPath);
-  datasetImportInfo.def_readwrite("component_dims", &ImportHDF5DatasetParameter::DatasetImportInfo::componentDimensions);
-  datasetImportInfo.def_readwrite("tuple_dims", &ImportHDF5DatasetParameter::DatasetImportInfo::tupleDimensions);
+  datasetImportInfo.def_readwrite("dataset_path", &ReadHDF5DatasetParameter::DatasetImportInfo::dataSetPath);
+  datasetImportInfo.def_readwrite("component_dims", &ReadHDF5DatasetParameter::DatasetImportInfo::componentDimensions);
+  datasetImportInfo.def_readwrite("tuple_dims", &ReadHDF5DatasetParameter::DatasetImportInfo::tupleDimensions);
 
-  py::class_<ImportHDF5DatasetParameter::ValueType> importHdf5DatasetInfo(importHDF5DatasetParameter, "ValueType");
+  py::class_<ReadHDF5DatasetParameter::ValueType> importHdf5DatasetInfo(importHDF5DatasetParameter, "ValueType");
   importHdf5DatasetInfo.def(py::init<>());
-  importHdf5DatasetInfo.def_readwrite("parent", &ImportHDF5DatasetParameter::ValueType::parent);
-  importHdf5DatasetInfo.def_readwrite("input_file", &ImportHDF5DatasetParameter::ValueType::inputFile);
-  importHdf5DatasetInfo.def_readwrite("datasets", &ImportHDF5DatasetParameter::ValueType::datasets);
-  importHdf5DatasetInfo.def("__repr__", [](const ImportHDF5DatasetParameter::ValueType& self) { return "ImportHDF5DatasetParameter.ValueType()"; });
+  importHdf5DatasetInfo.def_readwrite("parent", &ReadHDF5DatasetParameter::ValueType::parent);
+  importHdf5DatasetInfo.def_readwrite("input_file", &ReadHDF5DatasetParameter::ValueType::inputFile);
+  importHdf5DatasetInfo.def_readwrite("datasets", &ReadHDF5DatasetParameter::ValueType::datasets);
+  importHdf5DatasetInfo.def("__repr__", [](const ReadHDF5DatasetParameter::ValueType& self) { return "ReadHDF5DatasetParameter.ValueType()"; });
 
   py::enum_<GeneratedFileListParameter::Ordering> generatedFileListOrdering(generatedFileListParameter, "Ordering");
   generatedFileListOrdering.value("LowToHigh", GeneratedFileListParameter::Ordering::LowToHigh);
@@ -1009,6 +1009,15 @@ PYBIND11_MODULE(complex, mod)
         return pipelineResult.value();
       },
       "path"_a);
+  pipeline.def(
+      "to_file",
+      [](Pipeline& self, const std::string& name, const std::filesystem::path& path) {
+        nlohmann::json pipelineJson = self.toJson();
+        pipelineJson["name"] = name;
+        std::ofstream file(path, std::ios_base::binary);
+        file << pipelineJson;
+      },
+      "name"_a, "path"_a);
   pipeline.def("execute", &ExecutePipeline);
   pipeline.def(
       "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
@@ -1061,7 +1070,7 @@ PYBIND11_MODULE(complex, mod)
   internals->addConversion<GeneratedFileListParameter>();
   internals->addConversion<GeometrySelectionParameter>();
   internals->addConversion<ReadCSVFileParameter>();
-  internals->addConversion<ImportHDF5DatasetParameter>();
+  internals->addConversion<ReadHDF5DatasetParameter>();
   internals->addConversion<MultiArraySelectionParameter>();
   internals->addConversion<MultiPathSelectionParameter>();
   internals->addConversion<NeighborListSelectionParameter>();
