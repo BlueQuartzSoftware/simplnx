@@ -30,7 +30,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayName_Key = "feature_phases_array_name";
   static inline constexpr StringLiteral k_CellFeaturesAttributeMatrixPath_Key = "cell_features_attribute_matrix_path";
 
   /**

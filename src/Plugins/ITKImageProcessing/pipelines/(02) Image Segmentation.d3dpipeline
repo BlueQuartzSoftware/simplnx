@@ -156,7 +156,7 @@
         "cell_features_attribute_matrix_path": "ImageDataContainer/CellFeatureData",
         "cell_phases_array_path": "ImageDataContainer/Cell Data/Phases",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
-        "feature_phases_array_path": "Phases"
+        "feature_phases_array_name": "Phases"
       },
       "comments": "",
       "filter": {

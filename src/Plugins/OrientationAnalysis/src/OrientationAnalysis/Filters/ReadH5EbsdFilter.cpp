@@ -56,7 +56,8 @@ Parameters ReadH5EbsdFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<H5EbsdReaderParameter>(k_ReadH5EbsdParameter_Key, "Import H5Ebsd File", "Object that holds all relevant information to import data from the file.", H5EbsdReaderParameter::ValueType{}));
+  params.insert(std::make_unique<H5EbsdReaderParameter>(k_ReadH5EbsdParameter_Key, "Import H5Ebsd File", "Object that holds all relevant information to import data from the file.",
+                                                        H5EbsdReaderParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Created Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));

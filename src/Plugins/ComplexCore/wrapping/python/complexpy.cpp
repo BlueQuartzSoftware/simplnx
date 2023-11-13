@@ -1010,20 +1010,17 @@ PYBIND11_MODULE(complex, mod)
       },
       "path"_a);
   pipeline.def(
-    "to_file",
-    [](Pipeline& self, const std::string& name, const std::filesystem::path& path) {
+      "to_file",
+      [](Pipeline& self, const std::string& name, const std::filesystem::path& path) {
         nlohmann::json pipelineJson = self.toJson();
         pipelineJson["name"] = name;
         std::ofstream file(path, std::ios_base::binary);
         file << pipelineJson;
       },
-      "name"_a,
-      "path"_a);
+      "name"_a, "path"_a);
   pipeline.def("execute", &ExecutePipeline);
   pipeline.def(
-      "__getitem__",
-      [](Pipeline& self, Pipeline::index_type index) { return self.at(index); },
-      py::return_value_policy::reference_internal);
+      "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
   pipeline.def("__len__", &Pipeline::size);
   pipeline.def("size", &Pipeline::size);
   pipeline.def(
