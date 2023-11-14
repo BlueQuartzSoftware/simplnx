@@ -21,10 +21,11 @@ result = filter.execute(
     read_pattern_data=False,
     z_spacing=1.0
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
+    quit()
 else:
     print(f"{filter.name()} No errors running the filter")
 

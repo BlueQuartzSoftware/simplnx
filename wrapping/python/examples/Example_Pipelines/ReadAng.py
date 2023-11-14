@@ -19,10 +19,11 @@ result = filter.execute(
     data_container_name=cx.DataPath("DataContainer"),
     input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
+    quit()
 else:
     print(f"{filter.name()} No errors running the filter")
 
@@ -35,10 +36,11 @@ result = filter.execute(
     cell_euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
     rotation_axis=[0.0, 0.0, 1.0, 90.0]
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
+    quit()
 else:
     print(f"{filter.name()} No errors running the filter")
 
@@ -54,10 +56,11 @@ result = filter.execute(
     rotation_representation=("Axis Angle"),
     selected_image_geometry=cx.DataPath("DataContainer")
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
+    quit()
 else:
     print(f"{filter.name()} No errors running the filter")
 

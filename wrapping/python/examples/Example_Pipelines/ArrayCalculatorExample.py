@@ -61,11 +61,11 @@ result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     component_count=3,
-    data_format="Unknown",
+    data_format="",
     initialization_value="1.23878",
-    numeric_type=8,
+    numeric_type=cx.NumericType.float32,
     output_data_array=cx.DataPath("EulerAngles"),
-    tuple_dimensions=[0.0, 10.0]
+    tuple_dimensions=[[10.0]]
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -83,8 +83,8 @@ filter = cx.ArrayCalculatorFilter()
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_TestArray"),
-    infix_equation="TestArray+TestArray",
-    scalar_type=8
+    infix_equation="TestArray+TestArray",  
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -202,3 +202,4 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
+print("===> Pipeline Complete")

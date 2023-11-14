@@ -16,7 +16,7 @@ result = filter.execute(
     data_structure=data_structure,
     face_attribute_matrix_name="Face Data",
     face_normals_array_name="Face Normals",
-    stl_files_path="Data/STL_Models",
+    stl_files_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/STL_Models",
     triangle_data_container_name=cx.DataPath("TriangleGeometry"),
     vertex_attribute_matrix_name="Vertex Data"
 )
@@ -43,3 +43,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

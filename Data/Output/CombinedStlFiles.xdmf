@@ -2,5 +2,25 @@
 <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd"[]>
 <Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">
  <Domain>
+  <!-- *************** START OF TriangleGeometry *************** -->
+  <Grid Name="TriangleGeometry" GridType="Uniform">
+    <Topology TopologyType="Triangle" NumberOfElements="344">
+      <DataItem Format="HDF" NumberType="Int" Dimensions="344 3">
+        CombinedStlFiles.dream3d:/DataStructure/TriangleGeometry/SharedTriList
+      </DataItem>
+    </Topology>
+    <Geometry Type="XYZ">
+      <DataItem Format="HDF"  Dimensions="176 3" NumberType="Float" Precision="4">
+        CombinedStlFiles.dream3d:/DataStructure/TriangleGeometry/SharedVertexList
+      </DataItem>
+    </Geometry>
+
+    <Attribute Name="Face Normals" AttributeType="Vector" Center="Cell">
+      <DataItem Format="HDF" Dimensions="344 3" NumberType="Float" Precision="8" >
+        CombinedStlFiles.dream3d:/DataStructure/TriangleGeometry/Face Data/Face Normals
+      </DataItem>
+    </Attribute>
+  </Grid>
+  <!-- *************** END OF TriangleGeometry *************** -->
  </Domain>
 </Xdmf>

@@ -13,7 +13,7 @@ data_structure = cx.DataStructure()
 filter = cx.ImportDREAM3DFilter()
 # Set import parameters
 import_data = cx.Dream3dImportParameter.ImportData()
-import_data.file_path = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_data.data_paths = None
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure, import_file_data=import_data)
@@ -32,9 +32,10 @@ filter = cx.AvizoUniformCoordinateWriterFilter()
 result = filter.execute(data_structure=data_structure,
     feature_ids_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
     geometry_path=cx.DataPath("DataContainer"),
-    output_file=cx.DataPath("Data/Output/Examples/SmallIN100_AvizoUniform.am"),
+    output_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/SmallIN100_AvizoUniform.am",
     units="meters",
-    write_binary_file=False)
+    write_binary_file=False
+)
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
@@ -50,9 +51,10 @@ filter = cx.AvizoUniformCoordinateWriterFilter()
 result = filter.execute(data_structure=data_structure,
     feature_ids_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
     geometry_path=cx.DataPath("DataContainer"),
-    output_file=cx.DataPath("Data/Output/Examples/SmallIN100_AvizoRectilinear.am"),
+    output_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/SmallIN100_AvizoRectilinear.am",
     units="meters",
-    write_binary_file=False)
+    write_binary_file=False
+)
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
@@ -60,3 +62,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

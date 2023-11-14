@@ -86,11 +86,11 @@ result = filter.execute(
     created_data_path="Mask",
     created_mask_type=cx.DataType.boolean
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
 else:
     print(f"{filter.name()} No errors running the filter")
 
@@ -129,10 +129,10 @@ result = filter.execute(
     index_offset=0,
     plane=0
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
 else:
     print(f"{filter.name()} No errors running the filter")

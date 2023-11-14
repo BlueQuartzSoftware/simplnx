@@ -9,18 +9,17 @@ import numpy as np
 data_structure = cx.DataStructure()
 
 # Filter 1
+# Instantiate Import Data
+
+import_data = cx.Dream3dImportParameter.ImportData()
+import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_data.data_paths = None
+
 # Instantiate Filter
-filter = cxor.ImportH5OimDataFilter()
+filter = cx.ImportDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(
-    data_structure=data_structure,
-    cell_attribute_matrix_name=("Cell Data"),
-    cell_ensemble_attribute_matrix_name=("Cell Ensemble Data"),
-    image_geometry_name=cx.DataPath("ImageGeom"),
-    origin=[0.0, 0.0, 0.0],
-    read_pattern_data=False,
-    z_spacing=1.0
-)
+result = filter.execute(data_structure=data_structure,
+                        import_file_data=import_data)
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
@@ -31,12 +30,15 @@ else:
 
 # Filter 2
 # Instantiate Filter
-filter = cxor.RotateEulerRefFrameFilter()
+filter = cx.FindBoundaryCellsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("ImageGeom/Cell Data/EulerAngles"),
-    rotation_axis=[0.0, 0.0, 1.0, 90.0]
+    boundary_cells_array_name="BoundaryCells",
+    feature_ids_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
+    ignore_feature_zero=True,
+    image_geometry_path=cx.DataPath("DataContainer"),
+    include_volume_boundary=True,
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -47,31 +49,11 @@ else:
     print(f"{filter.name()} No errors running the filter")
 
 # Filter 3
-# Instantiate Filter
-filter = cx.RotateSampleRefFrameFilter()
-# Execute Filter with Parameters
-result = filter.execute(
-    data_structure=data_structure,
-    remove_original_geometry=True,
-    rotate_slice_by_slice=True,
-    rotation_axis=[0.0, 1.0, 0.0, 180.0],
-    rotation_representation=("Axis Angle"),
-    selected_image_geometry=cx.DataPath("ImageGeom")
-)
-if len(result.warnings) !=0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
-if len(result.errors) != 0:
-    print(f'{filter.name()} Errors: {result.errors}')
-    quit()
-else:
-    print(f"{filter.name()} No errors running the filter")
-
-# Filter 4
-# Define output file path
-output_file_path = "Data/Output/Examples/EdaxOIMData.dream3d"
+# Output file path for Filter 3
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/SmallIN100_BoundaryCells.dream3d"
 # Instantiate Filter
 filter = cx.ExportDREAM3DFilter()
-# Execute ExportDREAM3DFilter with Parameters
+# Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True
@@ -83,3 +65,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

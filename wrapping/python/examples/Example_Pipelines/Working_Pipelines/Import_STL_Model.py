@@ -17,14 +17,15 @@ result = filter.execute(
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
     #scale_factor: float = ...,
-    stl_file_path=cx.DataPath("Data/STL_Models/Cylinder.stl"),
+    stl_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/STL_Models/Cylinder.stl",
     triangle_geometry_name=cx.DataPath("[Triangle Geometry]"),
     vertex_attribute_matrix="Vertex Data"
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
+    quit()
 else:
     print(f"{filter.name()} No errors running the filter")
 
@@ -37,10 +38,11 @@ result = filter.execute(
     triangle_areas_array_path="Areas",
     triangle_geometry_data_path=cx.DataPath("[Triangle Geometry]")
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
+    quit()
 else:
     print(f"{filter.name()} No errors running the filter")
 
@@ -52,16 +54,18 @@ result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     component_count=1,
-    data_format="Unknown",
+    data_format="",
     initialization_value="0",
-    numeric_type=8,
+    numeric_type=cx.NumericType.float32,
     output_data_array=cx.DataPath("Node Type"),
-    tuple_dimensions=[0.0, 1.0]
+    tuple_dimensions=[[1.0]]
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
+    quit()
 else:
     print(f"{filter.name()} No errors running the filter")
 
+print("===> Pipeline Complete")

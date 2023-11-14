@@ -146,10 +146,10 @@ result = filter.execute(
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
 else:
     print(f"{filter.name()} No errors running the filter")

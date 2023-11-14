@@ -20,11 +20,11 @@ result = filter.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[0.25, 0.25, 1.0]
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
-elif len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
 else:
     print(f"{filter.name()} No errors running the filter")
 

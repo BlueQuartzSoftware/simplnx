@@ -17,7 +17,7 @@ result = filter.execute(
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd")
+    read_h5_ebsd_filter="Data/Output/Reconstruction/Small_IN100.h5ebsd"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
