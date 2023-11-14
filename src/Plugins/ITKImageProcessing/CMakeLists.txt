@@ -78,6 +78,27 @@ set(FilterList
 set(AlgorithmList
 )
 
+if(NOT COMPLEX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
+  list(APPEND FilterList
+    ITKBinaryContourImage
+    ITKBinaryOpeningByReconstructionImage
+    ITKClosingByReconstructionImage
+    ITKGrayscaleFillholeImage
+    ITKGrayscaleGrindPeakImage
+    ITKHConvexImage
+    ITKHMaximaImage
+    ITKHMinimaImage
+    ITKLabelContourImage
+    ITKMorphologicalGradientImage
+    ITKMorphologicalWatershedImage
+    ITKOpeningByReconstructionImage
+    ITKSignedMaurerDistanceMapImage
+    ITKValuedRegionalMaximaImage
+    ITKValuedRegionalMinimaImage
+)
+  endif()
+
+
 # ------------------------------------------------------------------------------
 # These are all extra filters that are built if we have enabled all the filters
 #
@@ -88,17 +109,14 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKAdaptiveHistogramEqualizationImage
     ITKAsinImage
     ITKAtanImage
-    ITKBinaryContourImage
     ITKBinaryDilateImage
     ITKBinaryErodeImage
     ITKBinaryMorphologicalClosingImage
     ITKBinaryMorphologicalOpeningImage
-    ITKBinaryOpeningByReconstructionImage
     ITKBinaryProjectionImage
     ITKBinaryThinningImage
     ITKBinaryThresholdImage
     ITKBlackTopHatImage
-    ITKClosingByReconstructionImage
     ITKCosImage
     ITKDilateObjectMorphologyImage
     ITKErodeObjectMorphologyImage
@@ -107,36 +125,24 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKGradientMagnitudeImage
     ITKGrayscaleDilateImage
     ITKGrayscaleErodeImage
-    ITKGrayscaleFillholeImage
-    ITKGrayscaleGrindPeakImage
     ITKGrayscaleMorphologicalClosingImage
     ITKGrayscaleMorphologicalOpeningImage
-    ITKHConvexImage
-    ITKHMaximaImage
-    ITKHMinimaImage
     ITKIntensityWindowingImage
     ITKInvertIntensityImage
     ITKImportFijiMontageFilter
-    ITKLabelContourImage
     ITKLog10Image
     ITKLogImage
     ITKMaskImage
-    ITKMorphologicalGradientImage
-    ITKMorphologicalWatershedImage
     ITKNormalizeImage
     ITKNotImage
-    ITKOpeningByReconstructionImage
     ITKOtsuMultipleThresholdsImage
     ITKRelabelComponentImage
     ITKSigmoidImage
-    ITKSignedMaurerDistanceMapImage
     ITKSinImage
     ITKSqrtImage
     ITKSquareImage
     ITKTanImage
     ITKThresholdImage
-    ITKValuedRegionalMaximaImage
-    ITKValuedRegionalMinimaImage
     ITKWhiteTopHatImage
 
     # -----------------------------------------------------------------------------
