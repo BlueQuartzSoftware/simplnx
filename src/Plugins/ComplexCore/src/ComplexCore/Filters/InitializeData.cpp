@@ -23,6 +23,8 @@ using namespace complex;
 
 namespace
 {
+constexpr char k_DelimiterChar = ';';
+
 enum InitializeType : uint64
 {
   FillValue,
@@ -92,7 +94,7 @@ void ValueFill(DataArray<T>& dataArray, const std::vector<std::string>& stringVa
 }
 
 template <typename T, class IncrementalOptions = AdditionT>
-void IncrementalFill(DataArray<T>& dataArray, const std::string& startValue, const std::string& stepValue)
+void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues)
 {
   usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
@@ -101,9 +103,9 @@ void IncrementalFill(DataArray<T>& dataArray, const std::string& startValue, con
 
   for(usize comp = 0; comp < numComp; comp++)
   {
-    Result<T> result = ConvertTo<T>::convert(startValue);
+    Result<T> result = ConvertTo<T>::convert(startValues[comp]);
     values[comp] = result.value();
-    result = ConvertTo<T>::convert(stepValue);
+    result = ConvertTo<T>::convert(stepValues[comp]);
     steps[comp] = result.value();
   }
 
@@ -232,15 +234,15 @@ struct FillArrayFunctor
 struct ValidateMultiInputFunctor
 {
   template <typename T>
-  Result<OutputActions> operator()(const usize expectedComp, const std::string& unfilteredStr)
+  PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr)
   {
     try
     {
-      std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), ';');
+      std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
 
       if(splitVals.size() != expectedComp)
       {
-        return MakePreflightErrorResult(-11610, fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components." ';', unfilteredStr, expectedComp));
+        return MakePreflightErrorResult(-11610, fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components." k_DelimiterChar, unfilteredStr, expectedComp));
       }
 
       for(usize comp = 0; comp < expectedComp; comp++)
@@ -368,7 +370,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitValue_Key)); // NO BOOL
     if(result.invalid())
     {
-      return {std::move(result)};
+      return result;
     }
     break;
   }
@@ -376,13 +378,13 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StartingFillValue_Key)); // NO BOOL
     if(result.invalid())
     {
-      return {std::move(result)};
+      return result;
     }
 
     result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StepValue_Key)); // NO BOOL
     if(result.invalid())
     {
-      return {std::move(result)};
+      return result;
     }
     break;
   }
@@ -399,13 +401,13 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitStartRange_Key)); // NO BOOL
     if(result.invalid())
     {
-      return {std::move(result)};
+      return result;
     }
 
     result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitEndRange_Key)); // NO BOOL
     if(result.invalid())
     {
-      return {std::move(result)};
+      return result;
     }
 
     break;
@@ -431,12 +433,12 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
 
   inputValues.initType = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
   inputValues.stepType = static_cast<StepType>(args.value<uint64>(k_StepOperation_Key));
-  inputValues.stringValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), ';');
-  inputValues.startValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StartingFillValue_Key)), ';');
-  inputValues.stepValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StepValue_Key)), ';');
+  inputValues.stringValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
+  inputValues.startValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StartingFillValue_Key)), k_DelimiterChar);
+  inputValues.stepValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StepValue_Key)), k_DelimiterChar);
   inputValues.seed = seed;
-  inputValues.randBegin = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitStartRange_Key)), ';');
-  inputValues.randEnd = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitEndRange_Key)), ';');
+  inputValues.randBegin = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitStartRange_Key)), k_DelimiterChar);
+  inputValues.randEnd = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
 
   auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
 
