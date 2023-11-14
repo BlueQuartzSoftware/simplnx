@@ -12,17 +12,18 @@ unstructured" **Geometry** is any geometry that requires explicit definition of 
 *Filter**. The transformation is applied in place, so the input **Geometry** will be modified.
 
 If the user selects an **Image Geometry** then they will need to select which kind of **Interpolation Method* will be
-used when transferring the data from the old geometry to the newly transformed geometry.
+used when transferring the data from the old geometry to the newly transformed geometry. If the user selects *any other*
+kind of geometry then the user should select the "No Interpolation" selection to disable the requirement for a *Cell Attribute Matrix*.
 
 The linear/Bi-Linear/Tri-Linear Interpolation is adapted from the equations presented
 in [https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf, page 36}](https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf)
 
 ### Caveats
 
-If the user selects an **unstructured** based geometry, **NO** interpolation will take place as the only changes that
+- If the user selects an **unstructured** based geometry, **NO** interpolation will take place as the only changes that
 take place are the actual coordinates of the vertices.
 
-If the user selects an **Image Geometry** then the user should select one of the *Interpolation* methods and then also
+- If the user selects an **Image Geometry** then the user should select one of the *Interpolation* methods and then also
 select the appropriate *Cell Attribute Matrix*.
 
 The **Scale** and **Rotation** transformation types will automatically translate the volume to (0, 0, 0), apply the scaling/rotation,
@@ -32,7 +33,7 @@ Matrix** types are selected, then it is up to the user to make sure that those t
 ## Example Transformations
 
 | Description | Example Output Image |
-|--|--|
+|-------------|----------------------|
 | Untransformed |  ![](Images/ApplyTransformation_AsRead.png) |
 | After Rotation of <001> 45 Degrees | ![](Images/ApplyTransformation_Rotated.png) |
 | Scaled (2.0, 2.0, 1.0)  | ![](Images/ApplyTransformation_Scaled.png) |
