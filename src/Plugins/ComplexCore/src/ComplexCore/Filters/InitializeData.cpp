@@ -2,10 +2,10 @@
 
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
@@ -70,15 +70,9 @@ void ValueFill(DataArray<T>& dataArray, const std::vector<std::string>& stringVa
 
     for(const auto& str : stringValues)
     {
-      auto result = ConvertTo<T>::convert(str);
-      if(result.invalid())
-      {
-        return MakeErrorResult(-17690, fmt::format("{} was unable to be translated to the data arrays type", str));
-      }
       values.emplace_back(ConvertTo<T>::convert(str).value());
     }
 
-    
     usize numTup = dataArray.getNumberOfTuples();
 
     for(usize tup = 0; tup < numTup; tup++)
@@ -110,7 +104,7 @@ void IncrementalFill(DataArray<T>& dataArray, const std::string& startValue, con
     Result<T> result = ConvertTo<T>::convert(startValue);
     values[comp] = result.value();
     result = ConvertTo<T>::convert(stepValue);
-    step[comp] = result.value();
+    steps[comp] = result.value();
   }
 
   usize numTup = dataArray.getNumberOfTuples();
@@ -123,11 +117,11 @@ void IncrementalFill(DataArray<T>& dataArray, const std::string& startValue, con
 
       if constexpr(IncrementalOptions::UsingAddition)
       {
-        value += step;
+        values[comp] += steps[comp];
       }
       if constexpr(IncrementalOptions::UsingSubtraction)
       {
-        value -= step;
+        values[comp] -= steps[comp];
       }
     }
   }
@@ -138,7 +132,7 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
 {
   usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
-  std::vector<std::mt19937_64> generators(numComp, {});
+  std::vector<std::mt19937_64> generators(numComp, std::mt19937_64{});
 
   for(usize comp = 0; comp < numComp; comp++)
   {
@@ -191,7 +185,7 @@ void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... 
     {
       dists.emplace_back(range.at(comp), range.at(comp + 1));
     }
-    ::RandomFill<T, std::uniform_int_distribution<T>>(dist, std::forward<ArgsT>(args)...);
+    ::RandomFill<T, std::uniform_int_distribution<T>>(dists, std::forward<ArgsT>(args)...);
   }
 }
 
@@ -237,35 +231,34 @@ struct FillArrayFunctor
 
 struct ValidateMultiInputFunctor
 {
-template<typename T>
-Result<OutputActions> operator()(const usize expectedComp, const std::string& unfilteredStr)
-{
-  try
+  template <typename T>
+  Result<OutputActions> operator()(const usize expectedComp, const std::string& unfilteredStr)
   {
-    std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), ';');
-
-    if(splitVals.size() != expectedComp)
+    try
     {
-      return MakePreflightErrorResult(-11610, fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components." ';', unfilteredStr, expectedComp));
-    }
+      std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), ';');
 
-    for(usize comp = 0; comp < expectedComp; comp++)
-    {
-      Result<T> result = ConvertTo<T>::convert(splitVals[comp]);
-
-      if(result.invalid())
+      if(splitVals.size() != expectedComp)
       {
-        return MakePreflightErrorResult(-11611, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
+        return MakePreflightErrorResult(-11610, fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components." ';', unfilteredStr, expectedComp));
       }
-    }
-  }
-  catch(const std::exception& e)
-  {
-    return MakePreflightErrorResult(-11612, fmt::format("While processing '{}' into {} components the following error was encountered: {}", unfilteredStr, expectedComp, e.what()));
-  }
 
-  return {};
-}
+      for(usize comp = 0; comp < expectedComp; comp++)
+      {
+        Result<T> result = ConvertTo<T>::convert(splitVals[comp]);
+
+        if(result.invalid())
+        {
+          return MakePreflightErrorResult(-11611, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
+        }
+      }
+    } catch(const std::exception& e)
+    {
+      return MakePreflightErrorResult(-11612, fmt::format("While processing '{}' into {} components the following error was encountered: {}", unfilteredStr, expectedComp, e.what()));
+    }
+
+    return {};
+  }
 };
 } // namespace
 
@@ -308,43 +301,46 @@ Parameters InitializeData::parameters() const
 
   // TODO: restrict types
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayPath_Key, "Any Component Arrays", "The data arrays in which to initialize the data", std::vector<DataPath>{},
-                                                              ArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayPath_Key, "Any Component Array", "The data array in which to initialize the data", DataPath{}, complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Data Initialization"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to",
-                                                                    static_cast<ChoicesParameter::ValueType>(0), ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
+                                                                    static_cast<ChoicesParameter::ValueType>(0),
+                                                                    ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
 
-  params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]", "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
+  params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]",
+                                                  "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
 
   params.insert(std::make_unique<StringParameter>(k_StartingFillValue_Key, "Starting Value [Seperated with ;]", "The value to start incrementing from", "0;1;2"));
-  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to preform", static_cast<ChoicesParameter::ValueType>(0), ChoicesParameter::Choices{"Addition", "Subtraction"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to preform", static_cast<ChoicesParameter::ValueType>(0),
+                                                   ChoicesParameter::Choices{"Addition", "Subtraction"}));
   params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Increment/Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
 
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
-  
-  params.insert(std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
+
+  params.insert(
+      std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
   params.insert(std::make_unique<StringParameter>(k_InitEndRange_Key, "Initialization End Range [Seperated with ;]", "[Inclusive]  The upper bound initialization range for random values", "1;1;1"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-   /* Using Fill Value */
-   params.linkParameters(k_InitType_Key, k_InitValue_Key, static_cast<ChoicesParameter::ValueType>(0));
-  
-   /* Using Incremental */
-   params.linkParameters(k_InitType_Key, k_StartingFillValue_Key, static_cast<ChoicesParameter::ValueType>(1));
-   params.linkParameters(k_InitType_Key, k_StepOperation_Key, static_cast<ChoicesParameter::ValueType>(1));
-   params.linkParameters(k_InitType_Key, k_StepValue_Key, static_cast<ChoicesParameter::ValueType>(1));
+  /* Using Fill Value */
+  params.linkParameters(k_InitType_Key, k_InitValue_Key, static_cast<ChoicesParameter::ValueType>(0));
 
-   /* Random - Using Random */
-   params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(2));
-   params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(2));
+  /* Using Incremental */
+  params.linkParameters(k_InitType_Key, k_StartingFillValue_Key, static_cast<ChoicesParameter::ValueType>(1));
+  params.linkParameters(k_InitType_Key, k_StepOperation_Key, static_cast<ChoicesParameter::ValueType>(1));
+  params.linkParameters(k_InitType_Key, k_StepValue_Key, static_cast<ChoicesParameter::ValueType>(1));
 
-   /* Random - Using Random With Range */
-   params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(3));
-   params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(3));
-   params.linkParameters(k_InitType_Key, k_InitRange_Key, static_cast<ChoicesParameter::ValueType>(3));
+  /* Random - Using Random */
+  params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(2));
+  params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(2));
+
+  /* Random - Using Random With Range */
+  params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_InitType_Key, k_InitRange_Key, static_cast<ChoicesParameter::ValueType>(3));
 
   return params;
 }
@@ -436,8 +432,8 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   inputValues.initType = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
   inputValues.stepType = static_cast<StepType>(args.value<uint64>(k_StepOperation_Key));
   inputValues.stringValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), ';');
-  inputValues.startValue = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StartingFillValue_Key)), ';');
-  inputValues.stepValue = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StepValue_Key)), ';');
+  inputValues.startValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StartingFillValue_Key)), ';');
+  inputValues.stepValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StepValue_Key)), ';');
   inputValues.seed = seed;
   inputValues.randBegin = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitStartRange_Key)), ';');
   inputValues.randEnd = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitEndRange_Key)), ';');
