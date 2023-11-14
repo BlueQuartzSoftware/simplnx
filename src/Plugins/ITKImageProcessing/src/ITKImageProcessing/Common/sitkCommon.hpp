@@ -142,8 +142,8 @@ itk::FlatStructuringElement<Dimension> CreateKernel(KernelEnum kernelType, const
   {
     size.push_back(static_cast<uint32_t>(f));
   }
-  typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
-  typedef typename StructuringElementType::RadiusType RadiusType;
+  using StructuringElementType = itk::FlatStructuringElement<Dimension>;
+  using RadiusType = typename StructuringElementType::RadiusType;
   RadiusType elementRadius;
   if(RadiusType::Dimension > 0)
   {

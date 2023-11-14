@@ -20,7 +20,7 @@ namespace itk
 class Dream3DFilterInterruption : public Command
 {
 public:
-  ITK_DISALLOW_COPY_AND_ASSIGN(Dream3DFilterInterruption);
+  ITK_DISALLOW_COPY_AND_MOVE(Dream3DFilterInterruption);
 
   /** Standard class type aliases. */
   using Self = Dream3DFilterInterruption;

@@ -53,6 +53,8 @@ if(NOT GENERATOR_IS_MULTI_CONFIG)
   set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${ITK_LIB_DIR})
 endif()
 
+message(STATUS "* ITK (${ITK_VERSION}) ${ITK_DIR}")
+
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "ITKImageProcessing")
