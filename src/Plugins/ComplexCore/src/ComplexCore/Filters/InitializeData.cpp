@@ -41,11 +41,12 @@ struct InitializeDataInputValues
 {
   InitializeType initType;
   StepType stepType;
-  std::string initValue;
-  std::string startValue;
-  std::string stepValue;
+  std::vector<std::string> stringValues;
+  std::vector<std::string> startValues;
+  std::vector<std::string> stepValues;
   uint64 seed;
-  std::vector<float64> range;
+  std::vector<std::string> randBegin;
+  std::vector<std::string> randEnd;
 };
 
 template <bool UseAddition, bool UseSubtraction>
@@ -59,44 +60,99 @@ using AdditionT = IncrementalOptions<true, false>;
 using SubtractionT = IncrementalOptions<false, true>;
 
 template <typename T>
-void ValueFill(DataArray<T>& dataArray, const std::string& initValue)
+void ValueFill(DataArray<T>& dataArray, const std::vector<std::string>& stringValues)
 {
-  Result<T> result = ConvertTo<T>::convert(initValue);
-  T value = result.value();
-  dataArray.fill(value);
+  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
+
+  if(numComp > 1)
+  {
+    std::vector<T> values;
+
+    for(const auto& str : stringValues)
+    {
+      auto result = ConvertTo<T>::convert(str);
+      if(result.invalid())
+      {
+        return MakeErrorResult(-17690, fmt::format("{} was unable to be translated to the data arrays type", str));
+      }
+      values.emplace_back(ConvertTo<T>::convert(str).value());
+    }
+
+    
+    usize numTup = dataArray.getNumberOfTuples();
+
+    for(usize tup = 0; tup < numTup; tup++)
+    {
+      for(usize comp = 0; comp < numComp; comp++)
+      {
+        dataArray[tup * numComp + comp] = values[comp];
+      }
+    }
+  }
+  else
+  {
+    Result<T> result = ConvertTo<T>::convert(stringValues[0]);
+    T value = result.value();
+    dataArray.fill(value);
+  }
 }
 
 template <typename T, class IncrementalOptions = AdditionT>
 void IncrementalFill(DataArray<T>& dataArray, const std::string& startValue, const std::string& stepValue)
 {
-  Result<T> result = ConvertTo<T>::convert(startValue);
-  T value = result.value();
-  result = ConvertTo<T>::convert(stepValue);
-  T step = result.value();
+  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
-  for(auto& cell : dataArray)
+  std::vector<T> values(numComp);
+  std::vector<T> steps(numComp);
+
+  for(usize comp = 0; comp < numComp; comp++)
   {
-    cell = value;
+    Result<T> result = ConvertTo<T>::convert(startValue);
+    values[comp] = result.value();
+    result = ConvertTo<T>::convert(stepValue);
+    step[comp] = result.value();
+  }
 
-    if constexpr(IncrementalOptions::UsingAddition)
+  usize numTup = dataArray.getNumberOfTuples();
+
+  for(usize tup = 0; tup < numTup; tup++)
+  {
+    for(usize comp = 0; comp < numComp; comp++)
     {
-      value += step;
-    }
-    if constexpr(IncrementalOptions::UsingSubtraction)
-    {
-      value -= step;
+      dataArray[tup * numComp + comp] = values[comp];
+
+      if constexpr(IncrementalOptions::UsingAddition)
+      {
+        value += step;
+      }
+      if constexpr(IncrementalOptions::UsingSubtraction)
+      {
+        value -= step;
+      }
     }
   }
 }
 
 template <typename T, class DistributionT>
-void RandomFill(DistributionT& dist, DataArray<T>& dataArray, const uint64 seed)
+void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const uint64 seed)
 {
-  std::mt19937_64 gen(seed);
+  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
-  for(auto& cell : dataArray)
+  std::vector<std::mt19937_64> generators(numComp, {});
+
+  for(usize comp = 0; comp < numComp; comp++)
   {
-    cell = dist(gen);
+    generators[comp].seed(seed + comp);
+  }
+
+  usize numTup = dataArray.getNumberOfTuples();
+
+  for(usize tup = 0; tup < numTup; tup++)
+  {
+    for(usize comp = 0; comp < numComp; comp++)
+    {
+      dataArray[tup * numComp + comp] = dist[comp](generators[comp]);
+    }
   }
 }
 
@@ -117,16 +173,24 @@ void FillIncForwarder(const StepType& stepType, ArgsT&&... args)
 }
 
 template <typename T, class... ArgsT>
-void FillRandomForwarder(const std::vector<float64>& range, ArgsT&&... args)
+void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... args)
 {
   if constexpr(std::is_floating_point_v<T>)
   {
-    std::uniform_real_distribution<T> dist(static_cast<T>(range.at(0)), static_cast<T>(range.at(1)));
-    ::RandomFill<T, std::uniform_real_distribution<T>>(dist, std::forward<ArgsT>(args)...);
+    std::vector<std::uniform_real_distribution<T>> dists;
+    for(usize comp = 0; comp < numComp; comp++)
+    {
+      dists.emplace_back(range.at(comp), range.at(comp + 1));
+    }
+    ::RandomFill<T, std::uniform_real_distribution<T>>(dists, std::forward<ArgsT>(args)...);
   }
   if constexpr(!std::is_floating_point_v<T>)
   {
-    std::uniform_int_distribution<T> dist(static_cast<T>(range.at(0)), static_cast<T>(range.at(1)));
+    std::vector<std::uniform_int_distribution<T>> dists;
+    for(usize comp = 0; comp < numComp; comp++)
+    {
+      dists.emplace_back(range.at(comp), range.at(comp + 1));
+    }
     ::RandomFill<T, std::uniform_int_distribution<T>>(dist, std::forward<ArgsT>(args)...);
   }
 }
@@ -137,57 +201,71 @@ struct FillArrayFunctor
   void operator()(IDataArray& iDataArray, const InitializeDataInputValues& inputValues)
   {
     auto& dataArray = dynamic_cast<DataArray<T>&>(iDataArray);
+    usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
     switch(inputValues.initType)
     {
     case InitializeType::FillValue: {
-      return ::ValueFill<T>(dataArray, inputValues.initValue);
+      return ::ValueFill<T>(dataArray, inputValues.stringValues);
     }
     case InitializeType::Incremental: {
-      return ::FillIncForwarder<T>(inputValues.stepType, dataArray, inputValues.startValue, inputValues.stepValue);
+      return ::FillIncForwarder<T>(inputValues.stepType, dataArray, inputValues.startValues, inputValues.stepValues);
     }
     case InitializeType::Random: {
-      return ::FillRandomForwarder<T>({std::numeric_limits<float64>::min(), std::numeric_limits<float64>::max()}, dataArray, inputValues.seed);
+      std::vector<T> range;
+      for(usize comp = 0; comp < numComp; comp++)
+      {
+        range.push_back(std::numeric_limits<T>::min());
+        range.push_back(std::numeric_limits<T>::max());
+      }
+      return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed);
     }
     case InitializeType::RangedRandom: {
-      return ::FillRandomForwarder<T>(inputValues.range, dataArray, inputValues.seed);
+      std::vector<T> range;
+      for(usize comp = 0; comp < numComp; comp++)
+      {
+        Result<T> result = ConvertTo<T>::convert(inputValues.randBegin[comp]);
+        range.push_back(result.value());
+        result = ConvertTo<T>::convert(inputValues.randEnd[comp]);
+        range.push_back(result.value());
+      }
+      return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed);
     }
     }
   }
 };
 
-struct FillMultiCompArrayFunctor
+struct ValidateMultiInputFunctor
 {
-  template <typename T>
-  Result<> operator()(IDataArray& iDataArray, const std::vector<std::string>& stringValues)
+template<typename T>
+Result<OutputActions> operator()(const usize expectedComp, const std::string& unfilteredStr)
+{
+  try
   {
-    auto& dataArray = dynamic_cast<DataArray<T>&>(iDataArray);
+    std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), ';');
 
-    std::vector<T> values;
-
-    for(const auto& str : stringValues)
+    if(splitVals.size() != expectedComp)
     {
-      auto result = ConvertTo<T>::convert(str);
+      return MakePreflightErrorResult(-11610, fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components." ';', unfilteredStr, expectedComp));
+    }
+
+    for(usize comp = 0; comp < expectedComp; comp++)
+    {
+      Result<T> result = ConvertTo<T>::convert(splitVals[comp]);
+
       if(result.invalid())
       {
-        return MakeErrorResult(-17690, fmt::format("{} was unable to be translated to the data arrays type", str));
-      }
-      values.emplace_back(ConvertTo<T>::convert(str).value());
-    }
-
-    usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
-    usize numTup = dataArray.getNumberOfTuples();
-
-    for(usize tup = 0; tup < numTup; tup++)
-    {
-      for(usize comp = 0; comp < numComp; comp++)
-      {
-        dataArray[tup * numComp + comp] = values[comp];
+        return MakePreflightErrorResult(-11611, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
       }
     }
-
-    return {};
   }
+  catch(const std::exception& e)
+  {
+    return MakePreflightErrorResult(-11612, fmt::format("While processing '{}' into {} components the following error was encountered: {}", unfilteredStr, expectedComp, e.what()));
+  }
+
+  return {};
+}
 };
 } // namespace
 
@@ -240,7 +318,7 @@ Parameters InitializeData::parameters() const
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]", "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
 
   params.insert(std::make_unique<StringParameter>(k_StartingFillValue_Key, "Starting Value [Seperated with ;]", "The value to start incrementing from", "0;1;2"));
-  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Starting Value", "The type of step operation to preform", static_cast<ChoicesParameter::ValueType>(0), ChoicesParameter::Choices{"Addition", "Subtraction"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to preform", static_cast<ChoicesParameter::ValueType>(0), ChoicesParameter::Choices{"Addition", "Subtraction"}));
   params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Increment/Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
 
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
@@ -280,44 +358,62 @@ IFilter::UniquePointer InitializeData::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  //  auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
-  auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
   auto seedArrayNameValue = args.value<std::string>(k_SeedArrayName_Key);
   auto initializeTypeValue = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
 
-  //  if(cellArrayPaths.empty())
-  //  {
-  //    return {MakeErrorResult<OutputActions>(-5550, "At least one data array must be selected.")};
-  //  }
-
-  //  if(multiCompArrays)
-  //  {
-  //    std::vector<T> values;
-  //
-  //    for(const auto& str : stringValues)
-  //    {
-  //      auto result = ConvertTo<T>::convert(str);
-  //      if(result.invalid())
-  //      {
-  //        return MakePreflightErrorResult(fmt::format("{} was unable to be translated to the data arrays type", str));
-  //      }
-  //      values.emplace_back(ConvertTo<T>::convert(str).value())
-  //    }
-  //
-  //    usize numComp = dataArray.getNumberOfComponents();
-  //
-  //    if(numComp > values.size() - 1)
-  //    {
-  //      MakePreflightErrorResult(fmt::format("one of the arrays ", str));
-  //    }
-  //  }
-
   complex::Result<OutputActions> resultOutputActions;
 
-  if(initializeTypeValue == InitializeType::Random)
+  auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
+  usize numComp = iDataArray.getNumberOfComponents(); // check that the values string is greater than max comps
+
+  switch(initializeTypeValue)
   {
+  case InitializeType::FillValue: {
+    auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitValue_Key)); // NO BOOL
+    if(result.invalid())
+    {
+      return {std::move(result)};
+    }
+    break;
+  }
+  case InitializeType::Incremental: {
+    auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StartingFillValue_Key)); // NO BOOL
+    if(result.invalid())
+    {
+      return {std::move(result)};
+    }
+
+    result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StepValue_Key)); // NO BOOL
+    if(result.invalid())
+    {
+      return {std::move(result)};
+    }
+    break;
+  }
+  case InitializeType::Random: {
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
+
+    break;
+  }
+  case InitializeType::RangedRandom: {
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
+    resultOutputActions.value().appendAction(std::move(createAction));
+
+    auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitStartRange_Key)); // NO BOOL
+    if(result.invalid())
+    {
+      return {std::move(result)};
+    }
+
+    result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitEndRange_Key)); // NO BOOL
+    if(result.invalid())
+    {
+      return {std::move(result)};
+    }
+
+    break;
+  }
   }
 
   return {std::move(resultOutputActions)};
@@ -339,26 +435,16 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
 
   inputValues.initType = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
   inputValues.stepType = static_cast<StepType>(args.value<uint64>(k_StepOperation_Key));
-  inputValues.initValue = args.value<std::string>(k_InitValue_Key);
-  inputValues.startValue = args.value<std::string>(k_StartingFillValue_Key);
-  inputValues.stepValue = args.value<std::string>(k_StepValue_Key);
+  inputValues.stringValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), ';');
+  inputValues.startValue = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StartingFillValue_Key)), ';');
+  inputValues.stepValue = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StepValue_Key)), ';');
   inputValues.seed = seed;
-  inputValues.range = args.value<std::vector<float64>>(k_InitRange_Key);
-
-  std::vector<std::string> multiFillValues =
-      args.value<bool>(k_UseMultiCompArrays_Key) ? StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_MultiFillValue_Key)), ';') : std::vector<std::string>{""};
+  inputValues.randBegin = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitStartRange_Key)), ';');
+  inputValues.randEnd = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitEndRange_Key)), ';');
 
   auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
 
-  if(iDataArray.getNumberOfComponents() > 1)
-  {
-    // Work out multi component arrays
-    ExecuteNeighborFunction(::FillMultiCompArrayFunctor{}, iDataArray.getDataType(), iDataArray, multiFillValues);
-  }
-  else
-  {
-    ExecuteNeighborFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, inputValues); // NO BOOL
-  }
+  ExecuteNeighborFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, inputValues); // NO BOOL
 
   return {};
 }
