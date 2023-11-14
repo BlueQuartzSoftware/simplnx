@@ -93,7 +93,7 @@ void ValueFill(DataArray<T>& dataArray, const std::vector<std::string>& stringVa
   }
 }
 
-template <typename T, class IncrementalOptions = AdditionT>
+template <typename T, class IncrementalOptions = AdditionT, class = std::enable_if_t<!std::is_same_v<T,bool>>>
 void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues)
 {
   usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
@@ -129,6 +129,49 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
   }
 }
 
+template <typename T, class IncrementalOptions = AdditionT, class = std::enable_if_t<std::is_same_v<T,bool>>>
+void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues)
+{
+  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
+
+  std::vector<T> values(numComp);
+  std::vector<T> steps(numComp);
+
+  for(usize comp = 0; comp < numComp; comp++)
+  {
+    Result<T> result = ConvertTo<T>::convert(startValues[comp]);
+    values[comp] = result.value();
+    result = ConvertTo<T>::convert(stepValues[comp]);
+    steps[comp] = result.value();
+  }
+
+  usize numTup = dataArray.getNumberOfTuples();
+
+  for(usize comp = 0; comp < numComp; comp++)
+  {
+    dataArray[comp] = values[comp];
+
+    values[comp] = !values[comp];
+  }
+
+  for(usize tup = 1; tup < numTup; tup++)
+  {
+    for(usize comp = 0; comp < numComp; comp++)
+    {
+      dataArray[tup * numComp + comp] = values[comp];
+
+      if constexpr(IncrementalOptions::UsingAddition)
+      {
+        values[comp] += steps[comp];
+      }
+      if constexpr(IncrementalOptions::UsingSubtraction)
+      {
+        values[comp] -= steps[comp];
+      }
+    }
+  }
+}
+
 template <typename T, class DistributionT>
 void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const uint64 seed)
 {
@@ -147,7 +190,14 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
   {
     for(usize comp = 0; comp < numComp; comp++)
     {
-      dataArray[tup * numComp + comp] = dist[comp](generators[comp]);
+      if constexpr(!std::is_same_v<T, bool>)
+      {
+        dataArray[tup * numComp + comp] = dist[comp](generators[comp]);
+      }
+      if constexpr(std::is_same_v<T, bool>)
+      {
+        dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
+      }
     }
   }
 }
@@ -171,19 +221,28 @@ void FillIncForwarder(const StepType& stepType, ArgsT&&... args)
 template <typename T, class... ArgsT>
 void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... args)
 {
+  if constexpr(std::is_same_v<T, bool>)
+  {
+    std::vector<std::uniform_int_distribution<int8>> dists;
+    for(usize comp = 0; comp < numComp * 2; comp += 2)
+    {
+      dists.emplace_back((range.at(comp) ? 1 : 0), (range.at(comp + 1) ? 1 : 0));
+    }
+    ::RandomFill<T, std::uniform_int_distribution<int8>>(dists, std::forward<ArgsT>(args)...);
+  }
   if constexpr(std::is_floating_point_v<T>)
   {
     std::vector<std::uniform_real_distribution<T>> dists;
-    for(usize comp = 0; comp < numComp; comp++)
+    for(usize comp = 0; comp < numComp * 2; comp += 2)
     {
       dists.emplace_back(range.at(comp), range.at(comp + 1));
     }
     ::RandomFill<T, std::uniform_real_distribution<T>>(dists, std::forward<ArgsT>(args)...);
   }
-  if constexpr(!std::is_floating_point_v<T>)
+  if constexpr(!std::is_floating_point_v<T> && !std::is_same_v<T, bool>)
   {
     std::vector<std::uniform_int_distribution<T>> dists;
-    for(usize comp = 0; comp < numComp; comp++)
+    for(usize comp = 0; comp < numComp * 2; comp += 2)
     {
       dists.emplace_back(range.at(comp), range.at(comp + 1));
     }
@@ -209,10 +268,21 @@ struct FillArrayFunctor
     }
     case InitializeType::Random: {
       std::vector<T> range;
-      for(usize comp = 0; comp < numComp; comp++)
+      if constexpr(!std::is_same_v<T, bool>)
       {
-        range.push_back(std::numeric_limits<T>::min());
-        range.push_back(std::numeric_limits<T>::max());
+        for(usize comp = 0; comp < numComp; comp++)
+        {
+          range.push_back(std::numeric_limits<T>::min());
+          range.push_back(std::numeric_limits<T>::max());
+        }
+      }
+      if constexpr(std::is_same_v<T, bool>)
+      {
+        for(usize comp = 0; comp < numComp; comp++)
+        {
+          range.push_back(false);
+          range.push_back(true);
+        }
       }
       return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed);
     }
@@ -442,7 +512,7 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
 
   auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
 
-  ExecuteNeighborFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, inputValues); // NO BOOL
+  ExecuteDataFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, inputValues);
 
   return {};
 }
