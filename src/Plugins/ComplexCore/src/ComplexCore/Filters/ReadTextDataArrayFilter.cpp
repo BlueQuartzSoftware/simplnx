@@ -54,7 +54,7 @@ Parameters ReadTextDataArrayFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File path that points to the imported file", fs::path("<file to import goes here>"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Data Type to interpret and store data into.", NumericType::int8));
+  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Input Numeric Type", "Data Type to interpret and store data into.", NumericType::int8));
   params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 1));
   params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
