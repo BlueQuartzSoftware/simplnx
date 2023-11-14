@@ -93,7 +93,7 @@ void ValueFill(DataArray<T>& dataArray, const std::vector<std::string>& stringVa
   }
 }
 
-template <typename T, class IncrementalOptions = AdditionT, class = std::enable_if_t<!std::is_same_v<T,bool>>>
+template <typename T, class IncrementalOptions = AdditionT>
 void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues)
 {
   usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
@@ -111,62 +111,40 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
 
   usize numTup = dataArray.getNumberOfTuples();
 
-  for(usize tup = 0; tup < numTup; tup++)
+  if constexpr(std::is_same_v<T, bool>)
   {
     for(usize comp = 0; comp < numComp; comp++)
     {
-      dataArray[tup * numComp + comp] = values[comp];
+      dataArray[comp] = values[comp];
 
-      if constexpr(IncrementalOptions::UsingAddition)
+      values[comp] = !values[comp];
+    }
+
+    for(usize tup = 1; tup < numTup; tup++)
+    {
+      for(usize comp = 0; comp < numComp; comp++)
       {
-        values[comp] += steps[comp];
-      }
-      if constexpr(IncrementalOptions::UsingSubtraction)
-      {
-        values[comp] -= steps[comp];
+        dataArray[tup * numComp + comp] = values[comp];
       }
     }
   }
-}
 
-template <typename T, class IncrementalOptions = AdditionT, class = std::enable_if_t<std::is_same_v<T,bool>>>
-void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues)
-{
-  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
-
-  std::vector<T> values(numComp);
-  std::vector<T> steps(numComp);
-
-  for(usize comp = 0; comp < numComp; comp++)
+  if constexpr(!std::is_same_v<T, bool>)
   {
-    Result<T> result = ConvertTo<T>::convert(startValues[comp]);
-    values[comp] = result.value();
-    result = ConvertTo<T>::convert(stepValues[comp]);
-    steps[comp] = result.value();
-  }
-
-  usize numTup = dataArray.getNumberOfTuples();
-
-  for(usize comp = 0; comp < numComp; comp++)
-  {
-    dataArray[comp] = values[comp];
-
-    values[comp] = !values[comp];
-  }
-
-  for(usize tup = 1; tup < numTup; tup++)
-  {
-    for(usize comp = 0; comp < numComp; comp++)
+    for(usize tup = 0; tup < numTup; tup++)
     {
-      dataArray[tup * numComp + comp] = values[comp];
+      for(usize comp = 0; comp < numComp; comp++)
+      {
+        dataArray[tup * numComp + comp] = values[comp];
 
-      if constexpr(IncrementalOptions::UsingAddition)
-      {
-        values[comp] += steps[comp];
-      }
-      if constexpr(IncrementalOptions::UsingSubtraction)
-      {
-        values[comp] -= steps[comp];
+        if constexpr(IncrementalOptions::UsingAddition)
+        {
+          values[comp] += steps[comp];
+        }
+        if constexpr(IncrementalOptions::UsingSubtraction)
+        {
+          values[comp] -= steps[comp];
+        }
       }
     }
   }
@@ -304,15 +282,16 @@ struct FillArrayFunctor
 struct ValidateMultiInputFunctor
 {
   template <typename T>
-  PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr)
+  IFilter::PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr)
   {
     try
     {
-      std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
+      std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(unfilteredStr), k_DelimiterChar);
 
       if(splitVals.size() != expectedComp)
       {
-        return MakePreflightErrorResult(-11610, fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components." k_DelimiterChar, unfilteredStr, expectedComp));
+        return IFilter::MakePreflightErrorResult(-11610,
+                                                 fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components.", k_DelimiterChar, unfilteredStr, expectedComp));
       }
 
       for(usize comp = 0; comp < expectedComp; comp++)
@@ -321,12 +300,12 @@ struct ValidateMultiInputFunctor
 
         if(result.invalid())
         {
-          return MakePreflightErrorResult(-11611, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
+          return IFilter::MakePreflightErrorResult(-11611, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
         }
       }
     } catch(const std::exception& e)
     {
-      return MakePreflightErrorResult(-11612, fmt::format("While processing '{}' into {} components the following error was encountered: {}", unfilteredStr, expectedComp, e.what()));
+      return IFilter::MakePreflightErrorResult(-11612, fmt::format("While processing '{}' into {} components the following error was encountered: {}", unfilteredStr, expectedComp, e.what()));
     }
 
     return {};
@@ -438,7 +417,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
   {
   case InitializeType::FillValue: {
     auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitValue_Key)); // NO BOOL
-    if(result.invalid())
+    if(result.outputActions.invalid())
     {
       return result;
     }
@@ -446,13 +425,13 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
   }
   case InitializeType::Incremental: {
     auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StartingFillValue_Key)); // NO BOOL
-    if(result.invalid())
+    if(result.outputActions.invalid())
     {
       return result;
     }
 
     result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StepValue_Key)); // NO BOOL
-    if(result.invalid())
+    if(result.outputActions.invalid())
     {
       return result;
     }
@@ -469,13 +448,13 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     resultOutputActions.value().appendAction(std::move(createAction));
 
     auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitStartRange_Key)); // NO BOOL
-    if(result.invalid())
+    if(result.outputActions.invalid())
     {
       return result;
     }
 
     result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitEndRange_Key)); // NO BOOL
-    if(result.invalid())
+    if(result.outputActions.invalid())
     {
       return result;
     }
