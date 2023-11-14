@@ -64,7 +64,7 @@ Parameters ReadRawBinaryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The input binary file path", fs::path(), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Scalar Type", "Data type of the binary data", NumericType::int8));
+  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Input Numeric Type", "Data type of the binary data", NumericType::int8));
 
   DynamicTableInfo tableInfo;
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo{1, "Value {}"});
