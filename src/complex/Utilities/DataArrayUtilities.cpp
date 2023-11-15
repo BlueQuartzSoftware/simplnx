@@ -242,44 +242,25 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
   {
     return MakeErrorResult(-5550, fmt::format("Could not find the input array path '{}' for validating number of features", arrayPath.toString()));
   }
-
+  Result<> results = {};
   const usize numFeatures = featureArray->getNumberOfTuples();
-  bool mismatchedFeatures = false;
-  usize largestFeature = 0;
+
   for(const int32& featureId : featureIds)
   {
-    if(static_cast<usize>(featureId) > largestFeature)
+    if(featureId < 0)
     {
-      largestFeature = featureId;
-      if(largestFeature >= numFeatures)
-      {
-        mismatchedFeatures = true;
-        break;
-      }
+      results = MakeErrorResult(
+          -5555, fmt::format("Feature Ids array with name '{}' has negative values within the array. The first negative value encountered was '{}'. All values must be positive within the array",
+                             featureIds.getName(), featureId));
+      return results;
+    }
+    if(static_cast<usize>(featureId) >= numFeatures)
+    {
+      results = MakeErrorResult(-5551, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected feature array '{}'",
+                                                   featureIds.getName(), featureId, numFeatures, arrayPath.toString()));
+      return results;
     }
   }
-
-  Result<> results = {};
-  if(mismatchedFeatures)
-  {
-    results = MakeErrorResult(-5551, fmt::format("The largest Feature Id {} in the FeatureIds array is larger than the number of Features ({}) in the Feature Data array at path '{}'", largestFeature,
-                                                 numFeatures, arrayPath.toString()));
-  }
-
-  if(largestFeature != (numFeatures - 1))
-  {
-    results =
-        MergeResults(results, MakeErrorResult(-5552, fmt::format("The number of Features ({}) in the Feature Data array at path '{}' does not match the largest Feature Id in the FeatureIds array {}",
-                                                                 numFeatures, arrayPath.toString(), largestFeature)));
-
-    const auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
-    if(parentAM != nullptr)
-    {
-      results = MergeResults(results, MakeErrorResult(-5553, fmt::format("The input Attribute matrix at path '{}' has {} tuples which does not match the number of total features {}",
-                                                                         arrayPath.getParent().toString(), parentAM->getNumTuples(), largestFeature + 1)));
-    }
-  }
-
   return results;
 }
 
