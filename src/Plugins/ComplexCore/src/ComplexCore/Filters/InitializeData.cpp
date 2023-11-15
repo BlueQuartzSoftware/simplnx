@@ -17,6 +17,7 @@
 #include <chrono>
 #include <limits>
 #include <random>
+#include <sstream>
 #include <thread>
 
 using namespace complex;
@@ -49,6 +50,7 @@ struct InitializeDataInputValues
   uint64 seed;
   std::vector<std::string> randBegin;
   std::vector<std::string> randEnd;
+  bool standardizeSeed;
 };
 
 template <bool UseAddition, bool UseSubtraction>
@@ -105,8 +107,11 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
   {
     Result<T> result = ConvertTo<T>::convert(startValues[comp]);
     values[comp] = result.value();
-    result = ConvertTo<T>::convert(stepValues[comp]);
-    steps[comp] = result.value();
+    if constexpr(std::is_same_v<T, bool>)
+    {
+      result = ConvertTo<T>::convert(stepValues[comp]);
+      steps[comp] = result.value();
+    }
   }
 
   usize numTup = dataArray.getNumberOfTuples();
@@ -117,7 +122,14 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
     {
       dataArray[comp] = values[comp];
 
-      values[comp] = !values[comp];
+      if constexpr(IncrementalOptions::UsingAddition)
+      {
+        values[comp] = ConvertTo<uint8>::convert(stepValues[comp]).value() != 0 ? true : values[comp];
+      }
+      if constexpr(IncrementalOptions::UsingSubtraction)
+      {
+        values[comp] = ConvertTo<uint8>::convert(stepValues[comp]).value() != 0 ? false : values[comp];
+      }
     }
 
     for(usize tup = 1; tup < numTup; tup++)
@@ -151,7 +163,7 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
 }
 
 template <typename T, class DistributionT>
-void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const uint64 seed)
+void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const uint64 seed, const bool standardizeSeed)
 {
   usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
@@ -159,7 +171,7 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
 
   for(usize comp = 0; comp < numComp; comp++)
   {
-    generators[comp].seed(seed + comp);
+    generators[comp].seed((standardizeSeed ? seed : seed + comp)); // If standardizing seed all generators use the same else, use modified seeds
   }
 
   usize numTup = dataArray.getNumberOfTuples();
@@ -170,7 +182,7 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
     {
       if constexpr(!std::is_same_v<T, bool>)
       {
-        dataArray[tup * numComp + comp] = dist[comp](generators[comp]);
+        dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
       }
       if constexpr(std::is_same_v<T, bool>)
       {
@@ -228,6 +240,23 @@ void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... 
   }
 }
 
+inline std::vector<std::string> standardizeMultiComponent(const usize numComps, const std::vector<std::string>& componentValues)
+{
+  if(componentValues.size() == numComps)
+  {
+    return {componentValues};
+  }
+  else
+  {
+    std::vector<std::string> standardized(numComps);
+    for(usize comp = 0; comp < numComp; comp++)
+    {
+      standardized[comp] == componentValues[0];
+    }
+    return standardized;
+  }
+}
+
 struct FillArrayFunctor
 {
   template <typename T>
@@ -239,10 +268,10 @@ struct FillArrayFunctor
     switch(inputValues.initType)
     {
     case InitializeType::FillValue: {
-      return ::ValueFill<T>(dataArray, inputValues.stringValues);
+      return ::ValueFill<T>(dataArray, standardizeMultiComponent(numComp, inputValues.stringValues));
     }
     case InitializeType::Incremental: {
-      return ::FillIncForwarder<T>(inputValues.stepType, dataArray, inputValues.startValues, inputValues.stepValues);
+      return ::FillIncForwarder<T>(inputValues.stepType, dataArray, standardizeMultiComponent(numComp, inputValues.startValues), standardizeMultiComponent(numComp, inputValues.stepValues));
     }
     case InitializeType::Random: {
       std::vector<T> range;
@@ -262,18 +291,21 @@ struct FillArrayFunctor
           range.push_back(true);
         }
       }
-      return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed);
+      return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed, inputValues.standardizeSeed);
     }
     case InitializeType::RangedRandom: {
+      auto randBegin = standardizeMultiComponent(numComp, inputValues.randBegin);
+      auto randEnd = standardizeMultiComponent(numComp, inputValues.randEnd);
+
       std::vector<T> range;
       for(usize comp = 0; comp < numComp; comp++)
       {
-        Result<T> result = ConvertTo<T>::convert(inputValues.randBegin[comp]);
+        Result<T> result = ConvertTo<T>::convert(randBegin[comp]);
         range.push_back(result.value());
-        result = ConvertTo<T>::convert(inputValues.randEnd[comp]);
+        result = ConvertTo<T>::convert(randEnd[comp]);
         range.push_back(result.value());
       }
-      return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed);
+      return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed, inputValues.standardizeSeed);
     }
     }
   }
@@ -281,34 +313,59 @@ struct FillArrayFunctor
 
 struct ValidateMultiInputFunctor
 {
+  // The single comp size validation defaults to off as size 0 is checked earlier in the function
   template <typename T>
-  IFilter::PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr)
+  IFilter::PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr, const usize singleCompSize = 0)
   {
     try
     {
       std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(unfilteredStr), k_DelimiterChar);
 
-      if(splitVals.size() != expectedComp)
+      if(splitVals.size() == 0)
       {
-        return IFilter::MakePreflightErrorResult(-11610,
-                                                 fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components.", k_DelimiterChar, unfilteredStr, expectedComp));
+        return IFilter::MakePreflightErrorResult(-11610, fmt::format("A required parameter is unable to be processed with '{}' delimiter. Input: {}", k_DelimiterChar, splitVals[comp]));
       }
 
-      for(usize comp = 0; comp < expectedComp; comp++)
+      for(usize comp = 0; comp < splitVals.size(); comp++)
       {
+        if(splitVals[comp].empty())
+        {
+          return IFilter::MakePreflightErrorResult(-11611, fmt::format("Empty value found after '{}' components were converted. Check for duplicate '{}' next to one another.", comp, k_DelimiterChar));
+        }
+
         Result<T> result = ConvertTo<T>::convert(splitVals[comp]);
 
         if(result.invalid())
         {
-          return IFilter::MakePreflightErrorResult(-11611, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
+          return IFilter::MakePreflightErrorResult(-11612, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
         }
       }
+
+      if(splitVals.size() == expectedComp)
+      {
+        return {}; // Valid
+      }
+
+      if(splitVals.size() == singleCompSize)
+      {
+        return {}; // Valid
+      }
+
+      if(splitVals.size() == expectedComp + 1)
+      {
+        if(unfilteredStr.back() == k_DelimiterChar)
+        {
+          return IFilter::MakePreflightErrorResult(-11613, fmt::format("Remove the extra delimiter '{}' at the end of your value sequence: {}.", k_DelimiterChar, unfilteredStr));
+        }
+      }
+
+      return IFilter::MakePreflightErrorResult(-11614,
+                                                 fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components.", k_DelimiterChar, unfilteredStr, expectedComp));
+
     } catch(const std::exception& e)
     {
-      return IFilter::MakePreflightErrorResult(-11612, fmt::format("While processing '{}' into {} components the following error was encountered: {}", unfilteredStr, expectedComp, e.what()));
+      return IFilter::MakePreflightErrorResult(-11615, fmt::format("While processing '{}' into {} components the following error was encountered: {}", unfilteredStr, expectedComp, e.what()));
     }
-
-    return {};
   }
 };
 } // namespace
@@ -370,6 +427,7 @@ Parameters InitializeData::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
+  params.insert(std::make_unique<BoolParameter>(k_StandardizeSeed_Key, "Use Seed for Each Component", "When true the same seed will be used for each component's generator in a multi-component array", false));
 
   params.insert(
       std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
@@ -387,11 +445,16 @@ Parameters InitializeData::parameters() const
   /* Random - Using Random */
   params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(2));
   params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(2));
+  params.linkParameters(k_InitType_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(2));
+  params.linkParameters(k_InitType_Key, k_StandardizeSeed_Key, static_cast<ChoicesParameter::ValueType>(2));
 
   /* Random - Using Random With Range */
   params.linkParameters(k_InitType_Key, k_UseSeed_Key, static_cast<ChoicesParameter::ValueType>(3));
   params.linkParameters(k_InitType_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(3));
-  params.linkParameters(k_InitType_Key, k_InitRange_Key, static_cast<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_InitType_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_InitType_Key, k_StandardizeSeed_Key, static_cast<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_InitType_Key, k_InitStartRange_Key, static_cast<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_InitType_Key, k_InitEndRange_Key, static_cast<ChoicesParameter::ValueType>(3));
 
   return params;
 }
@@ -409,61 +472,147 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
   auto initializeTypeValue = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
 
   complex::Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
   usize numComp = iDataArray.getNumberOfComponents(); // check that the values string is greater than max comps
 
+  if(iDataArray.getDataType() == DataType::boolean)
+  {
+    std::stringstream updatedValStrm;
+
+    updatedValStrm << "We detected that you are doing an operation on a boolean array.\n";
+    updatedValStrm << "The only accepted values for boolean arrays are as follows ignoring asterisk mark: 'True', 'TRUE', 'true', 'False', 'FALSE', 'false'";
+
+    preflightUpdatedValues.emplace_back("Boolean Note", updatedValStrm.str());
+  }
+
+  if(numComp > 1)
+  {
+    std::stringstream updatedValStrm;
+
+    updatedValStrm << "We detected that you are doing an operation on a multi-component array.\n";
+    updatedValStrm
+        << "If you do NOT want to use unique values for each component, you can just supply one value to the input box and we will apply that value to every component for the tuple.\nExample: 1\n\n";
+
+    updatedValStrm << fmt::format("If you DO want to use unique values for each component, you need to supply {} values of type {} seperated by '{}'.\n", numComp, DataTypeToString(iDataArray.getDataType()), k_DelimiterChar);
+    updatedValStrm << "Example: ";
+
+    for(usize comp = 0; comp < numComp; comp++)
+    {
+      updatedValStrm << "1";
+
+      if(comp != numComp - 1)
+      {
+        updatedValStrm << k_DelimiterChar;
+      }
+    }
+
+    preflightUpdatedValues.emplace_back("Multi-Component Note", updatedValStrm.str());
+  }
+
+  std::stringstream operationNuancesStrm;
+
   switch(initializeTypeValue)
   {
   case InitializeType::FillValue: {
-    auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitValue_Key)); // NO BOOL
+    auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return result;
+      return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
     }
+
+    operationNuancesStrm << "None to note";
+
     break;
   }
   case InitializeType::Incremental: {
-    auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StartingFillValue_Key)); // NO BOOL
+    auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StartingFillValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return result;
+      return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
     }
 
-    result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StepValue_Key)); // NO BOOL
+    if(iDataArray.getDataType() == DataType::boolean)
+    {
+      // custom bool checks here
+      std::stringstream updatedValStrm;
+
+      updatedValStrm << "We detected that you are doing an incremental operation on a boolean array.\n";
+      updatedValStrm << "For the step values please enter uint8 values, preferrably a 0 or 1 only.\n";
+
+      switch(static_cast<StepType>(args.value<uint64>(k_StepOperation_Key)))
+      {
+        case Addition:
+        {
+          updatedValStrm << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all 'false' values to change to 'true' after the first tuple, 'true' values will remain unchanged.\n"
+        }
+        case Subtraction:
+        {
+          updatedValStrm << "You have currently selected the subtraction operation.\nAny step value that is greater than 0 will cause all 'true' values to change to 'false' after the first tuple; 'false' values will remain unchanged.\n"
+        }
+      }
+
+      preflightUpdatedValues.emplace_back("Boolean Incremental Nuances", updatedValStrm.str());
+
+      result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, DataType::uint8, numComp, args.value<std::string>(k_StepValue_Key), 1);
+      if(result.outputActions.invalid())
+      {
+        return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+      }
+    }
+    else
+    {
+      result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StepValue_Key), 1);
+      if(result.outputActions.invalid())
+      {
+        return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+      }
+    }
+
+    operationNuancesStrm << "When supplying a 0 as the Step value the component at that index in the tuple will be unchanged in the end array.\n";
+    operationNuancesStrm << fmt::format("Example: Suppose we have a two component array with a Step Values of '2{}0', Starting Values of '0', and an addition Step Operation\n", k_DelimiterChar);
+    operationNuancesStrm << "The output array would look like 0,0 | 2,0 | 4,0 | 6,0 | ...";
+
+    break;
+  }
+  case InitializeType::RangedRandom: {
+    auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitStartRange_Key), 1);
     if(result.outputActions.invalid())
     {
-      return result;
+      return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
     }
-    break;
+
+    result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitEndRange_Key), 1);
+    if(result.outputActions.invalid())
+    {
+      return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+    }
+
+    [[fallthrough]];
   }
   case InitializeType::Random: {
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
 
-    break;
-  }
-  case InitializeType::RangedRandom: {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
-    resultOutputActions.value().appendAction(std::move(createAction));
-
-    auto result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitStartRange_Key)); // NO BOOL
-    if(result.outputActions.invalid())
+    if(args.value<bool>(k_StandardizeSeed_Key))
     {
-      return result;
+      operationNuancesStrm << "This generates THE SAME sequences of random numbers for each component in the array based on one seed.\n";
+      operationNuancesStrm << "The resulting array will look like | 1,1,1 | 9,9,9 | ...\n";
     }
-
-    result = ExecuteNeighborFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitEndRange_Key)); // NO BOOL
-    if(result.outputActions.invalid())
+    else
     {
-      return result;
+      operationNuancesStrm << "This generates DIFFERENT sequences of random numbers for each component in the array based on x seeds all modified versions of an original seed.\n";
+      operationNuancesStrm << "The resulting array will look like | 1,9,5 | 7,1,6 | ...\n";
     }
 
     break;
   }
   }
 
-  return {std::move(resultOutputActions)};
+  preflightUpdatedValues.emplace_back("Operation Nuances", operationNuancesStrm.str());
+
+  return {std::move(resultOutputActions), , std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -488,6 +637,7 @@ Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args,
   inputValues.seed = seed;
   inputValues.randBegin = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitStartRange_Key)), k_DelimiterChar);
   inputValues.randEnd = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
+  inputValues.standardizeSeed = args.value<bool>(k_StandardizeSeed_Key);
 
   auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
 
