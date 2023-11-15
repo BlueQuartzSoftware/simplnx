@@ -62,7 +62,7 @@
     {
       "args": {
         "calculated_array": "Caclulated_TestArray",
-        "infix_equation": {
+        "calculator_parameter": {
           "equation": "TestArray+TestArray",
           "selected_group": "",
           "units": 0
@@ -79,7 +79,7 @@
     {
       "args": {
         "calculated_array": "Caclulated_TestArray 2",
-        "infix_equation": {
+        "calculator_parameter": {
           "equation": "TestArray+TestArray",
           "selected_group": "",
           "units": 0
@@ -96,7 +96,7 @@
     {
       "args": {
         "calculated_array": "Caclulated_TestArray 3",
-        "infix_equation": {
+        "calculator_parameter": {
           "equation": "TestArray+TestArray",
           "selected_group": "",
           "units": 0
@@ -113,7 +113,7 @@
     {
       "args": {
         "calculated_array": "Caclulated_ConfidenceIndex",
-        "infix_equation": {
+        "calculator_parameter": {
           "equation": "Confidence Index*100",
           "selected_group": "",
           "units": 0
@@ -130,7 +130,7 @@
     {
       "args": {
         "calculated_array": "Caclulated_EulerAngles",
-        "infix_equation": {
+        "calculator_parameter": {
           "equation": "EulerAngles/2",
           "selected_group": "",
           "units": 0
@@ -147,7 +147,7 @@
     {
       "args": {
         "calculated_array": "Caclulated_EulerAngles2",
-        "infix_equation": {
+        "calculator_parameter": {
           "equation": "EulerAngles[0]+EulerAngles[1]",
           "selected_group": "",
           "units": 0
