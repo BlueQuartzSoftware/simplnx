@@ -249,9 +249,9 @@ inline std::vector<std::string> standardizeMultiComponent(const usize numComps, 
   else
   {
     std::vector<std::string> standardized(numComps);
-    for(usize comp = 0; comp < numComp; comp++)
+    for(usize comp = 0; comp < numComps; comp++)
     {
-      standardized[comp] == componentValues[0];
+      standardized[comp] = componentValues[0];
     }
     return standardized;
   }
@@ -321,9 +321,9 @@ struct ValidateMultiInputFunctor
     {
       std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(unfilteredStr), k_DelimiterChar);
 
-      if(splitVals.size() == 0)
+      if(splitVals.empty())
       {
-        return IFilter::MakePreflightErrorResult(-11610, fmt::format("A required parameter is unable to be processed with '{}' delimiter. Input: {}", k_DelimiterChar, splitVals[comp]));
+        return IFilter::MakePreflightErrorResult(-11610, fmt::format("A required parameter is unable to be processed with '{}' delimiter. Input: {}", k_DelimiterChar, unfilteredStr));
       }
 
       for(usize comp = 0; comp < splitVals.size(); comp++)
@@ -360,7 +360,7 @@ struct ValidateMultiInputFunctor
       }
 
       return IFilter::MakePreflightErrorResult(-11614,
-                                                 fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components.", k_DelimiterChar, unfilteredStr, expectedComp));
+                                               fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components.", k_DelimiterChar, unfilteredStr, expectedComp));
 
     } catch(const std::exception& e)
     {
@@ -427,7 +427,8 @@ Parameters InitializeData::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
-  params.insert(std::make_unique<BoolParameter>(k_StandardizeSeed_Key, "Use Seed for Each Component", "When true the same seed will be used for each component's generator in a multi-component array", false));
+  params.insert(std::make_unique<BoolParameter>(k_StandardizeSeed_Key, "Use the Same Seed for Each Component",
+                                                "When true the same seed will be used for each component's generator in a multi-component array", false));
 
   params.insert(
       std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
@@ -484,7 +485,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     updatedValStrm << "We detected that you are doing an operation on a boolean array.\n";
     updatedValStrm << "The only accepted values for boolean arrays are as follows ignoring asterisk mark: 'True', 'TRUE', 'true', 'False', 'FALSE', 'false'";
 
-    preflightUpdatedValues.emplace_back("Boolean Note", updatedValStrm.str());
+    preflightUpdatedValues.push_back({"Boolean Note", updatedValStrm.str()});
   }
 
   if(numComp > 1)
@@ -495,7 +496,8 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     updatedValStrm
         << "If you do NOT want to use unique values for each component, you can just supply one value to the input box and we will apply that value to every component for the tuple.\nExample: 1\n\n";
 
-    updatedValStrm << fmt::format("If you DO want to use unique values for each component, you need to supply {} values of type {} seperated by '{}'.\n", numComp, DataTypeToString(iDataArray.getDataType()), k_DelimiterChar);
+    updatedValStrm << fmt::format("If you DO want to use unique values for each component, you need to supply {} values of type {} seperated by '{}'.\n", numComp,
+                                  DataTypeToString(iDataArray.getDataType()), k_DelimiterChar);
     updatedValStrm << "Example: ";
 
     for(usize comp = 0; comp < numComp; comp++)
@@ -508,7 +510,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
       }
     }
 
-    preflightUpdatedValues.emplace_back("Multi-Component Note", updatedValStrm.str());
+    preflightUpdatedValues.push_back({"Multi-Component Note", updatedValStrm.str()});
   }
 
   std::stringstream operationNuancesStrm;
@@ -519,7 +521,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
     operationNuancesStrm << "None to note";
@@ -530,7 +532,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StartingFillValue_Key), 1);
     if(result.outputActions.invalid())
     {
-      return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
     if(iDataArray.getDataType() == DataType::boolean)
@@ -543,22 +545,24 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 
       switch(static_cast<StepType>(args.value<uint64>(k_StepOperation_Key)))
       {
-        case Addition:
-        {
-          updatedValStrm << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all 'false' values to change to 'true' after the first tuple, 'true' values will remain unchanged.\n"
-        }
-        case Subtraction:
-        {
-          updatedValStrm << "You have currently selected the subtraction operation.\nAny step value that is greater than 0 will cause all 'true' values to change to 'false' after the first tuple; 'false' values will remain unchanged.\n"
-        }
+      case Addition: {
+        updatedValStrm << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all 'false' values to change to 'true' after the first tuple, 'true' "
+                          "values will remain unchanged.\n";
+        break;
+      }
+      case Subtraction: {
+        updatedValStrm << "You have currently selected the subtraction operation.\nAny step value that is greater than 0 will cause all 'true' values to change to 'false' after the first tuple; "
+                          "'false' values will remain unchanged.\n";
+        break;
+      }
       }
 
-      preflightUpdatedValues.emplace_back("Boolean Incremental Nuances", updatedValStrm.str());
+      preflightUpdatedValues.push_back({"Boolean Incremental Nuances", updatedValStrm.str()});
 
       result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, DataType::uint8, numComp, args.value<std::string>(k_StepValue_Key), 1);
       if(result.outputActions.invalid())
       {
-        return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+        return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
       }
     }
     else
@@ -566,7 +570,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
       result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_StepValue_Key), 1);
       if(result.outputActions.invalid())
       {
-        return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+        return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
       }
     }
 
@@ -580,13 +584,13 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitStartRange_Key), 1);
     if(result.outputActions.invalid())
     {
-      return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, iDataArray.getDataType(), numComp, args.value<std::string>(k_InitEndRange_Key), 1);
     if(result.outputActions.invalid())
     {
-      return MergeResults(result, {std::move(resultOutputActions), std::move(preflightUpdatedValues)});
+      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
     [[fallthrough]];
@@ -610,9 +614,9 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
   }
   }
 
-  preflightUpdatedValues.emplace_back("Operation Nuances", operationNuancesStrm.str());
+  preflightUpdatedValues.push_back({"Operation Nuances", operationNuancesStrm.str()});
 
-  return {std::move(resultOutputActions), , std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
