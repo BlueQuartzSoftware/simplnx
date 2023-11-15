@@ -38,10 +38,12 @@ const complex::ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
 
 const std::string k_NearestNeighborInterpolation("Nearest Neighbor Resampling");
 const std::string k_LinearInterpolation("Linear Interpolation");
-const complex::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation};
+const std::string k_NoInterpolation("No Interpolation");
+const complex::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation, k_NoInterpolation};
 
 const complex::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
 const complex::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
+const complex::ChoicesParameter::ValueType k_NoInterpolationIdx = 2ULL;
 } // namespace
 
 namespace complex
