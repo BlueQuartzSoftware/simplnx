@@ -51,7 +51,7 @@ Parameters ArrayCalculatorFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<CalculatorParameter>(k_InfixEquation_Key, "Infix Expression", "The mathematical expression used to calculate the output array", CalculatorParameter::ValueType{}));
+  params.insert(std::make_unique<CalculatorParameter>(k_CalculatorParameter_Key, "Infix Expression", "The mathematical expression used to calculate the output array", CalculatorParameter::ValueType{}));
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Output Numeric Type", "The data type of the calculated array", NumericType::float64));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CalculatedArray_Key, "Output Calculated Array", "The path to the calculated array", DataPath{}));
@@ -69,7 +69,7 @@ IFilter::UniquePointer ArrayCalculatorFilter::clone() const
 IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel) const
 {
-  auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_InfixEquation_Key);
+  auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_CalculatorParameter_Key);
   auto pScalarTypeValue = filterArgs.value<NumericTypeParameter::ValueType>(k_ScalarType_Key);
   auto pCalculatedArrayPath = filterArgs.value<DataPath>(k_CalculatedArray_Key);
 
@@ -184,7 +184,7 @@ Result<> ArrayCalculatorFilter::executeImpl(DataStructure& dataStructure, const 
 {
 
   ArrayCalculatorInputValues inputValues;
-  auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_InfixEquation_Key);
+  auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_CalculatorParameter_Key);
   inputValues.InfixEquation = pInfixEquationValue.m_Equation;
   inputValues.Units = pInfixEquationValue.m_Units;
   inputValues.SelectedGroup = pInfixEquationValue.m_SelectedGroup;

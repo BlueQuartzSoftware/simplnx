@@ -248,6 +248,15 @@ DataStructure CreateValidTestDataStructure()
   return ds;
 }
 
+/**
+ * @brief
+ *  Create a Cell and Cell Feature attribute Matrix. The Cell AttributeMatrix will have a
+ *  featureIds DataArray that has values of 10. The Cell Feature AttributeMatrix will have
+ *  only 6 tuples in it. This means that the maximum value of FeatureIds would be 5. By having
+ *  values in the Feature Ids = 10, the preflight would pass but the execute would fail.
+ * @param geomIs3d
+ * @return
+ */
 DataStructure CreateInvalidTestDataStructure(bool geomIs3d)
 {
   DataStructure ds;
@@ -267,7 +276,7 @@ DataStructure CreateInvalidTestDataStructure(bool geomIs3d)
 
   auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(ds, k_FeatureIds, dims, {1}, cellAM->getId());
   auto& featureIdsDataStore = featureIds->getDataStoreRef();
-  featureIdsDataStore.fill(0);
+  featureIdsDataStore.fill(10);
   return ds;
 }
 } // namespace

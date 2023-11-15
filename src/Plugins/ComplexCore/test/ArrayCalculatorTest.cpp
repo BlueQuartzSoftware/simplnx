@@ -86,7 +86,7 @@ IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ArrayCalculatorFilter::k_InfixEquation_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{DataPath({k_AttributeMatrix}), equation, units}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{DataPath({k_AttributeMatrix}), equation, units}));
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(calculatedPath));
 
@@ -104,7 +104,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ArrayCalculatorFilter::k_InfixEquation_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{DataPath({k_AttributeMatrix}), equation, units}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{DataPath({k_AttributeMatrix}), equation, units}));
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(targetArrayPath));
 

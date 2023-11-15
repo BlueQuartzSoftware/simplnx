@@ -125,8 +125,8 @@ General Parameters
    calc_param = cx.CalculatorParameter.ValueType( selected_group, infix_equation, cx.CalculatorParameter.AngleUnits.Radians)
    result = cx.ArrayCalculatorFilter.execute(data_structure = data_structure,
                                              calculated_array=cx.DataPath(["Small IN100","Scan Data","Calulated CI"]), 
-                                           infix_equation = calc_param, 
-                                           scalar_type=cx.NumericType.float32)
+                                             calculator_parameter = calc_param, 
+                                             scalar_type=cx.NumericType.float32)
 
 
 
