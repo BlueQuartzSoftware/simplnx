@@ -104,10 +104,12 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
                                                              IGeometry::GetAllGeomTypes()));
 
   params.insertSeparator(Parameters::Separator{"Image Geometry Resampling/Interpolation"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Resampling or Interpolation", "Select the type of interpolation algorithm",
-                                                                    k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Resampling or Interpolation (Image Geometry Only)",
+                                                                    "Select the type of interpolation algorithm. (0)Nearest Neighbor, (1)Linear Interpolation, (3)No Interpolation",
+                                                                    k_NoInterpolationIdx, k_InterpolationChoices));
 
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix", "The path to the Cell level data that should be interpolated", DataPath{}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix (Image Geometry Only)",
+                                                                    "The path to the Cell level data that should be interpolated. Only applies when selecting an Image Geometry.", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_TransformationType_Key, k_ComputedTransformationMatrix_Key, k_PrecomputedTransformationMatrixIdx);
@@ -115,6 +117,9 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.linkParameters(k_TransformationType_Key, k_Rotation_Key, k_RotationIdx);
   params.linkParameters(k_TransformationType_Key, k_Translation_Key, k_TranslationIdx);
   params.linkParameters(k_TransformationType_Key, k_Scale_Key, k_ScaleIdx);
+
+  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, k_NearestNeighborInterpolationIdx);
+  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, k_LinearInterpolationIdx);
 
   return params;
 }
@@ -406,9 +411,12 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   else
   {
     // An image geometry was not chosen, so throw a warning communicating to the user that the cell attribute matrix will not be used
-    auto warning = Warning{-5555, fmt::format("The Selected Geometry is not an image geometry, so the Attribute Matrix '{}' will not be used when applying this transformation.",
-                                              pCellAttributeMatrixPath.getTargetName())};
-    resultOutputActions.warnings().push_back(warning);
+    if(!pCellAttributeMatrixPath.getTargetName().empty())
+    {
+      auto warning = Warning{-5555, fmt::format("The Selected Geometry is not an image geometry, so the Attribute Matrix '{}' will not be used when applying this transformation.",
+                                                pCellAttributeMatrixPath.getTargetName())};
+      resultOutputActions.warnings().push_back(warning);
+    }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
