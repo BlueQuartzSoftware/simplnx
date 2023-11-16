@@ -113,7 +113,7 @@ else:
 
 # Filter 5
 output_file_path = "Data/Output/SurfaceMesh/SurfaceNets_Demo.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 

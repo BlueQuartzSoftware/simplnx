@@ -15,9 +15,11 @@ import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-2023
 import_data.data_paths = None
 
 # Instantiate Filter
-filter = cx.ImportDREAM3DFilter()
+filter = cx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure, import_file_data=import_data)
+result = filter.execute(data_structure=data_structure,
+                        import_file_data=import_data
+)
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
@@ -218,7 +220,7 @@ else:
 # Set Output File Path
 output_file_path = "Data/Output/Statistics/SmallIN100_Morph.dream3d"
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,

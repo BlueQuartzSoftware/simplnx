@@ -10,7 +10,7 @@ data_structure = cx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cxor.ImportH5OimDataFilter()
+filter = cxor.ReadH5OimDataFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -33,8 +33,8 @@ else:
 # Define output file path
 output_file_path = "Data/Output/Examples/H5EspritData.dream3d"
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
-# Execute ExportDREAM3DFilter with Parameters
+filter = cx.WriteDREAM3DFilter()
+# Execute WriteDREAM3DFilter with Parameters
 result = filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True

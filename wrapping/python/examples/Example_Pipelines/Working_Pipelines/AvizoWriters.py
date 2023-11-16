@@ -10,7 +10,7 @@ data_structure = cx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cx.ImportDREAM3DFilter()
+filter = cx.ReadDREAM3DFilter()
 # Set import parameters
 import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
@@ -27,7 +27,7 @@ else:
 
 # Filter 2
 # Instantiate Filter
-filter = cx.AvizoUniformCoordinateWriterFilter()
+filter = cx.WriteAvizoUniformCoordinateFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
     feature_ids_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
@@ -46,7 +46,7 @@ else:
 
 # Filter 3
 # Instantiate Filter
-filter = cx.AvizoUniformCoordinateWriterFilter()
+filter = cx.WriteAvizoUniformCoordinateFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
     feature_ids_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),

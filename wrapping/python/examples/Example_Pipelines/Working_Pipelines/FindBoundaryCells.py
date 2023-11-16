@@ -16,7 +16,7 @@ import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-2023
 import_data.data_paths = None
 
 # Instantiate Filter
-filter = cx.ImportDREAM3DFilter()
+filter = cx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
                         import_file_data=import_data)
@@ -52,7 +52,7 @@ else:
 # Output file path for Filter 3
 output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/SmallIN100_BoundaryCells.dream3d"
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,

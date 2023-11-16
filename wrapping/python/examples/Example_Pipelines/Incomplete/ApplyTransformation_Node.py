@@ -10,7 +10,7 @@ data_structure = cx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cx.StlFileReaderFilter()
+filter = cx.ReadStlFileFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -31,7 +31,7 @@ else:
 
 # Filter 2
 # Instantiate Filter
-filter = cx.StlFileReaderFilter()
+filter = cx.ReadStlFileFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -78,7 +78,7 @@ else:
 
 # Filter 4
 # Instantiate Filter
-filter = cx.StlFileReaderFilter()
+filter = cx.ReadStlFileFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -119,7 +119,7 @@ else:
 
 # Filter 6
 # Instantiate Filter
-filter = cx.StlFileReaderFilter()
+filter = cx.ReadStlFileFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -160,7 +160,7 @@ else:
 
 # Filter 8
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = "Data/Output/ApplyTransformation_Node.dream3d"
 # Execute Filter with Parameters

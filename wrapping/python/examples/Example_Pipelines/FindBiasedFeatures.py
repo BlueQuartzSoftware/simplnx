@@ -14,7 +14,7 @@ import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
-filter = cx.ImportDREAM3DFilter()
+filter = cx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
                         import_file_data=import_data
@@ -116,7 +116,7 @@ else:
 # Output file path for Filter 4
 output_file_path = "Data/Output/Examples/FindBiasedFeatures.dream3d"
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,

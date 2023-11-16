@@ -95,15 +95,16 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-# Filter 7
+# Filter 5
 # Instantiate Filter
 filter = cx.ArrayCalculatorFilter()
+calc_param = cx.CalculatorParameter.ValueType(cx.DataPath(""), "Confidence Index*100", cx.CalculatorParameter.AngleUnits.Radians)
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_ConfidenceIndex"),
-    infix_equation="Confidence Index*100",
-    scalar_type=9
+    infix_equation=calc_param, 
+    scalar_type=cx.NumericType.float64
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -114,15 +115,16 @@ else:
     print(f"{filter.name()} No errors running the filter")
 
 
-# Filter 8
+# Filter 6
 # Instantiate Filter
 filter = cx.ArrayCalculatorFilter()
+calc_param = cx.CalculatorParameter.ValueType(cx.DataPath(""), "EulerAngles/2", cx.CalculatorParameter.AngleUnits.Radians)
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_EulerAngles"),
-    infix_equation="EulerAngles/2",
-    scalar_type=8
+    infix_equation=calc_param, 
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -132,15 +134,16 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-# Filter 9
+# Filter 7
 # Instantiate Filter
 filter = cx.ArrayCalculatorFilter()
+calc_param = cx.CalculatorParameter.ValueType(cx.DataPath(""), "EulerAngles[0]+EulerAngles[1]", cx.CalculatorParameter.AngleUnits.Radians)
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_EulerAngles2"),
-    infix_equation="EulerAngles[0]+EulerAngles[1]",
-    scalar_type=8
+    infix_equation=calc_param, 
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -150,11 +153,11 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-# Filter 10
+# Filter 8
 # Define output file path
-output_file_path = "Data/Output/ArrayCalculatorExampleResults.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/ArrayCalculatorExampleResults.dream3d"
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure, 
                        export_file_path=output_file_path, 

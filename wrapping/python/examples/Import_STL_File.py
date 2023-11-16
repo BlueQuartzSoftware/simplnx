@@ -8,7 +8,7 @@ import numpy as np
 # Create a Data Structure
 data_structure = cx.DataStructure()
 
-result = cx.StlFileReaderFilter.execute(data_structure=data_structure,
+result = cx.ReadStlFileFilter.execute(data_structure=data_structure,
                                             face_attribute_matrix="Face Data" ,
                                             face_normals_data_path="Face Normals",
                                             scale_factor=1,
@@ -26,7 +26,7 @@ else:
 
 
 output_file_path = "Data/Output/ImportSTLFile.dream3d"
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.errors) != 0:

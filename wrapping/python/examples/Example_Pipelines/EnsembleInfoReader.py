@@ -30,15 +30,15 @@ else:
 
 # Filter 2
 # Instantiate Filter
-filter = cx.RawBinaryReaderFilter()
+filter = cx.ReadRawBinaryFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     created_attribute_array_path=cx.DataPath("Quats"),
     endian=0,
-    input_file=cx.DataPath("Data/OrientationAnalysis/quats.raw"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/OrientationAnalysis/quats.raw",
     number_of_components=4,
-    scalar_type=8,
+    scalar_type=cx.NumericType.float32,
     skip_header_bytes=0,
     tuple_dimensions=[[2.0, 100.0, 100.0]]
 )
@@ -94,7 +94,7 @@ else:
 
 # Filter 5
 # Instantiate Filter
-filter = cxor.EnsembleInfoReaderFilter()
+filter = cxor.ReadEnsembleInfoFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -137,7 +137,7 @@ else:
 
 # Filter 7
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Set Output file path
 output_file_path = "Data/Output/Examples/EnsembleInfoReaderExample.dream3d"
 # Execute Filter with Parameters

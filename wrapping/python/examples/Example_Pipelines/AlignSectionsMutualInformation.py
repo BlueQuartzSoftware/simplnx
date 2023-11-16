@@ -17,7 +17,7 @@ result = filter.execute(
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter=cx.DataPath("Data/Output/Reconstruction/Small_IN100.h5ebsd")
+    read_h5_ebsd_filter="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/Small_IN100.h5ebsd"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -105,7 +105,7 @@ else:
 
 # Filter 5
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = "Data/Output/OrientationAnalysis/SmallIN100_AlignSectionsMutualInformation.dream3d"
 # Execute Filter with Parameters
@@ -121,4 +121,4 @@ if len(result.errors) != 0:
     print(f'Warnings: {result.warnings}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+    print(f"{filter.name()} No errors running the WriteDREAM3DFilter")

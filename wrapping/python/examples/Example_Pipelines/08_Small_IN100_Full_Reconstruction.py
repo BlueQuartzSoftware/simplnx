@@ -11,7 +11,7 @@ data_structure = cx.DataStructure()
 # Filter 1
 # Instantiate Filter
 
-filter_parameter = cxor.H5EbsdReaderParameter.ValueType()
+filter_parameter = cxor.ReadH5EbsdFileParameter.ValueType()
 filter_parameter.euler_representation=0
 filter_parameter.end_slice=117
 filter_parameter.hdf5_data_paths=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
@@ -507,7 +507,7 @@ else:
 
 # Filter 22
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 # Execute Filter with Parameters
@@ -524,6 +524,6 @@ if len(result.errors) != 0:
     print('Warnings: {}'.format(result.warnings))
     quit()
 else:
-    print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+    print(f"{filter.name()} No errors running the WriteDREAM3DFilter")
 
 print("===> Pipeline Complete")

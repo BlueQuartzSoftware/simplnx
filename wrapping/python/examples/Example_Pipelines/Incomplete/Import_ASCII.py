@@ -177,10 +177,10 @@ else:
 
 # Filter 8
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Define output file path
 output_file_path = "Data/Output/Small_IN100/EnsembleData.dream3d"
-# Execute ExportDREAM3DFilter with Parameters
+# Execute WriteDREAM3DFilter with Parameters
 result = filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True

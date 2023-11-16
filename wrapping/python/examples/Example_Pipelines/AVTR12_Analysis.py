@@ -454,7 +454,7 @@ else:
 
 # Filter 21
 # Instantiate Filter
-filter = cx.FeatureDataCSVWriterFilter()
+filter = cx.WriteFeatureDataCSVFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -524,7 +524,7 @@ else:
 # Filter 24
 output_file_path = "Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr.dream3d"
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure, 
                         export_file_path=output_file_path, 

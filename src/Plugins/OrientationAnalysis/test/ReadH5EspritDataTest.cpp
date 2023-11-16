@@ -30,7 +30,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Valid Filter Execution",
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 
   // Read Exemplar DREAM3D File
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ImportH5Data/6_6_import_h5_esprit_data.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ReadH5Data/6_6_import_h5_esprit_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -38,7 +38,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Valid Filter Execution",
   DataStructure dataStructure;
   Arguments args;
 
-  auto h5TestFile = fs::path(fmt::format("{}/6_6_ImportH5Data/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
+  auto h5TestFile = fs::path(fmt::format("{}/6_6_ReadH5Data/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
   OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName}};
 
   // Create default Parameters for the filter.
@@ -97,7 +97,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
-  auto h5TestFile = fs::path(fmt::format("{}/6_6_ImportH5Data/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
+  auto h5TestFile = fs::path(fmt::format("{}/6_6_ReadH5Data/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
   OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName}};
 
   SECTION("Invalid Z Spacing")
@@ -115,7 +115,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
   }
   SECTION("Invalid h5 file type (incompatible manufacturer)")
   {
-    h5TestFile = fs::path(fmt::format("{}/6_6_ImportH5Data/EdaxOIMData.h5", unit_test::k_TestFilesDir));
+    h5TestFile = fs::path(fmt::format("{}/6_6_ReadH5Data/EdaxOIMData.h5", unit_test::k_TestFilesDir));
     scanSelections.inputFilePath = h5TestFile;
     args.insertOrAssign(ReadH5EspritDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
     args.insertOrAssign(ReadH5EspritDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));

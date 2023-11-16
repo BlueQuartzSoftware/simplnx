@@ -251,7 +251,7 @@ else:
 
 # Filter 12
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Transformation/ApplyTransformation_Image.dream3d"
 # Execute Filter with Parameters

@@ -189,7 +189,7 @@ else:
 # Filter 9
 output_file_path = "Data/Output/Examples/ReplaceElementAttributesWithNeighbor.dream3d"
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,

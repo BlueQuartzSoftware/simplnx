@@ -15,7 +15,7 @@ import_data.file_path = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_data.data_paths = None
 
 # Instantiate Filter
-filter = cx.ImportDREAM3DFilter()
+filter = cx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
                                          import_file_data=import_data)
@@ -29,7 +29,7 @@ else:
 
 # Filter 2
 # Instantiate Filter
-filter = cx.VtkRectilinearGridWriterFilter
+filter = cx.WriteVtkRectilinearGridFilter
 # Execute Filter
 result = filter.execute(
     data_structure=data_structure,

@@ -240,7 +240,7 @@ else:
 
 
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 output_file_path = "Data/Examples/ResampleRectGridToImageGeom.dream3d"
 result = filter.execute(data_structure=data_structure, 

@@ -14,7 +14,7 @@ import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
-filter = cx.ImportDREAM3DFilter()
+filter = cx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure, import_file_data=import_data)
 if len(result.warnings) != 0:
@@ -23,7 +23,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ImportDREAM3DFilter filter")
+    print(f"{filter.name()} No errors running the ReadDREAM3DFilter filter")
 
 # Filter 2
 # Instantiate Filter
@@ -141,7 +141,7 @@ else:
 
 # Filter 8
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 output_file_path = "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
 result = filter.execute(
@@ -156,7 +156,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+    print(f"{filter.name()} No errors running the WriteDREAM3DFilter")
 
 
 print("===> Pipeline Complete")

@@ -10,7 +10,7 @@ data_structure = cx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cx.StlFileReaderFilter()
+filter = cx.ReadStlFileFilter()
 # Execute Filter with Parameters
 result = filter.execute(    
     data_structure=data_structure,

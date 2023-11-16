@@ -127,8 +127,8 @@ else:
 # Filter 5
 # Define output file path
 output_file_path = "Data/Output/ResamplePorosityImage.dream3d"
-# Execute ExportDREAM3DFilter with Parameters
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+# Execute WriteDREAM3DFilter with Parameters
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.warnings) !=0:

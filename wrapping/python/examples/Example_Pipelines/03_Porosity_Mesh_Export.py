@@ -292,7 +292,7 @@ else:
 
 # Filter 12
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 output_file_path = "Data/Output/Porosity_Analysis.dream3d"
 result = filter.execute(
@@ -306,4 +306,4 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+    print(f"{filter.name()} No errors running the WriteDREAM3DFilter")

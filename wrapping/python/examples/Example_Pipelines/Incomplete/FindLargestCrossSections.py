@@ -123,8 +123,8 @@ else:
 # Filter 6
 # Define output file path
 output_file_path = "Data/Output/Examples/SmallIN100_LargestCrossSections.dream3d"
-# Execute ExportDREAM3DFilter with Parameters
-result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
+# Execute WriteDREAM3DFilter with Parameters
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True
 )

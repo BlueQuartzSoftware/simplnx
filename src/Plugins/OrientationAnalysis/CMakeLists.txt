@@ -370,13 +370,13 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   set_target_properties(Copy_${PLUGIN_NAME}_Small_IN100 PROPERTIES FOLDER ZZ_COPY_FILES)
 
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
-    ARCHIVE_NAME 6_6_ImportH5Data.tar.gz
+    ARCHIVE_NAME 6_6_ReadH5Data.tar.gz
     SHA512 68cf620d28a515d04040d66c4f8fa9d8d46707c65138b366b47f40d1d56a36c40e2e2cd0c9d35168b68c2cb5b2ce95650fa2a0d4e6ffce980d0dd0654908f40d
   )
   add_custom_target(Copy_${PLUGIN_NAME}_H5Data ALL
-    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data.tar.gz"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/EdaxOIMData.h5" "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/H5EspritReaderTest.h5" "${DATA_DEST_DIR}/${PLUGIN_NAME}/"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data"
+    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ReadH5Data.tar.gz"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_ReadH5Data/EdaxOIMData.h5" "${DREAM3D_DATA_DIR}/TestFiles/6_6_ReadH5Data/H5EspritReaderTest.h5" "${DATA_DEST_DIR}/${PLUGIN_NAME}/"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ReadH5Data"
     WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
     COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
     DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this

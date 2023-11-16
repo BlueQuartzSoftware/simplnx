@@ -14,7 +14,7 @@ import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
-filter = cx.ImportDREAM3DFilter()
+filter = cx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
                         import_file_data=import_data)

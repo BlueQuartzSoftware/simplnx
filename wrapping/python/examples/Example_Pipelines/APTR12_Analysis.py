@@ -19,7 +19,7 @@ result = filter.execute(
     data_container_name=cx.DataPath("fw-ar-IF1-aptr12-corr"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
-    input_file=cx.DataPath("Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf")
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -27,7 +27,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ReadCtfDataFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 2
 # Instantiate Filter
@@ -35,9 +35,11 @@ filter = cx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
+    created_image_geometry=cx.DataPath(""),
     remove_original_geometry=False,
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
+    #rotation_matrix=[]
     rotation_representation=0,
     selected_image_geometry=cx.DataPath("fw-ar-IF1-aptr12-corr")
 )
@@ -443,7 +445,7 @@ else:
 
 # Filter 21
 # Instantiate Filter
-filter = cx.FeatureDataCSVWriterFilter()
+filter = cx.WriteFeatureDataCSVFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -459,7 +461,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the FeatureDataCSVWriterFilter")
+    print(f"{filter.name()} No errors running the WriteFeatureDataCSVFilter")
 
 # Filter 22
 # Instantiate Filter
@@ -505,7 +507,7 @@ else:
 
 # Filter 24
 # Instantiate Filter
-filter = cx.ExportDREAM3DFilter()
+filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -518,4 +520,4 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ExportDREAM3DFilter")
+    print(f"{filter.name()} No errors running the WriteDREAM3DFilter")
