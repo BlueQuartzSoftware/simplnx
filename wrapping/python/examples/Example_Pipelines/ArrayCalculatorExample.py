@@ -79,48 +79,13 @@ else:
 # Filter 4
 # Instantiate Filter
 filter = cx.ArrayCalculatorFilter()
+calc_param = cx.CalculatorParameter.ValueType(cx.DataPath(""), "TestArray+TestArray", cx.CalculatorParameter.AngleUnits.Radians)
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_TestArray"),
-    infix_equation="TestArray+TestArray",  
+    infix_equation=calc_param, 
     scalar_type=cx.NumericType.float32
-)
-if len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
-if len(result.errors) != 0:
-    print(f'{filter.name()} Errors: {result.errors}')
-    quit()
-else:
-    print(f"{filter.name()} No errors running the filter")
-
-# Filter 5
-# Instantiate Filter
-filter = cx.ArrayCalculatorFilter()
-# Execute Filter with Parameters
-result = filter.execute(
-    data_structure=data_structure,
-    calculated_array=cx.DataPath("Caclulated_TestArray 2"),
-    infix_equation="TestArray+TestArray",
-    scalar_type=8
-)
-if len(result.warnings) != 0:
-    print(f'{filter.name()} Warnings: {result.warnings}')
-if len(result.errors) != 0:
-    print(f'{filter.name()} Errors: {result.errors}')
-    quit()
-else:
-    print(f"{filter.name()} No errors running the filter")
-
-# Filter 6
-# Instantiate Filter
-filter = cx.ArrayCalculatorFilter()
-# Execute Filter with Parameters
-result = filter.execute(
-    data_structure=data_structure,
-    calculated_array=cx.DataPath("Caclulated_TestArray 3"),
-    infix_equation="TestArray+TestArray",
-    scalar_type=8
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')

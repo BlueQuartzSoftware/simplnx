@@ -17,25 +17,32 @@ result = filter.execute(
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
     data_container_name=cx.DataPath("DataContainer"),
-    input_file=cx.DataPath("Data/Small_IN100/Slice_1.ang")
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100/Slice_1.ang"
 )
-
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 2
 # Instantiate ArrayThreshold objects
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["DataContainer/Cell Data/Confidence Index"])
+threshold_1.array_path = cx.DataPath("DataContainer/Cell Data/Confidence Index")
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_1.value = 0.1
 
 threshold_2 = cx.ArrayThreshold()
-threshold_2.array_path = cx.DataPath(["DataContainer/Cell Data/Image Quality"])
+threshold_2.array_path = cx.DataPath("DataContainer/Cell Data/Image Quality")
 threshold_2.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_2.value = 120
 
 # Define ArrayThresholdSet object
 threshold_set = cx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1, threshold_2]
+dt = cx.DataType.boolean
 
 # Instantiate Filter
 filter = cx.MultiThresholdObjects()
@@ -105,7 +112,7 @@ result = filter.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -129,7 +136,7 @@ result = filter.execute(
     selected_image_geometry=cx.DataPath("DataContainer"),
     update_origin=False
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -151,7 +158,7 @@ result = filter.execute(
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=True
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -171,7 +178,7 @@ result = filter.execute(
     selected_comparison=0,
     selected_image_geometry=cx.DataPath("DataContainer")
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')

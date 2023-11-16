@@ -30,7 +30,7 @@ filter = cx.CreateDataGroup()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    data_object_path=cx.DataPath("Group 2")
+    data_object_path=cx.DataPath("Group 1/Group 2")
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -52,7 +52,7 @@ result = filter.execute(
     #edge_attribute_matrix_name="Edge Data", (not used here)
     #edge_list_name: DataPath = ..., (not used here)
     #face_attribute_matrix_name="Face Data", (not used here)
-    geometry_name=cx.DataPath("[Geometry]"), 
+    geometry_name=cx.DataPath("Group 1/Group 2/[Geometry]"),
     geometry_type=0,
     #hexahedral_list_name: DataPath = ..., (not used here)
     length_unit_type=7,
@@ -74,7 +74,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the CreateGeometryFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 
 # Filter 4

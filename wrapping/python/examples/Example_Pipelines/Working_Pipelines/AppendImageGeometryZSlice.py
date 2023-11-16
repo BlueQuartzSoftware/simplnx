@@ -115,7 +115,7 @@ result = filter.execute(
     n_skip_lines=0,
     n_tuples=[[480000.0]],
     output_data_array=cx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
-    scalar_type=cx.NumericType.int16 #Temporary Switch: 'int8' disabled, use 'int16' instead until fix can be deployed
+    scalar_type=cx.NumericType.uint8 #Temporary Switch: 'int8' disabled, use 'int16' instead until fix can be deployed
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
