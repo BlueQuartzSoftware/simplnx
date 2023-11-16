@@ -26,11 +26,7 @@ else:
     print("No errors running the CreateDataArray")
 
 # Get a numpy.view into the newly created DataArray
-data_array = data_structure[array_path]
-# Get the underlying DataStore object
-data_store = data_array.store
-# Get a Numpy View into the data
-npdata = data_store.npview()
+npdata = data_structure[array_path].npview()
 
 # Read the CSV file into the DataArray using the numpy view
 file_path = 'angles.csv'

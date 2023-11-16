@@ -50,12 +50,7 @@ else:
     print("No errors running the filter")
 
 # We can check the output of the filter by simply printing the array
-# First get the array from the DataStructure
-data_array = data_structure[output_array_path]
-# Get the underlying DataStore object
-data_store = data_array.store
-# Get the raw data as an Numpy View
-npdata = data_store.npview()
+npdata = data_structure[output_array_path].npview()
 print(npdata)
 
 #------------------------------------------------------------------------------
@@ -80,9 +75,7 @@ if len(result.errors) != 0:
 else:
     print("No errors running the filter")
 
-data_array = data_structure[output_array_path]
-data_store = data_array.store
-npdata = data_store.npview()
+npdata = data_structure[output_array_path].npview()
 print(npdata)
 
 
@@ -108,9 +101,7 @@ if len(result.errors) != 0:
 else:
     print("No errors running the filter")
 
-data_array = data_structure[output_array_path]
-data_store = data_array.store
-npdata = data_store.npview()
+npdata = data_structure[output_array_path].npview()
 print(npdata)
 
 result = cx.CreateAttributeMatrixFilter.execute(data_structure=data_structure, 
