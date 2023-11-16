@@ -317,55 +317,48 @@ struct ValidateMultiInputFunctor
   template <typename T>
   IFilter::PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr, const usize singleCompSize = 0)
   {
-    try
+    std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(unfilteredStr), k_DelimiterChar);
+
+    if(splitVals.empty())
     {
-      std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(unfilteredStr), k_DelimiterChar);
-
-      if(splitVals.empty())
-      {
-        return IFilter::MakePreflightErrorResult(-11610, fmt::format("A required parameter is unable to be processed with '{}' delimiter. Input: {}", k_DelimiterChar, unfilteredStr));
-      }
-
-      for(usize comp = 0; comp < splitVals.size(); comp++)
-      {
-        if(splitVals[comp].empty())
-        {
-          return IFilter::MakePreflightErrorResult(-11611, fmt::format("Empty value found after '{}' components were converted. Check for duplicate '{}' next to one another.", comp, k_DelimiterChar));
-        }
-
-        Result<T> result = ConvertTo<T>::convert(splitVals[comp]);
-
-        if(result.invalid())
-        {
-          return IFilter::MakePreflightErrorResult(-11612, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
-        }
-      }
-
-      if(splitVals.size() == expectedComp)
-      {
-        return {}; // Valid
-      }
-
-      if(splitVals.size() == singleCompSize)
-      {
-        return {}; // Valid
-      }
-
-      if(splitVals.size() == expectedComp + 1)
-      {
-        if(unfilteredStr.back() == k_DelimiterChar)
-        {
-          return IFilter::MakePreflightErrorResult(-11613, fmt::format("Remove the extra delimiter '{}' at the end of your value sequence: {}.", k_DelimiterChar, unfilteredStr));
-        }
-      }
-
-      return IFilter::MakePreflightErrorResult(-11614,
-                                               fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components.", k_DelimiterChar, unfilteredStr, expectedComp));
-
-    } catch(const std::exception& e)
-    {
-      return IFilter::MakePreflightErrorResult(-11615, fmt::format("While processing '{}' into {} components the following error was encountered: {}", unfilteredStr, expectedComp, e.what()));
+      return IFilter::MakePreflightErrorResult(-11610, fmt::format("A required parameter is unable to be processed with '{}' delimiter. Input: {}", k_DelimiterChar, unfilteredStr));
     }
+
+    for(usize comp = 0; comp < splitVals.size(); comp++)
+    {
+      if(splitVals[comp].empty())
+      {
+        return IFilter::MakePreflightErrorResult(-11611, fmt::format("Empty value found after '{}' components were converted. Check for duplicate '{}' next to one another.", comp, k_DelimiterChar));
+      }
+
+      Result<T> result = ConvertTo<T>::convert(splitVals[comp]);
+
+      if(result.invalid())
+      {
+        return IFilter::MakePreflightErrorResult(-11612, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
+      }
+    }
+
+    if(splitVals.size() == expectedComp)
+    {
+      return {}; // Valid
+    }
+
+    if(splitVals.size() == singleCompSize)
+    {
+      return {}; // Valid
+    }
+
+    if(splitVals.size() == expectedComp + 1)
+    {
+      if(unfilteredStr.back() == k_DelimiterChar)
+      {
+        return IFilter::MakePreflightErrorResult(-11613, fmt::format("Remove the extra delimiter '{}' at the end of your value sequence: {}.", k_DelimiterChar, unfilteredStr));
+      }
+    }
+
+    return IFilter::MakePreflightErrorResult(-11614,
+                                             fmt::format("Using '{}' as a delimiter we are unable to break '{}' into the required {} components.", k_DelimiterChar, unfilteredStr, expectedComp));
   }
 };
 } // namespace
@@ -407,7 +400,6 @@ Parameters InitializeData::parameters() const
 {
   Parameters params;
 
-  // TODO: restrict types
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayPath_Key, "Any Component Array", "The data array in which to initialize the data", DataPath{}, complex::GetAllDataTypes()));
 
@@ -483,7 +475,13 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     std::stringstream updatedValStrm;
 
     updatedValStrm << "We detected that you are doing an operation on a boolean array.\n";
-    updatedValStrm << "The only accepted values for boolean arrays are as follows ignoring asterisk mark: 'True', 'TRUE', 'true', 'False', 'FALSE', 'false'";
+    updatedValStrm << "The ONLY way two ways specify a 'false' boolean value are as follows:\n";
+    updatedValStrm << "- boolean value string types as follows ignoring asterisk mark: 'False', 'FALSE', 'false'\n";
+    updatedValStrm << "- all well formed integers and well formed floating point definitions of 0\n\n";
+
+    updatedValStrm << "ANY OTHER string or number WILL BE 'true', although it is good practice to define true values as follows:\n";
+    updatedValStrm << "- boolean value string types as follows ignoring asterisk mark: 'True', 'TRUE', 'true'\n";
+    updatedValStrm << "- all well formed integers and well formed floating point definitions of 1";
 
     preflightUpdatedValues.push_back({"Boolean Note", updatedValStrm.str()});
   }
@@ -601,9 +599,10 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 
     if(args.value<bool>(k_StandardizeSeed_Key) && numComp == 1)
     {
-      operationNuancesStrm << fmt::format("You chose to standardize the seed for each component, but the array {} is a single component so it will not alter the randomization scheme.", iDataArray.getName());
+      operationNuancesStrm << fmt::format("You chose to standardize the seed for each component, but the array {} is a single component so it will not alter the randomization scheme.",
+                                          iDataArray.getName());
     }
-    if(args.value<bool>(k_StandardizeSeed_Key))
+    else if(args.value<bool>(k_StandardizeSeed_Key))
     {
       operationNuancesStrm << "This generates THE SAME sequences of random numbers for each component in the array based on one seed.\n";
       operationNuancesStrm << "The resulting array will look like | 1,1,1 | 9,9,9 | ...\n";
