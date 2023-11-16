@@ -65,7 +65,7 @@ result  = create_array_filter.execute(data_structure=data_structure,
                                         output_data_array=output_array_path, 
                                         tuple_dimensions=tuple_dims)
 
-x_coords =  data_structure[output_array_path].store.npview()
+x_coords = data_structure[output_array_path].npview()
 x_coords = np.squeeze(x_coords, axis=1)
 x_coords[:] = np.arange(0, 10, 1)
 
@@ -81,7 +81,7 @@ result  = create_array_filter.execute(data_structure=data_structure,
                                         output_data_array=output_array_path, 
                                         tuple_dimensions=tuple_dims)
 
-y_coords =  data_structure[output_array_path].store.npview()
+y_coords = data_structure[output_array_path].npview()
 y_coords = np.squeeze(y_coords, axis=1)
 y_coords[:] = np.arange(10, 20, 1)
 
@@ -97,7 +97,7 @@ result  = create_array_filter.execute(data_structure=data_structure,
                                         output_data_array=output_array_path, 
                                         tuple_dimensions=tuple_dims)
 
-z_coords =  data_structure[output_array_path].store.npview()
+z_coords = data_structure[output_array_path].npview()
 z_coords = np.squeeze(z_coords, axis=1)
 z_coords[:] = np.arange(20, 30, 1)
 
@@ -131,7 +131,7 @@ result = cx.CreateDataArray.execute(data_structure,
                                     initialization_value='0')
 
 # Read the CSV file into the DataArray using the numpy view
-vertex_coords = data_structure[array_path].store.npview()
+vertex_coords = data_structure[array_path].npview()
 file_path = 'complex/test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
@@ -145,7 +145,7 @@ result = cx.CreateDataArray.execute(data_structure,
                                     initialization_value='0')
 
 # Read the CSV file into the DataArray using the numpy view
-triangles = data_structure[array_path].store.npview()
+triangles = data_structure[array_path].npview()
 file_path = 'complex/test/Data/TriangleConnectivity.csv'
 triangles[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
@@ -179,7 +179,7 @@ result = cx.CreateDataArray.execute(data_structure,
                                     initialization_value='0')
 
 # Read the CSV file into the DataArray using the numpy view
-vertex_coords = data_structure[array_path].store.npview()
+vertex_coords = data_structure[array_path].npview()
 file_path = 'complex/test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
@@ -193,7 +193,7 @@ result = cx.CreateDataArray.execute(data_structure,
                                     initialization_value='0')
 
 # Read the CSV file into the DataArray using the numpy view
-edges = data_structure[array_path].store.npview()
+edges = data_structure[array_path].npview()
 file_path = 'complex/test/Data/EdgeConnectivity.csv'
 edges[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 

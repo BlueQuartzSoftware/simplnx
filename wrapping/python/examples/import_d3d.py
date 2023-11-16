@@ -26,12 +26,8 @@ else:
 #------------------------------------------------------------------------------
 # Get the underlying data from the DataStructure
 #------------------------------------------------------------------------------
-data_array = data_structure[cx.DataPath(["Small IN100", "Scan Data", "Image Quality"])]
-# Get the underlying DataStore object
-data_store = data_array.store
+npview = data_structure[["Small IN100", "Scan Data", "Image Quality"]].npview()
 
-# Get a View into the DataArray through a Numpy.View
-npview = data_store.npview()
 # Change the underlying data based on some criteria using Numpy
 npview[npview < 120] = 0
 
@@ -53,7 +49,7 @@ else:
 # View with MatPlotLib
 #------------------------------------------------------------------------------
 # Make a copy to that we can use MatPlotLib
-npdata = data_store.npview().copy()
+npdata = data_structure[["Small IN100", "Scan Data", "Image Quality"]].npview().copy()
 
 # Remove any dimension with '1' for MatPlotLib?
 npdata = np.squeeze(npdata, axis=0)

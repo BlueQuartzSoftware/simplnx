@@ -25,9 +25,7 @@ if len(result.errors) != 0:
 else:
     print("No errors running the filter")
 
-data_array = data_structure[output_array_path]
-data_store = data_array.store
-npdata = data_store.npview()
+npdata = data_structure[output_array_path].npview()
 print(npdata)
 
 output_file_path = "output_file_example.dream3d"

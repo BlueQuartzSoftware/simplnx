@@ -307,15 +307,8 @@ The next code section was take from `basic_arrays.py <https://github.com/BlueQua
                                         output_data_array=output_array_path, 
                                         tuple_dimensions=tuple_dims)
 
-    # First get the array from the DataStructure
-    data_array = data_structure[output_array_path]
-    # Get the underlying complex.DataStore object
-    data_store = data_array.store
     # Get the raw data as an Numpy View
-    npdata = data_store.npview()
-
-    # The developer could also just do this in a single line
-    npdata = data_structure[output_array_path].store.npview()
+    npdata = data_structure[output_array_path].npview()
 
 The next code section was take from `basic_arrays.py <https://github.com/BlueQuartzSoftware/complex/tree/develop/wrapping/python/examples/angle_conversion.py>`__
 
