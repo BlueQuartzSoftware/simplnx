@@ -16,17 +16,17 @@ namespace
 {
 } // namespace
 
-TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData Single Component Value Initialization", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
 }
 
-TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData Single Component Random Initialization", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
 }
 
-TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData Single Component Random With Range Initialization", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
 }

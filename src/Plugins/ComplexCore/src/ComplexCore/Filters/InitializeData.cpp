@@ -599,6 +599,10 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
 
+    if(args.value<bool>(k_StandardizeSeed_Key) && numComp == 1)
+    {
+      operationNuancesStrm << fmt::format("You chose to standardize the seed for each component, but the array {} is a single component so it will not alter the randomization scheme.", iDataArray.getName());
+    }
     if(args.value<bool>(k_StandardizeSeed_Key))
     {
       operationNuancesStrm << "This generates THE SAME sequences of random numbers for each component in the array based on one seed.\n";
