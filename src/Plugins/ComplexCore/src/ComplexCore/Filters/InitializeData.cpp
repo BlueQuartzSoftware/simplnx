@@ -107,7 +107,7 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
   {
     Result<T> result = ConvertTo<T>::convert(startValues[comp]);
     values[comp] = result.value();
-    if constexpr(std::is_same_v<T, bool>)
+    if constexpr(!std::is_same_v<T, bool>)
     {
       result = ConvertTo<T>::convert(stepValues[comp]);
       steps[comp] = result.value();
@@ -539,18 +539,24 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
       std::stringstream updatedValStrm;
 
       updatedValStrm << "We detected that you are doing an incremental operation on a boolean array.\n";
-      updatedValStrm << "For the step values please enter uint8 values, preferrably a 0 or 1 only.\n";
+      updatedValStrm << "For the step values please enter uint8 values, preferably a 0 or 1 only.\n";
 
       switch(static_cast<StepType>(args.value<uint64>(k_StepOperation_Key)))
       {
       case Addition: {
-        updatedValStrm << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all 'false' values to change to 'true' after the first tuple, 'true' "
+        updatedValStrm << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all values to be 'true' after the first tuple, 'true' "
                           "values will remain unchanged.\n";
+        updatedValStrm << "The two possibilities:\n";
+        updatedValStrm << "- If your start value is 'false' and step value > 0, the array will initialize to | false | true | true | ... |\n";
+        updatedValStrm << "- If your start value is 'true' and step value > 0, the array will initialize to | true | true | true | ... |";
         break;
       }
       case Subtraction: {
-        updatedValStrm << "You have currently selected the subtraction operation.\nAny step value that is greater than 0 will cause all 'true' values to change to 'false' after the first tuple; "
-                          "'false' values will remain unchanged.\n";
+        updatedValStrm << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all values to be 'false' after the first tuple, 'false' "
+                          "values will remain unchanged.\n";
+        updatedValStrm << "The two possibilities:\n";
+        updatedValStrm << "- If your start value is 'true' and step value > 0, the array will initialize to | true | false | false | ... |\n";
+        updatedValStrm << "- If your start value is 'false' and step value > 0, the array will initialize to | false | false | false | ... |";
         break;
       }
       }

@@ -319,7 +319,8 @@ IFilter::PreflightResult InitializeImageGeomCellData::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeImageGeomCellData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> InitializeImageGeomCellData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);

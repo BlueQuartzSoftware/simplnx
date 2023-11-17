@@ -22,8 +22,8 @@ const std::vector<usize> k_ImageDims = {23, 24, 25};
 const std::vector<usize> k_ArrayDims(k_ImageDims.crbegin(), k_ImageDims.crend());
 const std::vector<usize> k_ComponentDims = {3};
 
-Arguments CreateArgs(std::vector<DataPath> cellArrayPaths, DataPath imageGeomPath, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax, InitializeImageGeomCellData::InitType initType,
-                     float64 initValue, std::pair<float64, float64> initRange)
+Arguments CreateArgs(std::vector<DataPath> cellArrayPaths, DataPath imageGeomPath, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax,
+                     InitializeImageGeomCellData::InitType initType, float64 initValue, std::pair<float64, float64> initRange)
 {
   Arguments args;
 
