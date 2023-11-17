@@ -424,8 +424,8 @@ TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value 
 
 TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_addition.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -433,11 +433,11 @@ TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-A
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1)); // Default Seed
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("1;0;0"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -448,13 +448,13 @@ TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-A
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_subtraction.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -462,11 +462,11 @@ TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-S
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1)); // Default Seed
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("0;1;1"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -477,13 +477,13 @@ TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-S
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized-Random-With-Range Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -491,14 +491,14 @@ TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized-
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3)); // Default Seed
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    // omit seed value to use default seed type
-    // omit seed array name since it will not be used
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
     args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("0"));
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("1;0;1"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -509,7 +509,7 @@ TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized-
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 18: Single Component Random Initialization", "[ComplexCore][InitializeData]")
