@@ -213,30 +213,30 @@ void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... 
 {
   if constexpr(std::is_same_v<T, bool>)
   {
-    std::vector<std::uniform_int_distribution<int8>> dists;
+    std::vector<std::uniform_int_distribution<int64>> dists;
     for(usize comp = 0; comp < numComp * 2; comp += 2)
     {
       dists.emplace_back((range.at(comp) ? 1 : 0), (range.at(comp + 1) ? 1 : 0));
     }
-    ::RandomFill<T, std::uniform_int_distribution<int8>>(dists, std::forward<ArgsT>(args)...);
+    ::RandomFill<T, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
   }
   if constexpr(std::is_floating_point_v<T>)
   {
-    std::vector<std::uniform_real_distribution<T>> dists;
+    std::vector<std::uniform_real_distribution<float64>> dists;
     for(usize comp = 0; comp < numComp * 2; comp += 2)
     {
       dists.emplace_back(range.at(comp), range.at(comp + 1));
     }
-    ::RandomFill<T, std::uniform_real_distribution<T>>(dists, std::forward<ArgsT>(args)...);
+    ::RandomFill<T, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
   }
   if constexpr(!std::is_floating_point_v<T> && !std::is_same_v<T, bool>)
   {
-    std::vector<std::uniform_int_distribution<T>> dists;
+    std::vector<std::uniform_int_distribution<int64>> dists;
     for(usize comp = 0; comp < numComp * 2; comp += 2)
     {
       dists.emplace_back(range.at(comp), range.at(comp + 1));
     }
-    ::RandomFill<T, std::uniform_int_distribution<T>>(dists, std::forward<ArgsT>(args)...);
+    ::RandomFill<T, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
   }
 }
 
