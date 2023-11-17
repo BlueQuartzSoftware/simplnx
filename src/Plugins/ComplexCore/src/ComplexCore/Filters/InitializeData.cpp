@@ -475,7 +475,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     std::stringstream updatedValStrm;
 
     updatedValStrm << "We detected that you are doing an operation on a boolean array.\n";
-    updatedValStrm << "The ONLY way two ways specify a 'false' boolean value are as follows:\n";
+    updatedValStrm << "The ONLY two ways to specify a 'false' boolean value are as follows:\n";
     updatedValStrm << "- boolean value string types as follows ignoring asterisk mark: 'False', 'FALSE', 'false'\n";
     updatedValStrm << "- all well formed integers and well formed floating point definitions of 0\n\n";
 
