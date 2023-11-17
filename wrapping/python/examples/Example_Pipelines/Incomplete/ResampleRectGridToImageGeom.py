@@ -15,10 +15,9 @@ filter = cx.ReadCSVFileFilter()
 result = filter.execute(
     data_structure=data_structure,
     created_data_group=cx.DataPath("Bounds"),
+    #read_csv_data: ReadCSVDataParameter
     # selected_data_group: DataPath = ...,
-    tuple_dimensions=[14.0],
     use_existing_group=False,
-    # wizard_data: CSVWizardData = ...
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -254,3 +253,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

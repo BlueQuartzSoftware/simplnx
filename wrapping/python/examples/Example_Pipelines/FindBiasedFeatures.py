@@ -29,6 +29,39 @@ else:
 
 # Filter 2
 # Instantiate Filter
+filter = cx.DeleteData()
+# Execute Filter With Parameters
+result = filter.execute(
+    data_structure=data_structure,
+    removed_data_path=[cx.DataPath("DataContainer/CellFeatureData/NumNeighbors2"),
+                       cx.DataPath("DataContainer/CellFeatureData/Centroids"),
+                       cx.DataPath("DataContainer/CellFeatureData/EquivalentDiameters"),
+                       cx.DataPath("DataContainer/CellFeatureData/NumElements"),
+                       cx.DataPath("DataContainer/CellFeatureData/Omega3s"),
+                       cx.DataPath("DataContainer/CellFeatureData/AxisLengths"),
+                       cx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
+                       cx.DataPath("DataContainer/CellFeatureData/AspectRatios"),
+                       cx.DataPath("DataContainer/CellFeatureData/Shape Volumes"),
+                       cx.DataPath("DataContainer/CellFeatureData/NumNeighbors"),
+                       cx.DataPath("DataContainer/CellFeatureData/NeighborList"),
+                       cx.DataPath("DataContainer/CellFeatureData/SharedSurfaceAreaList"),
+                       cx.DataPath("DataContainer/CellFeatureData/NeighborHoods"),
+                       cx.DataPath("DataContainer/CellFeatureData/NeighborhoodList"),
+                       cx.DataPath("DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"),
+                       cx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
+                       cx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles")]
+)
+if len(result.warnings) != 0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
+
+
+# Filter 2
+# Instantiate Filter
 filter = cx.FindNeighbors()
 # Execute Filter with Parameters
 result = filter.execute(

@@ -57,8 +57,8 @@ result = filter.execute(
     data_structure=data_structure,
     chosen_limit_dists=2,
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    dist_output_file=cx.DataPath("Data/Output/Examples/gbcd_distribution.dat"),
-    err_output_file=cx.DataPath("Data/Output/Examples/gbcd_distribution_errors.dat"),
+    dist_output_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/gbcd_distribution.dat",
+    err_output_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/gbcd_distribution_errors.dat",
     exclude_triple_lines=True,
     feature_euler_angles_array_path=cx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
     feature_phases_array_path=cx.DataPath("DataContainer/CellFeatureData/Phases"),
@@ -84,18 +84,17 @@ else:
 
 # Filter 4
 # Instantiate Filter
-filter = cxor.FindGBCDMetricBasedFilter()
+filter = cxor.FindGBPDMetricBasedFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    chosen_limit_dists=7,
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    dist_output_file=cx.DataPath("Data/Output/Examples/gbcd_distribution.dat"),
-    err_output_file=cx.DataPath("Data/Output/Examples/gbcd_distribution_errors.dat"),
+    dist_output_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/gbpd_distribution.dat",
+    err_output_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/gbpd_distribution_errors.dat",
     exclude_triple_lines=False,
     feature_euler_angles_array_path=cx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
     feature_phases_array_path=cx.DataPath("DataContainer/CellFeatureData/Phases"),
-    misorientation_rotation=[1.0, 1.0, 1.0, 17.9],
+    limit_dist=7.0,
     node_types_array_path=cx.DataPath("TriangleDataContainer/VertexData/NodeType"),
     num_sampl_pts=3000,
     phase_of_interest=1,
@@ -113,3 +112,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

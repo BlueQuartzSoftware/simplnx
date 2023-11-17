@@ -40,3 +40,5 @@ result = cx.ReadCSVData.execute(
 
 
 #This filter is currently under construction and will be updated at a future time
+
+print("===> Pipeline Complete")

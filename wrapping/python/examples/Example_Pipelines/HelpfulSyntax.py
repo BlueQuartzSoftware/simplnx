@@ -82,11 +82,4 @@ if len(result.errors) != 0:
 else:
     print(f"{filter.name()} No errors running the filter")
 
-
-
-
-#Change PathLike to Strings
-
 print("===> Pipeline Complete")
-
-#H5EbsdReaderParameter

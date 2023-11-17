@@ -19,7 +19,7 @@ result = filter.execute(
     data_container_name=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
-    input_file=cx.DataPath("Data/Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf")
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -164,3 +164,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the filter")
+
+print("===> Pipeline Complete")

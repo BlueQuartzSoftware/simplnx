@@ -521,3 +521,5 @@ if len(result.errors) != 0:
     quit()
 else:
     print(f"{filter.name()} No errors running the WriteDREAM3DFilter")
+
+print("===> Pipeline Complete")

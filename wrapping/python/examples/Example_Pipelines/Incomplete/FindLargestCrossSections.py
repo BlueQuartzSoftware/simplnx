@@ -134,3 +134,5 @@ elif len(result.warnings) != 0:
     print(f'Warnings: {result.warnings}')
 else:
     print("No errors running the filter")
+
+print("===> Pipeline Complete")
