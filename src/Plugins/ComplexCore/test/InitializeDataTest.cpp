@@ -395,10 +395,11 @@ TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Random-Wi
   UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
 }
 
-TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value Initialization", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value Fill Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_single_val_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -406,9 +407,9 @@ TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value 
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0)); // Default Seed
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("False"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -419,12 +420,13 @@ TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value 
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_addition.dream3d", unit_test::k_TestFilesDir)));
 
   {
@@ -434,7 +436,7 @@ TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-A
 
     // Create default Parameters for the filter.
     args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1)); // Default Seed
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("1;0;0"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
@@ -453,7 +455,8 @@ TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-A
 
 TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_subtraction.dream3d", unit_test::k_TestFilesDir)));
 
   {
@@ -463,7 +466,7 @@ TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-S
 
     // Create default Parameters for the filter.
     args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1)); // Default Seed
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("0;1;1"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
@@ -482,7 +485,8 @@ TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-S
 
 TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized-Random-With-Range Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz", "initialize_data_test_files");
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
@@ -600,4 +604,32 @@ TEST_CASE("ComplexCore::InitializeData 20: Multi Component Non-Standardized-Rand
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+}
+
+TEST_CASE("ComplexCore::InitializeData 21: Boolean Single Component Fill Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_bool_fill.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("False"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
