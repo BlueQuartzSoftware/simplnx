@@ -192,7 +192,7 @@ result = filter.execute(
     cell_features_attribute_matrix_path=cx.DataPath("ImageDataContainer/CellFeatureData"),
     cell_phases_array_path=cx.DataPath("ImageDataContainer/Cell Data/Phases"),
     feature_ids_path=cx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
-    feature_phases_array_path="Phases"
+    feature_phases_array_name="Phases"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')

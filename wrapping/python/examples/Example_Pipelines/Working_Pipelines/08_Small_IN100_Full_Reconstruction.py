@@ -14,7 +14,7 @@ data_structure = cx.DataStructure()
 filter_parameter = cxor.ReadH5EbsdFileParameter.ValueType()
 filter_parameter.euler_representation=0
 filter_parameter.end_slice=117
-filter_parameter.hdf5_data_paths=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
+filter_parameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
 filter_parameter.input_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/Small_IN100.h5ebsd"
 filter_parameter.start_slice=6
 filter_parameter.use_recommended_transform=True
@@ -26,7 +26,7 @@ result = filter.execute(
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter=filter_parameter
+    read_h5_ebsd_parameter=filter_parameter
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -34,19 +34,19 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ReadH5EbsdFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 2
 # Set Up Thresholds and Instantiate Filter
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["DataContainer/CellData/Image Quality"])
+threshold_1.array_path = cx.DataPath("DataContainer/CellData/Image Quality")
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-threshold_1.value = 0.1
+threshold_1.value = 120
 
 threshold_2 = cx.ArrayThreshold()
-threshold_2.array_path = cx.DataPath(["DataContainer/CellData/Confidence Index"])
+threshold_2.array_path = cx.DataPath("DataContainer/CellData/Confidence Index")
 threshold_2.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-threshold_2.value = 120
+threshold_2.value = 0.1
 
 threshold_set = cx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1, threshold_2]
@@ -67,7 +67,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the MultiThresholdObjects")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 3
 # Instantiate Filter
@@ -77,7 +77,9 @@ result = filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=cx.DataPath("DataContainer/CellData/EulerAngles"),
     input_type=0,
-    output_orientation_array_name="Quats"
+    output_orientation_array_name="Quats",
+    output_type=2
+
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -85,7 +87,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ConvertOrientations")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 4
 # Instantiate Filter
@@ -109,7 +111,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the AlignSectionsMisorientationFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 5
 # Instantiate Filter
@@ -118,7 +120,7 @@ filter = cx.IdentifySample()
 result = filter.execute(
     data_structure=data_structure,
     fill_holes=False,
-    good_voxels=cx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
     image_geometry=cx.DataPath("DataContainer")
 )
 if len(result.warnings) != 0:
@@ -149,7 +151,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the AlignSectionsFeatureCentroidFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 
 # Filter 7
@@ -172,7 +174,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the BadDataNeighborOrientationCheckFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 8
 # Instantiate Filter
@@ -181,7 +183,7 @@ filter = cxor.NeighborOrientationCorrelationFilter()
 result = filter.execute(
     data_structure=data_structure,
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
-    confidence_index_array_path=cx.DataPath("DataContainer/CellData/Confidence Index"),
+    correlation_array_path=cx.DataPath("DataContainer/CellData/Confidence Index"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     image_geometry_path=cx.DataPath("DataContainer"),
     level=2,
@@ -196,7 +198,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the NeighborOrientationCorrelationFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 9
 # Instantiate Filter
@@ -222,7 +224,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the EBSDSegmentFeaturesFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 
 # Filter 10
@@ -234,7 +236,7 @@ result = filter.execute(
     cell_features_attribute_matrix_path=cx.DataPath("DataContainer/CellFeatureData"),
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     feature_ids_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
-    feature_phases_array_path="Phases"
+    feature_phases_array_name="Phases"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -242,7 +244,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the FindFeaturePhasesFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 11
 # Instantiate Filter
@@ -264,7 +266,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the FindAvgOrientationsFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 12
 # Instantiate Filter
@@ -289,7 +291,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the FindNeighbors")
+    print(f"{filter.name()} No errors running the filter")
 
 
 # Filter 13
@@ -303,7 +305,7 @@ result = filter.execute(
     avg_quats_array_path=cx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
     axis_tolerance=3.0,
     cell_parent_ids_array_name="ParentIds",
-    contiguous_neighbor_list_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
+    contiguous_neighbor_list_array_path=cx.DataPath("DataContainer/CellFeatureData/NeighborList2"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_ids_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
     feature_parent_ids_array_name="ParentIds",
@@ -318,7 +320,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the MergeTwinsFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 14
 # Instantiate Filter
@@ -340,7 +342,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the CalculateFeatureSizesFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 15
 # Instantiate Filter
@@ -362,7 +364,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the RemoveMinimumSizeFeaturesFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 
 # Filter 16
@@ -388,7 +390,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the FindNeighbors")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 17
 # Instantiate Filter
@@ -396,7 +398,7 @@ filter = cx.MinNeighbors()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    apply_to_single_phase=True,
+    apply_to_single_phase=False,
     cell_attribute_matrix=cx.DataPath("DataContainer/CellData"),
     feature_ids=cx.DataPath("DataContainer/CellData/FeatureIds"),
     image_geom=cx.DataPath("DataContainer"),
@@ -412,7 +414,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the MinNeighbors")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 18
 # Instantiate Filter
@@ -433,7 +435,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the FillBadDataFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 
 # Filter 19
@@ -448,8 +450,8 @@ result = filter.execute(
     selected_image_geometry=cx.DataPath("DataContainer"),
     x_dir_on=True,
     y_dir_on=True,
-    z_dir_on=True
-    # ignored_data_array_paths: List[DataPath] = ...,  # Not currently part of the code
+    z_dir_on=True,
+    ignored_data_array_paths=[]
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -457,7 +459,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ErodeDilateBadDataFilter with Erode operation")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 20
 # Instantiate Filter
@@ -471,8 +473,8 @@ result = filter.execute(
     selected_image_geometry=cx.DataPath("DataContainer"),
     x_dir_on=True,
     y_dir_on=True,
-    z_dir_on=True
-    # ignored_data_array_paths: List[DataPath] = ...,  # Not currently part of the code
+    z_dir_on=True,
+    ignored_data_array_paths=[]
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -480,7 +482,7 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ErodeDilateBadDataFilter with Dilate operation")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 21
 # Instantiate Filter
@@ -488,7 +490,7 @@ filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("DataContainer/CellData/Mask"),
+    cell_euler_angles_array_path=cx.DataPath("DataContainer/CellData/EulerAngles"),
     cell_ipf_colors_array_name="IPFColors",
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
@@ -502,28 +504,26 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the GenerateIPFColorsFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 
 # Filter 22
 # Instantiate Filter
 filter = cx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    # Update the format method for proper string formatting
-    print('Errors: {}'.format(result.errors))
-    print('Warnings: {}'.format(result.warnings))
+    print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the WriteDREAM3DFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 print("===> Pipeline Complete")

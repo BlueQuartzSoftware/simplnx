@@ -11,13 +11,22 @@ data_structure = cx.DataStructure()
 # Filter 1
 # Instantiate Filter
 filter = cxor.ReadH5EbsdFilter()
+
+h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
+h5ebsdParameter.euler_representation=0
+h5ebsdParameter.end_slice=117
+h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
+h5ebsdParameter.input_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/Small_IN100.h5ebsd"
+h5ebsdParameter.start_slice=1
+h5ebsdParameter.use_recommended_transform=True
+
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter="Data/Output/Reconstruction/Small_IN100.h5ebsd"
+    read_h5_ebsd_parameter=h5ebsdParameter
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -30,18 +39,17 @@ else:
 # Filter 2
 # Instantiate Filter
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["DataContainer/CellData/Image Quality"])
+threshold_1.array_path = cx.DataPath("DataContainer/CellData/Image Quality")
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-threshold_1.value = 0.1
+threshold_1.value = 120
 
 threshold_2 = cx.ArrayThreshold()
-threshold_2.array_path = cx.DataPath(["DataContainer/CellData/Confidence Index"])
+threshold_2.array_path = cx.DataPath("DataContainer/CellData/Confidence Index")
 threshold_2.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-threshold_2.value = 120
+threshold_2.value = 0.1
 
 threshold_set = cx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1, threshold_2]
-dt = cx.DataType.boolean
 
 # Execute Filter with Parameters
 result = cx.MultiThresholdObjects.execute(data_structure=data_structure,
@@ -78,17 +86,20 @@ else:
 
 # Filter 4
 # Instantiate Filter
-filter = cx.ScalarSegmentFeaturesFilter()
+filter = cxor.EBSDSegmentFeaturesFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    active_array_path="Active",
-    cell_feature_group_path="CellFeatureData",
-    feature_ids_path="FeatureIds",
+    active_array_name="Active",
+    cell_feature_attribute_matrix_name="CellFeatureData",
+    cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
+    crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    feature_ids_array_name="FeatureIds",
     grid_geometry_path=cx.DataPath("DataContainer"),
-    mask_path=cx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
+    misorientation_tolerance=5.0,
+    quats_array_path=cx.DataPath("DataContainer/CellData/Quats"),
     randomize_features=True,
-    scalar_tolerance=5,
     use_mask=True
 )
 if len(result.warnings) != 0:
@@ -105,7 +116,7 @@ filter = cx.FindLargestCrossSectionsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
+    cell_feature_attribute_matrix_path=cx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_array_path=cx.DataPath("DataContainer/CellData/FeatureIds"),
     image_geometry_path=cx.DataPath("DataContainer"),
     largest_cross_sections_array_path="LargestCrossSections",
@@ -121,18 +132,21 @@ else:
 
 
 # Filter 6
+# Instantiate Filter
+filter = cx.WriteDREAM3DFilter()
 # Define output file path
-output_file_path = "Data/Output/Examples/SmallIN100_LargestCrossSections.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/SmallIN100_LargestCrossSections.dream3d"
 # Execute WriteDREAM3DFilter with Parameters
-result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
+result = filter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print(f'Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'Warnings: {result.warnings}')
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the filter")
 
 print("===> Pipeline Complete")
