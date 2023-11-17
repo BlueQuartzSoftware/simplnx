@@ -631,18 +631,23 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 //------------------------------------------------------------------------------
 Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
+  auto initType = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
+
   auto seed = args.value<std::mt19937_64::result_type>(k_SeedValue_Key);
   if(!args.value<bool>(k_UseSeed_Key))
   {
     seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   }
 
-  // Store Seed Value in Top Level Array
-  data.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  if(initType == InitializeType::Random || initType == InitializeType::RangedRandom)
+  {
+    // Store Seed Value in Top Level Array
+    data.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  }
 
   InitializeDataInputValues inputValues;
 
-  inputValues.initType = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
+  inputValues.initType = initType;
   inputValues.stepType = static_cast<StepType>(args.value<uint64>(k_StepOperation_Key));
   inputValues.stringValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
   inputValues.startValues = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_StartingFillValue_Key)), k_DelimiterChar);
