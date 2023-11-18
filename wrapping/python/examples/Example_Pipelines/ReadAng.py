@@ -33,7 +33,7 @@ filter = cxor.RotateEulerRefFrameFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
+    euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
     rotation_axis=[0.0, 0.0, 1.0, 90.0]
 )
 if len(result.warnings) !=0:
@@ -50,9 +50,11 @@ filter = cx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
+    #created_image_geometry: DataPath = ...,
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
+    #rotation_matrix: Any = ...,
     rotation_representation=("Axis Angle"),
     selected_image_geometry=cx.DataPath("DataContainer")
 )
@@ -94,7 +96,7 @@ filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
+    euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPFColors"),
     cell_phases_array_path=cx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),

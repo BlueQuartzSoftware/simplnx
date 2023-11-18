@@ -30,6 +30,7 @@ else:
 
 
 # Filter 2
+
 # Define ReadCSVData parameters
 read_csv_data = cx.ReadCSVDataParameter()
 read_csv_data.input_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/EulersRotated.csv"
@@ -45,11 +46,13 @@ read_csv_data.header_mode = cx.ReadCSVDataParameter.HeaderMode.Custom
 # Instantiate Filter
 filter = cx.ReadCSVFileFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
-                        created_data_group=cx.DataPath(["Imported Data"]),
-                        selected_data_group=cx.DataPath("[Image Geometry]/CellData"),
-                        use_existing_group=True,
-                        read_csv_data=read_csv_data)
+result = filter.execute(
+    data_structure=data_structure,
+    created_data_group=cx.DataPath("Imported Data"),
+    read_csv_data=read_csv_data,
+    selected_data_group=cx.DataPath("[Image Geometry]/CellData"),
+    use_existing_group=True,
+)
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
@@ -71,6 +74,13 @@ result = filter.execute(
     selected_array_path=cx.DataPath("[Image Geometry]/CellData/Phase"),
     use_conditional=False
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
+if len(result.errors) != 0:
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
+else:
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 4
 # Instantiate Filter
@@ -125,7 +135,7 @@ filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("[Image Geometry]/CellData/Phase"),
+    euler_angles_array_path=cx.DataPath("[Image Geometry]/CellData/Phase"),
     cell_ipf_colors_array_name="IPFColors",
     cell_phases_array_path=cx.DataPath("[Image Geometry]/CellData/Phase"),
     crystal_structures_array_path=cx.DataPath("[Image Geometry]/CellEnsembleData/CrystalStructures"),
@@ -172,11 +182,12 @@ result = filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True
 )
+if len(result.warnings) !=0:
+    print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print(f'Errors: {result.errors}')
-elif len(result.warnings) != 0:
-    print(f'Warnings: {result.warnings}')
+    print(f'{filter.name()} Errors: {result.errors}')
+    quit()
 else:
-    print("No errors running the filter")
+    print(f"{filter.name()} No errors running the filter")
 
 print("===> Pipeline Complete")

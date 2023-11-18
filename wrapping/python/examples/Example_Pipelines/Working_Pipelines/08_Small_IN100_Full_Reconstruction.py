@@ -490,7 +490,7 @@ filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("DataContainer/CellData/EulerAngles"),
+    euler_angles_array_path=cx.DataPath("DataContainer/CellData/EulerAngles"),
     cell_ipf_colors_array_name="IPFColors",
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),

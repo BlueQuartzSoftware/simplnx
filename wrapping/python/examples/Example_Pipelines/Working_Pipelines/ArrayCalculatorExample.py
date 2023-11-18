@@ -22,7 +22,7 @@ result = filter.execute(
     output_data_array=cx.DataPath("TestArray"),
     tuple_dimensions=[[10.0]]
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -45,7 +45,7 @@ result = filter.execute(
     output_data_array=cx.DataPath("Confidence Index"),
     tuple_dimensions=[[10.0]]
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -67,7 +67,7 @@ result = filter.execute(
     output_data_array=cx.DataPath("EulerAngles"),
     tuple_dimensions=[[10.0]]
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -84,10 +84,10 @@ calc_param = cx.CalculatorParameter.ValueType(cx.DataPath(""), "TestArray+TestAr
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_TestArray"),
-    infix_equation=calc_param, 
+    calculator_parameter=calc_param, 
     scalar_type=cx.NumericType.float32
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -103,10 +103,10 @@ calc_param = cx.CalculatorParameter.ValueType(cx.DataPath(""), "Confidence Index
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_ConfidenceIndex"),
-    infix_equation=calc_param, 
+    calculator_parameter=calc_param, 
     scalar_type=cx.NumericType.float64
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -123,10 +123,10 @@ calc_param = cx.CalculatorParameter.ValueType(cx.DataPath(""), "EulerAngles/2", 
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_EulerAngles"),
-    infix_equation=calc_param, 
+    calculator_parameter=calc_param, 
     scalar_type=cx.NumericType.float32
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -142,10 +142,10 @@ calc_param = cx.CalculatorParameter.ValueType(cx.DataPath(""), "EulerAngles[0]+E
 result = filter.execute(
     data_structure=data_structure,
     calculated_array=cx.DataPath("Caclulated_EulerAngles2"),
-    infix_equation=calc_param, 
+    calculator_parameter=calc_param, 
     scalar_type=cx.NumericType.float32
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
@@ -162,7 +162,7 @@ filter = cx.WriteDREAM3DFilter()
 result = filter.execute(data_structure=data_structure, 
                        export_file_path=output_file_path, 
                        write_xdmf_file=True)
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')

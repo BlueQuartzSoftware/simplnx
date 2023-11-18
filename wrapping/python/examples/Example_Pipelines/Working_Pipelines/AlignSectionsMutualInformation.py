@@ -9,6 +9,16 @@ import numpy as np
 data_structure = cx.DataStructure()
 
 # Filter 1
+
+# Create the ReadH5EbsdFileParameter and assign values to it.
+h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
+h5ebsdParameter.euler_representation=0
+h5ebsdParameter.end_slice=117
+h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
+h5ebsdParameter.input_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/Small_IN100.h5ebsd"
+h5ebsdParameter.start_slice=1
+h5ebsdParameter.use_recommended_transform=True
+
 # Instantiate Filter
 filter = cxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
@@ -17,7 +27,7 @@ result = filter.execute(
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=cx.DataPath("DataContainer"),
-    read_h5_ebsd_filter="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/Small_IN100.h5ebsd"
+    read_h5_ebsd_parameter=h5ebsdParameter
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -25,19 +35,19 @@ if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the ReadH5EbsdFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 # Filter 2
 # Set Up Thresholds and Instantiate Filter
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["DataContainer/CellData/Image Quality"])
+threshold_1.array_path = cx.DataPath("DataContainer/CellData/Image Quality")
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-threshold_1.value = 0.1
+threshold_1.value = 120
 
 threshold_2 = cx.ArrayThreshold()
-threshold_2.array_path = cx.DataPath(["DataContainer/CellData/ConfidenceIndex"])
+threshold_2.array_path = cx.DataPath("DataContainer/CellData/Confidence Index")
 threshold_2.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
-threshold_2.value = 120
+threshold_2.value = 0.1
 
 threshold_set = cx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1, threshold_2]
@@ -85,7 +95,7 @@ filter = cxor.AlignSectionsMutualInformationFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    alignment_shift_file_name=cx.DataPath("Data/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt"),
+    alignment_shift_file_name="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
     cell_phases_array_path=cx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     mask_array_path=cx.DataPath("DataContainer/CellData/Mask"),
@@ -114,13 +124,12 @@ result = filter.execute(
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
-    print(f'Errors: {result.errors}')
-    print(f'Warnings: {result.warnings}')
+    print(f'{filter.name()} Errors: {result.errors}')
     quit()
 else:
-    print(f"{filter.name()} No errors running the WriteDREAM3DFilter")
+    print(f"{filter.name()} No errors running the filter")
 
 print("===> Pipeline Complete")

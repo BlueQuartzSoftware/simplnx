@@ -9,6 +9,19 @@ import numpy as np
 data_structure = cx.DataStructure()
 
 # Filter 1
+
+generated_file_list_value = cx.GeneratedFileListParameter.ValueType()
+generated_file_list_value.input_path = "Data/Porosity_Image"
+generated_file_list_value.ordering = cx.GeneratedFileListParameter.Ordering.LowToHigh
+
+generated_file_list_value.file_prefix = "slice_"
+generated_file_list_value.file_suffix = ""
+generated_file_list_value.file_extension = ".tif"
+generated_file_list_value.start_index = 11
+generated_file_list_value.end_index = 174
+generated_file_list_value.increment_index = 1
+generated_file_list_value.padding_digits = 2
+
 # Instantiate Filter
 filter = cxitk.ITKImportImageStack()
 # Execute Filter with Parameters
@@ -18,7 +31,7 @@ result = filter.execute(
     image_data_array_path="ImageData",
     image_geometry_path=cx.DataPath("RoboMet.3D Image Stack"),
     image_transform_choice=0,
-    input_file_list_info=cx.DataPath("Data/Porosity_Image"),
+    input_file_list_info=generated_file_list_value,
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )

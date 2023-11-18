@@ -9,6 +9,19 @@ import numpy as np
 data_structure = cx.DataStructure()
 
 # Filter 1
+
+# Define ReadCSVData parameters
+read_csv_data = cx.ReadCSVDataParameter()
+read_csv_data.input_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/EulersRotated.csv"
+read_csv_data.start_import_row = 2
+read_csv_data.delimiters = [',']
+read_csv_data.custom_headers = ['phi1', 'Phi', 'phi2']
+read_csv_data.column_data_types = [cx.DataType.float32, cx.DataType.float32, cx.DataType.float32]
+read_csv_data.skipped_array_mask = [False, False, False]
+read_csv_data.tuple_dims = [480_001]
+read_csv_data.headers_line = 1
+read_csv_data.header_mode = cx.ReadCSVDataParameter.HeaderMode.Custom
+
 # Instantiate Filter
 filter = cx.ReadCSVFileFilter()
 # Execute Filter with Parameters
@@ -72,14 +85,14 @@ filter = cx.ReadTextDataArrayFilter()
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=False,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file="Data/ASCIIData/ConfidenceIndex.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/ConfidenceIndex.csv",
     n_comp=1,
     n_skip_lines=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=cx.DataPath("ConfidenceIndex"),
-    scalar_type=8
+    output_data_array=cx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"),
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -96,14 +109,14 @@ filter = cx.ReadTextDataArrayFilter()
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=False,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file="Data/ASCIIData/ImageQuality.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/ImageQuality.csv",
     n_comp=1,
     n_skip_lines=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=cx.DataPath("ImageQuality"),
-    scalar_type=8
+    output_data_array=cx.DataPath("RectGridGeometry/CellData/ImageQuality"),
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -121,14 +134,14 @@ filter = cx.ReadTextDataArrayFilter()
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=False,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file="Data/ASCIIData/SEM Signal.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/SEM Signal.csv",
     n_comp=1,
     n_skip_lines=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=cx.DataPath("SEM Signal"),
-    scalar_type=8
+    output_data_array=cx.DataPath("RectGridGeometry/CellData/SEM Signal"),
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -145,14 +158,14 @@ filter = cx.ReadTextDataArrayFilter()
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=False,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file="Data/ASCIIData/Fit.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/Fit.csv",
     n_comp=1,
     n_skip_lines=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=cx.DataPath("Fit"),
-    scalar_type=8
+    output_data_array=cx.DataPath("RectGridGeometry/CellData/Fit"),
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -170,14 +183,14 @@ filter = cx.ReadTextDataArrayFilter()
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=False,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file="Data/ASCIIData/EulerAngles.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/EulerAngles.csv",
     n_comp=3,
     n_skip_lines=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=cx.DataPath("EulerAngles"),
-    scalar_type=8
+    output_data_array=cx.DataPath("RectGridGeometry/CellData/EulerAngles"),
+    scalar_type=cx.NumericType.float32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -194,14 +207,14 @@ filter = cx.ReadTextDataArrayFilter()
 result = filter.execute(
     data_structure=data_structure,
     advanced_options=False,
-    data_format="Unknown",
+    data_format="",
     delimiter_choice=0,
-    input_file="Data/ASCIIData/Phases.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/Phases.csv",
     n_comp=1,
     n_skip_lines=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=cx.DataPath("Phases"),
-    scalar_type=4
+    output_data_array=cx.DataPath("RectGridGeometry/CellData/Phases"),
+    scalar_type=cx.NumericType.int32
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -241,7 +254,7 @@ else:
 # Instantiate Filter
 filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
-output_file_path = "Data/Examples/ResampleRectGridToImageGeom.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Examples/ResampleRectGridToImageGeom.dream3d"
 result = filter.execute(data_structure=data_structure, 
                         export_file_path=output_file_path, 
                         write_xdmf_file=True)

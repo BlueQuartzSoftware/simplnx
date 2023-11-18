@@ -58,7 +58,7 @@ result = filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=cx.DataPath("[Image Geometry]/Cell Data/Quats"),
     input_type=2,
-    output_orientation_array_name=("Eulers"),
+    output_orientation_array_name="Eulers",
     output_type=0
 )
 if len(result.warnings) != 0:
@@ -119,7 +119,7 @@ filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("[Image Geometry]/Cell Data/Eulers"),
+    euler_angles_array_path=cx.DataPath("[Image Geometry]/Cell Data/Eulers"),
     cell_ipf_colors_array_name=("IPFColors"),
     cell_phases_array_path=cx.DataPath("[Image Geometry]/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("[Image Geometry]/Cell Ensemble/CrystalStructures"),

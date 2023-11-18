@@ -22,9 +22,7 @@ result = filter.execute(
     triangle_geometry_name=cx.DataPath("[Triange Geometry]"),
     vertex_attribute_matrix="Vertex Data"
 )
-
-# Error/Result Handling for Filter 1
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')

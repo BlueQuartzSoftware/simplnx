@@ -35,7 +35,7 @@ filter = cxor.RotateEulerRefFrameFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=cx.DataPath("ImageGeom/Cell Data/EulerAngles"),
+    euler_angles_array_path=cx.DataPath("ImageGeom/Cell Data/EulerAngles"),
     rotation_axis=[0.0, 0.0, 1.0, 90.0]
 )
 if len(result.warnings) !=0:
