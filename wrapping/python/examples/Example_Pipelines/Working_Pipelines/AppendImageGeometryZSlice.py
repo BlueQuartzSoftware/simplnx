@@ -37,7 +37,7 @@ result = filter.execute(
     advanced_options=True,
     data_format="",
     delimiter_choice=0,
-    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/ConfidenceIndex.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/ASCIIData/ConfidenceIndex.csv",
     n_comp=1,
     n_skip_lines=0,
     n_tuples=[[480000.0]],
@@ -61,7 +61,7 @@ result = filter.execute(
     advanced_options=True,
     data_format="",
     delimiter_choice=0,
-    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/FeatureIds.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/ASCIIData/FeatureIds.csv",
     n_comp=1,
     n_skip_lines=0,
     n_tuples=[[480000.0]],
@@ -86,7 +86,7 @@ result = filter.execute(
     advanced_options=True,
     data_format="",
     delimiter_choice=0,
-    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/ImageQuality.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/ASCIIData/ImageQuality.csv",
     n_comp=1,
     n_skip_lines=0,
     n_tuples=[[480000.0]],
@@ -110,7 +110,7 @@ result = filter.execute(
     advanced_options=True,
     data_format="",
     delimiter_choice=0,
-    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/IPFColor.csv",
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/ASCIIData/IPFColor.csv",
     n_comp=3,
     n_skip_lines=0,
     n_tuples=[[480000.0]],
@@ -198,7 +198,7 @@ else:
 # Instantiate Filter
 filter = cx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/AppendImageGeometryZSlice.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Examples/AppendImageGeometryZSlice.dream3d"
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,

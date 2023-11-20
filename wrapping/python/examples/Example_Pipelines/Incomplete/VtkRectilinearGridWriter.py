@@ -34,7 +34,7 @@ filter = cx.WriteVtkRectilinearGridFilter
 result = filter.execute(
     data_structure=data_structure,
     image_geometry_path=cx.DataPath("DataContainer"),
-    output_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/SmallIN100_Final.vtk",
+    output_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Examples/SmallIN100_Final.vtk",
     write_binary_file=True,
     selected_data_array_paths=[
  cx.DataPath("DataContainer/CellData/Confidence Index"), 
@@ -51,7 +51,7 @@ result = filter.execute(
  cx.DataPath("DataContainer/CellData/X Position"),
  cx.DataPath("DataContainer/CellData/Y Position")]
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')

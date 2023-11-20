@@ -19,7 +19,7 @@ result = filter.execute(
     data_container_name=cx.DataPath("fw-ar-IF1-aptr12-corr"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
-    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
 )
 if len(result.warnings) != 0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -145,7 +145,7 @@ filter = cxitk.ITKImageWriter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    file_name="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_001.png",
+    file_name="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_001.png",
     image_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_001"),
     image_geom_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
     index_offset=0,
@@ -187,7 +187,7 @@ filter = cxitk.ITKImageWriter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    file_name="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_010.png",
+    file_name="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_010.png",
     image_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_010"),
     image_geom_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
     index_offset=0,
@@ -228,7 +228,7 @@ filter = cxitk.ITKImageWriter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    file_name="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_100.png",
+    file_name="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr_100.png",
     image_array_path=cx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_100"),
     image_geom_path=cx.DataPath("fw-ar-IF1-aptr12-corr"),
     index_offset=0,

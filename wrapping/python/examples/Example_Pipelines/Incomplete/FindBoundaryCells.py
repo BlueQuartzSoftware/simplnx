@@ -12,7 +12,7 @@ data_structure = cx.DataStructure()
 # Instantiate Import Data
 
 import_data = cx.Dream3dImportParameter.ImportData()
-import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_data.data_paths = None
 
 # Instantiate Filter
@@ -50,7 +50,7 @@ else:
 
 # Filter 3
 # Output file path for Filter 3
-output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/SmallIN100_BoundaryCells.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Examples/SmallIN100_BoundaryCells.dream3d"
 # Instantiate Filter
 filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters

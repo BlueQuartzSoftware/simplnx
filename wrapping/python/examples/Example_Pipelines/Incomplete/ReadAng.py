@@ -17,7 +17,7 @@ result = filter.execute(
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("Cell Ensemble Data"),
     data_container_name=cx.DataPath("DataContainer"),
-    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100/Slice_1.ang"
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Small_IN100/Slice_1.ang"
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')

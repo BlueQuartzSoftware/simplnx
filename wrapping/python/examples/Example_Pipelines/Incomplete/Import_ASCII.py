@@ -33,7 +33,7 @@ else:
 
 # Define ReadCSVData parameters
 read_csv_data = cx.ReadCSVDataParameter()
-read_csv_data.input_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/ASCIIData/EulersRotated.csv"
+read_csv_data.input_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/ASCIIData/EulersRotated.csv"
 read_csv_data.start_import_row = 2
 read_csv_data.delimiters = [',']
 read_csv_data.custom_headers = ['phi1', 'Phi', 'phi2']

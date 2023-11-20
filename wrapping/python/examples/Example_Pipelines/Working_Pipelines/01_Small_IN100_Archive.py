@@ -12,7 +12,7 @@ data_structure = cx.DataStructure()
 # Instantiate Filter
 
 generated_file_list_value = cx.GeneratedFileListParameter.ValueType()
-generated_file_list_value.input_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Small_IN100"
+generated_file_list_value.input_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Small_IN100"
 generated_file_list_value.ordering = cx.GeneratedFileListParameter.Ordering.HighToLow
 
 generated_file_list_value.file_prefix = "Slice_"

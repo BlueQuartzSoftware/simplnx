@@ -155,7 +155,7 @@ else:
 
 # Filter 8
 # Define output file path
-output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/ArrayCalculatorExampleResults.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/ArrayCalculatorExampleResults.dream3d"
 # Instantiate Filter
 filter = cx.WriteDREAM3DFilter()
 # Execute Filter with Parameters

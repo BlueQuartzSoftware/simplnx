@@ -11,7 +11,7 @@ data_structure = cx.DataStructure()
 # Filter 1
 # Instantiate Import Data Parameter
 import_data = cx.Dream3dImportParameter.ImportData()
-import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_data.data_paths = None
 
 # Instantiate Filter

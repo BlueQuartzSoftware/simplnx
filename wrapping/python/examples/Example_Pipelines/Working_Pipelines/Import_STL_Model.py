@@ -17,7 +17,7 @@ result = filter.execute(
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
     #scale_factor: float = ...,
-    stl_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/STL_Models/Cylinder.stl",
+    stl_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/STL_Models/Cylinder.stl",
     triangle_geometry_name=cx.DataPath("[Triangle Geometry]"),
     vertex_attribute_matrix="Vertex Data"
 )

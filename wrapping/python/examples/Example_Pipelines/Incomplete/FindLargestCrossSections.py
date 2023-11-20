@@ -16,7 +16,7 @@ h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
 h5ebsdParameter.euler_representation=0
 h5ebsdParameter.end_slice=117
 h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
-h5ebsdParameter.input_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Reconstruction/Small_IN100.h5ebsd"
+h5ebsdParameter.input_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Reconstruction/Small_IN100.h5ebsd"
 h5ebsdParameter.start_slice=1
 h5ebsdParameter.use_recommended_transform=True
 
@@ -135,7 +135,7 @@ else:
 # Instantiate Filter
 filter = cx.WriteDREAM3DFilter()
 # Define output file path
-output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/Output/Examples/SmallIN100_LargestCrossSections.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Examples/SmallIN100_LargestCrossSections.dream3d"
 # Execute WriteDREAM3DFilter with Parameters
 result = filter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 

@@ -19,7 +19,7 @@ result = filter.execute(
     data_container_name=cx.DataPath("DataContainer"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=False,
-    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/DREAM3DNX-7.0.0-RC-7-UDRI-20231027.2-windows-AMD64/Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
