@@ -81,8 +81,8 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FlaggedFeaturesArrayPath_Key, "Flagged Features", "Specifies whether the Feature will remain in the structure or not", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when removing flagged features",
-                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               complex::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_Functionality_Key, k_CreatedImageGeometryPrefix_Key, std::make_any<uint64>(to_underlying(Functionality::Extract)));
