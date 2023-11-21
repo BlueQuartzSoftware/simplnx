@@ -112,9 +112,9 @@ constexpr StringLiteral k_WriteTimeSeriesKey = "WriteTimeSeries";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ExportDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ExportDREAM3DFilter().getDefaultArguments();
+  Arguments args = WriteDREAM3DFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

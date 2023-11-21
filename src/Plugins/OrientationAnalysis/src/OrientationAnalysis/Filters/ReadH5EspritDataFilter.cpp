@@ -238,9 +238,9 @@ constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttr
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportH5EspritDataFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadH5EspritDataFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportH5EspritDataFilter().getDefaultArguments();
+  Arguments args = ReadH5EspritDataFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

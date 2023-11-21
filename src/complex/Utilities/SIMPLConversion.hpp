@@ -22,12 +22,12 @@
 #include "complex/Parameters/GenerateColorTableParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/ReadCSVFileParameter.hpp"
+#include "complex/Parameters/ReadHDF5DatasetParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
@@ -1804,9 +1804,9 @@ struct ReadASCIIWizardDataFilterParameterConverter
   static constexpr StringLiteral k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
   static constexpr StringLiteral k_ConsecutiveDelimitersKey = "Wizard_ConsecutiveDelimiters";
 
-  static std::vector<std::optional<DataType>> ConvertDataTypeStrings(const std::vector<std::string>& dataTypes)
+  static std::vector<DataType> ConvertDataTypeStrings(const std::vector<std::string>& dataTypes)
   {
-    std::vector<std::optional<DataType>> output;
+    std::vector<DataType> output;
 
     for(usize i = 0; i < dataTypes.size(); i++)
     {
@@ -1815,7 +1815,6 @@ struct ReadASCIIWizardDataFilterParameterConverter
         output.push_back(complex::StringToDataType(dataTypes[i]));
       } catch(const std::exception& e)
       {
-        output.push_back({});
       }
     }
 
@@ -1847,16 +1846,13 @@ struct ReadASCIIWizardDataFilterParameterConverter
       }
     }
 
-    // REDO: Filter was redesigned
     ValueType value;
-#if 0
     value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
-    value.dataHeaders = json[k_DataHeadersKey].get<std::vector<std::string>>();
-    value.beginIndex = json[k_BeginIndexKey].get<int32>();
-    value.numberOfLines = json[k_NumberOfLinesKey].get<int32>();
+    value.customHeaders = json[k_DataHeadersKey].get<std::vector<std::string>>();
+    value.startImportRow = json[k_BeginIndexKey].get<int32>();
     value.dataTypes = ConvertDataTypeStrings(dataTypeStrings);
     value.delimiters = ConvertToChars(json[k_DelimitersKey].get<std::string>());
-    value.headerLine = json[k_HeaderLineKey].get<int32>();
+    value.headersLine = json[k_HeaderLineKey].get<int32>();
 
     bool headerIsCustom = json[k_HeaderIsCustomKey].get<bool>();
     bool headerUsesDefaults = json[k_HeaderUsesDefaultsKey].get<bool>();
@@ -1865,23 +1861,12 @@ struct ReadASCIIWizardDataFilterParameterConverter
     {
       value.headerMode = ValueType::HeaderMode::CUSTOM;
     }
-    else if(headerUsesDefaults)
-    {
-      value.headerMode = ValueType::HeaderMode::DEFAULTS;
-    }
     else
     {
       value.headerMode = ValueType::HeaderMode::LINE;
     }
 
-    const auto& delimiters = value.delimiters;
-
-    value.tabAsDelimiter = std::find(delimiters.begin(), delimiters.end(), '\t') != delimiters.end();
-    value.semicolonAsDelimiter = std::find(delimiters.begin(), delimiters.end(), ';') != delimiters.end();
-    value.commaAsDelimiter = std::find(delimiters.begin(), delimiters.end(), ',') != delimiters.end();
-    value.spaceAsDelimiter = std::find(delimiters.begin(), delimiters.end(), ' ') != delimiters.end();
     value.consecutiveDelimiters = static_cast<bool>(json[k_ConsecutiveDelimitersKey].get<int32>());
-#endif
 
     return {std::move(value)};
   }
@@ -1889,7 +1874,7 @@ struct ReadASCIIWizardDataFilterParameterConverter
 
 struct ImportHDF5DatasetFilterParameterConverter
 {
-  using ParameterType = ImportHDF5DatasetParameter;
+  using ParameterType = ReadHDF5DatasetParameter;
   using ValueType = ParameterType::ValueType;
 
   static constexpr StringLiteral k_DatasetPathKey = "dataset_path";
@@ -1900,7 +1885,7 @@ struct ImportHDF5DatasetFilterParameterConverter
   {
     if(!json1.is_array())
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("ImportHDF5DatasetFilterParameter json '{}' is not an array", json1.dump()));
+      return MakeErrorResult<ValueType>(-1, fmt::format("ReadHDF5DatasetParameter json '{}' is not an array", json1.dump()));
     }
 
     if(!json2.is_string())

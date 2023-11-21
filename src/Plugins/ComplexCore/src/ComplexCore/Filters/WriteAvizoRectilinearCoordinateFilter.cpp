@@ -116,9 +116,9 @@ constexpr StringLiteral k_UnitsKey = "Units";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> AvizoRectilinearCoordinateWriterFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteAvizoRectilinearCoordinateFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = AvizoRectilinearCoordinateWriterFilter().getDefaultArguments();
+  Arguments args = WriteAvizoRectilinearCoordinateFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -443,9 +443,9 @@ constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix"
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportHDF5Dataset::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadHDF5Dataset::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportHDF5Dataset().getDefaultArguments();
+  Arguments args = ReadHDF5Dataset().getDefaultArguments();
 
   std::vector<Result<>> results;
 

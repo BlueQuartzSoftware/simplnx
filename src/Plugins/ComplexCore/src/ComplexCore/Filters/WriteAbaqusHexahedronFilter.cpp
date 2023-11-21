@@ -134,9 +134,9 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> AbaqusHexahedronWriterFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteAbaqusHexahedronFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = AbaqusHexahedronWriterFilter().getDefaultArguments();
+  Arguments args = WriteAbaqusHexahedronFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -472,9 +472,9 @@ constexpr StringLiteral k_DensityArrayNameKey = "DensityArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportVolumeGraphicsFileFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadVolumeGraphicsFileFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportVolumeGraphicsFileFilter().getDefaultArguments();
+  Arguments args = ReadVolumeGraphicsFileFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

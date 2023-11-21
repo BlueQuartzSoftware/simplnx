@@ -132,9 +132,9 @@ constexpr StringLiteral k_FeatureEulerAnglesArrayPathKey = "FeatureEulerAnglesAr
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ExportGBCDTriangleDataFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteGBCDTriangleDataFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ExportGBCDTriangleDataFilter().getDefaultArguments();
+  Arguments args = WriteGBCDTriangleDataFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

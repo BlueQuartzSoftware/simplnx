@@ -197,9 +197,9 @@ constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayP
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> RawBinaryReaderFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = RawBinaryReaderFilter().getDefaultArguments();
+  Arguments args = ReadRawBinaryFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

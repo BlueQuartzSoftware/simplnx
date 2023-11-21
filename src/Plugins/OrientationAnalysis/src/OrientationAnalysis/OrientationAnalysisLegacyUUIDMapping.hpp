@@ -87,11 +87,11 @@ namespace complex
     {complex::Uuid::FromString("1a0848da-2edd-52c0-b111-62a4dc6d2886").value(), {complex::FilterTraits<FindFeatureReferenceCAxisMisorientationsFilter>::uuid, &FindFeatureReferenceCAxisMisorientationsFilter::FromSIMPLJson}}, // FindFeatureReferenceCAxisMisorientations
     {complex::Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value(), {complex::FilterTraits<FindMisorientationsFilter>::uuid, &FindMisorientationsFilter::FromSIMPLJson}}, // FindMisorientations
     {complex::Uuid::FromString("2a0bfcd3-2517-5117-b164-964dfac8fe22").value(), {complex::FilterTraits<CreateEnsembleInfoFilter>::uuid, &CreateEnsembleInfoFilter::FromSIMPLJson}}, // CreateEnsembleInfoFilter
-    {complex::Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value(), {complex::FilterTraits<EnsembleInfoReaderFilter>::uuid, &EnsembleInfoReaderFilter::FromSIMPLJson}}, // EnsembleInfoReader
+    {complex::Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value(), {complex::FilterTraits<ReadEnsembleInfoFilter>::uuid, &ReadEnsembleInfoFilter::FromSIMPLJson}}, // EnsembleInfoReader
     {complex::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), {complex::FilterTraits<FindShapesFilter>::uuid, &FindShapesFilter::FromSIMPLJson}}, // FindShapes
-    {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), {complex::FilterTraits<ImportH5OimDataFilter>::uuid, &ImportH5OimDataFilter::FromSIMPLJson}}, // ImportH5OimData
+    {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), {complex::FilterTraits<ReadH5OimDataFilter>::uuid, &ReadH5OimDataFilter::FromSIMPLJson}}, // ImportH5OimData
     {complex::Uuid::FromString("428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c").value(), {complex::FilterTraits<FindFeatureReferenceMisorientationsFilter>::uuid, &FindFeatureReferenceMisorientationsFilter::FromSIMPLJson}}, // FindFeatureReferenceMisorientations
-    {complex::Uuid::FromString("433976f0-710a-5dcc-938e-fcde49cd842f").value(), {complex::FilterTraits<ExportGBCDTriangleDataFilter>::uuid, &ExportGBCDTriangleDataFilter::FromSIMPLJson}}, // ExportGBCDTriangleDataFilter
+    {complex::Uuid::FromString("433976f0-710a-5dcc-938e-fcde49cd842f").value(), {complex::FilterTraits<WriteGBCDTriangleDataFilter>::uuid, &WriteGBCDTriangleDataFilter::FromSIMPLJson}}, // ExportGBCDTriangleDataFilter
     {complex::Uuid::FromString("439e31b7-3198-5d0d-aef6-65a9e9c1a016").value(), {complex::FilterTraits<ConvertQuaternionFilter>::uuid, &ConvertQuaternionFilter::FromSIMPLJson}}, // ConvertQuaternion
     {complex::Uuid::FromString("4ef7f56b-616e-5a80-9e68-1da8f35ad235").value(), {complex::FilterTraits<ReadH5EbsdFilter>::uuid, &ReadH5EbsdFilter::FromSIMPLJson}}, // ReadH5Ebsd
     {complex::Uuid::FromString("4fb2b9de-3124-534b-b914-dbbbdbc14604").value(), {complex::FilterTraits<AlignSectionsMisorientationFilter>::uuid, &AlignSectionsMisorientationFilter::FromSIMPLJson}}, // AlignSectionsMisorientation
@@ -103,7 +103,7 @@ namespace complex
     {complex::Uuid::FromString("7cd30864-7bcf-5c10-aea7-d107373e2d40").value(), {complex::FilterTraits<GenerateFaceMisorientationColoringFilter>::uuid, &GenerateFaceMisorientationColoringFilter::FromSIMPLJson}}, // GenerateFaceMisorientationColoring
     {complex::Uuid::FromString("85900eba-3da9-5985-ac71-1d9d290a5d31").value(), {complex::FilterTraits<GenerateGBCDPoleFigureFilter>::uuid, &GenerateGBCDPoleFigureFilter::FromSIMPLJson}}, // VisualizeGBCDPoleFigureFilter
     {complex::Uuid::FromString("88d332c1-cf6c-52d3-a38d-22f6eae19fa6").value(), {complex::FilterTraits<FindKernelAvgMisorientationsFilter>::uuid, &FindKernelAvgMisorientationsFilter::FromSIMPLJson}}, // FindKernelAvgMisorientations
-    {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), {complex::FilterTraits<ImportH5EspritDataFilter>::uuid, &ImportH5EspritDataFilter::FromSIMPLJson}}, // ImportH5EspritData
+    {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), {complex::FilterTraits<ReadH5EspritDataFilter>::uuid, &ReadH5EspritDataFilter::FromSIMPLJson}}, // ImportH5EspritData
     {complex::Uuid::FromString("9a6677a6-b9e5-5fee-afa2-27e868cab8ca").value(), {complex::FilterTraits<GenerateFZQuaternions>::uuid, &GenerateFZQuaternions::FromSIMPLJson}}, // GenerateFZQuaternions
     {complex::Uuid::FromString("a10bb78e-fcff-553d-97d6-830a43c85385").value(), {complex::FilterTraits<WritePoleFigureFilter>::uuid, &WritePoleFigureFilter::FromSIMPLJson}}, // WritePoleFigure
     {complex::Uuid::FromString("a2b62395-1a7d-5058-a840-752d8f8e2430").value(), {complex::FilterTraits<RodriguesConvertorFilter>::uuid, &RodriguesConvertorFilter::FromSIMPLJson}}, // RodriguesConvertor
@@ -118,7 +118,7 @@ namespace complex
     {complex::Uuid::FromString("e67ca06a-176f-58fc-a676-d6ee5553511a").value(), {complex::FilterTraits<FindSchmidsFilter>::uuid, &FindSchmidsFilter::FromSIMPLJson}}, // FindSchmids
     {complex::Uuid::FromString("ef9420b2-8c46-55f3-8ae4-f53790639de4").value(), {complex::FilterTraits<RotateEulerRefFrameFilter>::uuid, &RotateEulerRefFrameFilter::FromSIMPLJson}}, // RotateEulerRefFrame
     {complex::Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value(), {complex::FilterTraits<BadDataNeighborOrientationCheckFilter>::uuid, &BadDataNeighborOrientationCheckFilter::FromSIMPLJson}}, // BadDataNeighborOrientationCheck
-    {complex::Uuid::FromString("f62065b4-54e9-53b1-bed7-2178a57d3c7a").value(), {complex::FilterTraits<ExportGBCDGMTFileFilter>::uuid, &ExportGBCDGMTFileFilter::FromSIMPLJson}}, // ExportGBCDGMTFileFilter
+    {complex::Uuid::FromString("f62065b4-54e9-53b1-bed7-2178a57d3c7a").value(), {complex::FilterTraits<WriteGBCDGMTFileFilter>::uuid, &WriteGBCDGMTFileFilter::FromSIMPLJson}}, // ExportGBCDGMTFileFilter
     {complex::Uuid::FromString("00d20627-5b88-56ba-ac7a-fc2a4b337903").value(), {complex::FilterTraits<FindGBPDMetricBasedFilter>::uuid, &FindGBPDMetricBasedFilter::FromSIMPLJson}}, // FindGBPDMetricBased
     // {complex::Uuid::FromString("17410178-4e5f-58b9-900e-8194c69200ab").value(), {complex::FilterTraits<ReplaceElementAttributesWithNeighborValues>::uuid, {}}}, // ReplaceElementAttributesWithNeighborValues
     // {complex::Uuid::FromString("179b0c7a-4e62-5070-ba49-ae58d5ccbfe8").value(), {complex::FilterTraits<ImportEbsdMontage>::uuid, {}}}, // ImportEbsdMontage
@@ -146,7 +146,7 @@ namespace complex
     // {complex::Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value(), {complex::FilterTraits<GenerateOrientationMatrixTranspose>::uuid, {}}}, // GenerateOrientationMatrixTranspose
     {complex::Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value(), {complex::FilterTraits<FindGBCDMetricBasedFilter>::uuid, &FindGBCDMetricBasedFilter::FromSIMPLJson}}, // FindGBCDMetricBased
     {complex::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), {complex::FilterTraits<WriteStatsGenOdfAngleFileFilter>::uuid, &WriteStatsGenOdfAngleFileFilter::FromSIMPLJson}}, // WriteStatsGenOdfAngleFile
-    {complex::Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value(), {complex::FilterTraits<INLWriterFilter>::uuid, &INLWriterFilter::FromSIMPLJson}}, // INLWriter
+    {complex::Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value(), {complex::FilterTraits<WriteINLFileFilter>::uuid, &WriteINLFileFilter::FromSIMPLJson}}, // INLWriter
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

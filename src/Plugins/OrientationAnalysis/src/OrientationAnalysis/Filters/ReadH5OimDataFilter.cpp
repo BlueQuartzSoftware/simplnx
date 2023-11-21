@@ -228,9 +228,9 @@ constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttr
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportH5OimDataFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadH5OimDataFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportH5OimDataFilter().getDefaultArguments();
+  Arguments args = ReadH5OimDataFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -196,9 +196,9 @@ constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName"
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportDeformKeyFileV12Filter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadDeformKeyFileV12Filter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportDeformKeyFileV12Filter().getDefaultArguments();
+  Arguments args = ReadDeformKeyFileV12Filter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

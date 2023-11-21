@@ -234,7 +234,7 @@ set(PLUGIN_EXTRA_SOURCES
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/inicpp.h"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.cpp"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ImportH5Data.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ReadH5Data.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.cpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/Fonts.hpp"

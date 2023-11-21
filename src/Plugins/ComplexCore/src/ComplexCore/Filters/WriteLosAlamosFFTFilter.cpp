@@ -129,9 +129,9 @@ constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> LosAlamosFFTWriterFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteLosAlamosFFTFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = LosAlamosFFTWriterFilter().getDefaultArguments();
+  Arguments args = WriteLosAlamosFFTFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

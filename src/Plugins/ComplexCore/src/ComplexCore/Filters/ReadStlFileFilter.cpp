@@ -209,9 +209,9 @@ constexpr StringLiteral k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> StlFileReaderFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = StlFileReaderFilter().getDefaultArguments();
+  Arguments args = ReadStlFileFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

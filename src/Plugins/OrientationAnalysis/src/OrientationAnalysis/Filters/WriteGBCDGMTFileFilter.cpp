@@ -145,9 +145,9 @@ constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArra
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ExportGBCDGMTFileFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteGBCDGMTFileFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ExportGBCDGMTFileFilter().getDefaultArguments();
+  Arguments args = WriteGBCDGMTFileFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

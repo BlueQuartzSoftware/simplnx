@@ -114,9 +114,9 @@ constexpr StringLiteral k_InputFileDataContainerArrayProxyKey = "InputFileDataCo
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportDREAM3DFilter().getDefaultArguments();
+  Arguments args = ReadDREAM3DFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

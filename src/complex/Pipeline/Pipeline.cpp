@@ -870,7 +870,7 @@ Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json, FilterList*
 
 Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json)
 {
-  auto* app = Application::Instance();
+  auto app = Application::Instance();
   return FromSIMPLJson(json, app->getFilterList());
 }
 
@@ -898,7 +898,7 @@ Result<Pipeline> Pipeline::FromSIMPLFile(const std::filesystem::path& path, Filt
 
 Result<Pipeline> Pipeline::FromSIMPLFile(const std::filesystem::path& path)
 {
-  auto* app = Application::Instance();
+  auto app = Application::Instance();
   return FromSIMPLFile(path, app->getFilterList());
 }
 

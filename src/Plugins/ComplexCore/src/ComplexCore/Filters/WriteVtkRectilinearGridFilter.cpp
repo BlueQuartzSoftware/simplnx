@@ -132,9 +132,9 @@ constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> VtkRectilinearGridWriterFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteVtkRectilinearGridFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = VtkRectilinearGridWriterFilter().getDefaultArguments();
+  Arguments args = WriteVtkRectilinearGridFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

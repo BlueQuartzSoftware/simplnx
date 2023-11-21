@@ -138,9 +138,9 @@ constexpr StringLiteral k_NumFeaturesArrayPathKey = "NumFeaturesArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> INLWriterFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteINLFileFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = INLWriterFilter().getDefaultArguments();
+  Arguments args = WriteINLFileFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

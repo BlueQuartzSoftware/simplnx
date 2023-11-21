@@ -274,7 +274,7 @@ namespace SIMPLConversionCustom
 {
 struct ReadH5EbsdFilterParameterConverter
 {
-  using ParameterType = H5EbsdReaderParameter;
+  using ParameterType = ReadH5EbsdFileParameter;
   using ValueType = ParameterType::ValueType;
 
   static constexpr StringLiteral k_InputFileKey = "InputFile";
@@ -325,7 +325,7 @@ struct ReadH5EbsdFilterParameterConverter
     value.endSlice = json[k_ZEndIndexKey].get<int32>();
     value.eulerRepresentation = json[k_RefFrameZDirKey].get<int32>() - 1;
     value.useRecommendedTransform = static_cast<bool>(json[k_UseTransformationsKey].get<int32>());
-    value.hdf5DataPaths = json[k_SelectedArrayNamesKey].get<std::vector<std::string>>();
+    value.selectedArrayNames = json[k_SelectedArrayNamesKey].get<std::vector<std::string>>();
 
     return {std::move(value)};
   }
@@ -339,7 +339,7 @@ Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, k_ReadH5EbsdFilter_Key));
+  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, k_ReadH5EbsdParameter_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataContainerName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(

@@ -86,6 +86,11 @@ AbstractPipelineNode::NodeType PipelineFilter::getType() const
 
 std::string PipelineFilter::getName() const
 {
+  if(m_Filter == nullptr)
+  {
+    return "Filter not Found";
+  }
+
   return m_Filter->humanName();
 }
 
@@ -96,11 +101,21 @@ IFilter* PipelineFilter::getFilter() const
 
 Parameters PipelineFilter::getParameters() const
 {
+  if(m_Filter == nullptr)
+  {
+    return {};
+  }
+
   return m_Filter->parameters();
 }
 
 Arguments PipelineFilter::getArguments() const
 {
+  if(m_Filter == nullptr)
+  {
+    return {};
+  }
+
   return m_Arguments;
 }
 
@@ -574,6 +589,38 @@ void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
   }
 }
 
+complex::WarningCollection convertErrors(const complex::ErrorCollection& errors, const std::string& filterName)
+{
+  if(errors.empty())
+  {
+    return {};
+  }
+
+  std::string prefix = fmt::format("Filter: '{}' ", filterName);
+  WarningCollection warnings;
+  for(const auto& error : errors)
+  {
+    warnings.emplace_back(Warning{error.code, prefix + error.message});
+  }
+  return std::move(warnings);
+}
+
+std::string createErrorComments(const complex::ErrorCollection& errors, const std::string& filterName)
+{
+  if(errors.empty())
+  {
+    return "";
+  }
+
+  std::string prefix = "Parameter conversion error: ";
+  std::string output;
+  for(const auto& error : errors)
+  {
+    output += prefix + error.message + "\n";
+  }
+  return output;
+}
+
 Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nlohmann::json& json, const FilterList& filterList)
 {
   if(!json.contains(k_SIMPLFilterUuidKey))
@@ -605,12 +652,15 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
 
   Result<Arguments> argumentsResult = simplData->convertJson(json);
 
-  if(argumentsResult.invalid())
-  {
-    return ConvertInvalidResult<std::unique_ptr<PipelineFilter>>(std::move(argumentsResult));
-  }
-
+  const auto filterName = filter->name();
   auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter), std::move(argumentsResult.value()));
 
-  return {std::move(pipelineFilter)};
+  WarningCollection warnings;
+  if(argumentsResult.invalid())
+  {
+    warnings = convertErrors(argumentsResult.errors(), filterName);
+    pipelineFilter->setComments(createErrorComments(argumentsResult.errors(), filterName));
+  }
+
+  return {std::move(pipelineFilter), std::move(warnings)};
 }

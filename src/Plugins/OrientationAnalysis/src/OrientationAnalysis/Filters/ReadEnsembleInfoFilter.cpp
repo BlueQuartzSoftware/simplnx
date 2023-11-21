@@ -156,9 +156,9 @@ constexpr StringLiteral k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> EnsembleInfoReaderFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = EnsembleInfoReaderFilter().getDefaultArguments();
+  Arguments args = ReadEnsembleInfoFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

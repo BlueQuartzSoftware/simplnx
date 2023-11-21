@@ -567,9 +567,9 @@ constexpr StringLiteral k_ImportedVolumeDescriptionKey = "ImportedVolumeDescript
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ImportBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ImportBinaryCTNorthstarFilter().getDefaultArguments();
+  Arguments args = ReadBinaryCTNorthstarFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

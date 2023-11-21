@@ -164,9 +164,9 @@ constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttrib
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FeatureDataCSVWriterFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteFeatureDataCSVFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FeatureDataCSVWriterFilter().getDefaultArguments();
+  Arguments args = WriteFeatureDataCSVFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 
