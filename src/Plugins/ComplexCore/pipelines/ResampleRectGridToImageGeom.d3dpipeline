@@ -6,38 +6,32 @@
     {
       "args": {
         "created_data_group": "Bounds",
-        "selected_data_group": "",
-        "tuple_dimensions": [
-          [
-            14.0
-          ]
-        ],
-        "use_existing_group": false,
-        "wizard_data": {
-          "Begin Index": 2,
-          "Comma As Delimiter": true,
+        "read_csv_data": {
           "Consecutive Delimiters": false,
-          "Data Headers": [
-            "x",
-            "y",
-            "z"
-          ],
+          "Custom Headers": null,
           "Data Types": [
             8,
             8,
             8
           ],
           "Delimiters": [
-            44
+            ","
           ],
           "Header Line": 1,
           "Header Mode": 0,
           "Input File Path": "Data/ASCIIData/RectilinearGrid.csv",
-          "Number of Lines": 15,
-          "Semicolon As Delimiter": false,
-          "Space As Delimiter": false,
-          "Tab As Delimiter": false
-        }
+          "Skipped Array Mask": [
+            false,
+            false,
+            false
+          ],
+          "Start Import Row": 2,
+          "Tuple Dimensions": [
+            14
+          ]
+        },
+        "selected_data_group": "",
+        "use_existing_group": false
       },
       "comments": "",
       "filter": {
@@ -266,5 +260,5 @@
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }
