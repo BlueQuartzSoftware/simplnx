@@ -11,7 +11,7 @@ data_structure = cx.DataStructure()
 # Filter 1
 
 import_data = cx.Dream3dImportParameter.ImportData()
-import_data.file_path = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_data.file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_data.data_paths = None
 
 # Instantiate Filter
@@ -29,7 +29,17 @@ else:
 
 # Filter 2
 # Instantiate Filter
-filter = cx.WriteVtkRectilinearGridFilter
+filter = cx.DeleteData()
+# Execute Filter
+result = filter.execute(
+    data_structure=data_structure,
+    removed_data_path=[cx.DataPath("DataContainer/CellEnsembleData/MaterialName"),
+                       cx.DataPath("MergeTwins SeedValue")]
+)
+
+# Filter 3
+# Instantiate Filter
+filter = cx.WriteVtkRectilinearGridFilter()
 # Execute Filter
 result = filter.execute(
     data_structure=data_structure,

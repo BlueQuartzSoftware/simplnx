@@ -33,8 +33,7 @@ filter = cx.DeleteData()
 # Execute Filter With Parameters
 result = filter.execute(
     data_structure=data_structure,
-    removed_data_path=[#cx.DataPath("DataContainer/CellFeatureData/NumNeighbors2"),
-                       cx.DataPath("DataContainer/CellFeatureData/Centroids"),
+    removed_data_path=[cx.DataPath("DataContainer/CellFeatureData/Centroids"),
                        cx.DataPath("DataContainer/CellFeatureData/EquivalentDiameters"),
                        cx.DataPath("DataContainer/CellFeatureData/NumElements"),
                        cx.DataPath("DataContainer/CellFeatureData/Omega3s"),
@@ -45,7 +44,6 @@ result = filter.execute(
                        cx.DataPath("DataContainer/CellFeatureData/NumNeighbors"),
                        cx.DataPath("DataContainer/CellFeatureData/NeighborList"),
                        cx.DataPath("DataContainer/CellFeatureData/SharedSurfaceAreaList"),
-                       #cx.DataPath("DataContainer/CellFeatureData/NeighborHoods"),
                        cx.DataPath("DataContainer/CellFeatureData/NeighborhoodList"),
                        cx.DataPath("DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"),
                        cx.DataPath("DataContainer/CellFeatureData/AvgQuats"),

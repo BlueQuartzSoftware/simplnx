@@ -38,7 +38,8 @@ result = filter.execute(
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
-    rotation_representation=("Axis Angle"),
+    #rotation_matrix=
+    rotation_representation=0,
     selected_image_geometry=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2")
 )
 if len(result.warnings) != 0:
@@ -55,8 +56,8 @@ filter = cx.CropImageGeometry()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    max_voxel=[488, 0, 0],
-    min_voxel=[549, 399, 0],
+    max_voxel=[549, 399, 0],
+    min_voxel=[488, 0, 0],
     remove_original_geometry=True,
     renumber_features=False,
     selected_image_geometry=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
@@ -73,7 +74,7 @@ else:
 # Filter 4
 # Instantiate Filter
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Error"])
+threshold_1.array_path = cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Error")
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.Equal
 threshold_1.value = 0.0
 
@@ -97,8 +98,8 @@ filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    euler_angles_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
-    cell_ipf_colors_array_name=("IPF_Exposed_001"),
+    cell_euler_angles_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
+    cell_ipf_colors_array_name=("IPF_Unexposed_001"),
     cell_phases_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases"),
     crystal_structures_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures"),
     mask_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"),
@@ -119,8 +120,8 @@ filter = cxitk.ITKImageWriter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    file_name=cx.DataPath("Data/Output/TexturedCopper/IPF_Unexposed.png"),
-    image_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/IPF_Exposed_001"),
+    file_name="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/TexturedCopper/IPF_Unexposed.png",
+    image_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/IPF_Unexposed_001"),
     image_geom_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
     index_offset=0,
     plane=0
@@ -139,25 +140,25 @@ filter = cxor.WritePoleFigureFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    euler_angles_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
-    cell_phases_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
+    cell_euler_angles_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
+    cell_phases_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases"),
     crystal_structures_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures"),
     generation_algorithm=0,
     mask_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"),
     image_geometry_path=cx.DataPath("PoleFigure"),
     image_layout=2,
-    image_prefix=("Cugrid_after 2nd_15kv_2kx_2_Unexposed_"),
+    image_prefix="Cugrid_after 2nd_15kv_2kx_2_Unexposed_",
     image_size=1024,
     lambert_size=64,
     material_name_array_path=cx.DataPath("Cugrid_after 2nd_15kv_2kx_2/Phase Data/MaterialName"),
     num_colors=32,
-    output_path=cx.DataPath("Data/Output/TexturedCopper"),
+    output_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/TexturedCopper",
     save_as_image_geometry=True,
-    title=("Cugrid_after 2nd_15kv_2kx_2 Unexposed"),
+    title="Cugrid_after 2nd_15kv_2kx_2 Unexposed",
     use_mask=True,
     write_image_to_disk=True
 )
-if len(result.warnings) != 0:
+if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
 if len(result.errors) != 0:
     print(f'{filter.name()} Errors: {result.errors}')

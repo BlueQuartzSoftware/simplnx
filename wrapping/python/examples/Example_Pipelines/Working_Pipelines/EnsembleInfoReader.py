@@ -34,7 +34,7 @@ filter = cx.ReadRawBinaryFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    created_attribute_array_path=cx.DataPath("Quats"),
+    created_attribute_array_path=cx.DataPath("[Image Geometry]/Cell Data/Quats"),
     endian=0,
     input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/OrientationAnalysis/quats.raw",
     number_of_components=4,
@@ -78,10 +78,10 @@ result = filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     component_count=1,
-    data_format=("Unknown"),
-    initialization_value=("1"),
-    numeric_type=4,
-    output_data_array=cx.DataPath("Phases"),
+    data_format="",
+    initialization_value="1",
+    numeric_type=cx.NumericType.int32,
+    output_data_array=cx.DataPath("[Image Geometry]/Cell Data/Phases"),
     tuple_dimensions=[[2.0, 100.0, 100.0]]
 )
 if len(result.warnings) != 0:
@@ -101,7 +101,7 @@ result = filter.execute(
     cell_ensemble_attribute_matrix_name=("Cell Ensemble"),
     crystal_structures_array_name=("CrystalStructures"),
     data_container_name=cx.DataPath("[Image Geometry]"),
-    input_file=cx.DataPath("Data/OrientationAnalysis/Ensemble.ini"),
+    input_file="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/OrientationAnalysis/Ensemble.ini",
     phase_types_array_name=("PhaseTypes")
 )
 if len(result.warnings) != 0:
@@ -119,7 +119,7 @@ filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    euler_angles_array_path=cx.DataPath("[Image Geometry]/Cell Data/Eulers"),
+    cell_euler_angles_array_path=cx.DataPath("[Image Geometry]/Cell Data/Eulers"),
     cell_ipf_colors_array_name=("IPFColors"),
     cell_phases_array_path=cx.DataPath("[Image Geometry]/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("[Image Geometry]/Cell Ensemble/CrystalStructures"),
@@ -139,7 +139,7 @@ else:
 # Instantiate Filter
 filter = cx.WriteDREAM3DFilter()
 # Set Output file path
-output_file_path = "Data/Output/Examples/EnsembleInfoReaderExample.dream3d"
+output_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Output/Examples/EnsembleInfoReaderExample.dream3d"
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
