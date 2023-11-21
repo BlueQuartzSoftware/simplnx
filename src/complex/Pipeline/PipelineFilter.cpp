@@ -653,7 +653,11 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
   Result<Arguments> argumentsResult = simplData->convertJson(json);
 
   const auto filterName = filter->name();
-  auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter), std::move(argumentsResult.value()));
+  auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter));
+  if(argumentsResult.valid())
+  {
+    pipelineFilter->setArguments(std::move(argumentsResult.value()));
+  }
 
   WarningCollection warnings;
   if(argumentsResult.invalid())
