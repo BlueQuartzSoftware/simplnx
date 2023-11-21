@@ -11,7 +11,7 @@ data_structure = cx.DataStructure()
 # Filter 1
 
 generated_file_list_value = cx.GeneratedFileListParameter.ValueType()
-generated_file_list_value.input_path = "Data/Porosity_Image"
+generated_file_list_value.input_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/Porosity_Image"
 generated_file_list_value.ordering = cx.GeneratedFileListParameter.Ordering.LowToHigh
 
 generated_file_list_value.file_prefix = "slice_"
@@ -46,8 +46,8 @@ else:
 # Filter 2
 # Instantiate ArrayThreshold objects
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["RoboMet.3D Imgage Stack/Optical Data/ImageData"])
-threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
+threshold_1.array_path = cx.DataPath("RoboMet.3D Imgage Stack/Optical Data/ImageData")
+threshold_1.comparison = cx.ArrayThreshold.ComparisonType.Equal
 threshold_1.value = 0.0
 
 # Define ArrayThresholdSet object

@@ -11,6 +11,7 @@ data_structure = cx.DataStructure()
 # Filter 1
 
 # Define ReadCSVData parameters
+
 read_csv_data = cx.ReadCSVDataParameter()
 read_csv_data.input_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/ASCIIData/EulersRotated.csv"
 read_csv_data.start_import_row = 2
@@ -28,7 +29,7 @@ filter = cx.ReadCSVFileFilter()
 result = filter.execute(
     data_structure=data_structure,
     created_data_group=cx.DataPath("Bounds"),
-    #read_csv_data: ReadCSVDataParameter
+    read_csv_data=read_csv_data,
     # selected_data_group: DataPath = ...,
     use_existing_group=False,
 )

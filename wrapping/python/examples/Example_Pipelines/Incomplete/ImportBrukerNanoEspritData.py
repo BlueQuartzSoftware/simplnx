@@ -19,6 +19,7 @@ result = filter.execute(
     image_geometry_name=cx.DataPath("ImageGeom"),
     origin=[0.0, 0.0, 0.0],
     read_pattern_data=False,
+    #selected_scan_names: ValueType = ...,
     z_spacing=1.0
 )
 if len(result.warnings) !=0:

@@ -40,7 +40,7 @@ result = filter.execute(
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
     #rotation_matrix: List[List[float]] = ...,
-    rotation_representation=("Axis Angle"),
+    rotation_representation=0,
     selected_image_geometry=cx.DataPath("DataContainer")
 )
 if len(result.warnings) !=0:
@@ -54,7 +54,7 @@ else:
 # Filter 3
 # Define ArrayThreshold object
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath(["DataContainer/Cell Data/Error"])
+threshold_1.array_path = cx.DataPath("DataContainer/Cell Data/Error")
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.Equal
 threshold_1.value = 0.0
 
@@ -83,7 +83,7 @@ filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
+    cell_euler_angles_array_path=cx.DataPath("DataContainer/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPFColors"),
     cell_phases_array_path=cx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=cx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
