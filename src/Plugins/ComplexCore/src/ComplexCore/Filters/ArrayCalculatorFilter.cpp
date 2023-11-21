@@ -217,7 +217,7 @@ Result<Arguments> ArrayCalculatorFilter::FromSIMPLJson(const nlohmann::json& jso
 
   // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedAttributeMatrixKey,
   // "@COMPLEX_PARAMETER_KEY@"));
-  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::CalculatorFilterParameterConverter>(args, json, k_InfixEquation_Key));
+  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::CalculatorFilterParameterConverter>(args, json, k_CalculatorParameter_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CalculatedArrayKey, k_CalculatedArray_Key));
 
