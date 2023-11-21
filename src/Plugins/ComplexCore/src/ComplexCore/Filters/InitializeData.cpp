@@ -603,20 +603,26 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
 
-    if(args.value<bool>(k_StandardizeSeed_Key) && numComp == 1)
+    if(numComp == 1)
     {
-      operationNuancesStrm << fmt::format("You chose to standardize the seed for each component, but the array {} is a single component so it will not alter the randomization scheme.",
-                                          iDataArray.getName());
-    }
-    else if(args.value<bool>(k_StandardizeSeed_Key))
-    {
-      operationNuancesStrm << "This generates THE SAME sequences of random numbers for each component in the array based on one seed.\n";
-      operationNuancesStrm << "The resulting array will look like | 1,1,1 | 9,9,9 | ...\n";
+      if(args.value<bool>(k_StandardizeSeed_Key))
+      {
+        operationNuancesStrm << fmt::format("You chose to standardize the seed for each component, but the array {} is a single component so it will not alter the randomization scheme.",
+                                            iDataArray.getName());
+      }
     }
     else
     {
-      operationNuancesStrm << "This generates DIFFERENT sequences of random numbers for each component in the array based on x seeds all modified versions of an original seed.\n";
-      operationNuancesStrm << "The resulting array will look like | 1,9,5 | 7,1,6 | ...\n";
+      if(args.value<bool>(k_StandardizeSeed_Key))
+      {
+        operationNuancesStrm << "This generates THE SAME sequences of random numbers for each component in the array based on one seed.\n";
+        operationNuancesStrm << "The resulting array will look like | 1,1,1 | 9,9,9 | ...\n";
+      }
+      else
+      {
+        operationNuancesStrm << "This generates DIFFERENT sequences of random numbers for each component in the array based on x seeds all modified versions of an original seed.\n";
+        operationNuancesStrm << "The resulting array will look like | 1,9,5 | 7,1,6 | ...\n";
+      }
     }
 
     break;
