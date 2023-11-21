@@ -14,8 +14,9 @@ namespace
 
 TEST_CASE("ComplexCore::InitializeData 1: Single Component Fill Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -23,9 +24,9 @@ TEST_CASE("ComplexCore::InitializeData 1: Single Component Fill Initialization",
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0)); // Default Seed
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("-3.14"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -36,13 +37,14 @@ TEST_CASE("ComplexCore::InitializeData 1: Single Component Fill Initialization",
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 2: Multi Component Single-Value Fill Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -50,9 +52,9 @@ TEST_CASE("ComplexCore::InitializeData 2: Multi Component Single-Value Fill Init
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0)); // Default Seed
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("53"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -63,13 +65,14 @@ TEST_CASE("ComplexCore::InitializeData 2: Multi Component Single-Value Fill Init
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 3: Multi Component Multi-Value Fill Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_fill.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -77,9 +80,9 @@ TEST_CASE("ComplexCore::InitializeData 3: Multi Component Multi-Value Fill Initi
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0)); // Default Seed
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("123;0;-38"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -90,7 +93,7 @@ TEST_CASE("ComplexCore::InitializeData 3: Multi Component Multi-Value Fill Initi
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 4: Single Component Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
