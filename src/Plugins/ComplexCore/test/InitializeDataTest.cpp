@@ -269,8 +269,9 @@ TEST_CASE("ComplexCore::InitializeData 9: Multi Component Multi-Incremental-Subt
 
 TEST_CASE("ComplexCore::InitializeData 10: Single Component Random-With-Range Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -278,14 +279,14 @@ TEST_CASE("ComplexCore::InitializeData 10: Single Component Random-With-Range In
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3)); // Default Seed
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    // omit seed value to use default seed type
-    // omit seed array name since it will not be used
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
     args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("2.62"));
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("6666.66"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -296,13 +297,14 @@ TEST_CASE("ComplexCore::InitializeData 10: Single Component Random-With-Range In
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
-TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standardized-Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -310,14 +312,14 @@ TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standard
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3)); // Default Seed
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    // omit seed value to use default seed type
-    // omit seed array name since it will not be used
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
     args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-6.283185")); // -2 pi
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("6.283185"));    // 2 pi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -328,13 +330,14 @@ TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standard
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
-TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Standardized-Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_non_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -342,14 +345,14 @@ TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Stan
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3)); // Default Seed
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    // omit seed value to use default seed type
-    // omit seed array name since it will not be used
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
     args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-1000"));
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("1000"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -360,13 +363,14 @@ TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Stan
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
-TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Non-Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_non_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -374,14 +378,14 @@ TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Random-Wi
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3)); // Default Seed
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    // omit seed value to use default seed type
-    // omit seed array name since it will not be used
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>(""));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-500;0;19"));
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("-1;0;1000"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -392,7 +396,7 @@ TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Random-Wi
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value Fill Initialization", "[ComplexCore][InitializeData]")
