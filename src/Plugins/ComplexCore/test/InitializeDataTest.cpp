@@ -95,8 +95,9 @@ TEST_CASE("ComplexCore::InitializeData 3: Multi Component Multi-Value Fill Initi
 
 TEST_CASE("ComplexCore::InitializeData 4: Single Component Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_inc_add.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -104,11 +105,11 @@ TEST_CASE("ComplexCore::InitializeData 4: Single Component Incremental-Addition 
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1)); // Default Seed
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("-2.09"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("10.67"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -119,13 +120,14 @@ TEST_CASE("ComplexCore::InitializeData 4: Single Component Incremental-Addition 
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
-TEST_CASE("ComplexCore::InitializeData 5: Multi Component Single-Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 5: Multi Component Single-Value Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_inc_add.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -133,11 +135,11 @@ TEST_CASE("ComplexCore::InitializeData 5: Multi Component Single-Incremental-Add
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1)); // Default Seed
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("-126"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("43"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -148,13 +150,14 @@ TEST_CASE("ComplexCore::InitializeData 5: Multi Component Single-Incremental-Add
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
-TEST_CASE("ComplexCore::InitializeData 6: Multi Component Multi-Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 6: Multi Component Multi-Value Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_component_fill.dream3d", unit_test::k_TestFilesDir)));
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_inc_add.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -162,11 +165,11 @@ TEST_CASE("ComplexCore::InitializeData 6: Multi Component Multi-Incremental-Addi
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1)); // Default Seed
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("34;0;-71"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>(""));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("-3;0;7"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -177,7 +180,7 @@ TEST_CASE("ComplexCore::InitializeData 6: Multi Component Multi-Incremental-Addi
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath{});
+  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
 TEST_CASE("ComplexCore::InitializeData 7: Single Component Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
@@ -210,7 +213,7 @@ TEST_CASE("ComplexCore::InitializeData 7: Single Component Incremental-Subtracti
   UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
 }
 
-TEST_CASE("ComplexCore::InitializeData 8: Multi Component Single-Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 8: Multi Component Single-Value Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                              "initialize_data_test_files");
