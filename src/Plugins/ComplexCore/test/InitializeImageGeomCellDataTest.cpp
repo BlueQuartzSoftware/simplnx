@@ -91,23 +91,22 @@ bool DoesRangeSatisfyCondition(const IDataStore& dataStore, uint64 xMin, uint64 
   return true;
 }
 
-
 struct DoesRangeEqualValueFunctor
 {
-template <class T>
-bool operator()(const IDataStore& dataStore, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, float64 expectedValue)
-{
-  return DoesRangeSatisfyCondition<T>(dataStore, xMin, yMin, zMin, xMax, yMax, zMax, [expectedValue](T value) { return value == expectedValue; });
-}
+  template <class T>
+  bool operator()(const IDataStore& dataStore, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, float64 expectedValue)
+  {
+    return DoesRangeSatisfyCondition<T>(dataStore, xMin, yMin, zMin, xMax, yMax, zMax, [expectedValue](T value) { return value == expectedValue; });
+  }
 };
 
 struct IsDataWithinInclusiveRangeFunctor
 {
-template <class T>
-bool operator()(const IDataStore& dataStore, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, std::pair<float64, float64> range)
-{
-  return DoesRangeSatisfyCondition<T>(dataStore, xMin, yMin, zMin, xMax, yMax, zMax, [range](T value) { return value >= range.first && value <= range.second; });
-}
+  template <class T>
+  bool operator()(const IDataStore& dataStore, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, std::pair<float64, float64> range)
+  {
+    return DoesRangeSatisfyCondition<T>(dataStore, xMin, yMin, zMin, xMax, yMax, zMax, [range](T value) { return value >= range.first && value <= range.second; });
+  }
 };
 } // namespace
 
@@ -140,8 +139,8 @@ TEST_CASE("ComplexCore::InitializeImageGeomCellData(Manual)", "[ComplexCore][Ini
     DataType type = dataStore.getDataType();
 
     // Check that the data inside the range is changed to the correct value and the data outside it is unchanged
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0)); // No bool
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue)); // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));                                                    // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));                                                 // No bool
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
 }
@@ -175,7 +174,7 @@ TEST_CASE("ComplexCore::InitializeImageGeomCellData(Random)", "[ComplexCore][Ini
 
     // Check that the data outside the range is not changed
     // Since the data inside the range is random, we cannot check it
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0)); // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));                                                    // No bool
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
 }
@@ -209,8 +208,8 @@ TEST_CASE("ComplexCore::InitializeImageGeomCellData(RandomWithRange)", "[Complex
     DataType type = dataStore.getDataType();
 
     // Check that the data inside the range is within the given range and that the data outside it is unchanged
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0)); // No bool
-    REQUIRE(ExecuteNeighborFunction(IsDataWithinInclusiveRangeFunctor{}, type, dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange)); // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));                                                    // No bool
+    REQUIRE(ExecuteNeighborFunction(IsDataWithinInclusiveRangeFunctor{}, type, dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));                                          // No bool
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
 }
