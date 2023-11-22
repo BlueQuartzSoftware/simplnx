@@ -10,16 +10,16 @@ using namespace complex;
 
 namespace
 {
-static inline constexpr DataPath k_BaselinePath = DataPath({"baseline"});
-static inline constexpr DataPath k_ExemplarPath = DataPath({"exemplar"});
+const DataPath k_BaselinePath = DataPath({"baseline"});
+const DataPath k_ExemplarPath = DataPath({"exemplar"});
 
-template<typename T, bool Standardized = false>
+template <typename T, bool Standardized = false>
 void BoundsCheck(const DataArray<T>& dataArray, const std::vector<T>& compBounds)
 {
   usize numTup = dataArray.getNumberOfTuples();
   usize numComp = dataArray.getNumberOfComponents();
 
-  REQUIRE(compBounds.size() == numComp * 2)
+  REQUIRE(compBounds.size() == numComp * 2);
 
   for(usize tup = 0; tup < numTup; tup++)
   {
@@ -27,24 +27,33 @@ void BoundsCheck(const DataArray<T>& dataArray, const std::vector<T>& compBounds
     for(usize comp = 0; comp < numComp; comp++)
     {
       T value = dataArray[tup * numComp + comp];
-      REQUIRE(value >= compBounds[comp * 2]);
-      REQUIRE(value <= compBounds[comp * 2 + 1]);
-
-      if constexpr (Standardized)
+      if constexpr(!std::is_same_v<T, bool>)
       {
-        REQUIRE(currentComp == value);
+        REQUIRE(value >= compBounds[comp * 2]);
+        REQUIRE(value <= compBounds[comp * 2 + 1]);
+
+        if(comp != 0)
+        {
+          if constexpr(Standardized)
+          {
+            REQUIRE(currentComp == value);
+          }
+
+          if constexpr(!Standardized)
+          {
+            REQUIRE(currentComp != value);
+          }
+        }
       }
 
-      if constexpr (!Standardized)
+      if constexpr(std::is_same_v<T, bool>)
       {
-        REQUIRE(currentComp != value);
+        REQUIRE((value == compBounds[comp * 2] || value == compBounds[comp * 2 + 1]));
       }
     }
   }
 }
-{
 
-}
 } // namespace
 
 TEST_CASE("ComplexCore::InitializeData 1: Single Component Fill Initialization", "[ComplexCore][InitializeData]")
@@ -341,7 +350,7 @@ TEST_CASE("ComplexCore::InitializeData 10: Single Component Random-With-Range In
     REQUIRE(executeResult.result.valid());
   }
 
-  ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<float32>(::k_BaselinePath), {2.62f, 6666.66f});
+  ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {2.62f, 6666.66f});
 }
 
 TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
@@ -374,7 +383,7 @@ TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standard
     REQUIRE(executeResult.result.valid());
   }
 
-  ::BoundsCheck<float32, true>(dataStructure.getDataRefAs<float32>(::k_BaselinePath), {-6.283185f, 6.283185f, -6.28318f, 6.283185f, -6.28318f, 6.283185f});
+  ::BoundsCheck<float32, true>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {-6.283185f, 6.283185f, -6.28318f, 6.283185f, -6.28318f, 6.283185f});
 }
 
 TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
@@ -407,7 +416,7 @@ TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Stan
     REQUIRE(executeResult.result.valid());
   }
 
-  ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<int32>(::k_BaselinePath), {-1000, 1000, -1000, 1000, -1000, 1000});
+  ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-1000, 1000, -1000, 1000, -1000, 1000});
 }
 
 TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Non-Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
@@ -440,7 +449,7 @@ TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Non-Stand
     REQUIRE(executeResult.result.valid());
   }
 
-  ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<int32>(::k_BaselinePath), {-500, -1, 0, 0, 19, 1000});
+  ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-500, -1, 0, 0, 19, 1000});
 }
 
 TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value Fill Initialization", "[ComplexCore][InitializeData]")
@@ -561,7 +570,7 @@ TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized 
     REQUIRE(executeResult.result.valid());
   }
 
-  ::BoundsCheck<bool, true>(dataStructure.getDataRefAs<bool>(::k_BaselinePath), {false, true, false, false, false, true});
+  ::BoundsCheck<bool, true>(dataStructure.getDataRefAs<BoolArray>(::k_BaselinePath), {false, true, false, false, false, true});
 }
 
 TEST_CASE("ComplexCore::InitializeData 18: Single Component Random Initialization", "[ComplexCore][InitializeData]")
@@ -592,7 +601,7 @@ TEST_CASE("ComplexCore::InitializeData 18: Single Component Random Initializatio
     REQUIRE(executeResult.result.valid());
   }
 
-  ::BoundsCheck<bool, false>(dataStructure.getDataRefAs<bool>(::k_BaselinePath), {false, true, false, true, false, true});
+  ::BoundsCheck<uint8, false>(dataStructure.getDataRefAs<UInt8Array>(::k_BaselinePath), {std::numeric_limits<uint8>::min(), std::numeric_limits<uint8>::max()});
 }
 
 TEST_CASE("ComplexCore::InitializeData 19: Multi Component Standardized-Random Initialization", "[ComplexCore][InitializeData]")
@@ -623,7 +632,8 @@ TEST_CASE("ComplexCore::InitializeData 19: Multi Component Standardized-Random I
     REQUIRE(executeResult.result.valid());
   }
 
-  ::BoundsCheck<uint32, true>(dataStructure.getDataRefAs<uint32>(::k_BaselinePath), {std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max()});
+  ::BoundsCheck<uint32, true>(dataStructure.getDataRefAs<UInt32Array>(::k_BaselinePath), {std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(),
+                                                                                          std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max()});
 }
 
 TEST_CASE("ComplexCore::InitializeData 20: Multi Component Non-Standardized-Random Initialization", "[ComplexCore][InitializeData]")
@@ -654,7 +664,9 @@ TEST_CASE("ComplexCore::InitializeData 20: Multi Component Non-Standardized-Rand
     REQUIRE(executeResult.result.valid());
   }
 
-  ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<float32>(::k_BaselinePath), {std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max()});
+  ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath),
+                                {std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(),
+                                 std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max()});
 }
 
 TEST_CASE("ComplexCore::InitializeData 21: Boolean Single Component Fill Initialization", "[ComplexCore][InitializeData]")
