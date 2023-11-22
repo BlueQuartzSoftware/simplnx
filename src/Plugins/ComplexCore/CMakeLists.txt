@@ -72,6 +72,7 @@ set(FilterList
   IdentifySample
   ImageContouringFilter
   InitializeData
+  InitializeImageGeomCellData
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
   KMeansFilter

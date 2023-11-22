@@ -73,6 +73,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ImageContouringTest.cpp
   ImageGeomTest.cpp
   InitializeDataTest.cpp
+  InitializeImageGeomCellDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
   KMeansTest.cpp
@@ -218,6 +219,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
 #  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_import_deform_12.tar.gz SHA512 21aef18e48a877a1298ae4be0a4ebbb13df4f55acd2178778bd5e1dce32791180dd4c2dd83584be833ae0eb02dc003165c394fc001cc7375d289fcd86b712486)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME k_files.tar.gz SHA512 2701d7bca711821df78bf7649f9b5928cd9febeb4f04e5c8ce8008633304128e3e9290dadfb01e15f73b281a55c6d65255ca4bd115bf04a3218c32dfd7337d7a)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME SurfaceMeshTest.tar.gz SHA512 a74e9fa40ccec78174dbbac90969bfa17367c3a7e14b7b84624032317c351de89957750803d7cb43c67dec19281ee4f647de022d474566fd43e25b8230cce6d6)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME initialize_data_test_files.tar.gz SHA512 f04fe76ef96add4b775111ae7fc95233a7748a25501d9f00a8b2a162c87782b8cd2813e6e46ba7892e721976693da06965e624335dbb28224c9c5b877a05aa49)
 
 endif()
 
