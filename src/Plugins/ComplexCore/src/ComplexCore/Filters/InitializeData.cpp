@@ -476,11 +476,11 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 
     updatedValStrm << "We detected that you are doing an operation on a boolean array.\n";
     updatedValStrm << "The ONLY two ways to specify a 'false' boolean value are as follows:\n";
-    updatedValStrm << "- boolean value string types as follows ignoring asterisk mark: 'False', 'FALSE', 'false'\n";
+    updatedValStrm << "- boolean value string types as follows ignoring apostrophe marks: 'False', 'FALSE', 'false'\n";
     updatedValStrm << "- all well formed integers and well formed floating point definitions of 0\n\n";
 
     updatedValStrm << "ANY OTHER string or number WILL BE 'true', although it is good practice to define true values as follows:\n";
-    updatedValStrm << "- boolean value string types as follows ignoring asterisk mark: 'True', 'TRUE', 'true'\n";
+    updatedValStrm << "- boolean value string types as follows ignoring apostrophe marks: 'True', 'TRUE', 'true'\n";
     updatedValStrm << "- all well formed integers and well formed floating point definitions of 1";
 
     preflightUpdatedValues.push_back({"Boolean Note", updatedValStrm.str()});
