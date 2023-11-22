@@ -148,7 +148,7 @@ private:
     for(auto& bound : m_Cache.bounds)
     {
       std::stringstream dcNameStream;
-      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.stem();
+      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.stem().string();
       bound.ImageName = dcNameStream.str();
 
       {
