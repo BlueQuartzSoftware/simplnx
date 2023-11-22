@@ -1,391 +1,698 @@
 #include "ComplexCore/Filters/InitializeData.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
-#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
-
-#include <stdexcept>
 
 using namespace complex;
 
 namespace
 {
-const DataPath k_ImageGeomPath{{"ImageGeom"}};
-const DataPath k_Int32ArrayPath = k_ImageGeomPath.createChildPath("Int32Array");
-const DataPath k_Float32ArrayPath = k_ImageGeomPath.createChildPath("Float32Array");
+const DataPath k_BaselinePath = DataPath({"baseline"});
+const DataPath k_ExemplarPath = DataPath({"exemplar"});
 
-const std::vector<usize> k_ImageDims = {23, 24, 25};
-const std::vector<usize> k_ArrayDims(k_ImageDims.crbegin(), k_ImageDims.crend());
-const std::vector<usize> k_ComponentDims = {3};
-
-Arguments CreateArgs(std::vector<DataPath> cellArrayPaths, DataPath imageGeomPath, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax, InitializeData::InitType initType,
-                     float64 initValue, std::pair<float64, float64> initRange)
+template <typename T, bool Standardized = false>
+void BoundsCheck(const DataArray<T>& dataArray, const std::vector<T>& compBounds)
 {
-  Arguments args;
+  usize numTup = dataArray.getNumberOfTuples();
+  usize numComp = dataArray.getNumberOfComponents();
 
-  args.insert(InitializeData::k_CellArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::move(cellArrayPaths)));
-  args.insert(InitializeData::k_ImageGeometryPath_Key, std::make_any<DataPath>(std::move(imageGeomPath)));
-  args.insert(InitializeData::k_MinPoint_Key, std::make_any<std::vector<uint64>>({xMin, yMin, zMin}));
-  args.insert(InitializeData::k_MaxPoint_Key, std::make_any<std::vector<uint64>>({xMax, yMax, zMax}));
-  args.insert(InitializeData::k_InitType_Key, std::make_any<uint64>(to_underlying(initType)));
-  args.insert(InitializeData::k_InitValue_Key, std::make_any<float64>(initValue));
-  args.insert(InitializeData::k_InitRange_Key, std::make_any<std::vector<float64>>({initRange.first, initRange.second}));
+  REQUIRE(compBounds.size() == numComp * 2);
 
-  return args;
-}
-
-DataStructure CreateDataStructure()
-{
-  DataStructure dataStructure;
-
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
-
-  imageGeom->setDimensions(k_ImageDims);
-
-  Int32Array* int32Array = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_Int32ArrayPath.getTargetName(), k_ArrayDims, k_ComponentDims, imageGeom->getId());
-  REQUIRE(int32Array != nullptr);
-
-  int32Array->fill(0);
-
-  Float32Array* float32Array = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_Float32ArrayPath.getTargetName(), k_ArrayDims, k_ComponentDims, imageGeom->getId());
-  REQUIRE(float32Array != nullptr);
-
-  float32Array->fill(0.0f);
-
-  return dataStructure;
-}
-
-template <class T, class PredicateT>
-bool DoesRangeSatisfyCondition(const IDataStore& dataStore, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax, PredicateT&& predicate)
-{
-  auto& dataStoreTyped = dynamic_cast<const AbstractDataStore<T>&>(dataStore);
-  // Z Y X
-  auto dims = dataStoreTyped.getTupleShape();
-  usize numComps = dataStoreTyped.getNumberOfComponents();
-
-  for(uint64 k = zMin; k < zMax + 1; k++)
+  for(usize tup = 0; tup < numTup; tup++)
   {
-    for(uint64 j = yMin; j < yMax + 1; j++)
+    T currentComp = dataArray[tup * numComp];
+    for(usize comp = 0; comp < numComp; comp++)
     {
-      for(uint64 i = xMin; i < xMax + 1; i++)
+      T value = dataArray[tup * numComp + comp];
+      if constexpr(!std::is_same_v<T, bool>)
       {
-        usize tuple = (k * dims[1] * dims[2]) + (j * dims[2]) + i;
-        for(usize c = 0; c < numComps; c++)
+        REQUIRE(value >= compBounds[comp * 2]);
+        REQUIRE(value <= compBounds[comp * 2 + 1]);
+
+        if(comp != 0)
         {
-          T value = dataStoreTyped.getComponentValue(tuple, c);
-          if(!predicate(value))
+          if constexpr(Standardized)
           {
-            return false;
+            REQUIRE(currentComp == value);
+          }
+
+          if constexpr(!Standardized)
+          {
+            REQUIRE(currentComp != value);
           }
         }
       }
+
+      if constexpr(std::is_same_v<T, bool>)
+      {
+        REQUIRE((value == compBounds[comp * 2] || value == compBounds[comp * 2 + 1]));
+      }
     }
   }
-
-  return true;
 }
 
-template <class T>
-bool DoesRangeEqualValue(const IDataStore& dataStore, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, float64 expectedValue)
-{
-  return DoesRangeSatisfyCondition<T>(dataStore, xMin, yMin, zMin, xMax, yMax, zMax, [expectedValue](T value) { return value == expectedValue; });
-}
-
-template <class T>
-bool IsDataWithinInclusiveRange(const IDataStore& dataStore, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax, std::pair<float64, float64> range)
-{
-  return DoesRangeSatisfyCondition<T>(dataStore, xMin, yMin, zMin, xMax, yMax, zMax, [range](T value) { return value >= range.first && value <= range.second; });
-}
 } // namespace
 
-TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 1: Single Component Fill Initialization", "[ComplexCore][InitializeData]")
 {
-  InitializeData filter;
-  DataStructure dataStructure = CreateDataStructure();
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_fill.dream3d", unit_test::k_TestFilesDir)));
 
-  constexpr uint64 xMin = 3;
-  constexpr uint64 yMin = 4;
-  constexpr uint64 zMin = 0;
-  constexpr uint64 xMax = 13;
-  constexpr uint64 yMax = 14;
-  constexpr uint64 zMax = 24;
-  constexpr float64 initValue = 42.0;
-  const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::Manual, initValue, {0.0, 0.0});
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  auto result = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result);
-
-  for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
-    const auto& dataStore = dataArray.getIDataStoreRef();
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
 
-    DataType type = dataStore.getDataType();
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("-3.14"));
 
-    // Check that the data inside the range is changed to the correct value and the data outside it is unchanged
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
 
-    switch(type)
-    {
-    case DataType::int8: {
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int16: {
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int32: {
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int64: {
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint8: {
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint16: {
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint32: {
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint64: {
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::float32: {
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::float64: {
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Unhandled DataType");
-    }
-    }
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
   }
+
+  UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 2: Multi Component Single-Value Fill Initialization", "[ComplexCore][InitializeData]")
 {
-  InitializeData filter;
-  DataStructure dataStructure = CreateDataStructure();
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_fill.dream3d", unit_test::k_TestFilesDir)));
 
-  constexpr uint64 xMin = 3;
-  constexpr uint64 yMin = 4;
-  constexpr uint64 zMin = 0;
-  constexpr uint64 xMax = 13;
-  constexpr uint64 yMax = 14;
-  constexpr uint64 zMax = 24;
-  const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::Random, 0.0, {0.0, 0.0});
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  auto result = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result);
-
-  for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
-    const auto& dataStore = dataArray.getIDataStoreRef();
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
 
-    DataType type = dataStore.getDataType();
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("53"));
 
-    // Check that the data outside the range is not changed
-    // Since the data inside the range is random, we cannot check it
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
 
-    switch(type)
-    {
-    case DataType::int8: {
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int16: {
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int32: {
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int64: {
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint8: {
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint16: {
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint32: {
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint64: {
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::float32: {
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::float64: {
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Unhandled DataType");
-    }
-    }
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
   }
+
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 3: Multi Component Multi-Value Fill Initialization", "[ComplexCore][InitializeData]")
 {
-  InitializeData filter;
-  DataStructure dataStructure = CreateDataStructure();
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_fill.dream3d", unit_test::k_TestFilesDir)));
 
-  constexpr uint64 xMin = 3;
-  constexpr uint64 yMin = 4;
-  constexpr uint64 zMin = 0;
-  constexpr uint64 xMax = 13;
-  constexpr uint64 yMax = 14;
-  constexpr uint64 zMax = 24;
-  constexpr std::pair<float64, float64> initRange = {1.0, 25.0};
-  const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::RandomWithRange, 0.0, initRange);
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  auto result = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result);
-
-  for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
-    const auto& dataStore = dataArray.getIDataStoreRef();
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
 
-    DataType type = dataStore.getDataType();
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("123;0;-38"));
 
-    // Check that the data inside the range is within the given range and that the data outside it is unchanged
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
 
-    switch(type)
-    {
-    case DataType::int8: {
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<int8>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<int8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int16: {
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<int16>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<int16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int32: {
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<int32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<int32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::int64: {
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<int64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<int64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint8: {
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<uint8>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<uint8>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint16: {
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<uint16>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<uint16>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint32: {
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<uint32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<uint32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::uint64: {
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<uint64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<uint64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::float32: {
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<float32>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<float32>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    case DataType::float64: {
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));
-      REQUIRE(IsDataWithinInclusiveRange<float64>(dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));
-      REQUIRE(DoesRangeEqualValue<float64>(dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Unhandled DataType");
-    }
-    }
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
   }
+
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 4: Single Component Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_inc_add.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("-2.09"));
+    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("10.67"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 5: Multi Component Single-Value Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_inc_add.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("-126"));
+    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("43"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 6: Multi Component Multi-Value Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_inc_add.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("34;0;-71"));
+    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("-3;0;7"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 7: Single Component Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_inc_sub.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("0.567"));
+    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1.43"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 8: Multi Component Single-Value Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_inc_sub.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("7"));
+    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("-1"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 9: Multi Component Multi-Value Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_inc_sub.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("100;0;-1"));
+    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("2;16;-10"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 10: Single Component Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_rwr.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("2.62"));
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("6666.66"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {2.62f, 6666.66f});
+}
+
+TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-6.283185")); // -2 pi
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("6.283185"));    // 2 pi
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::BoundsCheck<float32, true>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {-6.283185f, 6.283185f, -6.28318f, 6.283185f, -6.28318f, 6.283185f});
+}
+
+TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_non_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-1000"));
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("1000"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-1000, 1000, -1000, 1000, -1000, 1000});
+}
+
+TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Non-Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_non_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-500;0;19"));
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("-1;0;1000"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-500, -1, 0, 0, 19, 1000});
+}
+
+TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value Fill Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_single_val_fill.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("False"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_addition.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("1;0;0"));
+    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_subtraction.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("0;1;1"));
+    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+}
+
+TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("0"));
+    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("1;0;1"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::BoundsCheck<bool, true>(dataStructure.getDataRefAs<BoolArray>(::k_BaselinePath), {false, true, false, false, false, true});
+}
+
+TEST_CASE("ComplexCore::InitializeData 18: Single Component Random Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_rand.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
+    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::BoundsCheck<uint8, false>(dataStructure.getDataRefAs<UInt8Array>(::k_BaselinePath), {std::numeric_limits<uint8>::min(), std::numeric_limits<uint8>::max()});
+}
+
+TEST_CASE("ComplexCore::InitializeData 19: Multi Component Standardized-Random Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_stand_rand.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
+    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::BoundsCheck<uint32, true>(dataStructure.getDataRefAs<UInt32Array>(::k_BaselinePath), {std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(),
+                                                                                          std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max()});
+}
+
+TEST_CASE("ComplexCore::InitializeData 20: Multi Component Non-Standardized-Random Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_non_stand_rand.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
+    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
+    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath),
+                                {std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(),
+                                 std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max()});
+}
+
+TEST_CASE("ComplexCore::InitializeData 21: Boolean Single Component Fill Initialization", "[ComplexCore][InitializeData]")
+{
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
+                                                             "initialize_data_test_files");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_bool_fill.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    InitializeData filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("False"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }

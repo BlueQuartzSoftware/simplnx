@@ -153,7 +153,7 @@ struct ConvertTo<bool>
       return {floatResult.value() != 0.0};
     }
 
-    return {false};
+    return {true};
   }
 };
 

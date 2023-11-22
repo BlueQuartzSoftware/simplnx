@@ -8,31 +8,36 @@
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT InitializeData : public IFilter
+class COMPLEXCORE_EXPORT InitializeImageGeomCellData : public IFilter
 {
 public:
-  InitializeData() = default;
-  ~InitializeData() noexcept override = default;
+  InitializeImageGeomCellData() = default;
+  ~InitializeImageGeomCellData() noexcept override = default;
 
-  InitializeData(const InitializeData&) = delete;
-  InitializeData(InitializeData&&) noexcept = delete;
+  InitializeImageGeomCellData(const InitializeImageGeomCellData&) = delete;
+  InitializeImageGeomCellData(InitializeImageGeomCellData&&) noexcept = delete;
 
-  InitializeData& operator=(const InitializeData&) = delete;
-  InitializeData& operator=(InitializeData&&) noexcept = delete;
+  InitializeImageGeomCellData& operator=(const InitializeImageGeomCellData&) = delete;
+  InitializeImageGeomCellData& operator=(InitializeImageGeomCellData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ArrayPath_Key = "array_path";
+  static inline constexpr StringLiteral k_CellArrayPaths_Key = "cell_arrays";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geom_path";
+  static inline constexpr StringLiteral k_MinPoint_Key = "min_point";
+  static inline constexpr StringLiteral k_MaxPoint_Key = "max_point";
   static inline constexpr StringLiteral k_InitType_Key = "init_type";
   static inline constexpr StringLiteral k_InitValue_Key = "init_value";
-  static inline constexpr StringLiteral k_StartingFillValue_Key = "starting_fill_value";
-  static inline constexpr StringLiteral k_StepOperation_Key = "step_operation";
-  static inline constexpr StringLiteral k_StepValue_Key = "step_value";
+  static inline constexpr StringLiteral k_InitRange_Key = "init_range";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-  static inline constexpr StringLiteral k_InitStartRange_Key = "init_start_range";
-  static inline constexpr StringLiteral k_InitEndRange_Key = "init_end_range";
-  static inline constexpr StringLiteral k_StandardizeSeed_Key = "standardize_seed";
+
+  enum class InitType : uint64
+  {
+    Manual = 0,
+    Random,
+    RandomWithRange
+  };
 
   /**
    * @brief
@@ -103,4 +108,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, InitializeData, "01c82d15-ba52-4ffa-a7a5-487ee5a613f5");
+COMPLEX_DEF_FILTER_TRAITS(complex, InitializeImageGeomCellData, "447b8909-661f-446a-8c1f-72e0cb568fcf");
