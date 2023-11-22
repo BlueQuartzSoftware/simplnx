@@ -10,6 +10,41 @@ using namespace complex;
 
 namespace
 {
+static inline constexpr DataPath k_BaselinePath = DataPath({"baseline"});
+static inline constexpr DataPath k_ExemplarPath = DataPath({"exemplar"});
+
+template<typename T, bool Standardized = false>
+void BoundsCheck(const DataArray<T>& dataArray, const std::vector<T>& compBounds)
+{
+  usize numTup = dataArray.getNumberOfTuples();
+  usize numComp = dataArray.getNumberOfComponents();
+
+  REQUIRE(compBounds.size() == numComp * 2)
+
+  for(usize tup = 0; tup < numTup; tup++)
+  {
+    T currentComp = dataArray[tup * numComp];
+    for(usize comp = 0; comp < numComp; comp++)
+    {
+      T value = dataArray[tup * numComp + comp];
+      REQUIRE(value >= compBounds[comp * 2]);
+      REQUIRE(value <= compBounds[comp * 2 + 1]);
+
+      if constexpr (Standardized)
+      {
+        REQUIRE(currentComp == value);
+      }
+
+      if constexpr (!Standardized)
+      {
+        REQUIRE(currentComp != value);
+      }
+    }
+  }
+}
+{
+
+}
 } // namespace
 
 TEST_CASE("ComplexCore::InitializeData 1: Single Component Fill Initialization", "[ComplexCore][InitializeData]")
@@ -24,7 +59,7 @@ TEST_CASE("ComplexCore::InitializeData 1: Single Component Fill Initialization",
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("-3.14"));
 
@@ -37,7 +72,7 @@ TEST_CASE("ComplexCore::InitializeData 1: Single Component Fill Initialization",
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 2: Multi Component Single-Value Fill Initialization", "[ComplexCore][InitializeData]")
@@ -52,7 +87,7 @@ TEST_CASE("ComplexCore::InitializeData 2: Multi Component Single-Value Fill Init
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("53"));
 
@@ -65,7 +100,7 @@ TEST_CASE("ComplexCore::InitializeData 2: Multi Component Single-Value Fill Init
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 3: Multi Component Multi-Value Fill Initialization", "[ComplexCore][InitializeData]")
@@ -80,7 +115,7 @@ TEST_CASE("ComplexCore::InitializeData 3: Multi Component Multi-Value Fill Initi
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("123;0;-38"));
 
@@ -93,7 +128,7 @@ TEST_CASE("ComplexCore::InitializeData 3: Multi Component Multi-Value Fill Initi
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 4: Single Component Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
@@ -108,7 +143,7 @@ TEST_CASE("ComplexCore::InitializeData 4: Single Component Incremental-Addition 
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("-2.09"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
@@ -123,7 +158,7 @@ TEST_CASE("ComplexCore::InitializeData 4: Single Component Incremental-Addition 
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 5: Multi Component Single-Value Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
@@ -138,7 +173,7 @@ TEST_CASE("ComplexCore::InitializeData 5: Multi Component Single-Value Increment
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("-126"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
@@ -153,7 +188,7 @@ TEST_CASE("ComplexCore::InitializeData 5: Multi Component Single-Value Increment
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 6: Multi Component Multi-Value Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
@@ -168,7 +203,7 @@ TEST_CASE("ComplexCore::InitializeData 6: Multi Component Multi-Value Incrementa
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("34;0;-71"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
@@ -183,7 +218,7 @@ TEST_CASE("ComplexCore::InitializeData 6: Multi Component Multi-Value Incrementa
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 7: Single Component Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
@@ -198,7 +233,7 @@ TEST_CASE("ComplexCore::InitializeData 7: Single Component Incremental-Subtracti
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("0.567"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
@@ -213,7 +248,7 @@ TEST_CASE("ComplexCore::InitializeData 7: Single Component Incremental-Subtracti
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 8: Multi Component Single-Value Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
@@ -228,7 +263,7 @@ TEST_CASE("ComplexCore::InitializeData 8: Multi Component Single-Value Increment
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("7"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
@@ -243,7 +278,7 @@ TEST_CASE("ComplexCore::InitializeData 8: Multi Component Single-Value Increment
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 9: Multi Component Multi-Value Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
@@ -258,7 +293,7 @@ TEST_CASE("ComplexCore::InitializeData 9: Multi Component Multi-Value Incrementa
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("100;0;-1"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
@@ -273,7 +308,7 @@ TEST_CASE("ComplexCore::InitializeData 9: Multi Component Multi-Value Incrementa
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 10: Single Component Random-With-Range Initialization", "[ComplexCore][InitializeData]")
@@ -288,7 +323,7 @@ TEST_CASE("ComplexCore::InitializeData 10: Single Component Random-With-Range In
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
     args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
@@ -306,7 +341,7 @@ TEST_CASE("ComplexCore::InitializeData 10: Single Component Random-With-Range In
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<float32>(::k_BaselinePath), {2.62f, 6666.66f});
 }
 
 TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
@@ -321,7 +356,7 @@ TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standard
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
     args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
@@ -339,7 +374,7 @@ TEST_CASE("ComplexCore::InitializeData 11: Multi Component Single-Value Standard
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  ::BoundsCheck<float32, true>(dataStructure.getDataRefAs<float32>(::k_BaselinePath), {-6.283185f, 6.283185f, -6.28318f, 6.283185f, -6.28318f, 6.283185f});
 }
 
 TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
@@ -354,7 +389,7 @@ TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Stan
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
     args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
@@ -372,7 +407,7 @@ TEST_CASE("ComplexCore::InitializeData 12: Multi Component Single-Value Non-Stan
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<int32>(::k_BaselinePath), {-1000, 1000, -1000, 1000, -1000, 1000});
 }
 
 TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Non-Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
@@ -387,7 +422,7 @@ TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Non-Stand
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
     args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
@@ -405,7 +440,7 @@ TEST_CASE("ComplexCore::InitializeData 13: Multi Component Multi-Value Non-Stand
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<int32>(::k_BaselinePath), {-500, -1, 0, 0, 19, 1000});
 }
 
 TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value Fill Initialization", "[ComplexCore][InitializeData]")
@@ -420,7 +455,7 @@ TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value 
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("False"));
 
@@ -433,7 +468,7 @@ TEST_CASE("ComplexCore::InitializeData 14: Boolean Multi Component Single-Value 
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-Addition Initialization", "[ComplexCore][InitializeData]")
@@ -448,7 +483,7 @@ TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-A
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("1;0;0"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
@@ -463,7 +498,7 @@ TEST_CASE("ComplexCore::InitializeData 15: Boolean Multi Component Incremental-A
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
 TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-Subtraction Initialization", "[ComplexCore][InitializeData]")
@@ -478,7 +513,7 @@ TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-S
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
     args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("0;1;1"));
     args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
@@ -493,10 +528,10 @@ TEST_CASE("ComplexCore::InitializeData 16: Boolean Multi Component Incremental-S
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized-Random-With-Range Initialization", "[ComplexCore][InitializeData]")
+TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized Random-With-Range Initialization", "[ComplexCore][InitializeData]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                              "initialize_data_test_files");
@@ -508,7 +543,7 @@ TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized-
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
     args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
@@ -526,7 +561,7 @@ TEST_CASE("ComplexCore::InitializeData 17: Boolean Multi Component Standardized-
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  ::BoundsCheck<bool, true>(dataStructure.getDataRefAs<bool>(::k_BaselinePath), {false, true, false, false, false, true});
 }
 
 TEST_CASE("ComplexCore::InitializeData 18: Single Component Random Initialization", "[ComplexCore][InitializeData]")
@@ -541,7 +576,7 @@ TEST_CASE("ComplexCore::InitializeData 18: Single Component Random Initializatio
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
     args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
@@ -557,7 +592,7 @@ TEST_CASE("ComplexCore::InitializeData 18: Single Component Random Initializatio
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<uint8>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  ::BoundsCheck<bool, false>(dataStructure.getDataRefAs<bool>(::k_BaselinePath), {false, true, false, true, false, true});
 }
 
 TEST_CASE("ComplexCore::InitializeData 19: Multi Component Standardized-Random Initialization", "[ComplexCore][InitializeData]")
@@ -572,7 +607,7 @@ TEST_CASE("ComplexCore::InitializeData 19: Multi Component Standardized-Random I
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
     args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
@@ -588,7 +623,7 @@ TEST_CASE("ComplexCore::InitializeData 19: Multi Component Standardized-Random I
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<uint32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  ::BoundsCheck<uint32, true>(dataStructure.getDataRefAs<uint32>(::k_BaselinePath), {std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max()});
 }
 
 TEST_CASE("ComplexCore::InitializeData 20: Multi Component Non-Standardized-Random Initialization", "[ComplexCore][InitializeData]")
@@ -603,7 +638,7 @@ TEST_CASE("ComplexCore::InitializeData 20: Multi Component Non-Standardized-Rand
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
     args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
     args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
@@ -619,7 +654,7 @@ TEST_CASE("ComplexCore::InitializeData 20: Multi Component Non-Standardized-Rand
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<float32>(::k_BaselinePath), {std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max()});
 }
 
 TEST_CASE("ComplexCore::InitializeData 21: Boolean Single Component Fill Initialization", "[ComplexCore][InitializeData]")
@@ -634,7 +669,7 @@ TEST_CASE("ComplexCore::InitializeData 21: Boolean Single Component Fill Initial
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(DataPath({"baseline"})));
+    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
     args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
     args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("False"));
 
@@ -647,5 +682,5 @@ TEST_CASE("ComplexCore::InitializeData 21: Boolean Single Component Fill Initial
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<bool>(dataStructure, DataPath({"exemplar"}), DataPath({"baseline"}));
+  UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
