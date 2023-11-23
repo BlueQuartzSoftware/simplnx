@@ -13,6 +13,7 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/MontageUtilities.hpp"
+#include "complex/Filter/Actions/UpdateImageGeomAction.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -180,6 +181,10 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     {
       return result;
     }
+
+    std::optional<FloatVec3> originVec = FloatVec3(bound.Origin[0], bound.Origin[1], bound.Origin[2]);
+    std::optional<FloatVec3> spacingVec;
+    result.outputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, imageDataProxy.getParent().getParent()));
     resultOutputActions = MergeOutputActionResults(resultOutputActions, result.outputActions);
   }
 
