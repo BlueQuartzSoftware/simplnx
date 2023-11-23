@@ -1,5 +1,7 @@
 #include "ITKImportFijiMontage.hpp"
 
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 
 #include "complex/Common/Array.hpp"
@@ -53,11 +55,11 @@ public:
 
     if(!m_Allocate)
     {
-      FillCache();
+      fillCache();
     }
     else
     {
-      return ReadImages();
+      return readImages();
     }
 
     return {};
@@ -73,7 +75,7 @@ private:
   const ITKImportFijiMontageInputValues* m_InputValues;
 
   // -----------------------------------------------------------------------------
-  void ParseConfigFile()
+  void parseConfigFile()
   {
     bool dimFound = false;
     bool dataFound = false;
@@ -137,10 +139,9 @@ private:
   }
 
   // -----------------------------------------------------------------------------
-  void FillCache()
+  void fillCache()
   {
-    // This next function will set the FileName (Partial), Row, Col for each "bound" object
-    ParseConfigFile();
+    parseConfigFile();
 
     Point3Df minCoord = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
 
@@ -177,7 +178,7 @@ private:
   }
 
   // -----------------------------------------------------------------------------
-  Result<> ReadImages()
+  Result<> readImages()
   {
     Result<> outputResult = {};
 
@@ -188,40 +189,41 @@ private:
     {
       m_Filter->sendUpdate(("Importing " + bound.Filepath.filename().string()));
 
-      DataPath imageDataProxy = {};
+      DataPath imageDataPath = {};
       if(m_InputValues->parentDataGroup)
       {
-        imageDataProxy = DataPath({m_InputValues->DataGroupName, bound.ImageName, m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
+        imageDataPath = DataPath({m_InputValues->DataGroupName, bound.ImageName, m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
       }
       else
       {
-        imageDataProxy = DataPath({bound.ImageName, bound.ImageName, m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
+        imageDataPath = DataPath({bound.ImageName, bound.ImageName, m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
       }
 
-      // Instantiate the Image Import Filter to actually read the image into a data array
+      // Ensure that we are dealing with in-core memory ONLY
+      const IDataArray* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(imageDataPath);
+      if(inputArrayPtr->getDataFormat() != "")
       {
-        // execute image import filter
-        // This same filter was used to preflight so as long as nothing changes on disk this really should work....
-        Arguments imageImportArgs;
-        imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
-        imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageDataProxy.getParent().getParent()));
-        imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
-        imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataProxy));
-
-        auto result = imageImportFilter.execute(m_DataStructure, imageImportArgs).result;
-        if(result.invalid())
-        {
-          outputResult = MergeResults(outputResult, result);
-          continue;
-        }
+        return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataPath.toString()));
       }
 
-      auto* image = m_DataStructure.getDataAs<ImageGeom>(imageDataProxy.getParent().getParent());
+      // Set the Correct Origin, Spacing and Units for the Image Geometry
+      auto* image = m_DataStructure.getDataAs<ImageGeom>(imageDataPath.getParent().getParent());
       image->setUnits(m_InputValues->lengthUnit);
       image->setOrigin(bound.Origin);
       image->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
 
-      // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
+      // Use ITKUtils to read the image into the DataStructure
+      Result<> imageReaderResult = cxItkImageReader::ReadImageExecute<cxItkImageReader::ReadImageIntoArrayFunctor>(bound.Filepath, m_DataStructure, imageDataPath, bound.Filepath);
+      if(imageReaderResult.invalid())
+      {
+        for(const auto& error : imageReaderResult.errors())
+        {
+          m_Filter->sendUpdate(fmt::format("|-- Error Reading Image: Code ({}) - {}", error.code, error.message));
+        }
+        continue; // Let us try to continue to the next image if we encountered a problem reading this image
+      }
+
+      // Check if we need to convert to grayscale
       if(m_InputValues->convertToGrayScale)
       {
         if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
@@ -238,7 +240,7 @@ private:
         Arguments colorToGrayscaleArgs;
         colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
         colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(m_InputValues->colorWeights));
-        colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{imageDataProxy}));
+        colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{imageDataPath}));
         colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
 
         // Run grayscale filter and process results and messages
@@ -251,19 +253,19 @@ private:
         // deletion of non-grayscale array
         DataObject::IdType id;
         { // scoped for safety since this reference will be nonexistent in a moment
-          auto& oldArray = m_DataStructure.getDataRefAs<IDataArray>(imageDataProxy);
+          auto& oldArray = m_DataStructure.getDataRefAs<IDataArray>(imageDataPath);
           id = oldArray.getId();
         }
         m_DataStructure.removeData(id);
 
         // rename grayscale array to reflect original
         {
-          auto& gray = m_DataStructure.getDataRefAs<IDataArray>(imageDataProxy.getParent().createChildPath("gray" + imageDataProxy.getTargetName()));
-          if(!gray.canRename(imageDataProxy.getTargetName()))
+          auto& gray = m_DataStructure.getDataRefAs<IDataArray>(imageDataPath.getParent().createChildPath("gray" + imageDataPath.getTargetName()));
+          if(!gray.canRename(imageDataPath.getTargetName()))
           {
-            return MakeErrorResult(-18543, fmt::format("Unable to rename the grayscale array to {}", imageDataProxy.getTargetName()));
+            return MakeErrorResult(-18543, fmt::format("Unable to rename the grayscale array to {}", imageDataPath.getTargetName()));
           }
-          gray.rename(imageDataProxy.getTargetName());
+          gray.rename(imageDataPath.getTargetName());
         }
       }
     }
