@@ -28,7 +28,7 @@ filter = cxitk.ITKImportImageStack()
 result = filter.execute(
     data_structure=data_structure,
     cell_data_name="Optical Data",
-    image_data_array_path="ImageData",
+    image_data_array_path="Image Data",
     image_geometry_path=cx.DataPath("RoboMet.3D Image Stack"),
     image_transform_choice=0,
     input_file_list_info=generated_file_list_value,
@@ -46,11 +46,10 @@ else:
 # Filter 2
 # Instantiate ArrayThreshold objects
 threshold_1 = cx.ArrayThreshold()
-threshold_1.array_path = cx.DataPath("RoboMet.3D Imgage Stack/Optical Data/ImageData")
+threshold_1.array_path = cx.DataPath("RoboMet.3D Image Stack/Optical Data/Image Data")
 threshold_1.comparison = cx.ArrayThreshold.ComparisonType.Equal
 threshold_1.value = 0.0
 
-# Define ArrayThresholdSet object
 threshold_set = cx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1]
 dt = cx.DataType.boolean
@@ -82,7 +81,7 @@ result = filter.execute(
     cell_feature_group_path="Pore Data",
     feature_ids_path="FeatureIds",
     grid_geometry_path=cx.DataPath("RoboMet.3D Image Stack"),
-    input_array_path="RoboMet.3D Image Stack/Optical Data/Image Data",
+    input_array_path=cx.DataPath("RoboMet.3D Image Stack/Optical Data/Image Data"),
     mask_path=cx.DataPath("RoboMet.3D Image Stack/Optical Data/Mask"),
     randomize_features=False,
     scalar_tolerance=0,

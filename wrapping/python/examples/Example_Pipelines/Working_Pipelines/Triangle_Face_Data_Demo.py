@@ -19,7 +19,7 @@ result = filter.execute(
     scale_factor=1.0,
     scale_output=False,
     stl_file_path="C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/STL_Models/ASTMD638_specimen.stl",
-    triangle_geometry_name=cx.DataPath("[Triange Geometry]"),
+    triangle_geometry_name=cx.DataPath("[Triangle Geometry]"),
     vertex_attribute_matrix="Vertex Data"
 )
 if len(result.warnings) !=0:
@@ -37,7 +37,7 @@ filter = cx.CalculateTriangleAreasFilter()
 result = filter.execute(
     data_structure=data_structure,
     triangle_areas_array_path="Face Areas",
-    triangle_geometry_data_path=cx.DataPath("[Triange Geometry]")
+    triangle_geometry_data_path=cx.DataPath("[Triangle Geometry]")
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')
@@ -54,7 +54,7 @@ filter = cx.TriangleNormalFilter()
 result = filter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_normals_array_path="Face Normals (Calculated)",
-    tri_geometry_data_path=cx.DataPath("[Triange Geometry]")
+    tri_geometry_data_path=cx.DataPath("[Triangle Geometry]")
 )
 if len(result.warnings) !=0:
     print(f'{filter.name()} Warnings: {result.warnings}')

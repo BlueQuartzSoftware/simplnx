@@ -13,13 +13,13 @@ data_structure = cx.DataStructure()
 # Define ReadCSVData parameters
 
 read_csv_data = cx.ReadCSVDataParameter()
-read_csv_data.input_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/ASCIIData/EulersRotated.csv"
+read_csv_data.input_file_path = "C:/Users/alejo/Downloads/DREAM3DNX-7.0.0-RC-7-windows-AMD64/Data/ASCIIData/RectilinearGrid.csv"
 read_csv_data.start_import_row = 2
 read_csv_data.delimiters = [',']
-read_csv_data.custom_headers = ['phi1', 'Phi', 'phi2']
+read_csv_data.custom_headers = ['x', 'y', 'z']
 read_csv_data.column_data_types = [cx.DataType.float32, cx.DataType.float32, cx.DataType.float32]
 read_csv_data.skipped_array_mask = [False, False, False]
-read_csv_data.tuple_dims = [480_001]
+read_csv_data.tuple_dims = [14]
 read_csv_data.headers_line = 1
 read_csv_data.header_mode = cx.ReadCSVDataParameter.HeaderMode.Custom
 
