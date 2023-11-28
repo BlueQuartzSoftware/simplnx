@@ -286,6 +286,7 @@ set(COMPLEX_SOURCE_DIR ${complex_SOURCE_DIR}/src/complex)
 set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Any.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/AtomicFile.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Bit.hpp
   ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${COMPLEX_SOURCE_DIR}/Common/ComplexConstants.hpp
@@ -536,6 +537,7 @@ set(COMPLEX_GENERATED_HEADERS
 )
 
 set(COMPLEX_SRCS
+  ${COMPLEX_SOURCE_DIR}/Common/AtomicFile.cpp
   ${COMPLEX_SOURCE_DIR}/Common/RgbColor.cpp
   ${COMPLEX_SOURCE_DIR}/Common/Range.cpp
   ${COMPLEX_SOURCE_DIR}/Common/Range2D.cpp
