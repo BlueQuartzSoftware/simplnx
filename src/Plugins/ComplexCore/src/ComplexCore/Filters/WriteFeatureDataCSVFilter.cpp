@@ -1,5 +1,6 @@
 #include "WriteFeatureDataCSVFilter.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -94,7 +95,9 @@ IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStru
 Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
-  auto pOutputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key));
+
+  auto pOutputFilePath = atomicFile.tempFilePath();
   auto pWriteNeighborListDataValue = filterArgs.value<bool>(k_WriteNeighborListData_Key);
   auto pWriteNumFeaturesLineValue = filterArgs.value<bool>(k_WriteNumFeaturesLine_Key);
   auto pDelimiterChoiceIntValue = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoiceInt_Key);
@@ -149,6 +152,7 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
   // call ostream function
   OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
 
+  atomicFile.commit();
   return {};
 }
 

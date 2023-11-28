@@ -2,6 +2,7 @@
 
 #include "ComplexCore/Filters/Algorithms/WriteAvizoRectilinearCoordinate.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -96,13 +97,17 @@ Result<> WriteAvizoRectilinearCoordinateFilter::executeImpl(DataStructure& dataS
 {
   AvizoWriterInputValues inputValues;
 
-  inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+
+  inputValues.OutputFile = atomicFile.tempFilePath();
   inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
   inputValues.GeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.Units = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
 
-  return WriteAvizoRectilinearCoordinate(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto result = WriteAvizoRectilinearCoordinate(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  atomicFile.setAutoCommit(result.valid());
+  return result;
 }
 
 namespace

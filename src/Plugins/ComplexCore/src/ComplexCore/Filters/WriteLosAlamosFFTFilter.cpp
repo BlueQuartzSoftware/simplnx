@@ -2,6 +2,7 @@
 
 #include "ComplexCore/Filters/Algorithms/WriteLosAlamosFFT.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -107,15 +108,19 @@ IFilter::PreflightResult WriteLosAlamosFFTFilter::preflightImpl(const DataStruct
 Result<> WriteLosAlamosFFTFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel) const
 {
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+
   WriteLosAlamosFFTInputValues inputValues;
 
-  inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
+  inputValues.OutputFile = atomicFile.tempFilePath();
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath);
 
-  return WriteLosAlamosFFT(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto result = WriteLosAlamosFFT(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  atomicFile.setAutoCommit(result.valid());
+  return result;
 }
 
 namespace

@@ -1,5 +1,6 @@
 #include "WriteDREAM3DFilter.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
@@ -82,7 +83,9 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
 Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {
-  auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
+  AtomicFile atomicFile(args.value<std::filesystem::path>(k_ExportFilePath), true);
+
+  auto exportFilePath = atomicFile.tempFilePath();
   auto writeXdmf = args.value<bool>(k_WriteXdmf);
 
   Pipeline pipeline;
@@ -99,6 +102,7 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
   }
 
   auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
+  atomicFile.setAutoCommit(results.valid());
   return results;
 }
 

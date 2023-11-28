@@ -2,6 +2,7 @@
 
 #include "ComplexCore/Filters/Algorithms/WriteVtkRectilinearGrid.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -112,14 +113,18 @@ IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const Data
 Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                     const std::atomic_bool& shouldCancel) const
 {
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+
   WriteVtkRectilinearGridInputValues inputValues;
 
-  inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
+  inputValues.OutputFile = atomicFile.tempFilePath();
   inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  return WriteVtkRectilinearGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto result = WriteVtkRectilinearGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  atomicFile.setAutoCommit(result.valid());
+  return result;
 }
 
 namespace
