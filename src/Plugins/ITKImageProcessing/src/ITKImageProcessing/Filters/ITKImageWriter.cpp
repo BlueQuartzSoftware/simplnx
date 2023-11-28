@@ -1,5 +1,6 @@
 #include "ITKImageWriter.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -73,6 +74,7 @@ void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const 
   namesGenerator->SetIncrementIndex(1);
   namesGenerator->SetStartIndex(indexOffset);
   namesGenerator->SetEndIndex(z_size - 1);
+
   using InputImageType = itk::Image<PixelT, Dimensions>;
   using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
   using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
@@ -90,25 +92,48 @@ Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, 
 
   auto& typedDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<PixelT>>&>(dataStore);
 
-  try
+  typename itk::Image<PixelT, Dimensions>::Pointer image = ITK::WrapDataStoreInImage<PixelT, Dimensions>(typedDataStore, imageGeom);
+  if(Is2DFormat(filePath) && Dimensions == 3)
   {
-    typename itk::Image<PixelT, Dimensions>::Pointer image = ITK::WrapDataStoreInImage<PixelT, Dimensions>(typedDataStore, imageGeom);
-    if(Is2DFormat(filePath) && Dimensions == 3)
+    typename ImageType::SizeType size = image->GetLargestPossibleRegion().GetSize();
+    if(size[2] < 2)
     {
-      typename ImageType::SizeType size = image->GetLargestPossibleRegion().GetSize();
-      if(size[2] < 2)
-      {
-        return MakeErrorResult(-21012, "Image is 2D, not 3D.");
-      }
-      WriteAs2DStack<PixelT, Dimensions>(*image, size[2], filePath, indexOffset);
+      return MakeErrorResult(-21012, "Image is 2D, not 3D.");
     }
-    else
+
+    // create new nested directorty to write to
+
+    // generate all of the files in that new directory
+    tempFilePath = fmt::format("{}/{}/{}{}", filePath.parent_path().string(), filePath.parent_path().string(), filePath.stem().string(), m_FilePath.extension().string());
+      
+    try
     {
-      WriteAsOneFile<PixelT, Dimensions>(*image, filePath);
+      WriteAs2DStack<PixelT, Dimensions>(*image, size[2], tempFilePath, indexOffset);
+    } catch(const itk::ExceptionObject& err)
+    {
+      // Handle errors from the writer deleting the directory if fail
+
+
+      return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
     }
-  } catch(const itk::ExceptionObject& err)
+
+    // Move all of the files from the new directory to the users actual directory deleting the new directory on the way out
+
+  }
+  else
   {
-    return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
+    // Use the atomic file here
+    AtomicFile atomicFile(filePath, false);
+
+    try
+    {
+      WriteAsOneFile<PixelT, Dimensions>(*image, atomicFile.tempFilePath());
+    } catch(const itk::ExceptionObject& err)
+    {
+      return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
+    }
+
+    atomicFile.commit();
   }
 
   return {};
