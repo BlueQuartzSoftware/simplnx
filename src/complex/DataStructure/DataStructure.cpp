@@ -908,15 +908,14 @@ void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
   {
     auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
     outputStream << k_Delimiter << topLevelPath.getTargetName() << "\n";
-    auto optionalChildPaths = GetAllChildDataPaths(*this, topLevelPath);
+    auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
 
-    if(optionalChildPaths.has_value() && !optionalChildPaths.value().empty())
+    if(optionalDataPaths.has_value() && !optionalDataPaths.value().empty())
     {
       // Begin recursion
-      recurseHierarchyToText(outputStream, optionalChildPaths.value(), "");
+      recurseHierarchyToText(outputStream, optionalDataPaths.value(), "");
     }
   }
-  outputStream << '\n'; // for readability
 }
 
 void DataStructure::recurseHierarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const
@@ -929,12 +928,15 @@ void DataStructure::recurseHierarchyToGraphViz(std::ostream& outputStream, const
 
     // pull child paths or skip to next iteration
     auto optionalChildPaths = GetAllChildDataPaths(*this, path);
-    if(optionalChildPaths.has_value() && !optionalChildPaths.value().empty())
+    if(!optionalChildPaths.has_value() || optionalChildPaths.value().empty())
     {
-      // Begin recursion
-      recurseHierarchyToGraphViz(outputStream, optionalChildPaths.value(), path.getTargetName());
+      continue;
     }
+
+    // recurse
+    recurseHierarchyToGraphViz(outputStream, optionalChildPaths.value(), path.getTargetName());
   }
+  // outputStream << "\n"; // for readability
 }
 
 void DataStructure::recurseHierarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const

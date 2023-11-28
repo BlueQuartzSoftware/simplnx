@@ -278,3 +278,45 @@ option(COMPLEX_ENABLE_SPHINX_DOCS "Enables the Sphinx based documentation genera
 if(COMPLEX_ENABLE_SPHINX_DOCS)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs ${complex_BINARY_DIR}/sphinx_docs)
 endif()
+
+#------------------------------------------------------------------------------
+# Create the Python Unit tests
+#------------------------------------------------------------------------------
+option(COMPLEX_ENABLE_PYTHON_TESTS "Enables python based unit tests" OFF)
+if(COMPLEX_ENABLE_PYTHON_TESTS)
+
+    file(READ ${complex_SOURCE_DIR}/wrapping/python/complex_test_dirs.in.py COMPLEX_TEST_DIRS_FILE)
+
+    string(REPLACE "\${CMAKE_LIBRARY_OUTPUT_DIRECTORY}" $<TARGET_FILE_DIR:complex> COMPLEX_TEST_DIRS_FILE ${COMPLEX_TEST_DIRS_FILE})
+    string(REPLACE "\${complex_BINARY_DIR}" ${complex_BINARY_DIR} COMPLEX_TEST_DIRS_FILE ${COMPLEX_TEST_DIRS_FILE})
+    string(REPLACE "\${DREAM3D_DATA_DIR}" ${DREAM3D_DATA_DIR} COMPLEX_TEST_DIRS_FILE ${COMPLEX_TEST_DIRS_FILE})
+    string(REPLACE "\${complex_SOURCE_DIR}" ${complex_SOURCE_DIR} COMPLEX_TEST_DIRS_FILE ${COMPLEX_TEST_DIRS_FILE})
+
+    file(GENERATE
+      OUTPUT "$<TARGET_FILE_DIR:complex>/complex_test_dirs.py"
+      CONTENT ${COMPLEX_TEST_DIRS_FILE}
+    )
+
+    set(PYTHON_TEST_INPUT_DIR "${complex_SOURCE_DIR}/wrapping/python/examples")
+
+    set(COMPLEX_PYTHON_TESTS
+      "angle_conversion" 
+      "basic_arrays" 
+      "basic_ebsd_ipf" 
+      "basic_numpy" 
+      "create_ensemble_info" 
+      "generated_file_list" 
+      "geometry_examples" 
+      "import_d3d" 
+      "import_hdf5" 
+      "output_file" 
+      "pipeline" 
+      "read_csv_file"
+    )
+
+    CreatePythonTests(PREFIX "PY_COMPLEX"
+      INPUT_DIR ${PYTHON_TEST_INPUT_DIR}
+      TEST_NAMES ${COMPLEX_PYTHON_TESTS}
+    )
+
+endif()

@@ -2,31 +2,30 @@ import complex as cx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
-
+import complex_test_dirs as cxtest
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 # Create the DataStructure object
 data_structure = cx.DataStructure()
 
 import_data = cx.Dream3dImportParameter.ImportData()
-import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
-import_data.data_paths = None
+import_data.file_path = cxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
+import_data.data_paths = None  # Use 'None' to import the entire file.
 
-result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
-    print("No errors running the ImportDREAM3DFilter filter")
-
+    print("No errors running the ReadDREAM3DFilter filter")
 
 #------------------------------------------------------------------------------
 # Get the underlying data from the DataStructure
 #------------------------------------------------------------------------------
-npview = data_structure[["Small IN100", "Scan Data", "Image Quality"]].npview()
+npview_data_path = cx.DataPath("Small IN100/Scan Data/Image Quality")
+npview = data_structure[npview_data_path].npview()
 
 # Change the underlying data based on some criteria using Numpy
 npview[npview < 120] = 0
@@ -34,7 +33,7 @@ npview[npview < 120] = 0
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
-output_file_path = "/tmp/import_data.dream3d"
+output_file_path = cxtest.GetTestTempDirectory() + "/import_data.dream3d"
 result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
@@ -43,19 +42,3 @@ if len(result.errors) != 0:
     print('Warnings: {}', result.warnings)
 else:
     print("No errors running the WriteDREAM3DFilter")
-
-
-#------------------------------------------------------------------------------
-# View with MatPlotLib
-#------------------------------------------------------------------------------
-# Make a copy to that we can use MatPlotLib
-npdata = data_structure[["Small IN100", "Scan Data", "Image Quality"]].npview().copy()
-
-# Remove any dimension with '1' for MatPlotLib?
-npdata = np.squeeze(npdata, axis=0)
-npdata = np.squeeze(npdata, axis=2)
-
-plt.imshow(npdata)
-plt.title("Image Quality (Small IN100 from File)")
-#plt.axis('off')  # to turn off axes
-plt.show()

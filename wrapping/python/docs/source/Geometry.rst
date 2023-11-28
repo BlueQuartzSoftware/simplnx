@@ -31,6 +31,17 @@ are **ALWAYS** given in "C" order, or slowest to fastest order.
 
    Definition of Image Geometry
 
+.. py:class:: ImageGeom
+
+   :ivar dimensions: Returns dimensions of the Image Geometry in [XYZ] as integers
+   :ivar spacing: Returns the spacing of the Image Geometry in [XYZ] as float32
+   :ivar origin: Returns the origin of the Image Geometry in [XYZ] as float32
+   :ivar num_x_cells: Returns the number of Cells along the X Axis.
+   :ivar num_y_cells: Returns the number of Cells along the Y Axis.
+   :ivar num_z_cells: Returns the number of Cells along the Z Axis.
+
+
+
 .. _RectGridGeometry:
 
 RectilinearGrid Geometry (Semi-Regular Grid)
@@ -52,6 +63,59 @@ in each array is +1 from the dimension size.
    :alt: Definition of RectGrid Geometry
 
    Definition of RectGrid Geometry
+
+.. py:class:: RectilinearGrid
+
+   :ivar dimensions: Returns dimensions of the Image Geometry in [XYZ] as integers
+   :ivar num_x_cells: Returns the number of Cells along the X Axis.
+   :ivar num_y_cells: Returns the number of Cells along the Y Axis.
+   :ivar num_z_cells: Returns the number of Cells along the Z Axis.
+   :ivar x_bounds: Returns the axis values along the X Axis
+   :ivar y_bounds: Returns the axis values along the Y Axis
+   :ivar z_bounds: Returns the axis values along the Z Axis
+
+
+.. code:: python
+
+    # This code snippet assumes the developer has already generated the
+    # needed DataArrays and added them to the DataStructure through the proper
+    # CreateDataArray filters (or any other way)
+    result = cx.CreateGeometryFilter.execute(data_structure=data_structure,
+        array_handling= 1,  # Move the arrays from their original location.
+        cell_attribute_matrix_name="Cell Data",
+        geometry_name=cx.DataPath(["RectGrid Geometry"]),
+        geometry_type=1,
+        x_bounds=cx.DataPath("RectGridCoords/X Coords"),
+        y_bounds=cx.DataPath("RectGridCoords/Y Coords"),
+        z_bounds=cx.DataPath("RectGridCoords/Z Coords")
+      )
+    if len(result.errors) != 0:
+        print('Errors: {}', result.errors)
+        print('Warnings: {}', result.warnings)
+    else:
+        print("No errors running the CreateGeometryFilter filter")
+
+    rect_grid_geom = data_structure[cx.DataPath(["RectGrid Geometry"])]
+    x_cell_count = rect_grid_geom.num_x_cells
+    print(f'num_x_cells: {x_cell_count}')
+    x_bounds = rect_grid_geom.x_bounds
+    print(f'x_bounds: {x_bounds.store.npview()}')
+
+The output produced is:
+
+::
+
+    num_x_cells: 9
+    x_bounds: [[0.]
+    [1.]
+    [2.]
+    [3.]
+    [4.]
+    [5.]
+    [6.]
+    [7.]
+    [8.]
+    [9.]]
 
 
 Node Based Geometries (Unstructured Grid)

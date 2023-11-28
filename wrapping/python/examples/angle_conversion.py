@@ -3,8 +3,11 @@ import complex as cx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
+import complex_test_dirs as cxtest
 
 import numpy as np
+
+
 
 # ------------------------------------------------------------------------------
 # Create a DataArray that is as long as my CSV file (99 Rows in this case)
@@ -26,10 +29,14 @@ else:
     print("No errors running the CreateDataArray")
 
 # Get a numpy.view into the newly created DataArray
-npdata = data_structure[array_path].npview()
+data_array = data_structure[array_path]
+# Get the underlying DataStore object
+data_store = data_array.store
+# Get a Numpy View into the data
+npdata = data_store.npview()
 
 # Read the CSV file into the DataArray using the numpy view
-file_path = 'angles.csv'
+file_path = cxtest.GetComplexPythonSourceDir() + '/examples/angles.csv'
 npdata[:] = np.loadtxt(file_path, delimiter=',')
 
 # ------------------------------------------------------------------------------

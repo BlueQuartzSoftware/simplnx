@@ -33,6 +33,10 @@
           "type": "BOOL",
           "value": "ON"
         },
+        "COMPLEX_ENABLE_PYTHON_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
         "COMPLEX_EMBED_PYTHON": {
           "type": "BOOL",
           "value": "OFF"

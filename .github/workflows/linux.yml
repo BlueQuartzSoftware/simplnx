@@ -43,7 +43,7 @@ jobs:
           sudo apt-get -y install ninja-build
       - name: Install Sphinx
         run: |
-          sudo pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme
+          sudo pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Setup NuGet Credentials
         shell: bash
         run: |

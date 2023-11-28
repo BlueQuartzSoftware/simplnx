@@ -3,14 +3,15 @@ import complex as cx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
+import complex_test_dirs as cxtest
 
 import numpy as np
 
 data_structure = cx.DataStructure()
 
-pipeline = cx.Pipeline().from_file("/Users/mjackson/Workspace1/complex/src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline")
+pipeline = cx.Pipeline().from_file(cxtest.GetComplexSourceDir() + '/src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline')
 
-pipeline.to_file( "test pipeline", "/tmp/python_pipeline.d3dpipeline")
+pipeline.to_file( "test pipeline", cxtest.GetTestTempDirectory() + "/python_pipeline.d3dpipeline")
 
 
 
