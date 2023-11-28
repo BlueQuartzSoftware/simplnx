@@ -1,5 +1,6 @@
 #include "OStreamUtilities.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
 #include <chrono>
@@ -370,7 +371,9 @@ void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
 
   for(const auto& dataPath : objectPaths)
   {
-    auto outputFilePath = fmt::format("{}/{}{}", directoryPath, dataPath.getTargetName(), fileExtension);
+    AtomicFile atomicFile(fmt::format("{}/{}{}", directoryPath, dataPath.getTargetName(), fileExtension), false);
+
+    auto outputFilePath = atomicFile.tempFilePath().string();
     mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
 
     std::ofstream outStrm(outputFilePath, std::ios_base::out | std::ios_base::binary);
@@ -414,6 +417,7 @@ void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
     {
       return;
     }
+    atomicFile.commit();
   }
 };
 
