@@ -236,6 +236,13 @@ private:
           continue;
         }
 
+        if(m_DataStructure.getDataRefAs<IDataArray>(imageDataPath).getDataType() != DataType::uint8)
+        {
+          outputResult.warnings().emplace_back(
+              Warning{-74320, fmt::format("The array ({}) is not a UIntArray, so it will not be converted to grayscale. Continuing...", imageDataPath.getTargetName())});
+          continue;
+        }
+
         // This same filter was used to preflight so as long as nothing changes on disk this really should work....
         Arguments colorToGrayscaleArgs;
         colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));

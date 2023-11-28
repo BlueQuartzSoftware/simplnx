@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-const std::string k_SmallZeissZenDir = fmt::format("{}/fiji_montage_test/small_zeiss_zen", unit_test::k_TestFilesDir);
+const std::string k_SmallZeissZenDir = fmt::format("{}/fiji_montage/small_zeiss_zen", unit_test::k_TestFilesDir);
 
 const std::string k_DataGroupName = "Zen DataGroup";
 const DataPath k_DataGroupPath = {{k_DataGroupName}};
@@ -27,12 +27,12 @@ const DataPath k_DataGroupPath = {{k_DataGroupName}};
 
 TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[ITKImageProcessing][ITKImportFijiMontage]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "fiji_montage_test.tar.gz", "fiji_montage_test");
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "fiji_montage.tar.gz", "fiji_montage");
 
   auto app = Application::GetOrCreateInstance();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/fiji_montage_test/2x2_fiji_montage_test.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/fiji_montage/2x2_fiji_montage_test.dream3d", unit_test::k_TestFilesDir)));
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ITKImportFijiMontageFilter filter;
@@ -47,9 +47,9 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
   args.insertOrAssign(ITKImportFijiMontageFilter::k_DataGroupName_Key, std::make_any<std::string>(k_DataGroupName));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(IGeometry::LengthUnit::Micrometer)));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ChangeOrigin_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ParentDataGroup_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.2125f, 0.7154f, 0.0721f}));
+  // args.insertOrAssign(ITKImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.2125f, 0.7154f, 0.0721f}));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_DataContainerPath_Key, std::make_any<std::string>("Mosaic-"));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>("Tile Data"));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ImageDataArrayName_Key, std::make_any<std::string>("Image"));
