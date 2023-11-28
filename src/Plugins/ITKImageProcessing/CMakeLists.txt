@@ -259,8 +259,8 @@ set(${PLUGIN_NAME}_Common_Srcs
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKArrayHelper.cpp
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKProgressObserver.hpp
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKDream3DFilterInterruption.hpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/REadImageUtils.hpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/REadImageUtils.cpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ReadImageUtils.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ReadImageUtils.cpp
 )
 
 set(${PLUGIN_NAME}_GENERATED_DIR ${complex_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated)
