@@ -106,7 +106,8 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
     if(!useDims)
     {
       return MakePreflightErrorResult(
-          -77602, "The DataArray to be created is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. Check Set Tuple Dimensions to set the dimensions");
+          -78602, fmt::format("The DataArray to be created '{}'is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. Check Set Tuple Dimensions to set the dimensions",
+                              arrayPath.toString()));
     }
     else
     {
