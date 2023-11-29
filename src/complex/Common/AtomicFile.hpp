@@ -18,7 +18,7 @@ public:
   void commit();
   void setAutoCommit(bool value);
   bool getAutoCommit() const;
-  void removeTempFile();
+  void removeTempFile() const;
 
 private:
   fs::path m_FilePath;

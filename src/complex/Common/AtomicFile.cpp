@@ -89,7 +89,7 @@ bool AtomicFile::getAutoCommit() const
   return m_AutoCommit;
 }
 
-void AtomicFile::removeTempFile()
+void AtomicFile::removeTempFile() const
 {
   fs::remove(m_TempFilePath);
 }

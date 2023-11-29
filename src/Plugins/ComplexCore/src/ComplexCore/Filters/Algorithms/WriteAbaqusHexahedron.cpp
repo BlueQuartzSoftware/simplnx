@@ -317,15 +317,11 @@ int32 writeSects(const std::string& file, const Int32Array& featureIds, int32 ho
   return err;
 }
 
-void deleteFile(const std::vector<std::string>& fileNames)
+void deleteFile(const std::vector<AtomicFile>& fileList)
 {
-  for(const auto& fileName : fileNames)
+  for(const auto& atomicFile : fileList)
   {
-    auto path = fs::path(fileName);
-    if(fs::exists(path))
-    {
-      fs::remove(path);
-    }
+      atomicFile.removeTempFile();
   }
 }
 } // namespace

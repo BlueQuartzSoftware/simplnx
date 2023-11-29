@@ -117,13 +117,13 @@ Result<> WriteStlFile::operator()()
 
     AtomicFile atomicFile(filename, true);
 
-    FILE* f = fopen(atomicFileSave.tempFilePath().c_str(), "wb");
+    FILE* f = fopen(atomicFile.tempFilePath().c_str(), "wb");
 
     if(f == nullptr)
     {
       fclose(f);
       atomicFile.setAutoCommit(false); // Set this to false otherwise
-      return {MakeWarningVoidResult(-27875, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", atomicFileSave.tempFilePath().string(), filename))};
+      return {MakeWarningVoidResult(-27875, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", atomicFile.tempFilePath().string(), filename))};
     }
 
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));

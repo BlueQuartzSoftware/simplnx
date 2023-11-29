@@ -63,7 +63,7 @@ void WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& fileP
 }
 
 template <typename PixelT, uint32 Dimensions>
-void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const fs::path& filePath, uint64 indexOffset)
+Result<> WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const fs::path& filePath, uint64 indexOffset)
 {
   // write to temp directory
   auto namesGenerator = itk::NumericSeriesFileNames::New();
@@ -76,7 +76,7 @@ void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const 
   namesGenerator->SetStartIndex(indexOffset);
   namesGenerator->SetEndIndex(z_size - 1);
 
-  // generate all of the files in that new directory
+  // generate all the files in that new directory
   try
   {
     using InputImageType = itk::Image<PixelT, Dimensions>;
@@ -90,7 +90,7 @@ void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const 
   } catch(const itk::ExceptionObject& err)
   {
     // Handle errors from the writer deleting the directory
-    for(auto name : namesGenerator->GetFileNames())
+    for(const auto& name : namesGenerator->GetFileNames())
     {
       fs::remove(name);
     }
@@ -98,12 +98,14 @@ void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const 
     return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
   }
   
-  // Move all of the files from the new directory to the users actual directory
-  for(auto name : namesGenerator->GetFileNames())
+  // Move all the files from the new directory to the users actual directory
+  for(const auto& name : namesGenerator->GetFileNames())
   {
     fs::path tempFile(name);
-    fs::rename(tempFile, {fmt::format("{}/{}", filePath.parent_path(), tempFile.filename())});
+    fs::rename(tempFile, {fmt::format("{}/{}", filePath.parent_path().string(), tempFile.filename().string())});
   }
+
+  return {};
 }
 
 template <class PixelT, uint32 Dimensions>
@@ -122,7 +124,7 @@ Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, 
       return MakeErrorResult(-21012, "Image is 2D, not 3D.");
     }
 
-    WriteAs2DStack<PixelT, Dimensions>(*image, size[2], filePath, indexOffset);
+    return WriteAs2DStack<PixelT, Dimensions>(*image, size[2], filePath, indexOffset);
   }
   else
   {
@@ -138,9 +140,8 @@ Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, 
     }
 
     atomicFile.commit();
+    return {};
   }
-
-  return {};
 }
 
 template <class InputT, class OutputT, uint32 Dimensions>
