@@ -65,7 +65,7 @@ Parameters ReadH5EspritDataFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5 file. EDAX can store multiple scans in a single file",
+  params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5 file. Esprit can store multiple scans in a single file",
                                                                 OEMEbsdScanSelectionParameter::ValueType{},
                                                                 /* OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::Bruker, EbsdLib::OEM::DREAM3D},*/
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5", ".hdf5"}));
@@ -134,7 +134,10 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
   {
     CreateImageGeometryAction::SpacingType spacing = {static_cast<float32>(reader->getXStep()), static_cast<float32>(reader->getYStep()), pZSpacingValue};
-
+    for(float& value : spacing)
+    {
+      value = (value == 0.0f ? 1.0f : value);
+    }
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }

@@ -30,6 +30,10 @@ If the data has come from a TSL acquisition system and the settings of the acqui
 
 The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The {ref}`Threshold Objects <ComplexCore/MultiThresholdObjects:Description>` Filter can be used to define this *mask* by thresholding on values such as *MAD* > xx.
 
++ Note: If the X Step or Y Step within the HDF5 file for a scan is ZERO, those values will be set to 1.0 when the filter runs. This is needed
+as the user has no effective way to fix the HDF5 file. If the user needs a different
+spacing value, the user can utilize the {ref}`Set Origin and Spacing<ComplexCore/SetImageGeomOriginScalingFilter:Description>` filter.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
