@@ -65,8 +65,9 @@ void WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& fileP
 template <typename PixelT, uint32 Dimensions>
 void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const fs::path& filePath, uint64 indexOffset)
 {
+  // write to temp directory
   auto namesGenerator = itk::NumericSeriesFileNames::New();
-  fs::path parentPath = filePath.parent_path();
+  fs::path parentPath = fs::temp_directory_path();
   fs::path fileName = filePath.stem();
   fs::path extension = filePath.extension();
   std::string format = fmt::format("{}/{}%03d{}", parentPath.string(), fileName.string(), extension.string());
@@ -75,14 +76,34 @@ void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const 
   namesGenerator->SetStartIndex(indexOffset);
   namesGenerator->SetEndIndex(z_size - 1);
 
-  using InputImageType = itk::Image<PixelT, Dimensions>;
-  using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
-  using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
-  auto writer = SeriesWriterType::New();
-  writer->SetInput(&image);
-  writer->SetFileNames(namesGenerator->GetFileNames());
-  writer->UseCompressionOn();
-  writer->Update();
+  // generate all of the files in that new directory
+  try
+  {
+    using InputImageType = itk::Image<PixelT, Dimensions>;
+    using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
+    using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
+    auto writer = SeriesWriterType::New();
+    writer->SetInput(&image);
+    writer->SetFileNames(namesGenerator->GetFileNames());
+    writer->UseCompressionOn();
+    writer->Update();
+  } catch(const itk::ExceptionObject& err)
+  {
+    // Handle errors from the writer deleting the directory
+    for(auto name : namesGenerator->GetFileNames())
+    {
+      fs::remove(name);
+    }
+
+    return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
+  }
+  
+  // Move all of the files from the new directory to the users actual directory
+  for(auto name : namesGenerator->GetFileNames())
+  {
+    fs::path tempFile(name);
+    fs::rename(tempFile, {fmt::format("{}/{}", filePath.parent_path(), tempFile.filename())});
+  }
 }
 
 template <class PixelT, uint32 Dimensions>
@@ -101,24 +122,7 @@ Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, 
       return MakeErrorResult(-21012, "Image is 2D, not 3D.");
     }
 
-    // create new nested directorty to write to
-
-    // generate all of the files in that new directory
-    tempFilePath = fmt::format("{}/{}/{}{}", filePath.parent_path().string(), filePath.parent_path().string(), filePath.stem().string(), m_FilePath.extension().string());
-      
-    try
-    {
-      WriteAs2DStack<PixelT, Dimensions>(*image, size[2], tempFilePath, indexOffset);
-    } catch(const itk::ExceptionObject& err)
-    {
-      // Handle errors from the writer deleting the directory if fail
-
-
-      return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
-    }
-
-    // Move all of the files from the new directory to the users actual directory deleting the new directory on the way out
-
+    WriteAs2DStack<PixelT, Dimensions>(*image, size[2], filePath, indexOffset);
   }
   else
   {
