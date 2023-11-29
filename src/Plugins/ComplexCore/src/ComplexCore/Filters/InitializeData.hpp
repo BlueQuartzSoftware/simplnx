@@ -35,13 +35,6 @@ public:
   static inline constexpr StringLiteral k_StandardizeSeed_Key = "standardize_seed";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
-   * @param json
-   * @return Result<Arguments>
-   */
-  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
-
-  /**
    * @brief
    * @return std::string
    */

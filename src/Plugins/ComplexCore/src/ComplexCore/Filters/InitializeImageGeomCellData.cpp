@@ -12,6 +12,7 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
 
@@ -365,5 +366,44 @@ Result<> InitializeImageGeomCellData::executeImpl(DataStructure& data, const Arg
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_CellAttributeMatrixPathsKey = "CellAttributeMatrixPaths";
+constexpr StringLiteral k_XMinKey = "XMin";
+constexpr StringLiteral k_YMinKey = "YMin";
+constexpr StringLiteral k_ZMinKey = "ZMin";
+constexpr StringLiteral k_XMaxKey = "XMax";
+constexpr StringLiteral k_YMaxKey = "YMax";
+constexpr StringLiteral k_ZMaxKey = "ZMax";
+constexpr StringLiteral k_InitTypeKey = "InitType";
+constexpr StringLiteral k_InitValueKey = "InitValue";
+constexpr StringLiteral k_InitRangeKey = "InitRange";
+constexpr StringLiteral k_InvertDataKey = "InvertData";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> InitializeImageGeomCellData::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = InitializeImageGeomCellData().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerFromMultiSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathsKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathsKey, k_CellArrayPaths_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XMinKey, SIMPL::k_YMinKey, SIMPL::k_ZMinKey, k_MinPoint_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XMaxKey, SIMPL::k_YMaxKey, SIMPL::k_ZMaxKey, k_MaxPoint_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_InitTypeKey, k_InitType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_InitValueKey, k_InitValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::RangeFilterParameterConverter>(args, json, SIMPL::k_InitRangeKey, k_InitRange_Key));
+  //  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_InvertDataKey, "@COMPLEX_PARAMETER_KEY@"));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

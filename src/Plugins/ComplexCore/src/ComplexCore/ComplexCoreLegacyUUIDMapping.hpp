@@ -65,7 +65,7 @@
 #include "ComplexCore/Filters/ReadHDF5Dataset.hpp"
 #include "ComplexCore/Filters/ReadTextDataArrayFilter.hpp"
 #include "ComplexCore/Filters/ReadVolumeGraphicsFileFilter.hpp"
-#include "ComplexCore/Filters/InitializeData.hpp"
+#include "ComplexCore/Filters/InitializeImageGeomCellData.hpp"
 #include "ComplexCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 #include "ComplexCore/Filters/IterativeClosestPointFilter.hpp"
 #include "ComplexCore/Filters/LaplacianSmoothingFilter.hpp"
@@ -175,7 +175,7 @@ namespace complex
     {complex::Uuid::FromString("9e98c3b0-5707-5a3b-b8b5-23ef83b02896").value(), {complex::FilterTraits<ReadHDF5Dataset>::uuid, &ReadHDF5Dataset::FromSIMPLJson}}, // ImportHDF5Dataset
     {complex::Uuid::FromString("a7007472-29e5-5d0a-89a6-1aed11b603f8").value(), {complex::FilterTraits<ReadTextDataArrayFilter>::uuid, &ReadTextDataArrayFilter::FromSIMPLJson}}, // ImportAsciDataArray
     {complex::Uuid::FromString("5fa10d81-94b4-582b-833f-8eabe659069e").value(), {complex::FilterTraits<ReadVolumeGraphicsFileFilter>::uuid, &ReadVolumeGraphicsFileFilter::FromSIMPLJson}}, // ImportVolumeGraphicsFileFilter
-    {complex::Uuid::FromString("dfab9921-fea3-521c-99ba-48db98e43ff8").value(), {complex::FilterTraits<InitializeData>::uuid, &InitializeData::FromSIMPLJson}}, // InitializeData
+    {complex::Uuid::FromString("dfab9921-fea3-521c-99ba-48db98e43ff8").value(), {complex::FilterTraits<InitializeImageGeomCellData>::uuid, &InitializeImageGeomCellData::FromSIMPLJson}}, // InitializeData
     {complex::Uuid::FromString("4b551c15-418d-5081-be3f-d3aeb62408e5").value(), {complex::FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid, &InterpolatePointCloudToRegularGridFilter::FromSIMPLJson}}, // InterpolatePointCloudToRegularGrid
     {complex::Uuid::FromString("6c8fb24b-5b12-551c-ba6d-ae2fa7724764").value(), {complex::FilterTraits<IterativeClosestPointFilter>::uuid, &IterativeClosestPointFilter::FromSIMPLJson}}, // IterativeClosestPoint
     {complex::Uuid::FromString("601c4885-c218-5da6-9fc7-519d85d241ad").value(), {complex::FilterTraits<LaplacianSmoothingFilter>::uuid, &LaplacianSmoothingFilter::FromSIMPLJson}}, // LaplacianSmoothing
