@@ -193,8 +193,8 @@ Result<Arguments> CalculateArrayHistogramFilter::FromSIMPLJson(const nlohmann::j
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerKey, k_NewDataGroup_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPaths_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_NewDataGroupName_Key));
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey,
-                                                                                                                             SIMPL::k_NewAttributeMatrixNameKey, k_DataGroupName_Key));
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, SIMPL::k_NewAttributeMatrixNameKey,
+                                                                                                                k_DataGroupName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataArrayNameKey, k_HistoName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

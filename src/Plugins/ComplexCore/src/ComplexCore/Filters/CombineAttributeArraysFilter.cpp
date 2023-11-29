@@ -183,4 +183,3 @@ Result<Arguments> CombineAttributeArraysFilter::FromSIMPLJson(const nlohmann::js
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-

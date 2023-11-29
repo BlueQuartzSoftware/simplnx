@@ -49,7 +49,7 @@ public:
    */
   static Result<std::unique_ptr<PipelineFilter>> FromJson(const nlohmann::json& json, const FilterList& filterList);
 
-    /**
+  /**
    * @brief Constructs a PipelineFilter from SIMPL json using the given filter list. Returns nullptr on failure.
    * @param json
    * @param filterList

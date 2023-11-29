@@ -173,8 +173,7 @@ Result<Arguments> FindVertexToTriangleDistancesFilter::FromSIMPLJson(const nlohm
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerKey, k_TriangleDataContainer_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleNormalsArrayPathKey, k_TriangleNormalsArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_DistancesArrayPathKey, k_DistancesArrayPath_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_ClosestTriangleIdArrayPathKey, k_ClosestTriangleIdArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_ClosestTriangleIdArrayPathKey, k_ClosestTriangleIdArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

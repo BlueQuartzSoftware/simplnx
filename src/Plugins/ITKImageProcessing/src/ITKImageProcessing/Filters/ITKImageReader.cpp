@@ -140,8 +140,8 @@ Result<Arguments> ITKImageReader::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_FileNameKey, k_FileName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellDataName_Key));
-  results.push_back(
-      SIMPLConversion::Convert3Parameters<SIMPLConversion::DAPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, SIMPL::k_CellAttributeMatrixNameKey, SIMPL::k_ImageDataArrayNameKey, k_ImageDataArrayPath_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::DAPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, SIMPL::k_CellAttributeMatrixNameKey,
+                                                                                                                SIMPL::k_ImageDataArrayNameKey, k_ImageDataArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

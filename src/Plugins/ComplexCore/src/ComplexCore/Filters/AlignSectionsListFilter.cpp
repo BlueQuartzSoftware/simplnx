@@ -10,7 +10,6 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
-
 #include "complex/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -146,7 +145,7 @@ struct AttributeMatrixSelectionFilterParameterConverter
     return {std::move(dataPath)};
   }
 };
-}
+} // namespace SIMPLConversionCustom
 } // namespace
 
 Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -164,4 +163,3 @@ Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& j
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-

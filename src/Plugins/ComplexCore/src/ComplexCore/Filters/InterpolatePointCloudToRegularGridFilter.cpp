@@ -17,7 +17,6 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
-
 #include "complex/Utilities/SIMPLConversion.hpp"
 
 #include <cmath>
@@ -554,5 +553,3 @@ Result<Arguments> InterpolatePointCloudToRegularGridFilter::FromSIMPLJson(const 
 }
 
 } // namespace complex
-
-

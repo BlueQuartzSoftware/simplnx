@@ -203,9 +203,8 @@ Result<Arguments> ConvertColorToGrayScaleFilter::FromSIMPLJson(const nlohmann::j
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputArrayPrefixKey, k_OutputArrayPrefix_Key));
 
   // Does not exist in complex.
-  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_CreateNewAttributeMatrixKey, "@COMPLEX_PARAMETER_KEY@"));
-  //results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputAttributeMatrixNameKey, "@COMPLEX_PARAMETER_KEY@"));
-  
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_CreateNewAttributeMatrixKey, "@COMPLEX_PARAMETER_KEY@"));
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputAttributeMatrixNameKey, "@COMPLEX_PARAMETER_KEY@"));
 
   Result<> conversionResult = MergeResults(std::move(results));
 
