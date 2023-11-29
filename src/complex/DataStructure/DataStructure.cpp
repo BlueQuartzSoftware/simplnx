@@ -898,7 +898,7 @@ void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
   }
 
   // close dot file
-  outputStream << "}" << std::endl; // for readability
+  outputStream << "}\n"; // for readability
 }
 
 void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
@@ -908,15 +908,15 @@ void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
   {
     auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
     outputStream << k_Delimiter << topLevelPath.getTargetName() << "\n";
-    auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
+    auto optionalChildPaths = GetAllChildDataPaths(*this, topLevelPath);
 
-    if(optionalDataPaths.has_value() && !optionalDataPaths.value().empty())
+    if(optionalChildPaths.has_value() && !optionalChildPaths.value().empty())
     {
       // Begin recursion
-      recurseHierarchyToText(outputStream, optionalDataPaths.value(), "");
+      recurseHierarchyToText(outputStream, optionalChildPaths.value(), "");
     }
   }
-  outputStream << std::endl; // for readability
+  outputStream << '\n'; // for readability
 }
 
 void DataStructure::recurseHierarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const
@@ -929,15 +929,12 @@ void DataStructure::recurseHierarchyToGraphViz(std::ostream& outputStream, const
 
     // pull child paths or skip to next iteration
     auto optionalChildPaths = GetAllChildDataPaths(*this, path);
-    if(!optionalChildPaths.has_value() || optionalChildPaths.value().empty())
+    if(optionalChildPaths.has_value() && !optionalChildPaths.value().empty())
     {
-      continue;
+      // Begin recursion
+      recurseHierarchyToGraphViz(outputStream, optionalChildPaths.value(), path.getTargetName());
     }
-
-    // recurse
-    recurseHierarchyToGraphViz(outputStream, optionalChildPaths.value(), path.getTargetName());
   }
-  // outputStream << "\n"; // for readability
 }
 
 void DataStructure::recurseHierarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const
