@@ -138,7 +138,7 @@ Result<> WriteStlFile::operator()()
     {
       fclose(f);
       atomicFile.setAutoCommit(false); // Set this to false otherwise
-      atomicFile.removeTempFile(); // Remove the temp file
+      atomicFile.removeTempFile();     // Remove the temp file
       return {MakeWarningVoidResult(-27874, fmt::format("Error Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}.", filename, header.length()))};
     }
 
@@ -205,14 +205,16 @@ Result<> WriteStlFile::operator()()
       {
         fclose(f);
         atomicFile.setAutoCommit(false); // Set this to false otherwise
-        atomicFile.removeTempFile(); // Remove the temp file
-        return {MakeWarningVoidResult(-27873, fmt::format("Error Writing STL File '{}'. Not enough elements written for Feature Id {}. Wrote {} of 50. No file written.", filename, featureId, totalWritten))};
+        atomicFile.removeTempFile();     // Remove the temp file
+        return {MakeWarningVoidResult(-27873,
+                                      fmt::format("Error Writing STL File '{}'. Not enough elements written for Feature Id {}. Wrote {} of 50. No file written.", filename, featureId, totalWritten))};
       }
       triCount++;
     }
-    fclose(f);
+
     fseek(f, 80L, SEEK_SET);
     fwrite(reinterpret_cast<char*>(&triCount), 1, 4, f);
+    fclose(f);
   }
 
   return {};
