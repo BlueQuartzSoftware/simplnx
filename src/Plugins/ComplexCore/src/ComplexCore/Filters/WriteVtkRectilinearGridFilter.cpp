@@ -113,7 +113,13 @@ IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const Data
 Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                     const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), false);
+
+  auto dirResult = atomicFile.createOutputDirectories();
+  if(dirResult.invalid())
+  {
+    return dirResult;
+  }
 
   WriteVtkRectilinearGridInputValues inputValues;
 

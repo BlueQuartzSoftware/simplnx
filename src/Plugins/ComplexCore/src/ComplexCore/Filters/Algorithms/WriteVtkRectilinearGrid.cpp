@@ -241,14 +241,6 @@ const std::atomic_bool& WriteVtkRectilinearGrid::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteVtkRectilinearGrid::operator()()
 {
-  // Make sure any directory path is also available as the user may have just typed
-  // in a path without actually creating the full path
-  Result<> createDirectoriesResult = CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
-  if(createDirectoriesResult.invalid())
-  {
-    return createDirectoriesResult;
-  }
-
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 res = imageGeom.getSpacing();

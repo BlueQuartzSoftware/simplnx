@@ -1,60 +1,23 @@
 #include "AtomicFile.hpp"
 
-#include "complex/Common/Types.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <fmt/format.h>
 
-#include <chrono>
-#include <random>
-#include <utility>
-
 using namespace complex;
-
-namespace
-{
-const std::string k_AlphaNum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-}
 
 AtomicFile::AtomicFile(const std::string& filename, bool autoCommit)
 : m_FilePath(fs::path(filename))
 , m_AutoCommit(autoCommit)
 {
-  const usize length = 16;
-
-  std::string randomExtension(length, '-');
-
-  auto seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  std::mt19937_64 generator;
-  generator.seed(seed);
-  auto distribution = std::uniform_int_distribution<uint8>(0, 62);
-
-  for(usize i = 0; i < length; ++i)
-  {
-    randomExtension[i] = k_AlphaNum[distribution(generator)];
-  }
-
-  m_TempFilePath = fmt::format("{}/{}{}", m_FilePath.parent_path().string(), m_FilePath.stem().string() + randomExtension, m_FilePath.extension().string());
+  m_TempFilePath = fs::path(fmt::format("{}/{}", fs::temp_directory_path().string(), m_FilePath.filename().string()));
 }
 
 AtomicFile::AtomicFile(fs::path&& filepath, bool autoCommit)
 : m_FilePath(std::move(filepath))
 , m_AutoCommit(autoCommit)
 {
-  const usize length = 16;
-
-  std::string randomExtension(length, '-');
-
-  auto seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  std::mt19937_64 generator;
-  generator.seed(seed);
-  auto distribution = std::uniform_int_distribution<uint8>(0, 62);
-
-  for(usize i = 0; i < length; ++i)
-  {
-    randomExtension[i] = k_AlphaNum[distribution(generator)];
-  }
-
-  m_TempFilePath = fmt::format("{}/{}{}", m_FilePath.parent_path().string(), m_FilePath.stem().string() + randomExtension, m_FilePath.extension().string());
+  m_TempFilePath = fs::path(fmt::format("{}/{}", fs::temp_directory_path().string(), m_FilePath.filename().string()));
 }
 
 AtomicFile::~AtomicFile()
@@ -92,4 +55,11 @@ bool AtomicFile::getAutoCommit() const
 void AtomicFile::removeTempFile() const
 {
   fs::remove(m_TempFilePath);
+}
+
+Result<> AtomicFile::createOutputDirectories()
+{
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  return CreateOutputDirectories(m_FilePath.parent_path());
 }

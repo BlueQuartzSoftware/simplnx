@@ -1,5 +1,7 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
+
 #include <filesystem>
 #include <string>
 
@@ -19,6 +21,7 @@ public:
   void setAutoCommit(bool value);
   bool getAutoCommit() const;
   void removeTempFile() const;
+  Result<> createOutputDirectories();
 
 private:
   fs::path m_FilePath;

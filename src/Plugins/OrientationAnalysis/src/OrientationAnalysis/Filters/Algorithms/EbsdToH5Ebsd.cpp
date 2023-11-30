@@ -1,11 +1,11 @@
 #include "EbsdToH5Ebsd.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
-#include "EbsdLib/Core/EbsdMacros.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/H5CtfImporter.h"
 #include "EbsdLib/IO/TSL/AngFields.h"
@@ -59,6 +59,7 @@ Result<> EbsdToH5Ebsd::operator()()
     return createDirectoriesResult;
   }
 
+  AtomicFile atomicFile(absPath, false);
   // Create output H5Ebsd File
   hid_t fileId = H5Support::H5Utilities::createFile(absPath.string());
   if(fileId < 0)
@@ -311,5 +312,6 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
+  atomicFile.commit();
   return {};
 }
