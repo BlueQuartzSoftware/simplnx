@@ -48,18 +48,31 @@ bool Is2DFormat(const fs::path& fileName)
 }
 
 template <typename PixelT, uint32 Dimensions>
-void WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath /*, const IFilter::MessageHandler& messanger*/)
+Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath /*, const IFilter::MessageHandler& messanger*/)
 {
-  using ImageType = itk::Image<PixelT, Dimensions>;
-  using FileWriterType = itk::ImageFileWriter<ImageType>;
-  auto writer = FileWriterType::New();
+  fs::path tempPath(fmt::format("{}/{}", fs::temp_directory_path().string(), filePath.filename().string()));
+  try
+  {
+    using ImageType = itk::Image<PixelT, Dimensions>;
+    using FileWriterType = itk::ImageFileWriter<ImageType>;
+    auto writer = FileWriterType::New();
 
-  // messanger(fmt::format("Saving {}", fileName));
+    // messanger(fmt::format("Saving {}", fileName));
 
-  writer->SetInput(&image);
-  writer->SetFileName(filePath.string());
-  writer->UseCompressionOn();
-  writer->Update();
+    writer->SetInput(&image);
+    writer->SetFileName(tempPath.string());
+    writer->UseCompressionOn();
+    writer->Update();
+  } catch(const itk::ExceptionObject& err)
+  {
+    // Handle errors from the writer deleting the directory
+    fs::remove(tempPath);
+
+    return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
+  }
+
+  fs::rename(tempPath, filePath);
+  return {};
 }
 
 template <typename PixelT, uint32 Dimensions>
@@ -97,7 +110,7 @@ Result<> WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, co
 
     return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
   }
-  
+
   // Move all the files from the new directory to the users actual directory
   for(const auto& name : namesGenerator->GetFileNames())
   {
@@ -128,19 +141,7 @@ Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, 
   }
   else
   {
-    // Use the atomic file here
-    AtomicFile atomicFile(filePath, false);
-
-    try
-    {
-      WriteAsOneFile<PixelT, Dimensions>(*image, atomicFile.tempFilePath());
-    } catch(const itk::ExceptionObject& err)
-    {
-      return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
-    }
-
-    atomicFile.commit();
-    return {};
+    return WriteAsOneFile<PixelT, Dimensions>(*image, filePath);
   }
 }
 
