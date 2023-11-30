@@ -23,8 +23,9 @@ Utilizes the *itkReadImage* and *ColorToGrayScale* filters
     SampleMosaic_p4.bmp; ; (0.23675, 1839.55)
     SampleMosaic_p5.bmp; ; (1227.31, 1839.55)
 
-
 ### Color To Gray Scale Notes
+
+**For this option to work the read in color array must be a *UInt8Array* otherwise the image will be skipped over when loading**
 
 The luminosity method is a more sophisticated version of the average method. It also averages the values, but it forms a weighted average to account for human perception. We re more sensitive to green than other colors, so green is weighted most heavily. The default formula for luminosity is BT709 Gray scale:
 

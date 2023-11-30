@@ -7,6 +7,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Filter/Actions/UpdateImageGeomAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
@@ -180,6 +181,10 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     {
       return result;
     }
+
+    std::optional<FloatVec3> originVec = FloatVec3(bound.Origin[0], bound.Origin[1], bound.Origin[2]);
+    std::optional<FloatVec3> spacingVec;
+    result.outputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, imageDataProxy.getParent().getParent()));
     resultOutputActions = MergeOutputActionResults(resultOutputActions, result.outputActions);
   }
 
