@@ -104,7 +104,6 @@ file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------
 # -----------------------------------------------------------------------\n
 cmake_policy(SET CMP0012 NEW)
 cmake_policy(SET CMP0054 NEW)\n
-message(STATUS \"CMAKE_CONFIG=\${CMAKE_CONFIG}\")
 ")
 
 set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
