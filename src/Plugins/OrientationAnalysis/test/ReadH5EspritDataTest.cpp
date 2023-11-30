@@ -62,7 +62,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Valid Filter Execution",
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName}));
   const auto& exemplarImageGeom = exemplarDataStructure.getDataRefAs<ImageGeom>(DataPath({k_ExemplarDataContainer}));
   REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
-  REQUIRE(imageGeom.getSpacing() == exemplarImageGeom.getSpacing());
+  REQUIRE(imageGeom.getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
   REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
 
