@@ -7,10 +7,11 @@
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-
 #include "complex/Utilities/SIMPLConversion.hpp"
-
 #include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -83,7 +84,7 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
 Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(args.value<std::filesystem::path>(k_ExportFilePath), true);
+  AtomicFile atomicFile(args.value<std::filesystem::path>(k_ExportFilePath), false);
 
   auto exportFilePath = atomicFile.tempFilePath();
   auto writeXdmf = args.value<bool>(k_WriteXdmf);
@@ -102,7 +103,15 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
   }
 
   auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
-  atomicFile.setAutoCommit(results.valid());
+  if(results.valid())
+  {
+    atomicFile.commit();
+    if(writeXdmf)
+    {
+      fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
+      fs::rename(xdmfFilePath, args.value<fs::path>(k_ExportFilePath).replace_extension(".xdmf"));
+    }
+  }
   return results;
 }
 
