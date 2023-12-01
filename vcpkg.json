@@ -85,6 +85,14 @@
           "name": "blosc"
         }
       ]
+    },
+    "ssl": {
+      "description": "Use OpenSSL",
+      "dependencies": [
+        {
+          "name": "openssl"
+        }
+      ]
     }
   }
 }
