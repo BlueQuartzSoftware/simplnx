@@ -37,7 +37,7 @@ fs::path AtomicFile::tempFilePath() const
   return m_TempFilePath;
 }
 
-void AtomicFile::commit()
+void AtomicFile::commit() const
 {
   fs::rename(m_TempFilePath, m_FilePath);
 }

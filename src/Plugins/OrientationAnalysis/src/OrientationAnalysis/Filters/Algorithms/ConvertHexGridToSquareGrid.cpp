@@ -1,5 +1,6 @@
 #include "ConvertHexGridToSquareGrid.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -30,7 +31,13 @@ public:
   , m_SqrYStep(spacingXY.at(1))
   {
   }
-  ~Converter() noexcept = default;
+  ~Converter() noexcept
+  {
+    for(const auto& atomicFile : m_AtomicFiles)
+    {
+      atomicFile.commit();
+    }
+  }
 
   Converter(const Converter&) = delete;            // Copy Constructor Default Implemented
   Converter(Converter&&) = delete;                 // Move Constructor Not Implemented
@@ -67,7 +74,8 @@ public:
       }
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
-      fs::path outPath = fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string());
+      m_AtomicFiles.emplace_back((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())), false);
+      fs::path outPath = m_AtomicFiles[m_Index].tempFilePath();
 
       if(outPath == inputPath)
       {
@@ -188,6 +196,8 @@ public:
                   << "\n";
         }
       }
+
+      m_Index++;
     }
 
     return {};
@@ -197,6 +207,8 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const fs::path& m_OutputPath;
   const std::string& m_FilePrefix;
+  std::vector<AtomicFile> m_AtomicFiles = {};
+  usize m_Index = 0;
 
   const float32 m_SqrXStep;
   const float32 m_SqrYStep;
@@ -341,13 +353,15 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   int32 progress;
   int64 z = m_InputValues->InputFileListInfo.startIndex;
 
+  usize index = 0;
   auto result = Result<>{};
   ::Converter converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
   for(const auto& filepath : fileList)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Now Processing: {}", filepath));
 
-    result = MergeResults(converter(fs::path(filepath)), result);
+    result = MergeResults(converter(filepath), result);
+    index++;
 
     {
       z++;

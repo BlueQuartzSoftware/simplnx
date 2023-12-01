@@ -51,15 +51,14 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
-  // Make sure any directory path is also available as the user may have just typed
-  // in a path without actually creating the full path
-  Result<> createDirectoriesResult = complex::CreateOutputDirectories(absPath.parent_path());
-  if(createDirectoriesResult.invalid())
+  AtomicFile atomicFile(absPath, false);
+
+  auto dirResult = atomicFile.createOutputDirectories();
+  if(dirResult.invalid())
   {
-    return createDirectoriesResult;
+    return dirResult;
   }
 
-  AtomicFile atomicFile(absPath, false);
   // Create output H5Ebsd File
   hid_t fileId = H5Support::H5Utilities::createFile(absPath.string());
   if(fileId < 0)

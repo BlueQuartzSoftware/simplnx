@@ -17,7 +17,7 @@ public:
   ~AtomicFile();
 
   fs::path tempFilePath() const;
-  void commit();
+  void commit() const;
   void setAutoCommit(bool value);
   bool getAutoCommit() const;
   void removeTempFile() const;
