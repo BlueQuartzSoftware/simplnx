@@ -387,6 +387,7 @@ PYBIND11_MODULE(complex, mod)
   dataPath.def("__getitem__", [](const DataPath& self, usize index) { return self[index]; });
   dataPath.def("__repr__", [](const DataPath& self) { return fmt::format("DataPath('{}')", self.toString("/")); });
   dataPath.def("__str__", [](const DataPath& self) { return fmt::format("DataPath('{}')", self.toString("/")); });
+  dataPath.def("create_child_path", [](const DataPath& self, const std::string& name) { return self.createChildPath(name); });
 
   py::class_<AbstractPipelineNode, std::shared_ptr<AbstractPipelineNode>> abstractPipelineNode(mod, "AbstractPipelineNode");
   py::class_<PipelineFilter, AbstractPipelineNode, std::shared_ptr<PipelineFilter>> pipelineFilter(mod, "PipelineFilter");
