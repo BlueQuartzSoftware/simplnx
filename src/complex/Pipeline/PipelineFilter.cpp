@@ -18,8 +18,10 @@ constexpr StringLiteral k_FilterKey = "filter";
 constexpr StringLiteral k_FilterNameKey = "name";
 constexpr StringLiteral k_FilterUuidKey = "uuid";
 constexpr StringLiteral k_FilterCommentsKey = "comments";
+constexpr StringLiteral k_UnknownFilterValue = "UnknownFilter";
 
 constexpr StringLiteral k_SIMPLFilterUuidKey = "Filter_Uuid";
+constexpr StringLiteral k_SIMPLFilterHumanNameKey = "Filter_Human_Label";
 
 nlohmann::json CreateFilterJson(std::string_view uuid, std::string_view name, nlohmann::json argsArray, std::string_view comments)
 {
@@ -155,8 +157,16 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
   clearFaultState();
-  IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
-  m_Warnings = std::move(result.outputActions.warnings());
+  IFilter::PreflightResult result;
+  if(m_Filter != nullptr)
+  {
+    result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
+    m_Warnings = std::move(result.outputActions.warnings());
+  }
+  else
+  {
+    m_Warnings.push_back(Warning{-10, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+  }
   setHasWarnings(!m_Warnings.empty());
   m_PreflightValues = std::move(result.outputValues);
   if(result.outputActions.invalid())
@@ -241,10 +251,18 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
-  IFilter::ExecuteResult result = m_Filter->execute(data, getArguments(), this, messageHandler, shouldCancel);
-  m_PreflightValues = std::move(result.outputValues);
+  IFilter::ExecuteResult result;
+  if(m_Filter != nullptr)
+  {
+    result = m_Filter->execute(data, getArguments(), this, messageHandler, shouldCancel);
+    m_Warnings = result.result.warnings();
+  }
+  else
+  {
+    m_Warnings.push_back(Warning{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+  }
 
-  m_Warnings = result.result.warnings();
+  m_PreflightValues = std::move(result.outputValues);
 
   if(result.result.invalid())
   {
@@ -444,7 +462,7 @@ const std::vector<IFilter::PreflightValue>& PipelineFilter::getPreflightValues()
 
 std::unique_ptr<AbstractPipelineNode> PipelineFilter::deepCopy() const
 {
-  return std::make_unique<PipelineFilter>(m_Filter->clone(), m_Arguments);
+  return m_Filter == nullptr ? std::make_unique<PipelineFilter>(nullptr, m_Arguments) : std::make_unique<PipelineFilter>(m_Filter->clone(), m_Arguments);
 }
 
 void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
@@ -478,6 +496,10 @@ void PipelineFilter::notifyRenamedPaths(const RenamedPaths& renamedPathPairs)
 
 nlohmann::json PipelineFilter::toJsonImpl() const
 {
+  if(m_Filter == nullptr)
+  {
+    return CreateFilterJson("", k_UnknownFilterValue, nlohmann::json{}, m_Comments);
+  }
   return CreateFilterJson(m_Filter->uuid().str(), m_Filter->name(), m_Filter->toJson(m_Arguments), m_Comments);
 }
 
@@ -511,7 +533,24 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   {
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, "UUID value is not a string");
   }
+
+  const bool isDisabled = ReadDisabledState(json);
+  std::string comments;
+  if(json.contains(k_FilterCommentsKey.view()))
+  {
+    comments = json[k_FilterCommentsKey];
+  }
   auto filterName = filterNameObject.get<std::string>();
+
+  if(filterName == k_UnknownFilterValue)
+  {
+    auto pipelineFilter = std::make_unique<PipelineFilter>(nullptr);
+    pipelineFilter->setDisabled(isDisabled);
+    pipelineFilter->setComments(comments);
+    Result<std::unique_ptr<PipelineFilter>> result{std::move(pipelineFilter)};
+    return result;
+  }
+
   auto uuidString = uuidObject.get<std::string>();
   std::optional<Uuid> uuid = Uuid::FromString(uuidString);
   if(!uuid.has_value())
@@ -530,8 +569,6 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   }
 
   const auto& argsJson = json[k_ArgsKey];
-  const bool isDisabled = ReadDisabledState(json);
-
   auto argsResult = filter->fromJson(argsJson);
 
   if(argsResult.invalid())
@@ -543,12 +580,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
 
   auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter), std::move(argsResult.value()));
   pipelineFilter->setDisabled(isDisabled);
-
-  if(json.contains(k_FilterCommentsKey.view()))
-  {
-    pipelineFilter->setComments(json[k_FilterCommentsKey]);
-  }
-
+  pipelineFilter->setComments(comments);
   Result<std::unique_ptr<PipelineFilter>> result{std::move(pipelineFilter)};
   result.warnings() = std::move(argsResult.warnings());
   return result;
@@ -605,14 +637,13 @@ complex::WarningCollection convertErrors(const complex::ErrorCollection& errors,
   return std::move(warnings);
 }
 
-std::string createErrorComments(const complex::ErrorCollection& errors, const std::string& filterName)
+std::string PipelineFilter::CreateErrorComments(const complex::ErrorCollection& errors, const std::string& prefix)
 {
   if(errors.empty())
   {
     return "";
   }
 
-  std::string prefix = "Parameter conversion error: ";
   std::string output;
   for(const auto& error : errors)
   {
@@ -640,7 +671,12 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
 
   if(!simplData.has_value())
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, fmt::format("Unable to parse find conversion data for filter '{}'", uuidString));
+    std::string filterName = fmt::format("with uuid {}", uuidString);
+    if(json.contains(k_SIMPLFilterHumanNameKey))
+    {
+      filterName = fmt::format("{} with uuid {}", json[k_SIMPLFilterHumanNameKey].get<std::string>(), uuidString);
+    }
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, fmt::format("Unable to find conversion data for filter '{}'", filterName));
   }
 
   IFilter::UniquePointer filter = filterList.createFilter(simplData->complexUuid);
@@ -668,7 +704,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
   if(argumentsResult.invalid())
   {
     warnings = convertErrors(argumentsResult.errors(), filterName);
-    pipelineFilter->setComments(createErrorComments(argumentsResult.errors(), filterName));
+    pipelineFilter->setComments(CreateErrorComments(argumentsResult.errors(), "Parameter conversion error: "));
   }
 
   return {std::move(pipelineFilter), std::move(warnings)};

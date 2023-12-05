@@ -58,6 +58,14 @@ public:
   static Result<std::unique_ptr<PipelineFilter>> FromSIMPLJson(const nlohmann::json& json, const FilterList& filterList);
 
   /**
+   * @brief Creates a comment string from the errors collection
+   * @param errors The errors to convert to strings for storing in a comment
+   * @param prefix The comment string prefix for each of the errors
+   * @return The converted comment string containing all of the errors
+   */
+  static std::string CreateErrorComments(const complex::ErrorCollection& errors, const std::string& prefix);
+
+  /**
    * @brief Constructs a PipelineFilter with the provided filter and arguments.
    * If no Arguments are provided, a default empty value will be used instead.
    *

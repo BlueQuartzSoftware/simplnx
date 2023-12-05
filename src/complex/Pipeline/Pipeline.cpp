@@ -859,10 +859,14 @@ Result<Pipeline> Pipeline::FromSIMPLJson(const nlohmann::json& json, FilterList*
 
     if(filterResult.invalid())
     {
-      return ConvertInvalidResult<Pipeline>(std::move(filterResult));
+      auto pipelineFilter = std::make_unique<PipelineFilter>(nullptr);
+      pipelineFilter->setComments(PipelineFilter::CreateErrorComments(filterResult.errors(), "Filter conversion error: "));
+      pipeline.push_back(std::move(pipelineFilter));
     }
-
-    pipeline.push_back(std::move(filterResult.value()));
+    else
+    {
+      pipeline.push_back(std::move(filterResult.value()));
+    }
   }
 
   return {std::move(pipeline)};
