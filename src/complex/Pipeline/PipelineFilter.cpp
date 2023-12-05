@@ -157,18 +157,21 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
   clearFaultState();
-  IFilter::PreflightResult result;
-  if(m_Filter != nullptr)
+  if(m_Filter == nullptr)
   {
-    result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
-    m_Warnings = std::move(result.outputActions.warnings());
+    m_Errors.push_back(Error{-10, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+    setHasErrors();
+    setPreflightStructure(data, false);
+    sendFilterFaultMessage(m_Index, getFaultState());
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+    return false;
   }
-  else
-  {
-    m_Warnings.push_back(Warning{-10, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
-  }
+
+  IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
+  m_Warnings = std::move(result.outputActions.warnings());
   setHasWarnings(!m_Warnings.empty());
   m_PreflightValues = std::move(result.outputValues);
+
   if(result.outputActions.invalid())
   {
     m_Errors = std::move(result.outputActions.errors());
@@ -251,22 +254,25 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
+  if(m_Filter == nullptr)
+  {
+    m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+  }
+
   IFilter::ExecuteResult result;
   if(m_Filter != nullptr)
   {
     result = m_Filter->execute(data, getArguments(), this, messageHandler, shouldCancel);
     m_Warnings = result.result.warnings();
+    m_PreflightValues = std::move(result.outputValues);
+    if(result.result.invalid())
+    {
+      m_Errors = result.result.errors();
+    }
   }
   else
   {
-    m_Warnings.push_back(Warning{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
-  }
-
-  m_PreflightValues = std::move(result.outputValues);
-
-  if(result.result.invalid())
-  {
-    m_Errors = result.result.errors();
+    m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
   }
 
   setHasWarnings(!m_Warnings.empty());
@@ -281,7 +287,7 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
   this->sendFilterRunStateMessage(m_Index, complex::RunState::Idle);
   this->sendFilterUpdateMessage(m_Index, "End");
 
-  return result.result.valid();
+  return result.result.valid() && m_Filter != nullptr;
 }
 
 std::vector<DataPath> PipelineFilter::getCreatedPaths() const
