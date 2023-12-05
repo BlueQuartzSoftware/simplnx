@@ -125,6 +125,14 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-osx-v11"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+        },
+        "PYTHON_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
         }
       }
     },

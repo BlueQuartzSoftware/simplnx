@@ -14,12 +14,26 @@ import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = cxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
 import_data.data_paths = None  # Use 'None' to import the entire file.
 
-result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+print(f'{import_data.file_path}')
+
+result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
     print("No errors running the ReadDREAM3DFilter filter")
+
+
+#------------------------------------------------------------------------------
+# Print out the children of some of the Attribute Matrix groups
+#------------------------------------------------------------------------------
+children = data_structure.get_children("Small IN100")
+for child in children:
+    print(f'{child}')
+
+children = data_structure.get_children("Small IN100/Scan Data")
+for child in children:
+    print(f'{child}')
 
 #------------------------------------------------------------------------------
 # Get the underlying data from the DataStructure
