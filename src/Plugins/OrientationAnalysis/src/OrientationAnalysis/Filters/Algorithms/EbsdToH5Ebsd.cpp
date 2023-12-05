@@ -66,6 +66,12 @@ Result<> EbsdToH5Ebsd::operator()()
     return MakeErrorResult(-99501, fmt::format("The output HDF5 file could not be created. Check permissions or if the file is in use by another program"));
   }
 
+  fileId = H5Support::H5Utilities::createFile(atomicFile.tempFilePath().string());
+  if(fileId < 0)
+  {
+    return MakeErrorResult(-99501, fmt::format("The output HDF5 file could not be created. Check permissions or if the file is in use by another program"));
+  }
+
   H5Support::H5ScopedFileSentinel sentinel(fileId, true);
 
   herr_t err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::ZResolution, m_InputValues->ZSpacing);

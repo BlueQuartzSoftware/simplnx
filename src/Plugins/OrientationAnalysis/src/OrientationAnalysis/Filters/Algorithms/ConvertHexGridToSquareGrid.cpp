@@ -77,6 +77,15 @@ public:
       m_AtomicFiles.emplace_back((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())), false);
       fs::path outPath = m_AtomicFiles[m_Index].tempFilePath();
 
+      if(!fs::exists(inputPath.parent_path()))
+      {
+        auto result = m_AtomicFiles[m_Index].createOutputDirectories();
+        if(result.invalid())
+        {
+          return result;
+        }
+      }
+
       if(outPath == inputPath)
       {
         return MakeErrorResult(-201, "New ang file is the same as the old ang file. Overwriting is NOT allowed");
