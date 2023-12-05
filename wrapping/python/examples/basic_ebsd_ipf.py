@@ -181,7 +181,9 @@ else:
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
+
 output_file_path = cxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
+print(f'{output_file_path}')
 result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
