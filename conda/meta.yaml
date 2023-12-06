@@ -54,6 +54,10 @@ requirements:
     - tbb
     - tbb-devel
     - zlib
+    - sphinx
+    - myst-parser
+    - sphinx-markdown-tables
+    - sphinx_rtd_theme
   run:
     - python
     - numpy
