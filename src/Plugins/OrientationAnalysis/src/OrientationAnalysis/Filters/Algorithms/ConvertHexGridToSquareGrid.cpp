@@ -33,9 +33,12 @@ public:
   }
   ~Converter() noexcept
   {
-    for(const auto& atomicFile : m_AtomicFiles)
+    if(m_Valid)
     {
-      atomicFile.commit();
+      for(const auto& atomicFile : m_AtomicFiles)
+      {
+        atomicFile.commit();
+      }
     }
   }
 
@@ -56,20 +59,24 @@ public:
       int32 err = reader.readFile();
       if(err < 0 && err != -600)
       {
+        m_Valid = false;
         return MakeErrorResult(reader.getErrorCode(), reader.getErrorMessage());
       }
       if(err == -600)
       {
+        m_Valid = false;
         return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
       }
       if(reader.getGrid().find(EbsdLib::Ang::SquareGrid) == 0)
       {
+        m_Valid = false;
         return MakeErrorResult(-55000, fmt::format("Ang file is already a square grid: {}", inputPath.string()));
       }
 
       std::string origHeader = reader.getOriginalHeader();
       if(origHeader.empty())
       {
+        m_Valid = false;
         return MakeErrorResult(-55001, fmt::format("Header for input hex grid file was empty: {}", inputPath.string()));
       }
 
@@ -82,12 +89,14 @@ public:
         auto result = m_AtomicFiles[m_Index].createOutputDirectories();
         if(result.invalid())
         {
+          m_Valid = false;
           return result;
         }
       }
 
       if(outPath == inputPath)
       {
+        m_Valid = false;
         return MakeErrorResult(-201, "New ang file is the same as the old ang file. Overwriting is NOT allowed");
       }
 
@@ -95,11 +104,13 @@ public:
       // Ensure the output path exists by creating it if necessary
       if(!fs::exists(outPath.parent_path()))
       {
+        m_Valid = false;
         return MakeErrorResult(-77750, fmt::format("The parent path was not created and does not exist: {}", outPath.parent_path().string()));
       }
 
       if(!outFile.is_open())
       {
+        m_Valid = false;
         return MakeErrorResult(-200, fmt::format("Ang square output file could not be opened for writing: {}", outPath.string()));
       }
 
@@ -149,6 +160,7 @@ public:
       {
         if(m_ShouldCancel)
         {
+          m_Valid = false;
           return {};
         }
         for(int32 i = 0; i < m_SqrNumCols; i++)
@@ -218,6 +230,7 @@ private:
   const std::string& m_FilePrefix;
   std::vector<AtomicFile> m_AtomicFiles = {};
   usize m_Index = 0;
+  bool m_Valid = true;
 
   const float32 m_SqrXStep;
   const float32 m_SqrYStep;
@@ -370,6 +383,11 @@ Result<> ConvertHexGridToSquareGrid::operator()()
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Now Processing: {}", filepath));
 
     result = MergeResults(converter(filepath), result);
+    if(result.invalid())
+    {
+      return result;
+    }
+
     index++;
 
     {
