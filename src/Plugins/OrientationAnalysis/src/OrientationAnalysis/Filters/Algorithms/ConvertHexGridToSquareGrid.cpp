@@ -37,7 +37,7 @@ public:
     {
       for(const auto& atomicFile : m_AtomicFiles)
       {
-        atomicFile.commit();
+        atomicFile->commit();
       }
     }
   }
@@ -81,12 +81,13 @@ public:
       }
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
-      m_AtomicFiles.emplace_back((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())), false);
-      fs::path outPath = m_AtomicFiles[m_Index].tempFilePath();
+      m_AtomicFiles.emplace_back(std::make_unique<AtomicFile>((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())), false));
+      fs::path outPath = m_AtomicFiles[m_Index]->tempFilePath();
 
-      if(!fs::exists(inputPath.parent_path()))
+      // Ensure the output path exists by creating it if necessary
+      if(!fs::exists(m_OutputPath))
       {
-        auto result = m_AtomicFiles[m_Index].createOutputDirectories();
+        auto result = m_AtomicFiles[m_Index]->createOutputDirectories();
         if(result.invalid())
         {
           m_Valid = false;
@@ -101,11 +102,10 @@ public:
       }
 
       std::ofstream outFile(outPath, std::ios_base::out | std::ios_base::binary);
-      // Ensure the output path exists by creating it if necessary
-      if(!fs::exists(outPath.parent_path()))
+      if(!fs::exists(outPath))
       {
         m_Valid = false;
-        return MakeErrorResult(-77750, fmt::format("The parent path was not created and does not exist: {}", outPath.parent_path().string()));
+        return MakeErrorResult(-77750, fmt::format("The parent path was not created and does not exist: {}", outPath.string()));
       }
 
       if(!outFile.is_open())
@@ -228,7 +228,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const fs::path& m_OutputPath;
   const std::string& m_FilePrefix;
-  std::vector<AtomicFile> m_AtomicFiles = {};
+  std::vector<std::unique_ptr<AtomicFile>> m_AtomicFiles = {};
   usize m_Index = 0;
   bool m_Valid = true;
 

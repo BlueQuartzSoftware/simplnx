@@ -39,6 +39,11 @@ fs::path AtomicFile::tempFilePath() const
 
 void AtomicFile::commit() const
 {
+  if(!fs::exists(m_TempFilePath))
+  {
+    throw std::runtime_error(m_TempFilePath.string() + " does not exist");
+  }
+
   fs::rename(m_TempFilePath, m_FilePath);
 }
 
