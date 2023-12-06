@@ -9,7 +9,7 @@
 project = 'DREAM3D-NX'
 copyright = '2023, BlueQuartz Software, LLC'
 author = 'BlueQuartz Software, LLC'
-release = '1.2.0'
+release = '1.2.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

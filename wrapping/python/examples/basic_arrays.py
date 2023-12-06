@@ -75,6 +75,12 @@ if len(result.errors) != 0:
 else:
     print("No errors running the filter")
 
+data_array = data_structure[output_array_path]
+print(f'name: {data_array.name}')
+print(f'tuple_shape: {data_array.tuple_shape}')
+print(f'component_shape: {data_array.component_shape}')
+print(f'dtype: {data_array.dtype}')
+
 npdata = data_structure[output_array_path].npview()
 print(npdata)
 
@@ -124,3 +130,30 @@ if len(result.errors) != 0:
     print('Warnings: {}', result.warnings)
 else:
     print("No errors running the filter")
+
+
+#------------------------------------------------------------------------------
+# If you need to show the hierarchy of the DataStructure you can do one of the
+# following:
+#------------------------------------------------------------------------------
+
+# This will generate the hierarchy as a GraphViz formatted string that you can
+# print or save to a file
+graphviz_content = data_structure.hierarchy_to_graphviz()
+print(graphviz_content)
+
+# This will generate the hierarchy as an ASCI Formatted string.
+hierarchy_as_str = data_structure.hierarchy_to_str()
+print(hierarchy_as_str)
+
+#------------------------------------------------------------------------------
+# If you want to list out the children at a specific level of the DataStruture
+#------------------------------------------------------------------------------
+# Use an empty path for the top level objects
+children_paths = data_structure.get_children(cx.DataPath(""))
+print(children_paths)
+
+children_paths = data_structure.get_children(cx.DataPath("Some/Path/To"))
+print(children_paths)
+
+print(f'data_structure.size: {data_structure.size}')

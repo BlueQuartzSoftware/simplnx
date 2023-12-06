@@ -17,6 +17,7 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/unit_test/complex_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -41,6 +42,26 @@ constexpr StringLiteral k_TetGeo = "Tet Geometry";
 constexpr StringLiteral k_SharedPolyhedrons = "SharedPolyhedronList";
 constexpr StringLiteral k_HexGeo = "Hex Geometry";
 } // namespace
+
+// This test will ensure we don't run into runtime exceptions trying to run the functions
+TEST_CASE("ComplexCore::exportHierarchyAsGraphViz")
+{
+  DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsGraphViz_test.dot", unit_test::k_BinaryTestOutputDir));
+  std::cout << outputPath << std::endl;
+  std::ofstream output(outputPath, std::ios_base::trunc);
+  dataStructure.exportHierarchyAsGraphViz(output);
+}
+
+// This test will ensure we don't run into runtime exceptions trying to run the functions
+TEST_CASE("ComplexCore::exportHierarchyAsText")
+{
+  DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsText_test.txt", unit_test::k_BinaryTestOutputDir));
+  std::cout << outputPath << std::endl;
+  std::ofstream output(outputPath, std::ios_base::trunc);
+  dataStructure.exportHierarchyAsText(output);
+}
 
 DataStructure createTestDataStructure()
 {
