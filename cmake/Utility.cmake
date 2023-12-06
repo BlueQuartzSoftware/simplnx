@@ -473,7 +473,7 @@ function(AddPythonTest)
   set(oneValueArgs NAME FILE)
   set(multiValueArgs PYTHONPATH)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
+  message(STATUS "ARGS_FILE:${ARGS_FILE}")
   if(COMPLEX_BUILD_PYTHON)
     if(WIN32)
       add_test(NAME ${ARGS_NAME}
@@ -484,26 +484,22 @@ function(AddPythonTest)
         PROPERTY
           ENVIRONMENT
             "PYTHON_TEST_FILE=${ARGS_FILE}"
-      )
-      set_property(TEST ${ARGS_NAME}
-        PROPERTY
-          ENVIRONMENT
             "Python3_EXECUTABLE=${Python3_EXECUTABLE}"
-      )
+    )
     else()
       add_test(NAME ${ARGS_NAME}
         COMMAND ${complex_SOURCE_DIR}/wrapping/python/testing/anaconda_test.sh
       )
-
       set_property(TEST ${ARGS_NAME}
         PROPERTY
           ENVIRONMENT
             "PYTHON_TEST_FILE=${ARGS_FILE}"
-      )
+            "Python3_EXECUTABLE=${Python3_EXECUTABLE}"
+      )    
     endif()
   else()
     add_test(NAME ${ARGS_NAME}
-      COMMAND ${PYTHON_EXECUTABLE} ${ARGS_FILE}
+      COMMAND ${Python3_EXECUTABLE} ${ARGS_FILE}
     )
   endif()
 
@@ -518,7 +514,6 @@ function(AddPythonTest)
     PROPERTY
       ENVIRONMENT
       "PYTHONPATH=${ARGS_PYTHONPATH}"
-      "${complex_PYTHON_TEST_ENV}"
   )
 endfunction()
 

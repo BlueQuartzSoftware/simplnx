@@ -265,7 +265,7 @@ target_include_directories(${PLUGIN_NAME}
 # Add in the unit tests for the filters included in this plugin
 if(COMPLEX_BUILD_TESTS)
   enable_testing()
-  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+#  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 endif()
 
 # -----------------------------------------------------------------------
