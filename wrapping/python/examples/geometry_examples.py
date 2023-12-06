@@ -2,6 +2,7 @@ import simplnx as nx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
+import complex_test_dirs as cxtest
 
 import numpy as np
 
@@ -169,7 +170,7 @@ else:
 
 # Read the CSV file into the DataArray using the numpy view
 vertex_coords = data_structure[array_path].npview()
-file_path = 'simplnx/test/Data/VertexCoordinates.csv'
+file_path = cxtest.GetComplexSourceDir() + '/test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 array_path = nx.DataPath('Triangles')
@@ -186,7 +187,7 @@ else:
     print("No errors running the CreateDataArray filter")
 # Read the CSV file into the DataArray using the numpy view
 triangles = data_structure[array_path].npview()
-file_path = 'simplnx/test/Data/TriangleConnectivity.csv'
+file_path = cxtest.GetComplexSourceDir() + '/test/Data/TriangleConnectivity.csv'
 triangles[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
@@ -224,7 +225,7 @@ else:
 
 # Read the CSV file into the DataArray using the numpy view
 vertex_coords = data_structure[array_path].npview()
-file_path = 'simplnx/test/Data/VertexCoordinates.csv'
+file_path = cxtest.GetComplexSourceDir() + '/test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 array_path = nx.DataPath('Edges')
@@ -241,7 +242,7 @@ else:
     print("No errors running the CreateDataArray filter")
 
 # Read the CSV file into the DataArray using the numpy view
-file_path = 'simplnx/test/Data/EdgeConnectivity.csv'
+file_path = cxtest.GetComplexSourceDir() + '/test/Data/EdgeConnectivity.csv'
 edges_view = data_structure["Edges"].npview()
 edges_view[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
@@ -260,10 +261,9 @@ if len(result.errors) != 0:
 else:
     print("No errors running the CreateGeometryFilter (Edge) filter")
 
-
-
-output_file_path = "geometry_examples.dream3d"
-result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, export_file_path=output_file_path, write_xdmf_file=True)
+output_file_path = cxtest.GetTestTempDirectory() + "/geometry_examples.dream3d"
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, export_file_path=output_file_path,
+                                       write_xdmf_file=True)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)

@@ -33,6 +33,10 @@
           "type": "BOOL",
           "value": "ON"
         },
+        "SIMPLNX_ENABLE_PYTHON_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
         "SIMPLNX_EMBED_PYTHON": {
           "type": "BOOL",
           "value": "OFF"

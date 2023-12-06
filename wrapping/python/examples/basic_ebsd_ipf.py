@@ -3,9 +3,10 @@ import simplnx as nx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
+import complex_test_dirs as cxtest
 
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 #------------------------------------------------------------------------------
 # Create a Data Structure
@@ -17,7 +18,7 @@ result = cxor.ReadAngDataFilter.execute(data_structure=data_structure,
                                cell_attribute_matrix_name="Scan Data", 
                                cell_ensemble_attribute_matrix_name="Phase Data",
                                data_container_name=nx.DataPath(["Small IN100"]), 
-                               input_file="DREAM3D_Data/Data/SmallIN100/Slice_1.ang")
+                               input_file=cxtest.GetDataDirectory() + "/Data/SmallIN100/Slice_1.ang")
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
@@ -104,7 +105,7 @@ else:
 #------------------------------------------------------------------------------
 # Write the IPF colors to a PNG file
 #------------------------------------------------------------------------------
-result = cxitk.ITKImageWriter.execute(data_structure=data_structure, file_name="/tmp/Small_IN100_IPF_Z.png", 
+result = cxitk.ITKImageWriter.execute(data_structure=data_structure, file_name=cxtest.GetTestTempDirectory() + "/Small_IN100_IPF_Z.png", 
                                       image_array_path=nx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
                                       image_geom_path=nx.DataPath(["Small IN100"]),
                                       index_offset=0,
@@ -180,7 +181,7 @@ else:
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
-output_file_path = "basic_ebsd_example.dream3d"
+output_file_path = cxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)

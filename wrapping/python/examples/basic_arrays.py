@@ -94,7 +94,7 @@ print(npdata)
 output_array_path = nx.DataPath(["3D Array"])
 tuple_dims = [[3, 2, 5]]
 create_array_filter = nx.CreateDataArray()
-result  = create_array_filter.execute(data_structure=data_structure, 
+result = create_array_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
                                       initialization_value="10", 
