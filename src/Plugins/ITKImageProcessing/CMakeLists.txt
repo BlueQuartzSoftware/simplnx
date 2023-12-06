@@ -53,6 +53,8 @@ if(NOT GENERATOR_IS_MULTI_CONFIG)
   set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${ITK_LIB_DIR})
 endif()
 
+message(STATUS "* ITK (${ITK_VERSION}) ${ITK_DIR}")
+
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "ITKImageProcessing")
@@ -76,6 +78,27 @@ set(FilterList
 set(AlgorithmList
 )
 
+if(NOT COMPLEX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
+  list(APPEND FilterList
+    ITKBinaryContourImage
+    ITKBinaryOpeningByReconstructionImage
+    ITKClosingByReconstructionImage
+    ITKGrayscaleFillholeImage
+    ITKGrayscaleGrindPeakImage
+    ITKHConvexImage
+    ITKHMaximaImage
+    ITKHMinimaImage
+    ITKLabelContourImage
+    ITKMorphologicalGradientImage
+    ITKMorphologicalWatershedImage
+    ITKOpeningByReconstructionImage
+    ITKSignedMaurerDistanceMapImage
+    ITKValuedRegionalMaximaImage
+    ITKValuedRegionalMinimaImage
+)
+  endif()
+
+
 # ------------------------------------------------------------------------------
 # These are all extra filters that are built if we have enabled all the filters
 #
@@ -86,17 +109,14 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKAdaptiveHistogramEqualizationImage
     ITKAsinImage
     ITKAtanImage
-    ITKBinaryContourImage
     ITKBinaryDilateImage
     ITKBinaryErodeImage
     ITKBinaryMorphologicalClosingImage
     ITKBinaryMorphologicalOpeningImage
-    ITKBinaryOpeningByReconstructionImage
     ITKBinaryProjectionImage
     ITKBinaryThinningImage
     ITKBinaryThresholdImage
     ITKBlackTopHatImage
-    ITKClosingByReconstructionImage
     ITKCosImage
     ITKDilateObjectMorphologyImage
     ITKErodeObjectMorphologyImage
@@ -105,36 +125,24 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKGradientMagnitudeImage
     ITKGrayscaleDilateImage
     ITKGrayscaleErodeImage
-    ITKGrayscaleFillholeImage
-    ITKGrayscaleGrindPeakImage
     ITKGrayscaleMorphologicalClosingImage
     ITKGrayscaleMorphologicalOpeningImage
-    ITKHConvexImage
-    ITKHMaximaImage
-    ITKHMinimaImage
     ITKIntensityWindowingImage
     ITKInvertIntensityImage
     ITKImportFijiMontageFilter
-    ITKLabelContourImage
     ITKLog10Image
     ITKLogImage
     ITKMaskImage
-    ITKMorphologicalGradientImage
-    ITKMorphologicalWatershedImage
     ITKNormalizeImage
     ITKNotImage
-    ITKOpeningByReconstructionImage
     ITKOtsuMultipleThresholdsImage
     ITKRelabelComponentImage
     ITKSigmoidImage
-    ITKSignedMaurerDistanceMapImage
     ITKSinImage
     ITKSqrtImage
     ITKSquareImage
     ITKTanImage
     ITKThresholdImage
-    ITKValuedRegionalMaximaImage
-    ITKValuedRegionalMinimaImage
     ITKWhiteTopHatImage
 
     # -----------------------------------------------------------------------------
