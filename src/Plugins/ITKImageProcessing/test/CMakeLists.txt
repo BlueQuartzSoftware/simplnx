@@ -9,6 +9,25 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ITKMhaFileReaderTest.cpp
   ITKRescaleIntensityImageTest.cpp
 )
+if(NOT COMPLEX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
+  list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
+    ITKBinaryContourImageTest.cpp
+    ITKBinaryOpeningByReconstructionImageTest.cpp
+    ITKClosingByReconstructionImageTest.cpp
+    ITKGrayscaleFillholeImageTest.cpp
+    ITKGrayscaleGrindPeakImageTest.cpp
+    ITKHConvexImageTest.cpp
+    ITKHMaximaImageTest.cpp
+    ITKHMinimaImageTest.cpp
+    ITKLabelContourImageTest.cpp
+    ITKMorphologicalGradientImageTest.cpp
+    ITKMorphologicalWatershedImageTest.cpp
+    ITKOpeningByReconstructionImageTest.cpp
+    ITKSignedMaurerDistanceMapImageTest.cpp
+    ITKValuedRegionalMaximaImageTest.cpp
+    ITKValuedRegionalMinimaImageTest.cpp
+  )
+  endif()
 
 if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
@@ -17,17 +36,14 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKAdaptiveHistogramEqualizationImageTest.cpp
     ITKAsinImageTest.cpp
     ITKAtanImageTest.cpp
-    ITKBinaryContourImageTest.cpp
     ITKBinaryDilateImageTest.cpp
     ITKBinaryErodeImageTest.cpp
     ITKBinaryMorphologicalClosingImageTest.cpp
     ITKBinaryMorphologicalOpeningImageTest.cpp
-    ITKBinaryOpeningByReconstructionImageTest.cpp
     ITKBinaryProjectionImageTest.cpp
     ITKBinaryThinningImageTest.cpp
     ITKBinaryThresholdImageTest.cpp
     ITKBlackTopHatImageTest.cpp
-    ITKClosingByReconstructionImageTest.cpp
     ITKCosImageTest.cpp
     ITKDilateObjectMorphologyImageTest.cpp
     ITKErodeObjectMorphologyImageTest.cpp
@@ -36,36 +52,24 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKGradientMagnitudeImageTest.cpp
     ITKGrayscaleDilateImageTest.cpp
     ITKGrayscaleErodeImageTest.cpp
-    ITKGrayscaleFillholeImageTest.cpp
-    ITKGrayscaleGrindPeakImageTest.cpp
     ITKGrayscaleMorphologicalClosingImageTest.cpp
     ITKGrayscaleMorphologicalOpeningImageTest.cpp
-    ITKHConvexImageTest.cpp
-    ITKHMaximaImageTest.cpp
-    ITKHMinimaImageTest.cpp
     ITKImportFijiMontageTest.cpp
     ITKIntensityWindowingImageTest.cpp
     ITKInvertIntensityImageTest.cpp
-    ITKLabelContourImageTest.cpp
     ITKLog10ImageTest.cpp
     ITKLogImageTest.cpp
     ITKMaskImageTest.cpp
-    ITKMorphologicalGradientImageTest.cpp
-    ITKMorphologicalWatershedImageTest.cpp
     ITKNormalizeImageTest.cpp
     ITKNotImageTest.cpp
-    ITKOpeningByReconstructionImageTest.cpp
     ITKOtsuMultipleThresholdsImageTest.cpp
     ITKRelabelComponentImageTest.cpp
     ITKSigmoidImageTest.cpp
-    ITKSignedMaurerDistanceMapImageTest.cpp
     ITKSinImageTest.cpp
     ITKSqrtImageTest.cpp
     ITKSquareImageTest.cpp
     ITKTanImageTest.cpp
     ITKThresholdImageTest.cpp
-    ITKValuedRegionalMaximaImageTest.cpp
-    ITKValuedRegionalMinimaImageTest.cpp
     ITKWhiteTopHatImageTest.cpp
   )
 endif()

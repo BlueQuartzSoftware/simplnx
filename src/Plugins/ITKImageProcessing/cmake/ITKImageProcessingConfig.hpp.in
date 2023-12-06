@@ -1,3 +1,5 @@
 #pragma once
 
 #cmakedefine ITKIMAGEPROCESSING_LEAN_AND_MEAN
+
+#cmakedefine COMPLEX_CONDA_BUILD
