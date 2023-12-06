@@ -77,6 +77,7 @@ message(STATUS "* Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
 message(STATUS "* COMPLEX_BUILD_PYTHON: ${COMPLEX_BUILD_PYTHON}")
 message(STATUS "* COMPLEX_EMBED_PYTHON: ${COMPLEX_EMBED_PYTHON}")
 message(STATUS "* COMPLEX_ENABLE_SPHINX_DOCS: ${COMPLEX_ENABLE_SPHINX_DOCS}")
+message(STATUS "* COMPLEX_CONDA_BUILD: ${COMPLEX_CONDA_BUILD}")
 
 # message(STATUS "* -------------- Known Plugins ------------------------------------------------------")
 # foreach(plugin ${COMPLEX_PLUGIN_LIST})
