@@ -321,7 +321,7 @@ void deleteFile(const std::vector<AtomicFile>& fileList)
 {
   for(const auto& atomicFile : fileList)
   {
-      atomicFile.removeTempFile();
+    atomicFile.removeTempFile();
   }
 }
 } // namespace
@@ -362,7 +362,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   Vec3<float32> spacing = imageGeom.getSpacing();
   usize totalPoints = imageGeom.getNumberOfCells();
 
-   // Create file names
+  // Create file names
   std::vector<AtomicFile> fileList = {};
   fileList.emplace_back(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_nodes.inp");
   fileList.emplace_back(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_elems.inp");
