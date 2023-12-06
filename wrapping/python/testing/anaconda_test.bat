@@ -1,16 +1,15 @@
 @echo off
 
-echo "complex_CONDA_EXECUTABLE: %complex_CONDA_EXECUTABLE%"
-echo "complex_CONDA_ENV: %complex_CONDA_ENV%"
+
 echo "PYTHON_TEST_FILE: %PYTHON_TEST_FILE%"
 echo "PYTHONPATH: %PYTHONPATH%"
-
-CALL "%complex_CONDA_EXECUTABLE%" activate "%complex_CONDA_ENV%"
+echo "Python3_EXECUTABLE: %Python3_EXECUTABLE%"
 
 echo "PATH: %PATH%"
 echo "Where is Python: "
-where python
+where python.exe
 echo "Python Version: "
-python --version
+%Python3_EXECUTABLE% --version
 
-python "%PYTHON_TEST_FILE%"
+%Python3_EXECUTABLE% "%PYTHON_TEST_FILE%"
+
