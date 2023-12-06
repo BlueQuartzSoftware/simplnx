@@ -485,6 +485,11 @@ function(AddPythonTest)
           ENVIRONMENT
             "PYTHON_TEST_FILE=${ARGS_FILE}"
       )
+      set_property(TEST ${ARGS_NAME}
+        PROPERTY
+          ENVIRONMENT
+            "Python3_EXECUTABLE=${Python3_EXECUTABLE}"
+      )
     else()
       add_test(NAME ${ARGS_NAME}
         COMMAND ${complex_SOURCE_DIR}/wrapping/python/testing/anaconda_test.sh
