@@ -63,4 +63,4 @@ jobs:
           cmake --build --preset ci-macos-x64
       - name: Test
         run: |
-          ctest --preset ci-macos-x64
+          ctest --preset ci-macos-x64 --verbose

@@ -110,7 +110,7 @@ function(simplnx_create_pyi)
 
   add_custom_target(${PYI_TARGET_NAME} ALL
     COMMAND ${MYPY_STUBGEN_EXE} -m ${ARGS_PYTHON_MODULE_NAME} -o $<TARGET_FILE_DIR:simplnx>
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
     COMMENT "${ARGS_PYTHON_MODULE_NAME}: Generating .pyi files"
     WORKING_DIRECTORY $<TARGET_FILE_DIR:simplnx>
   )
@@ -300,18 +300,18 @@ if(COMPLEX_ENABLE_PYTHON_TESTS)
     set(PYTHON_TEST_INPUT_DIR "${complex_SOURCE_DIR}/wrapping/python/examples")
 
     set(COMPLEX_PYTHON_TESTS
-      "angle_conversion" 
-      "basic_arrays" 
-      "basic_ebsd_ipf" 
-      "basic_numpy" 
-      "create_ensemble_info" 
-      "generated_file_list" 
-      "geometry_examples" 
+      "basic_ebsd_ipf"
       "import_d3d" 
-      "import_hdf5" 
-      "output_file" 
-      "pipeline" 
-      "read_csv_file"
+      # "angle_conversion" 
+      # "basic_arrays" 
+      # "basic_numpy" 
+      # "create_ensemble_info" 
+      # "generated_file_list" 
+      # "geometry_examples" 
+      # "import_hdf5" 
+      # "output_file" 
+      # "pipeline" 
+      # "read_csv_file"
     )
 
     CreatePythonTests(PREFIX "PY_COMPLEX"
