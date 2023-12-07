@@ -10,7 +10,6 @@
 #include "ComplexCore/ComplexCoreFilterBinding.hpp"
 
 #include <ComplexCore/ComplexCorePlugin.hpp>
-
 #include <complex/DataStructure/AttributeMatrix.hpp>
 #include <complex/DataStructure/DataArray.hpp>
 #include <complex/DataStructure/DataGroup.hpp>
@@ -80,6 +79,7 @@
 #include <complex/Pipeline/AbstractPipelineNode.hpp>
 #include <complex/Pipeline/Pipeline.hpp>
 #include <complex/Pipeline/PipelineFilter.hpp>
+#include <complex/Utilities/DataGroupUtilities.hpp>
 
 #include <fmt/ranges.h>
 
@@ -505,12 +505,118 @@ PYBIND11_MODULE(complex, mod)
 
   dataObject.def_property_readonly("id", &DataObject::getId);
   dataObject.def_property_readonly("name", &DataObject::getName);
+  dataObject.def_property_readonly("type", &DataObject::getDataObjectType);
 
   dataStructure.def(py::init<>());
   dataStructure.def("__getitem__", py::overload_cast<const DataPath&>(&DataStructure::getSharedData));
+  dataStructure.def("__getitem__", [](DataStructure& self, const std::string& path) {
+    auto pathConversionResult = DataPath::FromString(path);
+    if(!pathConversionResult)
+    {
+      return std::shared_ptr<DataObject>(nullptr);
+    }
+    return self.getSharedData(pathConversionResult.value());
+  });
   dataStructure.def_property_readonly("size", &DataStructure::getSize);
   dataStructure.def("__len__", &DataStructure::getSize);
   dataStructure.def("remove", py::overload_cast<const DataPath&>(&DataStructure::removeData));
+  dataStructure.def("remove", [](DataStructure& self, const std::string& path) {
+    auto pathConversionResult = DataPath::FromString(path);
+    if(!pathConversionResult)
+    {
+      return false;
+    }
+    return self.removeData(pathConversionResult.value());
+  });
+  dataStructure.def("hierarchy_to_str", [](DataStructure& self) {
+    std::stringstream ss;
+    self.exportHierarchyAsText(ss);
+    return ss.str();
+  });
+  dataStructure.def("hierarchy_to_graphviz", [](DataStructure& self) {
+    std::stringstream ss;
+    self.exportHierarchyAsGraphViz(ss);
+    return ss.str();
+  });
+  dataStructure.def("get_children", [](DataStructure& self, complex::DataPath& parentPath) {
+    if(parentPath.empty())
+    {
+      std::vector<DataPath> outputPaths;
+      for(const auto* object : self.getTopLevelData())
+      {
+        auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
+        outputPaths.push_back(topLevelPath);
+      }
+      return outputPaths;
+    }
+    else
+    {
+      auto result = complex::GetAllChildDataPaths(self, parentPath);
+      if(result)
+      {
+        return result.value();
+      }
+      return std::vector<DataPath>{};
+    }
+  });
+  dataStructure.def("get_children", [](DataStructure& self, const std::string& parentPath) {
+    if(parentPath.empty())
+    {
+      std::vector<DataPath> outputPaths;
+      for(const auto* object : self.getTopLevelData())
+      {
+        auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
+        outputPaths.push_back(topLevelPath);
+      }
+      return outputPaths;
+    }
+    else
+    {
+      auto pathConversionResult = DataPath::FromString(parentPath);
+      if(!pathConversionResult)
+      {
+        return std::vector<DataPath>{};
+      }
+
+      auto result = complex::GetAllChildDataPaths(self, pathConversionResult.value());
+      if(result)
+      {
+        return result.value();
+      }
+      return std::vector<DataPath>{};
+    }
+  });
+
+  auto dataObjectType = py::enum_<DataObject::Type>(dataObject, "DataObjectType");
+  dataObjectType.value("DataObject", DataObject::Type::DataObject);
+  dataObjectType.value("DynamicListArray", DataObject::Type::DynamicListArray);
+  dataObjectType.value("ScalarData", DataObject::Type::ScalarData);
+  dataObjectType.value("BaseGroup", DataObject::Type::BaseGroup);
+  dataObjectType.value("AttributeMatrix", DataObject::Type::AttributeMatrix);
+  dataObjectType.value("DataGroup", DataObject::Type::DataGroup);
+  dataObjectType.value("IDataArray", DataObject::Type::IDataArray);
+  dataObjectType.value("DataArray", DataObject::Type::DataArray);
+  dataObjectType.value("IGeometry", DataObject::Type::IGeometry);
+  dataObjectType.value("IGridGeometry", DataObject::Type::IGridGeometry);
+  dataObjectType.value("RectGridGeom", DataObject::Type::RectGridGeom);
+  dataObjectType.value("ImageGeom", DataObject::Type::ImageGeom);
+  dataObjectType.value("INodeGeometry0D", DataObject::Type::INodeGeometry0D);
+  dataObjectType.value("VertexGeom", DataObject::Type::VertexGeom);
+  dataObjectType.value("INodeGeometry1D", DataObject::Type::INodeGeometry1D);
+  dataObjectType.value("EdgeGeom", DataObject::Type::EdgeGeom);
+  dataObjectType.value("INodeGeometry2D", DataObject::Type::INodeGeometry2D);
+  dataObjectType.value("QuadGeom", DataObject::Type::QuadGeom);
+  dataObjectType.value("TriangleGeom", DataObject::Type::TriangleGeom);
+  dataObjectType.value("INodeGeometry3D", DataObject::Type::INodeGeometry3D);
+  dataObjectType.value("HexahedralGeom", DataObject::Type::HexahedralGeom);
+  dataObjectType.value("TetrahedralGeom", DataObject::Type::TetrahedralGeom);
+  dataObjectType.value("INeighborList", DataObject::Type::INeighborList);
+  dataObjectType.value("NeighborList", DataObject::Type::NeighborList);
+  dataObjectType.value("StringArray", DataObject::Type::StringArray);
+  dataObjectType.value("AbstractMontage", DataObject::Type::AbstractMontage);
+  dataObjectType.value("GridMontage", DataObject::Type::GridMontage);
+  dataObjectType.value("Unknown", DataObject::Type::Unknown);
+  dataObjectType.value("Any", DataObject::Type::Any);
 
   py::class_<BaseGroup, DataObject, std::shared_ptr<BaseGroup>> baseGroup(mod, "BaseGroup");
   baseGroup.def("contains", py::overload_cast<const std::string&>(&BaseGroup::contains, py::const_));
@@ -593,6 +699,7 @@ PYBIND11_MODULE(complex, mod)
   iDataArray.def_property_readonly("store", py::overload_cast<>(&IDataArray::getIDataStore));
   iDataArray.def_property_readonly("tdims", &IDataArray::getTupleShape);
   iDataArray.def_property_readonly("cdims", &IDataArray::getComponentShape);
+  iDataArray.def_property_readonly("data_type", &IDataArray::getDataType);
 
   auto dataArrayInt8 = COMPLEX_PY_BIND_DATA_ARRAY(mod, Int8Array);
   auto dataArrayUInt8 = COMPLEX_PY_BIND_DATA_ARRAY(mod, UInt8Array);

@@ -15,18 +15,18 @@ import_data = cx.Dream3dImportParameter.ImportData()
 import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
 import_data.data_paths = None
 
-result = cx.ImportDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
-    print("No errors running the ImportDREAM3DFilter filter")
-
+    print("No errors running the ReadDREAM3DFilter filter")
 
 #------------------------------------------------------------------------------
 # Get the underlying data from the DataStructure
 #------------------------------------------------------------------------------
-npview = data_structure[["Small IN100", "Scan Data", "Image Quality"]].npview()
+npview_data_path = cx.DataPath("Small IN100/Scan Data/Image Quality")
+npview = data_structure[npview_data_path].npview()
 
 # Change the underlying data based on some criteria using Numpy
 npview[npview < 120] = 0

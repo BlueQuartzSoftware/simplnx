@@ -25,27 +25,27 @@ result = cxor.ReadH5EbsdFilter.execute(
     read_h5_ebsd_parameter=h5ebsdParameter
 )
 
-dataset1 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
+dataset1 = cx.ReadHDF5DatasetParameter.DatasetImportInfo()
 dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
 dataset1.tuple_dims = "117,201,189"
 dataset1.component_dims = "1"
 
-dataset2 = cx.ImportHDF5DatasetParameter.DatasetImportInfo()
+dataset2 = cx.ReadHDF5DatasetParameter.DatasetImportInfo()
 dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
 dataset2.tuple_dims = "117,201,189"
 dataset2.component_dims = "3"
 
-import_hdf5_param = cx.ImportHDF5DatasetParameter.ValueType()
-import_hdf5_param.input_file = "/Users/mjackson/DREAM3DNXData/Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_hdf5_param = cx.ReadHDF5DatasetParameter.ValueType()
+import_hdf5_param.input_file = "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_hdf5_param.datasets = [dataset1, dataset2]
 # import_hdf5_param.parent = cx.DataPath(["Imported Data"])
 
-result = cx.ImportHDF5Dataset.execute(data_structure=data_structure,
+result = cx.ReadHDF5Dataset.execute(data_structure=data_structure,
                                       import_hd_f5_file=import_hdf5_param
                                       )
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
-    print("No errors running the ImportHDF5DatasetParameter filter")
+    print("No errors running the ReadHDF5DatasetParameter filter")
 
