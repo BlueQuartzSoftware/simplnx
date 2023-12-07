@@ -5,7 +5,7 @@
 # message(STATUS "[DATA DOWNLOAD] @ARGS_ARCHIVE_NAME@")
 # --------------------------------------------------------------------------------------------------
 string(TIMESTAMP time_stamp_start %s)
-file(DOWNLOAD https://github.com/BlueQuartzSoftware/complex/releases/download/Data_Archive/@ARGS_ARCHIVE_NAME@
+file(DOWNLOAD @DATA_ARCHIVE_WEB_SITE@@ARGS_ARCHIVE_NAME@
               "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@"
               EXPECTED_HASH SHA512=@ARGS_SHA512@
               # SHOW_PROGRESS
