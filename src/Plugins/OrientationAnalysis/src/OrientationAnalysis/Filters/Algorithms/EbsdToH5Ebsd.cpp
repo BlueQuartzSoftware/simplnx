@@ -51,7 +51,7 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
-  AtomicFile atomicFile(absPath, false);
+  AtomicFile atomicFile(absPath.string(), false);
 
   auto dirResult = atomicFile.createOutputDirectories();
   if(dirResult.invalid())

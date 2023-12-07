@@ -117,7 +117,7 @@ Result<> WriteStlFile::operator()()
 
     AtomicFile atomicFile(filename, true);
 
-    FILE* f = fopen(atomicFile.tempFilePath().c_str(), "wb");
+    FILE* f = fopen(atomicFile.tempFilePath().string().c_str(), "wb");
 
     if(f == nullptr)
     {
