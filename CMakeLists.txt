@@ -2,64 +2,79 @@ cmake_minimum_required(VERSION 3.26)
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Is this a commercial or Free build
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
 include(CMakeDependentOption)
 cmake_dependent_option(COMPLEX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON "COMPLEX_BUILD_PYTHON" OFF)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # is building unit tests enabled
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # are multithreading algorithms enabled
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_ENABLE_MULTICORE "Enable multicore support" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_MULTICORE FEATURE "parallel")
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Are any out-of-core compressors enabled
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_ENABLE_COMPRESSORS "Install data compressors" OFF)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_COMPRESSORS FEATURE "compressors")
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Is downloading of the test files enabled
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_DOWNLOAD_TEST_FILES "Download the test files" ON)
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Will each unit test output the final DataStructure to a file
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_WRITE_TEST_OUTPUT "Write unit test output files" OFF)
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Is the ComplexCore Plugin enabled [DEFAULT=ON]
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_ENABLE_ComplexCore "Enable the ComplexCore Plugin" ON)
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Is the ITKImageProcessing Plugin enabled [DEFAULT=ON]
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_ENABLE_ITKImageProcessing "Enable the ITKImageProcessing Plugin" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_ITKImageProcessing FEATURE "itk")
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Is the OrientationAnalysis Plugin enabled [DEFAULT=ON]
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 option(COMPLEX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATURE "ebsd")
 
+# ------------------------------------------------------------------------------
+# Complex being built for an Anaconda Python distribution [DEFAULT=OFF]
+# ------------------------------------------------------------------------------
 option(COMPLEX_CONDA_BUILD "Enables conda-build specific layout" OFF)
 
+# ------------------------------------------------------------------------------
+# Enable all installation rules [DEFAULT=ON]
+# ------------------------------------------------------------------------------
 option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 
-# --------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Check if a different Data_Archive web site is being used.
+#   The alternate would be for the internal build bots that can download from a
+#   local webserver
+# ------------------------------------------------------------------------------
+if("${DATA_ARCHIVE_WEB_SITE}" STREQUAL "")
+  set(DATA_ARCHIVE_WEB_SITE "https://github.com/BlueQuartzSoftware/complex/releases/download/Data_Archive/")
+endif()
+
+# ------------------------------------------------------------------------------
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
 project(complex
