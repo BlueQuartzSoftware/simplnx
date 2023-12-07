@@ -17,7 +17,7 @@ result = cxor.ReadAngDataFilter.execute(data_structure=data_structure,
                                cell_attribute_matrix_name="Scan Data", 
                                cell_ensemble_attribute_matrix_name="Phase Data",
                                data_container_name=cx.DataPath(["Small IN100"]), 
-                               input_file="/Users/mjackson/Workspace1/DREAM3D_Data/Data/SmallIN100/Slice_1.ang")
+                               input_file="DREAM3D_Data/Data/SmallIN100/Slice_1.ang")
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)

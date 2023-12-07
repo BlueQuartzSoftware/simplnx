@@ -11,7 +11,7 @@ data_structure = cx.DataStructure()
 
 
 generated_file_list_value = cx.GeneratedFileListParameter.ValueType()
-generated_file_list_value.input_path = "/Users/mjackson/DREAM3DNXData/Data/Porosity_Image"
+generated_file_list_value.input_path = "Data/Porosity_Image"
 generated_file_list_value.ordering = cx.GeneratedFileListParameter.Ordering.LowToHigh
 
 generated_file_list_value.file_prefix = "slice_"
