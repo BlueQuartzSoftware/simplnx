@@ -50,6 +50,10 @@ void AtomicFile::commit() const
   }
   else
   {
+    if(fs::exists(m_FilePath))
+    {
+      fs::remove(m_FilePath);
+    }
     fs::copy_file(m_TempFilePath, m_FilePath);
   }
 }
