@@ -44,7 +44,14 @@ void AtomicFile::commit() const
     throw std::runtime_error(m_TempFilePath.string() + " does not exist");
   }
 
-  fs::rename(m_TempFilePath, m_FilePath);
+  if(m_TempFilePath.root_directory() == m_FilePath.root_directory())
+  {
+    fs::rename(m_TempFilePath, m_FilePath);
+  }
+  else
+  {
+    fs::copy_file(m_TempFilePath, m_FilePath);
+  }
 }
 
 void AtomicFile::setAutoCommit(bool value)
