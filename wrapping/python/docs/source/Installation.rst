@@ -1,7 +1,7 @@
 Installation
 ============
 
-Latest Version: 1.2.0
+Latest Version: 1.2.1
 ---------------------
 
 The *complex* library can be installed through an Anaconda packages from the *BlueQuartzSoftware* channel. This can be achieved

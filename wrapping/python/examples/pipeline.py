@@ -8,7 +8,7 @@ import numpy as np
 
 data_structure = cx.DataStructure()
 
-pipeline = cx.Pipeline().from_file("/Users/mjackson/Workspace1/complex/src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline")
+pipeline = cx.Pipeline().from_file("complex/src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline")
 
 pipeline.to_file( "test pipeline", "/tmp/python_pipeline.d3dpipeline")
 

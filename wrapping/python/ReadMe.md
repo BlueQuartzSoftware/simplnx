@@ -1,5 +1,20 @@
 # Complex Python Information
 
+## Checklist when updating Python Bindings
+
+- Update Version number.
+
+  - If you add API then update the third number
+  - If you break API (any where in complex), update the second number
+
+- Document **ALL** new API in the appropriate documentation file(s)
+- Create a ReleaseNotes_1XX.rst file with the appropriate highlights from the release
+- Create example python code for any new API
+- Update example python codes for any changed API
+- Add unit test for any NEW API
+- Update Unit test for changed API
+- Tag the repository with the correct version in the correct semantic form
+
 ## Creating the Python Bindings
 
 ### MacOS: Use Mamba
@@ -32,13 +47,16 @@ Create the package from the `complex` sources
 
 ```shell
     [user@host] $ cd complex/conda
-    (nx-build) [user@host] $ conda mambabuild --python 3.8 .; conda mambabuild --python 3.9 .; conda mambabuild --python 3.10 . 
+    (nx-build) [user@host] $ conda mambabuild --python 3.8 .
+    (nx-build) [user@host] $ conda mambabuild --python 3.9 .
+    (nx-build) [user@host] $ conda mambabuild --python 3.10 . 
 
 ```
 
 ### Windows/Linux
 
 ```shell
+    [user@host] $ conda create on nx-build python=3.10 mamba boa
     [user@host] $ cd complex/conda
     [user@host] $ conda build . 
 ```
@@ -46,8 +64,10 @@ Create the package from the `complex` sources
 For faster environment solves mamba can also be used.
 
 ```shell
-conda install boa
-conda mambabuild --python 3.8|3.9|3.10 .
+    [user@host] $ conda install boa
+    [user@host] $ conda mambabuild --python 3.8 .
+    [user@host] $ conda mambabuild --python 3.9 .
+    [user@host] $ conda mambabuild --python 3.10 .
 ```
 
 ### Uploading to Anaconda.org
@@ -56,7 +76,7 @@ Open a "base" anaconda prompt.
 
 ```shell
     [user@host] $ anaconda login
-    [user@host] $ anaconda upload -c bluequartzsoftware [path/to/tar.bz]
+    [user@host] $ anaconda upload --user bluequartzsoftware [path/to/tar.bz]
 ```
 
 ## Using the Python Bindings
@@ -64,7 +84,7 @@ Open a "base" anaconda prompt.
 ```shell
 conda config --add channels conda-forge
 conda config --set channel_priority strict
-conda create -n cxpython python=3.8
+conda create -n cxpython python=3.10
 conda activate cxpython
 conda install -c bluequartzsoftware complex
 ```

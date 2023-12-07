@@ -61,7 +61,7 @@ jobs:
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Install Sphinx
         run: |
-          pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme
+          pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Configure
         run: |
           cmake --preset ci-windows-${{matrix.toolset}} ${{github.workspace}} -T ${{matrix.toolset}}

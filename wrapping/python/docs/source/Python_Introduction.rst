@@ -39,10 +39,10 @@ If you will need functionality from either of the other *complex* plugins then y
 Creating the DataStructure
 --------------------------
 
-In order to effectively use the *complex* classes and functions, you will need to create at leaset one *DataStructure* object. 
-The *DataStructure* object holds the various *DataGroup*, *AttributeMatrix*, and *DataArray* that will be created. When
-then *DataStructure* goes out of scope those items will also be cleaned up. The code to create the
-*DataStructure* object is straight forward.
+In order to effectively use the *complex* classes and functions, you will need to create at leaset one :ref:`DataStructure` object. 
+The :ref:`DataStructure` object holds the various *DataGroup*, *AttributeMatrix*, and *DataArray* that will be created. When
+then :ref:`DataStructure` goes out of scope those items will also be cleaned up. The code to create the
+:ref:`DataStructure` object is straight forward.
 
 .. code:: python
 
@@ -79,7 +79,7 @@ An example of executing a file in immediate mode is the following code snippet.
                                         numeric_type=cx.NumericType.float32, 
                                         output_data_array=cx.DataPath(["3D Array"]), 
                                         tuple_dimensions= [[3, 2, 5]])
-    npdata = data_structure[cx.DataPath(["3D Array"])].store.npview()
+    npdata = data_structure[cx.DataPath(["3D Array"])].npview()
 
 
 The resulting :ref:`DataArray <DataArray>` is available for use immediately following the execution of the filter.
