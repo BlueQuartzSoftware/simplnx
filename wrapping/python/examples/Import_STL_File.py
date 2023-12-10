@@ -2,6 +2,7 @@ import complex as cx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
+import complex_test_dirs as cxtest
 
 import numpy as np
 
