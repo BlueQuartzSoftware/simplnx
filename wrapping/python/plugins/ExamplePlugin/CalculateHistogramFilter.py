@@ -96,7 +96,7 @@ class CalculateHistogramFilter:
 
       output_actions.append_action(cx.CreateImageGeometryAction(histogram_geom_path, geom_dims, geom_origin, geom_spacing, histogram_cellattrmat_name))
       histogram_data_array_path = histogram_geom_path.create_child_path(histogram_cellattrmat_name).create_child_path(histogram_data_array_name)
-      output_actions.append_action(cx.CreateArrayAction(cx.DataType.float32, list(reversed(geom_dims)), [3], histogram_data_array_path))
+      output_actions.append_action(cx.CreateArrayAction(cx.DataType.uint8, list(reversed(geom_dims)), [3], histogram_data_array_path))
 
     output_actions.append_action(cx.CreateAttributeMatrixAction(histogram_stats_attrmat_path, [num_of_bins]))
 
