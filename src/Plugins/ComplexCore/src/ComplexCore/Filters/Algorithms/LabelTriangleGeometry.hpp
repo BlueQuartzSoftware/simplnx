@@ -5,34 +5,18 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  LabelTriangleGeometryInputValues inputValues;
-
-  inputValues.CADDataContainerPath = filterArgs.value<DataPath>(k_CADDataContainerPath_Key);
-  inputValues.RegionIdArrayPath = filterArgs.value<DataPath>(k_RegionIdArrayPath_Key);
-  inputValues.TriangleAttributeMatrixName = filterArgs.value<DataPath>(k_TriangleAttributeMatrixName_Key);
-  inputValues.NumTrianglesArrayName = filterArgs.value<DataPath>(k_NumTrianglesArrayName_Key);
-
-  return LabelTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
 
 namespace complex
 {
 
 struct COMPLEXCORE_EXPORT LabelTriangleGeometryInputValues
 {
-  DataPath CADDataContainerPath;
-  DataPath RegionIdArrayPath;
-  DataPath TriangleAttributeMatrixName;
-  DataPath NumTrianglesArrayName;
-
+  DataPath TriangleGeomPath;
+  DataPath RegionIdsPath;
+  DataPath TriangleAMPath;
+  DataPath NumTrianglesPath;
 };
 
 /**

@@ -24,10 +24,10 @@ public:
   LabelTriangleGeometryFilter& operator=(LabelTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CADDataContainerPath_Key = "cad_data_container_path";
-  static inline constexpr StringLiteral k_RegionIdArrayPath_Key = "region_id_array_path";
+  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
+  static inline constexpr StringLiteral k_CreatedRegionIdsPath_Key = "created_region_ids_path";
   static inline constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
-  static inline constexpr StringLiteral k_NumTrianglesArrayName_Key = "num_triangles_array_name";
+  static inline constexpr StringLiteral k_NumTrianglesName_Key = "num_triangles_name";
 
   /**
    * @brief Returns the name of the filter.
@@ -91,8 +91,7 @@ protected:
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure & data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-      const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 
