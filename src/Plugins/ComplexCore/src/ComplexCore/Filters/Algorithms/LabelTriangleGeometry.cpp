@@ -49,7 +49,6 @@ Result<> LabelTriangleGeometry::operator()()
     usize chunkSize = 1000;
     std::vector<int32> triList(chunkSize, -1);
     // first identify connected triangle sets as features
-    usize size = 0;
     int32 regionCount = 1;
     for(usize i = 0; i < numTris; i++)
     {
@@ -58,7 +57,7 @@ Result<> LabelTriangleGeometry::operator()()
         regionIds[i] = regionCount;
         triangleCounts[regionCount]++;
 
-        size = 0;
+        usize size = 0;
         triList[size] = i;
         size++;
         while(size > 0)
