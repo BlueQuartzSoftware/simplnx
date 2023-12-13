@@ -56,7 +56,7 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
   const std::vector<uint64> k_MinVector{0, 0, 0};
   const std::vector<uint64> k_MaxVector{0, 0, 0};
 
-  static constexpr bool k_UpdateOrigin = false;
+  //  static constexpr bool k_UpdateOrigin = false;
   const DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   const DataPath k_NewImageGeomPath({Constants::k_SmallIN100, "New Image Geom"});
   static constexpr bool k_RenumberFeatures = false;
@@ -68,7 +68,7 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
 
   args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
   args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
-  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
+  // args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_NewImageGeomPath));
   args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
@@ -90,7 +90,7 @@ TEST_CASE("ComplexCore::CropImageGeometry Invalid Params", "[ComplexCore][CropIm
   std::vector<uint64> k_MinVector{0, 0, 0};
   std::vector<uint64> k_MaxVector{500, 20, 30};
 
-  static constexpr bool k_UpdateOrigin = false;
+  //  static constexpr bool k_UpdateOrigin = false;
   const DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   const DataPath k_NewImageGeomPath({Constants::k_SmallIN100, "New Image Geom"});
   static constexpr bool k_RenumberFeatures = false;
@@ -102,7 +102,7 @@ TEST_CASE("ComplexCore::CropImageGeometry Invalid Params", "[ComplexCore][CropIm
 
   args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
   args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
-  args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
+  // args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_NewImageGeomPath));
   args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
@@ -169,7 +169,7 @@ TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropI
   const std::vector<uint64> k_MinVector{10, 15, 0};
   const std::vector<uint64> k_MaxVector{60, 40, 50};
 
-  static constexpr bool k_UpdateOrigin = false;
+  // static constexpr bool k_UpdateOrigin = false;
   const DataPath k_ImageGeomPath({Constants::k_DataContainer});
   const DataPath k_NewImageGeomPath({"7_0_Cropped_ImageGeom"});
   DataPath destCellDataPath = k_NewImageGeomPath.createChildPath(Constants::k_CellData);
@@ -188,7 +188,7 @@ TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropI
 
   args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
   args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
-  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
+  //  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_NewImageGeomPath));
   args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));

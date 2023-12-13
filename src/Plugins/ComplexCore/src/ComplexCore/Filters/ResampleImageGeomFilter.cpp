@@ -253,9 +253,9 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     }
 
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-    preflightUpdatedValues.push_back(
-        {"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
-    preflightUpdatedValues.push_back({"Resampled Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, pSpacingValue, srcOrigin)});
+    preflightUpdatedValues.push_back({"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(),
+                                                                                                                         srcImageGeom->getOrigin(), srcImageGeom->getUnits())});
+    preflightUpdatedValues.push_back({"Resampled Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, pSpacingValue, srcOrigin, srcImageGeom->getUnits())});
   }
 
   // This section covers the option of renumbering the Feature Data where we need to do a

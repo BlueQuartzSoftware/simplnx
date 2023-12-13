@@ -124,7 +124,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
 
   // Define a custom class that generates the changes to the DataStructure.
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),
-                                                                               origin, spacing, pCellAttributeMatrixNameValue);
+                                                                               origin, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
 
   // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via a push_back
   complex::Result<OutputActions> resultOutputActions;

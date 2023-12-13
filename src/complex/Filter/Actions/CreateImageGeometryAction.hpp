@@ -26,7 +26,8 @@ public:
    * @param spacing
    * @param cellAttributeMatrixName
    */
-  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName);
+  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName,
+                            IGeometry::LengthUnit units = IGeometry::LengthUnit::Micrometer);
 
   ~CreateImageGeometryAction() noexcept override;
 
@@ -83,6 +84,7 @@ private:
   DimensionType m_Dims;
   OriginType m_Origin;
   SpacingType m_Spacing;
+  IGeometry::LengthUnit m_Units;
   std::string m_CellDataName;
 };
 } // namespace complex
