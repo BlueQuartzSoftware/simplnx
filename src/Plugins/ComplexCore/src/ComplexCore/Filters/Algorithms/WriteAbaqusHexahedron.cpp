@@ -317,11 +317,11 @@ int32 writeSects(const std::string& file, const Int32Array& featureIds, int32 ho
   return err;
 }
 
-void deleteFile(const std::vector<AtomicFile>& fileList)
+void deleteFile(const std::vector<std::unique_ptr<AtomicFile>>& fileList)
 {
   for(const auto& atomicFile : fileList)
   {
-    atomicFile.removeTempFile();
+    atomicFile->removeTempFile();
   }
 }
 } // namespace
@@ -363,17 +363,17 @@ Result<> WriteAbaqusHexahedron::operator()()
   usize totalPoints = imageGeom.getNumberOfCells();
 
   // Create file names
-  std::vector<AtomicFile> fileList = {};
-  fileList.emplace_back(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_nodes.inp");
-  fileList.emplace_back(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_elems.inp");
-  fileList.emplace_back(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_sects.inp");
-  fileList.emplace_back(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_elset.inp");
-  fileList.emplace_back(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + ".inp");
+  std::vector<std::unique_ptr<AtomicFile>> fileList = {};
+  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_nodes.inp"));
+  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_elems.inp"));
+  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_sects.inp"));
+  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_elset.inp"));
+  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + ".inp"));
 
-  int32 err = writeNodes(this, fileList[0].tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel()); // Nodes file
+  int32 err = writeNodes(this, fileList[0]->tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel()); // Nodes file
   if(err < 0)
   {
-    return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0].tempFilePath().string()));
+    return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0]->tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
@@ -382,10 +382,10 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 1/5) Complete");
 
-  err = writeElems(this, fileList[1].tempFilePath().string(), cDims.data(), pDims, getCancel()); // Elements file
+  err = writeElems(this, fileList[1]->tempFilePath().string(), cDims.data(), pDims, getCancel()); // Elements file
   if(err < 0)
   {
-    return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].tempFilePath().string()));
+    return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1]->tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
@@ -394,10 +394,10 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 2/5) Complete");
 
-  err = writeSects(fileList[2].tempFilePath().string(), featureIds, m_InputValues->HourglassStiffness); // Sections file
+  err = writeSects(fileList[2]->tempFilePath().string(), featureIds, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
   {
-    return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].tempFilePath().string()));
+    return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2]->tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
@@ -406,10 +406,10 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 3/5) Complete");
 
-  err = writeElset(this, fileList[3].tempFilePath().string(), totalPoints, featureIds, getCancel()); // Element set file
+  err = writeElset(this, fileList[3]->tempFilePath().string(), totalPoints, featureIds, getCancel()); // Element set file
   if(err < 0)
   {
-    return MakeErrorResult(-1116, fmt::format("Error writing output elset file '{}'", fileList[3].tempFilePath().string()));
+    return MakeErrorResult(-1116, fmt::format("Error writing output elset file '{}'", fileList[3]->tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
@@ -418,10 +418,10 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 4/5) Complete");
 
-  err = writeMaster(fileList[4].tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix); // Master file
+  err = writeMaster(fileList[4]->tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix); // Master file
   if(err < 0)
   {
-    return MakeErrorResult(-1117, fmt::format("Error writing output master file '{}'", fileList[4].tempFilePath().string()));
+    return MakeErrorResult(-1117, fmt::format("Error writing output master file '{}'", fileList[4]->tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
@@ -432,7 +432,7 @@ Result<> WriteAbaqusHexahedron::operator()()
 
   for(auto& file : fileList)
   {
-    file.commit();
+    file->commit();
   }
 
   return {};

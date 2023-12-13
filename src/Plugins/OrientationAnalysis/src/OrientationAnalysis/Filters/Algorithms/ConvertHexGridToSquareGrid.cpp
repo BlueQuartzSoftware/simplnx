@@ -87,7 +87,7 @@ public:
       // Ensure the output path exists by creating it if necessary
       if(!fs::exists(m_OutputPath))
       {
-        auto result = m_AtomicFiles[m_Index]->createOutputDirectories();
+        auto result = m_AtomicFiles[m_Index]->getResult();
         if(result.invalid())
         {
           m_Valid = false;

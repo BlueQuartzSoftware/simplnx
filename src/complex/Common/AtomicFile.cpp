@@ -4,20 +4,42 @@
 
 #include <fmt/format.h>
 
+#include <random>
+
 using namespace complex;
+
+namespace
+{
+constexpr std::array<char, 62> chars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+                                        'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+std::string randomDirName()
+{
+  std::mt19937_64 gen(static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
+  std::uniform_int_distribution<uint8> dist(0, chars.size() - 1);
+
+  std::stringstream ss;
+  for(uint8 i = 0; i < 24; i++)
+  {
+    ss << chars[dist(gen)];
+  }
+  return ss.str();
+}
+} // namespace
 
 AtomicFile::AtomicFile(const std::string& filename, bool autoCommit)
 : m_FilePath(fs::path(filename))
 , m_AutoCommit(autoCommit)
 {
-  m_TempFilePath = fs::path(fmt::format("{}/{}", fs::temp_directory_path().string(), m_FilePath.filename().string()));
+  m_TempFilePath = fs::path(fmt::format("{}/{}/{}", m_FilePath.parent_path().string(), ::randomDirName(), m_FilePath.filename().string()));
+  m_Result = createOutputDirectories();
 }
 
 AtomicFile::AtomicFile(fs::path&& filepath, bool autoCommit)
 : m_FilePath(std::move(filepath))
 , m_AutoCommit(autoCommit)
 {
-  m_TempFilePath = fs::path(fmt::format("{}/{}", fs::temp_directory_path().string(), m_FilePath.filename().string()));
+  m_TempFilePath = fs::path(fmt::format("{}/{}/{}", m_FilePath.parent_path().string(), ::randomDirName(), m_FilePath.filename().string()));
+  m_Result = createOutputDirectories();
 }
 
 AtomicFile::~AtomicFile()
@@ -26,7 +48,7 @@ AtomicFile::~AtomicFile()
   {
     commit();
   }
-  if(fs::exists(m_TempFilePath))
+  if(fs::exists(m_TempFilePath) || fs::exists(m_TempFilePath.parent_path()))
   {
     removeTempFile();
   }
@@ -44,18 +66,7 @@ void AtomicFile::commit() const
     throw std::runtime_error(m_TempFilePath.string() + " does not exist");
   }
 
-  if(m_TempFilePath.root_directory() == m_FilePath.root_directory())
-  {
-    fs::rename(m_TempFilePath, m_FilePath);
-  }
-  else
-  {
-    if(fs::exists(m_FilePath))
-    {
-      fs::remove(m_FilePath);
-    }
-    fs::copy_file(m_TempFilePath, m_FilePath);
-  }
+  fs::rename(m_TempFilePath, m_FilePath);
 }
 
 void AtomicFile::setAutoCommit(bool value)
@@ -70,12 +81,17 @@ bool AtomicFile::getAutoCommit() const
 
 void AtomicFile::removeTempFile() const
 {
-  fs::remove(m_TempFilePath);
+  fs::remove_all(m_TempFilePath.parent_path());
+}
+
+Result<> AtomicFile::getResult() const
+{
+  return m_Result;
 }
 
 Result<> AtomicFile::createOutputDirectories()
 {
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
-  return CreateOutputDirectories(m_FilePath.parent_path());
+  return CreateOutputDirectories(m_TempFilePath.parent_path());
 }

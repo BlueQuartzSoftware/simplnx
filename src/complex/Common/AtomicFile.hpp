@@ -33,11 +33,14 @@ public:
   void setAutoCommit(bool value);
   bool getAutoCommit() const;
   void removeTempFile() const;
-  Result<> createOutputDirectories();
+  Result<> getResult() const;
 
 private:
   fs::path m_FilePath;
   fs::path m_TempFilePath;
   bool m_AutoCommit = false;
+  Result<> m_Result = {};
+
+  Result<> createOutputDirectories();
 };
 } // namespace complex

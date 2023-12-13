@@ -115,7 +115,7 @@ Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure
 {
   AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), false);
 
-  auto dirResult = atomicFile.createOutputDirectories();
+  auto dirResult = atomicFile.getResult();
   if(dirResult.invalid())
   {
     return dirResult;
