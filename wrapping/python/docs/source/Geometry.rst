@@ -21,9 +21,16 @@ The voxel is topologically equivalent to the hexahedron with additional geometri
 constraints. Each face of the voxel is perpendicular to one of the coordinate x-y-z axes.
 
 When creating an ImageGeometry the dimension values are specified as X, Y, Z, *IN THAT ORDER* since this
-is most natural way to express a 3-dimensional cube. If you are going to be using an AttributeMatrix with the
+is the most natural way to express a 3-dimensional cube. If you are going to be using an AttributeMatrix with the
 Image Geometry, note that the tuple dimensions will be given in **ZYX** order since the tuple dimensions
-are **ALWAYS** given in "C" order, or slowest to fastest order.
+are **ALWAYS** given in "C" order, or slowest to fastest order. The spacing value is also given as **XYZ** order and denotes
+the real units value of the distance that each voxel along that axis will span. The origin is also specified
+using 3 real length unit values that will locate the first voxel of the grid. The data is rastered from slowest dimension
+Z to the fastest moving dimension X in a positive direction.
+
+For example if you set the dimensions at 10,10,10 and the origin of -10, -10, -10 and the spacing of 2.0, 2.0, 2.0 then the
+physical length of each side of the Image Geometry will be 20, 20, 20 units and have a physical bounds of (-10 to 10) length 
+units in each direction.
 
 .. figure:: Images/Image_Geometry.png
    :scale: 50 %

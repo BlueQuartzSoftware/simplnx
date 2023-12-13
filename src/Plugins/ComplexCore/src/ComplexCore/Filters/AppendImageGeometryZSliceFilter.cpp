@@ -249,7 +249,7 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
   {
     resultOutputActions.warnings().push_back(
         {-8412, "You are appending cell data together which may change the number of features. As a result, any feature level attribute matrix data will likely be invalidated!"});
-    preflightUpdatedValues.push_back({"Appended Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(newDims, spacing, origin)});
+    preflightUpdatedValues.push_back({"Appended Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(newDims, spacing, origin, inputGeometry.getUnits())});
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

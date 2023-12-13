@@ -356,8 +356,8 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         // These values should have been updated during the preflightImpl(...) method
         const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(srcImagePath);
 
-        preflightUpdatedValues.push_back(
-            {"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(), srcImageGeomPtr->getOrigin())});
+        preflightUpdatedValues.push_back({"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
+                                                                                                                             srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
 
         if(pTransformationMatrixTypeValue == k_PrecomputedTransformationMatrixIdx)
         {
@@ -365,8 +365,9 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         }
         else
         {
-          preflightUpdatedValues.push_back({"Transformed Image Geometry Info",
-                                            complex::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin)});
+          preflightUpdatedValues.push_back(
+              {"Transformed Image Geometry Info",
+               complex::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin, srcImageGeomPtr->getUnits())});
         }
       }
 

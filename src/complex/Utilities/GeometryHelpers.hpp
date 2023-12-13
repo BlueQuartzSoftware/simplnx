@@ -20,12 +20,13 @@ namespace Description
 
 /**
  * @brief Generates a string description for the given arguments
+ * @param geometry The geometry to generate the information string
  * @param dims The dimensions of the image geometry
  * @param spacing The spacing of the image geometry
  * @param origin The origin of the image geomtry
  * @return
  */
-COMPLEX_EXPORT std::string GenerateGeometryInfo(const complex::SizeVec3& dims, const complex::FloatVec3& spacing, const complex::FloatVec3& origin);
+COMPLEX_EXPORT std::string GenerateGeometryInfo(const complex::SizeVec3& dims, const complex::FloatVec3& spacing, const complex::FloatVec3& origin, IGeometry::LengthUnit units);
 
 } // namespace Description
 
