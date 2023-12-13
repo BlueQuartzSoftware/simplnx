@@ -159,11 +159,12 @@ Parameters CropImageGeometry::parameters() const
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "Upper bound of the volume to crop out", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
-  params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
+  // params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
   params.insertSeparator({"Input Geometry and Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "DataPath to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
+  params.insert(
+      std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "DataPath to the source Image Geometry", DataPath(), std::set{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
@@ -173,7 +174,7 @@ Parameters CropImageGeometry::parameters() const
       std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"CellFeatureData"})));
 
   params.insertSeparator({"Output Image Geometry"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the cropped geometry", DataPath()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The DataPath to store the created Image Geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
@@ -196,7 +197,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  auto shouldUpdateOrigin = filterArgs.value<bool>(k_UpdateOrigin_Key);
+  // auto shouldUpdateOrigin = true; // filterArgs.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
   auto cellFeatureAmPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
@@ -270,18 +271,9 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   std::vector<usize> dataArrayShape = {geomDims[2], geomDims[1], geomDims[0]}; // The DataArray shape goes slowest to fastest (ZYX)
 
   std::vector<float32> targetOrigin(3);
-  if(shouldUpdateOrigin)
-  {
-    targetOrigin[0] = static_cast<float>(xMin) * spacing[0] + srcOrigin[0];
-    targetOrigin[1] = static_cast<float>(yMin) * spacing[1] + srcOrigin[1];
-    targetOrigin[2] = static_cast<float>(zMin) * spacing[2] + srcOrigin[2];
-  }
-  else
-  {
-    targetOrigin[0] = srcOrigin[0];
-    targetOrigin[1] = srcOrigin[1];
-    targetOrigin[2] = srcOrigin[2];
-  }
+  targetOrigin[0] = static_cast<float>(xMin) * spacing[0] + srcOrigin[0];
+  targetOrigin[1] = static_cast<float>(yMin) * spacing[1] + srcOrigin[1];
+  targetOrigin[2] = static_cast<float>(zMin) * spacing[2] + srcOrigin[2];
 
   std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
 
@@ -333,10 +325,11 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
 
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
+    preflightUpdatedValues.push_back({"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(),
+                                                                                                                         srcImageGeom->getOrigin(), srcImageGeom->getUnits())});
     preflightUpdatedValues.push_back(
-        {"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
-    preflightUpdatedValues.push_back({"Cropped Image Geometry Info",
-                                      complex::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin)});
+        {"Cropped Image Geometry Info",
+         complex::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin, srcImageGeom->getUnits())});
   }
   // This section covers the option of renumbering the Feature Data where we need to do a
   // similar creation of the Data Arrays based on the arrays in the Source Image Geometry's

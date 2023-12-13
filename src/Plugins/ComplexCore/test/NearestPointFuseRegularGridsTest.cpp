@@ -32,7 +32,7 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
 
-  auto sampleAction = CreateImageGeometryAction(sampleImageGeomPath, dims, origin, spacing, sampleCellDataName);
+  auto sampleAction = CreateImageGeometryAction(sampleImageGeomPath, dims, origin, spacing, sampleCellDataName, IGeometry::LengthUnit::Micrometer);
   Result<> sampleActionResult = sampleAction.apply(dataStructure, IDataAction::Mode::Execute);
   COMPLEX_RESULT_REQUIRE_VALID(sampleActionResult);
 
@@ -43,7 +43,7 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   auto* sampleDataStore = dataStructure.getDataAs<Float64Array>(sampleDataArrayPath)->getDataStore();
   std::iota(sampleDataStore->begin(), sampleDataStore->end(), 1.0);
 
-  auto refAction = CreateImageGeometryAction(refImageGeomPath, refDims, refOrigin, refSpacing, refCellDataName);
+  auto refAction = CreateImageGeometryAction(refImageGeomPath, refDims, refOrigin, refSpacing, refCellDataName, IGeometry::LengthUnit::Micrometer);
   Result<> refActionResult = refAction.apply(dataStructure, IDataAction::Mode::Execute);
   COMPLEX_RESULT_REQUIRE_VALID(refActionResult);
 

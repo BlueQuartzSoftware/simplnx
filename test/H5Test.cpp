@@ -214,7 +214,7 @@ TEST_CASE("ImageGeometryIO")
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
 
   DataStructure originalDataStructure;
-  auto action = CreateImageGeometryAction(imageGeomPath, dims, origin, spacing, cellDataName);
+  auto action = CreateImageGeometryAction(imageGeomPath, dims, origin, spacing, cellDataName, IGeometry::LengthUnit::Micrometer);
   Result<> actionResult = action.apply(originalDataStructure, IDataAction::Mode::Execute);
   COMPLEX_RESULT_REQUIRE_VALID(actionResult);
 

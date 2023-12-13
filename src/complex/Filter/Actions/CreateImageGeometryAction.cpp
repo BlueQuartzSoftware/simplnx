@@ -7,11 +7,13 @@ using namespace complex;
 
 namespace complex
 {
-CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName)
+CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName,
+                                                     IGeometry::LengthUnit units)
 : IDataCreationAction(path)
 , m_Dims(dims)
 , m_Origin(origin)
 , m_Spacing(spacing)
+, m_Units(units)
 , m_CellDataName(cellAttributeMatrixName)
 {
 }
@@ -56,6 +58,7 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
   imageGeom->setDimensions(m_Dims);
   imageGeom->setOrigin(m_Origin);
   imageGeom->setSpacing(m_Spacing);
+  imageGeom->setUnits(m_Units);
 
   const DimensionType reversedDims(m_Dims.rbegin(), m_Dims.rend());
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, reversedDims, imageGeom->getId());

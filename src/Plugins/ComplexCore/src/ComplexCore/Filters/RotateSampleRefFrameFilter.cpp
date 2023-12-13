@@ -447,10 +447,10 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     // These values should have been updated during the preflightImpl(...) method
     const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
 
-    preflightUpdatedValues.push_back(
-        {"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
-    preflightUpdatedValues.push_back(
-        {"Rotated Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin)});
+    preflightUpdatedValues.push_back({"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(),
+                                                                                                                         srcImageGeom->getOrigin(), srcImageGeom->getUnits())});
+    preflightUpdatedValues.push_back({"Rotated Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(
+                                                                         dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin, srcImageGeom->getUnits())});
   }
 
   // copy over the rest of the data

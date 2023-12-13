@@ -47,10 +47,10 @@ enum class RotationRepresentation : uint64_t
 
 namespace
 {
-const ChoicesParameter::Choices k_SliceOperationChoices = {"None", "Flip along X axis", "Flip along Y axis"};
+const ChoicesParameter::Choices k_SliceOperationChoices = {"None", "Flip about X axis", "Flip about Y axis"};
 const ChoicesParameter::ValueType k_NoImageTransform = 0;
-const ChoicesParameter::ValueType k_FlipAlongXAxis = 1;
-const ChoicesParameter::ValueType k_FlipAlongYAxis = 2;
+const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
+const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
 
 const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
@@ -126,17 +126,17 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       }
 
       std::array<float, 3> sampleTransAxis = {0.0F, 0.0F, 0.0F};
-      if(transformType == k_FlipAlongYAxis)
+      if(transformType == k_FlipAboutYAxis)
       {
         sampleTransAxis = {0.0F, 1.0F, 0.0F};
       }
-      else if(transformType == k_FlipAlongXAxis)
+      else if(transformType == k_FlipAboutXAxis)
       {
         sampleTransAxis = {1.0F, 0.0F, 0.0F};
       }
       else
       {
-        return {MakeErrorResult(-50011, fmt::format("Image Transformation Operation value should be '0' or '1'."))};
+        return {MakeErrorResult(-50011, fmt::format("Image Transformation Operation value should be '{}' or '{}'.", k_FlipAboutXAxis, k_FlipAboutYAxis))};
       }
       Arguments args;
 
@@ -234,7 +234,7 @@ Parameters ITKImportImageStack::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the 3D volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the 3D volume", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "y", "Z"}));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ImageTransformChoice_Key, "Optional Slice Operations",
-                                                                    "Operation that is performed on each slice. 0=None, 1=Flip on X, 2=Flip on Y", 0, k_SliceOperationChoices));
+                                                                    "Operation that is performed on each slice. 0=None, 1=Flip about X, 2=Flip about Y", 0, k_SliceOperationChoices));
 
   params.insertSeparator(Parameters::Separator{"File List"});
   params.insert(

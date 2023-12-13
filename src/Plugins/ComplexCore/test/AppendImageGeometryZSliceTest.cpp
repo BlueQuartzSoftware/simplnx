@@ -44,7 +44,7 @@ TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
 
     args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{0, 0, 0}));
     args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{188, 200, 50}));
-    args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(false));
+    //  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(false));
     args.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
     args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_CroppedBottomHalfPath));
     args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
@@ -61,7 +61,7 @@ TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
 
     args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{0, 0, 51}));
     args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{188, 200, 116}));
-    args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
+    //  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
     args.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
     args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_CroppedTopHalfPath));
     args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
@@ -182,7 +182,7 @@ TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: InValid Filter Executio
 
       cropArgs.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{0, 0, 0}));
       cropArgs.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{10, 10, 0}));
-      cropArgs.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
+      //   cropArgs.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
       cropArgs.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_InvalidTestGeometryPath2));
       cropArgs.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_CroppedTopHalfPath));
       cropArgs.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));

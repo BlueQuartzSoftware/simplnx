@@ -210,7 +210,6 @@ public:
 
     Arguments args;
 
-    args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
     args.insertOrAssign(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_ImageGeometryPath));
     args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
