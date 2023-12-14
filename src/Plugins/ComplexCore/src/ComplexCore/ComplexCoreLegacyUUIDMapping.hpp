@@ -4,7 +4,7 @@
 #include <string>
 
 // clang-format off
-#include "ComplexCore/Filters/AbaqusHexahedronWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteAbaqusHexahedronFilter.hpp"
 #include "ComplexCore/Filters/AddBadDataFilter.hpp"
 #include "ComplexCore/Filters/AlignGeometries.hpp"
 #include "ComplexCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
@@ -14,8 +14,8 @@
 #include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "ComplexCore/Filters/ApproximatePointCloudHull.hpp"
 #include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
-#include "ComplexCore/Filters/AvizoRectilinearCoordinateWriterFilter.hpp"
-#include "ComplexCore/Filters/AvizoUniformCoordinateWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteAvizoRectilinearCoordinateFilter.hpp"
+#include "ComplexCore/Filters/WriteAvizoUniformCoordinateFilter.hpp"
 #include "ComplexCore/Filters/CalculateArrayHistogramFilter.hpp"
 #include "ComplexCore/Filters/CalculateFeatureSizesFilter.hpp"
 #include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"
@@ -82,7 +82,7 @@
 #include "ComplexCore/Filters/KMeansFilter.hpp"
 #include "ComplexCore/Filters/KMedoidsFilter.hpp"
 #include "ComplexCore/Filters/LaplacianSmoothingFilter.hpp"
-#include "ComplexCore/Filters/LosAlamosFFTWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteLosAlamosFFTFilter.hpp"
 #include "ComplexCore/Filters/MapPointCloudToRegularGridFilter.hpp"
 #include "ComplexCore/Filters/MinNeighbors.hpp"
 #include "ComplexCore/Filters/MoveData.hpp"
@@ -110,7 +110,7 @@
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp"
-#include "ComplexCore/Filters/VtkRectilinearGridWriterFilter.hpp"
+#include "ComplexCore/Filters/WriteVtkRectilinearGridFilter.hpp"
 #include "ComplexCore/Filters/WriteASCIIDataFilter.hpp"
 #include "ComplexCore/Filters/WriteStlFileFilter.hpp"
 #include "ComplexCore/Filters/AddBadDataFilter.hpp"
@@ -132,6 +132,7 @@
 #include "ComplexCore/Filters/KMedoidsFilter.hpp"
 #include "ComplexCore/Filters/KMeansFilter.hpp"
 #include "ComplexCore/Filters/SilhouetteFilter.hpp"
+#include "ComplexCore/Filters/RemoveFlaggedFeaturesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
