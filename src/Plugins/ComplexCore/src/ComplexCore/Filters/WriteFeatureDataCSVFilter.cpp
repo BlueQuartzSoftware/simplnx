@@ -143,14 +143,17 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
     }
   }
 
-  std::ofstream fout(pOutputFilePath.string(), std::ofstream::out | std::ios_base::binary); // test name resolution and create file
-  if(!fout.is_open())
+  // Scope file writer in code block to get around file lock on windows (enforce destructor order)
   {
-    return MakeErrorResult(-64640, fmt::format("Error opening path {}", pOutputFilePath.string()));
-  }
+    std::ofstream fout(pOutputFilePath.string(), std::ofstream::out | std::ios_base::binary); // test name resolution and create file
+    if(!fout.is_open())
+    {
+      return MakeErrorResult(-64640, fmt::format("Error opening path {}", pOutputFilePath.string()));
+    }
 
-  // call ostream function
-  OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
+    // call ostream function
+    OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
+  }
 
   atomicFile.commit();
   return {};

@@ -184,14 +184,17 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
       return createDirectoriesResult;
     }
 
-    // Create the output file
-    std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);
-    if(!outStrm.is_open())
+    // Scope file writer in code block to get around file lock on windows (enforce destructor order)
     {
-      return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
-    }
+      // Create the output file
+      std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);
+      if(!outStrm.is_open())
+      {
+        return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
+      }
 
-    OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
+      OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
+    }
     atomicFile.setAutoCommit(true);
   }
 

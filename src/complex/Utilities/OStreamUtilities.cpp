@@ -376,42 +376,46 @@ void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
     auto outputFilePath = atomicFile.tempFilePath().string();
     mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
 
-    std::ofstream outStrm(outputFilePath, std::ios_base::out | std::ios_base::binary);
+    // Scope file writer in code block to get around file lock on windows (enforce destructor order)
+    {
+      std::ofstream outStrm(outputFilePath, std::ios_base::out | std::ios_base::binary);
 
-    std::pair<int32, std::string> result = {0, "PrintDataSetsToMultipleFiles default failure. If you are seeing this error something bad has happened."};
-    auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
-    if(dataArray != nullptr)
-    {
-      if(exportToBinary)
+      std::pair<int32, std::string> result = {0, "PrintDataSetsToMultipleFiles default failure. If you are seeing this error something bad has happened."};
+      auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
+      if(dataArray != nullptr)
       {
-        result = dataArray->getIDataStore()->writeBinaryFile(outputFilePath);
+        if(exportToBinary)
+        {
+          result = dataArray->getIDataStore()->writeBinaryFile(outputFilePath);
+        }
+        else
+        {
+          ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outStrm, dataArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
+        }
       }
-      else
+      auto* stringArray = dataStructure.getDataAs<StringArray>(dataPath);
+      if(stringArray != nullptr)
       {
-        ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outStrm, dataArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
+        if(exportToBinary)
+        {
+          throw std::runtime_error(fmt::format("{}({}): Function {}: Error. Cannot print a StringArray to binary: '{}'", "PrintDataSetsToMultipleFiles", __FILE__, __LINE__, dataPath.getTargetName()));
+        }
+        PrintStringArray(outStrm, *stringArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
       }
-    }
-    auto* stringArray = dataStructure.getDataAs<StringArray>(dataPath);
-    if(stringArray != nullptr)
-    {
-      if(exportToBinary)
+      auto* neighborList = dataStructure.getDataAs<INeighborList>(dataPath);
+      if(neighborList != nullptr)
       {
-        throw std::runtime_error(fmt::format("{}({}): Function {}: Error. Cannot print a StringArray to binary: '{}'", "PrintDataSetsToMultipleFiles", __FILE__, __LINE__, dataPath.getTargetName()));
+        if(exportToBinary)
+        {
+          throw std::runtime_error(
+              fmt::format("{}({}): Function {}: Error. Cannot print a NeighborList to binary: '{}'", "PrintDataSetsToMultipleFiles", __FILE__, __LINE__, dataPath.getTargetName()));
+        }
+        ExecuteNeighborFunction(PrintNeighborList{}, neighborList->getDataType(), outStrm, neighborList, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
       }
-      PrintStringArray(outStrm, *stringArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
-    }
-    auto* neighborList = dataStructure.getDataAs<INeighborList>(dataPath);
-    if(neighborList != nullptr)
-    {
-      if(exportToBinary)
+      if(result.first < 0)
       {
-        throw std::runtime_error(fmt::format("{}({}): Function {}: Error. Cannot print a NeighborList to binary: '{}'", "PrintDataSetsToMultipleFiles", __FILE__, __LINE__, dataPath.getTargetName()));
+        mesgHandler(IFilter::Message::Type::Error, result.second);
       }
-      ExecuteNeighborFunction(PrintNeighborList{}, neighborList->getDataType(), outStrm, neighborList, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
-    }
-    if(result.first < 0)
-    {
-      mesgHandler(IFilter::Message::Type::Error, result.second);
     }
     if(shouldCancel)
     {
