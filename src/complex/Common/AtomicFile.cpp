@@ -17,12 +17,12 @@ std::string randomDirName()
   std::mt19937_64 gen(static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
   std::uniform_int_distribution<uint8> dist(0, chars.size() - 1);
 
-  std::stringstream ss;
+  std::string randomDir = "";
   for(uint8 i = 0; i < 24; i++)
   {
-    ss << chars[dist(gen)];
+    randomDir += chars[dist(gen)];
   }
-  return ss.str();
+  return randomDir;
 }
 } // namespace
 
