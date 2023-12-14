@@ -15,10 +15,10 @@ constexpr std::array<char, 62> chars = {'0', '1', '2', '3', '4', '5', '6', '7', 
 std::string randomDirName()
 {
   std::mt19937_64 gen(static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
-  std::uniform_int_distribution<uint8> dist(0, chars.size() - 1);
+  std::uniform_int_distribution<uint32> dist(0, chars.size() - 1);
 
   std::string randomDir = "";
-  for(uint8 i = 0; i < 24; i++)
+  for(uint32 i = 0; i < 24; i++)
   {
     randomDir += chars[dist(gen)];
   }
