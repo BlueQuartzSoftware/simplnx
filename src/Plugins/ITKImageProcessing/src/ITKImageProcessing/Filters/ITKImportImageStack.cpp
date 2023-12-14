@@ -64,6 +64,66 @@ std::unique_ptr<IFilter> CreateRotateSampleRefFrameFilter()
   return filter;
 }
 
+template <class T>
+void FlipAboutYAxis(DataArray<T>& dataArray, Vec3<usize>& dims)
+{
+  auto& tempDataStore = dataArray.getDataStoreRef();
+
+  usize numComp = tempDataStore.getNumberOfComponents();
+  std::vector<T> currentRowBuffer(dims[0] * dataArray.getNumberOfComponents());
+
+  // We could _in theory_ parallelize over the rows, not sure how the out-of-core
+  // would handle that though.
+  for(usize row = 0; row < dims[1]; row++)
+  {
+    // Copy the current row into a temp buffer
+    auto startIter = tempDataStore.begin() + (dims[0] * numComp * row);
+    auto endIter = startIter + dims[0] * numComp;
+    std::copy(startIter, endIter, currentRowBuffer.begin());
+
+    // Starting at the last tuple in the buffer
+    usize bufferIndex = (dims[0] - 1) * numComp;
+    usize dataStoreIndex = row * dims[0] * numComp;
+
+    for(usize tupleIdx = 0; tupleIdx < dims[0]; tupleIdx++)
+    {
+      for(usize cIdx = 0; cIdx < numComp; cIdx++)
+      {
+        tempDataStore.setValue(dataStoreIndex, currentRowBuffer[bufferIndex + cIdx]);
+        dataStoreIndex++;
+      }
+      bufferIndex = bufferIndex - numComp;
+    }
+  }
+}
+
+template <class T>
+void FlipAboutXAxis(DataArray<T>& dataArray, Vec3<usize>& dims)
+{
+  auto& tempDataStore = dataArray.getDataStoreRef();
+  usize numComp = tempDataStore.getNumberOfComponents();
+  size_t rowLCV = (dims[1] % 2 == 1) ? (dims[1] - 1 / 2) : dims[1] / 2;
+  usize bottomRow = dims[1] - 1;
+
+  for(usize row = 0; row < rowLCV; row++)
+  {
+    // Copy the "top" row into a temp buffer
+    auto topStartIter = 0 + (dims[0] * numComp * row);
+    auto topEndIter = topStartIter + dims[0] * numComp;
+    auto bottomStartIter = 0 + (dims[0] * numComp * bottomRow);
+
+    // Copy from bottom to top and then temp to bottom
+    for(usize eleIndex = topStartIter; eleIndex < topEndIter; eleIndex++)
+    {
+      T value = tempDataStore.getValue(eleIndex);
+      tempDataStore[eleIndex] = tempDataStore[bottomStartIter];
+      tempDataStore[bottomStartIter] = value;
+      bottomStartIter++;
+    }
+    bottomRow--;
+  }
+}
+
 } // namespace
 
 namespace cxITKImportImageStack
@@ -114,70 +174,29 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     SizeVec3 importedDims = importedImageGeom.getDimensions();
     if(dims[0] != importedDims[0] || dims[1] != importedDims[1])
     {
-      return MakeErrorResult(-64510, fmt::format("Slice {} image dimensions are different than the first slice.\n  First Slice Dims are:  {} x {}\n  Current Slice Dims are:{} x {}\n"));
-    }
-
-    if(transformType != k_NoImageTransform)
-    {
-      auto filter = CreateRotateSampleRefFrameFilter();
-      if(nullptr == filter)
-      {
-        return {MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter"))};
-      }
-
-      std::array<float, 3> sampleTransAxis = {0.0F, 0.0F, 0.0F};
-      if(transformType == k_FlipAboutYAxis)
-      {
-        sampleTransAxis = {0.0F, 1.0F, 0.0F};
-      }
-      else if(transformType == k_FlipAboutXAxis)
-      {
-        sampleTransAxis = {1.0F, 0.0F, 0.0F};
-      }
-      else
-      {
-        return {MakeErrorResult(-50011, fmt::format("Image Transformation Operation value should be '{}' or '{}'.", k_FlipAboutXAxis, k_FlipAboutYAxis))};
-      }
-      Arguments args;
-
-      args.insertOrAssign(RotateSampleRefFrame::k_SelectedImageGeometry_Key, std::make_any<DataPath>(imageGeomPath));
-      args.insertOrAssign(RotateSampleRefFrame::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
-
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], 180.0F}));
-      args.insertOrAssign(RotateSampleRefFrame::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
-
-      // Preflight the filter and check result
-      messageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
-      complex::IFilter::PreflightResult preflightResult = filter->preflight(importedDataStructure, args);
-      if(preflightResult.outputActions.invalid())
-      {
-        for(const auto& error : preflightResult.outputActions.errors())
-        {
-          std::cout << error.code << ": " << error.message << std::endl;
-        }
-        return {MakeErrorResult(-50012, fmt::format("Error preflighting {}", filter->humanName()))};
-      }
-
-      // Execute the filter and check the result
-      messageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
-      auto executeResult = filter->execute(importedDataStructure, args, nullptr, messageHandler, shouldCancel);
-      if(executeResult.result.invalid())
-      {
-        return {{nonstd::make_unexpected(executeResult.result.errors())}};
-      }
+      return MakeErrorResult(-64510, fmt::format("Slice {} image dimensions are different than the first slice.\n  First Slice Dims are:  {} x {}\n  Current Slice Dims are:{} x {}\n", slice,
+                                                 importedDims[0], importedDims[1], dims[0], dims[1]));
     }
 
     // Compute the Tuple Index we are at:
     const usize tupleIndex = (slice * dims[0] * dims[1]);
     // get the current Slice data...
-    const auto& tempData = importedDataStructure.getDataRefAs<DataArray<T>>(imageDataPath);
-    const auto& tempDataStore = tempData.getDataStoreRef();
+    auto& tempData = importedDataStructure.getDataRefAs<DataArray<T>>(imageDataPath);
+    auto& tempDataStore = tempData.getDataStoreRef();
+
+    if(transformType == k_FlipAboutYAxis)
+    {
+      FlipAboutYAxis<T>(tempData, dims);
+    }
+    else if(transformType == k_FlipAboutXAxis)
+    {
+      FlipAboutXAxis<T>(tempData, dims);
+    }
 
     // Copy that into the output array...
     if(!outputDataStore.copyFrom(tupleIndex, tempDataStore, 0, tuplesPerSlice))
     {
-      return MakeErrorResult(-64511, fmt::format("Error copying source image data into destination array.    Slice:{}    TupleIndex:{}    MaxTupleIndex:{}", slice, tupleIndex, outputData.getSize()));
+      return MakeErrorResult(-64511, fmt::format("Error copying source image data into destination array.\n  Slice:{}\n  TupleIndex:{}\n  MaxTupleIndex:{}", slice, tupleIndex, outputData.getSize()));
     }
 
     slice++;
