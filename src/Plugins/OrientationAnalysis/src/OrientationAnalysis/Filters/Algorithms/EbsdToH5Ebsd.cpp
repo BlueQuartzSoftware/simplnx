@@ -68,6 +68,9 @@ Result<> EbsdToH5Ebsd::operator()()
       return MakeErrorResult(-99501, fmt::format("The output HDF5 file could not be created. Check permissions or if the file is in use by another program"));
     }
 
+    // Use a file sentinel to ensure the file is closed before coming out of this scoped block of code
+    auto fileSentinel = H5Support::H5ScopedFileSentinel(fileId, true);
+
     fileId = H5Support::H5Utilities::createFile(atomicFile.tempFilePath().string());
     if(fileId < 0)
     {
