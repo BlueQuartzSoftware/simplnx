@@ -99,6 +99,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadVolumeGraphicsFileTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
   RemoveFlaggedFeaturesTest.cpp
+  RemoveFlaggedTrianglesTest.cpp
   RemoveFlaggedVerticesTest.cpp
   RemoveMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
