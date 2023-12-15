@@ -9,8 +9,6 @@
 
 #include "complex/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
-
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;

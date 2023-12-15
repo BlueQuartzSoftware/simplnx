@@ -714,9 +714,9 @@ Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  // results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter>(args, json, k_WizardData_Key));
+  // Wizard Data parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ArrayToDynamicTableFilterParameterConverter>(args, json, SIMPL::k_TupleDimsKey, k_TupleDims_Key));
+  // Tuple Dims parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -400,7 +400,7 @@ Result<Arguments> InitializeImageGeomCellData::FromSIMPLJson(const nlohmann::jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_InitTypeKey, k_InitType_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_InitValueKey, k_InitValue_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::RangeFilterParameterConverter>(args, json, SIMPL::k_InitRangeKey, k_InitRange_Key));
-  //  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_InvertDataKey, "@COMPLEX_PARAMETER_KEY@"));
+  // Invert Data parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));
 

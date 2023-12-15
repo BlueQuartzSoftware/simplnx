@@ -13,8 +13,6 @@
 
 #include "complex/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
-
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;

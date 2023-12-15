@@ -120,7 +120,7 @@ Result<Arguments> WriteDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputFileKey, k_ExportFilePath));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteXdmfFileKey, k_WriteXdmf));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteTimeSeriesKey, "@COMPLEX_PARAMETER_KEY@"));
+  // Write time series parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));
 

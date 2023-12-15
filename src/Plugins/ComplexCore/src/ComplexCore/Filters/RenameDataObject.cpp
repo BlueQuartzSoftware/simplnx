@@ -8,10 +8,6 @@
 
 #include "complex/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
-
-#include "complex/Utilities/SIMPLConversion.hpp"
-
 #include <stdexcept>
 
 using namespace complex;

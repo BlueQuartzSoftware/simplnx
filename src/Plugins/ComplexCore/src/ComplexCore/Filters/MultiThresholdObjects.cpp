@@ -13,8 +13,6 @@
 
 #include "complex/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
-
 #include <algorithm>
 
 namespace complex

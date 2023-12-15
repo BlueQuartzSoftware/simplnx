@@ -11,8 +11,6 @@
 
 #include "complex/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
-
 #include <vector>
 
 namespace complex

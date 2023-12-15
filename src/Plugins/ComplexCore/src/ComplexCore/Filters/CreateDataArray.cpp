@@ -251,10 +251,10 @@ Result<Arguments> CreateDataArray::FromSIMPLJson(const nlohmann::json& json)
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumComps_Key));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_InitializationTypeKey, k_Key));
+  // Initialize Type parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitilizationValue_Key));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::RangeFilterParameterConverter>(args, json, SIMPL::k_InitializationRangeKey, k_Key));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter>(args, json, SIMPL::k_StartingIndexValueKey, k_Key));
+  // Initialization Range parameter is not applicable in NX
+  // Starting Index value parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

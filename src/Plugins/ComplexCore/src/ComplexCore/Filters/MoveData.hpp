@@ -22,7 +22,6 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_Data_Key = "data";
-  // static inline constexpr StringLiteral k_OriginalParent_Key = "original_parent";
   static inline constexpr StringLiteral k_NewParent_Key = "new_parent";
 
   /**

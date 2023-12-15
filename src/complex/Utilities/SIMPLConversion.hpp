@@ -223,49 +223,23 @@ struct NumericTypeParameterConverter
   {
     if(!json.is_number_integer())
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("ScalarTypeParameter json '{}' is not an integer", json.dump()));
+      return MakeErrorResult<ValueType>(-1, fmt::format("NumericTypeParameter json '{}' is not an integer", json.dump()));
     }
 
     auto value = json.get<int32>();
 
-    switch(value)
+    if(value < 0 || value > 10)
     {
-    case 0: {
-      return {NumericType::int8};
-    }
-    case 1: {
-      return {NumericType::uint8};
-    }
-    case 2: {
-      return {NumericType::int16};
-    }
-    case 3: {
-      return {NumericType::uint16};
-    }
-    case 4: {
-      return {NumericType::int32};
-    }
-    case 5: {
-      return {NumericType::uint32};
-    }
-    case 6: {
-      return {NumericType::int64};
-    }
-    case 7: {
-      return {NumericType::uint64};
-    }
-    case 8: {
-      return {NumericType::float32};
-    }
-    case 9: {
-      return {NumericType::float64};
-    }
-    case 10: {
-      return {NumericType::uint64};
-    }
+      return MakeErrorResult<ValueType>(-2, fmt::format("Invalid NumericTypeParameter value '{}'", value));
     }
 
-    return MakeErrorResult<ValueType>(-2, fmt::format("Unknown NumericTypeParameter value '{}'", value));
+    // Convert size_t to uint64
+    if(value == 10)
+    {
+      return {NumericType::uint64};
+    }
+
+    return {static_cast<NumericType>(value)};
   }
 };
 
@@ -301,47 +275,18 @@ struct ScalarTypeParameterConverter
 
     auto value = json.get<int32>();
 
-    switch(value)
+    if(value < 0 || value > 11)
     {
-    case 0: {
-      return {DataType::int8};
-    }
-    case 1: {
-      return {DataType::uint8};
-    }
-    case 2: {
-      return {DataType::int16};
-    }
-    case 3: {
-      return {DataType::uint16};
-    }
-    case 4: {
-      return {DataType::int32};
-    }
-    case 5: {
-      return {DataType::uint32};
-    }
-    case 6: {
-      return {DataType::int64};
-    }
-    case 7: {
-      return {DataType::uint64};
-    }
-    case 8: {
-      return {DataType::float32};
-    }
-    case 9: {
-      return {DataType::float64};
-    }
-    case 10: {
-      return {DataType::boolean};
-    }
-    case 11: {
-      return {DataType::uint64};
-    }
+      return MakeErrorResult<ValueType>(-2, fmt::format("Invalid ScalarTypeParameter value '{}'", value));
     }
 
-    return MakeErrorResult<ValueType>(-2, fmt::format("Unknown ScalarTypeParameter value '{}'", value));
+    // Convert size_t to uint64
+    if(value == 11)
+    {
+      return {DataType::uint64};
+    }
+
+    return {static_cast<DataType>(value)};
   }
 };
 
@@ -374,44 +319,18 @@ struct NumericTypeFilterParameterConverter
 
     auto value = json.get<int32>();
 
-    switch(value)
+    if(value < 0 || value > 11)
     {
-    case 0: {
-      return {NumericType::int8};
-    }
-    case 1: {
-      return {NumericType::uint8};
-    }
-    case 2: {
-      return {NumericType::int16};
-    }
-    case 3: {
-      return {NumericType::uint16};
-    }
-    case 4: {
-      return {NumericType::int32};
-    }
-    case 5: {
-      return {NumericType::uint32};
-    }
-    case 6: {
-      return {NumericType::int64};
-    }
-    case 7: {
-      return {NumericType::uint64};
-    }
-    case 8: {
-      return {NumericType::float32};
-    }
-    case 9: {
-      return {NumericType::float64};
-    }
-    case 10: {
-      return {NumericType::uint64};
-    }
+      return MakeErrorResult<ValueType>(-2, fmt::format("Invalid NumericTypeParameter value '{}'", value));
     }
 
-    return MakeErrorResult<ValueType>(-2, fmt::format("Unknown ScalarTypeParameter value '{}'", value));
+    // Convert size_t to uint64
+    if(value == 10)
+    {
+      return {NumericType::uint64};
+    }
+
+    return {static_cast<NumericType>(value)};
   }
 };
 
@@ -1823,12 +1742,7 @@ struct ReadASCIIWizardDataFilterParameterConverter
 
   static std::vector<char> ConvertToChars(const std::string& string)
   {
-    std::vector<char> chars(string.length());
-    for(usize i = 0; i < string.size(); i++)
-    {
-      chars[i] = string[i];
-    }
-    return chars;
+    std::vector<char> chars(string.begin(), string.end());
   }
 
   static Result<ValueType> convert(const nlohmann::json& json)
@@ -2127,67 +2041,6 @@ struct CalculatorFilterParameterConverter
   }
 };
 
-#if 0
-struct ReadH5EbsdFilterParameterConverter
-{
-  using ParameterType = H5EbsdReaderParameter;
-  using ValueType = ParameterType::ValueType;
-
-  static constexpr StringLiteral k_InputFileKey = "InputFile";
-  static constexpr StringLiteral k_SelectedArrayNamesKey = "SelectedArrayNames";
-  static constexpr StringLiteral k_ZStartIndexKey = "ZStartIndex";
-  static constexpr StringLiteral k_ZEndIndexKey = "ZEndIndex";
-  static constexpr StringLiteral k_RefFrameZDirKey = "RefFrameZDir";
-  static constexpr StringLiteral k_UseTransformationsKey = "UseTransformations";
-
-  static Result<ValueType> convert(const nlohmann::json& json)
-  {
-    if(!json[k_InputFileKey].is_string())
-    {
-      return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter json '{}' is not a string", json[k_InputFileKey].dump()));
-    }
-    if(!json[k_SelectedArrayNamesKey].is_array())
-    {
-      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an array", json[k_SelectedArrayNamesKey].dump()));
-    }
-    if(!json[k_ZStartIndexKey].is_number_integer())
-    {
-      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_ZStartIndexKey].dump()));
-    }
-    if(!json[k_ZEndIndexKey].is_number_integer())
-    {
-      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_ZEndIndexKey].dump()));
-    }
-    if(!json[k_RefFrameZDirKey].is_number_integer())
-    {
-      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_RefFrameZDirKey].dump()));
-    }
-    if(!json[k_UseTransformationsKey].is_number_integer())
-    {
-      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_UseTransformationsKey].dump()));
-    }
-
-    for(const auto& iter : json[k_SelectedArrayNamesKey])
-    {
-      if(!iter.is_string())
-      {
-        return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter array name json '{}' is not a string", iter.dump()));
-      }
-    }
-
-    ParameterType::ValueType value;
-    value.inputFilePath = json[k_InputFileKey].get<std::string>();
-    value.startSlice = json[k_ZStartIndexKey].get<int32>();
-    value.endSlice = json[k_ZEndIndexKey].get<int32>();
-    value.eulerRepresentation = json[k_RefFrameZDirKey].get<int32>();
-    value.useRecommendedTransform = static_cast<bool>(json[k_UseTransformationsKey].get<int32>());
-    value.hdf5DataPaths = json[k_SelectedArrayNamesKey].get<std::vector<std::string>>();
-
-    return {std::move(value)};
-  }
-};
-#endif
-
 struct DataContainerReaderFilterParameterConverter
 {
   using ParameterType = Dream3dImportParameter;
@@ -2224,26 +2077,27 @@ struct DataContainerReaderFilterParameterConverter
     {
       std::string dcName = dcIter[k_DataObjectNameKey].get<std::string>();
       DataPath dcPath({dcName});
-      dataPaths.push_back(dcPath);
 
       for(const auto& amIter : dcIter[k_AttributeMatrixProxyKey])
       {
         std::string amName = amIter[k_DataObjectNameKey].get<std::string>();
         DataPath amPath = dcPath.createChildPath(amName);
-        dataPaths.push_back(amPath);
 
         for(const auto& daIter : amIter[k_DataArrayProxyKey])
         {
           std::string daName = daIter[k_DataObjectNameKey].get<std::string>();
-          DataPath daPath = amPath.createChildPath(daName);
-          dataPaths.push_back(daPath);
+          dataPaths.emplace_back(amPath.createChildPath(daName));
         }
+
+        dataPaths.push_back(std::move(amPath));
       }
+
+      dataPaths.push_back(std::move(dcPath));
     }
 
     ParameterType::ValueType value;
     value.FilePath = std::filesystem::path(inputFilePath);
-    value.DataPaths = dataPaths;
+    value.DataPaths = std::move(dataPaths);
 
     return {std::move(value)};
   }

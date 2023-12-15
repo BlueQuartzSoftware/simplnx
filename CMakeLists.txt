@@ -695,7 +695,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/SIMPLConversion.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 
@@ -977,7 +976,7 @@ if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Print Summary Information
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Summary.cmake)

@@ -12,8 +12,6 @@
 
 #include "complex/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
-
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -140,8 +138,6 @@ Result<Arguments> FindBoundaryCellsFilter::FromSIMPLJson(const nlohmann::json& j
   Arguments args = FindBoundaryCellsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
-
-  // GeometryPath missing
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_IgnoreFeatureZeroKey, k_IgnoreFeatureZero_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_IncludeVolumeBoundaryKey, k_IncludeVolumeBoundary_Key));

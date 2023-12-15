@@ -39,7 +39,7 @@ std::string GenerateSIMPLPipelineStringIndex(int32 index, int32 maxIndex)
     while(max > 0)
     {
       mag++;
-      max = max / 10;
+      max /= 10;
     }
     std::string formatString = fmt::format("{{:0{}}}", mag);
     numStr = fmt::format(fmt::runtime(formatString), index);

@@ -578,12 +578,12 @@ Result<Arguments> ReadBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DensityArrayNameKey, k_DensityArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_LengthUnitKey, k_LengthUnit_Key));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_VolumeDescriptionKey, "@COMPLEX_PARAMETER_KEY@"));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_DataFileInfoKey, "@COMPLEX_PARAMETER_KEY@"));
+  // Volume description parameter is not applicable in NX
+  // Data file info parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ImportSubvolumeKey, k_ImportSubvolume_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_StartVoxelCoordKey, k_StartVoxelCoord_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_EndVoxelCoordKey, k_EndVoxelCoord_Key));
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::PreflightUpdatedValueFilterParameterConverter>(args, json, SIMPL::k_ImportedVolumeDescriptionKey, "@COMPLEX_PARAMETER_KEY@"));
+  // Imported Volume Description parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));
 

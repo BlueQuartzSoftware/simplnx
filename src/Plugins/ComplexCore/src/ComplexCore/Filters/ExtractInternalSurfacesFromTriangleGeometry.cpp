@@ -413,11 +413,8 @@ Result<Arguments> ExtractInternalSurfacesFromTriangleGeometry::FromSIMPLJson(con
 
   std::vector<Result<>> results;
 
-  // Check k_InternalTrianglesNameKey
-
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_TriangleGeom_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InternalTrianglesNameKey, "@COMPLEX_PARAMETER_KEY@"));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

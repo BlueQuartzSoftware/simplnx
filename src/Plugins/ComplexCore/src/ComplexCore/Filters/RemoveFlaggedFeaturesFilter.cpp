@@ -16,8 +16,6 @@
 
 #include "complex/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
-
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 

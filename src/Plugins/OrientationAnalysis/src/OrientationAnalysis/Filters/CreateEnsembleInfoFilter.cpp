@@ -137,7 +137,7 @@ Result<Arguments> CreateEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, "@COMPLEX_PARAMETER_KEY@"));
+  // Data Container Name parameter is not applicable in NX
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::EnsembleInfoFilterParameterConverter>(args, json, SIMPL::k_EnsembleKey, k_Ensemble_Key));
   results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, SIMPL::k_CellEnsembleAttributeMatrixNameKey,

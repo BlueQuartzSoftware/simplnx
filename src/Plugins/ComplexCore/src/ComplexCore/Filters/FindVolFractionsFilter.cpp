@@ -141,7 +141,7 @@ Result<Arguments> FindVolFractionsFilter::FromSIMPLJson(const nlohmann::json& js
 
   std::vector<Result<>> results;
 
-  // k_CellEnsembleAttributeMatrixPath_Key missing
+  // Cell Ensemble attribute matrix parameter is not applicable in NX
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(

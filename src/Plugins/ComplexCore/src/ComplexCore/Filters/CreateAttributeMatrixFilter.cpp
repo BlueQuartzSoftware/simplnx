@@ -99,7 +99,7 @@ Result<Arguments> CreateAttributeMatrixFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixTypeKey, k_DataObjectPath));
+  // Attribute matrix type parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_TupleDimensionsKey, k_TupleDims_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeMatrixKey, k_DataObjectPath));
 
