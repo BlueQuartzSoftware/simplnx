@@ -7,32 +7,6 @@
 
 using namespace complex;
 
-namespace
-{
-int32_t writeHeader(FILE* f, const std::string& header, int32_t triCount)
-{
-  if(nullptr == f)
-  {
-    return -1;
-  }
-
-  char h[80];
-  size_t headLength = 80;
-  if(header.length() < 80)
-  {
-    headLength = static_cast<size_t>(header.length());
-  }
-
-  std::string c_str = header;
-  ::memset(h, 0, 80);
-  ::memcpy(h, c_str.data(), headLength);
-  // Return the number of bytes written - which should be 80
-  fwrite(h, 1, 80, f);
-  fwrite(&triCount, 1, 4, f);
-  return 0;
-}
-} // namespace
-
 // -----------------------------------------------------------------------------
 WriteStlFile::WriteStlFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteStlFileInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -142,7 +116,19 @@ Result<> WriteStlFile::operator()()
       return {MakeWarningVoidResult(-27874, fmt::format("Error Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}.", filename, header.length()))};
     }
 
-    writeHeader(f, header, 0);
+    char h[80];
+    size_t headLength = 80;
+    if(header.length() < 80)
+    {
+      headLength = static_cast<size_t>(header.length());
+    }
+
+    std::string c_str = header;
+    ::memset(h, 0, 80);
+    ::memcpy(h, c_str.data(), headLength);
+    // Return the number of bytes written - which should be 80
+    fwrite(h, 1, 80, f);
+    fwrite(&triCount, 1, 4, f);
     triCount = 0; // Reset this to Zero. Increment for every triangle written
 
     // Loop over all the triangles for this spin

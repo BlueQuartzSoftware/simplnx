@@ -7,8 +7,8 @@
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/SIMPLConversion.hpp"
 #include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "complex/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
