@@ -133,6 +133,7 @@
 #include "ComplexCore/Filters/KMeansFilter.hpp"
 #include "ComplexCore/Filters/SilhouetteFilter.hpp"
 #include "ComplexCore/Filters/RemoveFlaggedFeaturesFilter.hpp"
+#include "ComplexCore/Filters/RemoveFlaggedTrianglesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
