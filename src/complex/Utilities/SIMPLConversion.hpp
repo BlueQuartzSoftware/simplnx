@@ -1742,7 +1742,7 @@ struct ReadASCIIWizardDataFilterParameterConverter
 
   static std::vector<char> ConvertToChars(const std::string& string)
   {
-    std::vector<char> chars(string.begin(), string.end());
+    return std::vector<char>(string.begin(), string.end());
   }
 
   static Result<ValueType> convert(const nlohmann::json& json)
