@@ -22,6 +22,7 @@ constexpr StringLiteral k_UnknownFilterValue = "UnknownFilter";
 
 constexpr StringLiteral k_SIMPLFilterUuidKey = "Filter_Uuid";
 constexpr StringLiteral k_SIMPLFilterHumanNameKey = "Filter_Human_Label";
+constexpr StringLiteral k_SIMPLFilterClassNameKey = "Filter_Name";
 
 nlohmann::json CreateFilterJson(std::string_view uuid, std::string_view name, nlohmann::json argsArray, std::string_view comments)
 {
@@ -662,7 +663,11 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
 {
   if(!json.contains(k_SIMPLFilterUuidKey))
   {
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-1, fmt::format("SIMPL filter does not contain key '{}'", k_SIMPLFilterUuidKey.view()));
+    auto filterClassName = json.value(k_SIMPLFilterClassNameKey.view(), "NO NAME");
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(
+        -1, fmt::format("The pipeline file contained an entry for a SIMPL filter with name '{}', but the json that describes that filter did not include "
+                        "an entry with a key of '{}'.\nPlease open the pipeline file in DREAM.3D version 6.5 or 6.6 and re-save the pipeline and then try to reimport the pipeline file.",
+                        filterClassName, k_SIMPLFilterUuidKey.view()));
   }
 
   auto uuidString = json[k_SIMPLFilterUuidKey].get<std::string>();
