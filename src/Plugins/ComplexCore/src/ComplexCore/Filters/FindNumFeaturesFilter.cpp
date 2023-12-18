@@ -6,6 +6,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
@@ -108,5 +111,30 @@ Result<> FindNumFeaturesFilter::executeImpl(DataStructure& dataStructure, const 
     numFeaturesArrayRef[featurePhasesArrayRef[index]]++;
   }
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteral k_NumFeaturesArrayPathKey = "NumFeaturesArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindNumFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindNumFeaturesFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_EnsembleAttributeMatrixPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_NumFeaturesArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

@@ -10,6 +10,9 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
@@ -163,5 +166,28 @@ Result<> SplitAttributeArrayFilter::executeImpl(DataStructure& dataStructure, co
   }
 
   return SplitAttributeArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputArrayPathKey = "InputArrayPath";
+constexpr StringLiteral k_SplitArraysSuffixKey = "SplitArraysSuffix";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> SplitAttributeArrayFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = SplitAttributeArrayFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputArrayPathKey, k_MultiCompArray_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_SplitArraysSuffixKey, k_Postfix_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

@@ -8,6 +8,9 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
@@ -169,5 +172,29 @@ Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure,
   dataAlg.execute(CalculateAreasImpl(triangleGeom, faceAreas, shouldCancel));
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SurfaceMeshTriangleAreasArrayPathKey = "SurfaceMeshTriangleAreasArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CalculateTriangleAreasFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CalculateTriangleAreasFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_TriangleGeometryDataPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_CalculatedAreasDataPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

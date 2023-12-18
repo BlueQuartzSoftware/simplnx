@@ -7,6 +7,9 @@
 #include "complex/Filter/Actions/CreateNeighborListAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 
 using namespace complex;
@@ -136,5 +139,41 @@ Result<> FindSlipTransmissionMetricsFilter::executeImpl(DataStructure& dataStruc
   inputValues.mPrimeListArrayName = inputValues.NeighborListArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_mPrimeListArrayName_Key));
 
   return FindSlipTransmissionMetrics(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_NeighborListArrayPathKey = "NeighborListArrayPath";
+constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
+constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteral k_F1ListArrayNameKey = "F1ListArrayName";
+constexpr StringLiteral k_F1sptListArrayNameKey = "F1sptListArrayName";
+constexpr StringLiteral k_F7ListArrayNameKey = "F7ListArrayName";
+constexpr StringLiteral k_mPrimeListArrayNameKey = "mPrimeListArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindSlipTransmissionMetricsFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindSlipTransmissionMetricsFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NeighborListArrayPathKey, k_NeighborListArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_F1ListArrayNameKey, k_F1ListArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_F1sptListArrayNameKey, k_F1sptListArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_F7ListArrayNameKey, k_F7ListArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_mPrimeListArrayNameKey, k_mPrimeListArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

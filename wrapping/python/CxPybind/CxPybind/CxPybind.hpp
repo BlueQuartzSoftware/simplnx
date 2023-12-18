@@ -649,7 +649,7 @@ public:
     return plugin;
   }
 
-  std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const override
+  SIMPLMapType getSimplToComplexMap() const override
   {
     return {};
   }

@@ -12,6 +12,9 @@
 #include <itkMaskImageFilter.h>
 
 #include <numeric>
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <stdexcept>
 
 using namespace complex;
@@ -209,3 +212,31 @@ Result<> ITKMaskImage::executeImpl(DataStructure& dataStructure, const Arguments
   return ITK::Execute<cxITKMaskImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_OutsideValueKey = "OutsideValue";
+constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteral k_MaskCellArrayPathKey = "MaskCellArrayPath";
+constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ITKMaskImage::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ITKMaskImage().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutsideValueKey, k_OutsideValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_SelectedImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_SelectedImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskCellArrayPathKey, k_MaskImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageDataPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}

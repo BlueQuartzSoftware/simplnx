@@ -74,7 +74,7 @@ OrientationAnalysisPlugin::OrientationAnalysisPlugin()
 
 OrientationAnalysisPlugin::~OrientationAnalysisPlugin() = default;
 
-std::map<complex::Uuid, complex::Uuid> OrientationAnalysisPlugin::getSimplToComplexMap() const
+AbstractPlugin::SIMPLMapType OrientationAnalysisPlugin::getSimplToComplexMap() const
 {
   return complex::k_SIMPL_to_OrientationAnalysis;
 }

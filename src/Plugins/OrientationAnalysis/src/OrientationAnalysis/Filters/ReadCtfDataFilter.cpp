@@ -17,6 +17,8 @@
 #include "EbsdLib/IO/HKL/CtfPhase.h"
 #include "EbsdLib/IO/HKL/CtfReader.h"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -217,5 +219,37 @@ Result<> ReadCtfDataFilter::executeImpl(DataStructure& dataStructure, const Argu
 
   ReadCtfData readCtfData(dataStructure, messageHandler, shouldCancel, &inputValues);
   return readCtfData();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputFileKey = "InputFile";
+constexpr StringLiteral k_DegreesToRadiansKey = "DegreesToRadians";
+constexpr StringLiteral k_EdaxHexagonalAlignmentKey = "EdaxHexagonalAlignment";
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ReadCtfDataFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ReadCtfDataFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DegreesToRadiansKey, k_DegreesToRadians_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_EdaxHexagonalAlignmentKey, k_EdaxHexagonalAlignment_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataContainerName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

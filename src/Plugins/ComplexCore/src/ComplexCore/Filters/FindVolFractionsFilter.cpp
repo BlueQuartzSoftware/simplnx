@@ -6,6 +6,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
@@ -121,5 +124,32 @@ Result<> FindVolFractionsFilter::executeImpl(DataStructure& dataStructure, const
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteral k_VolFractionsArrayPathKey = "VolFractionsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindVolFractionsFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindVolFractionsFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  // Cell Ensemble attribute matrix parameter is not applicable in NX
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_CellEnsembleAttributeMatrixPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_VolFractionsArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

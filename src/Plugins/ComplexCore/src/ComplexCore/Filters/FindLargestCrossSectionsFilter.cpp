@@ -10,6 +10,9 @@
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -120,3 +123,32 @@ Result<> FindLargestCrossSectionsFilter::executeImpl(DataStructure& dataStructur
   return FindLargestCrossSections(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_PlaneKey = "Plane";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_LargestCrossSectionsArrayPathKey = "LargestCrossSectionsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindLargestCrossSectionsFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindLargestCrossSectionsFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_PlaneKey, k_Plane_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_LargestCrossSectionsArrayPathKey,
+                                                                                                                         k_CellFeatureAttributeMatrixPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_LargestCrossSectionsArrayPathKey, k_LargestCrossSectionsArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}

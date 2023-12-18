@@ -6,6 +6,8 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <stdexcept>
 
 using namespace complex;
@@ -83,5 +85,45 @@ IFilter::PreflightResult RenameDataObject::preflightImpl(const DataStructure& da
 Result<> RenameDataObject::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SelectedAttributeMatrixPathKey = "SelectedAttributeMatrixPath";
+constexpr StringLiteral k_NewAttributeMatrixKey = "NewAttributeMatrix";
+constexpr StringLiteral k_SelectedDataContainerNameKey = "SelectedDataContainerName";
+constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
+constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteral k_NewArrayNameKey = "NewArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RenameDataObject::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RenameDataObject().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  if(json.contains(SIMPL::k_SelectedArrayPathKey.str()))
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_DataObject_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewArrayNameKey, k_NewName_Key));
+  }
+  else if(json.contains(SIMPL::k_SelectedAttributeMatrixPathKey))
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedAttributeMatrixPathKey, k_DataObject_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewAttributeMatrixKey, k_NewName_Key));
+  }
+  else
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataContainerNameKey, k_DataObject_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerNameFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_NewName_Key));
+  }
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

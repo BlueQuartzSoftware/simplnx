@@ -40,6 +40,9 @@
 #include <array>
 #include <cmath>
 #include <limits>
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <stdexcept>
 
 using namespace complex;
@@ -562,5 +565,34 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_RotationRepresentationChoiceKey = "RotationRepresentationChoice";
+constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
+constexpr StringLiteral k_RotationAxisKey = "RotationAxis";
+constexpr StringLiteral k_RotationTableKey = "RotationTable";
+constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RotateSampleRefFrameFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RotateSampleRefFrameFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_RotationRepresentationChoiceKey, k_RotationRepresentation_Key));
+  results.push_back(
+      SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, SIMPL::k_RotationAxisKey, SIMPL::k_RotationAngleKey, k_RotationAxisAngle_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_RotationTableKey, k_RotationMatrix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_SelectedImageGeometry_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

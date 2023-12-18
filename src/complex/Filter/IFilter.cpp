@@ -285,4 +285,16 @@ std::vector<std::string> IFilter::defaultTags() const
 {
   return {};
 }
+
+Arguments IFilter::getDefaultArguments() const
+{
+  Arguments args;
+
+  for(const auto& [key, param] : parameters())
+  {
+    args.insertOrAssign(key, param->defaultValue());
+  }
+
+  return args;
+}
 } // namespace complex

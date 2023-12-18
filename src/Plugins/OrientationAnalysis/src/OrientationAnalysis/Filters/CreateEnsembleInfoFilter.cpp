@@ -8,6 +8,9 @@
 #include "complex/Filter/Actions/CreateStringArrayAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/EnsembleInfoParameter.hpp"
 
 using namespace complex;
@@ -113,5 +116,39 @@ Result<> CreateEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.PhaseNamesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseNamesArrayName_Key);
 
   return CreateEnsembleInfo(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteral k_EnsembleKey = "Ensemble";
+constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteral k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
+constexpr StringLiteral k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
+constexpr StringLiteral k_PhaseNamesArrayNameKey = "PhaseNamesArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CreateEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CreateEnsembleInfoFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  // Data Container Name parameter is not applicable in NX
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::EnsembleInfoFilterParameterConverter>(args, json, SIMPL::k_EnsembleKey, k_Ensemble_Key));
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, SIMPL::k_CellEnsembleAttributeMatrixNameKey,
+                                                                                                                k_CellEnsembleAttributeMatrixName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PhaseNamesArrayNameKey, k_PhaseNamesArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

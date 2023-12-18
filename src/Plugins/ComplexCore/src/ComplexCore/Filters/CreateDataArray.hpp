@@ -30,6 +30,13 @@ public:
   static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
 
   /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief Returns the filter's name.
    * @return std::string
    */

@@ -12,6 +12,9 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
@@ -203,5 +206,44 @@ Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStruc
   inputs.pCreatedDataArrayPaths = createdDataPaths;
 
   return PointSampleTriangleGeometry(dataStructure, &inputs, shouldCancel, messageHandler)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SamplesNumberTypeKey = "SamplesNumberType";
+constexpr StringLiteral k_NumberOfSamplesKey = "NumberOfSamples";
+constexpr StringLiteral k_UseMaskKey = "UseMask";
+constexpr StringLiteral k_TriangleGeometryKey = "TriangleGeometry";
+constexpr StringLiteral k_ParentGeometryKey = "ParentGeometry";
+constexpr StringLiteral k_TriangleAreasArrayPathKey = "TriangleAreasArrayPath";
+constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteral k_VertexGeometryKey = "VertexGeometry";
+constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> PointSampleTriangleGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = PointSampleTriangleGeometryFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  // Samples number type parameter is not applicable in NX
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumberOfSamplesKey, k_NumberOfSamples_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleGeometryKey, k_TriangleGeometry_Key));
+  // ParentGeometry parameter is not applicable in NX
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleAreasArrayPathKey, k_TriangleAreasArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_VertexGeometryKey, k_VertexGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexDataGroupPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

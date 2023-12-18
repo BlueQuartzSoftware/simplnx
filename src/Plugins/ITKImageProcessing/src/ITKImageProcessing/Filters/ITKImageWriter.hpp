@@ -30,6 +30,13 @@ public:
   static inline constexpr StringLiteral k_ImageArrayPath_Key = "image_array_path";
   static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
 
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   static inline constexpr usize k_XYPlane = 0;
   static inline constexpr usize k_XZPlane = 1;
   static inline constexpr usize k_YZPlane = 2;

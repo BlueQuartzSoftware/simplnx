@@ -20,7 +20,7 @@ TestOnePlugin::TestOnePlugin()
 
 TestOnePlugin::~TestOnePlugin() = default;
 
-std::map<complex::Uuid, complex::Uuid> TestOnePlugin::getSimplToComplexMap() const
+AbstractPlugin::SIMPLMapType TestOnePlugin::getSimplToComplexMap() const
 {
   return {};
 }

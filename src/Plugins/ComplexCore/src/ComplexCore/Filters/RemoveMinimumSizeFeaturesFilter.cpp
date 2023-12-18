@@ -12,6 +12,9 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 
 #include <algorithm>
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <vector>
 
 namespace complex
@@ -466,5 +469,38 @@ Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructu
   complex::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArrayRef, currentFeatureCount);
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_MinAllowedFeatureSizeKey = "MinAllowedFeatureSize";
+constexpr StringLiteral k_ApplyToSinglePhaseKey = "ApplyToSinglePhase";
+constexpr StringLiteral k_PhaseNumberKey = "PhaseNumber";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteral k_NumCellsArrayPathKey = "NumCellsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RemoveMinimumSizeFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RemoveMinimumSizeFeaturesFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int64>>(args, json, SIMPL::k_MinAllowedFeatureSizeKey, k_MinAllowedFeaturesSize_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ApplyToSinglePhaseKey, k_ApplySinglePhase_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int64>>(args, json, SIMPL::k_PhaseNumberKey, k_PhaseNumber_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NumCellsArrayPathKey, k_NumCellsPath_Key));
+  // Ignored Array Paths parameter is not applicable in NX
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

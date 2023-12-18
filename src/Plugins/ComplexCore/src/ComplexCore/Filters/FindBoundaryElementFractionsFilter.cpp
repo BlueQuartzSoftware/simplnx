@@ -6,6 +6,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
@@ -121,5 +124,32 @@ Result<> FindBoundaryElementFractionsFilter::executeImpl(DataStructure& dataStru
     boundaryCellFractions[i] = surfVoxCounts[i] / voxCounts[i];
   }
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_BoundaryCellsArrayPathKey = "BoundaryCellsArrayPath";
+constexpr StringLiteral k_BoundaryCellFractionsArrayPathKey = "BoundaryCellFractionsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindBoundaryElementFractionsFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindBoundaryElementFractionsFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellsArrayPathKey, k_BoundaryCellsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellsArrayPathKey, k_FeatureDataAMPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellFractionsArrayPathKey, k_BoundaryCellFractionsArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

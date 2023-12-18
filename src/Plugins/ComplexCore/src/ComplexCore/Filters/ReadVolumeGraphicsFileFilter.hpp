@@ -34,6 +34,13 @@ public:
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
 
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   struct HeaderMetadata
   {
     SizeVec3 Dimensions;

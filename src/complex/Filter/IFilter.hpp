@@ -188,6 +188,12 @@ public:
    */
   Result<Arguments> fromJson(const nlohmann::json& json) const;
 
+  /**
+   * @brief Returns the set of default arguments for this filter.k
+   * @return Arguments
+   */
+  Arguments getDefaultArguments() const;
+
 protected:
   IFilter() = default;
 

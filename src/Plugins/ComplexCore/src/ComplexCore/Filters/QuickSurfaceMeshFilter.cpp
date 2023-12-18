@@ -13,6 +13,9 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
 using namespace complex;
@@ -199,5 +202,44 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.CreatedDataArrayPaths = createdDataPaths;
 
   return complex::QuickSurfaceMesh(dataStructure, &inputValues, shouldCancel, messageHandler)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FixProblemVoxelsKey = "FixProblemVoxels";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteral k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
+constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteral k_NodeTypesArrayNameKey = "NodeTypesArrayName";
+constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
+constexpr StringLiteral k_FaceLabelsArrayNameKey = "FaceLabelsArrayName";
+constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> QuickSurfaceMeshFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = QuickSurfaceMeshFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_FixProblemVoxelsKey, k_FixProblemVoxels_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_GridGeometryDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceDataContainerNameKey, k_TriangleGeometryName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexDataGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NodeTypesArrayNameKey, k_NodeTypesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceDataGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceLabelsArrayNameKey, k_FaceLabelsArrayName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureAttributeMatrixNameKey, k_FaceFeatureAttributeMatrixName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

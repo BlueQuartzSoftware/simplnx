@@ -11,6 +11,8 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -142,5 +144,31 @@ Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arg
   // inputValues.FaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
 
   return WriteStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_OutputStlDirectoryKey = "OutputStlDirectory";
+constexpr StringLiteral k_OutputStlPrefixKey = "OutputStlPrefix";
+constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> WriteStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = WriteStlFileFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputStlDirectoryKey, k_OutputStlDirectory_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputStlPrefixKey, k_OutputStlPrefix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_FeatureIdsPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

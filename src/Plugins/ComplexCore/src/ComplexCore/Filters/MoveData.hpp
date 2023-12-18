@@ -22,8 +22,14 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_Data_Key = "data";
-  static inline constexpr StringLiteral k_OriginalParent_Key = "original_parent";
   static inline constexpr StringLiteral k_NewParent_Key = "new_parent";
+
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
   /**
    * @brief

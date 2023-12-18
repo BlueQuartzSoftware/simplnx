@@ -8,6 +8,9 @@
 #include "complex/Parameters/VectorParameter.hpp"
 
 #include <sstream>
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <string>
 
 using namespace std::string_literals;
@@ -141,3 +144,31 @@ Result<> CreateImageGeometry::executeImpl(DataStructure& data, const Arguments& 
   return {};
 }
 } // namespace complex
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SelectedDataContainerKey = "SelectedDataContainer";
+constexpr StringLiteral k_DimensionsKey = "Dimensions";
+constexpr StringLiteral k_OriginKey = "Origin";
+constexpr StringLiteral k_SpacingKey = "Spacing";
+constexpr StringLiteral k_BoxDimensionsKey = "BoxDimensions";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CreateImageGeometry::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CreateImageGeometry().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataContainerKey, k_GeometryDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64Vec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}

@@ -7,6 +7,9 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/VectorParameter.hpp"
 
 using namespace complex;
@@ -196,5 +199,51 @@ Result<> FindSchmidsFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.LambdasArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_LambdasArrayName_Key));
 
   return FindSchmids(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_LoadingDirectionKey = "LoadingDirection";
+constexpr StringLiteral k_StoreAngleComponentsKey = "StoreAngleComponents";
+constexpr StringLiteral k_OverrideSystemKey = "OverrideSystem";
+constexpr StringLiteral k_SlipPlaneKey = "SlipPlane";
+constexpr StringLiteral k_SlipDirectionKey = "SlipDirection";
+constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
+constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteral k_SchmidsArrayNameKey = "SchmidsArrayName";
+constexpr StringLiteral k_SlipSystemsArrayNameKey = "SlipSystemsArrayName";
+constexpr StringLiteral k_PolesArrayNameKey = "PolesArrayName";
+constexpr StringLiteral k_PhisArrayNameKey = "PhisArrayName";
+constexpr StringLiteral k_LambdasArrayNameKey = "LambdasArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindSchmidsFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindSchmidsFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_LoadingDirectionKey, k_LoadingDirection_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_StoreAngleComponentsKey, k_StoreAngleComponents_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_OverrideSystemKey, k_OverrideSystem_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SlipPlaneKey, k_SlipPlane_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SlipDirectionKey, k_SlipDirection_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SchmidsArrayNameKey, k_SchmidsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SlipSystemsArrayNameKey, k_SlipSystemsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PolesArrayNameKey, k_PolesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PhisArrayNameKey, k_PhisArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LambdasArrayNameKey, k_LambdasArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

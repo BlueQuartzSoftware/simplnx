@@ -23,6 +23,9 @@
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
@@ -561,4 +564,50 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
   // The deferred actions will take care of removing the original and renaming the output if
   // the user decided to do the crop "in place"
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_XMinKey = "XMin";
+constexpr StringLiteral k_YMinKey = "YMin";
+constexpr StringLiteral k_ZMinKey = "ZMin";
+constexpr StringLiteral k_XMaxKey = "XMax";
+constexpr StringLiteral k_YMaxKey = "YMax";
+constexpr StringLiteral k_ZMaxKey = "ZMax";
+constexpr StringLiteral k_OldBoxDimensionsKey = "OldBoxDimensions";
+constexpr StringLiteral k_NewBoxDimensionsKey = "NewBoxDimensions";
+constexpr StringLiteral k_UpdateOriginKey = "UpdateOrigin";
+constexpr StringLiteral k_SaveAsNewDataContainerKey = "SaveAsNewDataContainer";
+constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
+constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+constexpr StringLiteral k_RenumberFeaturesKey = "RenumberFeatures";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CropImageGeometry::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CropImageGeometry().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XMinKey, SIMPL::k_YMinKey, SIMPL::k_ZMinKey, k_MinVoxel_Key));
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XMaxKey, SIMPL::k_YMaxKey, SIMPL::k_ZMaxKey, k_MaxVoxel_Key));
+  // k_UpdateOrigin_Key currently disabled in NX.
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UpdateOriginKey, k_UpdateOrigin_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InvertedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_CreatedImageGeometry_Key));
+  // Cell attribute matrix parameter is not applicable in NX
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }

@@ -58,7 +58,7 @@ void ITKImageProcessingPlugin::RegisterITKImageIO()
   itk::MRCImageIOFactory::RegisterOneFactory();
 }
 
-std::map<complex::Uuid, complex::Uuid> ITKImageProcessingPlugin::getSimplToComplexMap() const
+AbstractPlugin::SIMPLMapType ITKImageProcessingPlugin::getSimplToComplexMap() const
 {
   return complex::k_SIMPL_to_ITKImageProcessing;
 }

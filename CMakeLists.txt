@@ -499,6 +499,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/KUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
@@ -975,7 +976,7 @@ if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Print Summary Information
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Summary.cmake)

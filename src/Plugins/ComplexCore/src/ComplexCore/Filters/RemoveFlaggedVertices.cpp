@@ -16,6 +16,8 @@
 
 #include <fmt/format.h>
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <string>
 
 using namespace complex;
@@ -265,5 +267,30 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_VertexGeometryKey = "VertexGeometry";
+constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteral k_ReducedVertexGeometryKey = "ReducedVertexGeometry";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RemoveFlaggedVertices::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RemoveFlaggedVertices().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_VertexGeometryKey, k_VertexGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_ReducedVertexGeometryKey, k_ReducedVertexGeometryPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

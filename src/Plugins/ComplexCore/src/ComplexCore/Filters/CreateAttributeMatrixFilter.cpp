@@ -5,6 +5,7 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/Utilities/SIMPLConversion.hpp"
 
 namespace complex
 {
@@ -80,5 +81,30 @@ Result<> CreateAttributeMatrixFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel) const
 {
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_AttributeMatrixTypeKey = "AttributeMatrixType";
+constexpr StringLiteral k_TupleDimensionsKey = "TupleDimensions";
+constexpr StringLiteral k_CreatedAttributeMatrixKey = "CreatedAttributeMatrix";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CreateAttributeMatrixFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args;
+
+  std::vector<Result<>> results;
+
+  // Attribute matrix type parameter is not applicable in NX
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_TupleDimensionsKey, k_TupleDims_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeMatrixKey, k_DataObjectPath));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

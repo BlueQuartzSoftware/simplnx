@@ -11,6 +11,9 @@
 #include "complex/Utilities/OStreamUtilities.hpp"
 
 #include <filesystem>
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -147,5 +150,35 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
   OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FeatureDataFileKey = "FeatureDataFile";
+constexpr StringLiteral k_WriteNeighborListDataKey = "WriteNeighborListData";
+constexpr StringLiteral k_WriteNumFeaturesLineKey = "WriteNumFeaturesLine";
+constexpr StringLiteral k_DelimiterChoiceIntKey = "DelimiterChoiceInt";
+constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> WriteFeatureDataCSVFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = WriteFeatureDataCSVFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_FeatureDataFileKey, k_FeatureDataFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteNeighborListDataKey, k_WriteNeighborListData_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteNumFeaturesLineKey, k_WriteNumFeaturesLine_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DelimiterChoiceIntKey, k_DelimiterChoiceInt_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey,
+                                                                                                                         k_CellFeatureAttributeMatrixPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

@@ -12,6 +12,8 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -180,5 +182,36 @@ Result<> ReadRawBinaryFilter::executeImpl(DataStructure& dataStructure, const Ar
 
   // Let the Algorithm instance do the work
   return ReadRawBinary(dataStructure, inputValues, shouldCancel, messageHandler)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputFileKey = "InputFile";
+constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteral k_EndianKey = "Endian";
+constexpr StringLiteral k_SkipHeaderBytesKey = "SkipHeaderBytes";
+constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ReadRawBinaryFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumberOfComponents_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_EndianKey, k_Endian_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, SIMPL::k_SkipHeaderBytesKey, k_SkipHeaderBytes_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeArrayPathKey, k_CreatedAttributeArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

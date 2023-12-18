@@ -3,6 +3,9 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
@@ -119,5 +122,26 @@ Result<> ReverseTriangleWindingFilter::executeImpl(DataStructure& dataStructure,
   dataAlg.execute(ReverseWindingImpl(triangleGeom.getFacesRef()));
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ReverseTriangleWindingFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ReverseTriangleWindingFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceDataContainerNameKey, k_TriGeomPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

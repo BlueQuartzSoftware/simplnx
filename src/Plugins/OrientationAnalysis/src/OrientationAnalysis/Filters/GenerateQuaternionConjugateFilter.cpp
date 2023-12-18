@@ -8,6 +8,9 @@
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
@@ -117,5 +120,30 @@ Result<> GenerateQuaternionConjugateFilter::executeImpl(DataStructure& dataStruc
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return GenerateQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_QuaternionDataArrayPathKey = "QuaternionDataArrayPath";
+constexpr StringLiteral k_OutputDataArrayPathKey = "OutputDataArrayPath";
+constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> GenerateQuaternionConjugateFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = GenerateQuaternionConjugateFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_QuaternionDataArrayPathKey, k_CellQuatsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_OutputDataArrayPathKey, k_OutputDataArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

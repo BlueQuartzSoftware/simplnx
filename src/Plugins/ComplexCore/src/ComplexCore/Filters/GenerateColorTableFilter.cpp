@@ -9,6 +9,9 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/GenerateColorTableParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
@@ -155,5 +158,32 @@ Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.InvalidColor = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);
 
   return GenerateColorTable(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SelectedPresetNameKey = "SelectedPresetName";
+constexpr StringLiteral k_SelectedPresetControlPointsKey = "SelectedPresetControlPoints";
+constexpr StringLiteral k_SelectedDataArrayPathKey = "SelectedDataArrayPath";
+constexpr StringLiteral k_RgbArrayNameKey = "RgbArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> GenerateColorTableFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = GenerateColorTableFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::GenerateColorTableFilterParameterConverter>(args, json, SIMPL::k_SelectedPresetNameKey,
+                                                                                                                     SIMPL::k_SelectedPresetControlPointsKey, k_SelectedPreset_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathKey, k_SelectedDataArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_RgbArrayNameKey, k_RgbArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
