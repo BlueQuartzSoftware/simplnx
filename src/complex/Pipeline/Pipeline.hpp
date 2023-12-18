@@ -32,6 +32,8 @@ public:
   using iterator = collection_type::iterator;
   using const_iterator = collection_type::const_iterator;
 
+  static constexpr StringLiteral k_Extension = ".d3dpipeline";
+
   /**
    * @brief Constructs a Pipeline from json.
    * @param json
@@ -61,6 +63,36 @@ public:
    * @return Result<Pipeline>
    */
   static Result<Pipeline> FromFile(const std::filesystem::path& path, FilterList* filterList);
+
+  /**
+   * @brief Attempts to read a SIMPL json pipeline and convert to a complex Pipeline.
+   * @param json
+   * @param filterList
+   * @return
+   */
+  static Result<Pipeline> FromSIMPLJson(const nlohmann::json& json, FilterList* filterList);
+
+  /**
+   * @brief Attempts to read a SIMPL json pipeline and convert to a complex Pipeline.
+   * @param json
+   * @return
+   */
+  static Result<Pipeline> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
+   * @brief Constructs a Pipeline from a SIMPL JSON file with the given FilterList.
+   * @param path
+   * @param filterList
+   * @return Result<Pipeline>
+   */
+  static Result<Pipeline> FromSIMPLFile(const std::filesystem::path& path, FilterList* filterList);
+
+  /**
+   * @brief Constructs a Pipeline from a SIMPL JSON file.
+   * @param path
+   * @return Result<Pipeline>
+   */
+  static Result<Pipeline> FromSIMPLFile(const std::filesystem::path& path);
 
   /**
    * @brief Constructs a pipeline with the specified name. If no name is

@@ -6,6 +6,9 @@
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 namespace
@@ -97,5 +100,30 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
 
   auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
   return results;
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_OutputFileKey = "OutputFile";
+constexpr StringLiteral k_WriteXdmfFileKey = "WriteXdmfFile";
+constexpr StringLiteral k_WriteTimeSeriesKey = "WriteTimeSeries";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> WriteDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = WriteDREAM3DFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputFileKey, k_ExportFilePath));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteXdmfFileKey, k_WriteXdmf));
+  // Write time series parameter is not applicable in NX
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

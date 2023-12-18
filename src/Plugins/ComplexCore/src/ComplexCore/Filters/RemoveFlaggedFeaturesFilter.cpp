@@ -13,6 +13,9 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
@@ -189,5 +192,36 @@ Result<> RemoveFlaggedFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.TempBoundsPath = inputValues.FlaggedFeaturesArrayPath.getParent().createChildPath(k_boundsName);
 
   return RemoveFlaggedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FillRemovedFeaturesKey = "FillRemovedFeatures";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_FlaggedFeaturesArrayPathKey = "FlaggedFeaturesArrayPath";
+constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RemoveFlaggedFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RemoveFlaggedFeaturesFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  if(json.contains(SIMPL::k_FillRemovedFeaturesKey.str()))
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_FillRemovedFeaturesKey, k_FillRemovedFeatures_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
+  }
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FlaggedFeaturesArrayPathKey, k_FlaggedFeaturesArrayPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

@@ -16,6 +16,9 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/GeometryHelpers.hpp"
 
 using namespace complex;
@@ -268,5 +271,30 @@ Result<> AppendImageGeometryZSliceFilter::executeImpl(DataStructure& dataStructu
   inputValues.NewGeometryPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
 
   return AppendImageGeometryZSlice(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputAttributeMatrixKey = "InputAttributeMatrix";
+constexpr StringLiteral k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
+constexpr StringLiteral k_CheckResolutionKey = "CheckResolution";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> AppendImageGeometryZSliceFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = AppendImageGeometryZSliceFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_InputAttributeMatrixKey, k_InputGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CheckResolutionKey, k_CheckResolution_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

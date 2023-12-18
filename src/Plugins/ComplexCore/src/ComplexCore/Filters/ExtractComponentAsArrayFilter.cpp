@@ -10,6 +10,9 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
@@ -154,5 +157,38 @@ Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure
   inputValues.NewArrayPath = inputValues.BaseArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewArrayPath_Key));
 
   return ExtractComponentAsArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_CompNumberKey = "CompNumber";
+constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteral k_NewArrayArrayNameKey = "NewArrayArrayName";
+constexpr StringLiteral k_ReducedArrayArrayNameKey = "ReducedArrayArrayName";
+constexpr StringLiteral k_SaveRemovedComponentKey = "SaveRemovedComponent";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ExtractComponentAsArrayFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ExtractComponentAsArrayFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_CompNumberKey, k_CompNumber_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayArrayNameKey, k_NewArrayPath_Key));
+
+  if(json.contains(SIMPL::k_ReducedArrayArrayNameKey.str()))
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ReducedArrayArrayNameKey, "@COMPLEX_PARAMETER_KEY@"));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveRemovedComponentKey, "@COMPLEX_PARAMETER_KEY@"));
+  }
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

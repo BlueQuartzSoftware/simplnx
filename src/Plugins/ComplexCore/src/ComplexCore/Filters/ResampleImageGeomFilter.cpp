@@ -21,6 +21,9 @@
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
@@ -387,5 +390,42 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
   }
 
   return ResampleImageGeom(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_CurrentGeomtryInfoKey = "CurrentGeomtryInfo";
+constexpr StringLiteral k_SpacingKey = "Spacing";
+constexpr StringLiteral k_NewGeomtryInfoKey = "NewGeomtryInfo";
+constexpr StringLiteral k_RenumberFeaturesKey = "RenumberFeatures";
+constexpr StringLiteral k_SaveAsNewDataContainerKey = "SaveAsNewDataContainer";
+constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
+constexpr StringLiteral k_NewDataContainerPathKey = "NewDataContainerPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ResampleImageGeomFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InvertedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerPathKey, k_CreatedImageGeometry_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

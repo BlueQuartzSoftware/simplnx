@@ -7,6 +7,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/SIMPLConversion.hpp"
 
 using namespace complex;
 
@@ -148,5 +149,42 @@ Result<> FindFeatureReferenceCAxisMisorientationsFilter::executeImpl(DataStructu
       inputValues.FeatureIdsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureReferenceCAxisMisorientationsArrayName_Key));
 
   return FindFeatureReferenceCAxisMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
+constexpr StringLiteral k_AvgCAxesArrayPathKey = "AvgCAxesArrayPath";
+constexpr StringLiteral k_FeatureAvgCAxisMisorientationsArrayNameKey = "FeatureAvgCAxisMisorientationsArrayName";
+constexpr StringLiteral k_FeatureStdevCAxisMisorientationsArrayNameKey = "FeatureStdevCAxisMisorientationsArrayName";
+constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayNameKey = "FeatureReferenceCAxisMisorientationsArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindFeatureReferenceCAxisMisorientationsFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindFeatureReferenceCAxisMisorientationsFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureAvgCAxisMisorientationsArrayNameKey,
+                                                                                                                   k_FeatureAvgCAxisMisorientationsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureStdevCAxisMisorientationsArrayNameKey,
+                                                                                                                   k_FeatureStdevCAxisMisorientationsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureReferenceCAxisMisorientationsArrayNameKey,
+                                                                                                                   k_FeatureReferenceCAxisMisorientationsArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

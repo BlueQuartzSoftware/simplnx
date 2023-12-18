@@ -16,6 +16,9 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/GeometryHelpers.hpp"
 
 using namespace complex;
@@ -208,5 +211,39 @@ Result<> ResampleRectGridToImageGeomFilter::executeImpl(DataStructure& dataStruc
   inputValues.ImageGeomCellAttributeMatrixName = filterArgs.value<std::string>(k_ImageGeomCellAttributeMatrix_Key);
 
   return ResampleRectGridToImageGeom(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_RectilinearGridPathKey = "RectilinearGridPath";
+constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteral k_RectGridGeometryDescKey = "RectGridGeometryDesc";
+constexpr StringLiteral k_DimensionsKey = "Dimensions";
+constexpr StringLiteral k_CreatedGeometryDescriptionKey = "CreatedGeometryDescription";
+constexpr StringLiteral k_ImageGeometryPathKey = "ImageGeometryPath";
+constexpr StringLiteral k_ImageGeomCellAttributeMatrixKey = "ImageGeomCellAttributeMatrix";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ResampleRectGridToImageGeomFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  // Rect Grid Geometry description parameter is not applicable in NX
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
+  // Created Geometry description is not applicable in NX
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ImageGeomCellAttributeMatrixKey, k_ImageGeomCellAttributeMatrix_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

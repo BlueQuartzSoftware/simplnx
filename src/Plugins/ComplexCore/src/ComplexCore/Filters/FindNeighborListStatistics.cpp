@@ -9,6 +9,9 @@
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 namespace complex
@@ -395,5 +398,56 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
   ExecuteParallelFunction<FindNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation, arrays);
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FindLengthKey = "FindLength";
+constexpr StringLiteral k_FindMinKey = "FindMin";
+constexpr StringLiteral k_FindMaxKey = "FindMax";
+constexpr StringLiteral k_FindMeanKey = "FindMean";
+constexpr StringLiteral k_FindMedianKey = "FindMedian";
+constexpr StringLiteral k_FindStdDeviationKey = "FindStdDeviation";
+constexpr StringLiteral k_FindSummationKey = "FindSummation";
+constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteral k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
+constexpr StringLiteral k_LengthArrayNameKey = "LengthArrayName";
+constexpr StringLiteral k_MinimumArrayNameKey = "MinimumArrayName";
+constexpr StringLiteral k_MaximumArrayNameKey = "MaximumArrayName";
+constexpr StringLiteral k_MeanArrayNameKey = "MeanArrayName";
+constexpr StringLiteral k_MedianArrayNameKey = "MedianArrayName";
+constexpr StringLiteral k_StdDeviationArrayNameKey = "StdDeviationArrayName";
+constexpr StringLiteral k_SummationArrayNameKey = "SummationArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> FindNeighborListStatistics::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = FindNeighborListStatistics().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindLengthKey, k_FindLength_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindMinKey, k_FindMinimum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindMaxKey, k_FindMaximum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindMeanKey, k_FindMean_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindMedianKey, k_FindMedian_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindStdDeviationKey, k_FindStandardDeviation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindSummationKey, k_FindSummation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_InputArray_Key));
+  // No destination attribute matrix parameter in NX
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LengthArrayNameKey, k_Length_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MinimumArrayNameKey, k_Minimum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MaximumArrayNameKey, k_Maximum_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MeanArrayNameKey, k_Mean_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MedianArrayNameKey, k_Median_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_StdDeviationArrayNameKey, k_StandardDeviation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SummationArrayNameKey, k_Summation_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

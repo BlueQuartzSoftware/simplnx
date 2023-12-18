@@ -19,7 +19,7 @@ public:
   /**
    * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
    * their complex counterpart
-   * @return std::map<complex::Uuid, complex::Uuid>
+   * @return SIMPLMapType
    */
-  std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const override;
+  SIMPLMapType getSimplToComplexMap() const override;
 };

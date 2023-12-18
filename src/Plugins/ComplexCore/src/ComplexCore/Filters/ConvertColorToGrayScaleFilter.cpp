@@ -11,6 +11,9 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/VectorParameter.hpp"
 
 using namespace complex;
@@ -172,3 +175,36 @@ Result<> ConvertColorToGrayScaleFilter::executeImpl(DataStructure& dataStructure
   return ConvertColorToGrayScale(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_ConversionAlgorithmKey = "ConversionAlgorithm";
+constexpr StringLiteral k_ColorWeightsKey = "ColorWeights";
+constexpr StringLiteral k_ColorChannelKey = "ColorChannel";
+constexpr StringLiteral k_InputDataArrayVectorKey = "InputDataArrayVector";
+constexpr StringLiteral k_CreateNewAttributeMatrixKey = "CreateNewAttributeMatrix";
+constexpr StringLiteral k_OutputAttributeMatrixNameKey = "OutputAttributeMatrixName";
+constexpr StringLiteral k_OutputArrayPrefixKey = "OutputArrayPrefix";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ConvertColorToGrayScaleFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ConvertColorToGrayScaleFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_ConversionAlgorithmKey, k_ConversionAlgorithm_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ColorWeightsKey, k_ColorWeights_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_ColorChannelKey, k_ColorChannel_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputDataArrayVectorKey, k_InputDataArrayVector_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputArrayPrefixKey, k_OutputArrayPrefix_Key));
+
+  // Create new attribute matrix and output attribute matrix name parameters are not applicable to NX
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}

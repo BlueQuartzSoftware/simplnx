@@ -173,6 +173,16 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
 }
 
 template <class ToT, class FromT>
+Result<ToT> ConvertInvalidResult(Result<FromT>&& result)
+{
+  Result<ToT> convertedResult;
+  convertedResult.m_Expected = nonstd::make_unexpected(std::move(result.errors()));
+  convertedResult.warnings() = std::move(result.warnings());
+
+  return convertedResult;
+}
+
+template <class ToT, class FromT>
 std::enable_if_t<std::is_convertible_v<FromT, ToT>, Result<ToT>> ConvertResultTo(Result<FromT>&& from)
 {
   if(from.invalid())
@@ -292,5 +302,17 @@ inline Result<T> MergeResults(Result<T> first, Result<T> second)
   Result<T> result = errors.empty() ? Result<T>{} : Result<T>{nonstd::make_unexpected(std::move(errors))};
   result.warnings() = std::move(warnings);
   return result;
+}
+
+inline Result<> MergeResults(std::vector<Result<>> results)
+{
+  Result<> outputResult;
+
+  for(auto& result : results)
+  {
+    outputResult = MergeResults(std::move(outputResult), std::move(result));
+  }
+
+  return outputResult;
 }
 } // namespace complex

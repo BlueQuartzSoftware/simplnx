@@ -4,6 +4,7 @@
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/Utilities/SIMPLConversion.hpp"
 
 namespace complex
 {
@@ -63,5 +64,26 @@ Result<> CreateDataGroup::executeImpl(DataStructure& dataStructure, const Argume
                                       const std::atomic_bool& shouldCancel) const
 {
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CreateDataGroup::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args;
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataObjectPath));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

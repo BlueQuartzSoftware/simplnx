@@ -26,6 +26,13 @@ public:
   static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 
   /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief
    * @return std::string
    */

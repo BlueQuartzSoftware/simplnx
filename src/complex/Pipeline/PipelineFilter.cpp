@@ -18,6 +18,43 @@ constexpr StringLiteral k_FilterKey = "filter";
 constexpr StringLiteral k_FilterNameKey = "name";
 constexpr StringLiteral k_FilterUuidKey = "uuid";
 constexpr StringLiteral k_FilterCommentsKey = "comments";
+constexpr StringLiteral k_UnknownFilterValue = "UnknownFilter";
+
+constexpr StringLiteral k_SIMPLFilterUuidKey = "Filter_Uuid";
+constexpr StringLiteral k_SIMPLFilterHumanNameKey = "Filter_Human_Label";
+constexpr StringLiteral k_SIMPLFilterClassNameKey = "Filter_Name";
+
+nlohmann::json CreateFilterJson(std::string_view uuid, std::string_view name, nlohmann::json argsArray, std::string_view comments)
+{
+  nlohmann::json json;
+
+  auto filterObjectJson = nlohmann::json::object();
+
+  filterObjectJson[k_FilterUuidKey] = uuid;
+  filterObjectJson[k_FilterNameKey] = name;
+
+  nlohmann::json argsJsonArray = std::move(argsArray);
+
+  json[k_FilterKey] = std::move(filterObjectJson);
+  json[k_ArgsKey] = std::move(argsJsonArray);
+  json[k_FilterCommentsKey] = comments;
+
+  return json;
+}
+
+std::optional<AbstractPlugin::SIMPLData> FindComplexConversionFromSIMPL(const Uuid& uuid, const FilterList& filterList)
+{
+  auto plugins = filterList.getLoadedPlugins();
+  for(const auto* plugin : plugins)
+  {
+    auto filterMap = plugin->getSimplToComplexMap();
+    if(filterMap.count(uuid) > 0)
+    {
+      return filterMap.at(uuid);
+    }
+  }
+  return {};
+}
 } // namespace
 
 std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handle, const Arguments& args, FilterList* filterList)
@@ -52,6 +89,11 @@ AbstractPipelineNode::NodeType PipelineFilter::getType() const
 
 std::string PipelineFilter::getName() const
 {
+  if(m_Filter == nullptr)
+  {
+    return "Filter not Found";
+  }
+
   return m_Filter->humanName();
 }
 
@@ -62,11 +104,21 @@ IFilter* PipelineFilter::getFilter() const
 
 Parameters PipelineFilter::getParameters() const
 {
+  if(m_Filter == nullptr)
+  {
+    return {};
+  }
+
   return m_Filter->parameters();
 }
 
 Arguments PipelineFilter::getArguments() const
 {
+  if(m_Filter == nullptr)
+  {
+    return {};
+  }
+
   return m_Arguments;
 }
 
@@ -106,10 +158,21 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
   clearFaultState();
+  if(m_Filter == nullptr)
+  {
+    m_Errors.push_back(Error{-10, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+    setHasErrors();
+    setPreflightStructure(data, false);
+    sendFilterFaultMessage(m_Index, getFaultState());
+    sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
+    return false;
+  }
+
   IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
   m_Warnings = std::move(result.outputActions.warnings());
   setHasWarnings(!m_Warnings.empty());
   m_PreflightValues = std::move(result.outputValues);
+
   if(result.outputActions.invalid())
   {
     m_Errors = std::move(result.outputActions.errors());
@@ -192,14 +255,25 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
 
   IFilter::MessageHandler messageHandler{[this](const IFilter::Message& message) { this->notifyFilterMessage(message); }};
 
-  IFilter::ExecuteResult result = m_Filter->execute(data, getArguments(), this, messageHandler, shouldCancel);
-  m_PreflightValues = std::move(result.outputValues);
-
-  m_Warnings = result.result.warnings();
-
-  if(result.result.invalid())
+  if(m_Filter == nullptr)
   {
-    m_Errors = result.result.errors();
+    m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+  }
+
+  IFilter::ExecuteResult result;
+  if(m_Filter != nullptr)
+  {
+    result = m_Filter->execute(data, getArguments(), this, messageHandler, shouldCancel);
+    m_Warnings = result.result.warnings();
+    m_PreflightValues = std::move(result.outputValues);
+    if(result.result.invalid())
+    {
+      m_Errors = result.result.errors();
+    }
+  }
+  else
+  {
+    m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
   }
 
   setHasWarnings(!m_Warnings.empty());
@@ -214,7 +288,7 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
   this->sendFilterRunStateMessage(m_Index, complex::RunState::Idle);
   this->sendFilterUpdateMessage(m_Index, "End");
 
-  return result.result.valid();
+  return result.result.valid() && m_Filter != nullptr;
 }
 
 std::vector<DataPath> PipelineFilter::getCreatedPaths() const
@@ -395,7 +469,7 @@ const std::vector<IFilter::PreflightValue>& PipelineFilter::getPreflightValues()
 
 std::unique_ptr<AbstractPipelineNode> PipelineFilter::deepCopy() const
 {
-  return std::make_unique<PipelineFilter>(m_Filter->clone(), m_Arguments);
+  return m_Filter == nullptr ? std::make_unique<PipelineFilter>(nullptr, m_Arguments) : std::make_unique<PipelineFilter>(m_Filter->clone(), m_Arguments);
 }
 
 void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
@@ -429,20 +503,11 @@ void PipelineFilter::notifyRenamedPaths(const RenamedPaths& renamedPathPairs)
 
 nlohmann::json PipelineFilter::toJsonImpl() const
 {
-  nlohmann::json json;
-
-  auto filterObjectJson = nlohmann::json::object();
-
-  filterObjectJson[k_FilterUuidKey] = m_Filter->uuid().str();
-  filterObjectJson[k_FilterNameKey] = m_Filter->name();
-
-  nlohmann::json argsJsonArray = m_Filter->toJson(m_Arguments);
-
-  json[k_FilterKey] = std::move(filterObjectJson);
-  json[k_ArgsKey] = std::move(argsJsonArray);
-  json[k_FilterCommentsKey] = m_Comments;
-
-  return json;
+  if(m_Filter == nullptr)
+  {
+    return CreateFilterJson("", k_UnknownFilterValue, nlohmann::json{}, m_Comments);
+  }
+  return CreateFilterJson(m_Filter->uuid().str(), m_Filter->name(), m_Filter->toJson(m_Arguments), m_Comments);
 }
 
 Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann::json& json)
@@ -475,7 +540,24 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   {
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, "UUID value is not a string");
   }
+
+  const bool isDisabled = ReadDisabledState(json);
+  std::string comments;
+  if(json.contains(k_FilterCommentsKey.view()))
+  {
+    comments = json[k_FilterCommentsKey];
+  }
   auto filterName = filterNameObject.get<std::string>();
+
+  if(filterName == k_UnknownFilterValue)
+  {
+    auto pipelineFilter = std::make_unique<PipelineFilter>(nullptr);
+    pipelineFilter->setDisabled(isDisabled);
+    pipelineFilter->setComments(comments);
+    Result<std::unique_ptr<PipelineFilter>> result{std::move(pipelineFilter)};
+    return result;
+  }
+
   auto uuidString = uuidObject.get<std::string>();
   std::optional<Uuid> uuid = Uuid::FromString(uuidString);
   if(!uuid.has_value())
@@ -494,8 +576,6 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   }
 
   const auto& argsJson = json[k_ArgsKey];
-  const bool isDisabled = ReadDisabledState(json);
-
   auto argsResult = filter->fromJson(argsJson);
 
   if(argsResult.invalid())
@@ -507,12 +587,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
 
   auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter), std::move(argsResult.value()));
   pipelineFilter->setDisabled(isDisabled);
-
-  if(json.contains(k_FilterCommentsKey.view()))
-  {
-    pipelineFilter->setComments(json[k_FilterCommentsKey]);
-  }
-
+  pipelineFilter->setComments(comments);
   Result<std::unique_ptr<PipelineFilter>> result{std::move(pipelineFilter)};
   result.warnings() = std::move(argsResult.warnings());
   return result;
@@ -551,4 +626,97 @@ void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
       }
     }
   }
+}
+
+complex::WarningCollection convertErrors(const complex::ErrorCollection& errors, const std::string& filterName)
+{
+  if(errors.empty())
+  {
+    return {};
+  }
+
+  std::string prefix = fmt::format("Filter: '{}' ", filterName);
+  WarningCollection warnings;
+  for(const auto& error : errors)
+  {
+    warnings.emplace_back(Warning{error.code, prefix + error.message});
+  }
+  return std::move(warnings);
+}
+
+std::string PipelineFilter::CreateErrorComments(const complex::ErrorCollection& errors, const std::string& prefix)
+{
+  if(errors.empty())
+  {
+    return "";
+  }
+
+  std::string output;
+  for(const auto& error : errors)
+  {
+    output += prefix + error.message + "\n";
+  }
+  return output;
+}
+
+Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nlohmann::json& json, const FilterList& filterList)
+{
+  if(!json.contains(k_SIMPLFilterUuidKey))
+  {
+    auto filterClassName = json.value(k_SIMPLFilterClassNameKey.view(), "NO NAME");
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(
+        -1, fmt::format("The pipeline file contained an entry for a SIMPL filter with name '{}', but the json that describes that filter did not include "
+                        "an entry with a key of '{}'.\nPlease open the pipeline file in DREAM.3D version 6.5 or 6.6 and re-save the pipeline and then try to reimport the pipeline file.",
+                        filterClassName, k_SIMPLFilterUuidKey.view()));
+  }
+
+  auto uuidString = json[k_SIMPLFilterUuidKey].get<std::string>();
+  std::optional<Uuid> filterUuid = Uuid::FromString(uuidString);
+
+  if(!filterUuid.has_value())
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-2, fmt::format("Unable to parse uuid '{}'", uuidString));
+  }
+
+  std::optional<AbstractPlugin::SIMPLData> simplData = FindComplexConversionFromSIMPL(*filterUuid, filterList);
+
+  if(!simplData.has_value())
+  {
+    std::string filterName = fmt::format("with uuid {}", uuidString);
+    if(json.contains(k_SIMPLFilterHumanNameKey))
+    {
+      filterName = fmt::format("{} with uuid {}", json[k_SIMPLFilterHumanNameKey].get<std::string>(), uuidString);
+    }
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, fmt::format("Unable to find conversion data for filter '{}'", filterName));
+  }
+
+  IFilter::UniquePointer filter = filterList.createFilter(simplData->complexUuid);
+
+  if(!simplData->convertJson)
+  {
+    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("Conversion function for filter '{}' is null", uuidString));
+  }
+
+  Result<Arguments> argumentsResult = simplData->convertJson(json);
+
+  const auto filterName = filter->name();
+  const auto& defaultArguments = filter->getDefaultArguments();
+  auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter));
+  if(argumentsResult.valid())
+  {
+    pipelineFilter->setArguments(std::move(argumentsResult.value()));
+  }
+  else
+  {
+    pipelineFilter->setArguments(defaultArguments);
+  }
+
+  WarningCollection warnings;
+  if(argumentsResult.invalid())
+  {
+    warnings = convertErrors(argumentsResult.errors(), filterName);
+    pipelineFilter->setComments(CreateErrorComments(argumentsResult.errors(), "Parameter conversion error: "));
+  }
+
+  return {std::move(pipelineFilter), std::move(warnings)};
 }

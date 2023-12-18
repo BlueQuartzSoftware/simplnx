@@ -31,6 +31,13 @@ public:
   static inline constexpr StringLiteral k_BoundaryCellsArrayName_Key = "boundary_cells_array_name";
 
   /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief Returns the name of the filter.
    * @return
    */

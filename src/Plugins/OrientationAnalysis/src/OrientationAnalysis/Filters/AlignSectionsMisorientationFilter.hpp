@@ -35,8 +35,14 @@ public:
   static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
   /**
    * @brief Returns the name of the filter.

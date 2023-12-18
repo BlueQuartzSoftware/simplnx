@@ -5,6 +5,9 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
 namespace fs = std::filesystem;
@@ -201,5 +204,30 @@ Result<> RobustAutomaticThreshold::executeImpl(DataStructure& data, const Argume
   FindThreshold(inputArray, gradientArray, maskArray);
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputArrayPathKey = "InputArrayPath";
+constexpr StringLiteral k_GradientMagnitudeArrayPathKey = "GradientMagnitudeArrayPath";
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RobustAutomaticThreshold::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RobustAutomaticThreshold().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputArrayPathKey, k_InputArrayPath));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GradientMagnitudeArrayPathKey, k_GradientMagnitudePath));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ArrayCreationPath));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

@@ -9,6 +9,8 @@
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <nlohmann/json.hpp>
 
 namespace
@@ -101,5 +103,27 @@ nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
     json[k_ImportedPipeline] = pipelineResult.value().toJson();
   }
   return json;
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_OverwriteExistingDataContainersKey = "OverwriteExistingDataContainers";
+constexpr StringLiteral k_InputFileDataContainerArrayProxyKey = "InputFileDataContainerArrayProxy";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ReadDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ReadDREAM3DFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::DataContainerReaderFilterParameterConverter>(args, json, k_ImportFileData));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

@@ -14,6 +14,8 @@
 #include "EbsdLib/LaueOps/LaueOps.h"
 #include "EbsdLib/OrientationMath/OrientationConverter.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <fmt/format.h>
 
 #ifndef _MSC_VER
@@ -800,3 +802,31 @@ Result<> ConvertOrientations::executeImpl(DataStructure& dataStructure, const Ar
 #ifndef _MSC_VER
 #pragma clang diagnostic pop
 #endif // !_MSVC_
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputTypeKey = "InputType";
+constexpr StringLiteral k_OutputTypeKey = "OutputType";
+constexpr StringLiteral k_InputOrientationArrayPathKey = "InputOrientationArrayPath";
+constexpr StringLiteral k_OutputOrientationArrayNameKey = "OutputOrientationArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ConvertOrientations::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ConvertOrientations().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_InputTypeKey, k_InputType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_OutputTypeKey, k_OutputType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_OutputOrientationArrayNameKey, k_OutputOrientationArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}

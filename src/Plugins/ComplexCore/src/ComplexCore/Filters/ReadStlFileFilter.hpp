@@ -34,8 +34,14 @@ public:
 
   static inline constexpr StringLiteral k_VertexAttributeMatrix_Key = "vertex_attribute_matrix";
   static inline constexpr StringLiteral k_FaceAttributeMatrix_Key = "face_attribute_matrix";
-
   static inline constexpr StringLiteral k_FaceNormalsName_Key = "face_normals_data_path";
+
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
   /**
    * @brief Returns the name of the filter.

@@ -17,6 +17,8 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/KUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <random>
 
 using namespace complex;
@@ -193,5 +195,45 @@ Result<> KMeansFilter::executeImpl(DataStructure& dataStructure, const Arguments
   inputValues.FeatureIdsArrayPath = fIdsPath;
 
   return KMeans(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InitClustersKey = "InitClusters";
+constexpr StringLiteral k_DistanceMetricKey = "DistanceMetric";
+constexpr StringLiteral k_UseMaskKey = "UseMask";
+constexpr StringLiteral k_UseRandomSeedKey = "UseRandomSeed";
+constexpr StringLiteral k_RandomSeedValueKey = "RandomSeedValue";
+constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
+constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
+constexpr StringLiteral k_MeansArrayNameKey = "MeansArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> KMeansFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = KMeansFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_InitClustersKey, k_InitClusters_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DistanceMetricKey, k_DistanceMetric_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseRandomSeedKey, k_UseSeed_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64FilterParameterConverter>(args, json, SIMPL::k_RandomSeedValueKey, k_SeedValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, SIMPL::k_FeatureAttributeMatrixNameKey,
+                                                                                                                k_FeatureAMPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_MeansArrayNameKey, k_MeansArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

@@ -9,6 +9,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/CalculatorParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/NumericTypeParameter.hpp"
 
 using namespace complex;
@@ -193,5 +196,33 @@ Result<> ArrayCalculatorFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.CalculatedArray = filterArgs.value<DataPath>(k_CalculatedArray_Key);
 
   return ArrayCalculator(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
+constexpr StringLiteral k_InfixEquationKey = "InfixEquation";
+constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteral k_CalculatedArrayKey = "CalculatedArray";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ArrayCalculatorFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ArrayCalculatorFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedAttributeMatrixKey,
+  // "@COMPLEX_PARAMETER_KEY@"));
+  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::CalculatorFilterParameterConverter>(args, json, k_CalculatorParameter_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CalculatedArrayKey, k_CalculatedArray_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

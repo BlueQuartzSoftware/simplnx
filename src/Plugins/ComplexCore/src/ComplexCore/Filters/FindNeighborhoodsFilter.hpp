@@ -30,6 +30,14 @@ public:
   static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
   static inline constexpr StringLiteral k_NeighborhoodsArrayName_Key = "neighborhoods_array_name";
   static inline constexpr StringLiteral k_NeighborhoodListArrayName_Key = "neighborhood_list_array_name";
+
+  /**
+   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
 
   /**

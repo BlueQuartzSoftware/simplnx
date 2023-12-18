@@ -11,6 +11,8 @@
 #include "complex/Utilities/ArrayThreshold.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <algorithm>
 
 namespace complex
@@ -561,5 +563,41 @@ Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const 
   }
 
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SelectedThresholdsKey = "SelectedThresholds";
+constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteral k_DestinationArrayNameKey = "DestinationArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> MultiThresholdObjects::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = MultiThresholdObjects().getDefaultArguments();
+  static constexpr StringLiteral k_FilterUuidKey = "Filter_Uuid";
+  static constexpr StringLiteral v1Uuid = "{014b7300-cf36-5ede-a751-5faf9b119dae}";
+
+  std::vector<Result<>> results;
+
+  bool isAdvanced = json[k_FilterUuidKey].get<std::string>() != v1Uuid;
+
+  if(isAdvanced)
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionAdvancedFilterParameterConverter>(args, json, SIMPL::k_SelectedThresholdsKey, k_ArrayThresholds_Key));
+  }
+  else
+  {
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedThresholdsKey, k_ArrayThresholds_Key));
+  }
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeFilterParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_CreatedMaskType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DestinationArrayNameKey, k_CreatedDataPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

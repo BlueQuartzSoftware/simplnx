@@ -11,6 +11,8 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -128,5 +130,32 @@ Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.FaceNormalsArrayName = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceNormalsArrayName_Key));
 
   return CombineStlFiles(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_StlFilesPathKey = "StlFilesPath";
+constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
+constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
+constexpr StringLiteral k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CombineStlFilesFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CombineStlFilesFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_StlFilesPathKey, k_StlFilesPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_TriangleDataContainerName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_FaceNormalsArrayNameKey, k_FaceNormalsArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

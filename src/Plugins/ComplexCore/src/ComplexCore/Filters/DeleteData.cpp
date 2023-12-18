@@ -4,6 +4,9 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+
+#include "complex/Utilities/SIMPLConversion.hpp"
+
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
 
 /**The commented out code in this filter and the header is set up to offer deeper control
@@ -193,5 +196,26 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStru
 Result<> DeleteData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_DataArraysToRemoveKey = "DataArraysToRemove";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> DeleteData::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = DeleteData().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraysToRemoveConverter>(args, json, SIMPL::k_DataArraysToRemoveKey, k_DataPath_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
