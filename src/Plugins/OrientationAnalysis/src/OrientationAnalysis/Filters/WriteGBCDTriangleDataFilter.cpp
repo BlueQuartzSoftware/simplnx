@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/WriteGBCDTriangleData.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -109,15 +110,19 @@ IFilter::PreflightResult WriteGBCDTriangleDataFilter::preflightImpl(const DataSt
 Result<> WriteGBCDTriangleDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+
   WriteGBCDTriangleDataInputValues inputValues;
 
-  inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
+  inputValues.OutputFile = atomicFile.tempFilePath();
   inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   inputValues.SurfaceMeshFaceNormalsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
   inputValues.SurfaceMeshFaceAreasArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceAreasArrayPath_Key);
   inputValues.FeatureEulerAnglesArrayPath = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
 
-  return WriteGBCDTriangleData(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto result = WriteGBCDTriangleData(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  atomicFile.setAutoCommit(result.valid());
+  return result;
 }
 
 namespace

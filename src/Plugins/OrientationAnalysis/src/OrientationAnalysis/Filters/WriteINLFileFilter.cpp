@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/WriteINLFile.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -110,9 +111,11 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
 Result<> WriteINLFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+
   WriteINLFileInputValues inputValues;
 
-  inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
+  inputValues.OutputFile = atomicFile.tempFilePath();
   inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -121,7 +124,9 @@ Result<> WriteINLFileFilter::executeImpl(DataStructure& dataStructure, const Arg
   inputValues.MaterialNameArrayPath = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
   inputValues.NumFeaturesArrayPath = filterArgs.value<DataPath>(k_NumFeaturesArrayPath_Key);
 
-  return WriteINLFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto result = WriteINLFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  atomicFile.setAutoCommit(result.valid());
+  return result;
 }
 
 namespace

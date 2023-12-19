@@ -1,5 +1,6 @@
 #include "WriteFeatureDataCSVFilter.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -94,7 +95,9 @@ IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStru
 Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
-  auto pOutputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key));
+
+  auto pOutputFilePath = atomicFile.tempFilePath();
   auto pWriteNeighborListDataValue = filterArgs.value<bool>(k_WriteNeighborListData_Key);
   auto pWriteNumFeaturesLineValue = filterArgs.value<bool>(k_WriteNumFeaturesLine_Key);
   auto pDelimiterChoiceIntValue = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoiceInt_Key);
@@ -140,15 +143,19 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
     }
   }
 
-  std::ofstream fout(pOutputFilePath.string(), std::ofstream::out | std::ios_base::binary); // test name resolution and create file
-  if(!fout.is_open())
+  // Scope file writer in code block to get around file lock on windows (enforce destructor order)
   {
-    return MakeErrorResult(-64640, fmt::format("Error opening path {}", pOutputFilePath.string()));
+    std::ofstream fout(pOutputFilePath.string(), std::ofstream::out | std::ios_base::binary); // test name resolution and create file
+    if(!fout.is_open())
+    {
+      return MakeErrorResult(-64640, fmt::format("Error opening path {}", pOutputFilePath.string()));
+    }
+
+    // call ostream function
+    OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
   }
 
-  // call ostream function
-  OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
-
+  atomicFile.commit();
   return {};
 }
 

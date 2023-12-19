@@ -1,5 +1,6 @@
 #include "WriteASCIIDataFilter.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
@@ -173,7 +174,8 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
 
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
-    auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+    AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key), false);
+    auto outputPath = atomicFile.tempFilePath();
     // Make sure any directory path is also available as the user may have just typed
     // in a path without actually creating the full path
     Result<> createDirectoriesResult = complex::CreateOutputDirectories(outputPath.parent_path());
@@ -182,14 +184,18 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
       return createDirectoriesResult;
     }
 
-    // Create the output file
-    std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);
-    if(!outStrm.is_open())
+    // Scope file writer in code block to get around file lock on windows (enforce destructor order)
     {
-      return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
-    }
+      // Create the output file
+      std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);
+      if(!outStrm.is_open())
+      {
+        return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
+      }
 
-    OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
+      OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
+    }
+    atomicFile.setAutoCommit(true);
   }
 
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::MultipleFiles)
