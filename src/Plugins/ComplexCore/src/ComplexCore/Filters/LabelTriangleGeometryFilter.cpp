@@ -9,6 +9,7 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/SIMPLConversion.hpp"
 
 using namespace complex;
 
@@ -124,5 +125,32 @@ Result<> LabelTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.NumTrianglesPath = inputValues.TriangleAMPath.createChildPath(filterArgs.value<std::string>(k_NumTrianglesName_Key));
 
   return LabelTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_CADDataContainerPathKey = "CADDataContainerPath";
+constexpr StringLiteral k_RegionIdArrayNameKey = "RegionIdArrayName";
+constexpr StringLiteral k_TriangleAttributeMatrixNameKey = "TriangleAttributeMatrixName";
+constexpr StringLiteral k_NumTrianglesArrayNameKey = "NumTrianglesArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> LabelTriangleGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = LabelTriangleGeometryFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_CADDataContainerPathKey, k_TriangleGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_RegionIdArrayNameKey, k_CreatedRegionIdsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_TriangleAttributeMatrixNameKey, k_TriangleAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumTrianglesArrayNameKey, k_NumTrianglesName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex

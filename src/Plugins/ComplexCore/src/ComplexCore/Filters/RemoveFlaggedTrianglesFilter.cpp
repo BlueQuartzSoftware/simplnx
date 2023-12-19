@@ -9,6 +9,7 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/Utilities/SIMPLConversion.hpp"
 
 using namespace complex;
 
@@ -113,5 +114,30 @@ Result<> RemoveFlaggedTrianglesFilter::executeImpl(DataStructure& dataStructure,
   inputValues.ReducedTriangleGeometry = filterArgs.value<DataPath>(k_OutputGeometry_Key);
 
   return RemoveFlaggedTriangles(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_TriangleGeometryKey = "TriangleGeometry";
+constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteral k_ReducedTriangleGeometryKey = "ReducedTriangleGeometry";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> RemoveFlaggedTrianglesFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = RemoveFlaggedTrianglesFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_TriangleGeometryKey, k_InputGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ReducedTriangleGeometryKey, k_OutputGeometry_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace complex
