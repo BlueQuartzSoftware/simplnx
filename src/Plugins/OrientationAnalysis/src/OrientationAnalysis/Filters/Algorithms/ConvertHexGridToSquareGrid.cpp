@@ -1,5 +1,6 @@
 #include "ConvertHexGridToSquareGrid.hpp"
 
+#include "complex/Common/AtomicFile.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -30,7 +31,16 @@ public:
   , m_SqrYStep(spacingXY.at(1))
   {
   }
-  ~Converter() noexcept = default;
+  ~Converter() noexcept
+  {
+    if(m_Valid)
+    {
+      for(const auto& atomicFile : m_AtomicFiles)
+      {
+        atomicFile->commit();
+      }
+    }
+  }
 
   Converter(const Converter&) = delete;            // Copy Constructor Default Implemented
   Converter(Converter&&) = delete;                 // Move Constructor Not Implemented
@@ -49,40 +59,58 @@ public:
       int32 err = reader.readFile();
       if(err < 0 && err != -600)
       {
+        m_Valid = false;
         return MakeErrorResult(reader.getErrorCode(), reader.getErrorMessage());
       }
       if(err == -600)
       {
+        m_Valid = false;
         return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
       }
       if(reader.getGrid().find(EbsdLib::Ang::SquareGrid) == 0)
       {
+        m_Valid = false;
         return MakeErrorResult(-55000, fmt::format("Ang file is already a square grid: {}", inputPath.string()));
       }
 
       std::string origHeader = reader.getOriginalHeader();
       if(origHeader.empty())
       {
+        m_Valid = false;
         return MakeErrorResult(-55001, fmt::format("Header for input hex grid file was empty: {}", inputPath.string()));
       }
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
-      fs::path outPath = fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string());
+      m_AtomicFiles.emplace_back(std::make_unique<AtomicFile>((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())), false));
+      fs::path outPath = m_AtomicFiles[m_Index]->tempFilePath();
+
+      // Ensure the output path exists by creating it if necessary
+      if(!fs::exists(m_OutputPath))
+      {
+        auto result = m_AtomicFiles[m_Index]->getResult();
+        if(result.invalid())
+        {
+          m_Valid = false;
+          return result;
+        }
+      }
 
       if(outPath == inputPath)
       {
+        m_Valid = false;
         return MakeErrorResult(-201, "New ang file is the same as the old ang file. Overwriting is NOT allowed");
       }
 
       std::ofstream outFile(outPath, std::ios_base::out | std::ios_base::binary);
-      // Ensure the output path exists by creating it if necessary
-      if(!fs::exists(outPath.parent_path()))
+      if(!fs::exists(outPath))
       {
-        return MakeErrorResult(-77750, fmt::format("The parent path was not created and does not exist: {}", outPath.parent_path().string()));
+        m_Valid = false;
+        return MakeErrorResult(-77750, fmt::format("The parent path was not created and does not exist: {}", outPath.string()));
       }
 
       if(!outFile.is_open())
       {
+        m_Valid = false;
         return MakeErrorResult(-200, fmt::format("Ang square output file could not be opened for writing: {}", outPath.string()));
       }
 
@@ -132,6 +160,7 @@ public:
       {
         if(m_ShouldCancel)
         {
+          m_Valid = false;
           return {};
         }
         for(int32 i = 0; i < m_SqrNumCols; i++)
@@ -188,6 +217,8 @@ public:
                   << "\n";
         }
       }
+
+      m_Index++;
     }
 
     return {};
@@ -197,6 +228,9 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const fs::path& m_OutputPath;
   const std::string& m_FilePrefix;
+  std::vector<std::unique_ptr<AtomicFile>> m_AtomicFiles = {};
+  usize m_Index = 0;
+  bool m_Valid = true;
 
   const float32 m_SqrXStep;
   const float32 m_SqrYStep;
@@ -341,13 +375,20 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   int32 progress;
   int64 z = m_InputValues->InputFileListInfo.startIndex;
 
+  usize index = 0;
   auto result = Result<>{};
   ::Converter converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
   for(const auto& filepath : fileList)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Now Processing: {}", filepath));
 
-    result = MergeResults(converter(fs::path(filepath)), result);
+    result = MergeResults(converter(filepath), result);
+    if(result.invalid())
+    {
+      return result;
+    }
+
+    index++;
 
     {
       z++;
