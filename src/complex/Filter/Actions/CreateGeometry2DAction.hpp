@@ -244,7 +244,8 @@ public:
    */
   UniquePointer clone() const override
   {
-    auto action = std::unique_ptr<CreateGeometry2DAction>(new CreateGeometry2DAction(getCreatedPath(), m_NumFaces, m_NumVertices, m_VertexDataName, m_FaceDataName, m_SharedVerticesName, m_SharedFacesName));
+    auto action =
+        std::unique_ptr<CreateGeometry2DAction>(new CreateGeometry2DAction(getCreatedPath(), m_NumFaces, m_NumVertices, m_VertexDataName, m_FaceDataName, m_SharedVerticesName, m_SharedFacesName));
     action->m_InputVertices = m_InputVertices;
     action->m_InputFaces = m_InputFaces;
     action->m_ArrayHandlingType = m_ArrayHandlingType;

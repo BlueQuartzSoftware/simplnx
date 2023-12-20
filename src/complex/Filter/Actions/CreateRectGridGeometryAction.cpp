@@ -174,7 +174,8 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
 
 IDataAction::UniquePointer CreateRectGridGeometryAction::clone() const
 {
-  auto action = std::unique_ptr<CreateRectGridGeometryAction>(new CreateRectGridGeometryAction(getCreatedPath(), m_NumXBoundTuples, m_NumYBoundTuples, m_NumZBoundTuples, m_CellDataName, m_XBoundsArrayName, m_YBoundsArrayName, m_ZBoundsArrayName));
+  auto action = std::unique_ptr<CreateRectGridGeometryAction>(
+      new CreateRectGridGeometryAction(getCreatedPath(), m_NumXBoundTuples, m_NumYBoundTuples, m_NumZBoundTuples, m_CellDataName, m_XBoundsArrayName, m_YBoundsArrayName, m_ZBoundsArrayName));
   action->m_InputXBounds = m_InputXBounds;
   action->m_InputYBounds = m_InputYBounds;
   action->m_InputZBounds = m_InputZBounds;
