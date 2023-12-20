@@ -243,7 +243,8 @@ public:
    */
   UniquePointer clone() const override
   {
-    auto action = std::unique_ptr<CreateGeometry3DAction>(new CreateGeometry3DAction(getCreatedPath(), m_NumCells, m_NumVertices, m_VertexDataName, m_CellDataName, m_SharedVerticesName, m_SharedCellsName));
+    auto action =
+        std::unique_ptr<CreateGeometry3DAction>(new CreateGeometry3DAction(getCreatedPath(), m_NumCells, m_NumVertices, m_VertexDataName, m_CellDataName, m_SharedVerticesName, m_SharedCellsName));
     action->m_InputVertices = m_InputVertices;
     action->m_InputCells = m_InputCells;
     action->m_ArrayHandlingType = m_ArrayHandlingType;
