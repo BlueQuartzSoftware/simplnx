@@ -1,4 +1,44 @@
-import simplnx as nx
+"""
+Important Note
+==============
+
+This python file can be used as an example of how to execute a number of DREAM3D-NX
+filters one after another, if you plan to use the codes below (and you are welcome to),
+there are a few things that you, the developer, should take note of:
+
+Import Statements
+-----------------
+
+You will most likely *NOT* need to include the following code:
+
+   .. code:: python
+      
+      import complex_test_dirs as cxtest
+
+Filter Error Detection
+----------------------
+
+In each section of code a filter is created and executed immediately. This may or
+may *not* be what you want to do. You can also preflight the filter to verify the
+correctness of the filters before executing the filter **although** this is done
+for you when the filter is executed. As such, you will want to check the 'result'
+variable to see if there are any errors or warnings. If there **are** any then
+you, as the developer, should act appropriately on the errors or warnings. 
+More specifically, this bit of code:
+
+   .. code:: python
+
+      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+
+is used by the simplnx unit testing framework and should be replaced by your own
+error checking code. You are welcome to look up the function definition and use
+that.
+
+"""
+import complex as cx
+import complex_test_dirs as cxtest
+
+
 import numpy as np
 
 
@@ -34,7 +74,8 @@ degrees_data = npdata.copy()
 radians_data = np.radians(degrees_data)
 
 # Run a D3D filter to convert back to degrees
-assert nx.ChangeAngleRepresentation.execute(data_structure, conversion_type=0, angles_array_path=array_path)
+result = cx.ChangeAngleRepresentation.execute(data_structure, conversion_type=0, angles_array_path=array_path)
+cxtest.check_filter_result(cx.ChangeAngleRepresentation, result)
 
 # compare the 2 arrays
 assert np.array_equal(npdata, radians_data)

@@ -397,7 +397,18 @@ auto BindFilter(py::handle scope, const Internals& internals)
 
     std::string executeSig = MakePythonSignature<FilterT>("execute", internals);
     std::string executeDocString = fmt::format("{}\n\nExecutes the filter\n", executeSig);
-
+    filter.def_static("human_name", [&internals]() {
+      FilterT filter;
+      return filter.humanName();
+    });
+    filter.def_static("name", [&internals]() {
+      FilterT filter;
+      return filter.name();
+    });
+    filter.def_static("uuid", [&internals]() {
+      FilterT filter;
+      return filter.uuid();
+    });
     filter.def_static(
         "execute",
         [&internals](DataStructure& dataStructure, const py::kwargs& kwargs) {

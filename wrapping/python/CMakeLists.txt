@@ -300,18 +300,19 @@ if(COMPLEX_ENABLE_PYTHON_TESTS)
     set(PYTHON_TEST_INPUT_DIR "${complex_SOURCE_DIR}/wrapping/python/examples")
 
     set(COMPLEX_PYTHON_TESTS
+      "angle_conversion" 
+      "basic_arrays" 
       "basic_ebsd_ipf"
-      "import_d3d" 
-      # "angle_conversion" 
-      # "basic_arrays" 
-      # "basic_numpy" 
-      # "create_ensemble_info" 
-      # "generated_file_list" 
-      # "geometry_examples" 
-      # "import_hdf5" 
-      # "output_file" 
-      # "pipeline" 
-      # "read_csv_file"
+      "basic_numpy" 
+      "create_ensemble_info" 
+      "generated_file_list" 
+      "geometry_examples" 
+      "import_d3d"      # Dependent on 'basic_ebsd_ipf' running first
+      "import_hdf5"     # Dependent on 'basic_ebsd_ipf' running first
+      "output_file" 
+      "pipeline" 
+      "read_csv_file"
+    #  "read_esprit_data"
     )
 
     CreatePythonTests(PREFIX "PY_COMPLEX"

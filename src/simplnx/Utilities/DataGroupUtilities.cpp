@@ -186,7 +186,6 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
     {
       bool ignore = false;
       DataPath childPath = parentGroup.createChildPath(childName);
-      const DataObject* dataObject = dataStructure.getData(childPath);
       for(const auto& ignoredPath : ignoredDataPaths)
       {
         if(childPath == ignoredPath)
@@ -195,7 +194,8 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
           break;
         }
       }
-      if(!ignore && (dataObjectType == DataObject::Type::DataObject || dataObject->getDataObjectType() == dataObjectType))
+      const DataObject* dataObject = dataStructure.getData(childPath);
+      if(dataObject != nullptr && !ignore && (dataObjectType == DataObject::Type::DataObject || dataObject->getDataObjectType() == dataObjectType))
       {
         childDataObjects.push_back(childPath);
       }
@@ -211,7 +211,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 {
   std::vector<DataPath> childDataObjects;
   const DataObject* dataObject1 = dataStructure.getData(parent);
-  if(dataObject1->getDataObjectType() == DataObject::Type::DataArray || dataObject1->getDataObjectType() == DataObject::Type::DynamicListArray ||
+  if(dataObject1 == nullptr || dataObject1->getDataObjectType() == DataObject::Type::DataArray || dataObject1->getDataObjectType() == DataObject::Type::DynamicListArray ||
      dataObject1->getDataObjectType() == DataObject::Type::NeighborList || dataObject1->getDataObjectType() == DataObject::Type::ScalarData ||
      dataObject1->getDataObjectType() == DataObject::Type::StringArray)
   {

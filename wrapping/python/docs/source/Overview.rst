@@ -181,7 +181,49 @@ form a **Pipeline**, in which the data structure flows through the set of **Filt
 being modified along the way. If a **Filter** reads in data from outside of DREAM3D-NX, 
 then the new data will be incorporated into the existing data structure. Or, if no 
 data structure yet exists (e.g, starting from a “blank slate”), a new one will be 
-created. 
+created.
+
+.. py:class:: complex.IFilter
+
+   This class holds an instantiation of a DREAM3D-NX filter. The filter can be
+   preflighted, executed or just held for later execution. 
+
+   .. py:method:: name()
+
+      :return: The C++ classname of the filter
+      :rtype: str
+
+   .. py:method:: human_name()
+
+      :return: What the user would see in the DREAM3D-NX application
+      :rtype: str
+
+   .. py:method:: uuid()
+
+      :return: The unique identifier of the filter
+      :rtype: str
+
+   .. py:method:: execute()
+
+      :return: A complex.IFilter.Result object that contains any warnings or errors
+      that were encountered during the execution of the filter.
+      :rtype: complex.IFilter.Result
+
+   .. py:method:: preflight()
+
+      :return: A complex.IFilter.Result object that contains any warnings or errors
+      that were encountered during the preflight of the filter.
+      :rtype: complex.IFilter.Result
+
+.. code:: python
+
+   create_array_filter = cx.CreateDataArray()
+   print(f'{create_array_filter.name()}')
+   print(f'{create_array_filter.human_name()}')
+   print(f'{create_array_filter.uuid()}')
+
+For examles of executing a filter, please see any of the example python files included
+with the source package.
 
 .. _Pipeline:
 .. _Plugin:
