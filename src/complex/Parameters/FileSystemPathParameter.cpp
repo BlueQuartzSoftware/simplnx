@@ -2,25 +2,15 @@
 
 #include "complex/Common/Any.hpp"
 #include "complex/Common/StringLiteral.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 #include "complex/Utilities/FileUtilities.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 
 #include <nlohmann/json.hpp>
 
-#include <cctype>
 #include <filesystem>
-#include <iostream>
 #include <stdexcept>
-
-#ifdef _WIN32
-#include <io.h>
-#define FSPP_ACCESS_FUNC_NAME _access
-#else
-#include <unistd.h>
-#define FSPP_ACCESS_FUNC_NAME access
-#endif
 
 namespace fs = std::filesystem;
 
@@ -159,13 +149,13 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
   switch(m_PathType)
   {
   case complex::FileSystemPathParameter::PathType::InputFile:
-    return ValidateInputFile(path);
+    return FileUtilities::ValidateInputFile(path);
   case complex::FileSystemPathParameter::PathType::InputDir:
-    return ValidateInputDir(path);
+    return FileUtilities::ValidateInputDir(path);
   case complex::FileSystemPathParameter::PathType::OutputFile:
-    return ValidateOutputFile(path);
+    return FileUtilities::ValidateOutputFile(path);
   case complex::FileSystemPathParameter::PathType::OutputDir:
-    return ValidateOutputDir(path);
+    return FileUtilities::ValidateOutputDir(path);
   }
 
   return {};

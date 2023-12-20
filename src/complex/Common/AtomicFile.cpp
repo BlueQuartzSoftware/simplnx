@@ -1,7 +1,7 @@
 #include "AtomicFile.hpp"
 
-#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/FileUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -45,7 +45,7 @@ AtomicFile::AtomicFile(const std::string& filename, bool autoCommit)
   }
 
   // Validate write permissions
-  auto result = ValidateDirectoryWritePermission(m_FilePath, true);
+  auto result = FileUtilities::ValidateDirectoryWritePermission(m_FilePath, true);
   if(result.invalid())
   {
     m_Result = MergeResults(m_Result, result);
@@ -77,7 +77,7 @@ AtomicFile::AtomicFile(fs::path&& filepath, bool autoCommit)
   }
 
   // Validate write permissions
-  auto result = ValidateDirectoryWritePermission(m_FilePath, true);
+  auto result = FileUtilities::ValidateDirectoryWritePermission(m_FilePath, true);
   if(result.invalid())
   {
     m_Result = MergeResults(m_Result, result);
