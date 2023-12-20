@@ -2,7 +2,7 @@
 
 #include "CxPybind/CxPybind.hpp"
 
-namespace complex::@PLUGIN_NAME@
+namespace nx::core::@PLUGIN_NAME@
 {
-void BindFilters(pybind11::handle scope, const complex::CxPybind::Internals& internals);
-} // namespace complex
+void BindFilters(pybind11::handle scope, const nx::core::CxPybind::Internals& internals);
+} // namespace nx::core

@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKBinaryMorphologicalClosingImage
@@ -114,6 +114,6 @@ protected:
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKBinaryMorphologicalClosingImage, "abb27e0c-b049-4f60-8355-178d86bb1de4");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKBinaryMorphologicalClosingImage, "abb27e0c-b049-4f60-8355-178d86bb1de4");

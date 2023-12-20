@@ -7,22 +7,22 @@
 
 #include "OrientationAnalysis/OrientationAnalysisFilterBinding.hpp"
 
-using namespace complex;
-using namespace complex::CxPybind;
+using namespace nx::core;
+using namespace nx::core::CxPybind;
 namespace py = pybind11;
 
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(orientationanalysis, mod)
 {
-  py::module_::import("complex");
+  py::module_::import("simplnx");
 
   auto& internals = Internals::Instance();
 
   auto* plugin = internals.addPlugin<OrientationAnalysisPlugin>();
 
-  auto h5EbsdReaderParameter = COMPLEX_PY_BIND_PARAMETER(mod, ReadH5EbsdFileParameter);
-  auto oemEbsdScanSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, OEMEbsdScanSelectionParameter);
+  auto h5EbsdReaderParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ReadH5EbsdFileParameter);
+  auto oemEbsdScanSelectionParameter = SIMPLNX_PY_BIND_PARAMETER(mod, OEMEbsdScanSelectionParameter);
 
   py::class_<ReadH5EbsdFileParameter::ValueType> h5EbsdReaderValueType(h5EbsdReaderParameter, "ValueType");
   h5EbsdReaderValueType.def(py::init<>());

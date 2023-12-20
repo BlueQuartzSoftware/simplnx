@@ -2,12 +2,12 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include <memory>
 
-namespace complex
+namespace nx::core
 {
 // forward declare the private implementation
 class ReadAngDataPrivate;
@@ -36,7 +36,7 @@ public:
   static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -109,6 +109,6 @@ protected:
 private:
   std::shared_ptr<ReadAngDataPrivate> m_AngDataPrivate;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ReadAngDataFilter, "5b062816-79ac-47ce-93cb-e7966896bcbd");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ReadAngDataFilter, "5b062816-79ac-47ce-93cb-e7966896bcbd");

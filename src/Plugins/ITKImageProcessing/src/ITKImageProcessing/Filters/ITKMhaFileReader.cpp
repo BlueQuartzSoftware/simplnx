@@ -6,43 +6,43 @@
 
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
-const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const Uuid k_ApplyTransformationToGeometryFilterId = *Uuid::FromString("f5bbc16b-3426-4ae0-b27b-ba7862dc40fe");
-const FilterHandle k_ApplyTransformationToGeometryFilterHandle(k_ApplyTransformationToGeometryFilterId, k_ComplexCorePluginId);
+const FilterHandle k_ApplyTransformationToGeometryFilterHandle(k_ApplyTransformationToGeometryFilterId, k_SimplnxCorePluginId);
 
 inline constexpr StringLiteral k_SelectedImageGeometryKey = "selected_image_geometry";
 inline constexpr StringLiteral k_CellAttributeMatrixPathKey = "cell_attribute_matrix_path";
 inline constexpr StringLiteral k_TransformationTypeKey = "transformation_type";
 inline constexpr StringLiteral k_ManualTransformationMatrixKey = "manual_transformation_matrix";
 inline constexpr StringLiteral k_InterpolationTypeKey = "interpolation_type";
-const complex::ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
+const nx::core::ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
 
 const std::string k_NearestNeighborInterpolation("Nearest Neighbor");
 const std::string k_LinearInterpolation("Linear Interpolation");
-const complex::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation};
+const nx::core::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation};
 
-const complex::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
-const complex::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
+const nx::core::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
+const nx::core::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
 
 Result<std::array<float32, 16>> readTransformMatrix(const std::string& filePath)
 {
@@ -172,7 +172,7 @@ struct CopyImageDataFunctor
 };
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ITKMhaFileReader::name() const
@@ -302,7 +302,7 @@ IFilter::PreflightResult ITKMhaFileReader::preflightImpl(const DataStructure& da
 
     if(saveImageTransformationAsArray)
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, std::vector<usize>{1}, std::vector<usize>{transformMatrix.size()}, transformationMatrixDataArrayPath);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{1}, std::vector<usize>{transformMatrix.size()}, transformationMatrixDataArrayPath);
       preflightResult.outputActions.value().appendAction(std::move(createArrayAction));
     }
   }
@@ -407,4 +407,4 @@ Result<> ITKMhaFileReader::executeImpl(DataStructure& dataStructure, const Argum
 
   return mainResult;
 }
-} // namespace complex
+} // namespace nx::core

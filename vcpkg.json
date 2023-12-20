@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
-  "name": "complex",
+  "name": "simplnx",
   "version": "0.1.0",
   "dependencies": [
     {

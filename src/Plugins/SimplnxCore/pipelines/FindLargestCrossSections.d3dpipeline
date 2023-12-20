@@ -1,0 +1,134 @@
+{
+  "isDisabled": false,
+  "name": "FindLargestCrossSections.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": "CellData",
+        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "data_container_name": "DataContainer",
+        "read_h5_ebsd_parameter": {
+          "end_slice": 117,
+          "euler_representation": 0,
+          "hdf5_data_paths": [
+            "Confidence Index",
+            "EulerAngles",
+            "Fit",
+            "Image Quality",
+            "Phases",
+            "SEM Signal",
+            "X Position",
+            "Y Position"
+          ],
+          "input_file_path": "Data/Output/Reconstruction/Small_IN100.h5ebsd",
+          "start_slice": 1,
+          "use_recommended_transform": true
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ReadH5EbsdFilter",
+        "uuid": "db291b6c-9aaf-432d-9547-430c865a539c"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "DataContainer/CellData/Image Quality",
+              "comparison": 0,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 120.0
+            },
+            {
+              "array_path": "DataContainer/CellData/Confidence Index",
+              "comparison": 0,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.1
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "Mask"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_orientation_array_path": "DataContainer/CellData/EulerAngles",
+        "input_type": 0,
+        "output_orientation_array_name": "Quats",
+        "output_type": 2
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ConvertOrientations",
+        "uuid": "501e54e6-a66f-4eeb-ae37-00e649c00d4b"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "active_array_name": "Active",
+        "cell_feature_attribute_matrix_name": "CellFeatureData",
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_ids_array_name": "FeatureIds",
+        "mask_array_path": "DataContainer/CellData/Mask",
+        "grid_geometry_path": "DataContainer",
+        "misorientation_tolerance": 5.0,
+        "quats_array_path": "DataContainer/CellData/Quats",
+        "randomize_features": true,
+        "use_mask": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::EBSDSegmentFeaturesFilter",
+        "uuid": "1810c2c7-63e3-41db-b204-a5821e6271c0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
+        "image_geometry_path": "DataContainer",
+        "largest_cross_sections_array_path": "LargestCrossSections",
+        "plane": 0
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::FindLargestCrossSectionsFilter",
+        "uuid": "18ba2f7a-4e3a-4547-bd8c-b0955d542a9f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/Examples/SmallIN100_LargestCrossSections.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

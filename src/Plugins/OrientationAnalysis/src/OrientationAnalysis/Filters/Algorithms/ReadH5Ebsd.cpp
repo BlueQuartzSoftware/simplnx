@@ -2,16 +2,16 @@
 
 #include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
 
-#include "complex/Common/Numbers.hpp"
-#include "complex/Common/StringLiteral.hpp"
-#include "complex/Common/TypeTraits.hpp"
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/StringArray.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/EbsdMacros.h"
@@ -24,15 +24,15 @@
 namespace RotateSampleRefFrame
 {
 // Parameter Keys
-static inline constexpr complex::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
-static inline constexpr complex::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
-static inline constexpr complex::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-static inline constexpr complex::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
-static inline constexpr complex::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
-static inline constexpr complex::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-static inline constexpr complex::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
+static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
+static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
+static inline constexpr nx::core::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+static inline constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
+static inline constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+static inline constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 
-// static inline constexpr complex::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+// static inline constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
 enum class RotationRepresentation : uint64_t
 {
@@ -44,13 +44,13 @@ enum class RotationRepresentation : uint64_t
 
 namespace RenameDataObject
 {
-static inline constexpr complex::StringLiteral k_DataObject_Key = "data_object";
-static inline constexpr complex::StringLiteral k_NewName_Key = "new_name";
+static inline constexpr nx::core::StringLiteral k_DataObject_Key = "data_object";
+static inline constexpr nx::core::StringLiteral k_NewName_Key = "new_name";
 } // namespace RenameDataObject
 
 namespace DeleteData
 {
-static inline constexpr complex::StringLiteral k_DataPath_Key = "removed_data_path";
+static inline constexpr nx::core::StringLiteral k_DataPath_Key = "removed_data_path";
 
 }
 
@@ -66,7 +66,7 @@ namespace
  * @return
  */
 template <typename EbsdReaderType, typename EbsdPhase>
-complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* mInputValues, complex::DataStructure& mDataStructure, std::shared_ptr<EbsdReaderType>& reader)
+nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues, nx::core::DataStructure& mDataStructure, std::shared_ptr<EbsdReaderType>& reader)
 {
   reader->setFileName(mInputValues->inputFilePath);
   reader->setSliceStart(mInputValues->startSlice);
@@ -75,25 +75,25 @@ complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* mInputValues, c
   std::vector<typename EbsdPhase::Pointer> phases = reader->getPhases();
   if(phases.size() == 0)
   {
-    return {complex::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->inputFilePath))};
+    return {nx::core::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->inputFilePath))};
   }
 
   // Resize the Ensemble Attribute Matrix to be the correct number of phases.
   std::vector<size_t> tDims = {phases.size() + 1};
 
-  complex::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
+  nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
 
-  complex::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-  complex::UInt32Array& xtalData = mDataStructure.getDataRefAs<complex::UInt32Array>(xtalDataPath);
+  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
+  nx::core::UInt32Array& xtalData = mDataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
   xtalData.getIDataStore()->resizeTuples(tDims);
 
-  complex::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
-  complex::Float32Array& latticData = mDataStructure.getDataRefAs<complex::Float32Array>(latticeDataPath);
+  nx::core::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
+  nx::core::Float32Array& latticData = mDataStructure.getDataRefAs<nx::core::Float32Array>(latticeDataPath);
   latticData.getIDataStore()->resizeTuples(tDims);
 
   // Reshape the Material Names here also.
-  complex::DataPath matNamesDataath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::MaterialName);
-  complex::StringArray& matNameData = mDataStructure.getDataRefAs<complex::StringArray>(matNamesDataath);
+  nx::core::DataPath matNamesDataath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::MaterialName);
+  nx::core::StringArray& matNameData = mDataStructure.getDataRefAs<nx::core::StringArray>(matNamesDataath);
   matNameData.resizeTuples(tDims);
 
   // Initialize the zero'th element to unknowns. The other elements will
@@ -126,16 +126,16 @@ complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* mInputValues, c
 }
 
 template <typename H5EbsdReaderType, typename T>
-void CopyData(complex::DataStructure& dataStructure, H5EbsdReaderType* ebsdReader, const std::vector<std::string>& arrayNames, std::set<std::string> selectedArrayNames,
-              complex::DataPath cellAttributeMatrixPath, size_t totalPoints)
+void CopyData(nx::core::DataStructure& dataStructure, H5EbsdReaderType* ebsdReader, const std::vector<std::string>& arrayNames, std::set<std::string> selectedArrayNames,
+              nx::core::DataPath cellAttributeMatrixPath, size_t totalPoints)
 {
-  using DataArrayType = complex::DataArray<T>;
+  using DataArrayType = nx::core::DataArray<T>;
   for(const auto& arrayName : arrayNames)
   {
     if(selectedArrayNames.find(arrayName) != selectedArrayNames.end())
     {
       T* source = reinterpret_cast<T*>(ebsdReader->getPointerByName(arrayName));
-      complex::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName); // get the data from the DataStructure
+      nx::core::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName); // get the data from the DataStructure
       DataArrayType& destination = dataStructure.getDataRefAs<DataArrayType>(dataPath);
       for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
       {
@@ -158,18 +158,18 @@ void CopyData(complex::DataStructure& dataStructure, H5EbsdReaderType* ebsdReade
  * @return
  */
 template <typename H5EbsdReaderType, typename PhaseType>
-complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* mInputValues, complex::DataStructure& dataStructure, const std::vector<std::string>& eulerNames,
-                               const complex::IFilter::MessageHandler& mMessageHandler, std::set<std::string> selectedArrayNames, const std::array<size_t, 3>& dcDims,
-                               const std::vector<std::string>& floatArrayNames, const std::vector<std::string>& intArrayNames)
+nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputValues, nx::core::DataStructure& dataStructure, const std::vector<std::string>& eulerNames,
+                                const nx::core::IFilter::MessageHandler& mMessageHandler, std::set<std::string> selectedArrayNames, const std::array<size_t, 3>& dcDims,
+                                const std::vector<std::string>& floatArrayNames, const std::vector<std::string>& intArrayNames)
 {
   int32_t err = 0;
   std::shared_ptr<H5EbsdReaderType> ebsdReader = std::dynamic_pointer_cast<H5EbsdReaderType>(H5EbsdReaderType::New());
   if(nullptr == ebsdReader)
   {
-    return {complex::MakeErrorResult(-50006, fmt::format("Error instantiating H5EbsdVolumeReader"))};
+    return {nx::core::MakeErrorResult(-50006, fmt::format("Error instantiating H5EbsdVolumeReader"))};
   }
   ebsdReader->setFileName(mInputValues->inputFilePath);
-  complex::Result<> result = LoadInfo<H5EbsdReaderType, PhaseType>(mInputValues, dataStructure, ebsdReader);
+  nx::core::Result<> result = LoadInfo<H5EbsdReaderType, PhaseType>(mInputValues, dataStructure, ebsdReader);
   if(result.invalid())
   {
     return result;
@@ -189,7 +189,7 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* mInputValue
   }
 
   // Initialize all the arrays with some default values
-  mMessageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath)});
+  mMessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath)});
   uint32_t mRefFrameZDir = ebsdReader->getStackingOrder();
 
   ebsdReader->setSliceStart(mInputValues->startSlice);
@@ -199,27 +199,27 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* mInputValue
   err = ebsdReader->loadData(dcDims[0], dcDims[1], dcDims[2], mRefFrameZDir);
   if(err < 0)
   {
-    return {complex::MakeErrorResult(-50003, fmt::format("Error loading data from H5Ebsd file '{}'", mInputValues->inputFilePath))};
+    return {nx::core::MakeErrorResult(-50003, fmt::format("Error loading data from H5Ebsd file '{}'", mInputValues->inputFilePath))};
   }
 
-  complex::DataPath geometryPath = mInputValues->dataContainerPath;
-  complex::DataPath cellAttributeMatrixPath = mInputValues->cellAttributeMatrixPath;
+  nx::core::DataPath geometryPath = mInputValues->dataContainerPath;
+  nx::core::DataPath cellAttributeMatrixPath = mInputValues->cellAttributeMatrixPath;
 
   size_t totalPoints = dcDims[0] * dcDims[1] * dcDims[2];
 
   // Get the Crystal Structure data which should have already been read from the file and copied to the array
-  complex::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
-  complex::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-  complex::UInt32Array& xtalData = dataStructure.getDataRefAs<complex::UInt32Array>(xtalDataPath);
+  nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
+  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
+  nx::core::UInt32Array& xtalData = dataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
 
   // Copy the Phase Values from the EBSDReader to the DataStructure
-  auto* phasePtr = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(eulerNames[3]));           // get the phase data from the EbsdReader
-  complex::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::H5Ebsd::Phases); // get the phase data from the DataStructure
-  complex::Int32Array* phaseDataArrayPtr = nullptr;
+  auto* phasePtr = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(eulerNames[3]));            // get the phase data from the EbsdReader
+  nx::core::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::H5Ebsd::Phases); // get the phase data from the DataStructure
+  nx::core::Int32Array* phaseDataArrayPtr = nullptr;
 
   if(selectedArrayNames.find(eulerNames[3]) != selectedArrayNames.end())
   {
-    phaseDataArrayPtr = dataStructure.getDataAs<complex::Int32Array>(phaseDataPath);
+    phaseDataArrayPtr = dataStructure.getDataAs<nx::core::Int32Array>(phaseDataPath);
     for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
     {
       (*phaseDataArrayPtr)[tupleIndex] = phasePtr[tupleIndex];
@@ -233,13 +233,13 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* mInputValue
     auto* euler1 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[1]));
     auto* euler2 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[2]));
     //  std::vector<size_t> cDims = {3};
-    complex::DataPath eulerDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
-    auto& eulerData = dataStructure.getDataRefAs<complex::Float32Array>(eulerDataPath);
+    nx::core::DataPath eulerDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
+    auto& eulerData = dataStructure.getDataRefAs<nx::core::Float32Array>(eulerDataPath);
 
     float degToRad = 1.0f;
     if(mInputValues->eulerRepresentation != EbsdLib::AngleRepresentation::Radians && mInputValues->useRecommendedTransform)
     {
-      degToRad = complex::numbers::pi_v<float> / 180.0F;
+      degToRad = nx::core::numbers::pi_v<float> / 180.0F;
     }
     for(size_t elementIndex = 0; elementIndex < totalPoints; elementIndex++)
     {
@@ -269,7 +269,7 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* mInputValue
 
 } // namespace
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ReadH5Ebsd::ReadH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5EbsdInputValues* inputValues)
@@ -364,7 +364,7 @@ Result<> ReadH5Ebsd::operator()()
       args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key,
                           std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{eulerTransAxis[0], eulerTransAxis[1], eulerTransAxis[2], eulerTransAngle}));
 
-      complex::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
+      nx::core::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
       args.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerDataPath));
       // Preflight the filter and check result
       auto preflightResult = rotEuler.preflight(m_DataStructure, args);
@@ -386,14 +386,14 @@ Result<> ReadH5Ebsd::operator()()
 
     if(sampleTransAngle > 0)
     {
-      const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+      const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
       auto* filterList = Application::Instance()->getFilterList();
 
       /*************************************************************************
        * Rotate Sample Ref Frame
        ************************************************************************/
       const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
-      const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_ComplexCorePluginId);
+      const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_SimplnxCorePluginId);
 
       auto filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
       if(nullptr == filter)
@@ -411,8 +411,8 @@ Result<> ReadH5Ebsd::operator()()
       args.insertOrAssign(RotateSampleRefFrame::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
 
       // Preflight the filter and check result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
-      complex::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
+      m_MessageHandler(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
+      nx::core::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
         for(const auto& error : preflightResult.outputActions.errors())
@@ -423,7 +423,7 @@ Result<> ReadH5Ebsd::operator()()
       }
 
       // Execute the filter and check the result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
+      m_MessageHandler(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
       auto executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {

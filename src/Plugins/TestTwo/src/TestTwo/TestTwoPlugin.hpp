@@ -2,9 +2,9 @@
 
 #include "TestTwo/TestTwo_export.hpp"
 
-#include "complex/Plugin/AbstractPlugin.hpp"
+#include "simplnx/Plugin/AbstractPlugin.hpp"
 
-class TESTTWO_EXPORT TestTwoPlugin : public complex::AbstractPlugin
+class TESTTWO_EXPORT TestTwoPlugin : public nx::core::AbstractPlugin
 {
 public:
   TestTwoPlugin();
@@ -18,8 +18,8 @@ public:
 
   /**
    * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
-   * their complex counterpart
+   * their simplnx counterpart
    * @return SIMPLMapType
    */
-  SIMPLMapType getSimplToComplexMap() const override;
+  SIMPLMapType getSimplToSimplnxMap() const override;
 };

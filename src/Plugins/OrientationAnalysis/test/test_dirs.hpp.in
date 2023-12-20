@@ -5,26 +5,26 @@
  */
 #pragma once
 
-#include "complex/Common/StringLiteral.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
 
-#cmakedefine COMPLEX_WRITE_TEST_OUTPUT
+#cmakedefine SIMPLNX_WRITE_TEST_OUTPUT
 
 
-namespace complex
+namespace nx::core
 {
 namespace unit_test
 {
-inline constexpr StringLiteral k_ComplexSourceDir = "@COMPLEX_SOURCE_DIR_NORM@";
-inline constexpr StringLiteral k_ComplexTestSourceDir = "@COMPLEX_SOURCE_DIR_NORM@/test";
-inline constexpr StringLiteral k_ComplexTestDataSourceDir = "@COMPLEX_SOURCE_DIR_NORM@/test/Data";
+inline constexpr StringLiteral k_ComplexSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@";
+inline constexpr StringLiteral k_ComplexTestSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test";
+inline constexpr StringLiteral k_ComplexTestDataSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test/Data";
 inline constexpr StringLiteral k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
 inline constexpr StringLiteral k_DataDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
 inline constexpr StringLiteral k_TestDataSourceDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
-inline constexpr StringLiteral k_BinaryDir = "@complex_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
-inline constexpr StringLiteral k_BinaryTestOutputDir = "@complex_BINARY_DIR@/Plugins/@PLUGIN_NAME@/test_output";
-inline constexpr StringLiteral k_BuildDir = COMPLEX_BUILD_DIR;
+inline constexpr StringLiteral k_BinaryDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
+inline constexpr StringLiteral k_BinaryTestOutputDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@/test_output";
+inline constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
 inline constexpr StringLiteral k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
 inline constexpr StringLiteral k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
 inline constexpr StringLiteral k_CMakeExecutable = "@CMAKE_COMMAND_NORM@";
 }
-} // namespace complex
+} // namespace nx::core

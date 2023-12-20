@@ -1,13 +1,13 @@
 #include "FindFeatureReferenceMisorientations.hpp"
 
-#include "complex/Common/Numbers.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 FindFeatureReferenceMisorientations::FindFeatureReferenceMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -96,7 +96,7 @@ Result<> FindFeatureReferenceMisorientations::operator()()
 
       OrientationD axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
 
-      featureReferenceMisorientations[point] = static_cast<float>((180.0 / complex::numbers::pi) * axisAngle[3]); // convert to degrees
+      featureReferenceMisorientations[point] = static_cast<float>((180.0 / nx::core::numbers::pi) * axisAngle[3]); // convert to degrees
       int32_t idx = featureIds[point] * 2;
       avgMiso[idx + 0]++;
       avgMiso[idx + 1] = avgMiso[idx + 1] + featureReferenceMisorientations[point];

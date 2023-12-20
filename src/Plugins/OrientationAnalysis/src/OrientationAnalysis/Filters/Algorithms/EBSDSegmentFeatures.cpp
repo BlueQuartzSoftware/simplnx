@@ -1,11 +1,11 @@
 #include "EBSDSegmentFeatures.hpp"
 
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 
 #include <chrono>
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 EBSDSegmentFeatures::EBSDSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EBSDSegmentFeaturesInputValues* inputValues)
@@ -33,7 +33,7 @@ Result<> EBSDSegmentFeatures::operator()()
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-      // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
       std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->goodVoxelsArrayPath.toString());
       return MakeErrorResult(-485090, message);
     }
@@ -74,10 +74,10 @@ Result<> EBSDSegmentFeatures::operator()()
 // -----------------------------------------------------------------------------
 int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 {
-  complex::DataArray<int32>::store_type* featureIds = m_FeatureIdsArray->getDataStore();
+  nx::core::DataArray<int32>::store_type* featureIds = m_FeatureIdsArray->getDataStore();
   usize totalPoints = featureIds->getNumberOfTuples();
 
-  complex::AbstractDataStore<int32>* cellPhases = m_CellPhases->getDataStore();
+  nx::core::AbstractDataStore<int32>* cellPhases = m_CellPhases->getDataStore();
 
   int64 seed = -1;
   // start with the next voxel after the last seed
@@ -118,7 +118,7 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbor
   bool group = false;
 
   // Get the phases for each voxel
-  complex::AbstractDataStore<int32>* cellPhases = m_CellPhases->getDataStore();
+  nx::core::AbstractDataStore<int32>* cellPhases = m_CellPhases->getDataStore();
 
   int32_t phase1 = (*m_CrystalStructures)[(*cellPhases)[referencepoint]];
   int32_t phase2 = (*m_CrystalStructures)[(*cellPhases)[neighborpoint]];

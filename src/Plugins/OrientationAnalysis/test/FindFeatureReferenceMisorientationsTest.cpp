@@ -1,19 +1,19 @@
 #include "OrientationAnalysis/Filters/FindFeatureReferenceMisorientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::Constants;
-using namespace complex::UnitTest;
+using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 // afasdf
 namespace
 {
@@ -29,13 +29,13 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[Or
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_stats_test.tar.gz", "6_6_stats_test.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_stats_test.tar.gz", "6_6_stats_test.dream3d");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({complex::Constants::k_DataContainer});
-  DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData);
+  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataPath cellDataPath = smallIn100Group.createChildPath(nx::core::Constants::k_CellData);
 
   DataPath cellFeatureDataPath({k_DataContainer, k_CellFeatureData});
   DataPath avgQuatsDataPath = cellFeatureDataPath.createChildPath(k_AvgQuats);
@@ -63,11 +63,11 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[Or
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Compare the Output Cell Data
@@ -86,7 +86,7 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[Or
     UnitTest::CompareArrays<float>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
 
-#ifdef COMPLEX_WRITE_TEST_OUTPUT
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_reference_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }

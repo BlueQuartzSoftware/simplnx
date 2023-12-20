@@ -2,13 +2,13 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/SegmentFeatures.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/SegmentFeatures.hpp"
 
-namespace complex
+namespace nx::core
 {
 
 struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
@@ -59,4 +59,4 @@ private:
   Int32Array* m_FeatureIdsArray = nullptr;
 };
 
-} // namespace complex
+} // namespace nx::core

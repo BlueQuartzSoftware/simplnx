@@ -2,25 +2,25 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/MergeTwins.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/NeighborListSelectionParameter.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/NeighborListSelectionParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
 #include <random>
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string MergeTwinsFilter::name() const
@@ -137,7 +137,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<size_t> cDims(1, 1);
@@ -296,4 +296,4 @@ Result<Arguments> MergeTwinsFilter::FromSIMPLJson(const nlohmann::json& json)
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 
-} // namespace complex
+} // namespace nx::core

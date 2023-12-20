@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class GenerateFaceMisorientationColoringFilter
@@ -32,7 +32,7 @@ public:
   static inline constexpr StringLiteral k_SurfaceMeshFaceMisorientationColorsArrayName_Key = "surface_mesh_face_misorientation_colors_array_name";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -102,7 +102,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, GenerateFaceMisorientationColoringFilter, "f3473af9-db77-43db-bd25-60df7230ea73");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, GenerateFaceMisorientationColoringFilter, "f3473af9-db77-43db-bd25-60df7230ea73");
 /* LEGACY UUID FOR THIS FILTER 7cd30864-7bcf-5c10-aea7-d107373e2d40 */

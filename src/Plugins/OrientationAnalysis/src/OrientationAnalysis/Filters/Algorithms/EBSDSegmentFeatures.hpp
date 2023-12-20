@@ -2,19 +2,19 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/SegmentFeatures.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/SegmentFeatures.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <vector>
 
-namespace complex
+namespace nx::core
 {
 
 /**
@@ -87,4 +87,4 @@ private:
   std::vector<LaueOps::Pointer> m_OrientationOps;
 };
 
-} // namespace complex
+} // namespace nx::core

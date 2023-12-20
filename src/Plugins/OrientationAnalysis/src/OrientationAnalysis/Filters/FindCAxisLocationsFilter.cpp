@@ -2,18 +2,18 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/FindCAxisLocations.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string FindCAxisLocationsFilter::name() const
@@ -138,4 +138,4 @@ Result<Arguments> FindCAxisLocationsFilter::FromSIMPLJson(const nlohmann::json& 
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

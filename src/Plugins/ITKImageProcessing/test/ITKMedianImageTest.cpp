@@ -4,15 +4,15 @@
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 /*
  * The original file paths (now commented out) were from the SimpleITK json;
@@ -34,7 +34,7 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProces
   // fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGBFloat.nrrd";
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
   Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
-  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)
+  SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
   args.insertOrAssign(ITKMedianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
@@ -42,10 +42,10 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProces
   args.insertOrAssign(ITKMedianImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   // REQUIRE(md5Hash == "3d91602f6080b45a5431b80d1f78c0a0");
@@ -65,7 +65,7 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing
   // fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGB.png";
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
   Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
-  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)
+  SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
   args.insertOrAssign(ITKMedianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
@@ -75,10 +75,10 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing
   args.insertOrAssign(ITKMedianImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{2, 3, 0}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   // REQUIRE(md5Hash == "03610a1cb421d145fe985478d4eb9c0a");

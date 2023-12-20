@@ -1,13 +1,13 @@
 #include "ReadCtfData.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/StringArray.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 
 #include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/Math/EbsdLibMath.h"
 
-using namespace complex;
+using namespace nx::core;
 
 using FloatVec3Type = std::vector<float>;
 

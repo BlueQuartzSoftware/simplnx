@@ -2,18 +2,18 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/GenerateIPFColors.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 namespace
 {
 
@@ -26,7 +26,7 @@ inline constexpr int32 k_MissingInputArray = -71442;
 inline constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -71443;
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string GenerateIPFColorsFilter::name() const
@@ -141,7 +141,7 @@ IFilter::PreflightResult GenerateIPFColorsFilter::preflightImpl(const DataStruct
   {
     goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
-    const complex::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
+    const nx::core::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
     if(nullptr == goodVoxelsArray)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
@@ -224,4 +224,4 @@ Result<Arguments> GenerateIPFColorsFilter::FromSIMPLJson(const nlohmann::json& j
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

@@ -1,7 +1,7 @@
 Release Notes 1.1.0
 ===================
 
-The `complex` library is under activate development and while we strive to maintain a stable API bugs are
+The `simplnx` library is under activate development and while we strive to maintain a stable API bugs are
 found the necessitate the changing of the API.
 
 Version 1.1.0
@@ -14,7 +14,7 @@ API Additions 1.1.0
 
   .. code:: python
 
-    some_path = complex.DataPath("DataContainer/AttributeMatrix/DataArray")
+    some_path = simplnx.DataPath("DataContainer/AttributeMatrix/DataArray")
 
 
 Filter Changes 1.1.0

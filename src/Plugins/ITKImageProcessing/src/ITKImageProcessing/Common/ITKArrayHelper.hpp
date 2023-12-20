@@ -3,15 +3,15 @@
 #include "ITKImageProcessing/Common/ITKDream3DFilterInterruption.hpp"
 #include "ITKImageProcessing/Common/ITKProgressObserver.hpp"
 
-#include "complex/Common/Result.hpp"
-#include "complex/Common/Types.hpp"
-#include "complex/Common/TypesUtility.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/IDataStore.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Output.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Output.hpp"
 
 #include <itkImage.h>
 #include <itkImageFileWriter.h>
@@ -26,7 +26,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace complex
+namespace nx::core
 {
 namespace ITK
 {
@@ -53,28 +53,28 @@ struct ImageGeomData
 
 inline const std::set<DataType>& GetScalarPixelAllowedTypes()
 {
-  static const std::set<DataType> dataTypes = {complex::DataType::int8,   complex::DataType::uint8, complex::DataType::int16,  complex::DataType::uint16,  complex::DataType::int32,
-                                               complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64, complex::DataType::float32, complex::DataType::float64};
+  static const std::set<DataType> dataTypes = {nx::core::DataType::int8,   nx::core::DataType::uint8, nx::core::DataType::int16,  nx::core::DataType::uint16,  nx::core::DataType::int32,
+                                               nx::core::DataType::uint32, nx::core::DataType::int64, nx::core::DataType::uint64, nx::core::DataType::float32, nx::core::DataType::float64};
   return dataTypes;
 }
 
 inline const std::set<DataType>& GetIntegerScalarPixelAllowedTypes()
 {
-  static const std::set<DataType> dataTypes = {complex::DataType::int8,  complex::DataType::uint8,  complex::DataType::int16, complex::DataType::uint16,
-                                               complex::DataType::int32, complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64};
+  static const std::set<DataType> dataTypes = {nx::core::DataType::int8,  nx::core::DataType::uint8,  nx::core::DataType::int16, nx::core::DataType::uint16,
+                                               nx::core::DataType::int32, nx::core::DataType::uint32, nx::core::DataType::int64, nx::core::DataType::uint64};
   return dataTypes;
 }
 
 inline const std::set<DataType>& GetFloatingScalarPixelAllowedTypes()
 {
-  static const std::set<DataType> dataTypes = {complex::DataType::float32, complex::DataType::float64};
+  static const std::set<DataType> dataTypes = {nx::core::DataType::float32, nx::core::DataType::float64};
   return dataTypes;
 }
 
 inline const std::set<DataType>& GetNonLabelPixelAllowedTypes()
 {
-  static const std::set<DataType> dataTypes = {complex::DataType::int8,   complex::DataType::uint8, complex::DataType::int16,  complex::DataType::uint16,  complex::DataType::int32,
-                                               complex::DataType::uint32, complex::DataType::int64, complex::DataType::uint64, complex::DataType::float32, complex::DataType::float64};
+  static const std::set<DataType> dataTypes = {nx::core::DataType::int8,   nx::core::DataType::uint8, nx::core::DataType::int16,  nx::core::DataType::uint16,  nx::core::DataType::int32,
+                                               nx::core::DataType::uint32, nx::core::DataType::int64, nx::core::DataType::uint64, nx::core::DataType::float32, nx::core::DataType::float64};
   return dataTypes;
 }
 
@@ -86,17 +86,17 @@ inline const std::set<DataType>& GetScalarVectorPixelAllowedTypes()
 
 inline const std::set<DataType>& GetFloatingVectorPixelAllowedTypes()
 {
-  static const std::set<DataType> dataTypes = {complex::DataType::float32, complex::DataType::float64};
+  static const std::set<DataType> dataTypes = {nx::core::DataType::float32, nx::core::DataType::float64};
   return dataTypes;
 }
 
 inline const std::set<DataType>& GetSignedIntegerScalarPixelAllowedTypes()
 {
   static const std::set<DataType> dataTypes = {
-      complex::DataType::int8,
-      complex::DataType::int16,
-      complex::DataType::int32,
-      complex::DataType::int64,
+      nx::core::DataType::int8,
+      nx::core::DataType::int16,
+      nx::core::DataType::int32,
+      nx::core::DataType::int64,
   };
   return dataTypes;
 }
@@ -125,7 +125,7 @@ bool DoTuplesMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
 bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom);
 
 /**
- * @brief Attempts to convert itk::IOComponentEnum to complex::NumericType
+ * @brief Attempts to convert itk::IOComponentEnum to nx::core::NumericType
  * @param component
  * @return
  */
@@ -172,7 +172,7 @@ inline constexpr std::optional<NumericType> ConvertIOComponentToNumericType(itk:
 }
 
 /**
- * @brief Attempts to convert itk::IOComponentEnum to complex::DataType
+ * @brief Attempts to convert itk::IOComponentEnum to nx::core::DataType
  * @param component
  * @return
  */
@@ -268,10 +268,10 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<
 {
   using T = ITK::UnderlyingType_t<PixelT>;
 
-  static_assert(std::is_standard_layout_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be standard layout");
-  // static_assert(std::is_trivial_v<PixelT>, "complex::ITK::WrapDataStoreInImage: PixelT must be trivial");
-  static_assert(std::is_arithmetic_v<T>, "complex::ITK::WrapDataStoreInImage: The underlying type T of PixelT must be arithmetic");
-  static_assert(sizeof(PixelT) % sizeof(T) == 0, "complex::ITK::WrapDataStoreInImage: The size of PixelT must be evenly divisible by T");
+  static_assert(std::is_standard_layout_v<PixelT>, "nx::core::ITK::WrapDataStoreInImage: PixelT must be standard layout");
+  // static_assert(std::is_trivial_v<PixelT>, "nx::core::ITK::WrapDataStoreInImage: PixelT must be trivial");
+  static_assert(std::is_arithmetic_v<T>, "nx::core::ITK::WrapDataStoreInImage: The underlying type T of PixelT must be arithmetic");
+  static_assert(sizeof(PixelT) % sizeof(T) == 0, "nx::core::ITK::WrapDataStoreInImage: The size of PixelT must be evenly divisible by T");
 
   using FilterType = itk::ImportImageFilter<PixelT, Dimensions>;
 
@@ -496,14 +496,14 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
 
   const IDataStore& dataStore = dataArray.getIDataStoreRef();
 
-  if(!complex::ITK::DoDimensionsMatch(dataStore, imageGeom) && !complex::ITK::DoTuplesMatch(dataStore, imageGeom))
+  if(!nx::core::ITK::DoDimensionsMatch(dataStore, imageGeom) && !nx::core::ITK::DoTuplesMatch(dataStore, imageGeom))
   {
 
     std::string errMessage = fmt::format("DataArray '{}' tuple dimensions '{}' do not match Image Geometry '{}' with dimensions 'XYZ={}' and the total number of ImageGeometry Cells {} does not match "
                                          "the total number of DataArray tuples {}.",
                                          inputArrayPath.toString(), fmt::join(dataStore.getTupleShape(), ", "), imageGeomPath.toString(), fmt::join(imageGeom.getDimensions(), ", "),
                                          imageGeom.getNumberOfCells(), dataStore.getNumberOfTuples());
-    return MakeErrorResult<OutputActions>(complex::ITK::Constants::k_ImageGeometryDimensionMismatch, errMessage);
+    return MakeErrorResult<OutputActions>(nx::core::ITK::Constants::k_ImageGeometryDimensionMismatch, errMessage);
   }
 
   std::vector<usize> cDims = dataStore.getComponentShape();
@@ -513,7 +513,7 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
   {
     const std::string errMessage =
         fmt::format("DataArray component dimensions of '{}' do not match output image component dimensions of '{}'", fmt::join(inputPixelDims, ", "), fmt::join(cDims, ", "));
-    return MakeErrorResult<OutputActions>(complex::ITK::Constants::k_ImageComponentDimensionMismatch, errMessage);
+    return MakeErrorResult<OutputActions>(nx::core::ITK::Constants::k_ImageComponentDimensionMismatch, errMessage);
   }
 
   OutputActions outputActions;
@@ -733,4 +733,4 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
   }
 }
 } // namespace ITK
-} // namespace complex
+} // namespace nx::core

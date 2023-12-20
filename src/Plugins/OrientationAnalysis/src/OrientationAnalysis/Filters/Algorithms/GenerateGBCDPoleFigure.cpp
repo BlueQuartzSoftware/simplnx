@@ -1,10 +1,10 @@
 #include "GenerateGBCDPoleFigure.hpp"
 
-#include "complex/Common/Bit.hpp"
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
-#include "complex/Utilities/ParallelData2DAlgorithm.hpp"
+#include "simplnx/Common/Bit.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/ParallelData2DAlgorithm.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -12,7 +12,7 @@
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {

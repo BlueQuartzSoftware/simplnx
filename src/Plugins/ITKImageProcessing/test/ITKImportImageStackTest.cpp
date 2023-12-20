@@ -4,14 +4,14 @@
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace fs = std::filesystem;
 
@@ -29,7 +29,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoInput", "[ITKImageProcessi
   Arguments args;
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoImageGeometry", "[ITKImageProcessing][ITKImportImageStack]")
@@ -45,7 +45,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoImageGeometry", "[ITKImage
   args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoFiles", "[ITKImageProcessing][ITKImportImageStack]")
@@ -69,7 +69,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoFiles", "[ITKImageProcessi
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: FileDoesNotExist", "[ITKImageProcessing][ITKImportImageStack]")
@@ -93,7 +93,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: FileDoesNotExist", "[ITKImag
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImageProcessing][ITKImportImageStack]")
@@ -122,10 +122,10 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImagePro
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeom != nullptr);

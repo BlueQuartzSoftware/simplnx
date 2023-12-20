@@ -21,10 +21,10 @@ Compare the data sets. The values should be exactly the same.
 #include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -32,22 +32,22 @@ Compare the data sets. The values should be exactly the same.
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::UnitTest;
-using namespace complex::Constants;
+using namespace nx::core;
+using namespace nx::core::UnitTest;
+using namespace nx::core::Constants;
 
-namespace complex::Constants
+namespace nx::core::Constants
 {
 inline constexpr StringLiteral k_ImageDataContainer("ImageDataContainer");
 inline constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
-} // namespace complex::Constants
+} // namespace nx::core::Constants
 
 TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][GenerateIPFColors]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",
-                                                             "so3_cubic_high_ipf_001.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",
+                                                              "so3_cubic_high_ipf_001.dream3d");
 
   DataStructure dataStructure;
   {
@@ -86,17 +86,17 @@ TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][Gener
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     {
       // Write out the DataStructure for later viewing/debugging
-      Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/GenerateIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir));
-      complex::HDF5::FileWriter fileWriter = std::move(result.value());
+      Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(fmt::format("{}/GenerateIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir));
+      nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
       auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-      COMPLEX_RESULT_REQUIRE_VALID(resultH5);
+      SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
     }
 
     DataPath ipfColors({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_Ipf_Colors});

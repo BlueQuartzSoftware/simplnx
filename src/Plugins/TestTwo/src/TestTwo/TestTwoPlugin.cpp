@@ -1,7 +1,7 @@
 #include "TestTwoPlugin.hpp"
 #include "TestTwo/TestTwo_filter_registration.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -20,9 +20,9 @@ TestTwoPlugin::TestTwoPlugin()
 
 TestTwoPlugin::~TestTwoPlugin() = default;
 
-AbstractPlugin::SIMPLMapType TestTwoPlugin::getSimplToComplexMap() const
+AbstractPlugin::SIMPLMapType TestTwoPlugin::getSimplToSimplnxMap() const
 {
   return {};
 }
 
-COMPLEX_DEF_PLUGIN(TestTwoPlugin)
+SIMPLNX_DEF_PLUGIN(TestTwoPlugin)

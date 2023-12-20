@@ -4,7 +4,7 @@
 /**
  * @brief On MSVC the above header (itkFlatStructuringelement.h) eventually brings in
  * `fileapi.h` which then defines 'CreateFile' as a macro. This interferes with
- * API in the `complex` library for reading HDF5 files. So we are going to `undef`
+ * API in the `simplnx` library for reading HDF5 files. So we are going to `undef`
  * that macro here.
  */
 #if defined(_MSC_VER) && defined(CreateFile)

@@ -2,14 +2,14 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include <chrono>
 
-namespace complex
+namespace nx::core
 {
 
 struct ORIENTATIONANALYSIS_EXPORT FindKernelAvgMisorientationsInputValues
@@ -60,4 +60,4 @@ private:
   size_t m_LastProgressInt = 0;
 };
 
-} // namespace complex
+} // namespace nx::core

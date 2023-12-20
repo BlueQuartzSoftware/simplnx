@@ -1,12 +1,12 @@
 #include "FindSlipTransmissionMetrics.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 
 #include "EbsdLib/Core/Quaternion.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 FindSlipTransmissionMetrics::FindSlipTransmissionMetrics(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,

@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKGrayscaleErodeImage
@@ -40,7 +40,7 @@ public:
   static inline constexpr StringLiteral k_KernelType_Key = "kernel_type";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -113,6 +113,6 @@ protected:
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKGrayscaleErodeImage, "3ceb1e6f-f4a4-4d8f-82d5-ecd20d4fc285");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGrayscaleErodeImage, "3ceb1e6f-f4a4-4d8f-82d5-ecd20d4fc285");

@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -16,8 +16,8 @@
 #include <algorithm>
 #include <cmath>
 
-using namespace complex;
-using namespace complex::OrientationUtilities;
+using namespace nx::core;
+using namespace nx::core::OrientationUtilities;
 
 // -----------------------------------------------------------------------------
 FindFeatureReferenceCAxisMisorientations::FindFeatureReferenceCAxisMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,

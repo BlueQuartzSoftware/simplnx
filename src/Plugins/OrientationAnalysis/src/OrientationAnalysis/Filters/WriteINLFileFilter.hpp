@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class WriteINLFileFilter
@@ -34,7 +34,7 @@ public:
   static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -104,7 +104,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, WriteINLFileFilter, "a5a37eb3-c143-4b38-a89b-e0641a20dc7e");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, WriteINLFileFilter, "a5a37eb3-c143-4b38-a89b-e0641a20dc7e");
 /* LEGACY UUID FOR THIS FILTER 27c724cc-8b69-5ebe-b90e-29d33858a032 */

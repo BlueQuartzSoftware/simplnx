@@ -1,11 +1,11 @@
 #pragma once
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-namespace complex
+namespace nx::core
 {
 class ITKIMAGEPROCESSING_EXPORT ITKMhaFileReader : public IFilter
 {
@@ -88,6 +88,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKMhaFileReader, "41c33a08-0052-4915-8d53-d503f85f30d9");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKMhaFileReader, "41c33a08-0052-4915-8d53-d503f85f30d9");

@@ -2,16 +2,16 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/FindFeatureReferenceCAxisMisorientations.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string FindFeatureReferenceCAxisMisorientationsFilter::name() const
@@ -98,7 +98,7 @@ IFilter::PreflightResult FindFeatureReferenceCAxisMisorientationsFilter::preflig
   auto pFeatureReferenceCAxisMisorientationsArrayNameValue = filterArgs.value<std::string>(k_FeatureReferenceCAxisMisorientationsArrayName_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue});
@@ -187,4 +187,4 @@ Result<Arguments> FindFeatureReferenceCAxisMisorientationsFilter::FromSIMPLJson(
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

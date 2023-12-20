@@ -1,15 +1,15 @@
 #include "BadDataNeighborOrientationCheck.hpp"
 
-#include "complex/Common/Numbers.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 BadDataNeighborOrientationCheck::BadDataNeighborOrientationCheck(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -49,7 +49,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-    // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
+    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
     std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
     return MakeErrorResult(-54900, message);
   }

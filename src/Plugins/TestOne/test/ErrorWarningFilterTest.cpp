@@ -1,11 +1,11 @@
 #include "TestOne/Filters/ErrorWarningFilter.hpp"
 #include "TestOne/TestOne_test_dirs.hpp"
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -32,7 +32,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
 
   // Preflight Warning enabled
@@ -48,7 +48,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     const std::vector<Warning>& warnings = preflightResult.outputActions.warnings();
     REQUIRE(warnings.size() == 1);
@@ -68,7 +68,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
     const std::vector<Error>& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
@@ -88,7 +88,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
 
     // Execute the filter and check result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const std::vector<Warning>& warnings = executeResult.result.warnings();
     REQUIRE(warnings.size() == 1);
@@ -108,7 +108,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
 
     // Execute the filter and check result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
     const std::vector<Error>& errors = executeResult.result.errors();
     REQUIRE(errors.size() == 1);

@@ -2,13 +2,13 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Common/Types.hpp"
+#include "simplnx/Common/Types.hpp"
 
 #include <map>
 #include <string>
 #include <vector>
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class PhaseType PhaseType.h
@@ -132,4 +132,4 @@ public:
   PhaseType& operator=(PhaseType&&) = delete;      // Move Assignment Not Implemented
 };
 
-} // namespace complex
+} // namespace nx::core

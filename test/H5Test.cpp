@@ -1,31 +1,31 @@
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/AttributeMatrix.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/DataObject.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/Geometry/QuadGeom.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/DataStructure/Geometry/VertexGeom.hpp"
-#include "complex/DataStructure/IO/HDF5/DataStructureReader.hpp"
-#include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
-#include "complex/DataStructure/Montage/GridMontage.hpp"
-#include "complex/DataStructure/ScalarData.hpp"
-#include "complex/DataStructure/StringArray.hpp"
-#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
-#include "complex/Utilities/Parsing/Text/CsvParser.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/DataStructure/Montage/GridMontage.hpp"
+#include "simplnx/DataStructure/ScalarData.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 
 #include "GeometryTestUtilities.hpp"
 
-#include "complex/unit_test/complex_test_dirs.hpp"
+#include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -37,11 +37,11 @@
 #define TEST_LEGACY 1
 
 namespace fs = std::filesystem;
-using namespace complex;
+using namespace nx::core;
 
-static_assert(std::is_same_v<hid_t, complex::HDF5::IdType>, "H5::IdType must be the same type as hid_t");
-static_assert(std::is_same_v<herr_t, complex::HDF5::ErrorType>, "H5::ErrorType must be the same type as herr_t");
-static_assert(std::is_same_v<hsize_t, complex::HDF5::SizeType>, "H5::SizeType must be the same type as hsize_t");
+static_assert(std::is_same_v<hid_t, nx::core::HDF5::IdType>, "H5::IdType must be the same type as hid_t");
+static_assert(std::is_same_v<herr_t, nx::core::HDF5::ErrorType>, "H5::ErrorType must be the same type as herr_t");
+static_assert(std::is_same_v<hsize_t, nx::core::HDF5::SizeType>, "H5::SizeType must be the same type as hsize_t");
 
 namespace
 {
@@ -89,7 +89,7 @@ TEST_CASE("Read Legacy DREAM.3D Data")
   std::filesystem::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
   Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
-  COMPLEX_RESULT_REQUIRE_VALID(result);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
   DataStructure dataStructure = result.value();
 
   const std::string geomName = "Small IN100";
@@ -216,29 +216,29 @@ TEST_CASE("ImageGeometryIO")
   DataStructure originalDataStructure;
   auto action = CreateImageGeometryAction(imageGeomPath, dims, origin, spacing, cellDataName, IGeometry::LengthUnit::Micrometer);
   Result<> actionResult = action.apply(originalDataStructure, IDataAction::Mode::Execute);
-  COMPLEX_RESULT_REQUIRE_VALID(actionResult);
+  SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
 
   fs::path filePath = dataDir / "ImageGeometryIO.dream3d";
 
   std::string filePathString = filePath.string();
 
   {
-    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePathString);
-    COMPLEX_RESULT_REQUIRE_VALID(result);
+    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePathString);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-    complex::HDF5::FileWriter fileWriter = std::move(result.value());
+    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
     Result<> writeResult = HDF5::DataStructureWriter::WriteFile(originalDataStructure, fileWriter);
-    COMPLEX_RESULT_REQUIRE_VALID(writeResult);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
   {
-    complex::HDF5::FileReader fileReader(filePathString);
+    nx::core::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
     auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
-    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure newDataStructure = std::move(readResult.value());
 
     auto* imageGeom = newDataStructure.getDataAs<ImageGeom>(imageGeomPath);
@@ -285,9 +285,9 @@ void CreateVertexGeometry(DataStructure& dataStructure)
   std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  complex::Result result = complex::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::ArrayFromPath<float>(dataStructure, path);
+  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   vertexGeometry->setVertices(*vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
@@ -322,9 +322,9 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   REQUIRE(faceCount == 242);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   triangleGeom->setFaceList(*dataArray);
 
@@ -333,9 +333,9 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = complex::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::ArrayFromPath<float>(dataStructure, path);
+  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   triangleGeom->setVertices(*vertexArray);
 }
@@ -356,9 +356,9 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   REQUIRE(faceCount == 121);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   geometry->setFaceList(*dataArray);
 
@@ -367,9 +367,9 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = complex::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::ArrayFromPath<float>(dataStructure, path);
+  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
@@ -390,9 +390,9 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   REQUIRE(faceCount == 264);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   geometry->setEdgeList(*dataArray);
 
@@ -401,9 +401,9 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = complex::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::ArrayFromPath<float>(dataStructure, path);
+  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
@@ -586,14 +586,14 @@ TEST_CASE("Node Based Geometry IO")
   {
     DataStructure ds = CreateNodeBasedGeometries();
     nodeData = getNodeGeomData(ds);
-    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePathString);
-    COMPLEX_RESULT_REQUIRE_VALID(result);
+    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePathString);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-    complex::HDF5::FileWriter fileWriter = std::move(result.value());
+    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
     auto resultH5 = HDF5::DataStructureWriter::WriteFile(ds, fileWriter);
-    COMPLEX_RESULT_REQUIRE_VALID(resultH5);
+    SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -602,11 +602,11 @@ TEST_CASE("Node Based Geometry IO")
   // Read HDF5 file
   try
   {
-    complex::HDF5::FileReader fileReader(filePathString);
+    nx::core::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
     auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
-    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
     checkNodeGeomData(dataStructure, nodeData);
@@ -636,14 +636,14 @@ TEST_CASE("NeighborList IO")
   {
     DataStructure dataStructure;
     CreateNeighborList(dataStructure);
-    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePathString);
-    COMPLEX_RESULT_REQUIRE_VALID(result);
+    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePathString);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-    complex::HDF5::FileWriter fileWriter = std::move(result.value());
+    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
     Result<> writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-    COMPLEX_RESULT_REQUIRE_VALID(writeResult);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -652,12 +652,12 @@ TEST_CASE("NeighborList IO")
   // Read HDF5 file
   try
   {
-    complex::HDF5::FileReader fileReader(filePathString);
+    nx::core::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
     herr_t err = 0;
     auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
-    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
     // auto neighborList = dataStructure.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
@@ -689,14 +689,14 @@ TEST_CASE("DataArray<bool> IO")
   {
     DataStructure dataStructure;
     CreateArrayTypes(dataStructure);
-    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePathString);
-    COMPLEX_RESULT_REQUIRE_VALID(result);
+    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePathString);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-    complex::HDF5::FileWriter fileWriter = std::move(result.value());
+    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
     Result<> writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-    COMPLEX_RESULT_REQUIRE_VALID(writeResult);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -705,11 +705,11 @@ TEST_CASE("DataArray<bool> IO")
   // Read HDF5 file
   try
   {
-    complex::HDF5::FileReader fileReader(filePathString);
+    nx::core::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
     auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
-    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
     REQUIRE(dataStructure.getDataAs<DataArray<int8>>(DataPath({"Int8Array"})) != nullptr);
@@ -741,11 +741,11 @@ TEST_CASE("DataArray<bool> IO")
   // Read HDF5 file in preflight mode to make sure StringArrays import correctly
   try
   {
-    complex::HDF5::FileReader fileReader(filePathString);
+    nx::core::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
     auto readResult = HDF5::DataStructureReader::ReadFile(fileReader, true);
-    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
     StringArray* stringArray = dataStructure.getDataAs<StringArray>(DataPath({"StringArray"}));
@@ -783,19 +783,19 @@ TEST_CASE("xdmf")
   }
   auto* data = DataArray<int32>::Create(dataStructure, "Data", std::move(vertexAssociatedData), vertexData->getId());
   Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", dataStructure, {}, true);
-  COMPLEX_RESULT_REQUIRE_VALID(result);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
 
 TEST_CASE("H5 Utilities")
 {
-  REQUIRE_THROWS(complex::HDF5::GetNameFromBuffer(""));
-  REQUIRE_THROWS(complex::HDF5::GetNameFromBuffer("/Group/"));
-  std::string objectName = complex::HDF5::GetNameFromBuffer("/");
+  REQUIRE_THROWS(nx::core::HDF5::GetNameFromBuffer(""));
+  REQUIRE_THROWS(nx::core::HDF5::GetNameFromBuffer("/Group/"));
+  std::string objectName = nx::core::HDF5::GetNameFromBuffer("/");
   REQUIRE(objectName == "/");
-  objectName = complex::HDF5::GetNameFromBuffer("/Group/Geometry/Data");
+  objectName = nx::core::HDF5::GetNameFromBuffer("/Group/Geometry/Data");
   REQUIRE(objectName == "Data");
-  objectName = complex::HDF5::GetNameFromBuffer("Data");
+  objectName = nx::core::HDF5::GetNameFromBuffer("Data");
   REQUIRE(objectName == "Data");
-  objectName = complex::HDF5::GetNameFromBuffer("/Data");
+  objectName = nx::core::HDF5::GetNameFromBuffer("/Data");
   REQUIRE(objectName == "Data");
 }

@@ -4,19 +4,19 @@
 #include "ITKImageProcessing/Filters/ITKMhaFileReader.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITKImageProcessing][ITKMhaFileReader]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_rev2.tar.gz", "ITKMhaFileReaderTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_rev2.tar.gz", "ITKMhaFileReaderTest");
 
-  // Load plugins (this is needed because ITKMhaFileReader needs access to the ComplexCore plugin)
+  // Load plugins (this is needed because ITKMhaFileReader needs access to the SimplnxCore plugin)
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Test reading 2D & 3D image data
@@ -62,10 +62,10 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   args.insertOrAssign(ITKMhaFileReader::k_TransformationMatrixDataArrayPathKey, tMatrixPath);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   REQUIRE(imageGeomPtr != nullptr);

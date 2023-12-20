@@ -11,7 +11,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ReadAngDataFilter",
+        "name": "simplnx::ReadAngDataFilter",
         "uuid": "5b062816-79ac-47ce-93cb-e7966896bcbd"
       },
       "isDisabled": false
@@ -28,7 +28,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::RotateEulerRefFrameFilter",
+        "name": "simplnx::RotateEulerRefFrameFilter",
         "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
       },
       "isDisabled": false
@@ -66,7 +66,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::RotateSampleRefFrameFilter",
+        "name": "simplnx::RotateSampleRefFrameFilter",
         "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
       },
       "isDisabled": false
@@ -97,7 +97,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::MultiThresholdObjects",
+        "name": "simplnx::MultiThresholdObjects",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
@@ -118,7 +118,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::GenerateIPFColorsFilter",
+        "name": "simplnx::GenerateIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false

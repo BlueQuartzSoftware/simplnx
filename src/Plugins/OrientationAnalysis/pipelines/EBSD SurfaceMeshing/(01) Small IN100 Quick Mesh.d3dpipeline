@@ -67,7 +67,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ReadDREAM3DFilter",
+        "name": "simplnx::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
@@ -94,7 +94,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::CropImageGeometry",
+        "name": "simplnx::CropImageGeometry",
         "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
       },
       "isDisabled": false
@@ -106,7 +106,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::MoveData",
+        "name": "simplnx::MoveData",
         "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
       },
       "isDisabled": true
@@ -127,7 +127,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::QuickSurfaceMeshFilter",
+        "name": "simplnx::QuickSurfaceMeshFilter",
         "uuid": "13dd00bd-ad49-4e04-95eb-3267952fd6e5"
       },
       "isDisabled": false
@@ -139,7 +139,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::WriteDREAM3DFilter",
+        "name": "simplnx::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

@@ -1,7 +1,7 @@
 :: ****************************************************************************
 :: This script file builds the necessary dependencies that are not found as 
 :: part of a python environment but are needed to ultimately build the 
-:: complex python bindings.
+:: simplnx python bindings.
 :: ****************************************************************************
 
 mkdir sdk
@@ -151,13 +151,13 @@ if errorlevel 1 exit 1
 cd ..
 
 :: ****************************************************************************
-:: Build the complex library
+:: Build the simplnx library
 :: ****************************************************************************
 
 mkdir build
 cd build
 
-cmake --preset conda-win ../complex
+cmake --preset conda-win ../simplnx
 if errorlevel 1 exit 1
 
 cmake --build . --target all

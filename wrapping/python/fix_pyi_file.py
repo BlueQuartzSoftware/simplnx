@@ -3,8 +3,8 @@ import argparse
 from pathlib import Path
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description='Fixes the generated .pyi complex module file')
-    parser.add_argument('-i', '--input_file', type=Path, help='Input complex.pyi file to fix')
+    parser = argparse.ArgumentParser(description='Fixes the generated .pyi simplnx module file')
+    parser.add_argument('-i', '--input_file', type=Path, help='Input simplnx.pyi file to fix')
 
     args = parser.parse_args()
 

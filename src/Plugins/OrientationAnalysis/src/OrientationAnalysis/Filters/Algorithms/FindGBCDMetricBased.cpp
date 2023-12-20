@@ -2,23 +2,23 @@
 
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <Eigen/Dense>
 
-#ifdef COMPLEX_ENABLE_MULTICORE
+#ifdef SIMPLNX_ENABLE_MULTICORE
 #include <tbb/concurrent_vector.h>
 #endif
 
-using namespace complex;
-using namespace complex::OrientationUtilities;
+using namespace nx::core;
+using namespace nx::core::OrientationUtilities;
 namespace fs = std::filesystem;
 using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
@@ -65,7 +65,7 @@ class TrianglesSelector
 {
 public:
   TrianglesSelector(bool excludeTripleLines, const IGeometry::SharedFaceList& triangles, const Int8Array& nodeTypes,
-#ifdef COMPLEX_ENABLE_MULTICORE
+#ifdef SIMPLNX_ENABLE_MULTICORE
                     tbb::concurrent_vector<TriAreaAndNormals>& selectedTriangles,
 #else
                     std::vector<TriAreaAndNormals>& selectedTriangles,
@@ -220,7 +220,7 @@ private:
   const IGeometry::SharedFaceList& m_Triangles;
   const Int8Array& m_NodeTypes;
 
-#ifdef COMPLEX_ENABLE_MULTICORE
+#ifdef SIMPLNX_ENABLE_MULTICORE
   tbb::concurrent_vector<TriAreaAndNormals>& m_SelectedTriangles;
 #else
   std::vector<TriAreaAndNormals>& m_SelectedTriangles;
@@ -250,7 +250,7 @@ class ProbeDistribution
 public:
   ProbeDistribution(std::vector<float64>& distributionValues, std::vector<float64>& errorValues, const std::vector<float64>& samplePtsX, const std::vector<float64>& samplePtsY,
                     const std::vector<float64>& samplePtsZ,
-#ifdef COMPLEX_ENABLE_MULTICORE
+#ifdef SIMPLNX_ENABLE_MULTICORE
                     const tbb::concurrent_vector<TriAreaAndNormals>& selectedTriangles,
 #else
                     const std::vector<TriAreaAndNormals>& selectedTriangles,
@@ -324,7 +324,7 @@ private:
   std::vector<float64> m_SamplePtsX;
   std::vector<float64> m_SamplePtsY;
   std::vector<float64> m_SamplePtsZ;
-#ifdef COMPLEX_ENABLE_MULTICORE
+#ifdef SIMPLNX_ENABLE_MULTICORE
   const tbb::concurrent_vector<TriAreaAndNormals>& m_SelectedTriangles;
 #else
   const std::vector<TriAreaAndNormals>& m_SelectedTriangles;
@@ -475,7 +475,7 @@ Result<> FindGBCDMetricBased::operator()()
   const usize numMeshTriangles = faceAreas.getNumberOfTuples();
 
 // ---------  find triangles (and equivalent crystallographic parameters) with +- the fixed mis orientation ---------
-#ifdef COMPLEX_ENABLE_MULTICORE
+#ifdef SIMPLNX_ENABLE_MULTICORE
   tbb::concurrent_vector<GBCDMetricBased::TriAreaAndNormals> selectedTriangles(0);
 #else
   std::vector<GBCDMetricBased::TriAreaAndNormals> selectedTriangles(0);

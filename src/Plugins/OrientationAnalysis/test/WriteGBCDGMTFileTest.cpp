@@ -4,21 +4,21 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Parameters/util/ReadCSVData.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Parameters/util/ReadCSVData.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::UnitTest;
+using namespace nx::core;
+using namespace nx::core::UnitTest;
 
 namespace
 {
@@ -41,7 +41,7 @@ inline constexpr StringLiteral k_GMT3("GMT3");
 
 TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][WriteGBCDGMTFile]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
@@ -49,7 +49,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath smallIn100Group({complex::Constants::k_SmallIN100});
+  const DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
   const DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_Grain_Data);
   const DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
   const DataPath featurePhasesPath = featureDataPath.createChildPath(Constants::k_Phases);
@@ -85,11 +85,11 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
 
       // Preflight the filter and check result
       auto preflightResult = gmtFilter.preflight(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
       // Execute the filter and check the result
       auto executeResult = gmtFilter.execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     // Compare the Output Pole Figure
@@ -113,7 +113,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(faceEnsemblePath));
 
       auto executeResult = importDataFilter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     {
@@ -133,7 +133,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(gmtGroupPath));
 
       auto executeResult = importDataFilter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     const DataPath gmt1ArrayPath = gmtGroupPath.createChildPath(k_GMT1);
@@ -171,11 +171,11 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     // Compare the Output Pole Figure
@@ -199,7 +199,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(faceEnsemblePath));
 
       auto executeResult = importDataFilter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     {
@@ -219,7 +219,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(gmtGroupPath));
 
       auto executeResult = importDataFilter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     const DataPath gmt1ArrayPath = gmtGroupPath.createChildPath(k_GMT1);
@@ -257,11 +257,11 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     // Compare the Output Pole Figure
@@ -285,7 +285,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(faceEnsemblePath));
 
       auto executeResult = importDataFilter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     {
@@ -305,7 +305,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(gmtGroupPath));
 
       auto executeResult = importDataFilter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     const DataPath gmt1ArrayPath = gmtGroupPath.createChildPath(k_GMT1);
@@ -326,7 +326,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
     UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, exemplarGmt3ArrayPath, gmt3ArrayPath);
   }
 
-#ifdef COMPLEX_WRITE_TEST_OUTPUT
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/gbcd_gmt.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }

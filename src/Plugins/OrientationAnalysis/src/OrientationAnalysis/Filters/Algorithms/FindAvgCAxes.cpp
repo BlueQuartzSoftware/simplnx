@@ -2,15 +2,15 @@
 
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
 
-using namespace complex;
-using namespace complex::OrientationUtilities;
+using namespace nx::core;
+using namespace nx::core::OrientationUtilities;
 
 // -----------------------------------------------------------------------------
 FindAvgCAxes::FindAvgCAxes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindAvgCAxesInputValues* inputValues)

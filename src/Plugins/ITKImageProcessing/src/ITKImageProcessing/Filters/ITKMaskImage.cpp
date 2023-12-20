@@ -2,22 +2,22 @@
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
 #include <itkCastImageFilter.h>
 #include <itkMaskImageFilter.h>
 
 #include <numeric>
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <stdexcept>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace cxITKMaskImage
 {
@@ -107,7 +107,7 @@ struct ITKMaskImageFunctor
 };
 } // namespace cxITKMaskImage
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ITKMaskImage::name() const
@@ -151,9 +151,9 @@ Parameters ITKMaskImage::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
-                                                          complex::GetAllDataTypes()));
+                                                          nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskImageDataPath_Key, "MaskImage", "The path to the image data to be used as the mask (should be the same size as the input image)",
-                                                          DataPath{}, complex::GetAllDataTypes()));
+                                                          DataPath{}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(
@@ -211,7 +211,7 @@ Result<> ITKMaskImage::executeImpl(DataStructure& dataStructure, const Arguments
 
   return ITK::Execute<cxITKMaskImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
-} // namespace complex
+} // namespace nx::core
 
 namespace
 {

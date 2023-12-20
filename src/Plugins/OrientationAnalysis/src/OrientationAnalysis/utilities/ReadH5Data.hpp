@@ -3,15 +3,15 @@
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/StringArray.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include "EbsdLib/IO/BrukerNano/H5EspritReader.h"
 #include "EbsdLib/IO/TSL/H5OIMReader.h"
 
-namespace complex
+namespace nx::core
 {
 struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 {
@@ -140,4 +140,4 @@ protected:
   const ReadH5DataInputValues* m_InputValues;
 };
 
-} // namespace complex
+} // namespace nx::core

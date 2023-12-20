@@ -4,21 +4,21 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
-#include "complex/Common/Types.hpp"
-#include "complex/Core/Application.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/Dream3dImportParameter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumericTypeParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/Dream3dImportParameter.hpp"
+#include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumericTypeParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::Constants;
-using namespace complex::UnitTest;
+using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 /**
  * Read H5Ebsd File
@@ -38,14 +38,14 @@ using namespace complex::UnitTest;
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline", "[OrientationAnalysis][AlignSectionsMisorientation]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_align_sections_misorientation.tar.gz",
-                                                             "6_6_align_sections_misorientation.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_align_sections_misorientation.tar.gz",
+                                                              "6_6_align_sections_misorientation.dream3d");
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
 
   const std::string kDataInputArchive2 = "align_sections.tar.gz";
   const std::string kExpectedOutputTopLevel2 = "align_sections_misorientation.txt";
-  const complex::UnitTest::TestFileSentinel testDataSentinel2(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive2, kExpectedOutputTopLevel2);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, kDataInputArchive2, kExpectedOutputTopLevel2);
 
   // We are just going to generate a big number so that we can use that in the output
   // file path. This tests the creation of intermediate directories that the filter
@@ -85,7 +85,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     Arguments args;
     // read in the exemplar shift data file
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/align_sections_misorientation.txt", unit_test::k_TestFilesDir))));
-    args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::int32));
+    args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
     args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(116)}}));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
@@ -94,14 +94,14 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
     auto executeResult = filter->execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  // MultiThreshold Objects Filter (From ComplexCore Plugins)
+  // MultiThreshold Objects Filter (From SimplnxCore Plugins)
   SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
 
   // Convert Orientations Filter (From OrientationAnalysis Plugin)
@@ -129,11 +129,11 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
   CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer);
@@ -155,7 +155,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
 
     Arguments args;
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
-    args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::int32));
+    args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
     args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(116)}}));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
@@ -164,13 +164,13 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
     auto executeResult = filter->execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
-#ifdef COMPLEX_WRITE_TEST_OUTPUT
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_misorientation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 

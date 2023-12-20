@@ -1,6 +1,6 @@
 from enum import IntEnum
 from typing import List
-import complex as cx
+import simplnx as nx
 import numpy as np
 
 def _get_min_max_of(dtype):
@@ -28,8 +28,8 @@ class InitializeDataPythonFilter:
   INIT_RANGE_KEY = 'init_range'
   INIT_INDICES_OFFSET_KEY = 'indices_offset'
 
-  def uuid(self) -> cx.Uuid:
-    return cx.Uuid('7e43c3e1-1f94-4115-9ca4-d41171315d71')
+  def uuid(self) -> nx.Uuid:
+    return nx.Uuid('7e43c3e1-1f94-4115-9ca4-d41171315d71')
 
   def human_name(self) -> str:
     return 'Initialize Data (Python)'
@@ -46,17 +46,17 @@ class InitializeDataPythonFilter:
   def clone(self):
     return InitializeDataPythonFilter()
 
-  def parameters(self) -> cx.Parameters:
-    params = cx.Parameters()
+  def parameters(self) -> nx.Parameters:
+    params = nx.Parameters()
 
-    params.insert(cx.MultiArraySelectionParameter(InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY, 'Cell Arrays', '', [], {cx.IArray.ArrayType.DataArray}, cx.get_all_data_types(), []))
-    params.insert(cx.GeometrySelectionParameter(InitializeDataPythonFilter.IMAGE_GEOMETRY_PATH_KEY, 'Image Geometry', '', cx.DataPath(), {cx.IGeometry.Type.Image}))
-    params.insert(cx.VectorUInt64Parameter(InitializeDataPythonFilter.MIN_POINT_KEY, 'Min Point', '', [0, 0, 0], ['X (Column)', 'Y (Row)', 'Z (Plane)']))
-    params.insert(cx.VectorUInt64Parameter(InitializeDataPythonFilter.MAX_POINT_KEY, 'Max Point', '', [0, 0, 0], ['X (Column)', 'Y (Row)', 'Z (Plane)']))
-    params.insert_linkable_parameter(cx.ChoicesParameter(self.INIT_TYPE_KEY, 'Initialization Type', '', InitializeDataPythonFilter.InitType.MANUAL, ['Manual', 'Random', 'Random With Range', 'Indices']))
-    params.insert(cx.Float64Parameter(InitializeDataPythonFilter.INIT_VALUE_KEY, 'Initialization Value', '', 0.0))
-    params.insert(cx.VectorFloat64Parameter(InitializeDataPythonFilter.INIT_RANGE_KEY, 'Initialization Range', '', [0.0, 0.0]))
-    params.insert(cx.Float64Parameter(InitializeDataPythonFilter.INIT_INDICES_OFFSET_KEY, 'Index offset', '', 0.0))
+    params.insert(nx.MultiArraySelectionParameter(InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY, 'Cell Arrays', '', [], {nx.IArray.ArrayType.DataArray}, nx.get_all_data_types(), []))
+    params.insert(nx.GeometrySelectionParameter(InitializeDataPythonFilter.IMAGE_GEOMETRY_PATH_KEY, 'Image Geometry', '', nx.DataPath(), {nx.IGeometry.Type.Image}))
+    params.insert(nx.VectorUInt64Parameter(InitializeDataPythonFilter.MIN_POINT_KEY, 'Min Point', '', [0, 0, 0], ['X (Column)', 'Y (Row)', 'Z (Plane)']))
+    params.insert(nx.VectorUInt64Parameter(InitializeDataPythonFilter.MAX_POINT_KEY, 'Max Point', '', [0, 0, 0], ['X (Column)', 'Y (Row)', 'Z (Plane)']))
+    params.insert_linkable_parameter(nx.ChoicesParameter(self.INIT_TYPE_KEY, 'Initialization Type', '', InitializeDataPythonFilter.InitType.MANUAL, ['Manual', 'Random', 'Random With Range', 'Indices']))
+    params.insert(nx.Float64Parameter(InitializeDataPythonFilter.INIT_VALUE_KEY, 'Initialization Value', '', 0.0))
+    params.insert(nx.VectorFloat64Parameter(InitializeDataPythonFilter.INIT_RANGE_KEY, 'Initialization Range', '', [0.0, 0.0]))
+    params.insert(nx.Float64Parameter(InitializeDataPythonFilter.INIT_INDICES_OFFSET_KEY, 'Index offset', '', 0.0))
 
     params.link_parameters(InitializeDataPythonFilter.INIT_TYPE_KEY, InitializeDataPythonFilter.INIT_VALUE_KEY, InitializeDataPythonFilter.InitType.MANUAL)
     params.link_parameters(InitializeDataPythonFilter.INIT_TYPE_KEY, InitializeDataPythonFilter.INIT_RANGE_KEY, InitializeDataPythonFilter.InitType.RANDOM_WITH_RANGE)
@@ -64,11 +64,11 @@ class InitializeDataPythonFilter:
 
     return params
 
-  def preflight_impl(self, data_structure: cx.DataStructure, args: dict, message_handler: cx.IFilter.MessageHandler, should_cancel: cx.AtomicBoolProxy) -> cx.IFilter.PreflightResult:
-    message_handler(cx.IFilter.Message(cx.IFilter.Message.Type.Info, f'Preflighting InitializeData'))
+  def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Preflighting InitializeData'))
 
-    cell_array_paths: List[cx.DataPath] = args[InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY]
-    image_geom_path: cx.DataPath = args[InitializeDataPythonFilter.IMAGE_GEOMETRY_PATH_KEY]
+    cell_array_paths: List[nx.DataPath] = args[InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY]
+    image_geom_path: nx.DataPath = args[InitializeDataPythonFilter.IMAGE_GEOMETRY_PATH_KEY]
     min_point: List[int] = args[InitializeDataPythonFilter.MIN_POINT_KEY]
     max_point: List[int] = args[InitializeDataPythonFilter.MAX_POINT_KEY]
     init_type: int = args[InitializeDataPythonFilter.INIT_TYPE_KEY]
@@ -90,24 +90,24 @@ class InitializeDataPythonFilter:
       return (-5550, 'At least one data array must be selected.')
 
     if x_max < x_min:
-      errors.append(cx.Error(-5551, f'X Max ({x_max}) less than X Min ({x_min})'))
+      errors.append(nx.Error(-5551, f'X Max ({x_max}) less than X Min ({x_min})'))
 
     if y_max < y_min:
-      errors.append(cx.Error(-5552, f'Y Max ({y_max}) less than Y Min ({y_min})'))
+      errors.append(nx.Error(-5552, f'Y Max ({y_max}) less than Y Min ({y_min})'))
 
     if z_max < z_min:
-      errors.append(cx.Error(-5553, f'Z Max ({z_max}) less than Z Min ({z_min})'))
+      errors.append(nx.Error(-5553, f'Z Max ({z_max}) less than Z Min ({z_min})'))
 
     image_geom = data_structure[image_geom_path]
 
     if x_max > (image_geom.num_x_cells - 1):
-      errors.append(cx.Error(-5557, f'The X Max you entered of {x_max} is greater than your Max X Point of {image_geom.num_x_cells - 1}'))
+      errors.append(nx.Error(-5557, f'The X Max you entered of {x_max} is greater than your Max X Point of {image_geom.num_x_cells - 1}'))
 
     if y_max > (image_geom.num_y_cells - 1):
-      errors.append(cx.Error(-5558, f'The Y Max you entered of {y_max} is greater than your Max Y Point of {image_geom.num_y_cells - 1}'))
+      errors.append(nx.Error(-5558, f'The Y Max you entered of {y_max} is greater than your Max Y Point of {image_geom.num_y_cells - 1}'))
 
     if z_max > (image_geom.num_z_cells - 1):
-      errors.append(cx.Error(-5559, f'The Z Max you entered of {z_max} is greater than your Max Z Point of {image_geom.num_z_cells - 1}'))
+      errors.append(nx.Error(-5559, f'The Z Max you entered of {z_max} is greater than your Max Z Point of {image_geom.num_z_cells - 1}'))
 
     image_dims = image_geom.dimensions
 
@@ -116,35 +116,35 @@ class InitializeDataPythonFilter:
     for path in cell_array_paths:
       data_array = data_structure[path]
       if len(data_array.tuple_shape) != len(reversed_image_dims):
-        errors.append(cx.Error(-5560, f'DataArray at \'{path}\' does not match dimensions of ImageGeometry at \'{image_geom_path}\''))
+        errors.append(nx.Error(-5560, f'DataArray at \'{path}\' does not match dimensions of ImageGeometry at \'{image_geom_path}\''))
 
       dtype = data_array.dtype
       min_value, max_value = _get_min_max_of(dtype)
       if init_type == InitializeDataPythonFilter.InitType.MANUAL:
         if init_value < min_value or init_value > max_value:
-          errors.append(cx.Error(-4000, f'{data_array.name}: The initialization value could not be converted. The valid range is {min_value} to {max_value}'))
+          errors.append(nx.Error(-4000, f'{data_array.name}: The initialization value could not be converted. The valid range is {min_value} to {max_value}'))
       elif init_type == InitializeDataPythonFilter.InitType.RANDOM_WITH_RANGE:
         range_min = init_range[0]
         range_max = init_range[1]
         if range_min > range_max:
-          errors.append(cx.Error(-5550, 'Invalid initialization range. Minimum value is larger than maximum value.'))
+          errors.append(nx.Error(-5550, 'Invalid initialization range. Minimum value is larger than maximum value.'))
         if range_min < min_value or range_max > max_value:
-          errors.append(cx.Error(-4001, f'{data_array.name}: The initialization range can only be from {min_value} to {max_value}'))
+          errors.append(nx.Error(-4001, f'{data_array.name}: The initialization range can only be from {min_value} to {max_value}'))
         if range_min == range_max:
-          errors.append(cx.Error(-4002, 'The initialization range must have differing values'))
+          errors.append(nx.Error(-4002, 'The initialization range must have differing values'))
       elif init_type == InitializeDataPythonFilter.InitType.INDICES:
         if init_indices_offset < min_value or init_indices_offset > max_value:
-          errors.append(cx.Error(-4000, f'{data_array.name}: The initialization value could not be converted. The valid range is {min_value} to {max_value}'))
+          errors.append(nx.Error(-4000, f'{data_array.name}: The initialization value could not be converted. The valid range is {min_value} to {max_value}'))
 
     if len(errors) != 0:
-      return cx.IFilter.PreflightResult(errors=errors)
+      return nx.IFilter.PreflightResult(errors=errors)
 
-    return cx.IFilter.PreflightResult()
+    return nx.IFilter.PreflightResult()
 
-  def execute_impl(self, data_structure: cx.DataStructure, args: dict, message_handler: cx.IFilter.MessageHandler, should_cancel: cx.AtomicBoolProxy) -> cx.IFilter.ExecuteResult:
-    message_handler(cx.IFilter.Message(cx.IFilter.Message.Type.Info, f'Executing InitializeData'))
+  def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Executing InitializeData'))
 
-    cell_array_paths: List[cx.DataPath] = args[InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY]
+    cell_array_paths: List[nx.DataPath] = args[InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY]
     min_point: List[int] = args[InitializeDataPythonFilter.MIN_POINT_KEY]
     max_point: List[int] = args[InitializeDataPythonFilter.MAX_POINT_KEY]
     init_type: int = args[InitializeDataPythonFilter.INIT_TYPE_KEY]
@@ -181,4 +181,4 @@ class InitializeDataPythonFilter:
         else:
           data_slice[:] = rng.integers(range_min, range_max, size=data_slice.size).reshape(data_slice.shape)
 
-    return cx.Result()
+    return nx.Result()

@@ -2,24 +2,24 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/AlignSectionsMutualInformation.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/EmptyAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string AlignSectionsMutualInformationFilter::name() const
@@ -112,7 +112,7 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
@@ -136,7 +136,7 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPathValue.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPathValue.getParent(), {});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -197,4 +197,4 @@ Result<Arguments> AlignSectionsMutualInformationFilter::FromSIMPLJson(const nloh
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

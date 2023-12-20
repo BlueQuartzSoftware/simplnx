@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKBinaryMorphologicalOpeningImage
@@ -48,7 +48,7 @@ public:
   static inline constexpr StringLiteral k_ForegroundValue_Key = "foreground_value";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -121,6 +121,6 @@ protected:
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKBinaryMorphologicalOpeningImage, "861ccb46-dbce-41bf-a66f-25cc18cd1073");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKBinaryMorphologicalOpeningImage, "861ccb46-dbce-41bf-a66f-25cc18cd1073");

@@ -5,7 +5,7 @@
 
 #include <Eigen/Dense>
 
-namespace complex
+namespace nx::core
 {
 namespace OrientationUtilities
 {
@@ -71,4 +71,4 @@ Eigen::Matrix<T, 3, 3, Eigen::RowMajor> EbsdLibMatrixToEigenMatrix(const EbsdLib
 std::string CrystalStructureEnumToString(uint32_t crystalStructureType);
 
 } // namespace OrientationUtilities
-} // namespace complex
+} // namespace nx::core

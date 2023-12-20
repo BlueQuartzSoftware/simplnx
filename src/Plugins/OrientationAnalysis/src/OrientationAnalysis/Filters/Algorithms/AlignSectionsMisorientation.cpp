@@ -1,16 +1,16 @@
 #include "AlignSectionsMisorientation.hpp"
 
-#include "complex/Common/Numbers.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <iostream>
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 AlignSectionsMisorientation::AlignSectionsMisorientation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -70,7 +70,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-      // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
       std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->goodVoxelsArrayPath.toString());
       return MakeErrorResult(-53900, message);
     }
@@ -81,7 +81,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
   {
     // Make sure any directory path is also available as the user may have just typed
     // in a path without actually creating the full path
-    Result<> createDirectoriesResult = complex::CreateOutputDirectories(m_InputValues->alignmentShiftFileName.parent_path());
+    Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->alignmentShiftFileName.parent_path());
     if(createDirectoriesResult.invalid())
     {
       return createDirectoriesResult;
@@ -118,7 +118,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
   const auto halfDim0 = static_cast<int64_t>(dims[0] * 0.5f);
   const auto halfDim1 = static_cast<int64_t>(dims[1] * 0.5f);
 
-  double deg2Rad = (complex::numbers::pi / 180.0);
+  double deg2Rad = (nx::core::numbers::pi / 180.0);
   auto start = std::chrono::steady_clock::now();
   // Loop over the Z Direction
   for(int64_t iter = 1; iter < dims[2]; iter++)
@@ -129,7 +129,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
       std::string message = fmt::format("Determining Shifts || {}% Complete", progInt);
-      m_MessageHandler(complex::IFilter::ProgressMessage{complex::IFilter::Message::Type::Info, message, progInt});
+      m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
       start = std::chrono::steady_clock::now();
     }
     if(getCancel())

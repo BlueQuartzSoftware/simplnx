@@ -1,18 +1,18 @@
 #include "WriteINLFile.hpp"
 
-#include "complex/ComplexVersion.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/StringArray.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/SIMPLNXVersion.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/IO/TSL/AngConstants.h"
 
 #include <fstream>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -75,7 +75,7 @@ Result<> WriteINLFile::operator()()
 {
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
-  Result<> createDirectoriesResult = complex::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;
@@ -105,7 +105,7 @@ Result<> WriteINLFile::operator()()
   FloatVec3 origin = imageGeom.getOrigin();
 
   // Write the header, Each line starts with a "#" symbol
-  fout << "# File written from " << complex::Version::PackageComplete() << "\n";
+  fout << "# File written from " << nx::core::Version::PackageComplete() << "\n";
   fout << "# X_STEP: " << std::fixed << res[0] << "\n";
   fout << "# Y_STEP: " << std::fixed << res[1] << "\n";
   fout << "# Z_STEP: " << std::fixed << res[2] << "\n";

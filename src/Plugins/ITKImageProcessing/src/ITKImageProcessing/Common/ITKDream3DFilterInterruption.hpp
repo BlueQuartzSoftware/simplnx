@@ -12,7 +12,7 @@
 #include <itkCommand.h>
 #include <itkProcessObject.h>
 
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 namespace itk
 {

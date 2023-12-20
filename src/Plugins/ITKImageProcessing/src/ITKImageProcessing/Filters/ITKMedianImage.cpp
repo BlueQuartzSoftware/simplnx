@@ -3,16 +3,16 @@
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <itkMedianImageFilter.h>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace cxITKMedianImage
 {
@@ -41,7 +41,7 @@ struct ITKMedianImageFunctor
 };
 } // namespace cxITKMedianImage
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ITKMedianImage::name() const
@@ -84,7 +84,7 @@ Parameters ITKMedianImage::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
-                                                          complex::ITK::GetScalarPixelAllowedTypes()));
+                                                          nx::core::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
@@ -159,4 +159,4 @@ Result<Arguments> ITKMedianImage::FromSIMPLJson(const nlohmann::json& json)
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

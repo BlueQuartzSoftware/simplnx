@@ -2,9 +2,9 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Plugin/AbstractPlugin.hpp"
+#include "simplnx/Plugin/AbstractPlugin.hpp"
 
-class ORIENTATIONANALYSIS_EXPORT OrientationAnalysisPlugin : public complex::AbstractPlugin
+class ORIENTATIONANALYSIS_EXPORT OrientationAnalysisPlugin : public nx::core::AbstractPlugin
 {
 public:
   OrientationAnalysisPlugin();
@@ -18,8 +18,8 @@ public:
 
   /**
    * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
-   * their complex counterpart
-   * @return std::map<complex::Uuid, complex::Uuid>
+   * their simplnx counterpart
+   * @return std::map<nx::core::Uuid, nx::core::Uuid>
    */
-  SIMPLMapType getSimplToComplexMap() const override;
+  SIMPLMapType getSimplToSimplnxMap() const override;
 };

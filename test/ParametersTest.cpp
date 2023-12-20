@@ -1,12 +1,12 @@
-#include "complex/Filter/Parameters.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+#include "simplnx/Filter/Parameters.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 
 #include <catch2/catch.hpp>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {

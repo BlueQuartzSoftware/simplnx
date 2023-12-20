@@ -2,15 +2,15 @@
 
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
-using namespace complex::OrientationUtilities;
+using namespace nx::core;
+using namespace nx::core::OrientationUtilities;
 
 // -----------------------------------------------------------------------------
 CAxisSegmentFeatures::CAxisSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CAxisSegmentFeaturesInputValues* inputValues)
@@ -42,7 +42,7 @@ Result<> CAxisSegmentFeatures::operator()()
     } catch(const std::out_of_range&)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-      // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
       return MakeErrorResult(-8362, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
     }
   }

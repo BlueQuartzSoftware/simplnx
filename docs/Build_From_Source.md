@@ -22,7 +22,7 @@
 
 ## Prerequisites ##
 
-In order to compile `complex` you will need a C++17 compiler suite installed on your computer.
+In order to compile `simplnx` you will need a C++17 compiler suite installed on your computer.
 
 + Compiler
   + Windows Visual Studio 2019 v142 toolset
@@ -31,7 +31,7 @@ In order to compile `complex` you will need a C++17 compiler suite installed on 
 
 ## Install vcpkg ##
 
-The `complex` project uses the [vcpkg](https://www.github.com/microsoft/vcpkg) to manage it's dependent libraries. If this is not already installed on your system then you will need to download and compile it.
+The `simplnx` project uses the [vcpkg](https://www.github.com/microsoft/vcpkg) to manage it's dependent libraries. If this is not already installed on your system then you will need to download and compile it.
 
 ### Windows ###
 
@@ -46,31 +46,31 @@ The `bootstrap-vcpkg.bat` file should be run automatically by CMake the first ti
 
 ## Clone Appropriate Repositories ##
 
-Within the folder DREAM3D-Dev clone both the `complex` and `DREAM3D_Data` repositories. The `DREAM3D_Data` repo is optional but does contain testing data.
+Within the folder DREAM3D-Dev clone both the `simplnx` and `DREAM3D_Data` repositories. The `DREAM3D_Data` repo is optional but does contain testing data.
 
-Create a location to keep the `complex` repositories and make builds. You can do either in-source our out-of-source builds.
+Create a location to keep the `simplnx` repositories and make builds. You can do either in-source our out-of-source builds.
 
 ```shell
 git clone --recursive https://github.com/bluequartzsoftware/complex
 ```
 
-## Configure complex with CMake ##
+## Configure simplnx with CMake ##
 
 For this example we are going to do an "in-source" build. By default git will ignore some basic names for build directories such as `Debug, Release, x64`. CMake can generate lots of project files from ninja, to nmake to Visual Studio. For this example we are going to use the `ninja` generator so we will need to keep the Debug and Release builds separated.
 
-The first time `complex` is configured with CMake, VCPKG will download, build and install the needed dependent libraries. This can take a few minutes so be patient. After `complex` is configured you can build it using your IDE (Visual Studio) or ninja (QtCreator, CLion) or cmake itself.
+The first time `simplnx` is configured with CMake, VCPKG will download, build and install the needed dependent libraries. This can take a few minutes so be patient. After `simplnx` is configured you can build it using your IDE (Visual Studio) or ninja (QtCreator, CLion) or cmake itself.
 
 ### Windows with Visual Studio IDE ###
 
-This example shows how to configure complex to build using Visual Studio IDE
+This example shows how to configure simplnx to build using Visual Studio IDE
 
 ```shell
 set BUILD_DIR=VisualStudio
 set VCPKG_INSTALL_ROOT=C:/Appications/vcpkg
-cd complex
+cd simplnx
 mkdir %BUILD_DIR%
 cd %BUILD_DIR%
-cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALL_ROOT%/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=%BUILD_DIR% -DVCPKG_MANIFEST_FEATURES="tests;parallel"  -DDREAM3D_Data_Dir=../../DREAM3D_Data ../complex
+cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALL_ROOT%/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=%BUILD_DIR% -DVCPKG_MANIFEST_FEATURES="tests;parallel"  -DDREAM3D_Data_Dir=../../DREAM3D_Data ../simplnx
 ```
 
 ### Windows with Ninja and IDE of choice (QtCreator, CLion, command line) ###
@@ -84,10 +84,10 @@ set NINJA_INSTALL=C:/Applications/ninja-win
 set PATH=%PATH%:%NINJA_INSTALL%
 set BUILD_DIR=Release
 set VCPKG_INSTALL_ROOT=C:/Appications/vcpkg
-cd complex
+cd simplnx
 mkdir %BUILD_DIR%
 cd %BUILD_DIR%
-cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALL_ROOT%/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=%BUILD_DIR% -DVCPKG_MANIFEST_FEATURES="tests;parallel" -DDREAM3D_Data_Dir=../../DREAM3D_Data ../complex
+cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALL_ROOT%/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=%BUILD_DIR% -DVCPKG_MANIFEST_FEATURES="tests;parallel" -DDREAM3D_Data_Dir=../../DREAM3D_Data ../simplnx
 ```
 
 ### macOS ARM64/M1 Compile and IDE of choice (QtCreator, CLion, command line) ###
@@ -101,10 +101,10 @@ export VCPKG_INSTALL_ROOT=/opt/local/vcpkg
 export VCPKG_TARGET_TRIPLET=arm64-osx-dynamic
 # This is used for Intel x64
 export VCPKG_TARGET_TRIPLET=x64-osx-dynamic
-cd complex
+cd simplnx
 mkdir $BUILD_DIR
 cd $BUILD_DIR
-cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALL_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=$BUILD_DIR -DVCPKG_MANIFEST_FEATURES="tests;parallel" -DDREAM3D_DATA_DIR=$HOME/Workspace1/DREAM3D_Data -DVCPKG_TARGET_TRIPLET:STRING=$VCPKG_TARGET_TRIPLET ../complex
+cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALL_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=$BUILD_DIR -DVCPKG_MANIFEST_FEATURES="tests;parallel" -DDREAM3D_DATA_DIR=$HOME/Workspace1/DREAM3D_Data -DVCPKG_TARGET_TRIPLET:STRING=$VCPKG_TARGET_TRIPLET ../simplnx
 ```
 
 ## Required CMake Arguments ##
@@ -122,22 +122,22 @@ cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALL_ROOT/scripts/buildsystems/v
 
 ## Adding Plugins ##
 
-By default the **only** plugin that is compiled is the `ComplexCore` plugin. If you would like to build any of the additional plugins you can provide additional arguments to the configuration command. **NOTE** For the `COMPLEX_EXTRA_PLUGINS` CMake argument, if you have multiple plugins separate each with a `;` character (which is why we double quote the value for the COMPLEX_EXTRA_PLUGINS variable.)
+By default the **only** plugin that is compiled is the `SimplnxCore` plugin. If you would like to build any of the additional plugins you can provide additional arguments to the configuration command. **NOTE** For the `SIMPLNX_EXTRA_PLUGINS` CMake argument, if you have multiple plugins separate each with a `;` character (which is why we double quote the value for the SIMPLNX_EXTRA_PLUGINS variable.)
 
 ### ITKImageProcessing ###
 
-This plugin gives complex access to the ability to read/write images and use the **ITK** library to process images.
+This plugin gives simplnx access to the ability to read/write images and use the **ITK** library to process images.
 
 There are 2 arguments that need to be added to the CMake configuration command
 
-+ `-DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing"`
++ `-DSIMPLNX_EXTRA_PLUGINS="ITKImageProcessing"`
 + `-DVCPKG_MANIFEST_FEATURES="tests;parallel;itk"`
 
 ### OrientationAnalysis ###
 
-This plugin gives complex the ability to process typical EBSD style of data.
+This plugin gives simplnx the ability to process typical EBSD style of data.
 
-+ `-DCOMPLEX_EXTRA_PLUGINS="OrientationAnalysis"`
++ `-DSIMPLNX_EXTRA_PLUGINS="OrientationAnalysis"`
 + `-DVCPKG_MANIFEST_FEATURES="tests;parallel;ebsd"`
 
 ## VCPKG Options ##
@@ -162,16 +162,16 @@ Complex and its plugins require test files to be able to perform the unit tests.
 
 The developer can also turn off the downloading of any test data with the following:
 
-+ `-DCOMPLEX_DOWNLOAD_TEST_FILES=OFF`
++ `-DSIMPLNX_DOWNLOAD_TEST_FILES=OFF`
 
 ## Python Bindings ##
 
-Python bindings are available for complex. To install them, please use an Anaconda virtual environment like the following:
+Python bindings are available for simplnx. To install them, please use an Anaconda virtual environment like the following:
 
 ```shell
 conda config --add channels conda-forge
 conda config --set channel_priority strict
 conda create -n cxpython python=3.8
 conda activate cxpython
-conda install -c bluequartzsoftware complex
+conda install -c bluequartzsoftware simplnx
 ```

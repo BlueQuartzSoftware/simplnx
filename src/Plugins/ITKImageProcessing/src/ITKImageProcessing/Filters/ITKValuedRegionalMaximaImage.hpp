@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKValuedRegionalMaximaImage
@@ -48,7 +48,7 @@ public:
   static inline constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -121,6 +121,6 @@ protected:
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKValuedRegionalMaximaImage, "2c0bb4f6-69fe-4c43-a32e-21b4b11efcff");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKValuedRegionalMaximaImage, "2c0bb4f6-69fe-4c43-a32e-21b4b11efcff");

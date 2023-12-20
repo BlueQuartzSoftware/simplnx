@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class GenerateFaceIPFColoringFilter
@@ -32,7 +32,7 @@ public:
   static inline constexpr StringLiteral k_SurfaceMeshFaceIPFColorsArrayName_Key = "surface_mesh_face_ipf_colors_array_name";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -102,7 +102,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, GenerateFaceIPFColoringFilter, "30759600-7c02-4650-b5ca-e7036d6b568e");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, GenerateFaceIPFColoringFilter, "30759600-7c02-4650-b5ca-e7036d6b568e");
 /* LEGACY UUID FOR THIS FILTER 0a121e03-3922-5c29-962d-40d88653f4b6 */

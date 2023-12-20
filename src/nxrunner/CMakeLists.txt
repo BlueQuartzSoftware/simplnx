@@ -17,7 +17,7 @@ add_executable(nxrunner)
 
 set_target_properties(nxrunner
   PROPERTIES
-    DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
+    DEBUG_POSTFIX "${SIMPLNX_DEBUG_POSTFIX}"
 )
 
 target_sources(nxrunner
@@ -26,11 +26,11 @@ target_sources(nxrunner
     ${CLI_SRCS}
 )
 
-target_link_libraries(nxrunner PRIVATE complex::complex)
+target_link_libraries(nxrunner PRIVATE simplnx::simplnx)
 
 source_group("nxrunner" FILES ${CLI_HDRS} ${CLI_SRCS})
 
-if(COMPLEX_EMBED_PYTHON)
+if(SIMPLNX_EMBED_PYTHON)
   find_package(pybind11 2.10.0 CONFIG REQUIRED)
 
   target_link_libraries(nxrunner
@@ -44,7 +44,7 @@ endif()
 # -----------------------------------------------------------------------
 set(DEST_DIR ".") # Windows we dump everything into the top level dir
 
-if((UNIX AND NOT APPLE) OR COMPLEX_CONDA_BUILD) # Linux we obey standard unix layout
+if((UNIX AND NOT APPLE) OR SIMPLNX_CONDA_BUILD) # Linux we obey standard unix layout
   set(DEST_DIR "bin") # Apple we have a custom script somewhere
 endif()
 

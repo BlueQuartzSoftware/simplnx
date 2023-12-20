@@ -1,17 +1,17 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Core/Application.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/Dream3dImportParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/Dream3dImportParameter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include "ITKImageProcessing/Filters/ITKAdaptiveHistogramEqualizationImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
@@ -19,7 +19,7 @@
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace ITKImageProcessingUnitTest
 {
@@ -39,7 +39,7 @@ void InitApplicationAndPlugins()
 DataPath ConvertColorToGrayScale(DataStructure& dataStructure, const DataPath& inputGeometryPath, DataPath inputDataPath)
 {
   const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
-  const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
+  const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
 
   // Parameter Keys
   constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm";
@@ -60,10 +60,10 @@ DataPath ConvertColorToGrayScale(DataStructure& dataStructure, const DataPath& i
   args.insertOrAssign(k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>("GrayScale_"));
 
   auto preflightResult = filter->preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter->execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   return inputGeometryPath.createChildPath(fmt::format("GrayScale_{}", ITKTestBase::k_InputDataPath));
 }
@@ -86,7 +86,7 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defau
     const fs::path inputFilePath = fs::path(unit_test::k_DataDir.view()) / "JSONFilters" / "Input/sf4.png";
     REQUIRE(fs::exists(inputFilePath));
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
-    COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)
+    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   }
 
   // convert color image to grayscale image
@@ -105,18 +105,18 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defau
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{10, 19, 10}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const fs::path baselineFilePath = fs::path(complex::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters/ITKAdaptiveHistogramEqualizationFilterTest.png";
+    const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters/ITKAdaptiveHistogramEqualizationFilterTest.png";
     const DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
     const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
     const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
     const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
     const Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 2e-3);
-    //  COMPLEX_RESULT_REQUIRE_VALID(compareResult)
+    //  SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
   }
 }
 
@@ -134,7 +134,7 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo
   { // Start Image Comparison Scope
     const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/sf4.png";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
-    COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)
+    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
 
   // convert color image to grayscale image
@@ -153,24 +153,24 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo
     args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{10, 10, 10}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const fs::path baselineFilePath = fs::path(complex::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters/ITKAdaptiveHistogramEqualizationFilterTest2.png";
+    const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters/ITKAdaptiveHistogramEqualizationFilterTest2.png";
     const DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
     const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
     const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
     const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
     const Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 1e-5);
-    COMPLEX_RESULT_REQUIRE_VALID(compareResult)
+    SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
   }
 
   {
-    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/itk_adaptive_align_histograms.dream3d", unit_test::k_BinaryTestOutputDir));
-    complex::HDF5::FileWriter fileWriter = std::move(result.value());
+    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(fmt::format("{}/itk_adaptive_align_histograms.dream3d", unit_test::k_BinaryTestOutputDir));
+    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
     auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-    COMPLEX_RESULT_REQUIRE_VALID(resultH5)
+    SIMPLNX_RESULT_REQUIRE_VALID(resultH5)
   }
 }

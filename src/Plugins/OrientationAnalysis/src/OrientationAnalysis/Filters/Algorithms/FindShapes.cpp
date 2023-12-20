@@ -2,9 +2,9 @@
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
-#include "complex/Common/Numbers.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -90,7 +90,7 @@ std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
 }
 
 } // namespace
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 FindShapes::FindShapes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindShapesInputValues* inputValues)
@@ -606,7 +606,7 @@ void FindShapes::find_axiseulers2D()
     {
       if(Ixx > Iyy)
       {
-        axisEulerAngles[3 * featureId] = complex::numbers::pi / 180.0F;
+        axisEulerAngles[3 * featureId] = nx::core::numbers::pi / 180.0F;
         axisEulerAngles[3 * featureId + 1] = 0.0f;
         axisEulerAngles[3 * featureId + 2] = 0.0f;
         continue;
@@ -633,9 +633,9 @@ void FindShapes::find_axiseulers2D()
     n2y = n2y / norm2;
     double cosine1 = n1x;
     double ea1 = acos(cosine1);
-    if(ea1 > complex::numbers::pi)
+    if(ea1 > nx::core::numbers::pi)
     {
-      ea1 = ea1 - complex::numbers::pi;
+      ea1 = ea1 - nx::core::numbers::pi;
     }
     axisEulerAngles[3 * featureId] = static_cast<float>(ea1);
     axisEulerAngles[3 * featureId + 1] = 0.0f;

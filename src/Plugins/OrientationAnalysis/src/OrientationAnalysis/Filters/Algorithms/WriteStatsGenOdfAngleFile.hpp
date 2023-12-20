@@ -2,13 +2,13 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-namespace complex
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+namespace nx::core
 {
 
 struct ORIENTATIONANALYSIS_EXPORT WriteStatsGenOdfAngleFileInputValues
@@ -54,4 +54,4 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 };
 
-} // namespace complex
+} // namespace nx::core

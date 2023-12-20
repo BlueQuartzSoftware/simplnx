@@ -3,16 +3,16 @@
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][ITKImageReader]")
 {
@@ -28,10 +28,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][
   args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imagePath);
   REQUIRE(imageGeom != nullptr);

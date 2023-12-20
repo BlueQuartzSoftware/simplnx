@@ -9,23 +9,23 @@
  *   float
  */
 #define ITK_BASIC_PIXEL_ID_TYPE_LIST 1
-#define COMPLEX_ITK_ARRAY_HELPER_USE_Scalar 1
+#define SIMPLNX_ITK_ARRAY_HELPER_USE_Scalar 1
 #define ITK_ARRAY_HELPER_NAMESPACE GradientMagnitudeRecursiveGaussianImage
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
 #include <itkGradientMagnitudeRecursiveGaussianImageFilter.h>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -51,7 +51,7 @@ struct ITKGradientMagnitudeRecursiveGaussianImageCreationFunctor
 };
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ITKGradientMagnitudeRecursiveGaussianImage::name() const
@@ -128,14 +128,14 @@ IFilter::PreflightResult ITKGradientMagnitudeRecursiveGaussianImage::preflightIm
   PreflightResult preflightResult;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  complex::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
+  nx::core::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
+  // will need to use one of the `*Actions` classes located in simplnx/Filter/Actions
   // to relay that information to the preflight and execute methods. This is done by
   // creating an instance of the Action class and then storing it in the resultOutputActions variable.
   // This is done through a `push_back()` method combined with a `std::move()`. For the
@@ -182,4 +182,4 @@ Result<> ITKGradientMagnitudeRecursiveGaussianImage::executeImpl(DataStructure& 
    ***************************************************************************/
   return ITK::Execute<ITKGradientMagnitudeRecursiveGaussianImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
 }
-} // namespace complex
+} // namespace nx::core

@@ -3,9 +3,9 @@
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 #include "OrientationAnalysis/Parameters/ReadH5EbsdFileParameter.h"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include <memory>
 #include <mutex>
@@ -24,7 +24,7 @@ inline const std::string MaterialName("MaterialName");
 } // namespace EnsembleData
 } // namespace EbsdLib
 
-namespace complex
+namespace nx::core
 {
 
 /**
@@ -66,4 +66,4 @@ private:
   const ReadH5EbsdInputValues* m_InputValues = nullptr;
 };
 
-} // namespace complex
+} // namespace nx::core

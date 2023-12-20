@@ -21,7 +21,7 @@
         "z_spacing": 0.25
       },
       "filter": {
-        "name": "complex::EbsdToH5EbsdFilter",
+        "name": "simplnx::EbsdToH5EbsdFilter",
         "uuid": "2d05ca72-0a1b-4aec-b9b0-bc470845c448"
       },
       "isDisabled": false

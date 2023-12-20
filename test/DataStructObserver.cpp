@@ -1,13 +1,13 @@
 #include "DataStructObserver.hpp"
 
-#include "complex/DataStructure/BaseGroup.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Messaging/DataAddedMessage.hpp"
-#include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
-#include "complex/DataStructure/Messaging/DataRenamedMessage.hpp"
-#include "complex/DataStructure/Messaging/DataReparentedMessage.hpp"
+#include "simplnx/DataStructure/BaseGroup.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Messaging/DataAddedMessage.hpp"
+#include "simplnx/DataStructure/Messaging/DataRemovedMessage.hpp"
+#include "simplnx/DataStructure/Messaging/DataRenamedMessage.hpp"
+#include "simplnx/DataStructure/Messaging/DataReparentedMessage.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 DataStructObserver::DataStructObserver(DataStructure& dataStruct)
 : AbstractDataStructureObserver()
@@ -37,7 +37,7 @@ void DataStructObserver::onNotify(DataStructure* target, const std::shared_ptr<A
   }
 }
 
-const complex::DataStructure& DataStructObserver::getDataStructure() const
+const nx::core::DataStructure& DataStructObserver::getDataStructure() const
 {
   return m_DataStructure;
 }

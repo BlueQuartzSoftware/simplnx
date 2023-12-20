@@ -22,14 +22,14 @@
 #include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/Common/Numbers.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
-using namespace complex;
+using namespace nx::core;
 
 // This section of code exists solely to generate a source code in case another
 // orientation representation is created. Leave this code here.
@@ -52,7 +52,7 @@ void _make_code()
 
       std::cout << "else if( inputType == OrientationRepresentation::Type::" << names[i] << " && outputType == OrientationRepresentation::Type::" << names[o] << ")\n"
                 << "{\n";
-      std::cout << "  messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, \"Converting " << names[i] << " to " << names[o] << "\"});\n";
+      std::cout << "  messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, \"Converting " << names[i] << " to " << names[o] << "\"});\n";
 
       if(inRep[i] == "qu")
       {
@@ -113,7 +113,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
     auto preflightResult = filter.preflight(dataStructure, args);
     const std::vector<Error>& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
-    REQUIRE(errors[0].code == complex::FilterParameter::Constants::k_Validate_Does_Not_Exist);
+    REQUIRE(errors[0].code == nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
@@ -126,7 +126,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
     auto preflightResult = filter.preflight(dataStructure, args);
     const std::vector<Error>& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
-    REQUIRE(errors[0].code == complex::FilterParameter::Constants::k_Validate_OutOfRange_Error);
+    REQUIRE(errors[0].code == nx::core::FilterParameter::Constants::k_Validate_OutOfRange_Error);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
@@ -136,7 +136,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
     auto preflightResult = filter.preflight(dataStructure, args);
     auto& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
-    REQUIRE(errors[0].code == complex::FilterParameter::Constants::k_Validate_OutOfRange_Error);
+    REQUIRE(errors[0].code == nx::core::FilterParameter::Constants::k_Validate_OutOfRange_Error);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 }

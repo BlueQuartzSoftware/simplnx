@@ -2,20 +2,20 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/FindFeatureNeighborCAxisMisalignments.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/NeighborListSelectionParameter.hpp"
+#include "simplnx/Parameters/NeighborListSelectionParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string FindFeatureNeighborCAxisMisalignmentsFilter::name() const
@@ -96,7 +96,7 @@ IFilter::PreflightResult FindFeatureNeighborCAxisMisalignmentsFilter::preflightI
   auto pCAxisMisalignmentListArrayNameValue = filterArgs.value<std::string>(k_CAxisMisalignmentListArrayName_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pNeighborListArrayPathValue, pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue});
@@ -175,4 +175,4 @@ Result<Arguments> FindFeatureNeighborCAxisMisalignmentsFilter::FromSIMPLJson(con
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

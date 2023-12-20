@@ -54,7 +54,7 @@ def create_filter_conversion(simpl_filter: SIMPLFilterInfo, complex_filter_name:
   for param in simpl_filter.parameters:
     if param.type == SEPERATOR_PARAMETER_TYPE:
       continue
-    converter_code.append(f'  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::{param.type}Converter>(args, json, SIMPL::k_{param.name}Key, "@COMPLEX_PARAMETER_KEY@"));\n')
+    converter_code.append(f'  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::{param.type}Converter>(args, json, SIMPL::k_{param.name}Key, "@SIMPLNX_PARAMETER_KEY@"));\n')
 
   converter_code.append('\n')
   converter_code.append('  Result<> conversionResult = MergeResults(std::move(results));\n')
@@ -67,7 +67,7 @@ def create_filter_conversion(simpl_filter: SIMPLFilterInfo, complex_filter_name:
 def create_includes() -> List[str]:
   lines: List[str] = []
   lines.append('\n')
-  lines.append('#include "complex/Utilities/SIMPLConversion.hpp"\n')
+  lines.append('#include "simplnx/Utilities/SIMPLConversion.hpp"\n')
   lines.append('\n')
   return lines
 
@@ -75,7 +75,7 @@ def create_function_decl() -> List[str]:
   lines: List[str] = []
   lines.append('\n')
   lines.append('  /**\n')
-  lines.append('   * @brief Reads SIMPL json and converts it complex Arguments.\n')
+  lines.append('   * @brief Reads SIMPL json and converts it simplnx Arguments.\n')
   lines.append('   * @param json\n')
   lines.append('   * @return Result<Arguments>\n')
   lines.append('   */\n')
@@ -106,18 +106,18 @@ def find_mapping_line(lines: List[str], simpl_uuid: str) -> int:
 def read_mapping_file(filepath: Path) -> Dict[str, str]:
   with open(filepath, 'r') as file:
     file_content = file.read()
-    matches = re.findall(r'{complex::Uuid::FromString\("(.*?)"\).value\(\), {complex::FilterTraits<(.*?)>::uuid, {}}},', file_content)
+    matches = re.findall(r'{nx::core::Uuid::FromString\("(.*?)"\).value\(\), {nx::core::FilterTraits<(.*?)>::uuid, {}}},', file_content)
     return dict(matches)
 
 def get_plugin_mapping_file_path_from_plugin_dir(plugin_dir: Path, plugin_name: str) -> Path:
   return plugin_dir / f'src/{plugin_name}/{plugin_name}LegacyUUIDMapping.hpp'
 
-def get_plugin_mapping_file_path_from_root_dir(complex_source_dir: Path, plugin_name: str) -> Path:
-  return get_plugin_mapping_file_path_from_plugin_dir(complex_source_dir / f'src/Plugins/{plugin_name}', plugin_name)
+def get_plugin_mapping_file_path_from_root_dir(simplnx_source_dir: Path, plugin_name: str) -> Path:
+  return get_plugin_mapping_file_path_from_plugin_dir(simplnx_source_dir / f'src/Plugins/{plugin_name}', plugin_name)
 
-def get_plugin_mappings(complex_source_dir: Path) -> Dict[str, Dict[str, str]]:
+def get_plugin_mappings(simplnx_source_dir: Path) -> Dict[str, Dict[str, str]]:
   mappings: Dict[str, Dict[str, str]] = {}
-  plugins_dir = complex_source_dir / 'src/Plugins'
+  plugins_dir = simplnx_source_dir / 'src/Plugins'
   ignored_plugins = ['TestOne', 'TestTwo']
   for child in plugins_dir.iterdir():
     if not child.is_dir():
@@ -136,14 +136,14 @@ def find_filter(mappings: Dict[str, Dict[str, str]], filter_uuid: str) -> Tuple[
       return (plugin_name, plugin_mapping[filter_uuid])
   raise RuntimeError(f'{filter_uuid} not found')
 
-def get_filter_base_path(complex_source_dir: Path, plugin_name: str, complex_filter: str) -> Path:
-  return complex_source_dir / f'src/Plugins/{plugin_name}/src/{plugin_name}/Filters/{complex_filter}'
+def get_filter_base_path(simplnx_source_dir: Path, plugin_name: str, complex_filter: str) -> Path:
+  return simplnx_source_dir / f'src/Plugins/{plugin_name}/src/{plugin_name}/Filters/{complex_filter}'
 
-def get_filter_hpp_path(complex_source_dir: Path, plugin_name: str, complex_filter: str) -> Path:
-  return get_filter_base_path(complex_source_dir, plugin_name, complex_filter).with_suffix('.hpp')
+def get_filter_hpp_path(simplnx_source_dir: Path, plugin_name: str, complex_filter: str) -> Path:
+  return get_filter_base_path(simplnx_source_dir, plugin_name, complex_filter).with_suffix('.hpp')
 
-def get_filter_cpp_path(complex_source_dir: Path, plugin_name: str, complex_filter: str) -> Path:
-  return get_filter_base_path(complex_source_dir, plugin_name, complex_filter).with_suffix('.cpp')
+def get_filter_cpp_path(simplnx_source_dir: Path, plugin_name: str, complex_filter: str) -> Path:
+  return get_filter_base_path(simplnx_source_dir, plugin_name, complex_filter).with_suffix('.cpp')
 
 def read_simpl_json(path: Path) -> Dict[str, SIMPLFilterInfo]:
   with open(path, 'r') as file:
@@ -204,16 +204,16 @@ def update_mapping_file(mapping_file_path: Path, simpl_uuid: str, complex_filter
   with open(mapping_file_path, 'w') as output_file:
     output_file.writelines(lines)
 
-def generate_converter_code(complex_source_dir: Path, simpl_json_path: Path, simpl_filters: List[str]) -> None:
-  mappings = get_plugin_mappings(complex_source_dir)
+def generate_converter_code(simplnx_source_dir: Path, simpl_json_path: Path, simpl_filters: List[str]) -> None:
+  mappings = get_plugin_mappings(simplnx_source_dir)
   simpl_filters_info = read_simpl_json(simpl_json_path)
   for simpl_filter_uuid in simpl_filters:
     if simpl_filter_uuid not in simpl_filters_info:
       raise RuntimeError(f'SIMPL filter json does not contain {simpl_filter_uuid}')
     plugin_name, complex_filter_name = find_filter(mappings, simpl_filter_uuid)
-    mapping_file_path = get_plugin_mapping_file_path_from_root_dir(complex_source_dir, plugin_name)
-    complex_filter_hpp_path = get_filter_hpp_path(complex_source_dir, plugin_name, complex_filter_name)
-    complex_filter_cpp_path = get_filter_cpp_path(complex_source_dir, plugin_name, complex_filter_name)
+    mapping_file_path = get_plugin_mapping_file_path_from_root_dir(simplnx_source_dir, plugin_name)
+    complex_filter_hpp_path = get_filter_hpp_path(simplnx_source_dir, plugin_name, complex_filter_name)
+    complex_filter_cpp_path = get_filter_cpp_path(simplnx_source_dir, plugin_name, complex_filter_name)
     update_filter_hpp(complex_filter_hpp_path)
     update_filter_cpp(complex_filter_cpp_path, simpl_filters_info[simpl_filter_uuid], complex_filter_name)
     update_mapping_file(mapping_file_path, simpl_filter_uuid, complex_filter_name)
@@ -223,17 +223,17 @@ def generate_converter_code(complex_source_dir: Path, simpl_json_path: Path, sim
 
 def main() -> None:
   parser = argparse.ArgumentParser()
-  parser.add_argument('complex_source_dir', type=Path)
+  parser.add_argument('simplnx_source_dir', type=Path)
   parser.add_argument('--simpl-json', type=Path, default=Path('./simpl_filters.json'))
   parser.add_argument('--simpl-filters', nargs='+')
 
   args = parser.parse_args()
 
-  complex_source_dir: Path = args.complex_source_dir
+  simplnx_source_dir: Path = args.simplnx_source_dir
   simpl_json: Path = args.simpl_json
   simpl_filters: List[str] = args.simpl_filters
 
-  generate_converter_code(complex_source_dir.absolute(), simpl_json.absolute(), simpl_filters)
+  generate_converter_code(simplnx_source_dir.absolute(), simpl_json.absolute(), simpl_filters)
 
 if __name__ == '__main__':
   main()

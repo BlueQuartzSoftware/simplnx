@@ -3,17 +3,17 @@
 #include "ITKImageProcessing/Filters/ITKImportFijiMontageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 
 #include <filesystem>
 #include <sstream>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace fs = std::filesystem;
 
@@ -27,7 +27,7 @@ const DataPath k_DataGroupPath = {{k_DataGroupName}};
 
 TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[ITKImageProcessing][ITKImportFijiMontage]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "fiji_montage.tar.gz", "fiji_montage");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fiji_montage.tar.gz", "fiji_montage");
 
   auto app = Application::GetOrCreateInstance();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
@@ -56,11 +56,11 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   std::vector<DataPath> generatedGroup = GetAllChildDataPaths(dataStructure, k_DataGroupPath, DataObject::Type::ImageGeom).value();
   std::vector<DataPath> exemplarGroup = GetAllChildDataPaths(exemplarDataStructure, k_DataGroupPath, DataObject::Type::ImageGeom).value();

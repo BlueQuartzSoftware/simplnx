@@ -1,38 +1,38 @@
 #include "AlignSectionsMisorientationFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/AlignSectionsMisorientation.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
 
 // Error Code constants
-constexpr complex::int32 k_InputRepresentationTypeError = -68001;
-constexpr complex::int32 k_OutputRepresentationTypeError = -68002;
-constexpr complex::int32 k_InputComponentDimensionError = -68003;
-constexpr complex::int32 k_InputComponentCountError = -68004;
-constexpr complex::int32 k_InconsistentTupleCount = -68063;
-constexpr complex::int32 k_OutputFilePathEmpty = -68063;
+constexpr nx::core::int32 k_InputRepresentationTypeError = -68001;
+constexpr nx::core::int32 k_OutputRepresentationTypeError = -68002;
+constexpr nx::core::int32 k_InputComponentDimensionError = -68003;
+constexpr nx::core::int32 k_InputComponentCountError = -68004;
+constexpr nx::core::int32 k_InconsistentTupleCount = -68063;
+constexpr nx::core::int32 k_OutputFilePathEmpty = -68063;
 
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string AlignSectionsMisorientationFilter::name() const
@@ -128,7 +128,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
 
   PreflightResult preflightResult;
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -173,7 +173,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPath.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pQuatsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -235,4 +235,4 @@ Result<Arguments> AlignSectionsMisorientationFilter::FromSIMPLJson(const nlohman
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

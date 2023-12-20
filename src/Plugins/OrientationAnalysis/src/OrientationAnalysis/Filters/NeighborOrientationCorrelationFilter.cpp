@@ -1,18 +1,18 @@
 #include "NeighborOrientationCorrelationFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/NeighborOrientationCorrelation.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -22,7 +22,7 @@ inline constexpr int32 k_IncorrectInputArray = -580092;
 inline constexpr int32 k_InvalidNumTuples = -580093;
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string NeighborOrientationCorrelationFilter::name() const
@@ -104,7 +104,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeomPathValue);
@@ -225,7 +225,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  complex::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pConfidenceIndexArrayPathValue.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pConfidenceIndexArrayPathValue.getParent(), {});
 
   return {};
 }
@@ -285,4 +285,4 @@ Result<Arguments> NeighborOrientationCorrelationFilter::FromSIMPLJson(const nloh
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

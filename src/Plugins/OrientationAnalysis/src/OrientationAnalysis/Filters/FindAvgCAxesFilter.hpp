@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class FindAvgCAxesFilter
@@ -32,7 +32,7 @@ public:
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -102,7 +102,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindAvgCAxesFilter, "453cdb58-7bbb-4576-ad5e-f75a1c54d348");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindAvgCAxesFilter, "453cdb58-7bbb-4576-ad5e-f75a1c54d348");
 /* LEGACY UUID FOR THIS FILTER c5a9a96c-7570-5279-b383-cc25ebae0046 */

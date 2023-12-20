@@ -1,12 +1,12 @@
 #include <catch2/catch.hpp>
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/FindFeatureNeighborCAxisMisalignmentsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-using namespace complex;
-using namespace complex::Constants;
+using namespace nx::core;
+using namespace nx::core::Constants;
 
 namespace
 {
@@ -21,7 +21,7 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: Val
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
@@ -42,11 +42,11 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: Val
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   UnitTest::CompareNeighborListFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_CAxisMisalignmentListNameExemplar),
                                                             k_CellFeatureDataPath.createChildPath(k_CAxisMisalignmentListNameComputed), UnitTest::EPSILON, true);
@@ -58,7 +58,7 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: InV
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
@@ -85,7 +85,7 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: InV
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("Mismatching Input Array Tuples")
   {
@@ -93,10 +93,10 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: InV
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 }

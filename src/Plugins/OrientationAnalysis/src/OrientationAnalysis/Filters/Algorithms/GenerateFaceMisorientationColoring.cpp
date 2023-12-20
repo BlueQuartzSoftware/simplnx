@@ -1,9 +1,9 @@
 #include "GenerateFaceMisorientationColoring.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -11,7 +11,7 @@
 using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
 using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
 
-using namespace complex;
+using namespace nx::core;
 
 /**
  * @brief The CalculateFaceMisorientationColorsImpl class implements a threaded algorithm that computes the misorientation

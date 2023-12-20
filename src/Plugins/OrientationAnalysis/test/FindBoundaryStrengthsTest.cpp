@@ -1,13 +1,13 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include "OrientationAnalysis/Filters/FindBoundaryStrengthsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -27,8 +27,8 @@ TEST_CASE("OrientationAnalysis::FindBoundaryStrengthsFilter: Valid Filter Execut
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission.tar.gz",
-                                                             "feature_boundary_neighbor_slip_transmission");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission.tar.gz",
+                                                              "feature_boundary_neighbor_slip_transmission");
 
   DataStructure dataStructure =
       UnitTest::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));

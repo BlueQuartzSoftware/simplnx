@@ -1,11 +1,11 @@
 #include "CliObserver.hpp"
 
-#include "complex/Common/Result.hpp"
-#include "complex/ComplexPython.hpp"
-#include "complex/ComplexVersion.hpp"
-#include "complex/Core/Application.hpp"
-#include "complex/Pipeline/Pipeline.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/SIMPLNXVersion.hpp"
+#include "simplnx/SimplnxPython.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -14,14 +14,14 @@
 #include <ostream>
 #include <string>
 
-#if COMPLEX_EMBED_PYTHON
+#if SIMPLNX_EMBED_PYTHON
 #include <pybind11/embed.h>
 #endif
 
 namespace fs = std::filesystem;
-using namespace complex;
+using namespace nx::core;
 
-#if COMPLEX_EMBED_PYTHON
+#if SIMPLNX_EMBED_PYTHON
 namespace py = pybind11;
 #endif
 
@@ -86,7 +86,7 @@ public:
     if(filepath.empty() || filepath.string().length() == 0)
     {
       std::string errorMessage = "Log file cannot be created with an empty filepath.";
-      return complex::MakeErrorResult(k_NullLogFileError, errorMessage);
+      return nx::core::MakeErrorResult(k_NullLogFileError, errorMessage);
     }
 
     const std::ios_base::openmode openmode = std::ios_base::out | std::ios_base::trunc;
@@ -94,7 +94,7 @@ public:
     if(m_LogStream.is_open() == false)
     {
       std::string errorMessage = fmt::format("Failed to open log file: '{}'", filepath.string());
-      return complex::MakeErrorResult(k_LogFileError, errorMessage);
+      return nx::core::MakeErrorResult(k_LogFileError, errorMessage);
     }
 
     return {};
@@ -183,7 +183,7 @@ Result<CliArguments> ParseParameters(int argc, char* argv[])
   if(argc < 2)
   {
     std::string ss = "No arguments to parse";
-    return complex::MakeErrorResult<CliArguments>(k_NoArgumentsProvided, ss);
+    return nx::core::MakeErrorResult<CliArguments>(k_NoArgumentsProvided, ss);
   }
 
   CliArguments args;
@@ -274,7 +274,7 @@ Result<> PreflightPipeline(Pipeline& pipeline)
   if(!pipeline.preflight())
   {
     std::string ss = "Error preflighting pipeline";
-    return complex::MakeErrorResult(-2, ss);
+    return nx::core::MakeErrorResult(-2, ss);
   }
 
   cliOut << "Finished preflighting pipeline";
@@ -291,7 +291,7 @@ Result<> ExecutePipeline(Pipeline& pipeline)
   if(!pipeline.execute())
   {
     std::string ss = "Error executing pipeline";
-    return complex::MakeErrorResult(k_ExecutePipelineError, ss);
+    return nx::core::MakeErrorResult(k_ExecutePipelineError, ss);
   }
   cliOut << "Finished executing pipeline";
   cliOut.endline();
@@ -306,7 +306,7 @@ Result<> ExecutePipeline(const Argument& arg)
   {
     cliOut << fmt::format("Could not load pipeline at path: '{}'", pipelinePath);
     cliOut.endline();
-    return complex::ConvertResult(std::move(loadPipelineResult));
+    return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
 
   Pipeline pipeline = loadPipelineResult.value();
@@ -323,7 +323,7 @@ Result<> PreflightPipeline(const Argument& arg)
   {
     cliOut << fmt::format("Could not load pipeline at path: '{}'", pipelinePath);
     cliOut.endline();
-    return complex::ConvertResult(std::move(loadPipelineResult));
+    return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
 
   cliOut << fmt::format("Preflighting pipeline at path: '{}'\n", pipelinePath);
@@ -458,13 +458,13 @@ Result<> DisplayHelpMenu(const std::vector<Argument>& arguments)
   }
 
   std::string ss = "Incorrect Help Syntax";
-  return complex::MakeErrorResult(k_FailedParsingArguments, ss);
+  return nx::core::MakeErrorResult(k_FailedParsingArguments, ss);
 }
 
 Result<> CreateArgumentError(const Argument& argument)
 {
   std::string errorMessage = fmt::format("Failed to parse argument: {}", argument.value);
-  return complex::MakeErrorResult(k_InvalidArgumentError, errorMessage);
+  return nx::core::MakeErrorResult(k_InvalidArgumentError, errorMessage);
 }
 
 Result<> SetLogFile(const Argument& argument)
@@ -473,10 +473,10 @@ Result<> SetLogFile(const Argument& argument)
   return cliOut.setLogFile(filepath);
 }
 
-#if COMPLEX_EMBED_PYTHON
+#if SIMPLNX_EMBED_PYTHON
 std::vector<std::string> GetPythonPluginList()
 {
-  auto* var = std::getenv("COMPLEX_PYTHON_PLUGINS");
+  auto* var = std::getenv("SIMPLNX_PYTHON_PLUGINS");
   if(var == nullptr)
   {
     return {};
@@ -489,7 +489,7 @@ std::vector<std::string> GetPythonPluginList()
 
 int main(int argc, char* argv[])
 {
-  cliOut << fmt::format("nxrunner: Version {} Build Date:{}\n\n", complex::Version::Package(), complex::Version::BuildDate());
+  cliOut << fmt::format("nxrunner: Version {} Build Date:{}\n\n", nx::core::Version::Package(), nx::core::Version::BuildDate());
   // cliOut.endline();
   // cliOut << "ARGUMENT LISTING START\n";
   // for(int argIndex = 0; argIndex < argc; argIndex++)
@@ -538,16 +538,16 @@ int main(int argc, char* argv[])
     }
   }
 
-  // Load the Complex Application instance and load the plugins
-  auto app = complex::Application::GetOrCreateInstance();
+  // Load the Simplnx Application instance and load the plugins
+  auto app = nx::core::Application::GetOrCreateInstance();
   LoadApp();
 
-#if COMPLEX_EMBED_PYTHON
+#if SIMPLNX_EMBED_PYTHON
   py::scoped_interpreter guard{};
 
   try
   {
-    auto cx = py::module_::import(COMPLEX_PYTHON_MODULE);
+    auto cx = py::module_::import(SIMPLNX_PYTHON_MODULE);
 
     auto pythonPlugins = GetPythonPluginList();
 
@@ -586,7 +586,7 @@ int main(int argc, char* argv[])
       auto result = ExecutePipeline(arguments[0]);
       results.push_back(result);
     }
-#if COMPLEX_EMBED_PYTHON
+#if SIMPLNX_EMBED_PYTHON
     catch(const py::error_already_set& exception)
     {
       fmt::print("Python exception: {}\n", exception.what());
@@ -606,7 +606,7 @@ int main(int argc, char* argv[])
       auto result = PreflightPipeline(arguments[0]);
       results.push_back(result);
     }
-#if COMPLEX_EMBED_PYTHON
+#if SIMPLNX_EMBED_PYTHON
     catch(const py::error_already_set& exception)
     {
       fmt::print("Python exception: {}\n", exception.what());

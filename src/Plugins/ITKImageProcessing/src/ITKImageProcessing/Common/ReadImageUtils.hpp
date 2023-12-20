@@ -1,14 +1,14 @@
 #pragma once
 
-#include "complex/Common/Result.hpp"
-#include "complex/Common/Types.hpp"
-#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
 #include <itkImageFileReader.h>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace cxItkImageReader
 {

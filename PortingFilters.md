@@ -34,10 +34,10 @@ Some nuances to note for this are as follows:
 <ul>
    <li>The path to the plugin should be .../PluginName/ NOT .../PluginName/src/PluginName/</li>
    <li>The slash at the end of the filepath is necessary to work properly ie [.../PluginName/ NOT .../PluginName]</li>
-   <li>The name of the filter should be the SIMPL name not what you want the complex name to be</li>
+   <li>The name of the filter should be the SIMPL name not what you want the simplnx name to be</li>
 </ul>
 
-You will need to update the various CMake files inside the target complex plugin in order to start compiling the new filter code inside of a complex build.
+You will need to update the various CMake files inside the target simplnx plugin in order to start compiling the new filter code inside of a simplnx build.
 
 
 ## SECTION 2 : Porting stubs from existing folder to ***Filters Folder***
@@ -91,18 +91,18 @@ Files from current SIMPL DREAM3D should have the prefix "6_6_" which denotes the
 
 These will be used to verify changes in the file and look for updates.
 
-> Go to the complex GitHub repo and update with the tar.gz file
+> Go to the simplnx GitHub repo and update with the tar.gz file
 
-GitHub Repo : <https://github.com/BlueQuartzSoftware/complex/releases/tag/Data_Archive>   
+GitHub Repo : <https://github.com/bluequartzsoftware/complex/releases/tag/Data_Archive>   
 **Be Sure to Save the Release**
 
-> Go to the complex CMakeLists.txt file and update sha 512
+> Go to the simplnx CMakeLists.txt file and update sha 512
 
-Located at line 579 in the CMakeLists.text file in the ***complex*** repo, one must update the table accordingly.
+Located at line 579 in the CMakeLists.text file in the ***simplnx*** repo, one must update the table accordingly.
 
 ### Working with filters outside the current plugin 
 
-There will be times you may have to call upon filters from another repo. Typically this occurs in ***complex_plugins***. In order to do this one must create an application instance which is done so by wrapping it in a struct that gets nested in a shared pointer to make sure it cleans itself up after each test case. Here is the syntax for doing so:
+There will be times you may have to call upon filters from another repo. Typically this occurs in ***simplnx_plugins***. In order to do this one must create an application instance which is done so by wrapping it in a struct that gets nested in a shared pointer to make sure it cleans itself up after each test case. Here is the syntax for doing so:
 
 > std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
 > app->loadPlugins(unit_test::k_BuildDir.view(), true);
@@ -110,7 +110,7 @@ There will be times you may have to call upon filters from another repo. Typical
 
 To use make_shared_enabler you must include:
 
-> #include "complex/UnitTest/UnitTestCommon.hpp"
+> #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 The syntax for use of ***filterList*** is as follows:
 
@@ -200,7 +200,7 @@ The number at the start is an arbitrary value save for the fact it must be negat
 
 ## SECTION 6 : Utilizing API's to the fullest
 
-This section aims to tackle ***complex*** convenience functions from major API's:
+This section aims to tackle ***simplnx*** convenience functions from major API's:
 
 ### Utilizing the ExecuteDataFunction
 

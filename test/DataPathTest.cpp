@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include "complex/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {

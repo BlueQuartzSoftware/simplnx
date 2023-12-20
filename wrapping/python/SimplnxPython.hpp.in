@@ -1,0 +1,5 @@
+#pragma once
+
+#cmakedefine01 SIMPLNX_EMBED_PYTHON
+
+#cmakedefine SIMPLNX_PYTHON_MODULE "@SIMPLNX_PYTHON_MODULE@"

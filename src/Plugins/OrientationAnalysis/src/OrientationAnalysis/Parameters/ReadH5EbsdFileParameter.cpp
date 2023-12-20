@@ -1,7 +1,7 @@
 #include "ReadH5EbsdFileParameter.h"
 
-#include "complex/Common/Any.hpp"
-#include "complex/Common/StringLiteral.hpp"
+#include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
 
 #include "EbsdLib/IO/H5EbsdVolumeInfo.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
@@ -15,7 +15,7 @@
 
 namespace fs = std::filesystem;
 
-namespace complex
+namespace nx::core
 {
 namespace
 {
@@ -231,4 +231,4 @@ Result<> ReadH5EbsdFileParameter::validate(const std::any& valueRef) const
   return {};
 }
 
-} // namespace complex
+} // namespace nx::core

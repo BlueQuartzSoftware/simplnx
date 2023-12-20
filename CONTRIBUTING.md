@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thank you for considering contributing to complex. Your involvement helps make complex a valuable tool for the global scientific community.
+Thank you for considering contributing to simplnx. Your involvement helps make simplnx a valuable tool for the global scientific community.
 
 This repository needs many different kinds of contribution not all of which require coding knowledge. Here are some of the different options:
 
@@ -14,17 +14,17 @@ This repository needs many different kinds of contribution not all of which requ
   - Answer questions from fellow users in [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions)
 - **For Python Developers:**
   - Create new examples of use cases and as a Jupyter Notebook or sdd to documentation
-  - Create filters for complex from new papers and dissertations
+  - Create filters for simplnx from new papers and dissertations
   - Fix bugs in filters or the python bindings
   - Update exisitng filters to expand functionality or optimize
 - **For Operating System Power Users and CyberSecurity Experts:**
   - Report security vulnerabilities in [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues)
   - Add CMake presets for compiling on unique operating systems not already supported
-  - Create packages of DREAM3DNX and/or complex (with the nxrunner cli) and submit them to your favorite package manager (AUR, Flatpak, etc.)
-  - Create ways to run complex (with the nxrunner cli) in containers (such as Docker container)
+  - Create packages of DREAM3DNX and/or simplnx (with the nxrunner cli) and submit them to your favorite package manager (AUR, Flatpak, etc.)
+  - Create ways to run simplnx (with the nxrunner cli) in containers (such as Docker container)
 - **For C++ Developers:**
-  - Create new filters for complex from new papers and dissertations
-  - Port old SIMPL filters to the updated complex framework [porting filters guidelines](/docs/Porting_Filters.md)
+  - Create new filters for simplnx from new papers and dissertations
+  - Port old SIMPL filters to the updated simplnx framework [porting filters guidelines](/docs/Porting_Filters.md)
   - Handle bugs and feature requests: [issue tracker](https://github.com/bluequartzsoftware/complex/issues)
   - Create new test cases to improve the reliability and robustness of the filters
   - Update nxrunner cli to offer the same functionality as our GUI interface
@@ -40,11 +40,11 @@ For instructions on building from source see our [Guide to Building From Source]
 ## Getting Started
 
 1. Fork the repository to your GitHub account.
-2. Clone the repository to your local machine: `git clone https://github.com/YOUR_USERNAME/complex.git`
+2. Clone the repository to your local machine: `git clone https://github.com/YOUR_USERNAME/simplnx.git`
 3. Create a new branch: `git checkout -b NAME_YOUR_BRANCH`
 4. Make your changes and commit them: `git commit -m 'Add some feature or fix some issue'`
 5. Push your changes to your fork: `git push origin NAME_YOUR_BRANCH`
-6. Create a pull request from your branch to the complex `main` or `master` branch.
+6. Create a pull request from your branch to the simplnx `main` or `master` branch.
 
 ## Code of Conduct
 
@@ -117,9 +117,9 @@ Willing to Collaborate with Other Contributors on These Changes: Y/N
 
 For information about our specifc naming conventions and styling see our [coding style guide](/docs/Code_Style_Guide.md).
 
-For the basic code styling complex uses `clang-format`, the formatting file is included at the root level in the repository.
+For the basic code styling simplnx uses `clang-format`, the formatting file is included at the root level in the repository.
 
-`clang-format` is a tool to automatically format C++ code. You should run 'clang-format' on your code before opening a Pull Request to make sure it passes the _clang-format pr_ check. You can install `clang-format` and `git-clang-format` with `npm install -g clang-format`. To automatically format a file according to a project's C++ code style, run `clang-format -i path/to/complex/file`, which is supported on macOS/Linux/Windows. If you want to run `clang-format` on all the changed code on your latest git commit (HEAD), you can run `git-clang-format HEAD~1`. Run `git-clang-format -h`  for extra help.
+`clang-format` is a tool to automatically format C++ code. You should run 'clang-format' on your code before opening a Pull Request to make sure it passes the _clang-format pr_ check. You can install `clang-format` and `git-clang-format` with `npm install -g clang-format`. To automatically format a file according to a project's C++ code style, run `clang-format -i path/to/simplnx/file`, which is supported on macOS/Linux/Windows. If you want to run `clang-format` on all the changed code on your latest git commit (HEAD), you can run `git-clang-format HEAD~1`. Run `git-clang-format -h`  for extra help.
 
 ### Documentation Styleguide
 

@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class CAxisSegmentFeaturesFilter
@@ -37,7 +37,7 @@ public:
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -107,7 +107,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CAxisSegmentFeaturesFilter, "9fe07e17-aef1-4bf1-834c-d3a73dafc27d");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CAxisSegmentFeaturesFilter, "9fe07e17-aef1-4bf1-834c-d3a73dafc27d");
 /* LEGACY UUID FOR THIS FILTER bff6be19-1219-5876-8838-1574ad29d965 */
