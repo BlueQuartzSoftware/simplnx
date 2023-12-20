@@ -261,8 +261,8 @@ namespace complex
     {complex::Uuid::FromString("f7486aa6-3049-5be7-8511-ae772b70c90b").value(), {complex::FilterTraits<KMedoidsFilter>::uuid, &KMedoidsFilter::FromSIMPLJson}}, // KMedoids
     {complex::Uuid::FromString("b56a04de-0ca0-509d-809f-52219fca9c98").value(), {complex::FilterTraits<KMeansFilter>::uuid, &KMeansFilter::FromSIMPLJson}}, // KMeans
     {complex::Uuid::FromString("f84d4d69-9ea5-54b6-a71c-df76d76d50cf").value(), {complex::FilterTraits<SilhouetteFilter>::uuid, &SilhouetteFilter::FromSIMPLJson}}, // Silhouette
-    {complex::Uuid::FromString("a250a228-3b6b-5b37-a6e4-8687484f04c4").value(), complex::FilterTraits<LabelTriangleGeometryFilter>::uuid, &LabelTriangleGeometryFilter::FromSIMPLJson}, // LabelTriangleGeometry
-    {complex::Uuid::FromString("379ccc67-16dd-530a-984f-177db9351bac").value(), complex::FilterTraits<RemoveFlaggedTrianglesFilter>::uuid, &RemoveFlaggedTrianglesFilter::FromSIMPLJson}, // RemoveFlaggedTriangles
+    {complex::Uuid::FromString("a250a228-3b6b-5b37-a6e4-8687484f04c4").value(), {complex::FilterTraits<LabelTriangleGeometryFilter>::uuid, &LabelTriangleGeometryFilter::FromSIMPLJson}}, // LabelTriangleGeometry
+    {complex::Uuid::FromString("379ccc67-16dd-530a-984f-177db9351bac").value(), {complex::FilterTraits<RemoveFlaggedTrianglesFilter>::uuid, &RemoveFlaggedTrianglesFilter::FromSIMPLJson}}, // RemoveFlaggedTriangles
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
