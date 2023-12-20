@@ -1,20 +1,20 @@
 #pragma once
 
-#include "simplnx/Common/Array.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
-#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/Filter/Output.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/simplnx_export.hpp"
+#include "complex/Common/Array.hpp"
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
+#include "complex/DataStructure/Geometry/QuadGeom.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/Filter/Output.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/complex_export.hpp"
 
 #include <fmt/core.h>
 
 #include <utility>
 
-namespace nx::core
+namespace complex
 {
 /**
  * @brief Action for creating a Triangle or QuadGeometry in a DataStructure
@@ -200,23 +200,23 @@ public:
       DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
       // Create the default DataArray that will hold the FaceList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
+      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString()));
       }
-      SharedTriList* triangles = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
+      SharedTriList* triangles = complex::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
       geometry2d->setFaceList(*triangles);
 
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = nx::core::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
-      Float32Array* vertexArray = nx::core::ArrayFromPath<float>(dataStructure, vertexPath);
+      Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
       geometry2d->setVertices(*vertexArray);
     }
 
@@ -244,8 +244,7 @@ public:
    */
   UniquePointer clone() const override
   {
-    auto action =
-        std::unique_ptr<CreateGeometry2DAction>(new CreateGeometry2DAction(getCreatedPath(), m_NumFaces, m_NumVertices, m_VertexDataName, m_FaceDataName, m_SharedVerticesName, m_SharedFacesName));
+    auto action = std::unique_ptr<CreateGeometry2DAction>(new CreateGeometry2DAction(getCreatedPath(), m_NumFaces, m_NumVertices, m_VertexDataName, m_FaceDataName, m_SharedVerticesName, m_SharedFacesName));
     action->m_InputVertices = m_InputVertices;
     action->m_InputFaces = m_InputFaces;
     action->m_ArrayHandlingType = m_ArrayHandlingType;
@@ -331,4 +330,4 @@ private:
 
 using CreateTriangleGeometryAction = CreateGeometry2DAction<TriangleGeom>;
 using CreateQuadGeometryAction = CreateGeometry2DAction<QuadGeom>;
-} // namespace nx::core
+} // namespace complex

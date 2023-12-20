@@ -1,15 +1,15 @@
 #include "CreateRectGridGeometryAction.hpp"
 
-#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "complex/DataStructure/Geometry/RectGridGeom.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include <fmt/core.h>
 
 #include <memory>
 
-using namespace nx::core;
+using namespace complex;
 
-namespace nx::core
+namespace complex
 {
 CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, usize xBoundTuples, usize yBoundTuples, usize zBoundTuples, const std::string& cellAttributeMatrixName,
                                                            const std::string& xBoundsName, const std::string& yBoundsName, const std::string& zBoundsName, std::string createdDataFormat)
@@ -174,8 +174,7 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
 
 IDataAction::UniquePointer CreateRectGridGeometryAction::clone() const
 {
-  auto action = std::unique_ptr<CreateRectGridGeometryAction>(
-      new CreateRectGridGeometryAction(getCreatedPath(), m_NumXBoundTuples, m_NumYBoundTuples, m_NumZBoundTuples, m_CellDataName, m_XBoundsArrayName, m_YBoundsArrayName, m_ZBoundsArrayName));
+  auto action = std::unique_ptr<CreateRectGridGeometryAction>(new CreateRectGridGeometryAction(getCreatedPath(), m_NumXBoundTuples, m_NumYBoundTuples, m_NumZBoundTuples, m_CellDataName, m_XBoundsArrayName, m_YBoundsArrayName, m_ZBoundsArrayName));
   action->m_InputXBounds = m_InputXBounds;
   action->m_InputYBounds = m_InputYBounds;
   action->m_InputZBounds = m_InputZBounds;
@@ -192,7 +191,7 @@ Float32Array* CreateRectGridGeometryAction::createBoundArray(DataStructure& data
     errors.insert(errors.end(), result.errors().begin(), result.errors().end());
     return nullptr;
   }
-  Float32Array* boundsArray = nx::core::ArrayFromPath<float>(dataStructure, boundsPath);
+  Float32Array* boundsArray = complex::ArrayFromPath<float>(dataStructure, boundsPath);
 
   return boundsArray;
 }
@@ -229,4 +228,4 @@ std::vector<DataPath> CreateRectGridGeometryAction::getAllCreatedPaths() const
   }
   return createdPaths;
 }
-} // namespace nx::core
+} // namespace complex

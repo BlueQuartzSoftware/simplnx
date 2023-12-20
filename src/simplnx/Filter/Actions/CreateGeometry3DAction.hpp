@@ -1,20 +1,20 @@
 #pragma once
 
-#include "simplnx/Common/Array.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
-#include "simplnx/Filter/Output.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/simplnx_export.hpp"
+#include "complex/Common/Array.hpp"
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
+#include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "complex/Filter/Output.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/complex_export.hpp"
 
 #include <fmt/core.h>
 
 #include <utility>
 
-namespace nx::core
+namespace complex
 {
 /**
  * @brief Action for creating a Tetrahedral or Hexehedral Geometry in a DataStructure
@@ -199,23 +199,23 @@ public:
     {
       const DataPath cellsPath = getCreatedPath().createChildPath(m_SharedCellsName);
       // Create the default DataArray that will hold the CellList and Vertices.
-      nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
+      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString()));
       }
-      SharedCellList* polyhedronList = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
+      SharedCellList* polyhedronList = complex::ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
       geometry3d->setPolyhedraList(*polyhedronList);
 
       // Create the Vertex Array with a component size of 3
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = nx::core::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
-      Float32Array* vertexArray = nx::core::ArrayFromPath<float>(dataStructure, vertexPath);
+      Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
       geometry3d->setVertices(*vertexArray);
     }
 
@@ -243,8 +243,7 @@ public:
    */
   UniquePointer clone() const override
   {
-    auto action =
-        std::unique_ptr<CreateGeometry3DAction>(new CreateGeometry3DAction(getCreatedPath(), m_NumCells, m_NumVertices, m_VertexDataName, m_CellDataName, m_SharedVerticesName, m_SharedCellsName));
+    auto action = std::unique_ptr<CreateGeometry3DAction>(new CreateGeometry3DAction(getCreatedPath(), m_NumCells, m_NumVertices, m_VertexDataName, m_CellDataName, m_SharedVerticesName, m_SharedCellsName));
     action->m_InputVertices = m_InputVertices;
     action->m_InputCells = m_InputCells;
     action->m_ArrayHandlingType = m_ArrayHandlingType;
@@ -330,4 +329,4 @@ private:
 
 using CreateTetrahedralGeometryAction = CreateGeometry3DAction<TetrahedralGeom>;
 using CreateHexahedralGeometryAction = CreateGeometry3DAction<HexahedralGeom>;
-} // namespace nx::core
+} // namespace complex
