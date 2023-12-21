@@ -179,10 +179,7 @@ public:
    */
   UniquePointer clone() const override
   {
-    auto action = std::unique_ptr<CreateVertexGeometryAction>(new CreateVertexGeometryAction());
-    action->m_NumVertices = m_NumVertices;
-    action->m_VertexDataName = m_VertexDataName;
-    action->m_SharedVertexListName = m_SharedVertexListName;
+    auto action = std::unique_ptr<CreateVertexGeometryAction>(new CreateVertexGeometryAction(getCreatedPath(), m_NumVertices, m_VertexDataName, m_SharedVertexListName));
     action->m_InputVertices = m_InputVertices;
     action->m_ArrayHandlingType = m_ArrayHandlingType;
     return action;

@@ -244,13 +244,8 @@ public:
    */
   UniquePointer clone() const override
   {
-    auto action = std::unique_ptr<CreateGeometry1DAction>(new CreateGeometry1DAction());
-    action->m_NumEdges = m_NumEdges;
-    action->m_NumVertices = m_NumVertices;
-    action->m_VertexDataName = m_VertexDataName;
-    action->m_EdgeDataName = m_EdgeDataName;
-    action->m_SharedVerticesName = m_SharedVerticesName;
-    action->m_SharedEdgesName = m_SharedEdgesName;
+    auto action =
+        std::unique_ptr<CreateGeometry1DAction>(new CreateGeometry1DAction(getCreatedPath(), m_NumEdges, m_NumVertices, m_VertexDataName, m_EdgeDataName, m_SharedVerticesName, m_SharedEdgesName));
     action->m_InputVertices = m_InputVertices;
     action->m_InputEdges = m_InputEdges;
     action->m_ArrayHandlingType = m_ArrayHandlingType;
