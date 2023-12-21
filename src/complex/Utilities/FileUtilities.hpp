@@ -32,6 +32,7 @@
 #pragma once
 
 #include "complex/Common/Result.hpp"
+#include "complex/complex_export.hpp"
 
 #include <filesystem>
 
@@ -40,23 +41,23 @@ namespace fs = std::filesystem;
 namespace complex::FileUtilities
 {
 //-----------------------------------------------------------------------------
-bool HasWriteAccess(const std::string& path);
+bool COMPLEX_EXPORT HasWriteAccess(const std::string& path);
 
 //-----------------------------------------------------------------------------
-Result<> ValidateInputFile(const fs::path& path);
+Result<> COMPLEX_EXPORT ValidateInputFile(const fs::path& path);
 
 //-----------------------------------------------------------------------------
-Result<> ValidateInputDir(const fs::path& path);
+Result<> COMPLEX_EXPORT ValidateInputDir(const fs::path& path);
 
 //-----------------------------------------------------------------------------
-Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile);
+Result<> COMPLEX_EXPORT ValidateDirectoryWritePermission(const fs::path& path, bool isFile);
 
 //-----------------------------------------------------------------------------
-Result<> ValidateOutputFile(const fs::path& path);
+Result<> COMPLEX_EXPORT ValidateOutputFile(const fs::path& path);
 
 //-----------------------------------------------------------------------------
-Result<> ValidateOutputDir(const fs::path& path);
+Result<> COMPLEX_EXPORT ValidateOutputDir(const fs::path& path);
 
 //-----------------------------------------------------------------------------
-Result<> ValidateCSVFile(const std::string& filePath);
+Result<> COMPLEX_EXPORT ValidateCSVFile(const std::string& filePath);
 } // namespace complex::FileUtilities
