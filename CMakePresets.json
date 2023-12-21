@@ -178,7 +178,7 @@
         },
         "Python3_EXECUTABLE": {
           "type": "PATH",
-          "value": "/home/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+          "value": "/opt/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
         }
       }
     },
