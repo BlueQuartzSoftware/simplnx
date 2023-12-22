@@ -109,8 +109,8 @@ function(simplnx_create_pyi)
   set(PYI_TARGET_NAME ${ARGS_PYTHON_MODULE_NAME}CreateStubFile)
 
   add_custom_target(${PYI_TARGET_NAME} ALL
-    COMMAND ${MYPY_STUBGEN_EXE} -m ${ARGS_PYTHON_MODULE_NAME} -o $<TARGET_FILE_DIR:simplnx>
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
+    COMMAND "${MYPY_STUBGEN_EXE}" -m "${ARGS_PYTHON_MODULE_NAME}" -o "$<TARGET_FILE_DIR:simplnx>"
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py" --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
     COMMENT "${ARGS_PYTHON_MODULE_NAME}: Generating .pyi files"
     WORKING_DIRECTORY $<TARGET_FILE_DIR:simplnx>
   )

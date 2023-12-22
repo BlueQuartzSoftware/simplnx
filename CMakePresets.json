@@ -130,7 +130,7 @@
           "type": "PATH",
           "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
         },
-        "COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY": {
+        "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
           "type": "BOOL",
           "value": "ON"
         }
@@ -155,7 +155,7 @@
           "type": "PATH",
           "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
         },
-        "COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY": {
+        "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
           "type": "BOOL",
           "value": "ON"
         }
@@ -302,6 +302,10 @@
         "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
           "type": "BOOL",
           "value": "ON"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/local/anaconda3/envs/nx-build/bin/python"
         }
       }
     },
