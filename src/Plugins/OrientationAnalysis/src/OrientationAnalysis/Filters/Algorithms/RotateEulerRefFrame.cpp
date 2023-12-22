@@ -1,14 +1,14 @@
 #include "RotateEulerRefFrame.hpp"
 
-#include "complex/Common/Numbers.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -33,7 +33,7 @@ public:
   void convert(size_t start, size_t end) const
   {
     float rotMat[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * complex::numbers::pi / 180.0F)).toGMatrix(rotMat);
+    OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * nx::core::numbers::pi / 180.0F)).toGMatrix(rotMat);
 
     float ea1 = 0, ea2 = 0, ea3 = 0;
     float g[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
@@ -45,8 +45,8 @@ public:
       ea3 = m_CellEulerAngles[3 * i + 2];
       OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(ea1, ea2, ea3)).toGMatrix(g);
 
-      complex::MatrixMath::Multiply3x3with3x3(g, rotMat, gNew);
-      complex::MatrixMath::Normalize3x3(gNew);
+      nx::core::MatrixMath::Multiply3x3with3x3(g, rotMat, gNew);
+      nx::core::MatrixMath::Normalize3x3(gNew);
 
       OrientationF eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(OrientationF(gNew));
       m_CellEulerAngles[3 * i] = eu[0];
@@ -83,7 +83,7 @@ RotateEulerRefFrame::~RotateEulerRefFrame() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> RotateEulerRefFrame::operator()()
 {
-  complex::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
+  nx::core::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
 
   size_t m_TotalElements = eulerAngles.getNumberOfTuples();
 

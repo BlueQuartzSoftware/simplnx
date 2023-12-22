@@ -1,7 +1,7 @@
-#include "complex/Core/Application.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/unit_test/complex_test_dirs.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -11,22 +11,22 @@
 TEST_CASE("Filter List Instantiation")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = complex::Application::Instance()->getFilterList();
+  auto* filterList = nx::core::Application::Instance()->getFilterList();
   REQUIRE(filterList != nullptr);
 
   const auto& handles = filterList->getFilterHandles();
   REQUIRE(!handles.empty());
 
-  complex::DataStructure dataStructure;
+  nx::core::DataStructure dataStructure;
 
   for(const auto& handle : handles)
   {
     auto filter = filterList->createFilter(handle);
     REQUIRE(filter != nullptr);
 
-    UNSCOPED_INFO(fmt::format("Filter List Instantiation::{} Instantiation. [complex][{}]", filter->className(), filter->name()));
+    UNSCOPED_INFO(fmt::format("Filter List Instantiation::{} Instantiation. [simplnx][{}]", filter->className(), filter->name()));
 
-    complex::Arguments args;
+    nx::core::Arguments args;
     dataStructure.clear();
 
     auto params = filter->parameters();

@@ -2,11 +2,11 @@
 #include "OrientationAnalysis/Filters/EbsdToH5EbsdFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
@@ -18,7 +18,7 @@
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
+using namespace nx::core;
 using namespace H5Support;
 
 namespace
@@ -182,7 +182,7 @@ int TraverseFile(const std::string& fileName)
 
 const std::string k_ExemplarFilePath = fmt::format("{}/6_5_h5ebsd_exemplar/6_5_h5ebsd_exemplar.h5ebsd", unit_test::k_TestFilesDir);
 
-const auto k_HighToLow = static_cast<ChoicesParameter::ValueType>(complex::FilePathGenerator::Ordering::HighToLow);
+const auto k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::FilePathGenerator::Ordering::HighToLow);
 const int32 k_StartIndex = 1;
 const int32 k_EndIndex = 2;
 const int32 k_IncrementIndex = 1;
@@ -200,8 +200,8 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
 
   fs::path inputPath(k_InputPath);
   REQUIRE(fs::exists(inputPath));
@@ -218,17 +218,17 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
   // Create default Parameters for the filter.
   args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32Parameter::ValueType>(0.25F));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(complex::EbsdToH5EbsdInputConstants::k_Edax));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(s_OutputFilePath)));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::TraverseFile(k_ExemplarFilePath);
 }

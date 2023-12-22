@@ -7,7 +7,7 @@
 #include <cmath>
 #include <memory>
 
-namespace complex
+namespace nx::core
 {
 /**
  * @brief 3X3 Matrix that is row major, i.e., the data is laid out in memory as follows:
@@ -414,4 +414,4 @@ public:
 private:
   std::array<T, 9> m_Data = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 };
-} // namespace complex
+} // namespace nx::core

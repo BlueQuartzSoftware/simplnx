@@ -6,47 +6,47 @@ target_include_directories(CxPybind INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/CxPybi
 
 target_link_libraries(CxPybind
   INTERFACE
-    complex
+    simplnx
     pybind11::headers
 )
 
-pybind11_add_module(complexpy "${ComplexCore_SOURCE_DIR}/wrapping/python/complexpy.cpp")
+pybind11_add_module(simplnxpy "${SimplnxCore_SOURCE_DIR}/wrapping/python/simplnxpy.cpp")
 
-target_compile_definitions(complexpy PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)
+target_compile_definitions(simplnxpy PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)
 
-# we want the CMake target name to be "complexpy", but the Python module to be "complex"
-set_target_properties(complexpy
+# we want the CMake target name to be "simplnxpy", but the Python module to be "simplnx"
+set_target_properties(simplnxpy
   PROPERTIES
-    OUTPUT_NAME ${COMPLEX_PYTHON_MODULE}
-    ARCHIVE_OUTPUT_NAME ${COMPLEX_PYTHON_MODULE}py
-    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
+    OUTPUT_NAME ${SIMPLNX_PYTHON_MODULE}
+    ARCHIVE_OUTPUT_NAME ${SIMPLNX_PYTHON_MODULE}py
+    LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:simplnx>
 )
 
 # pybind11 sets CXX_VISIBILITY_PRESET to hidden (though this may change in the future see https://github.com/pybind/pybind11/pull/4072)
 # This can cause issues when using libc++ and std::any across shared libraries
 # The hidden visibility causes some objects to have different RTTI which then results in std::bad_any_cast
-option(COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY "Controls CXX_VISIBILITY_PRESET for python modules" OFF)
+option(SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY "Controls CXX_VISIBILITY_PRESET for python modules" OFF)
 
-if(COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY)
-  set_target_properties(complexpy
+if(SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY)
+  set_target_properties(simplnxpy
     PROPERTIES
       CXX_VISIBILITY_PRESET default
   )
 endif()
 
-target_link_libraries(complexpy
+target_link_libraries(simplnxpy
   PUBLIC
-    ComplexCore
+    SimplnxCore
     CxPybind
 )
 
-target_compile_options(complexpy
+target_compile_options(simplnxpy
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
 #-------------------------------------------------------------------------------
-# FUNCTION: complex_generate_filter_bindings
+# FUNCTION: simplnx_generate_filter_bindings
 # ARGS:
 #   One Value:
 #      CPP_PLUGIN_NAME:
@@ -54,7 +54,7 @@ target_compile_options(complexpy
 #   Multi Value:
 #      FILTER_LIST
 #-------------------------------------------------------------------------------
-function(complex_generate_filter_bindings)
+function(simplnx_generate_filter_bindings)
   set(options)
   set(oneValueArgs CPP_PLUGIN_NAME PYTHON_MODULE_NAME)
   set(multiValueArgs FILTER_LIST)
@@ -90,7 +90,7 @@ function(complex_generate_filter_bindings)
 endfunction()
 
 #-------------------------------------------------------------------------------
-# FUNCTION: complex_create_pyi
+# FUNCTION: simplnx_create_pyi
 # ARGS:
 #   One Value:
 #      PYTHON_MODULE_NAME:
@@ -98,7 +98,7 @@ endfunction()
 #   Multi Value:
 #      
 #-------------------------------------------------------------------------------
-function(complex_create_pyi)
+function(simplnx_create_pyi)
   set(options)
   set(oneValueArgs PYTHON_MODULE_NAME PYTHON_TARGET)
   set(multiValueArgs)
@@ -109,24 +109,24 @@ function(complex_create_pyi)
   set(PYI_TARGET_NAME ${ARGS_PYTHON_MODULE_NAME}CreateStubFile)
 
   add_custom_target(${PYI_TARGET_NAME} ALL
-    COMMAND ${MYPY_STUBGEN_EXE} -m ${ARGS_PYTHON_MODULE_NAME} -o $<TARGET_FILE_DIR:complex>
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py --input_file "$<TARGET_FILE_DIR:complex>/${ARGS_PYTHON_MODULE_NAME}.pyi"
+    COMMAND ${MYPY_STUBGEN_EXE} -m ${ARGS_PYTHON_MODULE_NAME} -o $<TARGET_FILE_DIR:simplnx>
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
     COMMENT "${ARGS_PYTHON_MODULE_NAME}: Generating .pyi files"
-    WORKING_DIRECTORY $<TARGET_FILE_DIR:complex>
+    WORKING_DIRECTORY $<TARGET_FILE_DIR:simplnx>
   )
   set_property(TARGET ${PYI_TARGET_NAME} PROPERTY FOLDER "Python/Stub")
   add_dependencies(${PYI_TARGET_NAME} ${ARGS_PYTHON_TARGET})
 endfunction()
 
 #-------------------------------------------------------------------------------
-# FUNCTION: complex_create_plugin_pyi
+# FUNCTION: simplnx_create_plugin_pyi
 # ARGS:
 #   One Value:
 #      PLUGIN_NAME:
 #   Multi Value:
 #      
 #-------------------------------------------------------------------------------
-function(complex_create_plugin_pyi)
+function(simplnx_create_plugin_pyi)
   set(options)
   set(oneValueArgs PLUGIN_NAME)
   set(multiValueArgs)
@@ -134,69 +134,69 @@ function(complex_create_plugin_pyi)
 
   string(TOLOWER ${ARGS_PLUGIN_NAME} PLUGIN_NAME_LOWER)
 
-  complex_create_pyi(PYTHON_MODULE_NAME ${PLUGIN_NAME_LOWER} PYTHON_TARGET ${PLUGIN_NAME_LOWER})
-  add_dependencies(${PLUGIN_NAME_LOWER} complexpy)
+  simplnx_create_pyi(PYTHON_MODULE_NAME ${PLUGIN_NAME_LOWER} PYTHON_TARGET ${PLUGIN_NAME_LOWER})
+  add_dependencies(${PLUGIN_NAME_LOWER} simplnxpy)
 endfunction()
 
-get_property(COMPLEX_CORE_FILTER_LIST TARGET ComplexCore PROPERTY COMPLEX_FILTER_LIST)
+get_property(SIMPLNX_CORE_FILTER_LIST TARGET SimplnxCore PROPERTY SIMPLNX_FILTER_LIST)
 
-complex_generate_filter_bindings(CPP_PLUGIN_NAME ComplexCore
-  PYTHON_MODULE_NAME complexpy
-  FILTER_LIST ${COMPLEX_CORE_FILTER_LIST}
+simplnx_generate_filter_bindings(CPP_PLUGIN_NAME SimplnxCore
+  PYTHON_MODULE_NAME simplnxpy
+  FILTER_LIST ${SIMPLNX_CORE_FILTER_LIST}
 )
 
-set_property(TARGET complexpy PROPERTY FOLDER "Python")
+set_property(TARGET simplnxpy PROPERTY FOLDER "Python")
 
-option(COMPLEX_PY_GENERATE_PYI "Generate .pyi files for python bindings" OFF)
-if(COMPLEX_PY_GENERATE_PYI)
-  complex_create_pyi(PYTHON_MODULE_NAME complex PYTHON_TARGET complexpy)
+option(SIMPLNX_PY_GENERATE_PYI "Generate .pyi files for python bindings" OFF)
+if(SIMPLNX_PY_GENERATE_PYI)
+  simplnx_create_pyi(PYTHON_MODULE_NAME simplnx PYTHON_TARGET simplnxpy)
 endif()
 
 # Disabled due to auto generation not fully working
-# option(COMPLEX_PY_ENABLE_DOCS "Generate python documentation using sphinx" OFF)
-# if(COMPLEX_PY_ENABLE_DOCS)
+# option(SIMPLNX_PY_ENABLE_DOCS "Generate python documentation using sphinx" OFF)
+# if(SIMPLNX_PY_ENABLE_DOCS)
 #   find_package(Sphinx REQUIRED)
 
 #   set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/docs)
 #   set(SPHINX_BUILD ${PROJECT_BINARY_DIR}/docs/python)
 
-#   add_custom_target(complexpy_docs
+#   add_custom_target(simplnxpy_docs
 #     COMMAND
-#       ${CMAKE_COMMAND} -E env "PYTHONPATH=$<TARGET_FILE_DIR:complex>"
+#       ${CMAKE_COMMAND} -E env "PYTHONPATH=$<TARGET_FILE_DIR:simplnx>"
 #       ${SPHINX_BUILD_EXECUTABLE} -b html ${SPHINX_SOURCE} ${SPHINX_BUILD}
-#     WORKING_DIRECTORY $<TARGET_FILE_DIR:complex>
-#     COMMENT "Generating complexpy docs with Sphinx"
+#     WORKING_DIRECTORY $<TARGET_FILE_DIR:simplnx>
+#     COMMENT "Generating simplnxpy docs with Sphinx"
 #     VERBATIM
 #   )
-#   add_dependencies(complexpy_docs complexCreateStubFile)
+#   add_dependencies(simplnxpy_docs simplnxCreateStubFile)
 # endif()
 
-option(COMPLEX_PY_ENABLE_INSTALL "Enables install complexpy" OFF)
-if(COMPLEX_PY_ENABLE_INSTALL)
+option(SIMPLNX_PY_ENABLE_INSTALL "Enables install simplnxpy" OFF)
+if(SIMPLNX_PY_ENABLE_INSTALL)
   include(GNUInstallDirs)
-  set(COMPLEX_PY_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} CACHE PATH "Path to install complexpy")
+  set(SIMPLNX_PY_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} CACHE PATH "Path to install simplnxpy")
 
-  install(TARGETS complexpy
+  install(TARGETS simplnxpy
     LIBRARY
-      DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+      DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
   )
-  if(COMPLEX_PY_GENERATE_PYI)
-    install(FILES $<TARGET_FILE_DIR:complex>/complex.pyi
-      DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+  if(SIMPLNX_PY_GENERATE_PYI)
+    install(FILES $<TARGET_FILE_DIR:simplnx>/simplnx.pyi
+      DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
     )
   endif()
 endif()
 
 
 #-------------------------------------------------------------------------------
-# FUNCTION: complex_add_python_plugin
+# FUNCTION: simplnx_add_python_plugin
 # ARGS:
 #   One Value:
 #      PLUGIN_NAME:
 #   Multi Value:
 #      
 #-------------------------------------------------------------------------------
-function(complex_add_python_plugin)
+function(simplnx_add_python_plugin)
   set(options)
   set(oneValueArgs PLUGIN_NAME PYTHON_MODULE_NAME)
   set(multiValueArgs)
@@ -207,9 +207,9 @@ function(complex_add_python_plugin)
 
   pybind11_add_module(${PYTHON_MODULE_NAME} ${PYTHON_WRAPPING_DIR}/${PYTHON_MODULE_NAME}.cpp)
 
-  get_property(FILTER_LIST TARGET ${ARGS_PLUGIN_NAME} PROPERTY COMPLEX_FILTER_LIST)
+  get_property(FILTER_LIST TARGET ${ARGS_PLUGIN_NAME} PROPERTY SIMPLNX_FILTER_LIST)
 
-  complex_generate_filter_bindings(CPP_PLUGIN_NAME ${ARGS_PLUGIN_NAME}
+  simplnx_generate_filter_bindings(CPP_PLUGIN_NAME ${ARGS_PLUGIN_NAME}
     PYTHON_MODULE_NAME ${PYTHON_MODULE_NAME}
     FILTER_LIST ${FILTER_LIST}
   )
@@ -232,7 +232,7 @@ function(complex_add_python_plugin)
       ARCHIVE_OUTPUT_NAME ${PYTHON_MODULE_NAME}py
   )
 
-  if(COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY)
+  if(SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY)
     set_target_properties(${PYTHON_MODULE_NAME}
       PROPERTIES
         CXX_VISIBILITY_PRESET default
@@ -241,32 +241,32 @@ function(complex_add_python_plugin)
 
   set_property(TARGET ${PYTHON_MODULE_NAME} PROPERTY FOLDER "Python")
 
-  if(COMPLEX_PY_GENERATE_PYI)
-    complex_create_plugin_pyi(PLUGIN_NAME ${ARGS_PLUGIN_NAME})
+  if(SIMPLNX_PY_GENERATE_PYI)
+    simplnx_create_plugin_pyi(PLUGIN_NAME ${ARGS_PLUGIN_NAME})
 
-    if(COMPLEX_PY_ENABLE_INSTALL)
-      install(FILES $<TARGET_FILE_DIR:complex>/${PYTHON_MODULE_NAME}.pyi
-        DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+    if(SIMPLNX_PY_ENABLE_INSTALL)
+      install(FILES $<TARGET_FILE_DIR:simplnx>/${PYTHON_MODULE_NAME}.pyi
+        DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
       )
     endif()
   endif()
 
-  if(COMPLEX_PY_ENABLE_INSTALL)
+  if(SIMPLNX_PY_ENABLE_INSTALL)
     install(TARGETS ${PYTHON_MODULE_NAME}
       LIBRARY
-        DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+        DESTINATION ${SIMPLNX_PY_INSTALL_DIR}
     )
   endif()
 endfunction()
 
-get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
-foreach(d3dPlugin ${ComplexPluginTargets})
+get_property(simplnxPluginTargets GLOBAL PROPERTY simplnxPluginTargets)
+foreach(d3dPlugin ${simplnxPluginTargets})
   # message(STATUS "PYTHON: Checking Plugin ${d3dPlugin}")
   string(TOLOWER ${d3dPlugin} python_module_name)
-  if(NOT "${d3dPlugin}" STREQUAL "ComplexCore")
-    if(COMPLEX_PLUGIN_ENABLE_${d3dPlugin})
+  if(NOT "${d3dPlugin}" STREQUAL "SimplnxCore")
+    if(SIMPLNX_PLUGIN_ENABLE_${d3dPlugin})
       message(STATUS "PYTHON: Wrapping Plugin ${d3dPlugin}")
-      complex_add_python_plugin(PLUGIN_NAME ${d3dPlugin} PYTHON_MODULE_NAME ${python_module_name})
+      simplnx_add_python_plugin(PLUGIN_NAME ${d3dPlugin} PYTHON_MODULE_NAME ${python_module_name})
     endif()
   endif()
 endforeach()
@@ -274,7 +274,7 @@ endforeach()
 #------------------------------------------------------------------------------
 # Create the Sphinx based Documentation
 #------------------------------------------------------------------------------
-option(COMPLEX_ENABLE_SPHINX_DOCS "Enables the Sphinx based documentation generation" OFF)
-if(COMPLEX_ENABLE_SPHINX_DOCS)
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs ${complex_BINARY_DIR}/sphinx_docs)
+option(SIMPLNX_ENABLE_SPHINX_DOCS "Enables the Sphinx based documentation generation" OFF)
+if(SIMPLNX_ENABLE_SPHINX_DOCS)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs ${simplnx_BINARY_DIR}/sphinx_docs)
 endif()

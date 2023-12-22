@@ -1,10 +1,10 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/IO/Generic/DataIOCollection.hpp"
-#include "complex/Utilities/MemoryUtilities.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "simplnx/Utilities/MemoryUtilities.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 TEST_CASE("Contains HDF5 IO Support", "IOTest")
 {

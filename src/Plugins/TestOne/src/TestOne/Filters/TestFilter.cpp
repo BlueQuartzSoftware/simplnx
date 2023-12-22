@@ -1,11 +1,11 @@
 #include "TestFilter.hpp"
 
-#include "complex/Common/StringLiteral.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -31,7 +31,7 @@ std::string TestFilter::className() const
 }
 
 //------------------------------------------------------------------------------
-complex::Uuid TestFilter::uuid() const
+nx::core::Uuid TestFilter::uuid() const
 {
   return FilterTraits<TestFilter>::uuid;
 }
@@ -49,7 +49,7 @@ std::vector<std::string> TestFilter::defaultTags() const
 }
 
 //------------------------------------------------------------------------------
-complex::Parameters TestFilter::parameters() const
+nx::core::Parameters TestFilter::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<Float32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0.1234f));
@@ -60,20 +60,20 @@ complex::Parameters TestFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-complex::IFilter::UniquePointer TestFilter::clone() const
+nx::core::IFilter::UniquePointer TestFilter::clone() const
 {
   return std::make_unique<TestFilter>();
 }
 
 //------------------------------------------------------------------------------
-complex::IFilter::PreflightResult TestFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+nx::core::IFilter::PreflightResult TestFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-complex::Result<> TestFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+nx::core::Result<> TestFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel) const
 {
   return {};
 }

@@ -2,15 +2,15 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include <vector>
 
-namespace complex
+namespace nx::core
 {
 
 /**
@@ -58,4 +58,4 @@ private:
   int32_t m_PhaseWarningCount = 0;
 };
 
-} // namespace complex
+} // namespace nx::core

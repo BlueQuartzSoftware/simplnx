@@ -1,7 +1,7 @@
-include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
+include("${simplnx_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "TestOne")
-set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
+set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 
 #------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
@@ -15,7 +15,7 @@ set(FilterList
   DynamicTableExample
 )
 
-create_complex_plugin(NAME ${PLUGIN_NAME}
+create_simplnx_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
                       DESCRIPTION "Test Plugin for ${PLUGIN_NAME}"
                       VERSION "0.1.0"
@@ -23,7 +23,7 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 
 #------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
-if(COMPLEX_BUILD_TESTS)
+if(SIMPLNX_BUILD_TESTS)
   enable_testing()
   add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 endif()

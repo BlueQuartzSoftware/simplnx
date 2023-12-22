@@ -5,7 +5,7 @@
 - Update Version number.
 
   - If you add API then update the third number
-  - If you break API (any where in complex), update the second number
+  - If you break API (any where in simplnx), update the second number
 
 - Document **ALL** new API in the appropriate documentation file(s)
 - Create a ReleaseNotes_1XX.rst file with the appropriate highlights from the release
@@ -43,10 +43,10 @@ RELAUNCH A NEW TERMINAL!!!!
     [user@host] $ mamba install boa
 ```
 
-Create the package from the `complex` sources
+Create the package from the `simplnx` sources
 
 ```shell
-    [user@host] $ cd complex/conda
+    [user@host] $ cd simplnx/conda
     (nx-build) [user@host] $ conda mambabuild --python 3.8 .
     (nx-build) [user@host] $ conda mambabuild --python 3.9 .
     (nx-build) [user@host] $ conda mambabuild --python 3.10 . 
@@ -57,7 +57,7 @@ Create the package from the `complex` sources
 
 ```shell
     [user@host] $ conda create on nx-build python=3.10 mamba boa
-    [user@host] $ cd complex/conda
+    [user@host] $ cd simplnx/conda
     [user@host] $ conda build . 
 ```
 
@@ -86,7 +86,7 @@ conda config --add channels conda-forge
 conda config --set channel_priority strict
 conda create -n cxpython python=3.10
 conda activate cxpython
-conda install -c bluequartzsoftware complex
+conda install -c bluequartzsoftware simplnx
 ```
 
 If you plan to use jupyter notebooks, then any other kernels and such will also need to be installed. VS Code does this for you.
@@ -96,8 +96,8 @@ If you plan to use jupyter notebooks, then any other kernels and such will also 
 Ensure you are building the python bindings.
 
 ```shell
-COMPLEX_BUILD_PYTHON=ON
-COMPLEX_EMBED_PYTHON=OFF
-COMPLEX_ENABLE_SPHINX_DOCS=ON
+SIMPLNX_BUILD_PYTHON=ON
+SIMPLNX_EMBED_PYTHON=OFF
+SIMPLNX_ENABLE_SPHINX_DOCS=ON
 Python3_EXECUTABLE=/path/to/python
 ```

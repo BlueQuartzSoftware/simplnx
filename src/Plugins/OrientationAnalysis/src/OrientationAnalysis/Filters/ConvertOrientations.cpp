@@ -1,12 +1,12 @@
 #include "ConvertOrientations.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -14,7 +14,7 @@
 #include "EbsdLib/LaueOps/LaueOps.h"
 #include "EbsdLib/OrientationMath/OrientationConverter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/format.h>
 
@@ -22,16 +22,16 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "UnusedValue"
 #endif
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
 
 // Error Code constants
-constexpr complex::int32 k_InputRepresentationTypeError = -67001;
-constexpr complex::int32 k_OutputRepresentationTypeError = -67002;
-constexpr complex::int32 k_InputComponentDimensionError = -67003;
-constexpr complex::int32 k_InputComponentCountError = -67004;
+constexpr nx::core::int32 k_InputRepresentationTypeError = -67001;
+constexpr nx::core::int32 k_OutputRepresentationTypeError = -67002;
+constexpr nx::core::int32 k_InputComponentDimensionError = -67003;
+constexpr nx::core::int32 k_InputComponentCountError = -67004;
 
 template <typename T>
 struct EulerCheck
@@ -298,7 +298,7 @@ private:
 
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ConvertOrientations::name() const
@@ -446,358 +446,358 @@ Result<> ConvertOrientations::executeImpl(DataStructure& dataStructure, const Ar
   // This next block of code was generated from the ConvertOrientationsTest::_make_code() function.
   if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to OrientationMatrix"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Euler to OrientationMatrix"});
     ConversionFunctionType eu2om = OrientationTransformation::eu2om<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 9>(inputDataArray, outputDataArray, eu2om, euCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Quaternion"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Euler to Quaternion"});
     ToQuaternionFunctionType eu2qu = OrientationTransformation::eu2qu<InputType, QuaternionType>;
     parallelAlgorithm.execute(
         ::ToQuaternion<float, ToQuaternionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, eu2qu, euCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::AxisAngle)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to AxisAngle"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Euler to AxisAngle"});
     ConversionFunctionType eu2ax = OrientationTransformation::eu2ax<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, eu2ax, euCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Rodrigues)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Rodrigues"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Euler to Rodrigues"});
     ConversionFunctionType eu2ro = OrientationTransformation::eu2ro<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, eu2ro, euCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Homochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Homochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Euler to Homochoric"});
     ConversionFunctionType eu2ho = OrientationTransformation::eu2ho<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, eu2ho, euCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Cubochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Cubochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Euler to Cubochoric"});
     ConversionFunctionType eu2cu = OrientationTransformation::eu2cu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, eu2cu, euCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Euler && outputType == OrientationRepresentation::Type::Stereographic)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Euler to Stereographic"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Euler to Stereographic"});
     ConversionFunctionType eu2st = OrientationTransformation::eu2st<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, eu2st, euCheck));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Euler)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Euler"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting OrientationMatrix to Euler"});
     ConversionFunctionType om2eu = OrientationTransformation::om2eu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 9, 3>(inputDataArray, outputDataArray, om2eu, omCheck));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Quaternion"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting OrientationMatrix to Quaternion"});
     ToQuaternionFunctionType om2qu = OrientationTransformation::om2qu<InputType, QuaternionType>;
     parallelAlgorithm.execute(
         ::ToQuaternion<float, ToQuaternionFunctionType, ValidateInputDataFunctionType, 9, 4>(inputDataArray, outputDataArray, om2qu, omCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::AxisAngle)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to AxisAngle"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting OrientationMatrix to AxisAngle"});
     ConversionFunctionType om2ax = OrientationTransformation::om2ax<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 9, 4>(inputDataArray, outputDataArray, om2ax, omCheck));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Rodrigues)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Rodrigues"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting OrientationMatrix to Rodrigues"});
     ConversionFunctionType om2ro = OrientationTransformation::om2ro<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 9, 4>(inputDataArray, outputDataArray, om2ro, omCheck));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Homochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Homochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting OrientationMatrix to Homochoric"});
     ConversionFunctionType om2ho = OrientationTransformation::om2ho<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 9, 3>(inputDataArray, outputDataArray, om2ho, omCheck));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Cubochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Cubochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting OrientationMatrix to Cubochoric"});
     ConversionFunctionType om2cu = OrientationTransformation::om2cu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 9, 3>(inputDataArray, outputDataArray, om2cu, omCheck));
   }
   else if(inputType == OrientationRepresentation::Type::OrientationMatrix && outputType == OrientationRepresentation::Type::Stereographic)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting OrientationMatrix to Stereographic"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting OrientationMatrix to Stereographic"});
     ConversionFunctionType om2st = OrientationTransformation::om2st<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 9, 3>(inputDataArray, outputDataArray, om2st, omCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Euler)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Euler"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Quaternion to Euler"});
     FromQuaternionFunctionType qu2eu = OrientationTransformation::qu2eu<QuaternionType, OutputType>;
     parallelAlgorithm.execute(
         ::FromQuaternion<float, FromQuaternionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, qu2eu, quCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to OrientationMatrix"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Quaternion to OrientationMatrix"});
     FromQuaternionFunctionType qu2om = OrientationTransformation::qu2om<QuaternionType, OutputType>;
     parallelAlgorithm.execute(
         ::FromQuaternion<float, FromQuaternionFunctionType, ValidateInputDataFunctionType, 4, 9>(inputDataArray, outputDataArray, qu2om, quCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::AxisAngle)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to AxisAngle"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Quaternion to AxisAngle"});
     FromQuaternionFunctionType qu2ax = OrientationTransformation::qu2ax<QuaternionType, OutputType>;
     parallelAlgorithm.execute(
         ::FromQuaternion<float, FromQuaternionFunctionType, ValidateInputDataFunctionType, 4, 4>(inputDataArray, outputDataArray, qu2ax, quCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Rodrigues)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Rodrigues"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Quaternion to Rodrigues"});
     FromQuaternionFunctionType qu2ro = OrientationTransformation::qu2ro<QuaternionType, OutputType>;
     parallelAlgorithm.execute(
         ::FromQuaternion<float, FromQuaternionFunctionType, ValidateInputDataFunctionType, 4, 4>(inputDataArray, outputDataArray, qu2ro, quCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Homochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Homochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Quaternion to Homochoric"});
     FromQuaternionFunctionType qu2ho = OrientationTransformation::qu2ho<QuaternionType, OutputType>;
     parallelAlgorithm.execute(
         ::FromQuaternion<float, FromQuaternionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, qu2ho, quCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Cubochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Cubochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Quaternion to Cubochoric"});
     FromQuaternionFunctionType qu2cu = OrientationTransformation::qu2cu<QuaternionType, OutputType>;
     parallelAlgorithm.execute(
         ::FromQuaternion<float, FromQuaternionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, qu2cu, quCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Quaternion && outputType == OrientationRepresentation::Type::Stereographic)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Quaternion to Stereographic"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Quaternion to Stereographic"});
     FromQuaternionFunctionType qu2st = OrientationTransformation::qu2st<QuaternionType, OutputType>;
     parallelAlgorithm.execute(
         ::FromQuaternion<float, FromQuaternionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, qu2st, quCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Euler)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Euler"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting AxisAngle to Euler"});
     ConversionFunctionType ax2eu = OrientationTransformation::ax2eu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, ax2eu, axCheck));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to OrientationMatrix"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting AxisAngle to OrientationMatrix"});
     ConversionFunctionType ax2om = OrientationTransformation::ax2om<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 9>(inputDataArray, outputDataArray, ax2om, axCheck));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Quaternion"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting AxisAngle to Quaternion"});
     ToQuaternionFunctionType ax2qu = OrientationTransformation::ax2qu<InputType, QuaternionType>;
     parallelAlgorithm.execute(
         ::ToQuaternion<float, ToQuaternionFunctionType, ValidateInputDataFunctionType, 4, 4>(inputDataArray, outputDataArray, ax2qu, axCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Rodrigues)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Rodrigues"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting AxisAngle to Rodrigues"});
     ConversionFunctionType ax2ro = OrientationTransformation::ax2ro<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 4>(inputDataArray, outputDataArray, ax2ro, axCheck));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Homochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Homochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting AxisAngle to Homochoric"});
     ConversionFunctionType ax2ho = OrientationTransformation::ax2ho<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, ax2ho, axCheck));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Cubochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Cubochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting AxisAngle to Cubochoric"});
     ConversionFunctionType ax2cu = OrientationTransformation::ax2cu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, ax2cu, axCheck));
   }
   else if(inputType == OrientationRepresentation::Type::AxisAngle && outputType == OrientationRepresentation::Type::Stereographic)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting AxisAngle to Stereographic"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting AxisAngle to Stereographic"});
     ConversionFunctionType ax2st = OrientationTransformation::ax2st<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, ax2st, axCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Euler)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Euler"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Rodrigues to Euler"});
     ConversionFunctionType ro2eu = OrientationTransformation::ro2eu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, ro2eu, roCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to OrientationMatrix"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Rodrigues to OrientationMatrix"});
     ConversionFunctionType ro2om = OrientationTransformation::ro2om<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 9>(inputDataArray, outputDataArray, ro2om, roCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Quaternion"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Rodrigues to Quaternion"});
     ToQuaternionFunctionType ro2qu = OrientationTransformation::ro2qu<InputType, QuaternionType>;
     parallelAlgorithm.execute(
         ::ToQuaternion<float, ToQuaternionFunctionType, ValidateInputDataFunctionType, 4, 4>(inputDataArray, outputDataArray, ro2qu, roCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::AxisAngle)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to AxisAngle"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Rodrigues to AxisAngle"});
     ConversionFunctionType ro2ax = OrientationTransformation::ro2ax<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 4>(inputDataArray, outputDataArray, ro2ax, roCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Homochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Homochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Rodrigues to Homochoric"});
     ConversionFunctionType ro2ho = OrientationTransformation::ro2ho<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, ro2ho, roCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Cubochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Cubochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Rodrigues to Cubochoric"});
     ConversionFunctionType ro2cu = OrientationTransformation::ro2cu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, ro2cu, roCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Rodrigues && outputType == OrientationRepresentation::Type::Stereographic)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Rodrigues to Stereographic"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Rodrigues to Stereographic"});
     ConversionFunctionType ro2st = OrientationTransformation::ro2st<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 4, 3>(inputDataArray, outputDataArray, ro2st, roCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Euler)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Euler"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Homochoric to Euler"});
     ConversionFunctionType ho2eu = OrientationTransformation::ho2eu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, ho2eu, hoCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to OrientationMatrix"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Homochoric to OrientationMatrix"});
     ConversionFunctionType ho2om = OrientationTransformation::ho2om<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 9>(inputDataArray, outputDataArray, ho2om, hoCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Quaternion"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Homochoric to Quaternion"});
     ToQuaternionFunctionType ho2qu = OrientationTransformation::ho2qu<InputType, QuaternionType>;
     parallelAlgorithm.execute(
         ::ToQuaternion<float, ToQuaternionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, ho2qu, hoCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::AxisAngle)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to AxisAngle"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Homochoric to AxisAngle"});
     ConversionFunctionType ho2ax = OrientationTransformation::ho2ax<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, ho2ax, hoCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Rodrigues)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Rodrigues"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Homochoric to Rodrigues"});
     ConversionFunctionType ho2ro = OrientationTransformation::ho2ro<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, ho2ro, hoCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Cubochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Cubochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Homochoric to Cubochoric"});
     ConversionFunctionType ho2cu = OrientationTransformation::ho2cu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, ho2cu, hoCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Homochoric && outputType == OrientationRepresentation::Type::Stereographic)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Homochoric to Stereographic"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Homochoric to Stereographic"});
     ConversionFunctionType ho2st = OrientationTransformation::ho2st<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, ho2st, hoCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Euler)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Euler"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Cubochoric to Euler"});
     ConversionFunctionType cu2eu = OrientationTransformation::cu2eu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, cu2eu, cuCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to OrientationMatrix"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Cubochoric to OrientationMatrix"});
     ConversionFunctionType cu2om = OrientationTransformation::cu2om<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 9>(inputDataArray, outputDataArray, cu2om, cuCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Quaternion"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Cubochoric to Quaternion"});
     ToQuaternionFunctionType cu2qu = OrientationTransformation::cu2qu<InputType, QuaternionType>;
     parallelAlgorithm.execute(
         ::ToQuaternion<float, ToQuaternionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, cu2qu, cuCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::AxisAngle)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to AxisAngle"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Cubochoric to AxisAngle"});
     ConversionFunctionType cu2ax = OrientationTransformation::cu2ax<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, cu2ax, cuCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Rodrigues)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Rodrigues"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Cubochoric to Rodrigues"});
     ConversionFunctionType cu2ro = OrientationTransformation::cu2ro<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, cu2ro, cuCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Homochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Homochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Cubochoric to Homochoric"});
     ConversionFunctionType cu2ho = OrientationTransformation::cu2ho<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, cu2ho, cuCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Cubochoric && outputType == OrientationRepresentation::Type::Stereographic)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Cubochoric to Stereographic"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Cubochoric to Stereographic"});
     ConversionFunctionType cu2st = OrientationTransformation::cu2st<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, cu2st, cuCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Stereographic && outputType == OrientationRepresentation::Type::Euler)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Stereographic to Euler"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Stereographic to Euler"});
     ConversionFunctionType st2eu = OrientationTransformation::st2eu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, st2eu, stCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Stereographic && outputType == OrientationRepresentation::Type::OrientationMatrix)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Stereographic to OrientationMatrix"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Stereographic to OrientationMatrix"});
     ConversionFunctionType st2om = OrientationTransformation::st2om<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 9>(inputDataArray, outputDataArray, st2om, stCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Stereographic && outputType == OrientationRepresentation::Type::Quaternion)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Stereographic to Quaternion"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Stereographic to Quaternion"});
     ToQuaternionFunctionType st2qu = OrientationTransformation::st2qu<InputType, QuaternionType>;
     parallelAlgorithm.execute(
         ::ToQuaternion<float, ToQuaternionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, st2qu, stCheck, QuaternionType::Order::VectorScalar));
   }
   else if(inputType == OrientationRepresentation::Type::Stereographic && outputType == OrientationRepresentation::Type::AxisAngle)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Stereographic to AxisAngle"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Stereographic to AxisAngle"});
     ConversionFunctionType st2ax = OrientationTransformation::st2ax<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, st2ax, stCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Stereographic && outputType == OrientationRepresentation::Type::Rodrigues)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Stereographic to Rodrigues"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Stereographic to Rodrigues"});
     ConversionFunctionType st2ro = OrientationTransformation::st2ro<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 4>(inputDataArray, outputDataArray, st2ro, stCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Stereographic && outputType == OrientationRepresentation::Type::Homochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Stereographic to Homochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Stereographic to Homochoric"});
     ConversionFunctionType st2ho = OrientationTransformation::st2ho<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, st2ho, stCheck));
   }
   else if(inputType == OrientationRepresentation::Type::Stereographic && outputType == OrientationRepresentation::Type::Cubochoric)
   {
-    messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, "Converting Stereographic to Cubochoric"});
+    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Converting Stereographic to Cubochoric"});
     ConversionFunctionType st2cu = OrientationTransformation::st2cu<InputType, OutputType>;
     parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, 3, 3>(inputDataArray, outputDataArray, st2cu, stCheck));
   }
 
   return {};
 }
-} // namespace complex
+} // namespace nx::core
 
 #ifndef _MSC_VER
 #pragma clang diagnostic pop

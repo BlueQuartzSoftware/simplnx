@@ -1,13 +1,13 @@
 #include "FindMisorientations.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 FindMisorientations::FindMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindMisorientationsInputValues* inputValues)
@@ -71,7 +71,7 @@ Result<> FindMisorientations::operator()()
       {
         OrientationD axisAngle = orientationOps[xtalType1]->calculateMisorientation(q1, q2);
 
-        tempMisorientationLists[i][j] = static_cast<float>(axisAngle[3] * complex::Constants::k_180OverPiF);
+        tempMisorientationLists[i][j] = static_cast<float>(axisAngle[3] * nx::core::Constants::k_180OverPiF);
         if(m_InputValues->FindAvgMisors)
         {
           (*avgMisorientations)[i] += tempMisorientationLists[i][j];

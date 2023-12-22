@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKGradientMagnitudeRecursiveGaussianImage
@@ -101,6 +101,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKGradientMagnitudeRecursiveGaussianImage, "0ac5ed47-963e-4c54-b33d-967e0aa6a621");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "0ac5ed47-963e-4c54-b33d-967e0aa6a621");

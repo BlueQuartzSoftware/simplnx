@@ -1,9 +1,9 @@
 #include "GroupFeatures.hpp"
 
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 GroupFeatures::GroupFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GroupFeaturesInputValues* inputValues)

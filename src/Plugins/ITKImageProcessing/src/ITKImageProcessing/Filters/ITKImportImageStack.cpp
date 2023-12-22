@@ -3,41 +3,41 @@
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include <itkImageFileReader.h>
 #include <itkImageIOBase.h>
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace RotateSampleRefFrame
 {
 // Parameter Keys
-static inline constexpr complex::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
-static inline constexpr complex::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
-static inline constexpr complex::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-static inline constexpr complex::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
-static inline constexpr complex::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
-static inline constexpr complex::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-static inline constexpr complex::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
+static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
+static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
+static inline constexpr nx::core::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+static inline constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
+static inline constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+static inline constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 
-// static inline constexpr complex::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+// static inline constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
 enum class RotationRepresentation : uint64_t
 {
@@ -54,9 +54,9 @@ const ChoicesParameter::ValueType k_NoImageTransform = 0;
 const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
 const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
 
-const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
-const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_ComplexCorePluginId);
+const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_SimplnxCorePluginId);
 
 // Make sure we can instantiate the RotateSampleRefFrame Filter
 std::unique_ptr<IFilter> CreateRotateSampleRefFrameFilter()
@@ -214,7 +214,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
 }
 } // namespace cxITKImportImageStack
 
-namespace complex
+namespace nx::core
 {
 
 //------------------------------------------------------------------------------
@@ -463,4 +463,4 @@ Result<Arguments> ITKImportImageStack::FromSIMPLJson(const nlohmann::json& json)
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

@@ -2,11 +2,11 @@
 
 #include <vector>
 
-#include "complex/Plugin/AbstractPlugin.hpp"
+#include "simplnx/Plugin/AbstractPlugin.hpp"
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-class ITKIMAGEPROCESSING_EXPORT ITKImageProcessingPlugin : public complex::AbstractPlugin
+class ITKIMAGEPROCESSING_EXPORT ITKImageProcessingPlugin : public nx::core::AbstractPlugin
 {
 public:
   ITKImageProcessingPlugin();
@@ -22,10 +22,10 @@ public:
 
   /**
    * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
-   * their complex counterpart
-   * @return std::map<complex::Uuid, complex::Uuid>
+   * their simplnx counterpart
+   * @return std::map<nx::core::Uuid, nx::core::Uuid>
    */
-  SIMPLMapType getSimplToComplexMap() const override;
+  SIMPLMapType getSimplToSimplnxMap() const override;
 
   static std::vector<std::string> GetList2DSupportedFileExtensions();
 };

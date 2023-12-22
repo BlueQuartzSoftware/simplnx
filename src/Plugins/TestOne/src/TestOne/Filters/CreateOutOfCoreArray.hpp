@@ -1,11 +1,11 @@
 #pragma once
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include "TestOne/TestOne_export.hpp"
 
-namespace complex
+namespace nx::core
 {
 class TESTONE_EXPORT CreateOutOfCoreArray : public IFilter
 {
@@ -82,6 +82,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CreateOutOfCoreArray, "f1ac8cb2-ec9b-4764-a6f8-9211de3f8975");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreateOutOfCoreArray, "f1ac8cb2-ec9b-4764-a6f8-9211de3f8975");

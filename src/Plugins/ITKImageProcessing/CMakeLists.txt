@@ -49,13 +49,13 @@ if(NOT GENERATOR_IS_MULTI_CONFIG)
   get_target_property(ITKCOMMON_PATH ITKCommon IMPORTED_LOCATION_${TYPE_UPPER})
   get_filename_component(ITK_LIB_DIR ${ITKCOMMON_PATH} DIRECTORY CACHE)
 
-  get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
-  set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${ITK_LIB_DIR})
+  get_property(SIMPLNX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS)
+  set_property(GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS ${SIMPLNX_EXTRA_LIBRARY_DIRS} ${ITK_LIB_DIR})
 endif()
 
 message(STATUS "* ITK (${ITK_VERSION}) ${ITK_DIR}")
 
-include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
+include("${simplnx_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "ITKImageProcessing")
 set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
@@ -78,7 +78,7 @@ set(FilterList
 set(AlgorithmList
 )
 
-if(NOT COMPLEX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
+if(NOT SIMPLNX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND FilterList
     ITKBinaryContourImage
     ITKBinaryOpeningByReconstructionImage
@@ -244,7 +244,7 @@ list(SORT FilterList ORDER ASCENDING)
 # These are filters that need to be compiled but not exposed to a user
 # -----------------------------------------------------------------------------
 
-create_complex_plugin(NAME ${PLUGIN_NAME}
+create_simplnx_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
   ALGORITHM_LIST ${AlgorithmList}
   DESCRIPTION "${PLUGIN_NAME} Plugin"
@@ -271,8 +271,8 @@ set(${PLUGIN_NAME}_Common_Srcs
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ReadImageUtils.cpp
 )
 
-set(${PLUGIN_NAME}_GENERATED_DIR ${complex_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated)
-set(${PLUGIN_NAME}_GENERATED_HEADER_DIR ${complex_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated/ITKImageProcessing)
+set(${PLUGIN_NAME}_GENERATED_DIR ${simplnx_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated)
+set(${PLUGIN_NAME}_GENERATED_HEADER_DIR ${simplnx_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated/ITKImageProcessing)
 
 set(${PLUGIN_NAME}_GENERATED_CONFIG_HEADER ${${PLUGIN_NAME}_GENERATED_HEADER_DIR}/ITKImageProcessingConfig.hpp)
 
@@ -303,7 +303,7 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 
 # ------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
-if(COMPLEX_BUILD_TESTS)
+if(SIMPLNX_BUILD_TESTS)
   enable_testing()
   add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 endif()
@@ -312,10 +312,10 @@ endif()
 # Add in the install rules for ITK Libraries
 # ------------------------------------------------------------------------------
 get_filename_component(ITKImageProcessing_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR} DIRECTORY CACHE)
-get_filename_component(COMPLEX_PLUGINS_SOURCE_DIR ${ITKImageProcessing_SOURCE_DIR} DIRECTORY CACHE)
+get_filename_component(SIMPLNX_PLUGINS_SOURCE_DIR ${ITKImageProcessing_SOURCE_DIR} DIRECTORY CACHE)
 
 # message(STATUS "ITKImageProcessing_SOURCE_DIR: ${ITKImageProcessing_SOURCE_DIR}")
-include(${complex_SOURCE_DIR}/cmake/ITKInstall.cmake)
+include(${simplnx_SOURCE_DIR}/cmake/ITKInstall.cmake)
 AddItkCopyInstallRules(LIBS ${ItkComponents})
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -364,17 +364,17 @@ endif()
 # -----------------------------------------------------------------------
 # Download Example Data Files
 # -----------------------------------------------------------------------
-include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")
 
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 
 # -----------------------------------------------------------------------
-# These data files are pulled from the 'complex data archive' on github,
+# These data files are pulled from the 'simplnx data archive' on github,
 # decompressed and then copied to the build folder. Install rules are also
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
-if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
+if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
   endif()

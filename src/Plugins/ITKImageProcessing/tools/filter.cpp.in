@@ -7,7 +7,7 @@ ${PARAMETER_INCLUDES}
 
 ${ITK_FILTER_INCLUDE}
 
-using namespace complex;
+using namespace nx::core;
 
 namespace cx${FILTER_NAME}
 {
@@ -16,7 +16,7 @@ ${OUTPUT_TYPEDEF}
 ${ITK_FILTER_STRUCT}
 } // namespace cx${FILTER_NAME}
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ${FILTER_NAME}::name() const
@@ -100,4 +100,4 @@ ${LINK_OUTPUT_ARRAY}
   
   return ${EXECUTE_DECL};
 }
-} // namespace complex
+} // namespace nx::core

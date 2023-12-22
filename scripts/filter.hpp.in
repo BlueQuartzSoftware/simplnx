@@ -1,12 +1,12 @@
 #pragma once
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/complex_export.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/simplnx_export.hpp"
 
-namespace complex
+namespace nx::core
 {
-class COMPLEX_EXPORT @FILTER_NAME@ : public IFilter
+class SIMPLNX_EXPORT @FILTER_NAME@ : public IFilter
 {
 public:
   @FILTER_NAME@() = default;
@@ -65,6 +65,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, @FILTER_NAME@, "@UUID@");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, @FILTER_NAME@, "@UUID@");

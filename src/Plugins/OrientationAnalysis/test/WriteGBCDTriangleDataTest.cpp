@@ -4,16 +4,16 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
-#include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/util/ReadCSVData.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/util/ReadCSVData.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::UnitTest;
+using namespace nx::core;
+using namespace nx::core::UnitTest;
 
 namespace
 {
@@ -43,7 +43,7 @@ inline constexpr float32 k_EPSILON = 0.001;
 
 TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execution")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
@@ -76,10 +76,10 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
     args.insertOrAssign(WriteGBCDTriangleDataFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Compare the Output triangles files
@@ -105,7 +105,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
     args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(DataPath{}));
 
     auto executeResult = importDataFilter->execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // read in generated
@@ -127,7 +127,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
     args.insertOrAssign(k_SelectedDataGroup_Key, std::make_any<DataPath>(generatedResultsGroupPath));
 
     auto executeResult = importDataFilter->execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // do comparison
@@ -193,7 +193,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter exec
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   // Instantiate the filter and an Arguments Object
   WriteGBCDTriangleDataFilter filter;
@@ -237,9 +237,9 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter exec
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 }

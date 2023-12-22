@@ -1,4 +1,4 @@
-# Code of Conduct for complex
+# Code of Conduct for simplnx
 
 ## 1. Introduction
 

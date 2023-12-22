@@ -71,7 +71,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ReadDREAM3DFilter",
+        "name": "simplnx::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
@@ -83,7 +83,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::CalculateTriangleAreasFilter",
+        "name": "simplnx::CalculateTriangleAreasFilter",
         "uuid": "b149addd-c0c8-4010-a264-596005eaf2a5"
       },
       "isDisabled": false
@@ -95,7 +95,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::TriangleNormalFilter",
+        "name": "simplnx::TriangleNormalFilter",
         "uuid": "8133d419-1919-4dbf-a5bf-1c97282ba63f"
       },
       "isDisabled": false
@@ -107,7 +107,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::TriangleDihedralAngleFilter",
+        "name": "simplnx::TriangleDihedralAngleFilter",
         "uuid": "dd42c521-4ae5-485d-ad35-d1276547d2f1"
       },
       "isDisabled": false
@@ -123,7 +123,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::GenerateFaceIPFColoringFilter",
+        "name": "simplnx::GenerateFaceIPFColoringFilter",
         "uuid": "30759600-7c02-4650-b5ca-e7036d6b568e"
       },
       "isDisabled": false
@@ -138,7 +138,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::GenerateFaceMisorientationColoringFilter",
+        "name": "simplnx::GenerateFaceMisorientationColoringFilter",
         "uuid": "f3473af9-db77-43db-bd25-60df7230ea73"
       },
       "isDisabled": false
@@ -155,7 +155,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::SharedFeatureFaceFilter",
+        "name": "simplnx::SharedFeatureFaceFilter",
         "uuid": "aaf7a258-fc92-48d7-9d06-ba317a3769e8"
       },
       "isDisabled": false
@@ -167,7 +167,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::WriteDREAM3DFilter",
+        "name": "simplnx::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

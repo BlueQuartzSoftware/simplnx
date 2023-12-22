@@ -1,9 +1,9 @@
 #include "WriteGBCDTriangleData.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 WriteGBCDTriangleData::WriteGBCDTriangleData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,

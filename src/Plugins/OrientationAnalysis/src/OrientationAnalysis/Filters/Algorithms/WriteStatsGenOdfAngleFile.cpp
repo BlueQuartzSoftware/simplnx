@@ -1,12 +1,12 @@
 #include "WriteStatsGenOdfAngleFile.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 class QFile;
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {

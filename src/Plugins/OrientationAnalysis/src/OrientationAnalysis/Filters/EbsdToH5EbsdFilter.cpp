@@ -2,20 +2,20 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/EbsdToH5Ebsd.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
 #include <filesystem>
 #include <sstream>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string EbsdToH5EbsdFilter::name() const
@@ -86,7 +86,7 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
 
   PreflightResult preflightResult;
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -95,7 +95,7 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
     return {MakePreflightErrorResult(-60800, "Only .ang and .ctf files are supported")};
   }
 
-  generatedFileListInfo.ordering = complex::FilePathGenerator::Ordering::LowToHigh;
+  generatedFileListInfo.ordering = nx::core::FilePathGenerator::Ordering::LowToHigh;
   std::vector<std::string> fileList = generatedFileListInfo.generate();
   if(fileList.empty())
   {
@@ -176,8 +176,8 @@ Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arg
   // ALWAYS use LowToHigh (no matter what the user happened to click in the UI). We need
   // the list ordered from low to high to be correct. The Stacking Order is a piece of
   // meta-data that is stored in the HDF5 file and used when reading the .h5ebsd file
-  inputValues.InputFileListInfo.ordering = complex::FilePathGenerator::Ordering::LowToHigh;
+  inputValues.InputFileListInfo.ordering = nx::core::FilePathGenerator::Ordering::LowToHigh;
 
   return EbsdToH5Ebsd(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
-} // namespace complex
+} // namespace nx::core

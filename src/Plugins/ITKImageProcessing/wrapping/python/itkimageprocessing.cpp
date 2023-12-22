@@ -4,13 +4,13 @@
 
 #include "ITKImageProcessing/ITKImageProcessingFilterBinding.hpp"
 
-using namespace complex;
-using namespace complex::CxPybind;
+using namespace nx::core;
+using namespace nx::core::CxPybind;
 namespace py = pybind11;
 
 PYBIND11_MODULE(itkimageprocessing, mod)
 {
-  py::module_::import("complex");
+  py::module_::import("simplnx");
 
   auto& internals = Internals::Instance();
 

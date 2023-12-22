@@ -6,7 +6,7 @@ DataStructure Objects
 DataStructure
 ----------------
 
-The **complex** DataStructure can be filled with various types of objects. Those are
+The **simplnx** DataStructure can be filled with various types of objects. Those are
 all listed below. In the **DREAM3D-NX** user interface, the DataStructure of any
 pipeline can be inspected via the "DataStructure" view, shown below outlined in 
 a yellow box at the right side of the user interface.
@@ -52,7 +52,7 @@ a yellow box at the right side of the user interface.
       :return: A string that attempts to show the internal hierarchy of the DataStructure formatted in the GraphViz 'dot' language.
       :rtype: string
 
-   .. py:method:: get_children(complex.DataPath)
+   .. py:method:: get_children(simplnx.DataPath)
                   get_children(string)
 
       :param DataPath data_path: The DataPath (or string convertable to a DataPath) to get the children. An empty DataPath object will return the top level DataPaths.
@@ -65,11 +65,11 @@ a yellow box at the right side of the user interface.
    # constructed DataStructure objects.
    data_structure = cx.DataStructure()
    num_objects = data_structure.size
-   did_remove = data_structure.remove(complex.DataPath("/Path/to/Object"))
+   did_remove = data_structure.remove(simplnx.DataPath("/Path/to/Object"))
    hierarchy = data_structure.hierarchy_to_str()
    hierarchy_gv = data_structure.hierarchy_to_graphviz()
    top_level_child_paths = data_structure.get_children()
-   child_paths = data_structure.get_children(complex.DataPath("Group"))
+   child_paths = data_structure.get_children(simplnx.DataPath("Group"))
    child_paths = data_structure.get_children("/Path/to/Object")
 
 .. _DataObject:
@@ -85,39 +85,39 @@ below should be used instead.
 
    :ivar id: Integer. The internal id value used in the DataStructure
    :ivar name: String. The name of the object
-   :var type: complex.DataObject.DataObjectType value
+   :var type: simplnx.DataObject.DataObjectType value
 
 The possible *type* values are:
 
-- complex.DataObject::Type::DataObject
-- complex.DataObject::Type::DynamicListArray
-- complex.DataObject::Type::ScalarData
-- complex.DataObject::Type::BaseGroup
-- complex.DataObject::Type::AttributeMatrix
-- complex.DataObject::Type::DataGroup
-- complex.DataObject::Type::IDataArray
-- complex.DataObject::Type::DataArray
-- complex.DataObject::Type::IGeometry
-- complex.DataObject::Type::IGridGeometry
-- complex.DataObject::Type::RectGridGeom
-- complex.DataObject::Type::ImageGeom
-- complex.DataObject::Type::INodeGeometry0D
-- complex.DataObject::Type::VertexGeom
-- complex.DataObject::Type::INodeGeometry1D
-- complex.DataObject::Type::EdgeGeom
-- complex.DataObject::Type::INodeGeometry2D
-- complex.DataObject::Type::QuadGeom
-- complex.DataObject::Type::TriangleGeom
-- complex.DataObject::Type::INodeGeometry3D
-- complex.DataObject::Type::HexahedralGeom
-- complex.DataObject::Type::TetrahedralGeom
-- complex.DataObject::Type::INeighborList
-- complex.DataObject::Type::NeighborList
-- complex.DataObject::Type::StringArray
-- complex.DataObject::Type::AbstractMontage
-- complex.DataObject::Type::GridMontage
-- complex.DataObject::Type::Unknown
-- complex.DataObject::Type::Any
+- simplnx.DataObject::Type::DataObject
+- simplnx.DataObject::Type::DynamicListArray
+- simplnx.DataObject::Type::ScalarData
+- simplnx.DataObject::Type::BaseGroup
+- simplnx.DataObject::Type::AttributeMatrix
+- simplnx.DataObject::Type::DataGroup
+- simplnx.DataObject::Type::IDataArray
+- simplnx.DataObject::Type::DataArray
+- simplnx.DataObject::Type::IGeometry
+- simplnx.DataObject::Type::IGridGeometry
+- simplnx.DataObject::Type::RectGridGeom
+- simplnx.DataObject::Type::ImageGeom
+- simplnx.DataObject::Type::INodeGeometry0D
+- simplnx.DataObject::Type::VertexGeom
+- simplnx.DataObject::Type::INodeGeometry1D
+- simplnx.DataObject::Type::EdgeGeom
+- simplnx.DataObject::Type::INodeGeometry2D
+- simplnx.DataObject::Type::QuadGeom
+- simplnx.DataObject::Type::TriangleGeom
+- simplnx.DataObject::Type::INodeGeometry3D
+- simplnx.DataObject::Type::HexahedralGeom
+- simplnx.DataObject::Type::TetrahedralGeom
+- simplnx.DataObject::Type::INeighborList
+- simplnx.DataObject::Type::NeighborList
+- simplnx.DataObject::Type::StringArray
+- simplnx.DataObject::Type::AbstractMontage
+- simplnx.DataObject::Type::GridMontage
+- simplnx.DataObject::Type::Unknown
+- simplnx.DataObject::Type::Any
 
    .. code:: python
 
@@ -132,7 +132,7 @@ The possible *type* values are:
 DataPath
 ---------
 
-A DataPath is a complex class that describes the path to a :ref:`DataObject` within 
+A DataPath is a simplnx class that describes the path to a :ref:`DataObject` within 
 the DataStructure_ . The path is constructed as a python list of string objects.
 For example if we have a top level group called **MyGroup** and a `DataArray<DataArray>` 
 called *Euler Angles* within that group the **DataPath** object that would be constructed is the following
@@ -148,7 +148,7 @@ called *Euler Angles* within that group the **DataPath** object that would be co
 DataGroup
 ---------
 
-The DataStructure_ is a flexible heirarchy that stores all **complex** :ref:`DataObjects <DataObject>`
+The DataStructure_ is a flexible heirarchy that stores all **simplnx** :ref:`DataObjects <DataObject>`
 that are created. A basic :ref:`DataObject` that can be created is a :ref:`DataGroup` which is a 
 simple grouping mechanism that can be thought of as similar in concept to a folder or directory that 
 is created on the file system. The programmer can use the :ref:`CreateDataGroup<CreateDataGroup>` filter to create
@@ -168,7 +168,7 @@ DataArray
 The DataArray is the main class that holds the raw data. It is typically a contiguous
 chunk of memory that is allocated to hold the data that will be processed. The DataArray
 has a few properties that should be well understood by the user before starting to develop
-codes that are based on the `complex <https://www.github.com/bluequartzsoftware/complex>`_ library.
+codes that are based on the `simplnx <https://www.github.com/bluequartzsoftware/simplnx>`_ library.
 
 .. image:: Images/DataArray_Explanation.png
    :height: 664
@@ -230,7 +230,7 @@ DataStore
 ----------
 
 The DataStore is the C++ object that actually allocates the memory necessary to store
-data in complex/DREAM3D. The Python API is intentially limited to getting a Numpy.View()
+data in simplnx/DREAM3D. The Python API is intentially limited to getting a Numpy.View()
 so that python developers can have a consistent well known interace to the DataArray_. The
 programmer will never need to create from scratch a **DataStore** object. They should be fetched
 from a created DataArray_ by executing the :ref:`Create Data Array <CreateDataArray>` filter.

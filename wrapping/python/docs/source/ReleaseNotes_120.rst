@@ -1,7 +1,7 @@
 Release Notes 1.2.0
 ===================
 
-The `complex` library is under activate development and while we strive to maintain a stable API bugs are
+The `simplnx` library is under activate development and while we strive to maintain a stable API bugs are
 found the necessitate the changing of the API.
 
 Version 1.2.0
@@ -19,7 +19,7 @@ Filter Changes 1.2.0
 
 - All import and export filters have been renamed to either *ReadXXXX* or *WriteXXXX*. This will effect the python filter classes. 
 
-- ComplexCore
+- SimplnxCore
 
 +----------------------------------------+---------------------------------------+-----------+
 | Old File Name                          | New File Name                         | Type      |

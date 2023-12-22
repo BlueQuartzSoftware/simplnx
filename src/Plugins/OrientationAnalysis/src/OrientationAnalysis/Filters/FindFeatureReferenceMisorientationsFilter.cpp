@@ -1,21 +1,21 @@
 #include "FindFeatureReferenceMisorientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/FindFeatureReferenceMisorientations.hpp"
 
-#include "complex/DataStructure/AttributeMatrix.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string FindFeatureReferenceMisorientationsFilter::name() const
@@ -123,7 +123,7 @@ IFilter::PreflightResult FindFeatureReferenceMisorientationsFilter::preflightImp
 
   PreflightResult preflightResult;
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -240,4 +240,4 @@ Result<Arguments> FindFeatureReferenceMisorientationsFilter::FromSIMPLJson(const
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

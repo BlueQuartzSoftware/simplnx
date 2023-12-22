@@ -1,9 +1,9 @@
 #include "GenerateFaceIPFColoring.hpp"
 
-#include "complex/Common/RgbColor.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Common/RgbColor.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/LaueOps/CubicLowOps.h"
@@ -19,7 +19,7 @@
 #include "EbsdLib/LaueOps/TrigonalLowOps.h"
 #include "EbsdLib/LaueOps/TrigonalOps.h"
 
-using namespace complex;
+using namespace nx::core;
 
 /**
  * @brief The CalculateNormalsImpl class implements a threaded algorithm that computes the IPF colors for the given list of

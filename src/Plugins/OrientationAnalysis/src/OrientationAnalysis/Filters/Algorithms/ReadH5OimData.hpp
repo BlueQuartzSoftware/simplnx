@@ -3,7 +3,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 #include "OrientationAnalysis/utilities/ReadH5Data.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ReadH5OimData
@@ -27,4 +27,4 @@ public:
   Result<> copyRawEbsdData(int index) override;
 };
 
-} // namespace complex
+} // namespace nx::core

@@ -1,11 +1,11 @@
 #include "@FILTER_NAME@.hpp"
 
-//#include "complex/Common/StringLiteral.hpp"
+//#include "simplnx/Common/StringLiteral.hpp"
 // INSERT YOUR PARAMETER HEADERS
-//#include "complex/Parameters/BoolParameter.hpp"
-//#include "complex/Parameters/NumberParameter.hpp"
+//#include "simplnx/Parameters/BoolParameter.hpp"
+//#include "simplnx/Parameters/NumberParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -14,7 +14,7 @@ namespace
 // constexpr StringLiteral k_Param2Key = "param2";
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 std::string @FILTER_NAME@::name() const
 {
@@ -67,4 +67,4 @@ Result<> @FILTER_NAME@::executeImpl(DataStructure& data, const Arguments& args) 
 
   return {};
 }
-} // namespace complex
+} // namespace nx::core

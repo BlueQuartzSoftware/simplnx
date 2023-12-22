@@ -1,11 +1,11 @@
 #pragma once
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include "TestOne/TestOne_export.hpp"
 
-namespace complex
+namespace nx::core
 {
 class TESTONE_EXPORT DynamicTableExample : public IFilter
 {
@@ -81,6 +81,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, DynamicTableExample, "1307bbbc-112E-4aaa-941f-682637F7b17e");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, DynamicTableExample, "1307bbbc-112E-4aaa-941f-682637F7b17e");

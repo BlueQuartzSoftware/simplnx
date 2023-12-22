@@ -1,11 +1,11 @@
 #pragma once
 
-#include "complex/Common/Result.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <cstdio>
 #include <filesystem>
@@ -16,7 +16,7 @@
 
 namespace fs = std::filesystem;
 
-namespace complex
+namespace nx::core
 {
 namespace ITKTestBase
 {
@@ -54,4 +54,4 @@ void WriteDataSetAsBinary(const fs::path& absolutePath, const DataStore<T>& data
   std::fclose(file);
 }
 } // namespace ITKTestBase
-} // namespace complex
+} // namespace nx::core

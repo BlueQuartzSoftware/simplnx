@@ -5,17 +5,17 @@
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
-using namespace complex::Constants;
-using namespace complex::UnitTest;
+using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKHMinimaImageFilter(HMinima)", "[ITKImageProcessing][ITKHMinimaImage][HMinima]")
 {
@@ -30,7 +30,7 @@ TEST_CASE("ITKImageProcessing::ITKHMinimaImageFilter(HMinima)", "[ITKImageProces
   { // Start Image Comparison Scope
     const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
-    COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)
+    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
 
   Arguments args;
@@ -40,10 +40,10 @@ TEST_CASE("ITKImageProcessing::ITKHMinimaImageFilter(HMinima)", "[ITKImageProces
   args.insertOrAssign(ITKHMinimaImage::k_Height_Key, std::make_any<Float64Parameter::ValueType>(2000));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "7778067eeb752b6ac396dd9e362e8346");

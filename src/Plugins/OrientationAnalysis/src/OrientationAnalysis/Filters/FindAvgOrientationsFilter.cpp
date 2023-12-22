@@ -1,17 +1,17 @@
 #include "FindAvgOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/FindAvgOrientations.hpp"
 
-#include "complex/DataStructure/AttributeMatrix.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -24,7 +24,7 @@ inline constexpr int32 k_MissingInputArray = -7001;
 inline constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -7002;
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string FindAvgOrientationsFilter::name() const
@@ -72,7 +72,7 @@ Parameters FindAvgOrientationsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"CellEnsembleData", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{complex::DataType::uint32},
+                                                          DataPath({"CellEnsembleData", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "The path to the cell feature attribute matrix",
@@ -215,4 +215,4 @@ Result<Arguments> FindAvgOrientationsFilter::FromSIMPLJson(const nlohmann::json&
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

@@ -1,13 +1,13 @@
 #include "CreateEnsembleInfo.hpp"
 
 #include "OrientationAnalysis/utilities/PhaseType.hpp"
-#include "complex/DataStructure/AttributeMatrix.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/StringArray.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {

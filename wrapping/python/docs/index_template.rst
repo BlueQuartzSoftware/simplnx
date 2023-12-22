@@ -8,7 +8,7 @@ DREAM3D-NX Python Docs
 Latest Version: 1.2.1
 ---------------------
 
-The *complex* library can be installed through an Anaconda packages from the *BlueQuartzSoftware* channel. This can be achieved
+The *simplnx* library can be installed through an Anaconda packages from the *BlueQuartzSoftware* channel. This can be achieved
 by creating a new virtual environment
 
 .. code:: shell
@@ -17,7 +17,7 @@ by creating a new virtual environment
     conda config --set channel_priority strict
     conda create -n cxpython python=3.10
     conda activate cxpython
-    conda install -c bluequartzsoftware complex
+    conda install -c bluequartzsoftware simplnx
 
 .. toctree::
    :maxdepth: 3

@@ -1,11 +1,11 @@
-#include "complex/Core/Application.hpp"
-#include "complex/Pipeline/Pipeline.hpp"
-#include "complex/unit_test/complex_test_dirs.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
 
-using namespace complex;
+using namespace nx::core;
 
 TEST_CASE("Save Filters To Json")
 {

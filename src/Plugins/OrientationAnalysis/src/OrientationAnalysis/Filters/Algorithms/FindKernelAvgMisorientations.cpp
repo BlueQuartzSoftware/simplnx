@@ -1,16 +1,16 @@
 #include "FindKernelAvgMisorientations.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/ParallelData3DAlgorithm.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <chrono>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -122,7 +122,7 @@ public:
                     q2[2] = quats[quatIndex + 2];
                     q2[3] = quats[quatIndex + 3];
                     OrientationF axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
-                    totalMisorientation = totalMisorientation + (axisAngle[3] * complex::Constants::k_180OverPiD);
+                    totalMisorientation = totalMisorientation + (axisAngle[3] * nx::core::Constants::k_180OverPiD);
                     numVoxel++;
                   }
                 }

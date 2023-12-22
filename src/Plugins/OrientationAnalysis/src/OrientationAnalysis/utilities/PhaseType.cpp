@@ -1,6 +1,6 @@
 #include "PhaseType.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 PhaseType::PhaseType() = default;

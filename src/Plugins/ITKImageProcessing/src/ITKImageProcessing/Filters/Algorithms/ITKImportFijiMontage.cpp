@@ -4,27 +4,27 @@
 #include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 
-#include "complex/Common/Array.hpp"
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
 #include <sstream>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
-const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
-const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
+const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
 
 template <bool GenerateCache = true>
 class IOHandler
@@ -226,9 +226,9 @@ private:
       // Check if we need to convert to grayscale
       if(m_InputValues->convertToGrayScale)
       {
-        if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
+        if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
         {
-          return MakeErrorResult(-18542, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
+          return MakeErrorResult(-18542, "SimplnxCore was not instantiated in this instance, so color to grayscale is not a valid option.");
         }
         auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
         if(nullptr == grayScaleFilter.get())

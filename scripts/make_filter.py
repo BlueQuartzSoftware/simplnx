@@ -31,7 +31,7 @@ def make_filter(output_dir: Path, name: str, template_dir: Path) -> None:
   print(f'===================================================================')
 
 def main() -> None:
-  parser = argparse.ArgumentParser(description='Creates complex filter header and implementation skeleton codes')
+  parser = argparse.ArgumentParser(description='Creates simplnx filter header and implementation skeleton codes')
   parser.add_argument('-o', '--output_dir', type=Path, help='Input directory where files will be created')
   parser.add_argument('-n', '--name', type=str, help='Name of filter')
   parser.add_argument('-t', '--template_dir', type=Path, help='Location of template files')

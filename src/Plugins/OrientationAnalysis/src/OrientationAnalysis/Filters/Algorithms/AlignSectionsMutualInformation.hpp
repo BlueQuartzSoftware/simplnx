@@ -2,15 +2,15 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Utilities/AlignSections.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/AlignSections.hpp"
 
-namespace complex
+namespace nx::core
 {
 
 struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationInputValues
@@ -61,4 +61,4 @@ private:
   Result<> m_Result = {};
 };
 
-} // namespace complex
+} // namespace nx::core

@@ -1,7 +1,7 @@
 #include "TestOnePlugin.hpp"
 #include "TestOne/TestOne_filter_registration.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -20,9 +20,9 @@ TestOnePlugin::TestOnePlugin()
 
 TestOnePlugin::~TestOnePlugin() = default;
 
-AbstractPlugin::SIMPLMapType TestOnePlugin::getSimplToComplexMap() const
+AbstractPlugin::SIMPLMapType TestOnePlugin::getSimplToSimplnxMap() const
 {
   return {};
 }
 
-COMPLEX_DEF_PLUGIN(TestOnePlugin)
+SIMPLNX_DEF_PLUGIN(TestOnePlugin)

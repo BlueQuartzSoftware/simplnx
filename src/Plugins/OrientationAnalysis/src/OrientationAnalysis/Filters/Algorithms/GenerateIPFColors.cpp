@@ -1,15 +1,15 @@
 #include "GenerateIPFColors.hpp"
 
-#include "complex/Common/RgbColor.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Common/RgbColor.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
+using namespace nx::core;
 
 using FloatVec3Type = std::vector<float>;
 
@@ -23,8 +23,8 @@ namespace
 class GenerateIPFColorsImpl
 {
 public:
-  GenerateIPFColorsImpl(GenerateIPFColors* filter, FloatVec3Type referenceDir, complex::Float32Array& eulers, complex::Int32Array& phases, complex::UInt32Array& crystalStructures, int32_t numPhases,
-                        const complex::IDataArray* goodVoxels, complex::UInt8Array& colors)
+  GenerateIPFColorsImpl(GenerateIPFColors* filter, FloatVec3Type referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures,
+                        int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors)
   : m_Filter(filter)
   , m_ReferenceDir(referenceDir)
   , m_CellEulerAngles(eulers.getDataStoreRef())
@@ -81,9 +81,9 @@ public:
       if(phase < m_NumPhases && calcIPF && m_CrystalStructures[phase] < EbsdLib::CrystalStructure::LaueGroupEnd)
       {
         argb = ops[m_CrystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false);
-        m_CellIPFColors.setValue(index, static_cast<uint8_t>(complex::RgbColor::dRed(argb)));
-        m_CellIPFColors.setValue(index + 1, static_cast<uint8_t>(complex::RgbColor::dGreen(argb)));
-        m_CellIPFColors.setValue(index + 2, static_cast<uint8_t>(complex::RgbColor::dBlue(argb)));
+        m_CellIPFColors.setValue(index, static_cast<uint8_t>(nx::core::RgbColor::dRed(argb)));
+        m_CellIPFColors.setValue(index + 1, static_cast<uint8_t>(nx::core::RgbColor::dGreen(argb)));
+        m_CellIPFColors.setValue(index + 2, static_cast<uint8_t>(nx::core::RgbColor::dBlue(argb)));
       }
     }
   }
@@ -115,12 +115,12 @@ public:
 private:
   GenerateIPFColors* m_Filter = nullptr;
   FloatVec3Type m_ReferenceDir;
-  complex::Float32AbstractDataStore& m_CellEulerAngles;
-  complex::Int32AbstractDataStore& m_CellPhases;
-  complex::UInt32AbstractDataStore& m_CrystalStructures;
+  nx::core::Float32AbstractDataStore& m_CellEulerAngles;
+  nx::core::Int32AbstractDataStore& m_CellPhases;
+  nx::core::UInt32AbstractDataStore& m_CrystalStructures;
   int32_t m_NumPhases = 0;
-  const complex::IDataArray* m_GoodVoxels = nullptr;
-  complex::UInt8AbstractDataStore& m_CellIPFColors;
+  const nx::core::IDataArray* m_GoodVoxels = nullptr;
+  nx::core::UInt8AbstractDataStore& m_CellIPFColors;
 };
 } // namespace
 
@@ -142,12 +142,12 @@ Result<> GenerateIPFColors::operator()()
 
   std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
 
-  complex::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellEulerAnglesArrayPath);
-  complex::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+  nx::core::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellEulerAnglesArrayPath);
+  nx::core::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
 
-  complex::UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  nx::core::UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
 
-  complex::UInt8Array& ipfColors = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->cellIpfColorsArrayPath);
+  nx::core::UInt8Array& ipfColors = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->cellIpfColorsArrayPath);
 
   m_PhaseWarningCount = 0;
   size_t totalPoints = eulers.getNumberOfTuples();
@@ -165,7 +165,7 @@ Result<> GenerateIPFColors::operator()()
   algArrays.push_back(&crystalStructures);
   algArrays.push_back(&ipfColors);
 
-  complex::IDataArray* goodVoxelsArray = nullptr;
+  nx::core::IDataArray* goodVoxelsArray = nullptr;
   if(m_InputValues->useGoodVoxels)
   {
     goodVoxelsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->goodVoxelsArrayPath);
@@ -185,7 +185,7 @@ Result<> GenerateIPFColors::operator()()
 This indicates a problem with the input cell phase data. DREAM.3D will give INCORRECT RESULTS.",
                                       (numPhases - 1), m_PhaseWarningCount, (numPhases - 1));
 
-    return complex::MakeErrorResult(-48000, message);
+    return nx::core::MakeErrorResult(-48000, message);
   }
 
   return {};

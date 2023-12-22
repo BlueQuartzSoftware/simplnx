@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class WriteStatsGenOdfAngleFileFilter
@@ -35,7 +35,7 @@ public:
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -111,7 +111,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, WriteStatsGenOdfAngleFileFilter, "aa6d399b-715e-44f1-9902-f1bd18faf1c5");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, WriteStatsGenOdfAngleFileFilter, "aa6d399b-715e-44f1-9902-f1bd18faf1c5");
 /* LEGACY UUID FOR THIS FILTER a4952f40-22dd-54ec-8c38-69c3fcd0e6f7 */

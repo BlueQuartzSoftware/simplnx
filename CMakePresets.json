@@ -21,19 +21,19 @@
           "type": "STRING",
           "value": "Release"
         },
-        "COMPLEX_BUILD_TESTS": {
+        "SIMPLNX_BUILD_TESTS": {
           "type": "BOOL",
           "value": "ON"
         },
-        "COMPLEX_BUILD_DOCS": {
+        "SIMPLNX_BUILD_DOCS": {
           "type": "BOOL",
           "value": "OFF"
         },
-        "COMPLEX_BUILD_PYTHON": {
+        "SIMPLNX_BUILD_PYTHON": {
           "type": "BOOL",
           "value": "ON"
         },
-        "COMPLEX_EMBED_PYTHON": {
+        "SIMPLNX_EMBED_PYTHON": {
           "type": "BOOL",
           "value": "OFF"
         },
@@ -167,43 +167,43 @@
           "type": "STRING",
           "value": "Release"
         },
-        "COMPLEX_BUILD_TESTS": {
+        "SIMPLNX_BUILD_TESTS": {
           "type": "BOOL",
           "value": "OFF"
         },
-        "COMPLEX_BUILD_DOCS": {
+        "SIMPLNX_BUILD_DOCS": {
           "type": "BOOL",
           "value": "OFF"
         },
-        "COMPLEX_BUILD_PYTHON": {
+        "SIMPLNX_BUILD_PYTHON": {
           "type": "BOOL",
           "value": "ON"
         },
-        "COMPLEX_EMBED_PYTHON": {
+        "SIMPLNX_EMBED_PYTHON": {
           "type": "BOOL",
           "value": "ON"
         },
-        "COMPLEX_DOWNLOAD_TEST_FILES": {
+        "SIMPLNX_DOWNLOAD_TEST_FILES": {
           "type": "BOOL",
           "value": "OFF"
         },
-        "COMPLEX_CONDA_BUILD": {
+        "SIMPLNX_CONDA_BUILD": {
           "type": "BOOL",
           "value": "ON"
         },
-        "COMPLEX_ENABLE_INSTALL": {
+        "SIMPLNX_ENABLE_INSTALL": {
           "type": "BOOL",
           "value": "ON"
         },
-        "COMPLEX_PY_ENABLE_INSTALL": {
+        "SIMPLNX_PY_ENABLE_INSTALL": {
           "type": "BOOL",
           "value": "ON"
         },
-        "COMPLEX_PY_INSTALL_DIR": {
+        "SIMPLNX_PY_INSTALL_DIR": {
           "type": "PATH",
           "value": "$env{SP_DIR}"
         },
-        "COMPLEX_PY_GENERATE_PYI": {
+        "SIMPLNX_PY_GENERATE_PYI": {
           "type": "BOOL",
           "value": "ON"
         },
@@ -215,7 +215,7 @@
           "type": "BOOL",
           "value": "OFF"
         },
-        "ComplexCore_INSTALL_PIPELINES": {
+        "SimplnxCore_INSTALL_PIPELINES": {
           "type": "BOOL",
           "value": "OFF"
         },
@@ -275,7 +275,7 @@
       "name": "conda-osx",
       "inherits": "conda-unix",
       "cacheVariables": {
-        "COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY": {
+        "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
           "type": "BOOL",
           "value": "ON"
         }

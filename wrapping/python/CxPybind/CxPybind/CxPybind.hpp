@@ -11,16 +11,16 @@
 #include <boost/mp11/integral.hpp>
 #include <boost/mp11/list.hpp>
 
-#include <complex/Common/ScopeGuard.hpp>
-#include <complex/Core/Application.hpp>
-#include <complex/Filter/Arguments.hpp>
-#include <complex/Filter/FilterTraits.hpp>
-#include <complex/Filter/IFilter.hpp>
-#include <complex/Filter/IParameter.hpp>
-#include <complex/Filter/ParameterTraits.hpp>
-#include <complex/Filter/Parameters.hpp>
-#include <complex/Plugin/AbstractPlugin.hpp>
-#include <complex/Plugin/PluginLoader.hpp>
+#include <simplnx/Common/ScopeGuard.hpp>
+#include <simplnx/Core/Application.hpp>
+#include <simplnx/Filter/Arguments.hpp>
+#include <simplnx/Filter/FilterTraits.hpp>
+#include <simplnx/Filter/IFilter.hpp>
+#include <simplnx/Filter/IParameter.hpp>
+#include <simplnx/Filter/ParameterTraits.hpp>
+#include <simplnx/Filter/Parameters.hpp>
+#include <simplnx/Plugin/AbstractPlugin.hpp>
+#include <simplnx/Plugin/PluginLoader.hpp>
 
 #include <any>
 #include <memory>
@@ -28,11 +28,11 @@
 #include <unordered_map>
 #include <vector>
 
-#define COMPLEX_PY_BIND_CLASS(scope, className) pybind11::class_<className>(scope, #className)
-#define COMPLEX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
-#define COMPLEX_PY_BIND_PARAMETER(scope, className) COMPLEX_PY_BIND_CLASS_VARIADIC(scope, className, complex::IParameter)
+#define SIMPLNX_PY_BIND_CLASS(scope, className) pybind11::class_<className>(scope, #className)
+#define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
+#define SIMPLNX_PY_BIND_PARAMETER(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, nx::core::IParameter)
 
-namespace complex::CxPybind
+namespace nx::core::CxPybind
 {
 namespace py = pybind11;
 
@@ -144,7 +144,7 @@ class PythonPlugin;
 class Internals
 {
 public:
-  static inline constexpr StringLiteral k_Key = "COMPLEX_INTERNAL";
+  static inline constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
 
   Internals()
   : m_App(Application::GetOrCreateInstance())
@@ -156,7 +156,7 @@ public:
     auto* ptr = py::get_shared_data(k_Key);
     if(ptr == nullptr)
     {
-      throw std::runtime_error("Unable to acquire complex internals");
+      throw std::runtime_error("Unable to acquire simplnx internals");
     }
     return *static_cast<Internals*>(ptr);
   }
@@ -165,7 +165,7 @@ public:
   {
     if(!contains(uuid))
     {
-      throw std::runtime_error(fmt::format("complex has not registered the parameter '{}'", uuid.str()));
+      throw std::runtime_error(fmt::format("simplnx has not registered the parameter '{}'", uuid.str()));
     }
     return m_ParameterConversionMap.at(uuid);
   }
@@ -174,7 +174,7 @@ public:
   {
     if(!contains(uuid))
     {
-      throw std::runtime_error(fmt::format("complex has not registered the parameter '{}'", uuid.str()));
+      throw std::runtime_error(fmt::format("simplnx has not registered the parameter '{}'", uuid.str()));
     }
     return m_ParameterConversionMap.at(uuid);
   }
@@ -649,7 +649,7 @@ public:
     return plugin;
   }
 
-  SIMPLMapType getSimplToComplexMap() const override
+  SIMPLMapType getSimplToSimplnxMap() const override
   {
     return {};
   }
@@ -707,4 +707,4 @@ void BindParameterConstructor(py::class_<T, Options...>& object)
 
   object.def(py::init<const std::string&, const std::string&, const std::string&, const typename T::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
 }
-} // namespace complex::CxPybind
+} // namespace nx::core::CxPybind

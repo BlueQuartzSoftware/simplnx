@@ -7,18 +7,18 @@
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include <cmath>
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -73,7 +73,7 @@ Result<> WriteGBCDGMTFile::operator()()
 
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
-  Result<> createDirectoriesResult = complex::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;

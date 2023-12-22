@@ -2,12 +2,12 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
-namespace complex
+namespace nx::core
 {
 
 struct ORIENTATIONANALYSIS_EXPORT FindGBPDMetricBasedInputValues
@@ -61,4 +61,4 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 };
 
-} // namespace complex
+} // namespace nx::core

@@ -32,7 +32,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ReadH5OimDataFilter",
+        "name": "simplnx::ReadH5OimDataFilter",
         "uuid": "4ad3d47c-b1e1-4429-bc65-5e021be62ba0"
       },
       "isDisabled": false
@@ -49,7 +49,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::RotateEulerRefFrameFilter",
+        "name": "simplnx::RotateEulerRefFrameFilter",
         "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
       },
       "isDisabled": false
@@ -96,7 +96,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::RotateSampleRefFrameFilter",
+        "name": "simplnx::RotateSampleRefFrameFilter",
         "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
       },
       "isDisabled": false
@@ -108,7 +108,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::WriteDREAM3DFilter",
+        "name": "simplnx::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

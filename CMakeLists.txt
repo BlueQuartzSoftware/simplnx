@@ -5,65 +5,65 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 # ------------------------------------------------------------------------------
 # Is this a commercial or Free build
 # ------------------------------------------------------------------------------
-option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
+option(SIMPLNX_BUILD_PYTHON "Enable building Python building" OFF)
 include(CMakeDependentOption)
-cmake_dependent_option(COMPLEX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON "COMPLEX_BUILD_PYTHON" OFF)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
+cmake_dependent_option(SIMPLNX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON "SIMPLNX_BUILD_PYTHON" OFF)
+enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_BUILD_PYTHON FEATURE "python")
 
 # ------------------------------------------------------------------------------
 # is building unit tests enabled
 # ------------------------------------------------------------------------------
-option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
+option(SIMPLNX_BUILD_TESTS "Enable buildingtests" ON)
+enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_BUILD_TESTS FEATURE "tests")
 
 # ------------------------------------------------------------------------------
 # are multithreading algorithms enabled
 # ------------------------------------------------------------------------------
-option(COMPLEX_ENABLE_MULTICORE "Enable multicore support" ON)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_MULTICORE FEATURE "parallel")
+option(SIMPLNX_ENABLE_MULTICORE "Enable multicore support" ON)
+enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_ENABLE_MULTICORE FEATURE "parallel")
 
 # ------------------------------------------------------------------------------
 # Are any out-of-core compressors enabled
 # ------------------------------------------------------------------------------
-option(COMPLEX_ENABLE_COMPRESSORS "Install data compressors" OFF)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_COMPRESSORS FEATURE "compressors")
+option(SIMPLNX_ENABLE_COMPRESSORS "Install data compressors" OFF)
+enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_ENABLE_COMPRESSORS FEATURE "compressors")
 
 # ------------------------------------------------------------------------------
 # Is downloading of the test files enabled
 # ------------------------------------------------------------------------------
-option(COMPLEX_DOWNLOAD_TEST_FILES "Download the test files" ON)
+option(SIMPLNX_DOWNLOAD_TEST_FILES "Download the test files" ON)
 
 # ------------------------------------------------------------------------------
 # Will each unit test output the final DataStructure to a file
 # ------------------------------------------------------------------------------
-option(COMPLEX_WRITE_TEST_OUTPUT "Write unit test output files" OFF)
+option(SIMPLNX_WRITE_TEST_OUTPUT "Write unit test output files" OFF)
 
 # ------------------------------------------------------------------------------
-# Is the ComplexCore Plugin enabled [DEFAULT=ON]
+# Is the SimplnxCore Plugin enabled [DEFAULT=ON]
 # ------------------------------------------------------------------------------
-option(COMPLEX_ENABLE_ComplexCore "Enable the ComplexCore Plugin" ON)
+option(SIMPLNX_ENABLE_SimplnxCore "Enable the SimplnxCore Plugin" ON)
 
 # ------------------------------------------------------------------------------
 # Is the ITKImageProcessing Plugin enabled [DEFAULT=ON]
 # ------------------------------------------------------------------------------
-option(COMPLEX_ENABLE_ITKImageProcessing "Enable the ITKImageProcessing Plugin" ON)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_ITKImageProcessing FEATURE "itk")
+option(SIMPLNX_ENABLE_ITKImageProcessing "Enable the ITKImageProcessing Plugin" ON)
+enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_ENABLE_ITKImageProcessing FEATURE "itk")
 
 # ------------------------------------------------------------------------------
 # Is the OrientationAnalysis Plugin enabled [DEFAULT=ON]
 # ------------------------------------------------------------------------------
-option(COMPLEX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATURE "ebsd")
+option(SIMPLNX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
+enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_ENABLE_OrientationAnalysis FEATURE "ebsd")
 
 # ------------------------------------------------------------------------------
-# Complex being built for an Anaconda Python distribution [DEFAULT=OFF]
+# Simplnx being built for an Anaconda Python distribution [DEFAULT=OFF]
 # ------------------------------------------------------------------------------
-option(COMPLEX_CONDA_BUILD "Enables conda-build specific layout" OFF)
+option(SIMPLNX_CONDA_BUILD "Enables conda-build specific layout" OFF)
 
 # ------------------------------------------------------------------------------
 # Enable all installation rules [DEFAULT=ON]
 # ------------------------------------------------------------------------------
-option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
+option(SIMPLNX_ENABLE_INSTALL "Enablesinstall rules" ON)
 
 # ------------------------------------------------------------------------------
 # Check if a different Data_Archive web site is being used.
@@ -71,37 +71,37 @@ option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 #   local webserver
 # ------------------------------------------------------------------------------
 if("${DATA_ARCHIVE_WEB_SITE}" STREQUAL "")
-  set(DATA_ARCHIVE_WEB_SITE "https://github.com/BlueQuartzSoftware/complex/releases/download/Data_Archive/")
+  set(DATA_ARCHIVE_WEB_SITE "https://github.com/bluequartzsoftware/simplnx/releases/download/Data_Archive/")
 endif()
 
 # ------------------------------------------------------------------------------
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
-project(complex
+project(simplnx
   VERSION 1.2.1
   DESCRIPTION "SIMPL Redesign"
-  HOMEPAGE_URL "https://github.com/BlueQuartzSoftware/complex"
+  HOMEPAGE_URL "https://github.com/bluequartzsoftware/simplnx"
   LANGUAGES CXX
 )
 
-set(COMPLEX_BIN_DIR ${PROJECT_BINARY_DIR}/bin)
+set(SIMPLNX_BIN_DIR ${PROJECT_BINARY_DIR}/bin)
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${COMPLEX_BIN_DIR} CACHE PATH "Single Directory for all Libraries")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SIMPLNX_BIN_DIR} CACHE PATH "Single Directory for all Libraries")
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${COMPLEX_BIN_DIR} CACHE PATH "Single Directory for all Executables.")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SIMPLNX_BIN_DIR} CACHE PATH "Single Directory for all Executables.")
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${COMPLEX_BIN_DIR} CACHE PATH "Single Directory for all static libraries.")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SIMPLNX_BIN_DIR} CACHE PATH "Single Directory for all static libraries.")
 
-list(APPEND CMAKE_MODULE_PATH ${complex_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${simplnx_SOURCE_DIR}/cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(COMPLEX_DEBUG_POSTFIX "_d")
-set_property(GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX ${COMPLEX_DEBUG_POSTFIX})
-get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)
+set(SIMPLNX_DEBUG_POSTFIX "_d")
+set_property(GLOBAL PROPERTY SIMPLNX_DEBUG_POSTFIX ${SIMPLNX_DEBUG_POSTFIX})
+get_property(SIMPLNX_DEBUG_POSTFIX GLOBAL PROPERTY SIMPLNX_DEBUG_POSTFIX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -110,7 +110,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # files, test data files, pipelines into a single cmake file that gets
 # generated. This reduces the many copy targets to a single target.
 # -----------------------------------------------------------------------
-set(FETCH_FILE_PATH "${complex_BINARY_DIR}/complex_fetch_remote_files.cmake")
+set(FETCH_FILE_PATH "${simplnx_BINARY_DIR}/simplnx_fetch_remote_files.cmake")
 set_property(GLOBAL PROPERTY FETCH_FILE_PATH "${FETCH_FILE_PATH}")
 file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------------------------------
 # This file has the commands to download each of the test files.
@@ -126,7 +126,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
   set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>")
 endif()
 
-if(COMPLEX_BUILD_TESTS AND COMPLEX_DOWNLOAD_TEST_FILES)
+if(SIMPLNX_BUILD_TESTS AND SIMPLNX_DOWNLOAD_TEST_FILES)
   add_custom_target(Fetch_Remote_Data_Files ALL
     COMMAND "${CMAKE_COMMAND}" -DCMAKE_CONFIG=$<CONFIG> -P "${FETCH_FILE_PATH}"
     COMMENT "Downloading Test Data Files"
@@ -153,61 +153,61 @@ find_package(nod CONFIG REQUIRED)
 find_package(HDF5 MODULE REQUIRED)
 get_target_property(hdf5_dll_path hdf5::hdf5 IMPORTED_LOCATION_RELEASE)
 get_filename_component(hdf5_dll_path "${hdf5_dll_path}" DIRECTORY)
-get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
-set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${hdf5_dll_path})
+get_property(SIMPLNX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS)
+set_property(GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS ${SIMPLNX_EXTRA_LIBRARY_DIRS} ${hdf5_dll_path})
 
 # -----------------------------------------------------------------------
 # Find oneTBB and get the path to the DLL libraries and put that into a
 # global property for later install, debugging and packaging
 # -----------------------------------------------------------------------
-if(COMPLEX_ENABLE_MULTICORE)
+if(SIMPLNX_ENABLE_MULTICORE)
   find_package(TBB CONFIG REQUIRED)
   get_target_property(tbb_dll_path TBB::tbb IMPORTED_LOCATION_RELEASE)
   get_filename_component(tbb_dll_path "${tbb_dll_path}" DIRECTORY)
-  get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
-  set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${tbb_dll_path})
+  get_property(SIMPLNX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS)
+  set_property(GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS ${SIMPLNX_EXTRA_LIBRARY_DIRS} ${tbb_dll_path})
 endif()
 
 # -----------------------------------------------------------------------
 # Create the ${DREAM3D_DATA_DIR} if necessary
 # -----------------------------------------------------------------------
 if("${DREAM3D_DATA_DIR}" STREQUAL "")
-  message(WARNING "DREAM3D_DATA_DIR is not defined externally. Defining to ${complex_BINARY_DIR}/DREAM3D_Data")
-  set(DREAM3D_DATA_DIR "${complex_BINARY_DIR}/DREAM3D_Data")
+  message(WARNING "DREAM3D_DATA_DIR is not defined externally. Defining to ${simplnx_BINARY_DIR}/DREAM3D_Data")
+  set(DREAM3D_DATA_DIR "${simplnx_BINARY_DIR}/DREAM3D_Data")
 endif()
 file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
 
-add_library(complex SHARED)
-add_library(complex::complex ALIAS complex)
+add_library(simplnx SHARED)
+add_library(simplnx::simplnx ALIAS simplnx)
 
-target_compile_features(complex
+target_compile_features(simplnx
   PUBLIC
     cxx_std_17
 )
 
-set_target_properties(complex
+set_target_properties(simplnx
   PROPERTIES
-    DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
+    DEBUG_POSTFIX "${SIMPLNX_DEBUG_POSTFIX}"
 )
 
-complex_enable_warnings(TARGET complex)
+simplnx_enable_warnings(TARGET simplnx)
 
 if(MSVC)
-  target_compile_options(complex
+  target_compile_options(simplnx
     PRIVATE
       /MP
   )
 endif()
 
 # Force HDF5 1.10 API
-target_compile_definitions(complex PUBLIC "H5_USE_110_API")
+target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
-if(COMPLEX_ENABLE_MULTICORE)
-  target_compile_definitions(complex PUBLIC "COMPLEX_ENABLE_MULTICORE")
-  target_link_libraries(complex PUBLIC TBB::tbb)
+if(SIMPLNX_ENABLE_MULTICORE)
+  target_compile_definitions(simplnx PUBLIC "SIMPLNX_ENABLE_MULTICORE")
+  target_link_libraries(simplnx PUBLIC TBB::tbb)
 endif()
 
-target_link_libraries(complex
+target_link_libraries(simplnx
   PUBLIC
     fmt::fmt
     nlohmann_json::nlohmann_json
@@ -220,32 +220,32 @@ target_link_libraries(complex
 )
 
 if(UNIX)
-  target_link_libraries(complex
+  target_link_libraries(simplnx
     PRIVATE
       ${CMAKE_DL_LIBS}
   )
 endif()
 
-option(COMPLEX_ENABLE_LINK_FILESYSTEM "Enables linking to a C++ filesystem library" OFF)
-if(COMPLEX_ENABLE_LINK_FILESYSTEM)
-  set(COMPLEX_FILESYSTEM_LIB "stdc++fs" CACHE STRING "C++ filesystem library to link to")
-  set_property(CACHE COMPLEX_FILESYSTEM_LIB PROPERTY STRINGS "stdc++fs" "c++fs")
-  target_link_libraries(complex
+option(SIMPLNX_ENABLE_LINK_FILESYSTEM "Enables linking to a C++ filesystem library" OFF)
+if(SIMPLNX_ENABLE_LINK_FILESYSTEM)
+  set(SIMPLNX_FILESYSTEM_LIB "stdc++fs" CACHE STRING "C++ filesystem library to link to")
+  set_property(CACHE SIMPLNX_FILESYSTEM_LIB PROPERTY STRINGS "stdc++fs" "c++fs")
+  target_link_libraries(simplnx
     PUBLIC
-      ${COMPLEX_FILESYSTEM_LIB}
+      ${SIMPLNX_FILESYSTEM_LIB}
   )
 endif()
 
-set(COMPLEX_GENERATED_DIR ${complex_BINARY_DIR}/generated)
-set(COMPLEX_GENERATED_HEADER_DIR ${complex_BINARY_DIR}/generated/complex)
-set(COMPLEX_EXPORT_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/complex_export.hpp)
+set(SIMPLNX_GENERATED_DIR ${simplnx_BINARY_DIR}/generated)
+set(SIMPLNX_GENERATED_HEADER_DIR ${simplnx_BINARY_DIR}/generated/simplnx)
+set(SIMPLNX_EXPORT_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/simplnx_export.hpp)
 
-file(READ ${complex_SOURCE_DIR}/cmake/complex_export_extra.hpp COMPLEX_EXPORT_HEADER_EXTRA)
+file(READ ${simplnx_SOURCE_DIR}/cmake/simplnx_export_extra.hpp SIMPLNX_EXPORT_HEADER_EXTRA)
 
 include(GenerateExportHeader)
-generate_export_header(complex
-  EXPORT_FILE_NAME ${COMPLEX_EXPORT_HEADER}
-  CUSTOM_CONTENT_FROM_VARIABLE COMPLEX_EXPORT_HEADER_EXTRA
+generate_export_header(simplnx
+  EXPORT_FILE_NAME ${SIMPLNX_EXPORT_HEADER}
+  CUSTOM_CONTENT_FROM_VARIABLE SIMPLNX_EXPORT_HEADER_EXTRA
 )
 
 # Specify parameters here
@@ -281,479 +281,479 @@ set(CoreParameters
   VectorParameter
 )
 
-set(COMPLEX_SOURCE_DIR ${complex_SOURCE_DIR}/src/complex)
+set(SIMPLNX_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/simplnx)
 
-set(COMPLEX_HDRS
-  ${COMPLEX_SOURCE_DIR}/Common/Any.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/AtomicFile.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Bit.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/ComplexConstants.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Constants.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/DataVector.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/IteratorUtility.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Numbers.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Range.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Range2D.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Range3D.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Ray.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/RgbColor.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/ScopeGuard.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/StringLiteral.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/TypeTraits.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Types.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/TypesUtility.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
+set(SIMPLNX_HDRS
+  ${SIMPLNX_SOURCE_DIR}/Common/Any.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Array.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Bit.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/BoundingBox.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/SimplnxConstants.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Constants.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/DataVector.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/EulerAngle.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Numbers.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Range.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Range2D.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Range3D.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Ray.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Result.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/RgbColor.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/ScopeGuard.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/StringLiteral.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/TypeTraits.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Types.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/TypesUtility.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Uuid.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
-  ${COMPLEX_SOURCE_DIR}/Core/Preferences.hpp
+  ${SIMPLNX_SOURCE_DIR}/Core/Application.hpp
+  ${SIMPLNX_SOURCE_DIR}/Core/Preferences.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/FilterList.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/FilterHandle.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/FilterList.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IOConstants.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IOConstants.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStoreIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EmptyDataStoreIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStoreIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/EmptyDataStoreIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/AttributeMatrixIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/BaseGroupIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataArrayIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ScalarDataIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AttributeMatrixIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/BaseGroupIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataArrayIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/ScalarDataIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry1D.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry2D.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry3D.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry1D.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry2D.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry3D.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
-  ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridMontage.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridMontage.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/AbstractDataStore.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/AttributeMatrix.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataArray.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStore.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IArray.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IDataArray.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/INeighborList.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/StringArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AttributeMatrix.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataGroup.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataMap.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataObject.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataPath.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructure.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/NeighborList.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/ScalarData.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/StringArray.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/AnyCloneable.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/FilterTraits.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/IFilter.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/IParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/MutableDataParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Output.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/ParameterTraits.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Parameters.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/AbstractParameter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/AnyCloneable.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Arguments.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/ConstDataParameter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/DataParameter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/FilterTraits.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/IFilter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/IParameter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/MutableDataParameter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Output.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/ParameterTraits.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Parameters.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyDataObjectAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateRectGridGeometryAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry1DAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry2DAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry3DAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateVertexGeometryAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportH5ObjectPathsAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/EmptyAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/MoveDataAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyDataObjectAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateRectGridGeometryAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateGeometry1DAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateGeometry2DAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateGeometry3DAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateVertexGeometryAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/ImportH5ObjectPathsAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/EmptyAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/MoveDataAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/RenameDataAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.hpp
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/ReadCSVData.hpp
+  ${SIMPLNX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.hpp
+  ${SIMPLNX_SOURCE_DIR}/Parameters/util/ReadCSVData.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/PipelineFilter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Pipeline.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/PipelineFilter.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/AbstractPipelineMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeMovedMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/OutputRenamedMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineFilterMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeMessage.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.hpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/AbstractPipelineMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeMovedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/OutputRenamedMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineFilterMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeMessage.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
-  ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ArrayThreshold.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/FileUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/IParallelAlgorithm.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelAlgorithmUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/RTree.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/FlyingEdges.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/KUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/AlignSections.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayThreshold.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelAlgorithmUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/RTree.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/FlyingEdges.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/KUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Math/StatisticsCalculations.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Math/StatisticsCalculations.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
 )
 
-set(COMPLEX_GENERATED_HEADERS
-  ${COMPLEX_EXPORT_HEADER}
+set(SIMPLNX_GENERATED_HEADERS
+  ${SIMPLNX_EXPORT_HEADER}
 )
 
-set(COMPLEX_SRCS
-  ${COMPLEX_SOURCE_DIR}/Common/AtomicFile.cpp
-  ${COMPLEX_SOURCE_DIR}/Common/RgbColor.cpp
-  ${COMPLEX_SOURCE_DIR}/Common/Range.cpp
-  ${COMPLEX_SOURCE_DIR}/Common/Range2D.cpp
-  ${COMPLEX_SOURCE_DIR}/Common/Range3D.cpp
+set(SIMPLNX_SRCS
+  ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.cpp
+  ${SIMPLNX_SOURCE_DIR}/Common/RgbColor.cpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Range.cpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Range2D.cpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Range3D.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
-  ${COMPLEX_SOURCE_DIR}/Core/Preferences.cpp
+  ${SIMPLNX_SOURCE_DIR}/Core/Application.cpp
+  ${SIMPLNX_SOURCE_DIR}/Core/Preferences.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/FilterList.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/FilterHandle.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/FilterList.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/DataRenamedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/AttributeMatrixIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/BaseGroupIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AttributeMatrixIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/BaseGroupIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry1D.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry2D.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry3D.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry1D.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry2D.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry3D.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/QuadGeom.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/RectGridGeom.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridMontage.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridMontage.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/AttributeMatrix.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataObject.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataPath.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/INeighborList.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/StringArray.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AttributeMatrix.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataGroup.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataMap.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataObject.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataPath.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructure.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/NeighborList.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/StringArray.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/IFilter.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/IParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/MutableDataParameter.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Output.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Parameters.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/AbstractParameter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Arguments.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/ConstDataParameter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/DataParameter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/IFilter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/IParameter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/MutableDataParameter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Output.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Parameters.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/ValueParameter.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyDataObjectAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateRectGridGeometryAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportH5ObjectPathsAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/MoveDataAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyDataObjectAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateRectGridGeometryAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/ImportH5ObjectPathsAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/MoveDataAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/RenameDataAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/ReadCSVData.cpp
-  ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.cpp
+  ${SIMPLNX_SOURCE_DIR}/Parameters/util/ReadCSVData.cpp
+  ${SIMPLNX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Pipeline.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/PipelineFilter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Pipeline.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/PipelineFilter.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/AbstractPipelineMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeMovedMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/OutputRenamedMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineFilterMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeMessage.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.cpp
-  ${COMPLEX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/AbstractPipelineMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeMovedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeRemovedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeStatusMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/OutputRenamedMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineFilterMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeMessage.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/PipelineNodeObserver.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
-  ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.cpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/ArrayThreshold.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/SegmentFeatures.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayThreshold.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/SegmentFeatures.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/AlignSections.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
 )
 
 # Add Core FilterParameters
 foreach(param ${CoreParameters})
-  list(APPEND COMPLEX_HDRS
-    "${COMPLEX_SOURCE_DIR}/Parameters/${param}.hpp"
+  list(APPEND SIMPLNX_HDRS
+    "${SIMPLNX_SOURCE_DIR}/Parameters/${param}.hpp"
   )
-  list(APPEND COMPLEX_SRCS
-    "${COMPLEX_SOURCE_DIR}/Parameters/${param}.cpp"
+  list(APPEND SIMPLNX_SRCS
+    "${SIMPLNX_SOURCE_DIR}/Parameters/${param}.cpp"
   )
 endforeach()
 
-set(COMPLEX_GENERATED_PYTHON_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/ComplexPython.hpp)
-set(COMPLEX_PYTHON_MODULE "complex")
-configure_file(${complex_SOURCE_DIR}/wrapping/python/ComplexPython.hpp.in ${COMPLEX_GENERATED_PYTHON_HEADER})
+set(SIMPLNX_GENERATED_PYTHON_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/SimplnxPython.hpp)
+set(SIMPLNX_PYTHON_MODULE "simplnx")
+configure_file(${simplnx_SOURCE_DIR}/wrapping/python/SimplnxPython.hpp.in ${SIMPLNX_GENERATED_PYTHON_HEADER})
 
-list(APPEND COMPLEX_GENERATED_HEADERS
-  ${COMPLEX_GENERATED_PYTHON_HEADER}
+list(APPEND SIMPLNX_GENERATED_HEADERS
+  ${SIMPLNX_GENERATED_PYTHON_HEADER}
 )
 
-# set(COMPLEX_GENERATED_VERSION_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/ComplexVersion.h)
-# configure_file(${complex_SOURCE_DIR}/cmake/ComplexVersion.h.in ${COMPLEX_GENERATED_VERSION_HEADER})
+# set(SIMPLNX_GENERATED_VERSION_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/SIMPLNXVersion.h)
+# configure_file(${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.h.in ${SIMPLNX_GENERATED_VERSION_HEADER})
 
 
-set(CMP_VERSION_HDR_TEMPLATE_FILE ${complex_SOURCE_DIR}/cmake/ComplexVersion.hpp)
-set(CMP_VERSION_SRC_TEMPLATE_FILE ${complex_SOURCE_DIR}/cmake/ComplexVersion.cpp.in)
-set(VERSION_GEN_HEADER_FILE_NAME "ComplexVersion.hpp")
+set(CMP_VERSION_HDR_TEMPLATE_FILE ${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.hpp)
+set(CMP_VERSION_SRC_TEMPLATE_FILE ${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.cpp.in)
+set(VERSION_GEN_HEADER_FILE_NAME "SIMPLNXVersion.hpp")
 
-cmpBuildDateRevisionString(GENERATED_HEADER_FILE_PATH "generated/complex/ComplexVersion.hpp"
-      GENERATED_SOURCE_FILE_PATH "generated/complex/ComplexVersion.cpp"
-      NAMESPACE complex
-      PROJECT_NAME complex
+cmpBuildDateRevisionString(GENERATED_HEADER_FILE_PATH "generated/simplnx/SIMPLNXVersion.hpp"
+      GENERATED_SOURCE_FILE_PATH "generated/simplnx/SIMPLNXVersion.cpp"
+      NAMESPACE nx::core
+      PROJECT_NAME simplnx
       EXPORT_MACRO ""
       VERSION_MACRO_PATH ""
       STRING_CLASS std::string
@@ -762,89 +762,89 @@ cmpBuildDateRevisionString(GENERATED_HEADER_FILE_PATH "generated/complex/Complex
 
 
 
-list(APPEND COMPLEX_GENERATED_HEADERS
-  ${COMPLEX_GENERATED_HEADER_DIR}/ComplexVersion.hpp
-  ${COMPLEX_GENERATED_HEADER_DIR}/ComplexVersion.cpp
+list(APPEND SIMPLNX_GENERATED_HEADERS
+  ${SIMPLNX_GENERATED_HEADER_DIR}/SIMPLNXVersion.hpp
+  ${SIMPLNX_GENERATED_HEADER_DIR}/SIMPLNXVersion.cpp
 )
 
-set(COMPLEX_ALL_HDRS
-  ${COMPLEX_HDRS}
-  ${COMPLEX_GENERATED_HEADERS}
+set(SIMPLNX_ALL_HDRS
+  ${SIMPLNX_HDRS}
+  ${SIMPLNX_GENERATED_HEADERS}
 )
 
-target_sources(complex
+target_sources(simplnx
   PRIVATE
-    ${COMPLEX_ALL_HDRS}
-    ${COMPLEX_SRCS}
+    ${SIMPLNX_ALL_HDRS}
+    ${SIMPLNX_SRCS}
 )
 
-source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_HDRS})
-source_group(TREE ${COMPLEX_GENERATED_HEADER_DIR} PREFIX "complex/generated" FILES ${COMPLEX_GENERATED_HEADERS})
-source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_SRCS})
+source_group(TREE ${SIMPLNX_SOURCE_DIR} PREFIX "simplnx" FILES ${SIMPLNX_HDRS})
+source_group(TREE ${SIMPLNX_GENERATED_HEADER_DIR} PREFIX "simplnx/generated" FILES ${SIMPLNX_GENERATED_HEADERS})
+source_group(TREE ${SIMPLNX_SOURCE_DIR} PREFIX "simplnx" FILES ${SIMPLNX_SRCS})
 
-set(COMPLEX_INCLUDE_DIR ${complex_SOURCE_DIR}/src)
+set(SIMPLNX_INCLUDE_DIR ${simplnx_SOURCE_DIR}/src)
 
-target_include_directories(complex
+target_include_directories(simplnx
   PUBLIC
-    $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
+    $<BUILD_INTERFACE:${SIMPLNX_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${SIMPLNX_GENERATED_DIR}>
     $<INSTALL_INTERFACE:include>
 )
 
 # ------------------------------------------------------------------------------
 # CLI Executable
 # ------------------------------------------------------------------------------
-add_subdirectory(${complex_SOURCE_DIR}/src/nxrunner)
+add_subdirectory(${simplnx_SOURCE_DIR}/src/nxrunner)
 
 #------------------------------------------------------------------------------
-# Complex Plugins Section
+# Simplnx Plugins Section
 #------------------------------------------------------------------------------
-get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+get_property(simplnxPluginTargets GLOBAL PROPERTY simplnxPluginTargets)
 
-if(NOT "${ComplexPluginTargets}" STREQUAL "")
-  set_property(GLOBAL PROPERTY ComplexPluginTargets "")
+if(NOT "${simplnxPluginTargets}" STREQUAL "")
+  set_property(GLOBAL PROPERTY simplnxPluginTargets "")
 endif()
 
-include(${complex_SOURCE_DIR}/cmake/Plugin.cmake)
+include(${simplnx_SOURCE_DIR}/cmake/Plugin.cmake)
 
-# add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/${P_PLUGIN_NAME} ${complex_BINARY_DIR}/Plugins/${P_PLUGIN_NAME})
+# add_subdirectory(${simplnx_SOURCE_DIR}/src/Plugins/${P_PLUGIN_NAME} ${simplnx_BINARY_DIR}/Plugins/${P_PLUGIN_NAME})
 # get_property(PluginNumFilters GLOBAL PROPERTY ${P_PLUGIN_NAME}_filter_count)
 # message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
-set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 0)
+set_property(GLOBAL PROPERTY SIMPLNX_PLUGIN_COUNT 0)
 
 #------------------------------------------------------------------------------
-# Add user defined Plugin Dirs based on the COMPLEX_PLUGIN_SEARCH_DIRS variable
-# and falling back to complex_SOURCE_DIR/../complex_plugins if not defined
-# Use 'COMPLEX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
-set(COMPLEX_PLUGIN_LIST "")
-if(COMPLEX_ENABLE_ComplexCore)
-  set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} ComplexCore)
+# Add user defined Plugin Dirs based on the SIMPLNX_PLUGIN_SEARCH_DIRS variable
+# and falling back to simplnx_SOURCE_DIR/../simplnx_plugins if not defined
+# Use 'SIMPLNX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
+set(SIMPLNX_PLUGIN_LIST "")
+if(SIMPLNX_ENABLE_SimplnxCore)
+  set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} SimplnxCore)
 endif()
-if(COMPLEX_ENABLE_ITKImageProcessing)
-  set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} ITKImageProcessing)
+if(SIMPLNX_ENABLE_ITKImageProcessing)
+  set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} ITKImageProcessing)
 endif()
 # Ensure ITKImageProcessing comes before OrientationAnalysis as there is currently
 # a dependency of ITKImageWriter inside some of the example OrientationAnalysis pipelines
-if(COMPLEX_ENABLE_OrientationAnalysis)
-  set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} OrientationAnalysis)
+if(SIMPLNX_ENABLE_OrientationAnalysis)
+  set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} OrientationAnalysis)
 endif()
 
-if(COMPLEX_BUILD_TESTS)
-  list(APPEND COMPLEX_PLUGIN_LIST TestOne TestTwo)
+if(SIMPLNX_BUILD_TESTS)
+  list(APPEND SIMPLNX_PLUGIN_LIST TestOne TestTwo)
 endif()
 
 # Add any plugins to the list
-set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} ${COMPLEX_EXTRA_PLUGINS})
+set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} ${SIMPLNX_EXTRA_PLUGINS})
 
 
-foreach(plugin ${COMPLEX_PLUGIN_LIST})
-  if(NOT DEFINED COMPLEX_PLUGIN_ENABLE_${plugin})
-    set(COMPLEX_PLUGIN_ENABLE_${plugin} ON)
+foreach(plugin ${SIMPLNX_PLUGIN_LIST})
+  if(NOT DEFINED SIMPLNX_PLUGIN_ENABLE_${plugin})
+    set(SIMPLNX_PLUGIN_ENABLE_${plugin} ON)
   endif()
-  complex_add_plugin(PLUGIN_NAME ${plugin})
+  simplnx_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()
 
-set(COMPLEX_PACKAGE_NAMESPACE "complex::")
+set(SIMPLNX_PACKAGE_NAMESPACE "simplnx::")
 
 #------------------------------------------------------------------------------
 # Install the appropriate example pipelines based on which plugins are loaded
@@ -861,9 +861,9 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipelines")
 set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
 
-if(COMPLEX_DOWNLOAD_TEST_FILES AND TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
+if(SIMPLNX_DOWNLOAD_TEST_FILES AND TARGET SimplnxCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
   add_custom_target(Copy_PorosityAnalysis_Pipelines ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/PorosityAnalysis.d3dpipeline"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${simplnx_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/PorosityAnalysis.d3dpipeline"
     COMMENT "Copying Example Pipelines into Binary Directory"
     COMMAND_EXPAND_LISTS
     VERBATIM
@@ -871,7 +871,7 @@ if(COMPLEX_DOWNLOAD_TEST_FILES AND TARGET ComplexCore AND TARGET ITKImageProcess
   set_target_properties(Copy_PorosityAnalysis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
 
   add_custom_target(Copy_CAxis_Pipelines ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/Combo-EBSD-osc_r0c0.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/Combo-EBSD-osc_r0c0.d3dpipeline"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${simplnx_SOURCE_DIR}/pipelines/Combo-EBSD-osc_r0c0.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/Combo-EBSD-osc_r0c0.d3dpipeline"
     COMMENT "Copying Example Pipelines into Binary Directory"
     COMMAND_EXPAND_LISTS
     VERBATIM
@@ -892,35 +892,35 @@ if(COMPLEX_DOWNLOAD_TEST_FILES AND TARGET ComplexCore AND TARGET ITKImageProcess
   set_target_properties(Copy_CAxis_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 endif()
 
-if(COMPLEX_ENABLE_INSTALL)
-  install(TARGETS complex
-    EXPORT complexTargets
+if(SIMPLNX_ENABLE_INSTALL)
+  install(TARGETS simplnx
+    EXPORT simplnxTargets
   )
 
-  export(EXPORT complexTargets NAMESPACE ${COMPLEX_PACKAGE_NAMESPACE})
+  export(EXPORT simplnxTargets NAMESPACE ${SIMPLNX_PACKAGE_NAMESPACE})
 
   include(CMakePackageConfigHelpers)
 
-  set(COMPLEX_INSTALL_CMAKE_PREFIX "lib/cmake")
+  set(SIMPLNX_INSTALL_CMAKE_PREFIX "lib/cmake")
 
-  set(COMPLEX_CONFIG_FILE ${complex_BINARY_DIR}/complexConfig.cmake)
-  set(COMPLEX_VERSION_FILE ${complex_BINARY_DIR}/complexConfigVersion.cmake)
+  set(SIMPLNX_CONFIG_FILE ${simplnx_BINARY_DIR}/simplnxConfig.cmake)
+  set(SIMPLNX_VERSION_FILE ${simplnx_BINARY_DIR}/simplnxConfigVersion.cmake)
 
-  configure_package_config_file(${complex_SOURCE_DIR}/cmake/complexConfig.cmake.in ${COMPLEX_CONFIG_FILE}
-    INSTALL_DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
+  configure_package_config_file(${simplnx_SOURCE_DIR}/cmake/simplnxConfig.cmake.in ${SIMPLNX_CONFIG_FILE}
+    INSTALL_DESTINATION ${SIMPLNX_INSTALL_CMAKE_PREFIX}
   )
 
-  write_basic_package_version_file(${COMPLEX_VERSION_FILE}
+  write_basic_package_version_file(${SIMPLNX_VERSION_FILE}
     COMPATIBILITY SameMajorVersion
   )
 
-  install(FILES ${COMPLEX_CONFIG_FILE} ${COMPLEX_VERSION_FILE}
-    DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
+  install(FILES ${SIMPLNX_CONFIG_FILE} ${SIMPLNX_VERSION_FILE}
+    DESTINATION ${SIMPLNX_INSTALL_CMAKE_PREFIX}
     COMPONENT develop
   )
 
   include(GNUInstallDirs)
-  install(TARGETS complex
+  install(TARGETS simplnx
     RUNTIME
       DESTINATION ${CMAKE_INSTALL_BINDIR}
       COMPONENT runtime
@@ -933,28 +933,28 @@ if(COMPLEX_ENABLE_INSTALL)
       COMPONENT develop
   )
 
-  install(EXPORT complexTargets
-    NAMESPACE ${COMPLEX_PACKAGE_NAMESPACE}
-    DESTINATION ${COMPLEX_INSTALL_CMAKE_PREFIX}
+  install(EXPORT simplnxTargets
+    NAMESPACE ${SIMPLNX_PACKAGE_NAMESPACE}
+    DESTINATION ${SIMPLNX_INSTALL_CMAKE_PREFIX}
   )
 
-  install_with_directory(FILES ${COMPLEX_HDRS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/complex
+  install_with_directory(FILES ${SIMPLNX_HDRS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/simplnx
     COMPONENT develop
-    BASE_DIR ${COMPLEX_SOURCE_DIR}
+    BASE_DIR ${SIMPLNX_SOURCE_DIR}
   )
 
-  install_with_directory(FILES ${COMPLEX_GENERATED_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/complex
+  install_with_directory(FILES ${SIMPLNX_GENERATED_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/simplnx
     COMPONENT develop
-    BASE_DIR ${COMPLEX_GENERATED_HEADER_DIR}
+    BASE_DIR ${SIMPLNX_GENERATED_HEADER_DIR}
   )
   
-  include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+  include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 endif()
 
-option(COMPLEX_ENABLE_PACKAGING "Enables COMPLEX packaging" ON)
-if(COMPLEX_ENABLE_PACKAGING)
+option(SIMPLNX_ENABLE_PACKAGING "Enablespackaging" ON)
+if(SIMPLNX_ENABLE_PACKAGING)
   if(WIN32)
     set(CPACK_GENERATOR ZIP)
   else()
@@ -963,22 +963,22 @@ if(COMPLEX_ENABLE_PACKAGING)
   include(CPack)
 endif()
 
-if(COMPLEX_BUILD_TESTS)
+if(SIMPLNX_BUILD_TESTS)
   include(CTest)
   add_subdirectory(test)
 endif()
 
-if(COMPLEX_BUILD_PYTHON)
+if(SIMPLNX_BUILD_PYTHON)
   add_subdirectory(wrapping/python)
 endif()
 
-option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
+option(SIMPLNX_BUILD_DOCS "Enables buildingdocumentation" OFF)
 
-if(COMPLEX_BUILD_DOCS)
+if(SIMPLNX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
 # ------------------------------------------------------------------------------
 # Print Summary Information
 # ------------------------------------------------------------------------------
-include(${complex_SOURCE_DIR}/cmake/Summary.cmake)
+include(${simplnx_SOURCE_DIR}/cmake/Summary.cmake)

@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ConvertQuaternionFilter
@@ -30,7 +30,7 @@ public:
   static inline constexpr StringLiteral k_ConversionType_Key = "conversion_type";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -100,7 +100,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ConvertQuaternionFilter, "d6b51fb2-279d-41cd-ad1a-c7a5a3f4b1cc");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ConvertQuaternionFilter, "d6b51fb2-279d-41cd-ad1a-c7a5a3f4b1cc");
 /* LEGACY UUID FOR THIS FILTER 439e31b7-3198-5d0d-aef6-65a9e9c1a016 */

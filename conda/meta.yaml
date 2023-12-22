@@ -1,4 +1,4 @@
-{% set name = "complex" %}
+{% set name = "simplnx" %}
 {% set version = "1.2.1" %}
 
 package:
@@ -7,7 +7,7 @@ package:
 
 source:
   - path: ../
-    folder: complex
+    folder: simplnx
   - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
     git_rev: v1.0.26
     folder: EbsdLib
@@ -23,14 +23,14 @@ source:
   - git_url: https://github.com/martinmoene/span-lite
     git_rev: v0.10.3
     folder: span-lite
-  - url: https://raw.githubusercontent.com/BlueQuartzSoftware/complex-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
+  - url: https://raw.githubusercontent.com/BlueQuartzSoftware/simplnx-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
     folder: nod
 
 build:
   number: 0
   script_env:
-    - COMPLEX_CMAKE_PRESET=conda-linux # [linux]
-    - COMPLEX_CMAKE_PRESET=conda-osx # [osx]
+    - SIMPLNX_CMAKE_PRESET=conda-linux # [linux]
+    - SIMPLNX_CMAKE_PRESET=conda-osx # [osx]
 
 requirements:
   build:
@@ -70,9 +70,9 @@ requirements:
 
 test:
   imports:
-    - complex
+    - simplnx
 
 about:
-  home: http://dream3d.bluequartz.net/
+  home: https://www.dream3d.io/
   license: BSD
-  summary: DREAM.3D consists of data analysis tools (Filters) that allow for the construction of customized workflows (Pipelines) to analyze data.
+  summary: DREAM3D-NX consists of data analysis tools (Filters) that allow for the construction of customized workflows (Pipelines) to analyze data.

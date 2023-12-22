@@ -1,9 +1,9 @@
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Common/Array.hpp"
-#include "complex/Common/Types.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -11,11 +11,11 @@
 #include <memory>
 #include <vector>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace unit_test
 {
-inline constexpr StringLiteral k_BuildDir = COMPLEX_BUILD_DIR;
+inline constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
 }
 
 TEST_CASE("Array")
@@ -47,15 +47,15 @@ TEST_CASE("Array")
 
 TEST_CASE("DataArrayCreation")
 {
-  complex::DataStructure dataStructure;
+  nx::core::DataStructure dataStructure;
 
-  using DataStoreType = complex::DataStore<int32_t>;
-  DataStoreType data_array = DataStoreType(complex::IDataStore::ShapeType{0}, complex::IDataStore::ShapeType{2}, 0);
+  using DataStoreType = nx::core::DataStore<int32_t>;
+  DataStoreType data_array = DataStoreType(nx::core::IDataStore::ShapeType{0}, nx::core::IDataStore::ShapeType{2}, 0);
   size_t numTuples = data_array.getNumberOfTuples();
   REQUIRE(numTuples == 0);
 }
 
-TEST_CASE("complex::DataArray Copy TupleTest", "[complex][DataArray]")
+TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 

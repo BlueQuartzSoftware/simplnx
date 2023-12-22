@@ -1,12 +1,12 @@
 #pragma once
 
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 
 #include <catch2/catch.hpp>
 
-namespace complex
+namespace nx::core
 {
 
 template <typename T>
@@ -45,4 +45,4 @@ static const IGeometry::SharedFaceList* createFaceList(IGeometry* geom)
   return dynamic_cast<const IGeometry::SharedFaceList*>(dataArr);
 }
 
-} // namespace complex
+} // namespace nx::core

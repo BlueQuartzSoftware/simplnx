@@ -1,14 +1,14 @@
 #include "FindTriangleGeomShapes.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {

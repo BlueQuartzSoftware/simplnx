@@ -1,18 +1,18 @@
 #include "CreateOutOfCoreArray.hpp"
 
-#include "complex/Common/TypesUtility.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/NumericTypeParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/NumericTypeParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <stdexcept>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -31,7 +31,7 @@ void CreateAndInitArray(DataStructure& data, const DataPath& path, const std::st
 }
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 std::string CreateOutOfCoreArray::name() const
 {
@@ -170,4 +170,4 @@ Result<> CreateOutOfCoreArray::executeImpl(DataStructure& data, const Arguments&
 
   return {};
 }
-} // namespace complex
+} // namespace nx::core

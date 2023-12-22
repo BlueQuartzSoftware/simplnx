@@ -4,7 +4,7 @@ Filter Parameter Classes
 .. _Result:
 .. py:class:: Result
 
-   The object that encapsulates any warnings or errors from either preflighting or executing a complex.Filter object.
+   The object that encapsulates any warnings or errors from either preflighting or executing a simplnx.Filter object.
    It can be queried for the list of errors or warnings and thus printed if needed.
 
    .. code:: python
@@ -46,7 +46,7 @@ General Parameters
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
 
-   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`complex.MultiThresholdObjects() <MultiThresholdObjects>` filter.
+   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjects>` filter.
    This parameter should not be directly invoked but instead it's ArrayThresholdSet_ is invoked and used.
 
  
@@ -60,7 +60,7 @@ General Parameters
 .. _ArrayThreshold:
 .. py:class:: ArrayThresholdSet.ArrayThreshold
 
-  This class holds the values that are used for comparison in the :ref:`complex.MultiThresholdObjects() <MultiThresholdObjects>` filter.
+  This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjects>` filter.
 
   :ivar array_path: The :ref:`DataPath<DataPath>` to the array to use for this ArrayThreshold
   :ivar comparison: Int. The comparison operator to use. 0=">", 1="<", 2="=", 3="!="
@@ -182,7 +182,7 @@ General Parameters
 .. py:class:: DataStoreFormatParameter
 
    This parameter holds a **string** value that represents the kind of  :ref:`DataStore<DataStore>` that will be used
-   to store the data. Depending on the version of complex being used, there can be
+   to store the data. Depending on the version of simplnx being used, there can be
    both in-core and out-of-core  :ref:`DataStore<DataStore>` objects available.
 
 
@@ -299,10 +299,10 @@ General Parameters
 
    **NOTE: THIS API IS GOING TO CHANGE IN A FUTURE UPDATE**
    
-   This parameter is used specifically for the  :ref:`complex.GenerateColorTableFilter() <GenerateColorTableFilter>` filter. The parameter has 
-   a single member variable 'default_value' that is of type 'complex.Json'. 
+   This parameter is used specifically for the  :ref:`simplnx.GenerateColorTableFilter() <GenerateColorTableFilter>` filter. The parameter has 
+   a single member variable 'default_value' that is of type 'simplnx.Json'. 
 
-   .. py:class:: complex.Json
+   .. py:class:: simplnx.Json
    
    This class encapsulates a string that represents well formed JSON. It can be constructed on-the-fly as follows:
 
@@ -381,12 +381,12 @@ General Parameters
 .. _GeometrySelectionParameter:
 .. py:class:: GeometrySelectionParameter
 
-   This parameter represents the :ref:`DataPath<DataPath>` to a valid :ref:`complex.Geometry() <Geometry Descriptions>`
+   This parameter represents the :ref:`DataPath<DataPath>` to a valid :ref:`simplnx.Geometry() <Geometry Descriptions>`
 
 .. _ReadCSVDataParameter:
 .. py:class:: ReadCSVDataParameter
 
-   This parameter is used for the :ref:`complex.ReadCSVFileFilter() <ReadCSVFileFilter>` and holds
+   This parameter is used for the :ref:`simplnx.ReadCSVFileFilter() <ReadCSVFileFilter>` and holds
    the information to import a file formatted as table data where each 
    column of data is a single array. 
    
@@ -489,8 +489,8 @@ General Parameters
 .. _ReadHDF5DatasetParameter:
 .. py:class:: ReadHDF5DatasetParameter
 
-   This parameter is used for the :ref:`complex.ReadHDF5Dataset<ReadHDF5Dataset>` and holds the information
-   to import specific data sets from within the HDF5 file into DREAM3D/complex
+   This parameter is used for the :ref:`simplnx.ReadHDF5Dataset<ReadHDF5Dataset>` and holds the information
+   to import specific data sets from within the HDF5 file into DREAM3D/simplnx
 
    .. py:class:: ReadHDF5DatasetParameter.ValueType
 

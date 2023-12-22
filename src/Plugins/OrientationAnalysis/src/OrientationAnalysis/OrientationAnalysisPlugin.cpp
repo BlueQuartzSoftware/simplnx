@@ -3,12 +3,12 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_filter_registration.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
 // This maps previous filters from DREAM.3D Version 6.x to DREAM.3D Version 7.x
-std::map<complex::Uuid, complex::Uuid> k_SimplToComplexFilterMapping = {
+std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{f4a7c2df-e9b0-5da9-b745-a862666d6c99}").value(), Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value()}, /* BadDataNeighborOrientationCheck */
     {Uuid::FromString("{f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792}").value(), Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value()}, /* ChangeAngleRepresentation */
     {Uuid::FromString("{e1343abe-e5ad-5eb1-a89d-c209e620e4de}").value(), Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value()}, /* ConvertHexGridToSquareGrid */
@@ -74,9 +74,9 @@ OrientationAnalysisPlugin::OrientationAnalysisPlugin()
 
 OrientationAnalysisPlugin::~OrientationAnalysisPlugin() = default;
 
-AbstractPlugin::SIMPLMapType OrientationAnalysisPlugin::getSimplToComplexMap() const
+AbstractPlugin::SIMPLMapType OrientationAnalysisPlugin::getSimplToSimplnxMap() const
 {
-  return complex::k_SIMPL_to_OrientationAnalysis;
+  return nx::core::k_SIMPL_to_OrientationAnalysis;
 }
 
-COMPLEX_DEF_PLUGIN(OrientationAnalysisPlugin)
+SIMPLNX_DEF_PLUGIN(OrientationAnalysisPlugin)

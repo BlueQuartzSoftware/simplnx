@@ -1,5 +1,5 @@
 # Import the DREAM3D Base library and Plugins
-import complex as cx
+import simplnx as nx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
@@ -7,12 +7,12 @@ import orientationanalysis as cxor
 import numpy as np
 
 # Create a Data Structure
-data_structure = cx.DataStructure()
+data_structure = nx.DataStructure()
 
 
-generated_file_list_value = cx.GeneratedFileListParameter.ValueType()
+generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
 generated_file_list_value.input_path = "Data/Porosity_Image"
-generated_file_list_value.ordering = cx.GeneratedFileListParameter.Ordering.LowToHigh
+generated_file_list_value.ordering = nx.GeneratedFileListParameter.Ordering.LowToHigh
 
 generated_file_list_value.file_prefix = "slice_"
 generated_file_list_value.file_suffix = ""
@@ -25,7 +25,7 @@ generated_file_list_value.padding_digits = 2
 result = cxitk.ITKImportImageStack.execute(data_structure=data_structure, 
                                   cell_data_name="Cell Data", 
                                   image_data_array_path="Image Data", 
-                                  image_geometry_path=cx.DataPath(["Image Stack"]), 
+                                  image_geometry_path=nx.DataPath(["Image Stack"]), 
                                   image_transform_choice=0,
                                    input_file_list_info=generated_file_list_value,
                                    origin=[0., 0., 0.], 

@@ -1,5 +1,0 @@
-#pragma once
-
-#cmakedefine01 COMPLEX_EMBED_PYTHON
-
-#cmakedefine COMPLEX_PYTHON_MODULE "@COMPLEX_PYTHON_MODULE@"

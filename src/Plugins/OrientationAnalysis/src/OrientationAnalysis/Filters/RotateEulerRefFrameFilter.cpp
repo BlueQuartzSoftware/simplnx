@@ -1,17 +1,17 @@
 #include "RotateEulerRefFrameFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/RotateEulerRefFrame.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string RotateEulerRefFrameFilter::name() const
@@ -73,7 +73,7 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
   auto pRotationAxisAngleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_EulerAnglesArrayPath_Key);
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -88,7 +88,7 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
 Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
-  complex::RotateEulerRefFrameInputValues inputValues;
+  nx::core::RotateEulerRefFrameInputValues inputValues;
 
   inputValues.eulerAngleDataPath = filterArgs.value<DataPath>(k_EulerAnglesArrayPath_Key);
   inputValues.rotationAxis = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
@@ -121,4 +121,4 @@ Result<Arguments> RotateEulerRefFrameFilter::FromSIMPLJson(const nlohmann::json&
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ConvertHexGridToSquareGridFilter
@@ -98,7 +98,7 @@ protected:
 private:
   int32 m_InstanceId;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ConvertHexGridToSquareGridFilter, "960b0e35-de9f-496a-9423-0f55133b39c7");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ConvertHexGridToSquareGridFilter, "960b0e35-de9f-496a-9423-0f55133b39c7");
 /* LEGACY UUID FOR THIS FILTER e1343abe-e5ad-5eb1-a89d-c209e620e4de */

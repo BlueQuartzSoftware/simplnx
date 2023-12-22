@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class MergeTwinsFilter
@@ -42,7 +42,7 @@ public:
   static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -112,6 +112,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, MergeTwinsFilter, "f173786a-50cd-4c3c-9518-48ef6fc2bac9");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, MergeTwinsFilter, "f173786a-50cd-4c3c-9518-48ef6fc2bac9");

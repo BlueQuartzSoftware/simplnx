@@ -1,0 +1,247 @@
+{
+  "isDisabled": false,
+  "name": "ApplyTransformation_Node.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "triangle_geometry_name": "Blade",
+        "scale_factor": 1.0,
+        "scale_output": false,
+        "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ReadStlFileFilter",
+        "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "triangle_geometry_name": "Blade [Rotation]",
+        "scale_factor": 1.0,
+        "scale_output": false,
+        "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ReadStlFileFilter",
+        "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_path": "",
+        "computed_transformation_matrix": "",
+        "interpolation_type": 0,
+        "manual_transformation_matrix": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "rotation": [
+          1.0,
+          0.0,
+          0.0,
+          180.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "selected_image_geometry": "Blade [Rotation]",
+        "transformation_type": 3,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ApplyTransformationToGeometryFilter",
+        "uuid": "f5bbc16b-3426-4ae0-b27b-ba7862dc40fe"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "triangle_geometry_name": "Blade [Translation]",
+        "scale_factor": 1.0,
+        "scale_output": false,
+        "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ReadStlFileFilter",
+        "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_path": "",
+        "computed_transformation_matrix": "",
+        "interpolation_type": 0,
+        "manual_transformation_matrix": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "rotation": [
+          1.0,
+          1.0,
+          1.0,
+          45.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "selected_image_geometry": "Blade [Translation]",
+        "transformation_type": 4,
+        "translation": [
+          10.0,
+          10.0,
+          10.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ApplyTransformationToGeometryFilter",
+        "uuid": "f5bbc16b-3426-4ae0-b27b-ba7862dc40fe"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "triangle_geometry_name": "Blade [Scale]",
+        "scale_factor": 1.0,
+        "scale_output": false,
+        "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ReadStlFileFilter",
+        "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_path": "",
+        "computed_transformation_matrix": "",
+        "interpolation_type": 0,
+        "manual_transformation_matrix": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "rotation": [
+          1.0,
+          1.0,
+          1.0,
+          45.0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          1.0
+        ],
+        "selected_image_geometry": "Blade [Scale]",
+        "transformation_type": 5,
+        "translation": [
+          10.0,
+          10.0,
+          10.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ApplyTransformationToGeometryFilter",
+        "uuid": "f5bbc16b-3426-4ae0-b27b-ba7862dc40fe"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/ApplyTransformation_Node.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

@@ -1,22 +1,22 @@
 #include "ExampleFilter1.hpp"
 
-#include "complex/Common/StringLiteral.hpp"
-#include "complex/Parameters/ArrayThresholdsParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/NumericTypeParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Parameters/ArrayThresholdsParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/NumericTypeParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include <string>
 
 using namespace std::string_literals;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -32,7 +32,7 @@ constexpr StringLiteral k_Param9 = "param9";
 constexpr StringLiteral k_Param10 = "param10";
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ExampleFilter1::name() const
@@ -176,4 +176,4 @@ Result<> ExampleFilter1::executeImpl(DataStructure& data, const Arguments& args,
 {
   return MakeWarningVoidResult(-100, "Example Warning from within an execute message");
 }
-} // namespace complex
+} // namespace nx::core

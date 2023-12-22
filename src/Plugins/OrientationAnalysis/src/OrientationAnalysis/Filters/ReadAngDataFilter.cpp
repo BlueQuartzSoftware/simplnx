@@ -2,27 +2,27 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadAngData.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Filter/Actions/CreateStringArrayAction.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
 #include "EbsdLib/IO/TSL/AngFields.h"
 #include "EbsdLib/IO/TSL/AngPhase.h"
 #include "EbsdLib/IO/TSL/AngReader.h"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ReadAngDataFilter::name() const
@@ -125,7 +125,7 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
                                                                                origin, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
 
   // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via a push_back
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   DataPath cellAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue);
@@ -139,13 +139,13 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     if(reader.getPointerType(name) == EbsdLib::NumericTypes::Type::Int32)
     {
       DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
-      auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
+      auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
     else if(reader.getPointerType(name) == EbsdLib::NumericTypes::Type::Float)
     {
       DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
-      auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
+      auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
   }
@@ -154,7 +154,7 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   {
     cDims[0] = 1;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::AngFile::Phases);
-    auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
+    auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -162,7 +162,7 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   {
     cDims[0] = 3;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::AngFile::EulerAngles);
-    auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
+    auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -179,14 +179,14 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   {
     cDims[0] = 1;
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::CrystalStructures);
-    auto action = std::make_unique<CreateArrayAction>(complex::DataType::uint32, tupleDims, cDims, dataArrayPath);
+    auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the Lattice Constants Array
   {
     cDims[0] = 6;
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::LatticeConstants);
-    auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
+    auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the Material Names Array
@@ -247,4 +247,4 @@ Result<Arguments> ReadAngDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

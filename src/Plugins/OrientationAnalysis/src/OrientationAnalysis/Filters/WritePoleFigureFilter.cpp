@@ -5,26 +5,26 @@
 #include "OrientationAnalysis/utilities/LatoBold.hpp"
 #include "OrientationAnalysis/utilities/SIMPLConversion.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/StringArray.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataPathSelectionParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataPathSelectionParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 
 #include <canvas_ity.hpp>
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -46,7 +46,7 @@ float32 GetXCharWidth(int32 imageSize, float32 fontPtSize)
 }
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string WritePoleFigureFilter::name() const
@@ -168,7 +168,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
     return {MakeErrorResult<OutputActions>(-680000, fmt::format("MaterialNames DataArray should be of type 'StringArray'. Selected array was '{}'", pMaterialNameArrayPathValue.toString())), {}};
   }
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   // Roughly calculate the output dimensions of the ImageGeometry. This may change
   // in small amounts due to the XCharWidth not being calculated.
@@ -192,7 +192,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
     pageWidth = subCanvasWidth;
     pageHeight = pageHeight + subCanvasHeight * 4.0f;
   }
-  else if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == complex::WritePoleFigure::LayoutType::Square)
+  else if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == nx::core::WritePoleFigure::LayoutType::Square)
   {
     pageWidth = subCanvasWidth * 2.0f;
     pageHeight = pageHeight + subCanvasHeight * 2.0f;
@@ -296,4 +296,4 @@ Result<Arguments> WritePoleFigureFilter::FromSIMPLJson(const nlohmann::json& jso
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

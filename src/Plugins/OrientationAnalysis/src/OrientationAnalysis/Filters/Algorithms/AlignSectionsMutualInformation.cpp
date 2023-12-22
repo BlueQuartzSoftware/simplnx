@@ -1,17 +1,17 @@
 #include "AlignSectionsMutualInformation.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/AttributeMatrix.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <vector>
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 AlignSectionsMutualInformation::AlignSectionsMutualInformation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -72,7 +72,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
   {
     // Make sure any directory path is also available as the user may have just typed
     // in a path without actually creating the full path
-    Result<> createDirectoriesResult = complex::CreateOutputDirectories(m_InputValues->AlignmentShiftFileName.parent_path());
+    Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->AlignmentShiftFileName.parent_path());
     if(createDirectoriesResult.invalid())
     {
       return createDirectoriesResult;
@@ -253,7 +253,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
 
   size_t initialVoxelsListSize = 1000;
 
-  float misorientationTolerance = m_InputValues->MisorientationTolerance * complex::Constants::k_PiOver180F;
+  float misorientationTolerance = m_InputValues->MisorientationTolerance * nx::core::Constants::k_PiOver180F;
 
   featureCounts.resize(dims[2]);
 

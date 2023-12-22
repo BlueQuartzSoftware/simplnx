@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKGradientMagnitudeImage
@@ -44,7 +44,7 @@ public:
   static inline constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -117,6 +117,6 @@ protected:
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKGradientMagnitudeImage, "719df7b2-8db2-43eb-a40c-a015982eec08");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeImage, "719df7b2-8db2-43eb-a40c-a015982eec08");

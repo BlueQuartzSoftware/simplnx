@@ -1,6 +1,6 @@
 context:
   version: "1.2.1"
-  name: complex
+  name: simplnx
 
 package:
   name: "{{ name }}"
@@ -8,7 +8,7 @@ package:
 
 source:
   - path: ../
-    folder: complex
+    folder: simplnx
   - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
     git_rev: v1.0.26
     folder: EbsdLib
@@ -24,16 +24,16 @@ source:
   - git_url: https://github.com/martinmoene/span-lite
     git_rev: v0.10.3
     folder: span-lite
-  - url: https://raw.githubusercontent.com/BlueQuartzSoftware/complex-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
+  - url: https://raw.githubusercontent.com/bluequartzsoftware/simplnx-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
     folder: nod
 
 build:
   number: 0
   script_env:
     sel(linux):
-      COMPLEX_CMAKE_PRESET: "conda-linux"
+      SIMPLNX_CMAKE_PRESET: "conda-linux"
     sel(osx):
-      COMPLEX_CMAKE_PRESET: "conda-osx"
+      SIMPLNX_CMAKE_PRESET: "conda-osx"
 
 requirements:
   build:
@@ -73,7 +73,7 @@ requirements:
 
 test:
   imports:
-    - complex
+    - simplnx
 
 about:
   home: http://dream3d.bluequartz.net/

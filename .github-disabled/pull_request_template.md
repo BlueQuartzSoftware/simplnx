@@ -1,11 +1,11 @@
 <!-- The text within this markup is a comment, and is intended to provide
-guidelines to open a Pull Request for the complex repository. This text will not
+guidelines to open a Pull Request for the simplnx repository. This text will not
 be part of the Pull Request. -->
 
 
 <!-- See the CONTRIBUTING (CONTRIBUTING.md) guide. Specifically:
 
-Start complex commit messages with a standard prefix (and a space):
+Start simplnx commit messages with a standard prefix (and a space):
 
  * FILTER: When adding a new filter to code 
  * BUG: fix for runtime crash or incorrect result
@@ -29,15 +29,14 @@ close a related issues using keywords (https://help.github.com/articles/closing-
 @mentions (https://help.github.com/articles/basic-writing-and-formatting-syntax/#mentioning-people-and-teams)
 of the person or team responsible for reviewing proposed changes. -->
 
-
 ## Naming Conventions
 
-Naming of variables should descriptive where needed. Loop Control Variables can use `i` if warranted. Most of these conventions are enforced through the clang-tidy and clang-format configuration files. See the file `complex/docs/Code_Style_Guide.md` for a more in depth explanation.
+Naming of variables should descriptive where needed. Loop Control Variables can use `i` if warranted. Most of these conventions are enforced through the clang-tidy and clang-format configuration files. See the file `simplnx/docs/Code_Style_Guide.md` for a more in depth explanation.
 
 
 ## Filter Checklist
 
-The help file `complex/docs/Porting_Filters.md` has documentation to help you port or write new filters. At the top is a nice checklist of items that should be noted when porting a filter.
+The help file `simplnx/docs/Porting_Filters.md` has documentation to help you port or write new filters. At the top is a nice checklist of items that should be noted when porting a filter.
 
 
 ## Unit Testing
@@ -58,4 +57,4 @@ The idea of unit testing is to test the filter for proper execution and error ha
 - [ ] Classes and methods are properly documented
 
 
-<!-- **Thanks for contributing to complex!** -->
+<!-- **Thanks for contributing to simplnx!** -->

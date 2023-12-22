@@ -5,7 +5,7 @@ Python Example Usage
 Executing Filters (Immediate and Delayed)
 -------------------------------------------
 
-In the **complex** python API, the programmer can execute any filter immediately by 
+In the **simplnx** python API, the programmer can execute any filter immediately by 
 simply calling the *Execute()* function of the filter. The programmer simply needs to find the appropriate filter for their
 needs and use the API accordingly. Another option is to build up the filters and
 then execute each filter instance one after another. The programmer should note that
@@ -16,10 +16,10 @@ be ready to use until the **Execute()** method is run on each filter.
 Basic Import Statements
 -----------------------
 
-At the top of your python file you will need a few import statements to bring in the *complex* library and it*s plugins. There
+At the top of your python file you will need a few import statements to bring in the *simplnx* library and it*s plugins. There
 are three plugins, but only 2 of those you will need to explicitly import.
 
-+ ComplexCode: This plugin is included into the *complex* module automatically
++ ComplexCode: This plugin is included into the *simplnx* module automatically
 + OrientationAnalysis: This plugin should be imported if any of the functionality is needed.
 + ITKImageProcessing: This plugin should be imported if any of the functionality is needed.
 
@@ -27,9 +27,9 @@ In your python file you will need the following
 
 .. code:: python
 
-    import complex as cx
+    import simplnx as nx
 
-If you will need functionality from either of the other *complex* plugins then you will need the following.
+If you will need functionality from either of the other *simplnx* plugins then you will need the following.
 
 .. code:: python
 
@@ -39,7 +39,7 @@ If you will need functionality from either of the other *complex* plugins then y
 Creating the DataStructure
 --------------------------
 
-In order to effectively use the *complex* classes and functions, you will need to create at leaset one :ref:`DataStructure` object. 
+In order to effectively use the *simplnx* classes and functions, you will need to create at leaset one :ref:`DataStructure` object. 
 The :ref:`DataStructure` object holds the various *DataGroup*, *AttributeMatrix*, and *DataArray* that will be created. When
 then :ref:`DataStructure` goes out of scope those items will also be cleaned up. The code to create the
 :ref:`DataStructure` object is straight forward.
@@ -53,9 +53,9 @@ then :ref:`DataStructure` goes out of scope those items will also be cleaned up.
 Executing a Filter
 ------------------
 
-Within the complex library the :ref:`Filter` is the object that will perform an action
+Within the simplnx library the :ref:`Filter` is the object that will perform an action
 that could result in DataArrays being added, moved, removed, or nothing at all to 
-the :ref:`DataStructure`. Executing a complex filter can be done in one of two ways.
+the :ref:`DataStructure`. Executing a simplnx filter can be done in one of two ways.
 
 - Immediate Mode
    
@@ -88,7 +88,7 @@ This would not be the case had the filter just been instantiated but not execute
 Creating a DataGroup
 --------------------
 
-A :ref:`DataGroup` can be created with the :ref:`complex.CreateDataGroup.Execute() <CreateDataGroup>` method.
+A :ref:`DataGroup` can be created with the :ref:`simplnx.CreateDataGroup.Execute() <CreateDataGroup>` method.
 
 .. code:: python
 
@@ -99,7 +99,7 @@ A :ref:`DataGroup` can be created with the :ref:`complex.CreateDataGroup.Execute
 Creating a DataArray
 --------------------
 
-*complex* stores data in a :ref:`DataArray` object that is created through the :ref:`complex.CreateDataArray.Execute() <CreateDataArray>` method.
+*simplnx* stores data in a :ref:`DataArray` object that is created through the :ref:`simplnx.CreateDataArray.Execute() <CreateDataArray>` method.
 This will allow you to create an array that you can then fill with data using any python API that you wish. A basic use
 of the method is as follows.
 
@@ -132,17 +132,17 @@ external data sources into the DataArray.
     file_path = 'angles.csv'
     npdata[:] = np.loadtxt(file_path, delimiter=',')
 
-Within the **complex** code repository, there are example python files that can be used 
-as a starting point. `GitHub.com <https://github.com/BlueQuartzSoftware/complex/tree/develop/wrapping/python/examples>`_
+Within the **simplnx** code repository, there are example python files that can be used 
+as a starting point. `GitHub.com <https://github.com/bluequartzsoftware/simplnx/tree/develop/wrapping/python/examples>`_
 
 Importing a .dream3d File
 -------------------------
 
-The native file storage for **complex** is in the form of an `HDF5 <https://www.hdfgroup.org>`_ file. The typical extension 
-used from within **complex** is '.dream3d'. The complex python API has 2 separate classes to either import or export
+The native file storage for **simplnx** is in the form of an `HDF5 <https://www.hdfgroup.org>`_ file. The typical extension 
+used from within **simplnx** is '.dream3d'. The simplnx python API has 2 separate classes to either import or export
 a .dream3d file.
 
-In order to import a .dream3d file, we need to tell **complex** which data to import from the file. 
+In order to import a .dream3d file, we need to tell **simplnx** which data to import from the file. 
 
 .. code:: python
 
@@ -176,7 +176,7 @@ Exporting a .dream3d File
 -------------------------
 
 After processing the data if you would like to store your data in the native HDF5 file format, then the
-:ref:`complex.WriteDREAM3DFilter.Execute() <WriteDREAM3DFilter>` can be used to accomplish this goal.
+:ref:`simplnx.WriteDREAM3DFilter.Execute() <WriteDREAM3DFilter>` can be used to accomplish this goal.
 The filter will write the **complete** contents of the DataStructure to the HDF5 file.
 
 .. code:: python
@@ -195,7 +195,7 @@ The filter will write the **complete** contents of the DataStructure to the HDF5
 Creating Geometries in Complex
 ------------------------------
 
-Each of the supported **Geometry** objects can be created using the :ref:`complex.CreateGeometryFilter.Execute() <CreateGeometryFilter>` 
+Each of the supported **Geometry** objects can be created using the :ref:`simplnx.CreateGeometryFilter.Execute() <CreateGeometryFilter>` 
 Here is an example of creating the simplest of Geometries, the Image Geometry
 
 .. code:: python
@@ -222,7 +222,7 @@ of the list of vertex values (XYZ as 32 bit floating point values) and the conne
 list for the 1D, 2D and 3D geometries. :ref:`Please see the appropriate sections in the 
 manual for detailed descriptions. <Geometry Descriptions>`
 
-There are working examples within the python file <https://www.github.com/bluequartzsoftware/complex/wrapping/python/examples/geometry_examples.py>. 
+There are working examples within the python file <https://www.github.com/bluequartzsoftware/simplnx/wrapping/python/examples/geometry_examples.py>. 
 The below code will create a TriangleGeometry by importing the vertices and triangle
 connectivity from a sample file.
 
@@ -237,7 +237,7 @@ connectivity from a sample file.
                                         output_data_array=array_path,
                                         initialization_value='0')
     vertex_coords = data_structure[array_path].store.npview()
-    file_path = 'complex/test/Data/VertexCoordinates.csv'
+    file_path = 'simplnx/test/Data/VertexCoordinates.csv'
     vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
     # Create the triangle connectivity array and fill it from data on disk
@@ -249,7 +249,7 @@ connectivity from a sample file.
                                         output_data_array=array_path,
                                         initialization_value='0')
     triangles = data_structure[array_path].store.npview()
-    file_path = 'complex/test/Data/TriangleConnectivity.csv'
+    file_path = 'simplnx/test/Data/TriangleConnectivity.csv'
     triangles[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
     result = cx.CreateGeometryFilter.execute(data_structure=data_structure,
@@ -274,22 +274,22 @@ Interoperating with Numpy
 
 .. caution::
 
-    As of conda complex version 1.0.0 there is *NO* way to wrap an existing
-    numpy array. You will have to make a copy of the data into a complex DataArray
-    or have complex create the DataArray for you and load your data into the
+    As of conda simplnx version 1.0.0 there is *NO* way to wrap an existing
+    numpy array. You will have to make a copy of the data into a simplnx DataArray
+    or have simplnx create the DataArray for you and load your data into the
     DataArray (Overwriting the initialization values).
 
     This will hopefully be addressed in a future update.
 
 
-This code example shows how to create a complex DataArray and then use that array 
+This code example shows how to create a simplnx DataArray and then use that array 
 as a numpy view.
 
-The next code section was take from `basic_arrays.py <https://github.com/BlueQuartzSoftware/complex/tree/develop/wrapping/python/examples/basic_arrays.py>`__
+The next code section was take from `basic_arrays.py <https://github.com/bluequartzsoftware/simplnx/tree/develop/wrapping/python/examples/basic_arrays.py>`__
 
 .. code:: python
 
-    import complex as cx
+    import simplnx as nx
     import numpy as np
 
     # Create a Data Structure
@@ -310,11 +310,11 @@ The next code section was take from `basic_arrays.py <https://github.com/BlueQua
     # Get the raw data as an Numpy View
     npdata = data_structure[output_array_path].npview()
 
-The next code section was take from `basic_arrays.py <https://github.com/BlueQuartzSoftware/complex/tree/develop/wrapping/python/examples/angle_conversion.py>`__
+The next code section was take from `basic_arrays.py <https://github.com/bluequartzsoftware/simplnx/tree/develop/wrapping/python/examples/angle_conversion.py>`__
 
 .. code:: python
 
-    import complex as cx
+    import simplnx as nx
     data_structure = cx.DataStructure()
     # Create a DataArray to copy the Euler Angles into 
     array_path = cx.DataPath(['Euler Angles'])

@@ -1,15 +1,15 @@
-option(COMPLEX_BUILD_SPHINX_DOCS "Use Sphinx to build COMPLEX documentation" OFF)
+option(SIMPLNX_BUILD_SPHINX_DOCS "Use Sphinx to builddocumentation" OFF)
 
 find_package(Doxygen REQUIRED)
 
-set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR}/src/complex)
+set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR}/src/simplnx)
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs/doxygen)
 set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
 set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
 set(DOXYGEN_STRIP_PATH ${PROJECT_SOURCE_DIR}/src)
-if(COMPLEX_BUILD_SPHINX_DOCS)
+if(SIMPLNX_BUILD_SPHINX_DOCS)
   set(DOXYGEN_GENERATE_XML YES)
 else()
   set(DOXYGEN_GENERATE_XML NO)
@@ -20,35 +20,35 @@ configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
 file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR})
 
 add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
-  DEPENDS ${COMPLEX_HDRS}
+  DEPENDS ${SIMPLNX_HDRS}
   COMMAND Doxygen::doxygen ${DOXYFILE_OUT}
   MAIN_DEPENDENCY ${DOXYFILE_IN} ${DOXYFILE_OUT}
   COMMENT "Generating ${PROJECT_NAME} docs with Doxygen"
   VERBATIM
 )
 
-option(COMPLEX_DOXYGEN_EXCLUDE_FROM_ALL "Exclude the Doxygen generation from the default target" OFF)
-mark_as_advanced(COMPLEX_DOXYGEN_EXCLUDE_FROM_ALL)
+option(SIMPLNX_DOXYGEN_EXCLUDE_FROM_ALL "Exclude the Doxygen generation from the default target" OFF)
+mark_as_advanced(SIMPLNX_DOXYGEN_EXCLUDE_FROM_ALL)
 
-if(COMPLEX_SPHINX_EXCLUDE_FROM_ALL)
+if(SIMPLNX_SPHINX_EXCLUDE_FROM_ALL)
   set(doxygen_default)
 else()
   set(doxygen_default ALL)
 endif()
 
-add_custom_target(complex_doxygen ${doxygen_default} DEPENDS ${DOXYGEN_INDEX_FILE})
+add_custom_target(simplnx_doxygen ${doxygen_default} DEPENDS ${DOXYGEN_INDEX_FILE})
 
-option(COMPLEX_INSTALL_DOXYGEN_DOCS "Enable install for COMPLEX Doxygen docs" OFF)
+option(SIMPLNX_INSTALL_DOXYGEN_DOCS "Enable install forDoxygen docs" OFF)
 
 include(GNUInstallDirs)
 
-if(COMPLEX_INSTALL_DOXYGEN_DOCS)
+if(SIMPLNX_INSTALL_DOXYGEN_DOCS)
   install(DIRECTORY ${DOXYGEN_OUTPUT_DIR}
     DESTINATION ${CMAKE_INSTALL_DOCDIR}
   )
 endif()
 
-if(COMPLEX_BUILD_SPHINX_DOCS)
+if(SIMPLNX_BUILD_SPHINX_DOCS)
   find_package(Sphinx REQUIRED)
 
   set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -70,19 +70,19 @@ if(COMPLEX_BUILD_SPHINX_DOCS)
     VERBATIM
   )
 
-  option(COMPLEX_SPHINX_EXCLUDE_FROM_ALL "Exclude the Sphinx generation from the default target" OFF)
-  mark_as_advanced(COMPLEX_SPHINX_EXCLUDE_FROM_ALL)
+  option(SIMPLNX_SPHINX_EXCLUDE_FROM_ALL "Exclude the Sphinx generation from the default target" OFF)
+  mark_as_advanced(SIMPLNX_SPHINX_EXCLUDE_FROM_ALL)
 
-  if(COMPLEX_SPHINX_EXCLUDE_FROM_ALL)
+  if(SIMPLNX_SPHINX_EXCLUDE_FROM_ALL)
     set(sphinx_default)
   else()
     set(sphinx_default ALL)
   endif()
 
-  add_custom_target(complex_sphinx ${sphinx_default} DEPENDS ${SPHINX_INDEX_FILE})
+  add_custom_target(simplnx_sphinx ${sphinx_default} DEPENDS ${SPHINX_INDEX_FILE})
 
-  option(COMPLEX_INSTALL_SPHINX_DOCS "Enable install for COMPLEX Sphinx docs" OFF)
-  if(COMPLEX_INSTALL_SPHINX_DOCS)
+  option(SIMPLNX_INSTALL_SPHINX_DOCS "Enable install forSphinx docs" OFF)
+  if(SIMPLNX_INSTALL_SPHINX_DOCS)
     install(DIRECTORY ${SPHINX_BUILD}
       DESTINATION ${CMAKE_INSTALL_DOCDIR}
     )

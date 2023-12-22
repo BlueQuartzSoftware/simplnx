@@ -2,4 +2,4 @@
 
 #cmakedefine ITKIMAGEPROCESSING_LEAN_AND_MEAN
 
-#cmakedefine COMPLEX_CONDA_BUILD
+#cmakedefine SIMPLNX_CONDA_BUILD

@@ -21,18 +21,18 @@ This **Filter** will read a single .h5 file into a new **Image Geometry**, allow
 The user should be aware that simply reading the file then performing operations that are dependent on the proper crystallographic and sample reference frame will be undefined or simply **wrong**. In order to bring the crystal reference frame and sample reference frame into coincidence, rotations will need to be applied to the data. The recommended filters are:
 
 + {ref}`Rotate Euler Reference Frame <OrientationAnalysis/RotateEulerRefFrameFilter:Description>`
-+ {ref}`Rotate Sample Reference Frame <ComplexCore/RotateSampleRefFrameFilter:Description>`
++ {ref}`Rotate Sample Reference Frame <SimplnxCore/RotateSampleRefFrameFilter:Description>`
 
 If the data has come from a TSL acquisition system and the settings of the acquisition software were in the default modes, the following reference frame transformations may need to be performed based on the version of the OIM Analysis software being used to collect the data:
 
 + Sample Reference Frame: 180<sup>o</sup> about the <010> Axis
 + Crystal Reference Frame: 90<sup>o</sup> about the <001> Axis
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The {ref}`Threshold Objects <ComplexCore/MultiThresholdObjects:Description>` Filter can be used to define this *mask* by thresholding on values such as *MAD* > xx.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The {ref}`Threshold Objects <SimplnxCore/MultiThresholdObjects:Description>` Filter can be used to define this *mask* by thresholding on values such as *MAD* > xx.
 
 + Note: If the X Step or Y Step within the HDF5 file for a scan is ZERO, those values will be set to 1.0 when the filter runs. This is needed
 as the user has no effective way to fix the HDF5 file. If the user needs a different
-spacing value, the user can utilize the {ref}`Set Origin and Spacing<ComplexCore/SetImageGeomOriginScalingFilter:Description>` filter.
+spacing value, the user can utilize the {ref}`Set Origin and Spacing<SimplnxCore/SetImageGeomOriginScalingFilter:Description>` filter.
 
 % Auto generated parameter table will be inserted here
 

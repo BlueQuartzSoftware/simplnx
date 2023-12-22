@@ -1,14 +1,14 @@
 #include <catch2/catch.hpp>
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "OrientationAnalysis/Filters/GenerateQuaternionConjugateFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-using namespace complex;
+using namespace nx::core;
 namespace
 {
 const std::string k_QuatName = "Quats";
@@ -65,11 +65,11 @@ TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugateFilter", "[Orientatio
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName}));
     UnitTest::CompareDataArrays<float32>(*exemplarData, outputArray);

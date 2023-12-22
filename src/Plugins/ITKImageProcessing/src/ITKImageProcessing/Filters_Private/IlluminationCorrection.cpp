@@ -1,23 +1,23 @@
 #include "IlluminationCorrection.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/MontageSelectionFilterParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/MontageSelectionFilterParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 #include <itkIlluminationCorrectionFilter.h>
 namespace
@@ -34,7 +34,7 @@ struct ITKIlluminationCorrectionFilterCreationFunctor
 };
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string IlluminationCorrection::name() const
@@ -132,7 +132,7 @@ IFilter::PreflightResult IlluminationCorrection::preflightImpl(const DataStructu
   PreflightResult preflightResult;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);
 
@@ -142,7 +142,7 @@ IFilter::PreflightResult IlluminationCorrection::preflightImpl(const DataStructu
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
+  // will need to use one of the `*Actions` classes located in simplnx/Filter/Actions
   // to relay that information to the preflight and execute methods. This is done by
   // creating an instance of the Action class and then storing it in the resultOutputActions variable.
   // This is done through a `push_back()` method combined with a `std::move()`. For the
@@ -163,7 +163,7 @@ IFilter::PreflightResult IlluminationCorrection::preflightImpl(const DataStructu
   }
   // This block is commented out because it needs some variables to be filled in.
   {
-    // auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::FILL_ME_IN, std::vector<usize>{NUM_TUPLES_VALUE}, NUM_COMPONENTS, pBackgroundImageArrayPathValue);
+    // auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::NumericType::FILL_ME_IN, std::vector<usize>{NUM_TUPLES_VALUE}, NUM_COMPONENTS, pBackgroundImageArrayPathValue);
     // resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -204,4 +204,4 @@ Result<> IlluminationCorrection::executeImpl(DataStructure& dataStructure, const
 
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, IlluminationCorrectionFilterCreationFunctor{});
 }
-} // namespace complex
+} // namespace nx::core

@@ -1,15 +1,15 @@
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/FilterHandle.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/unit_test/complex_test_dirs.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/FilterHandle.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <sstream>
 #include <string>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -32,17 +32,17 @@ TEST_CASE("Test Loading Plugins")
   const auto& filterHandles = filterListPtr->getFilterHandles();
   auto plugins = filterListPtr->getLoadedPlugins();
 
-  if(plugins.size() != COMPLEX_PLUGIN_COUNT)
+  if(plugins.size() != SIMPLNX_PLUGIN_COUNT)
   {
     std::cout << "Incorrect number of plugins were loaded.\n"
-              << "Expected: " << COMPLEX_PLUGIN_COUNT << "\nLoaded: " << plugins.size() << "\nLoaded Plugins are:\n";
+              << "Expected: " << SIMPLNX_PLUGIN_COUNT << "\nLoaded: " << plugins.size() << "\nLoaded Plugins are:\n";
     for(auto const& plugin : plugins)
     {
       std::cout << plugin->getName() << "\n";
     }
   }
 
-  REQUIRE(plugins.size() == COMPLEX_PLUGIN_COUNT);
+  REQUIRE(plugins.size() == SIMPLNX_PLUGIN_COUNT);
   REQUIRE(filterHandles.size() >= 2);
 
   DataStructure dataStructure;
@@ -73,16 +73,16 @@ TEST_CASE("Test Singleton")
   auto plugins = filterListPtr->getLoadedPlugins();
 
   // Check plugins were loaded
-  if(plugins.size() != COMPLEX_PLUGIN_COUNT)
+  if(plugins.size() != SIMPLNX_PLUGIN_COUNT)
   {
     std::cout << "Incorrect number of plugins were loaded.\n"
-              << "Expected: " << COMPLEX_PLUGIN_COUNT << "\nLoaded: " << plugins.size() << "\nLoaded Plugins are:\n";
+              << "Expected: " << SIMPLNX_PLUGIN_COUNT << "\nLoaded: " << plugins.size() << "\nLoaded Plugins are:\n";
     for(auto const& plugin : plugins)
     {
       std::cout << plugin->getName() << "\n";
     }
   }
-  REQUIRE(plugins.size() == COMPLEX_PLUGIN_COUNT);
+  REQUIRE(plugins.size() == SIMPLNX_PLUGIN_COUNT);
 
   // Check filters loaded
   REQUIRE(filterHandles.size() >= 2);

@@ -108,12 +108,12 @@ cmake --build . --target install
 
 cd ..
 
-# "complex"
+# "simplnx"
 
 mkdir build
 cd build
 
-cmake --preset $COMPLEX_CMAKE_PRESET ../complex $CMAKE_ARGS -D CMAKE_OSX_DEPLOYMENT_TARGET:STRING="11.0"
+cmake --preset $SIMPLNX_CMAKE_PRESET ../simplnx $CMAKE_ARGS -D CMAKE_OSX_DEPLOYMENT_TARGET:STRING="11.0"
 
 cmake --build . --target all
 

@@ -1,0 +1,16 @@
+#pragma once
+
+#include "simplnx/Common/StringLiteral.hpp"
+
+namespace nx::core
+{
+namespace unit_test
+{
+inline constexpr StringLiteral k_SourceDir = "@SIMPLNX_SOURCE_DIR_NORM@";
+inline constexpr StringLiteral k_BinaryDir = "@SIMPLNX_BINARY_DIR_NORM@";
+inline constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
+inline constexpr StringLiteral k_BinaryTestOutputDir = "@simplnx_BINARY_DIR@/simplnx/test_output";
+inline constexpr StringLiteral k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
+inline constexpr StringLiteral k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
+}
+} // namespace nx::core

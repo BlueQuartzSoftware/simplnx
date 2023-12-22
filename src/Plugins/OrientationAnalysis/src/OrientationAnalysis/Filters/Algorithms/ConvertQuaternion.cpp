@@ -1,11 +1,11 @@
 #include "ConvertQuaternion.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {

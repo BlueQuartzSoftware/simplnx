@@ -19,7 +19,7 @@ body:
     attributes:
       label: Description of the Feature, Filter, or Functionality?
       description: Describe your feature in detail or even provide an implementation plan/existing open source library to reference!
-      value: What if complex had...
+      value: What if simplnx had...
     validations:
       required: true
   - type: dropdown

@@ -1,11 +1,11 @@
 #include "Test2Filter.hpp"
 
-#include "complex/Common/StringLiteral.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -31,7 +31,7 @@ std::string Test2Filter::className() const
 }
 
 //------------------------------------------------------------------------------
-complex::Uuid Test2Filter::uuid() const
+nx::core::Uuid Test2Filter::uuid() const
 {
   return FilterTraits<Test2Filter>::uuid;
 }
@@ -49,7 +49,7 @@ std::vector<std::string> Test2Filter::defaultTags() const
 }
 
 //------------------------------------------------------------------------------
-complex::Parameters Test2Filter::parameters() const
+nx::core::Parameters Test2Filter::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<Int32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0));
@@ -59,20 +59,20 @@ complex::Parameters Test2Filter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-complex::IFilter::UniquePointer Test2Filter::clone() const
+nx::core::IFilter::UniquePointer Test2Filter::clone() const
 {
   return std::make_unique<Test2Filter>();
 }
 
 //------------------------------------------------------------------------------
-complex::IFilter::PreflightResult Test2Filter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+nx::core::IFilter::PreflightResult Test2Filter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-complex::Result<> Test2Filter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+nx::core::Result<> Test2Filter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   return {};
 }

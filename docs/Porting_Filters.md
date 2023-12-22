@@ -28,13 +28,13 @@ static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 SIMPL
 
 ```cpp
-    setErrorCondition(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file");
+    setErrorCondition(nx::core::StlConstants::k_ErrorOpeningFile, "Error opening STL file");
 ```
 
 COMPLEX
 
 ```cpp
-    Result<> result =  MakeErrorResult(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file")
+    Result<> result =  MakeErrorResult(nx::core::StlConstants::k_ErrorOpeningFile, "Error opening STL file")
 ```
 
 then you can optionally return the `result` variable if needed
@@ -45,7 +45,7 @@ There are some substitutions for the QString operations.
 See [https://en.cppreference.com/w/cpp/string/basic_string](https://en.cppreference.com/w/cpp/string/basic_string) for
 more information about std::string
 
-There is a file `complex/Utilities/StringUtilities.hpp` that has some QString functionality that is needed.
+There is a file `simplnx/Utilities/StringUtilities.hpp` that has some QString functionality that is needed.
 
 ## Getting a Geometry from the DataStructure
 
@@ -152,7 +152,7 @@ of how to perform this transfer of data.
 
 There are several classes that can be used to help the developer write parallel algorithms.
 
-`complex/Utilities/ParallelAlgorithm` and `complex/Utilties/ParallelTaskAlgorithm` are the two main classes depending
+`simplnx/Utilities/ParallelAlgorithm` and `simplnx/Utilties/ParallelTaskAlgorithm` are the two main classes depending
 on the situation. `AlignSections.cpp` and `CropImageGeoemtry.cpp` both use a task based
 parallelism. `RotateSampleRefFrameFilter.cpp` shows an example
 of using ParallelData3DAlgorithm.
@@ -160,13 +160,13 @@ of using ParallelData3DAlgorithm.
 ## Constants for Pi and Others
 
 ```cpp
-  #include "complex/Common/Numbers.hpp"
+  #include "simplnx/Common/Numbers.hpp"
 ```
 
 and use it this way:
 
 ```cpp
-  double foo = complex::numbers::k_180OverPi * 232.0;
+  double foo = nx::core::numbers::k_180OverPi * 232.0;
 ```
 
 ## MessageHandler
@@ -204,7 +204,7 @@ You have code that does this:
 EXECUTE_FUNCTION_TEMPLATE(this, Detail::ExecuteTemplate, m_InArrayPtr.lock(), this, m_InArrayPtr.lock());
 ```
 
-and now you are porting that to `complex`. The old `Detail::ExecuteTemplate` needs to be converted into a "struct" based
+and now you are porting that to `simplnx`. The old `Detail::ExecuteTemplate` needs to be converted into a "struct" based
 functor like the following:
 
 ```cpp

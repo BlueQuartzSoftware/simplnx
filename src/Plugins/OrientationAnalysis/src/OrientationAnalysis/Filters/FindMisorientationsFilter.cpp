@@ -1,22 +1,22 @@
 #include "FindMisorientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/FindMisorientations.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/NeighborListSelectionParameter.hpp"
+#include "simplnx/Parameters/NeighborListSelectionParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string FindMisorientationsFilter::name() const
@@ -60,12 +60,12 @@ Parameters FindMisorientationsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Feature Neighbor List", "List of the contiguous neighboring Features for a given Feature",
-                                                                 DataPath({"DataContainer", "FeatureData", "NeighborList"}), NeighborListSelectionParameter::AllowedTypes{complex::DataType::int32}));
+                                                                 DataPath({"DataContainer", "FeatureData", "NeighborList"}), NeighborListSelectionParameter::AllowedTypes{nx::core::DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Feature Average Quaternions", "Defines the average orientation of the Feature in quaternion representation",
-                                                          DataPath({"DataContainer", "FeatureData", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{complex::DataType::float32},
+                                                          DataPath({"DataContainer", "FeatureData", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs",
-                                                          DataPath({"DataContainer", "FeatureData", "Phases"}), ArraySelectionParameter::AllowedTypes{complex::DataType::int32},
+                                                          DataPath({"DataContainer", "FeatureData", "Phases"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
@@ -136,16 +136,16 @@ IFilter::PreflightResult FindMisorientationsFilter::preflightImpl(const DataStru
     return {MakeErrorResult<OutputActions>(-34501, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   if(pFindAvgMisorsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, avgQuats->getIDataStore()->getTupleShape(), std::vector<usize>{1}, pAvgMisorientationsArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, avgQuats->getIDataStore()->getTupleShape(), std::vector<usize>{1}, pAvgMisorientationsArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Create the NeighborList array
-  auto createArrayAction = std::make_unique<CreateNeighborListAction>(complex::DataType::float32, avgQuats->getNumberOfTuples(), pMisorientationListArrayPath);
+  auto createArrayAction = std::make_unique<CreateNeighborListAction>(nx::core::DataType::float32, avgQuats->getNumberOfTuples(), pMisorientationListArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -207,4 +207,4 @@ Result<Arguments> FindMisorientationsFilter::FromSIMPLJson(const nlohmann::json&
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

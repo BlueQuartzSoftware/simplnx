@@ -10,7 +10,7 @@ Then you can run the `itk_filter_generator.py` file to generate the filters.
 An example usage of the python script is this:
 
 ````
-python itk_filter_generator.py `pwd` `pwd`/SimpleITK/Code/BasicFilters/json /Users/mjackson/Workspace1/complex/src/Plugins/ITKImageProcessing/src/ITKImageProcessing/Filters /Users/mjackson/Workspace1/complex/src/Plugins/ITKImageProcessing/test
+python itk_filter_generator.py `pwd` `pwd`/SimpleITK/Code/BasicFilters/json /Users/mjackson/Workspace1/simplnx/src/Plugins/ITKImageProcessing/src/ITKImageProcessing/Filters /Users/mjackson/Workspace1/simplnx/src/Plugins/ITKImageProcessing/test
 ````
 
 ## Modification Notes
