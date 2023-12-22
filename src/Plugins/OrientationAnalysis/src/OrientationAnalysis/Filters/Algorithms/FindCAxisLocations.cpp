@@ -2,14 +2,14 @@
 
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
-using namespace complex::OrientationUtilities;
+using namespace nx::core;
+using namespace nx::core::OrientationUtilities;
 
 // -----------------------------------------------------------------------------
 FindCAxisLocations::FindCAxisLocations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindCAxisLocationsInputValues* inputValues)

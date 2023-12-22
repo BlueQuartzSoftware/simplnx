@@ -1,21 +1,21 @@
 #include "CreateEnsembleInfoFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/CreateEnsembleInfo.hpp"
 
-#include "complex/Common/Types.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Filter/Actions/CreateStringArrayAction.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/EnsembleInfoParameter.hpp"
+#include "simplnx/Parameters/EnsembleInfoParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string CreateEnsembleInfoFilter::name() const
@@ -151,4 +151,4 @@ Result<Arguments> CreateEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& 
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

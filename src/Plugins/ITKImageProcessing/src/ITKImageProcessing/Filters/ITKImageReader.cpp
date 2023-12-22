@@ -1,27 +1,27 @@
 #include "ITKImageReader.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 
 #include <filesystem>
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ITKImageReader::name() const
@@ -147,4 +147,4 @@ Result<Arguments> ITKImageReader::FromSIMPLJson(const nlohmann::json& json)
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

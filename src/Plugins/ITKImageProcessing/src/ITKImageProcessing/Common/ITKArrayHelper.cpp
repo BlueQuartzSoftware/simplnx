@@ -1,10 +1,10 @@
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
-#include "complex/Common/TypesUtility.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 
 #include <fmt/ranges.h>
 
-using namespace complex;
+using namespace nx::core;
 
 bool ITK::DoTuplesMatch(const IDataStore& dataStore, const ImageGeom& imageGeom)
 {

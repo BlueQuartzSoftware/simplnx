@@ -3,19 +3,19 @@ include(GNUInstallDirs)
 
 # --------------------------------------------------------------------
 # This function optionally compiles a named plugin when compiling sandbox
-# This function will add in an Option "COMPLEX_PLUGIN_ENABLE_${NAME} which
+# This function will add in an Option "SIMPLNX_PLUGIN_ENABLE_${NAME} which
 # the programmer can use to enable/disable the compiling of specific plugins
 # Arguments:
 # PLUGIN_NAME The name of the Plugin
 # PLUGIN_SOURCE_DIR The source directory for the plugin
-function(complex_COMPILE_PLUGIN)
+function(simplnx_COMPILE_PLUGIN)
   set(options)
   set(oneValueArgs PLUGIN_NAME PLUGIN_SOURCE_DIR DOC_CHECK)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  option(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME} "Build the ${ARGS_PLUGIN_NAME}" ON)
+  option(SIMPLNX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME} "Build the ${ARGS_PLUGIN_NAME}" ON)
 
-  if(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME})
+  if(SIMPLNX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME})
     add_subdirectory(${ARGS_PLUGIN_SOURCE_DIR} ${PROJECT_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME})
     get_property(PluginNumFilters GLOBAL PROPERTY ${ARGS_PLUGIN_NAME}_filter_count)
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/test_output)
@@ -24,79 +24,79 @@ function(complex_COMPILE_PLUGIN)
     #- Now set up the dependency between the main application and each of the plugins so that
     #- things like Visual Studio are forced to rebuild the plugins when launching
     #- the sandbox application
-    if(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME} AND TARGET complex::complex AND TARGET ${ARGS_PLUGIN_NAME})
-      add_dependencies(${ARGS_PLUGIN_NAME} complex::complex)
+    if(SIMPLNX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME} AND TARGET simplnx::simplnx AND TARGET ${ARGS_PLUGIN_NAME})
+      add_dependencies(${ARGS_PLUGIN_NAME} simplnx::simplnx)
     endif()
 
   else()
-    message(STATUS "${ARGS_PLUGIN_NAME} [DISABLED]: Use -DCOMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME}=ON to Enable Plugin")
+    message(STATUS "${ARGS_PLUGIN_NAME} [DISABLED]: Use -DSIMPLNX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME}=ON to Enable Plugin")
   endif()
 endfunction()
 
 # -----------------------------------------------------------------------------
-# This function will search through the COMPLEX_PLUGIN_SEARCH_DIRS variable and
+# This function will search through the SIMPLNX_PLUGIN_SEARCH_DIRS variable and
 # look for a directory with the name that holds a CMakeLists.txt file.
 # Arguments:
 # PLUGIN_NAME The name of the Plugin
-function(complex_add_plugin)
+function(simplnx_add_plugin)
   set(options )
   set(oneValueArgs PLUGIN_NAME)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  set(COMPLEX_PLUGIN_SEARCH_DIRS_2 ${COMPLEX_PLUGIN_SEARCH_DIRS} 
-                                      ${complex_SOURCE_DIR}/src/Plugins
-                                      ${complex_SOURCE_DIR}/../complex_plugins 
-                                      ${complex_SOURCE_DIR}/../DREAM3D_Plugins
+  set(SIMPLNX_PLUGIN_SEARCH_DIRS_2 ${SIMPLNX_PLUGIN_SEARCH_DIRS} 
+                                      ${simplnx_SOURCE_DIR}/src/Plugins
+                                      ${simplnx_SOURCE_DIR}/../simplnx_plugins 
+                                      ${simplnx_SOURCE_DIR}/../DREAM3D_Plugins
                                       )
 
-  #message(STATUS "complex_add_plugin: ${ARGS_PLUGIN_NAME}")
-  #message(STATUS "COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR: ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
-  if(NOT DEFINED COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR OR NOT EXISTS "${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
-    #message(STATUS "COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR was NOT Defined. Searching for Plugins in 'COMPLEX_PLUGIN_SEARCH_DIRS_2'")
-    foreach(pluginSearchDir ${COMPLEX_PLUGIN_SEARCH_DIRS_2})
+  #message(STATUS "simplnx_add_plugin: ${ARGS_PLUGIN_NAME}")
+  #message(STATUS "SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR: ${SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
+  if(NOT DEFINED SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR OR NOT EXISTS "${SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
+    #message(STATUS "SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR was NOT Defined. Searching for Plugins in 'SIMPLNX_PLUGIN_SEARCH_DIRS_2'")
+    foreach(pluginSearchDir ${SIMPLNX_PLUGIN_SEARCH_DIRS_2})
       #message(STATUS "|-Searching:${pluginSearchDir} ")
       if(EXISTS ${pluginSearchDir}/${ARGS_PLUGIN_NAME}/CMakeLists.txt)
-        set(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir}/${ARGS_PLUGIN_NAME} CACHE PATH "")
-        #message(STATUS "  |-Plugin: Defining COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR to ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
+        set(SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir}/${ARGS_PLUGIN_NAME} CACHE PATH "")
+        #message(STATUS "  |-Plugin: Defining SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR to ${SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
         break()
       endif()
     endforeach()
   endif()
 
   # Mark these variables as advanced
-  mark_as_advanced(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR)
+  mark_as_advanced(SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR)
 
   # Now that we have defined where the user's plugin directory is at we
   # need to make sure it has a CMakeLists.txt file in it
-  if(EXISTS ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}/CMakeLists.txt)
-    set(${ARGS_PLUGIN_NAME}_IMPORT_FILE COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR/CMakeLists.txt)
+  if(EXISTS ${SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}/CMakeLists.txt)
+    set(${ARGS_PLUGIN_NAME}_IMPORT_FILE SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR/CMakeLists.txt)
   endif()
 
   # By this point we should have everything defined and ready to go...
-  if(DEFINED COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR AND DEFINED ${ARGS_PLUGIN_NAME}_IMPORT_FILE)
-    #message(STATUS "Plugin: Adding Plugin ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
+  if(DEFINED SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR AND DEFINED ${ARGS_PLUGIN_NAME}_IMPORT_FILE)
+    #message(STATUS "Plugin: Adding Plugin ${SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
 
-    set(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME} ON CACHE BOOL "Enable ${ARGS_PLUGIN_NAME} Plugin")
-    if(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME})
+    set(SIMPLNX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME} ON CACHE BOOL "Enable ${ARGS_PLUGIN_NAME} Plugin")
+    if(SIMPLNX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME})
       #message(STATUS "${PLUGIN_NAME} ENABLED")
-      complex_COMPILE_PLUGIN(PLUGIN_NAME ${ARGS_PLUGIN_NAME}
-        PLUGIN_SOURCE_DIR ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}
+      simplnx_COMPILE_PLUGIN(PLUGIN_NAME ${ARGS_PLUGIN_NAME}
+        PLUGIN_SOURCE_DIR ${SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}
       )
       # Increment the plugin count only if it is enabled
-      get_property(PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
+      get_property(PLUGIN_COUNT GLOBAL PROPERTY SIMPLNX_PLUGIN_COUNT)
       math(EXPR PLUGIN_COUNT "${PLUGIN_COUNT}+1")
-      set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT ${PLUGIN_COUNT})
+      set_property(GLOBAL PROPERTY SIMPLNX_PLUGIN_COUNT ${PLUGIN_COUNT})
     else()
-      message(STATUS "${ARGS_PLUGIN_NAME} [DISABLED]: Use '-DCOMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME}=ON' to enable this plugin")
+      message(STATUS "${ARGS_PLUGIN_NAME} [DISABLED]: Use '-DSIMPLNX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME}=ON' to enable this plugin")
     endif()
   else()
-    set(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir} CACHE PATH "" FORCE)
-    message(STATUS "${ARGS_PLUGIN_NAME} [DISABLED]. Missing Source Directory. Use -DCOMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR=/Path/To/PluginDir")
+    set(SIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir} CACHE PATH "" FORCE)
+    message(STATUS "${ARGS_PLUGIN_NAME} [DISABLED]. Missing Source Directory. Use -DSIMPLNX_${ARGS_PLUGIN_NAME}_SOURCE_DIR=/Path/To/PluginDir")
   endif()
 endfunction()
 
 # -----------------------------------------------------------------------------
-# This function will search through the COMPLEX_PLUGIN_SEARCH_DIRS variable and
+# This function will search through the SIMPLNX_PLUGIN_SEARCH_DIRS variable and
 # look for a directory with the name that holds a CMakeLists.txt file.
 # Arguments:
 # NAME The name of the Plugin
@@ -104,7 +104,7 @@ endfunction()
 # VERSION The version of the plugin, used in the "project(...)" call
 # FILTER_LIST the list of filters to compile
 # ACTION_LIST
-function(create_complex_plugin)
+function(create_simplnx_plugin)
   set(options DOC_CHECK ADD_TO_GLOBAL_LIST)
   set(oneValueArgs NAME DESCRIPTION VERSION)
   set(multiValueArgs FILTER_LIST ACTION_LIST ALGORITHM_LIST)
@@ -161,7 +161,7 @@ function(create_complex_plugin)
     )
 
     string(APPEND Public_Filter_Registration_Code
-      "  filters.push_back([]() -> complex::IFilter::UniquePointer { return std::make_unique<complex::${filter}>(); });\n"
+      "  filters.push_back([]() -> nx::core::IFilter::UniquePointer { return std::make_unique<nx::core::${filter}>(); });\n"
     )
   endforeach()
 
@@ -185,34 +185,34 @@ function(create_complex_plugin)
     )
   endforeach()
 
-  configure_file( ${complex_SOURCE_DIR}/cmake/plugin_filter_registration.h.in
+  configure_file( ${simplnx_SOURCE_DIR}/cmake/plugin_filter_registration.h.in
     ${ARGS_GENERATED_HEADER_DIR}/${ARGS_NAME}_filter_registration.hpp
   )
 
   add_library(${ARGS_NAME} SHARED)
-  add_library(complex::${ARGS_NAME} ALIAS ${ARGS_NAME})
+  add_library(simplnx::${ARGS_NAME} ALIAS ${ARGS_NAME})
 
-  set_property(TARGET ${ARGS_NAME} PROPERTY COMPLEX_FILTER_LIST ${ARGS_FILTER_LIST})
+  set_property(TARGET ${ARGS_NAME} PROPERTY SIMPLNX_FILTER_LIST ${ARGS_FILTER_LIST})
 
   #------------------------------------------------------------------------------
   # Add the plugin to the global list of plugins. This is needed for installation.
   #------------------------------------------------------------------------------
   if(${ARGS_ADD_TO_GLOBAL_LIST})
-    get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
-    set(ComplexPluginTargets ${ComplexPluginTargets} ${ARGS_NAME})
-    set_property(GLOBAL PROPERTY ComplexPluginTargets ${ComplexPluginTargets})
+    get_property(simplnxPluginTargets GLOBAL PROPERTY simplnxPluginTargets)
+    set(simplnxPluginTargets ${simplnxPluginTargets} ${ARGS_NAME})
+    set_property(GLOBAL PROPERTY simplnxPluginTargets ${simplnxPluginTargets})
   endif()
   #------------------------------------------------------------------------------
   # Add a global property that stores the filters that are in this plugin
   #------------------------------------------------------------------------------
-  get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)   
+  get_property(SIMPLNX_DEBUG_POSTFIX GLOBAL PROPERTY SIMPLNX_DEBUG_POSTFIX)   
   set_property(GLOBAL PROPERTY ${ARGS_NAME}_FILTER_LIST ${ARGS_FILTER_LIST})
-  get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)
+  get_property(SIMPLNX_DEBUG_POSTFIX GLOBAL PROPERTY SIMPLNX_DEBUG_POSTFIX)
   set_target_properties(${ARGS_NAME}
     PROPERTIES
       FOLDER "Plugins/${ARGS_NAME}"
-      SUFFIX ".complex"
-      DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
+      SUFFIX ".simplnx"
+      DEBUG_POSTFIX "${SIMPLNX_DEBUG_POSTFIX}"
   )
 
   #------------------------------------------------------------------------------
@@ -230,24 +230,24 @@ function(create_complex_plugin)
 
   #------------------------------------------------------------------------------
   # Where are the plugins going to be placed during the build, unless overridden
-  # by the global property COMPLEX_ARGS_OUTPUT_DIR
-  get_property(COMPLEX_ARGS_OUTPUT_DIR GLOBAL PROPERTY COMPLEX_ARGS_OUTPUT_DIR)
-  if("${COMPLEX_ARGS_OUTPUT_DIR}" STREQUAL "")
+  # by the global property SIMPLNX_ARGS_OUTPUT_DIR
+  get_property(SIMPLNX_ARGS_OUTPUT_DIR GLOBAL PROPERTY SIMPLNX_ARGS_OUTPUT_DIR)
+  if("${SIMPLNX_ARGS_OUTPUT_DIR}" STREQUAL "")
     set_target_properties(${ARGS_NAME} PROPERTIES
-      LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
-      RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
+      LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:simplnx>
+      RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:simplnx>
     )
   else()
     set_target_properties(${ARGS_NAME} PROPERTIES
-      LIBRARY_OUTPUT_DIRECTORY ${COMPLEX_ARGS_OUTPUT_DIR}
-      RUNTIME_OUTPUT_DIRECTORY ${COMPLEX_ARGS_OUTPUT_DIR}
+      LIBRARY_OUTPUT_DIRECTORY ${SIMPLNX_ARGS_OUTPUT_DIR}
+      RUNTIME_OUTPUT_DIRECTORY ${SIMPLNX_ARGS_OUTPUT_DIR}
     )
   endif()
 
-  target_link_libraries(${ARGS_NAME} PUBLIC complex)
+  target_link_libraries(${ARGS_NAME} PUBLIC simplnx)
 
-  include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
-  complex_enable_warnings(TARGET ${ARGS_NAME})
+  include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
+  simplnx_enable_warnings(TARGET ${ARGS_NAME})
 
   if(MSVC)
     target_compile_options(${ARGS_NAME}
@@ -283,7 +283,7 @@ function(create_complex_plugin)
       $<BUILD_INTERFACE:${ARGS_GENERATED_DIR}>
   )
 
-  if(COMPLEX_ENABLE_INSTALL)
+  if(SIMPLNX_ENABLE_INSTALL)
     install(TARGETS ${ARGS_NAME}
       PUBLIC_HEADER
         DESTINATION include/${ARGS_NAME}
@@ -307,7 +307,7 @@ endfunction()
 # Arguments:
 # PLUGIN_NAME The name of the Plugin
 # FILTER_LIST The list of sources to compile.
-function(create_complex_plugin_unit_test)
+function(create_simplnx_plugin_unit_test)
   set(options)
   set(oneValueArgs PLUGIN_NAME)
   set(multiValueArgs FILTER_LIST)
@@ -320,9 +320,9 @@ function(create_complex_plugin_unit_test)
   find_package(Catch2 CONFIG REQUIRED)
   include(Catch)
 
-  get_filename_component(complexProj_PARENT ${complex_SOURCE_DIR} DIRECTORY CACHE)
+  get_filename_component(simplnxProj_PARENT ${simplnx_SOURCE_DIR} DIRECTORY CACHE)
   if("${DREAM3D_DATA_DIR}" STREQUAL "")
-    set(DREAM3D_DATA_DIR "${complexProj_PARENT}/DREAM3D_Data/" CACHE PATH "The directory where to find test data files")
+    set(DREAM3D_DATA_DIR "${simplnxProj_PARENT}/DREAM3D_Data/" CACHE PATH "The directory where to find test data files")
   endif()
 
   if(NOT EXISTS "${DREAM3D_DATA_DIR}")
@@ -336,37 +336,37 @@ function(create_complex_plugin_unit_test)
   #------------------------------------------------------------------------------
   # Convert the native path to a path that will be compatible with C++ source codes
   file(TO_CMAKE_PATH "${${ARGS_PLUGIN_NAME}_SOURCE_DIR}" PLUGIN_SOURCE_DIR_NORM)
-  file(TO_CMAKE_PATH "${complex_SOURCE_DIR}" COMPLEX_SOURCE_DIR_NORM)
+  file(TO_CMAKE_PATH "${simplnx_SOURCE_DIR}" SIMPLNX_SOURCE_DIR_NORM)
 
   #------------------------------------------------------------------------------
   # Set the generated directory in the build folder, set the path to the generated
   # header, and finally configure the header file
-  set(${ARGS_PLUGIN_NAME}_GENERATED_DIR ${complex_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated)
-  set(COMPLEX_TEST_DIRS_HEADER ${${ARGS_PLUGIN_NAME}_GENERATED_DIR}/${ARGS_PLUGIN_NAME}/${ARGS_PLUGIN_NAME}_test_dirs.hpp)
-  configure_file(${${ARGS_PLUGIN_NAME}_SOURCE_DIR}/test/test_dirs.hpp.in ${COMPLEX_TEST_DIRS_HEADER} @ONLY)
+  set(${ARGS_PLUGIN_NAME}_GENERATED_DIR ${simplnx_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated)
+  set(SIMPLNX_TEST_DIRS_HEADER ${${ARGS_PLUGIN_NAME}_GENERATED_DIR}/${ARGS_PLUGIN_NAME}/${ARGS_PLUGIN_NAME}_test_dirs.hpp)
+  configure_file(${${ARGS_PLUGIN_NAME}_SOURCE_DIR}/test/test_dirs.hpp.in ${SIMPLNX_TEST_DIRS_HEADER} @ONLY)
   file(MAKE_DIRECTORY "${${ARGS_PLUGIN_NAME}_BINARY_DIR}/test_output/")
 
   #------------------------------------------------------------------------------
   # Create the unit test executable
   add_executable(${UNIT_TEST_TARGET}
-    ${COMPLEX_TEST_DIRS_HEADER}
+    ${SIMPLNX_TEST_DIRS_HEADER}
     ${ARGS_PLUGIN_NAME}_test_main.cpp
     ${${ARGS_PLUGIN_NAME}UnitTest_SRCS}
   )
 
   target_link_libraries(${UNIT_TEST_TARGET}
     PRIVATE
-      complex
+      simplnx
       ${ARGS_PLUGIN_NAME}
       Catch2::Catch2
-      complex::UnitTestCommon
+      simplnx::UnitTestCommon
   )
 
   source_group("test" FILES  ${${ARGS_PLUGIN_NAME}UnitTest_SRCS} ${ARGS_PLUGIN_NAME}_test_main.cpp)
-  source_group("Generated" FILES ${COMPLEX_TEST_DIRS_HEADER} )                                                
+  source_group("Generated" FILES ${SIMPLNX_TEST_DIRS_HEADER} )                                                
 
-  include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
-  complex_enable_warnings(TARGET ${UNIT_TEST_TARGET})
+  include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
+  simplnx_enable_warnings(TARGET ${UNIT_TEST_TARGET})
 
   #------------------------------------------------------------------------------
   # Require that the test plugins are built before tests because some tests
@@ -375,13 +375,13 @@ function(create_complex_plugin_unit_test)
 
   set_target_properties(${UNIT_TEST_TARGET}
     PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
+      RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:simplnx>
       FOLDER "Plugins/${ARGS_PLUGIN_NAME}"
   )
 
   target_compile_definitions(${UNIT_TEST_TARGET}
     PRIVATE
-      COMPLEX_BUILD_DIR="$<TARGET_FILE_DIR:complex_test>"
+      SIMPLNX_BUILD_DIR="$<TARGET_FILE_DIR:simplnx_test>"
   )
 
   target_compile_options(${UNIT_TEST_TARGET}

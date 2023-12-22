@@ -2,11 +2,11 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ConvertHexGridToSquareGrid.hpp"
 
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/IO/TSL/AngConstants.h"
@@ -16,7 +16,7 @@
 #include <sstream>
 
 namespace fs = std::filesystem;
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -31,7 +31,7 @@ std::atomic_int32_t s_InstanceId = 0;
 std::map<int32, ConvertHexGridToSquareGridFilterCache> s_HeaderCache;
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 ConvertHexGridToSquareGridFilter::ConvertHexGridToSquareGridFilter()
@@ -117,7 +117,7 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
   auto pInputFileListInfoValue = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);
   auto pInputSingleFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputPath_Key);
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   FileSystemPathParameter::ValueType inputPath = pInputSingleFile;
@@ -163,7 +163,7 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     }
     if(err == -600)
     {
-      complex::Warning warning;
+      nx::core::Warning warning;
       warning.code = reader.getErrorCode();
       warning.message = reader.getErrorMessage();
       resultOutputActions.m_Warnings.emplace_back(std::move(warning));
@@ -203,4 +203,4 @@ Result<> ConvertHexGridToSquareGridFilter::executeImpl(DataStructure& dataStruct
 
   return ConvertHexGridToSquareGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
-} // namespace complex
+} // namespace nx::core

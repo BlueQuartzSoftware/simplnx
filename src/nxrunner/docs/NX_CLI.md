@@ -1,8 +1,8 @@
 # NX Runner (NX CLI)
 
-NX Runner is an executable that allows preflighting and executing complex pipelines from the command line. The executable is created as part of the default complex CMake project and created alongside the complex library file.
+NX Runner is an executable that allows preflighting and executing simplnx pipelines from the command line. The executable is created as part of the default simplnx CMake project and created alongside the simplnx library file.
 
-In addition, NX Runner contains commands for porting SIMPL pipeline files to complex pipelines. One of these commands prints the converted pipeline to the terminal, and the other saves the converted pipeline to a new file using the complex pipeline extension.
+In addition, NX Runner contains commands for porting SIMPL pipeline files to simplnx pipelines. One of these commands prints the converted pipeline to the terminal, and the other saves the converted pipeline to a new file using the simplnx pipeline extension.
 
 ## Commands
 
@@ -48,8 +48,8 @@ For example, ```--preflight bash D:/Directory/pipeline.d3pipeline -l D:/Logs/pip
 -co <pipeline filepath> [--logfile | -l]
 ```
 
-Converts a SIMPL pipeline at the target filepath to a complex pipeline. If any errors are encountered during the process, they are printed to the console. Otherwise, the converted pipeline is printed to the console. Optionally, a log file is created at the specified filepath where the output is saved.
+Converts a SIMPL pipeline at the target filepath to a simplnx pipeline. If any errors are encountered during the process, they are printed to the console. Otherwise, the converted pipeline is printed to the console. Optionally, a log file is created at the specified filepath where the output is saved.
 
-The second option (convert-output / co) also saves the converted pipeline to file based on the name of the converted pipeline using the complex pipeline extension (`.d3pipeline`).
+The second option (convert-output / co) also saves the converted pipeline to file based on the name of the converted pipeline using the simplnx pipeline extension (`.d3pipeline`).
 
 For example, ```--convert-output bash D:/Directory/SIMPL.json``` will attempt to convert the SIMPL pipeline at `D:/Directory/SIMPL.json` and save the converted pipeline to `D:/Directory/SIMPL.d3pipeline`

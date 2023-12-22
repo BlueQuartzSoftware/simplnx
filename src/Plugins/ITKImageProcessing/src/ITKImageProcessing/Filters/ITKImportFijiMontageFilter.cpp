@@ -4,32 +4,32 @@
 
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/UpdateImageGeomAction.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Utilities/MontageUtilities.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
+#include "simplnx/Filter/Actions/UpdateImageGeomAction.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/MontageUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
-const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
-const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
+const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
 std::atomic_int32_t s_InstanceId = 0;
 std::map<int32, FijiCache> s_HeaderCache;
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 ITKImportFijiMontageFilter::ITKImportFijiMontageFilter()
@@ -122,7 +122,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   auto pImageDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions = {};
+  nx::core::Result<OutputActions> resultOutputActions = {};
   std::vector<PreflightValue> preflightUpdatedValues;
 
   ITKImportFijiMontageInputValues inputValues;
@@ -190,9 +190,9 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
 
   if(pConvertToGrayScaleValue)
   {
-    if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
+    if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
     {
-      return MakePreflightErrorResult(-18540, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
+      return MakePreflightErrorResult(-18540, "SimplnxCore was not instantiated in this instance, so color to grayscale is not a valid option.");
     }
     auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
     if(nullptr == grayScaleFilter.get())
@@ -235,4 +235,4 @@ Result<> ITKImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, c
 
   return {};
 }
-} // namespace complex
+} // namespace nx::core

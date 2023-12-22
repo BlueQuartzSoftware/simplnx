@@ -1,17 +1,17 @@
 #include "FindTriangleGeomShapesFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/FindTriangleGeomShapes.hpp"
 
-#include "complex/DataStructure/AttributeMatrix.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string FindTriangleGeomShapesFilter::name() const
@@ -52,7 +52,7 @@ Parameters FindTriangleGeomShapesFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Required Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
+                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Required Face Feature Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixName_Key, "Face Feature Attribute Matrix",
@@ -95,7 +95,7 @@ IFilter::PreflightResult FindTriangleGeomShapesFilter::preflightImpl(const DataS
 
   PreflightResult preflightResult;
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   // Ensure the Face Feature Attribute Matrix is really an AttributeMatrix
   const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(pFeatureAttributeMatrixPath);
@@ -109,7 +109,7 @@ IFilter::PreflightResult FindTriangleGeomShapesFilter::preflightImpl(const DataS
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_Omega3sArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{1}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{1}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -117,21 +117,21 @@ IFilter::PreflightResult FindTriangleGeomShapesFilter::preflightImpl(const DataS
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the Axis Euler Angles Output Array
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisEulerAnglesArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the Aspect Ratios Output Array
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AspectRatiosArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{2}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{2}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -165,4 +165,4 @@ Result<> FindTriangleGeomShapesFilter::executeImpl(DataStructure& dataStructure,
 
   return FindTriangleGeomShapes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
-} // namespace complex
+} // namespace nx::core

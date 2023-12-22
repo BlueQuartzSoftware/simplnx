@@ -9,7 +9,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ErrorWarningFilterTest.cpp
 )
 
-create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
+create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
                                 FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 
 
@@ -33,5 +33,5 @@ create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 # you can use the target_include_directories(.....) cmake call
  target_include_directories(${PLUGIN_NAME}UnitTest
      PUBLIC
-     ${complex_SOURCE_DIR}/test
+     ${simplnx_SOURCE_DIR}/test
  )

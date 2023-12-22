@@ -1,13 +1,13 @@
 #include "NeighborOrientationCorrelation.hpp"
 
-#include "complex/Common/Numbers.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/DataGroupUtilities.hpp"
-#include "complex/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
-#ifdef COMPLEX_ENABLE_MULTICORE
+#ifdef SIMPLNX_ENABLE_MULTICORE
 #define RUN_TASK g->run
 #else
 #define RUN_TASK
@@ -15,7 +15,7 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
+using namespace nx::core;
 
 class NeighborOrientationCorrelationTransferDataImpl
 {
@@ -301,7 +301,7 @@ Result<> NeighborOrientationCorrelation::operator()()
     }
 
     // Build up a list of the DataArrays that we are going to operate on.
-    std::vector<std::shared_ptr<IDataArray>> voxelArrays = complex::GenerateDataArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
+    std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
     // The idea for this parallel section is to parallelize over each Data Array that
     // will need it's data adjusted. This should go faster than before by about 2x.
     // Better speed up could be achieved if we had better data locality.

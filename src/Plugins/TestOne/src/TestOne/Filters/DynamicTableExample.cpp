@@ -1,9 +1,9 @@
 #include "DynamicTableExample.hpp"
 
-#include "complex/Common/StringLiteral.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Parameters/DynamicTableParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -13,7 +13,7 @@ constexpr StringLiteral k_Param3 = "param3";
 constexpr StringLiteral k_Param4 = "param4";
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 
 //------------------------------------------------------------------------------
@@ -105,4 +105,4 @@ Result<> DynamicTableExample::executeImpl(DataStructure& data, const Arguments& 
 {
   return {};
 }
-} // namespace complex
+} // namespace nx::core

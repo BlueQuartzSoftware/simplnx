@@ -1,10 +1,10 @@
 #include <catch2/catch.hpp>
 
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/ReadH5OimDataFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -15,8 +15,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
-using namespace complex::Constants;
+using namespace nx::core;
+using namespace nx::core::Constants;
 
 namespace
 {
@@ -27,7 +27,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Valid Filter Execution", "[
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ImportH5Data/6_6_import_h5_oim_data.dream3d", unit_test::k_TestFilesDir));
@@ -52,11 +52,11 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Valid Filter Execution", "[
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName}));
   const auto& exemplarImageGeom = exemplarDataStructure.getDataRefAs<ImageGeom>(DataPath({k_ExemplarDataContainer}));
@@ -84,7 +84,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: InValid Filter Execution", 
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadH5OimDataFilter filter;
@@ -122,9 +122,9 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: InValid Filter Execution", 
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 }

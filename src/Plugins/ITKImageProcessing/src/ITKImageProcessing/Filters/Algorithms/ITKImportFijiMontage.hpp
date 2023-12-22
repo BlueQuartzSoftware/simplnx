@@ -2,15 +2,15 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Common/Array.hpp"
-#include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-namespace complex
+namespace nx::core
 {
 struct ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageInputValues
 {
@@ -114,4 +114,4 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
   FijiCache& m_Cache;
 };
-} // namespace complex
+} // namespace nx::core

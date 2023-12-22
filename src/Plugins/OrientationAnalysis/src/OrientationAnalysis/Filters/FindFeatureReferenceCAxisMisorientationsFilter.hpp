@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class FindFeatureReferenceCAxisMisorientationsFilter
@@ -35,7 +35,7 @@ public:
   static inline constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayName_Key = "feature_reference_c_axis_misorientations_array_name";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -105,7 +105,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindFeatureReferenceCAxisMisorientationsFilter, "16c487d2-8f99-4fb5-a4df-d3f70a8e6b25");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindFeatureReferenceCAxisMisorientationsFilter, "16c487d2-8f99-4fb5-a4df-d3f70a8e6b25");
 /* LEGACY UUID FOR THIS FILTER 1a0848da-2edd-52c0-b111-62a4dc6d2886 */

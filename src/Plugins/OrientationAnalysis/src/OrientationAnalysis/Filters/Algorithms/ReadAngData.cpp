@@ -1,15 +1,15 @@
 #include "ReadAngData.hpp"
 
-#include "complex/Common/RgbColor.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/StringArray.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/RgbColor.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 using FloatVec3Type = std::vector<float>;
 
@@ -81,8 +81,8 @@ std::pair<int32, std::string> ReadAngData::loadMaterialInfo(AngReader* reader) c
     const int32_t phaseID = phase->getPhaseIndex();
     crystalStructures[phaseID] = phase->determineLaueGroup();
     std::string materialName = phase->getMaterialName();
-    materialName = complex::StringUtilities::replace(materialName, "MaterialName", "");
-    materialName = complex::StringUtilities::trimmed(materialName);
+    materialName = nx::core::StringUtilities::replace(materialName, "MaterialName", "");
+    materialName = nx::core::StringUtilities::trimmed(materialName);
     materialNames[phaseID] = materialName;
 
     std::vector<float> lattConst = phase->getLatticeConstants();

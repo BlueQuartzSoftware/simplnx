@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class GenerateFZQuaternions
@@ -32,7 +32,7 @@ public:
   static inline constexpr StringLiteral k_FZQuatsArrayPath_Key = "f_zquats_array_path";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -102,6 +102,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, GenerateFZQuaternions, "8b651407-08a9-4c25-967a-d86444eca87f");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, GenerateFZQuaternions, "8b651407-08a9-4c25-967a-d86444eca87f");

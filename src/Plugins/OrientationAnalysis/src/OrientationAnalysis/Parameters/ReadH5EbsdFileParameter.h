@@ -1,17 +1,17 @@
 #pragma once
 
-#include "complex/Filter/ParameterTraits.hpp"
-#include "complex/Filter/ValueParameter.hpp"
-#include "complex/Utilities/FilePathGenerator.hpp"
-#include "complex/complex_export.hpp"
+#include "simplnx/Filter/ParameterTraits.hpp"
+#include "simplnx/Filter/ValueParameter.hpp"
+#include "simplnx/Utilities/FilePathGenerator.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 
 #include <string>
 
-namespace complex
+namespace nx::core
 {
-class COMPLEX_EXPORT ReadH5EbsdFileParameter : public ValueParameter
+class SIMPLNX_EXPORT ReadH5EbsdFileParameter : public ValueParameter
 {
 
 public:
@@ -92,6 +92,6 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::ReadH5EbsdFileParameter, "FAC15aa6-b367-508e-bf73-94ab6be0058b");
+SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ReadH5EbsdFileParameter, "FAC15aa6-b367-508e-bf73-94ab6be0058b");

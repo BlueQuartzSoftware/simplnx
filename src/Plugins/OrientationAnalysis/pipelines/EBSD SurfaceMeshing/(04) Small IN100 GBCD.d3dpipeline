@@ -74,7 +74,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ReadDREAM3DFilter",
+        "name": "simplnx::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
@@ -94,7 +94,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::FindGBCDFilter",
+        "name": "simplnx::FindGBCDFilter",
         "uuid": "0cc592b7-a3d3-4c6a-8894-1533670a31b9"
       },
       "isDisabled": false
@@ -117,7 +117,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::GenerateGBCDPoleFigureFilter",
+        "name": "simplnx::GenerateGBCDPoleFigureFilter",
         "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
       },
       "isDisabled": false
@@ -140,7 +140,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::GenerateGBCDPoleFigureFilter",
+        "name": "simplnx::GenerateGBCDPoleFigureFilter",
         "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
       },
       "isDisabled": false
@@ -163,7 +163,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::GenerateGBCDPoleFigureFilter",
+        "name": "simplnx::GenerateGBCDPoleFigureFilter",
         "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
       },
       "isDisabled": false
@@ -183,7 +183,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::WriteGBCDGMTFileFilter",
+        "name": "simplnx::WriteGBCDGMTFileFilter",
         "uuid": "31710abf-b8a6-423f-a03f-4b8885bd3633"
       },
       "isDisabled": false
@@ -198,7 +198,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::WriteGBCDTriangleDataFilter",
+        "name": "simplnx::WriteGBCDTriangleDataFilter",
         "uuid": "6e0da3a1-dc42-4b01-80aa-3af9e8209ee3"
       },
       "isDisabled": false
@@ -210,7 +210,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::WriteDREAM3DFilter",
+        "name": "simplnx::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

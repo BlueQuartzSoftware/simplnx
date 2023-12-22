@@ -2,19 +2,19 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/FindSlipTransmissionMetrics.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
-#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "complex/Parameters/NeighborListSelectionParameter.hpp"
+#include "simplnx/Parameters/NeighborListSelectionParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string FindSlipTransmissionMetricsFilter::name() const
@@ -94,7 +94,7 @@ IFilter::PreflightResult FindSlipTransmissionMetricsFilter::preflightImpl(const 
   auto pmPrimeListNameValue = filterArgs.value<std::string>(k_mPrimeListArrayName_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   usize tupShape = dataStructure.getDataAs<Int32NeighborList>(pNeighborListPathValue)->getNumberOfTuples();
@@ -176,4 +176,4 @@ Result<Arguments> FindSlipTransmissionMetricsFilter::FromSIMPLJson(const nlohman
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

@@ -12,7 +12,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ReadAngDataFilter",
+        "name": "simplnx::ReadAngDataFilter",
         "uuid": "5b062816-79ac-47ce-93cb-e7966896bcbd"
       },
       "isDisabled": false
@@ -29,7 +29,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::RotateEulerRefFrameFilter",
+        "name": "simplnx::RotateEulerRefFrameFilter",
         "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
       },
       "isDisabled": false
@@ -67,7 +67,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::RotateSampleRefFrameFilter",
+        "name": "simplnx::RotateSampleRefFrameFilter",
         "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
       },
       "isDisabled": false
@@ -93,7 +93,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::MultiThresholdObjects",
+        "name": "simplnx::MultiThresholdObjects",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
@@ -109,7 +109,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ConditionalSetValue",
+        "name": "simplnx::ConditionalSetValue",
         "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
       },
       "isDisabled": false
@@ -130,7 +130,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::CalculateArrayHistogramFilter",
+        "name": "simplnx::CalculateArrayHistogramFilter",
         "uuid": "c6b6d9e5-301d-4767-abf7-530f5ef5007d"
       },
       "isDisabled": false
@@ -150,7 +150,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::WriteASCIIDataFilter",
+        "name": "simplnx::WriteASCIIDataFilter",
         "uuid": "06c8bfe8-2b42-4956-aca3-580bc0620716"
       },
       "isDisabled": false

@@ -1,5 +1,5 @@
 # Import the DREAM3D Base library and Plugins
-import complex as cx
+import simplnx as nx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
@@ -9,14 +9,14 @@ import numpy as np
 # Let's get a data array created to have something to write.
 
 # Create a Data Structure
-data_structure = cx.DataStructure()
+data_structure = nx.DataStructure()
 
 # Create a 2D Array with dimensions 2, 5 where the 5 is the fastest moving dimension.
 # Example, and Image where 5 wide x 2 High
-output_array_path = cx.DataPath(["3D Array"])
-array_type = cx.NumericType.float32
+output_array_path = nx.DataPath(["3D Array"])
+array_type = nx.NumericType.float32
 tuple_dims = [[3, 2,5]]
-create_array_filter = cx.CreateDataArray()
+create_array_filter = nx.CreateDataArray()
 result  = create_array_filter.execute(data_structure=data_structure, component_count=1, data_format="", initialization_value="10", 
                             numeric_type=array_type, output_data_array=output_array_path, tuple_dimensions=tuple_dims)
 if len(result.errors) != 0:
@@ -29,7 +29,7 @@ npdata = data_structure[output_array_path].npview()
 print(npdata)
 
 output_file_path = "output_file_example.dream3d"
-result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
+result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.errors) != 0:

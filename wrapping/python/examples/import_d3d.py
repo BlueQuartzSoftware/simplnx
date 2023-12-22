@@ -1,4 +1,4 @@
-import complex as cx
+import simplnx as nx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 
 
 # Create the DataStructure object
-data_structure = cx.DataStructure()
+data_structure = nx.DataStructure()
 
-import_data = cx.Dream3dImportParameter.ImportData()
+import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
 import_data.data_paths = None
 
-result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
@@ -25,7 +25,7 @@ else:
 #------------------------------------------------------------------------------
 # Get the underlying data from the DataStructure
 #------------------------------------------------------------------------------
-npview_data_path = cx.DataPath("Small IN100/Scan Data/Image Quality")
+npview_data_path = nx.DataPath("Small IN100/Scan Data/Image Quality")
 npview = data_structure[npview_data_path].npview()
 
 # Change the underlying data based on some criteria using Numpy
@@ -35,7 +35,7 @@ npview[npview < 120] = 0
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
 output_file_path = "/tmp/import_data.dream3d"
-result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
+result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.errors) != 0:

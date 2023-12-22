@@ -9,7 +9,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ITKMhaFileReaderTest.cpp
   ITKRescaleIntensityImageTest.cpp
 )
-if(NOT COMPLEX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
+if(NOT SIMPLNX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
     ITKBinaryContourImageTest.cpp
     ITKBinaryOpeningByReconstructionImageTest.cpp
@@ -74,7 +74,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   )
 endif()
 
-create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
+create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ""
 )
 
@@ -89,7 +89,7 @@ target_sources(${PLUGIN_NAME}UnitTest
 # -----------------------------------------------------------------------------
 # Include any example pipelines into the unit testing
 # -----------------------------------------------------------------------------
-include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 
 # These should be relative to the 
 set(PREBUILT_PIPELINE_NAMES
@@ -102,13 +102,13 @@ set(PREBUILT_PIPELINE_NAMES
 # Here we are going to setup to download and decompress the test files. In order
 # to add your own test files you will need to tar.gz the test file, compute the
 # SHA 512 Hash of the file and then upload the file to
-# https://github.com/BlueQuartzSoftware/complex/releases/tag/Data_Archive.
+# https://github.com/bluequartzsoftware/simplnx/releases/tag/Data_Archive.
 #
 # Go to the web site above, "edit" the release, add the filename and SHA 512 to
 # the table and then upload your compressed file.
 # Save the release so that the repo is updated
 # -----------------------------------------------------------------------------
-if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES) 
+if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES) 
   if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
   endif()

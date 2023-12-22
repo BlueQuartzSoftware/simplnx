@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumericTypeParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumericTypeParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/FindGBPDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -12,8 +12,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
-using namespace complex::Constants;
+using namespace nx::core;
+using namespace nx::core::Constants;
 
 namespace
 {
@@ -43,8 +43,8 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
-                                                             "6_6_find_gbcd_metric_based");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
+                                                              "6_6_find_gbcd_metric_based");
 
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
@@ -84,11 +84,11 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
   // read in exemplar and computed data files for comparison
@@ -106,7 +106,7 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
     {
       Arguments args;
       args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(exemplarDistOutput));
-      args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::float32));
+      args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
       args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
       args.insertOrAssign(k_NCompKey, std::make_any<uint64>(3));
       args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(1));
@@ -114,13 +114,13 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
       args.insertOrAssign(k_DataArrayKey, std::make_any<DataPath>(k_ExemplarDistributionPath));
 
       auto executeResult = filter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     }
     // exemplar errors
     {
       Arguments args;
       args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(exemplarErrorsOutput));
-      args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::float32));
+      args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
       args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
       args.insertOrAssign(k_NCompKey, std::make_any<uint64>(3));
       args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(1));
@@ -128,13 +128,13 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
       args.insertOrAssign(k_DataArrayKey, std::make_any<DataPath>(k_ExemplarErrorPath));
 
       auto executeResult = filter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     }
     // computed distribution
     {
       Arguments args;
       args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
-      args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::float32));
+      args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
       args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
       args.insertOrAssign(k_NCompKey, std::make_any<uint64>(3));
       args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(1));
@@ -142,13 +142,13 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
       args.insertOrAssign(k_DataArrayKey, std::make_any<DataPath>(k_ComputedDistributionPath));
 
       auto executeResult = filter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     }
     // computed errors
     {
       Arguments args;
       args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
-      args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::float32));
+      args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
       args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
       args.insertOrAssign(k_NCompKey, std::make_any<uint64>(3));
       args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(1));
@@ -156,7 +156,7 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
       args.insertOrAssign(k_DataArrayKey, std::make_any<DataPath>(k_ComputedErrorPath));
 
       auto executeResult = filter->execute(dataStructure, args);
-      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     }
   }
 
@@ -169,8 +169,8 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: InValid Filter Execut
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
-                                                             "6_6_find_gbcd_metric_based");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
+                                                              "6_6_find_gbcd_metric_based");
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_find_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
@@ -225,9 +225,9 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: InValid Filter Execut
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 }

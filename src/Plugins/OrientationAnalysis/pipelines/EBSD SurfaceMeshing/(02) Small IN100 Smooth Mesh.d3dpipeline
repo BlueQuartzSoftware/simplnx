@@ -69,7 +69,7 @@
         }
       },
       "filter": {
-        "name": "complex::ReadDREAM3DFilter",
+        "name": "simplnx::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
@@ -89,7 +89,7 @@
         "use_taubin_smoothing": true
       },
       "filter": {
-        "name": "complex::LaplacianSmoothingFilter",
+        "name": "simplnx::LaplacianSmoothingFilter",
         "uuid": "0dd0916e-9305-4a7b-98cf-a6cfb97cb501"
       },
       "isDisabled": false
@@ -100,7 +100,7 @@
         "write_xdmf_file": true
       },
       "filter": {
-        "name": "complex::WriteDREAM3DFilter",
+        "name": "simplnx::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

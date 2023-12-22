@@ -3,7 +3,7 @@
  * @CMAKE_CURRENT_LIST_FILE@
  */
 
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 @Filter_Registration_Include_String@
 
@@ -12,9 +12,9 @@
 
 namespace {
 
-std::vector<complex::FilterCreationFunc> GetPluginFilterList()
+std::vector<nx::core::FilterCreationFunc> GetPluginFilterList()
 {
-  std::vector<complex::FilterCreationFunc> filters;
+  std::vector<nx::core::FilterCreationFunc> filters;
 @Public_Filter_Registration_Code@
   return filters;
 }

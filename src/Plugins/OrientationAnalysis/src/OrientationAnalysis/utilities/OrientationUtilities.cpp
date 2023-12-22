@@ -2,7 +2,7 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-namespace complex
+namespace nx::core
 {
 namespace OrientationUtilities
 {
@@ -18,4 +18,4 @@ std::string CrystalStructureEnumToString(uint32_t crystalStructureType)
 }
 
 } // namespace OrientationUtilities
-} // namespace complex
+} // namespace nx::core

@@ -18,7 +18,7 @@
 #include <itkTIFFImageIOFactory.h>
 #include <itkVTKImageIOFactory.h>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -58,9 +58,9 @@ void ITKImageProcessingPlugin::RegisterITKImageIO()
   itk::MRCImageIOFactory::RegisterOneFactory();
 }
 
-AbstractPlugin::SIMPLMapType ITKImageProcessingPlugin::getSimplToComplexMap() const
+AbstractPlugin::SIMPLMapType ITKImageProcessingPlugin::getSimplToSimplnxMap() const
 {
-  return complex::k_SIMPL_to_ITKImageProcessing;
+  return nx::core::k_SIMPL_to_ITKImageProcessing;
 }
 
 std::vector<std::string> ITKImageProcessingPlugin::GetList2DSupportedFileExtensions()
@@ -68,4 +68,4 @@ std::vector<std::string> ITKImageProcessingPlugin::GetList2DSupportedFileExtensi
   return {".png", ".tif", ".jpg", ".jpeg", ".bmp", ".mha"};
 }
 
-COMPLEX_DEF_PLUGIN(ITKImageProcessingPlugin)
+SIMPLNX_DEF_PLUGIN(ITKImageProcessingPlugin)

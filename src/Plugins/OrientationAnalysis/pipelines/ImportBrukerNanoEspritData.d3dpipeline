@@ -26,7 +26,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::ReadH5EspritDataFilter",
+        "name": "simplnx::ReadH5EspritDataFilter",
         "uuid": "694a0d54-b492-41bc-993b-ce0f5006e927"
       },
       "isDisabled": false
@@ -38,7 +38,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::WriteDREAM3DFilter",
+        "name": "simplnx::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

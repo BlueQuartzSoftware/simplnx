@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKDiscreteGaussianImage
@@ -58,7 +58,7 @@ public:
   static inline constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -131,6 +131,6 @@ protected:
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKDiscreteGaussianImage, "025edc1a-986d-4005-92d1-545dfdc13abd");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKDiscreteGaussianImage, "025edc1a-986d-4005-92d1-545dfdc13abd");

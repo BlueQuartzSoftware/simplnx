@@ -5,7 +5,7 @@
 #include <cmath>
 #include <memory>
 
-namespace complex
+namespace nx::core
 {
 /**
  * @brief 3x1 Matrix as a row.
@@ -283,4 +283,4 @@ public:
 private:
   std::array<T, 3> m_Data = {0.0, 0.0, 0.0};
 };
-} // namespace complex
+} // namespace nx::core

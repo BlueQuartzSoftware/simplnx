@@ -1,11 +1,11 @@
 #include "ConvertHexGridToSquareGrid.hpp"
 
-#include "complex/Common/AtomicFile.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Utilities/FilePathGenerator.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Utilities/FilePathGenerator.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "EbsdLib/IO/TSL/AngConstants.h"
 #include "EbsdLib/IO/TSL/AngReader.h"
@@ -13,7 +13,7 @@
 #include <fstream>
 #include <sstream>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {

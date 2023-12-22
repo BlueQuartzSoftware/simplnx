@@ -1,12 +1,12 @@
 #include "CliObserver.hpp"
 
-#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
+#include "simplnx/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
 #include <iostream>
 #include <string>
 
-using namespace complex;
-using namespace complex::CLI;
+using namespace nx::core;
+using namespace nx::core::CLI;
 
 PipelineObserver::PipelineObserver(Pipeline* pipeline)
 {
@@ -26,27 +26,27 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
   int32_t currentFilterIndex = 0;
   for(const auto cxFilter : *pipeline)
   {
-    m_SignalConnections.push_back(cxFilter->getFilterUpdateSignal().connect([currentFilterIndex](complex::AbstractPipelineNode* node, int32_t, const std::string& message) {
+    m_SignalConnections.push_back(cxFilter->getFilterUpdateSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode* node, int32_t, const std::string& message) {
       std::cout << "[" << currentFilterIndex << "] " << node->getName() << ": " << message << std::endl;
     }));
 
-    m_SignalConnections.push_back(cxFilter->getFilterProgressSignal().connect([currentFilterIndex](complex::AbstractPipelineNode* node, int32_t, int32_t progress, const std::string& message) {
+    m_SignalConnections.push_back(cxFilter->getFilterProgressSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode* node, int32_t, int32_t progress, const std::string& message) {
       std::cout << "[" << currentFilterIndex << "] " << node->getName() << ": " << progress << "% " << message << std::endl;
     }));
 
-    m_SignalConnections.push_back(cxFilter->getFilterFaultSignal().connect([currentFilterIndex](complex::AbstractPipelineNode*, int32_t filterIndex, complex::FaultState state) {
-      if(state == complex::FaultState::Errors)
+    m_SignalConnections.push_back(cxFilter->getFilterFaultSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t filterIndex, nx::core::FaultState state) {
+      if(state == nx::core::FaultState::Errors)
       {
         std::cout << "[" << currentFilterIndex << "] Error(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
       }
-      if(state != complex::FaultState::Warnings)
+      if(state != nx::core::FaultState::Warnings)
       {
         std::cout << "[" << currentFilterIndex << "] Warning(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
       }
     }));
 
     m_SignalConnections.push_back(cxFilter->getFilterFaultDetailSignal().connect(
-        [currentFilterIndex](complex::AbstractPipelineNode*, int32_t filterIndex, const complex::WarningCollection& warnings, const complex::ErrorCollection& errors) {
+        [currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t filterIndex, const nx::core::WarningCollection& warnings, const nx::core::ErrorCollection& errors) {
           if(!warnings.empty())
           {
             std::cout << "[" << currentFilterIndex << "] Warnings During Execution" << std::endl;

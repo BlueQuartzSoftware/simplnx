@@ -1,11 +1,11 @@
 #pragma once
 
-#include "complex/Common/Types.hpp"
-#include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 
 #include <string>
 
-namespace complex
+namespace nx::core
 {
 class DataObject;
 class DataStructure;
@@ -18,10 +18,10 @@ class DataReparentedMessage;
 /**
  * @brief
  */
-class DataStructObserver : public complex::AbstractDataStructureObserver
+class DataStructObserver : public nx::core::AbstractDataStructureObserver
 {
 public:
-  DataStructObserver(complex::DataStructure& dataStruct);
+  DataStructObserver(nx::core::DataStructure& dataStruct);
   ~DataStructObserver() override;
 
   /**
@@ -35,7 +35,7 @@ public:
    * @brief
    * @return
    */
-  const complex::DataStructure& getDataStructure() const;
+  const nx::core::DataStructure& getDataStructure() const;
 
   usize getDataAddedCount() const;
   usize getDataRemovedCount() const;
@@ -43,10 +43,10 @@ public:
   usize getDataReparentedCount() const;
 
 private:
-  complex::DataStructure& m_DataStructure;
+  nx::core::DataStructure& m_DataStructure;
   usize m_AddedCount = 0;
   usize m_RemovedCount = 0;
   usize m_RenamedCount = 0;
   usize m_ReparentedCount = 0;
 };
-} // namespace complex
+} // namespace nx::core

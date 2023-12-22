@@ -11,14 +11,14 @@ find_package(EbsdLib REQUIRED)
 get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 
 #if(NOT GENERATOR_IS_MULTI_CONFIG)
-  get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
-  set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${EbsdLib_LIB_DIRS})
+  get_property(SIMPLNX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS)
+  set_property(GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS ${SIMPLNX_EXTRA_LIBRARY_DIRS} ${EbsdLib_LIB_DIRS})
 #endif()
 
 # ------------------------------------------------------------------------------
-# Include the standard complex plugin cmake support codes
+# Include the standard simplnx plugin cmake support codes
 # ------------------------------------------------------------------------------
-include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
+include("${simplnx_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "OrientationAnalysis")
 set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
@@ -92,7 +92,7 @@ set(STUB_FILTERS
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
 )
 
-create_complex_plugin(NAME ${PLUGIN_NAME}
+create_simplnx_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
   DESCRIPTION "${PLUGIN_NAME} Plugin"
   VERSION "0.2.0"
@@ -101,20 +101,20 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 )
 
 # ------------------------------------------------------------------------------
-# Add any filter parameters to the `complex` target
-# This should be integrated with the `create_complex_plugin` function call
+# Add any filter parameters to the `simplnx` target
+# This should be integrated with the `create_simplnx_plugin` function call
 #
-# The `complex` target will need to know about any dependent libraries and any
+# The `simplnx` target will need to know about any dependent libraries and any
 # include directories that are needed for the parameter.
 # ------------------------------------------------------------------------------
-set(complex_injected_parameters
+set(simplnx_injected_parameters
   ReadH5EbsdFileParameter
   OEMEbsdScanSelectionParameter
   #EbsdToH5EbsdParameter
 )
 
-foreach(source ${complex_injected_parameters})
-  target_sources(complex PRIVATE
+foreach(source ${simplnx_injected_parameters})
+  target_sources(simplnx PRIVATE
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.h
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.cpp)
 
@@ -123,13 +123,13 @@ foreach(source ${complex_injected_parameters})
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.cpp)
 endforeach()
 
-target_include_directories(complex PUBLIC )
+target_include_directories(simplnx PUBLIC )
 
 # ------------------------------------------------------------------------------
-# Add a link library to complex because it now depends on EbsdLib. Complex will
+# Add a link library to simplnx because it now depends on EbsdLib. Complex will
 # be able to find the include dirs from the CMake EbsdLib target
 # ------------------------------------------------------------------------------
-target_link_libraries(complex PUBLIC EbsdLib::EbsdLib)
+target_link_libraries(simplnx PUBLIC EbsdLib::EbsdLib)
 
 # ------------------------------------------------------------------------------
 # Include filters that need to be compiled but not available to the general user
@@ -155,7 +155,7 @@ endif()
 
 # ------------------------------------------------------------------------------
 # Algorithms
-# This should be integrated with the `create_complex_plugin` function call
+# This should be integrated with the `create_simplnx_plugin` function call
 # ------------------------------------------------------------------------------
 set(filter_algorithms
   AlignSectionsMisorientation
@@ -264,7 +264,7 @@ target_include_directories(${PLUGIN_NAME}
 
 # ------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
-if(COMPLEX_BUILD_TESTS)
+if(SIMPLNX_BUILD_TESTS)
   enable_testing()
   add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 endif()
@@ -305,17 +305,17 @@ endif()
 # -----------------------------------------------------------------------
 # Download Example Data Files
 # -----------------------------------------------------------------------
-include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")
 
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 
 # -----------------------------------------------------------------------
-# These data files are pulled from the 'complex data archive' on github,
+# These data files are pulled from the 'simplnx data archive' on github,
 # decompressed and then copied to the build folder. Install rules are also
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
-if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES) 
+if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES) 
   if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
   endif()

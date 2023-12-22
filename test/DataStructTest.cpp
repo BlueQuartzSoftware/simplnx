@@ -1,30 +1,30 @@
 #include "DataStructObserver.hpp"
 
-#include "complex/Common/StringLiteral.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
-#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/Geometry/QuadGeom.hpp"
-#include "complex/DataStructure/Geometry/RectGridGeom.hpp"
-#include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/DataStructure/ScalarData.hpp"
-#include "complex/DataStructure/StringArray.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/DataGroupUtilities.hpp"
-#include "complex/unit_test/complex_test_dirs.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/ScalarData.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <memory>
 #include <vector>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -44,7 +44,7 @@ constexpr StringLiteral k_HexGeo = "Hex Geometry";
 } // namespace
 
 // This test will ensure we don't run into runtime exceptions trying to run the functions
-TEST_CASE("ComplexCore::exportHierarchyAsGraphViz")
+TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
 {
   DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsGraphViz_test.dot", unit_test::k_BinaryTestOutputDir));
@@ -54,7 +54,7 @@ TEST_CASE("ComplexCore::exportHierarchyAsGraphViz")
 }
 
 // This test will ensure we don't run into runtime exceptions trying to run the functions
-TEST_CASE("ComplexCore::exportHierarchyAsText")
+TEST_CASE("SimplnxCore::exportHierarchyAsText")
 {
   DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsText_test.txt", unit_test::k_BinaryTestOutputDir));

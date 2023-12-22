@@ -4,18 +4,18 @@
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 #include "OrientationAnalysis/utilities/SIMPLConversion.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Filter/Actions/CreateStringArrayAction.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include "EbsdLib/IO/BrukerNano/EspritConstants.h"
 #include "EbsdLib/IO/BrukerNano/EspritPhase.h"
@@ -26,9 +26,9 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ReadH5EspritDataFilter::name() const
@@ -108,7 +108,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   DataPath cellAMPath = pImageGeometryNameValue.createChildPath(pCellAttributeMatrixNameValue);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   if(pZSpacingValue <= 0)
@@ -260,4 +260,4 @@ Result<Arguments> ReadH5EspritDataFilter::FromSIMPLJson(const nlohmann::json& js
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

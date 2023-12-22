@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class NeighborOrientationCorrelationFilter
@@ -35,7 +35,7 @@ public:
   static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -105,6 +105,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, NeighborOrientationCorrelationFilter, "4625c192-7e46-4333-a294-67a2eb64cb37");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, NeighborOrientationCorrelationFilter, "4625c192-7e46-4333-a294-67a2eb64cb37");

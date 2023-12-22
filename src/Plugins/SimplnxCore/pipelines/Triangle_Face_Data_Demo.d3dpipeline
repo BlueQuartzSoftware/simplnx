@@ -1,0 +1,70 @@
+{
+  "isDisabled": false,
+  "name": "Triangle_Areas_Demo.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "triangle_geometry_name": "[Triangle Geometry]",
+        "scale_factor": 1.0,
+        "scale_output": false,
+        "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ReadStlFileFilter",
+        "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "triangle_areas_array_path": "Face Areas",
+        "triangle_geometry_data_path": "[Triangle Geometry]"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::CalculateTriangleAreasFilter",
+        "uuid": "b149addd-c0c8-4010-a264-596005eaf2a5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "surface_mesh_triangle_normals_array_path": "Face Normals (Calculated)",
+        "tri_geometry_data_path": "[Triangle Geometry]"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::TriangleNormalFilter",
+        "uuid": "8133d419-1919-4dbf-a5bf-1c97282ba63f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "surface_mesh_triangle_dihedral_angles_array_name": "Dihedral Angles",
+        "tri_geometry_data_path": "[Triangle Geometry]"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::TriangleDihedralAngleFilter",
+        "uuid": "dd42c521-4ae5-485d-ad35-d1276547d2f1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "centroids_array_name": "Centroids",
+        "triangle_geometry_path": "[Triangle Geometry]"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::TriangleCentroidFilter",
+        "uuid": "5d7156ae-3e0a-4db0-a792-552f492e8911"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

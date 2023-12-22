@@ -38,14 +38,14 @@ endfunction()
 #------------------------------------------------------------------------------
 #
 #------------------------------------------------------------------------------
-function(complex_enable_warnings)
+function(simplnx_enable_warnings)
   set(optionsArgs)
   set(oneValueArgs TARGET)
   set(multiValueArgs)
   cmake_parse_arguments(ARG "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   if(NOT TARGET ${ARG_TARGET})
-    message(FATAL_ERROR "complex_enable_warnings must be called with the argument TARGET set to a valid target")
+    message(FATAL_ERROR "simplnx_enable_warnings must be called with the argument TARGET set to a valid target")
   endif()
 
   if(MSVC)
@@ -97,14 +97,14 @@ function(download_test_data)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  if(NOT COMPLEX_DOWNLOAD_TEST_FILES)
+  if(NOT SIMPLNX_DOWNLOAD_TEST_FILES)
     return()
   endif()
 
   get_property(FETCH_FILE_PATH GLOBAL PROPERTY FETCH_FILE_PATH)
 
   get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME_WE)
-  file(TO_CMAKE_PATH "${complex_BINARY_DIR}/TestFiles" test_files_dir)
+  file(TO_CMAKE_PATH "${simplnx_BINARY_DIR}/TestFiles" test_files_dir)
   file(TO_CMAKE_PATH "${ARGS_DREAM3D_DATA_DIR}" ARGS_DREAM3D_DATA_DIR)
   #----------------------------------------------------------------------------
   # Create the custom CMake File for this archive file
@@ -121,7 +121,7 @@ function(download_test_data)
   # Strip off the .tar.gz extension
   string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
 
-  configure_file(${complex_SOURCE_DIR}/cmake/FetchDataFile.cmake.in
+  configure_file(${simplnx_SOURCE_DIR}/cmake/FetchDataFile.cmake.in
                 ${fetch_data_file}
                 @ONLY
   )
@@ -132,7 +132,7 @@ function(download_test_data)
   file(REMOVE "${fetch_data_file}") # Remove the temporary file
 
   if(ARGS_COPY_DATA)
-    configure_file(${complex_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
+    configure_file(${simplnx_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
                    ${fetch_data_file}
                    @ONLY
                    )
@@ -150,7 +150,7 @@ function(download_test_data)
   if(ARGS_INSTALL)
     # If we did NOT already copy the data, then do that now during the build
     if(NOT ARGS_COPY_DATA)
-      configure_file(${complex_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
+      configure_file(${simplnx_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
                     ${fetch_data_file}
                     @ONLY
                     )
@@ -213,14 +213,14 @@ function(create_data_copy_rules)
       ${ARGS_DREAM3D_DATA_DIR}/Data/Models
     )
 
-    set(COMPLEX_DATA_INSTALL_DIR "Data")
+    set(SIMPLNX_DATA_INSTALL_DIR "Data")
 
     # NOTE: If we are creating an Anaconda install the install directory WILL be different
     foreach(data_dir ${DREAM3D_DATA_DIRECTORIES})
       if(EXISTS ${data_dir})
         install(DIRECTORY
           ${data_dir}
-          DESTINATION ${COMPLEX_DATA_INSTALL_DIR}
+          DESTINATION ${SIMPLNX_DATA_INSTALL_DIR}
           COMPONENT Applications
         )
       endif()

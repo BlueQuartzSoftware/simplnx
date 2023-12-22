@@ -30,10 +30,10 @@ Checks: "-abseil-*,
   -readability-uppercase-literal-suffix,
   -readability-magic-numbers"
 WarningsAsErrors: '*'
-HeaderFilterRegex: 'complex/.*\.hpp'
+HeaderFilterRegex: 'simplnx/.*\.hpp'
 FormatStyle: file
 CheckOptions:
-  cppcoreguidelines-macro-usage.AllowedRegexp: 'COMPLEX_EXPORT|COMPLEX_NO_EXPORT|COMPLEX_DEPRECATED'
+  cppcoreguidelines-macro-usage.AllowedRegexp: 'SIMPLNX_EXPORT|SIMPLNX_NO_EXPORT|SIMPLNX_DEPRECATED'
   readability-identifier-naming.IgnoreMainLikeFunctions: 'false'
   readability-identifier-naming.PrivateMemberPrefix: 'm_'
   readability-identifier-naming.NamespaceCase: lower_case

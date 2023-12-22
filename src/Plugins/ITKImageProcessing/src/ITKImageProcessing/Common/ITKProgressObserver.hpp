@@ -4,7 +4,7 @@
 
 #include <fmt/core.h>
 
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include "itkCommand.h"
 #include "itkMacro.h"
@@ -22,7 +22,7 @@ public:
   using Pointer = SmartPointer<Self>;
 
   /** Method for creation through the object factory. */
-  static Pointer New(const complex::IFilter::MessageHandler& messageHandler)
+  static Pointer New(const nx::core::IFilter::MessageHandler& messageHandler)
   {
     Pointer smartPtr = ::itk::ObjectFactory<ProgressObserver>::Create();
     if(smartPtr == nullptr)
@@ -70,7 +70,7 @@ public:
         ss = fmt::format("{} : {}", m_MessagePrefix, progressStr);
       }
 
-      m_MessageHandler(complex::IFilter::Message::Type::Info, ss);
+      m_MessageHandler(nx::core::IFilter::Message::Type::Info, ss);
       m_StartTime = std::chrono::steady_clock::now();
     }
   }
@@ -82,7 +82,7 @@ public:
 
 protected:
   ProgressObserver() = delete;
-  ProgressObserver(const complex::IFilter::MessageHandler& m)
+  ProgressObserver(const nx::core::IFilter::MessageHandler& m)
   : m_MessageHandler(m)
   , m_StartTime(std::chrono::steady_clock::now())
   {
@@ -90,7 +90,7 @@ protected:
   ~ProgressObserver() override = default;
 
 private:
-  const complex::IFilter::MessageHandler& m_MessageHandler;
+  const nx::core::IFilter::MessageHandler& m_MessageHandler;
   std::string m_MessagePrefix;
   std::chrono::steady_clock::time_point m_StartTime;
 };

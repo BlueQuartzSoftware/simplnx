@@ -1,15 +1,15 @@
 #include "OEMEbsdScanSelectionParameter.h"
 
-#include "complex/Common/Any.hpp"
-#include "complex/Common/StringLiteral.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
 #include <nlohmann/json.hpp>
 
-namespace complex
+namespace nx::core
 {
 namespace
 {
@@ -179,7 +179,7 @@ Result<> OEMEbsdScanSelectionParameter::validate(const std::any& valueRef) const
     return {nonstd::make_unexpected(std::move(errors))};
   }
 
-  const std::string lowerExtension = complex::StringUtilities::toLower(value.inputFilePath.extension().string());
+  const std::string lowerExtension = nx::core::StringUtilities::toLower(value.inputFilePath.extension().string());
   if(value.inputFilePath.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
   {
     return {nonstd::make_unexpected(std::vector<Error>{{-20032, fmt::format("File extension '{}' is not a valid file extension.", value.inputFilePath.extension().string())}})};
@@ -199,4 +199,4 @@ OEMEbsdScanSelectionParameter::EbsdReaderType OEMEbsdScanSelectionParameter::get
   return m_ReaderType;
 }
 
-} // namespace complex
+} // namespace nx::core

@@ -1,5 +1,5 @@
 # Import the DREAM3D Base library and Plugins
-import complex as cx
+import simplnx as nx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
@@ -13,7 +13,7 @@ import numpy as np
 # Create a DataArray that is as long as my CSV file (99 Rows in this case)
 # ------------------------------------------------------------------------------
 # Create a Data Structure
-data_structure = cx.DataStructure()
+data_structure = nx.DataStructure()
 
 param1 = cxor.OEMEbsdScanSelectionParameter.ValueType()
 param1.input_file_path = "LEROY_0089_Section_382.h5"
@@ -24,7 +24,7 @@ result = cxor.ReadH5EspritDataFilter.execute(data_structure = data_structure,
                                              cell_attribute_matrix_name = "Cell Data", 
                                              cell_ensemble_attribute_matrix_name = "Cell Ensemble Data", 
                                              degrees_to_radians = True, 
-                                             image_geometry_name = cx.DataPath("ImageGeom"),
+                                             image_geometry_name = nx.DataPath("ImageGeom"),
                                              origin = [0.0, 0.0, 0.0], 
                                              read_pattern_data = False, 
                                              selected_scan_names = param1, 
@@ -43,7 +43,7 @@ else:
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
 output_file_path = cxtest.GetTestTempDirectory() + "/import_esprit.dream3d"
-result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
+result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.errors) != 0:

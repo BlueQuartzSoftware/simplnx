@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class FindBoundaryStrengthsFilter
@@ -35,7 +35,7 @@ public:
   static inline constexpr StringLiteral k_SurfaceMeshmPrimesArrayName_Key = "surface_meshm_primes_array_name";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -105,7 +105,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryStrengthsFilter, "f39707f9-0411-4736-a591-1bfbd099bb71");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindBoundaryStrengthsFilter, "f39707f9-0411-4736-a591-1bfbd099bb71");
 /* LEGACY UUID FOR THIS FILTER 8071facb-8905-5699-b345-105ae4ac33ff */

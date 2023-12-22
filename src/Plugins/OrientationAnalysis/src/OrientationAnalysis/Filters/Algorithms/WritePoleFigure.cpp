@@ -6,13 +6,13 @@
 #include "OrientationAnalysis/utilities/LatoRegular.hpp"
 #include "OrientationAnalysis/utilities/TiffWriter.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/Common/RgbColor.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/ParallelTaskAlgorithm.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/Common/RgbColor.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/LaueOps/CubicLowOps.h"
@@ -31,7 +31,7 @@
 #define CANVAS_ITY_IMPLEMENTATION
 #include <canvas_ity.hpp>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -225,9 +225,9 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
   int numColors = config.numColors;
 
   // Get all the colors that we will need
-  std::vector<complex::Rgba> colorTable(numColors);
+  std::vector<nx::core::Rgba> colorTable(numColors);
   std::vector<float> colors(3 * numColors, 0.0);
-  complex::RgbColor::GetColorTable(numColors, colors); // Generate the color table values
+  nx::core::RgbColor::GetColorTable(numColors, colors); // Generate the color table values
   float r = 0.0;
   float g = 0.0;
   float b = 0.0;
@@ -274,7 +274,7 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
   // Draw the color bar
   for(int i = 0; i < numColors; i++)
   {
-    const complex::Rgb c = colorTable[numColors - i - 1];
+    const nx::core::Rgb c = colorTable[numColors - i - 1];
     std::tie(r, g, b) = RgbColor::fRgb(c);
 
     const float32 x = position.first + margins;
@@ -336,11 +336,11 @@ Result<> WritePoleFigure::operator()()
 
   const std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
 
-  const complex::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  complex::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  const nx::core::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
+  nx::core::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
 
-  complex::UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  complex::StringArray& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
+  nx::core::UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  nx::core::StringArray& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
 
   std::unique_ptr<MaskCompare> maskCompare = nullptr;
   if(m_InputValues->UseMask)
@@ -351,7 +351,7 @@ Result<> WritePoleFigure::operator()()
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-      // some other context that is NOT going through the normal complex::IFilter API of Preflight and Execute
+      // some other context that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
       return MakeErrorResult(-53900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
     }
   }
@@ -371,7 +371,7 @@ Result<> WritePoleFigure::operator()()
   for(size_t phase = 1; phase < numPhases; ++phase)
   {
     auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("{}Phase_{}", m_InputValues->ImagePrefix, phase));
-    auto arrayCreationResult = complex::CreateArray<uint8>(m_DataStructure, tupleShape, {4ULL}, imageArrayPath, IDataAction::Mode::Execute);
+    auto arrayCreationResult = nx::core::CreateArray<uint8>(m_DataStructure, tupleShape, {4ULL}, imageArrayPath, IDataAction::Mode::Execute);
     if(arrayCreationResult.invalid())
     {
       return arrayCreationResult;
@@ -514,7 +514,7 @@ Result<> WritePoleFigure::operator()()
         globalImageOrigins[2] = std::make_pair(0.0f, margins + fontPtSize + subCanvasHeight * 2.0f);
         globalImageOrigins[3] = std::make_pair(0.0f, margins + fontPtSize + subCanvasHeight * 3.0f);
       }
-      else if(static_cast<WritePoleFigure::LayoutType>(m_InputValues->ImageLayout) == complex::WritePoleFigure::LayoutType::Square)
+      else if(static_cast<WritePoleFigure::LayoutType>(m_InputValues->ImageLayout) == nx::core::WritePoleFigure::LayoutType::Square)
       {
         pageWidth = subCanvasWidth * 2.0f;
         pageHeight = pageHeight + subCanvasHeight * 2.0f;
@@ -559,7 +559,7 @@ Result<> WritePoleFigure::operator()()
         context.set_line_width(3.0f);
         context.set_color(canvas_ity::stroke_style, 0.0f, 0.0f, 0.0f, 1.0f);
         context.arc(figureOrigin[0] + margins + m_InputValues->ImageSize / 2.0f, figureOrigin[1] + fontPtSize * 2 + margins * 2 + m_InputValues->ImageSize / 2.0f, m_InputValues->ImageSize / 2.0f, 0,
-                    complex::Constants::k_2Pi<float>);
+                    nx::core::Constants::k_2Pi<float>);
         context.stroke();
         context.close_path();
 
@@ -602,8 +602,8 @@ Result<> WritePoleFigure::operator()()
 
         // Draw the figure subtitle. This is usually the direction or plane family
         std::string figureSubtitle = figures[i]->getName();
-        figureSubtitle = complex::StringUtilities::replace(figureSubtitle, "<", "(");
-        figureSubtitle = complex::StringUtilities::replace(figureSubtitle, ">", ")");
+        figureSubtitle = nx::core::StringUtilities::replace(figureSubtitle, "<", "(");
+        figureSubtitle = nx::core::StringUtilities::replace(figureSubtitle, ">", ")");
         std::string bottomPart;
         std::array<float, 2> textOrigin = {figureOrigin[0] + margins, figureOrigin[1] + fontPtSize + 2 * margins};
         for(size_t idx = 0; idx < figureSubtitle.size(); idx++)

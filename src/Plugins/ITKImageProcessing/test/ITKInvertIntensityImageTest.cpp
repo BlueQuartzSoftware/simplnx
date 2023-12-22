@@ -4,15 +4,15 @@
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 TEST_CASE("ITKImageProcessing::ITKInvertIntensityImageFilter(3d)", "[ITKImageProcessing][ITKInvertIntensityImage][3d]")
 {
@@ -27,7 +27,7 @@ TEST_CASE("ITKImageProcessing::ITKInvertIntensityImageFilter(3d)", "[ITKImagePro
   { // Start Image Comparison Scope
     const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
-    COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)
+    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
 
   Arguments args;
@@ -36,10 +36,10 @@ TEST_CASE("ITKImageProcessing::ITKInvertIntensityImageFilter(3d)", "[ITKImagePro
   args.insertOrAssign(ITKInvertIntensityImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "76765a57f26a7979f33efc8ed9801a55");

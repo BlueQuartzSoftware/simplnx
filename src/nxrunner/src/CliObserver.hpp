@@ -1,9 +1,9 @@
 #pragma once
 
-#include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
-#include "complex/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/Messaging/PipelineNodeObserver.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
 
-namespace complex
+namespace nx::core
 {
 namespace CLI
 {
@@ -39,4 +39,4 @@ private:
   std::vector<nod::scoped_connection> m_SignalConnections;
 };
 } // namespace CLI
-} // namespace complex
+} // namespace nx::core

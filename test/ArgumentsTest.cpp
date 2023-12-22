@@ -1,11 +1,11 @@
-#include <complex/Common/StringLiteral.hpp>
-#include <complex/Filter/Arguments.hpp>
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <string>
 
-using namespace complex;
+using namespace nx::core;
 
 TEST_CASE("ArgumentsTest")
 {

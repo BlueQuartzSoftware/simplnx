@@ -1,14 +1,14 @@
 #include "PluginDir.hpp"
 
-#include "complex/Core/Application.hpp"
-#include "complex/Filtering/AbstractFilter.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Filtering/AbstractFilter.hpp"
 
 #include <exception>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
-using namespace complex;
+using namespace nx::core;
 
 void createApp()
 {

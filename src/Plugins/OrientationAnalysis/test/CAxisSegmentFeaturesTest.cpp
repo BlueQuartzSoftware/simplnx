@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/CAxisSegmentFeaturesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -9,8 +9,8 @@
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::Constants;
+using namespace nx::core;
+using namespace nx::core::Constants;
 
 namespace
 {
@@ -21,7 +21,7 @@ const std::string k_ComputedCellFeatureData = "NX_CellFeatureData";
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Execution", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_caxis_segment_features.dream3d", unit_test::k_TestFilesDir));
@@ -48,11 +48,11 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Executi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
@@ -70,7 +70,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Executi
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Invalid Filter Execution", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
@@ -97,9 +97,9 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Invalid Filter Execu
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 }

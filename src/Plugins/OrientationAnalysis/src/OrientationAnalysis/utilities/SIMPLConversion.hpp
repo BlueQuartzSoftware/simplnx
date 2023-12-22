@@ -1,6 +1,6 @@
 #pragma once
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 
@@ -8,7 +8,7 @@
 
 #include <string_view>
 
-namespace complex::SIMPLConversion
+namespace nx::core::SIMPLConversion
 {
 struct OEMEbsdScanSelectionFilterParameterConverter
 {
@@ -37,4 +37,4 @@ struct OEMEbsdScanSelectionFilterParameterConverter
     return {std::move(value)};
   }
 };
-} // namespace complex::SIMPLConversion
+} // namespace nx::core::SIMPLConversion

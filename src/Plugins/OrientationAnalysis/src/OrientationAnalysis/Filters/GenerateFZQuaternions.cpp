@@ -1,20 +1,20 @@
 #include "GenerateFZQuaternions.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -110,7 +110,7 @@ private:
 };
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string GenerateFZQuaternions::name() const
@@ -223,7 +223,7 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
     {
       return {MakeErrorResult<OutputActions>(-49004, fmt::format("Mask Array number of components is not 1: '{}'", maskArray.getNumberOfComponents()))};
     }
-    if(maskArray.getDataType() != complex::DataType::boolean && maskArray.getDataType() != complex::DataType::uint8 && maskArray.getDataType() != complex::DataType::int8)
+    if(maskArray.getDataType() != nx::core::DataType::boolean && maskArray.getDataType() != nx::core::DataType::uint8 && maskArray.getDataType() != nx::core::DataType::int8)
     {
       return {MakeErrorResult<OutputActions>(-49005, fmt::format("Mask Array is not [BOOL (10) | UINT8 (2) | INT8 (1)]: '{}'", fmt::underlying(maskArray.getDataType())))};
     }
@@ -235,12 +235,12 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
     }
   }
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
   auto createArrayAction =
-      std::make_unique<CreateArrayAction>(complex::DataType::float32, quatArray.getDataStore()->getTupleShape(), quatArray.getDataStore()->getComponentShape(), pFZQuatsArrayPathValue);
+      std::make_unique<CreateArrayAction>(nx::core::DataType::float32, quatArray.getDataStore()->getTupleShape(), quatArray.getDataStore()->getComponentShape(), pFZQuatsArrayPathValue);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
@@ -348,4 +348,4 @@ Result<Arguments> GenerateFZQuaternions::FromSIMPLJson(const nlohmann::json& jso
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

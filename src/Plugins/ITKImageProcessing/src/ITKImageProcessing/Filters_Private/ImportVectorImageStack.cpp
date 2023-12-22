@@ -1,16 +1,16 @@
 #include "ImportVectorImageStack.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/ImportVectorImageStackFilterParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/ImportVectorImageStackFilterParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ImportVectorImageStack::name() const
@@ -88,7 +88,7 @@ IFilter::PreflightResult ImportVectorImageStack::preflightImpl(const DataStructu
 
   PreflightResult preflightResult;
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -98,7 +98,7 @@ IFilter::PreflightResult ImportVectorImageStack::preflightImpl(const DataStructu
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
+  // will need to use one of the `*Actions` classes located in simplnx/Filter/Actions
   // to relay that information to the preflight and execute methods. This is done by
   // creating an instance of the Action class and then storing it in the resultOutputActions variable.
   // This is done through a `push_back()` method combined with a `std::move()`. For the
@@ -143,4 +143,4 @@ Result<> ImportVectorImageStack::executeImpl(DataStructure& dataStructure, const
 
   return {};
 }
-} // namespace complex
+} // namespace nx::core

@@ -6,23 +6,23 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
-#include "complex/Core/Application.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/Dream3dImportParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/Dream3dImportParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::Constants;
+using namespace nx::core;
+using namespace nx::core::Constants;
 
 TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction][MergeTwinsFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "neighbor_orientation_correlation.tar.gz",
-                                                             "neighbor_orientation_correlation.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "neighbor_orientation_correlation.tar.gz",
+                                                              "neighbor_orientation_correlation.dream3d");
 
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
@@ -75,11 +75,11 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter->execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // SegmentFeatures (Misorientation) filter
@@ -185,10 +185,10 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
     args.insert(k_SurfaceFeatures_Key, std::make_any<std::string>("SurfaceFeatures"));
 
     auto preflightResult = filter->preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     auto result = filter->execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   }
 
   // merge twins filter

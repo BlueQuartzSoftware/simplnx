@@ -2,7 +2,7 @@ find_package(Catch2 CONFIG REQUIRED)
 find_package(reproc++ CONFIG REQUIRED)
 
 add_library(ComplexUnitTestCommon INTERFACE)
-add_library(complex::UnitTestCommon ALIAS ComplexUnitTestCommon)
+add_library(simplnx::UnitTestCommon ALIAS ComplexUnitTestCommon)
 
 target_include_directories(ComplexUnitTestCommon
   INTERFACE
@@ -11,12 +11,12 @@ target_include_directories(ComplexUnitTestCommon
 
 target_link_libraries(ComplexUnitTestCommon
   INTERFACE
-    complex
+    simplnx
     Catch2::Catch2
     reproc++
 )
 
 target_sources(ComplexUnitTestCommon
   INTERFACE
-    ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/complex/UnitTest/UnitTestCommon.hpp
+    ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/UnitTestCommon.hpp
 )

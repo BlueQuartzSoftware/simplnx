@@ -2,21 +2,21 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/WriteGBCDTriangleData.hpp"
 
-#include "complex/Common/AtomicFile.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/EmptyAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string WriteGBCDTriangleDataFilter::name() const
@@ -92,7 +92,7 @@ IFilter::PreflightResult WriteGBCDTriangleDataFilter::preflightImpl(const DataSt
   auto pFeatureEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // make sure all the face data has same number of tuples (i.e. they should all be coming from the same Triangle Geometry)
@@ -157,4 +157,4 @@ Result<Arguments> WriteGBCDTriangleDataFilter::FromSIMPLJson(const nlohmann::jso
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

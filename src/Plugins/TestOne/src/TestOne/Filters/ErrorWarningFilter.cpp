@@ -31,9 +31,9 @@
 
 #include "ErrorWarningFilter.hpp"
 
-#include "complex/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 //------------------------------------------------------------------------------
 std::string ErrorWarningFilter::name() const
@@ -48,7 +48,7 @@ std::string ErrorWarningFilter::className() const
 }
 
 //------------------------------------------------------------------------------
-complex::Uuid ErrorWarningFilter::uuid() const
+nx::core::Uuid ErrorWarningFilter::uuid() const
 {
   return FilterTraits<ErrorWarningFilter>::uuid;
 }
@@ -66,7 +66,7 @@ std::vector<std::string> ErrorWarningFilter::defaultTags() const
 }
 
 //------------------------------------------------------------------------------
-complex::Parameters ErrorWarningFilter::parameters() const
+nx::core::Parameters ErrorWarningFilter::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<BoolParameter>(k_PreflightWarning_Key, "Preflight Warning", "Preflight warning parameter", false));
@@ -85,13 +85,13 @@ IFilter::UniquePointer ErrorWarningFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-complex::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto preflightWarning = args.value<bool>(k_PreflightWarning_Key);
   auto preflightError = args.value<bool>(k_PreflightError_Key);
   auto preflightException = args.value<bool>(k_PreflightException_Key);
 
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
 
   if(preflightWarning)
   {
@@ -110,14 +110,14 @@ complex::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-complex::Result<> ErrorWarningFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
   auto executeWarning = args.value<bool>(k_ExecuteWarning_Key);
   auto executeError = args.value<bool>(k_ExecuteError_Key);
   auto executeException = args.value<bool>(k_ExecuteException_Key);
 
-  complex::Result<> resultActions;
+  nx::core::Result<> resultActions;
 
   if(executeWarning)
   {

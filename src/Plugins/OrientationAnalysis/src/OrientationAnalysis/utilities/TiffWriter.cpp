@@ -1,6 +1,6 @@
 #include "TiffWriter.hpp"
 
-#include "complex/Common/Bit.hpp"
+#include "simplnx/Common/Bit.hpp"
 
 #include <fmt/format.h>
 
@@ -40,7 +40,7 @@ std::pair<int32_t, std::string> TiffWriter::WriteImage(const std::string& filepa
   // Check for Endianess of the system and write the appropriate magic number according to the tiff spec
   std::array<char, 4> magicNumber = {0x49, 0x49, 0x2A, 0x00};
 
-  if(complex::checkEndian() == complex::endian::big)
+  if(nx::core::checkEndian() == nx::core::endian::big)
   {
     magicNumber = {0x4D, 0x4D, 0x00, 0x2A};
   }

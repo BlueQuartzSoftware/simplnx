@@ -28,27 +28,27 @@ of doing that.
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
-#include "complex/Core/Application.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumericTypeParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumericTypeParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::Constants;
+using namespace nx::core;
+using namespace nx::core::Constants;
 
 namespace FindAvgOrientationsTest
 {
 // These are the argument keys for the Import Text filter. We cannot use the ones from the
-// header file as that would bring in a dependency on the ComplexCorePlugin
+// header file as that would bring in a dependency on the SimplnxCorePlugin
 static constexpr StringLiteral k_InputFileKey = "input_file";
 static constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
 static constexpr StringLiteral k_NTuplesKey = "n_tuples";
@@ -58,7 +58,7 @@ static constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
 static constexpr StringLiteral k_DataArrayKey = "output_data_array";
 } // namespace FindAvgOrientationsTest
 
-void runReadTextDataArrayFilter(const std::string k_InputFileName, complex::NumericType k_NumericType, const uint64 k_NumTuples, const uint64 k_NumComponents, const DataPath k_InputFileDataPath,
+void runReadTextDataArrayFilter(const std::string k_InputFileName, nx::core::NumericType k_NumericType, const uint64 k_NumTuples, const uint64 k_NumComponents, const DataPath k_InputFileDataPath,
                                 DataStructure& dataStructure)
 {
   auto* filterList = Application::Instance()->getFilterList();
@@ -78,16 +78,16 @@ void runReadTextDataArrayFilter(const std::string k_InputFileName, complex::Nume
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
 TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][FindAvgOrientations]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
 
   // Instantiate an "Application" instance to load plugins
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
@@ -120,7 +120,7 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
   DataStructure dataStructure;
 
   // Create the Crystal Structures Array (needed later down the pipeline)
-  UInt32Array* crystalStructuresPtr = complex::UnitTest::CreateTestDataArray<uint32>(dataStructure, k_CrystalStuctures, {2}, {1});
+  UInt32Array* crystalStructuresPtr = nx::core::UnitTest::CreateTestDataArray<uint32>(dataStructure, k_CrystalStuctures, {2}, {1});
   (*crystalStructuresPtr)[0] = 999; // Unknown Crystal Structure
   (*crystalStructuresPtr)[1] = 1;   // Cubic Laue Class
 
@@ -162,11 +162,11 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Compare the data sets

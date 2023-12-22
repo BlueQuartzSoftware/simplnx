@@ -1,9 +1,9 @@
-#include "complex/Common/Uuid.hpp"
-#include "complex/Common/StringLiteral.hpp"
+#include "simplnx/Common/Uuid.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
 
 #include <catch2/catch.hpp>
 
-using namespace complex;
+using namespace nx::core;
 
 TEST_CASE("UuidTest")
 {

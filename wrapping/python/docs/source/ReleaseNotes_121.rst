@@ -1,7 +1,7 @@
 Release Notes 1.2.1
 ===================
 
-The `complex` library is under activate development and while we strive to maintain a stable API bugs are
+The `simplnx` library is under activate development and while we strive to maintain a stable API bugs are
 found the necessitate the changing of the API.
 
 Version 1.2.1
@@ -16,7 +16,7 @@ API Additions 1.2.1
 
 - DataObject add the "type" property
 
-- Retrieve the children of a DataObject in the DataStructure using a complex.DataPath or "/" delimited string
+- Retrieve the children of a DataObject in the DataStructure using a simplnx.DataPath or "/" delimited string
   
   .. code:: python
   
@@ -40,7 +40,7 @@ API Additions 1.2.1
     hierarchy_as_str = data_structure.hierarchy_to_str()
     print(hierarchy_as_str)
 
-- Get a numpy view of a DataArray directly from the DataStructure by using the a complex.DataPath or "/" delimited string
+- Get a numpy view of a DataArray directly from the DataStructure by using the a simplnx.DataPath or "/" delimited string
 
   .. code:: python
 

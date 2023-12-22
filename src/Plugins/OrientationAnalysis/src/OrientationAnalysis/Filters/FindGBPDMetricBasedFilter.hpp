@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class FindGBPDMetricBasedFilter
@@ -42,7 +42,7 @@ public:
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -112,7 +112,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindGBPDMetricBasedFilter, "8267878b-d23a-4666-83a0-f1a7711861ce");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindGBPDMetricBasedFilter, "8267878b-d23a-4666-83a0-f1a7711861ce");
 /* LEGACY UUID FOR THIS FILTER 00d20627-5b88-56ba-ac7a-fc2a4b337903 */

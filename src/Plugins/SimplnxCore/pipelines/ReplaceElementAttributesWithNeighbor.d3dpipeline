@@ -1,0 +1,222 @@
+{
+  "isDisabled": false,
+  "name": "ReplaceElementAttributesWithNeighbor.d3dpipeline",
+  "pinnedParams": [
+    {
+      "filterIndex": 5,
+      "filterUuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2",
+      "paramUuid": "17309744-c4e8-4d1e-807e-e7012387f1ec",
+      "paramName": "min_voxel"
+    },
+    {
+      "filterIndex": 5,
+      "filterUuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2",
+      "paramUuid": "17309744-c4e8-4d1e-807e-e7012387f1ec",
+      "paramName": "max_voxel"
+    }
+  ],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "data_container_name": "DataContainer",
+        "input_file": "Data/Small_IN100/Slice_1.ang"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ReadAngDataFilter",
+        "uuid": "5b062816-79ac-47ce-93cb-e7966896bcbd"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "DataContainer/Cell Data/Confidence Index",
+              "comparison": 0,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.1
+            },
+            {
+              "array_path": "DataContainer/Cell Data/Image Quality",
+              "comparison": 0,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 120.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "Mask"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_image_geometry": "",
+        "remove_original_geometry": true,
+        "rotate_slice_by_slice": false,
+        "rotation_axis": [
+          0.0,
+          1.0,
+          0.0,
+          180.0
+        ],
+        "rotation_matrix": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "rotation_representation": 0,
+        "selected_image_geometry": "DataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::RotateSampleRefFrameFilter",
+        "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+        "rotation_axis": [
+          0.0,
+          0.0,
+          1.0,
+          90.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::RotateEulerRefFrameFilter",
+        "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "change_origin": true,
+        "change_resolution": true,
+        "image_geom": "DataContainer",
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::SetImageGeomOriginScalingFilter",
+        "uuid": "057bc7fd-c84a-4902-9397-87e51b1b1fe0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_feature_attribute_matrix": "CellFeatureData",
+        "created_image_geometry": "",
+        "feature_ids": "",
+        "max_voxel": [
+          160,
+          175,
+          0
+        ],
+        "min_voxel": [
+          25,
+          25,
+          0
+        ],
+        "remove_original_geometry": true,
+        "renumber_features": false,
+        "selected_image_geometry": "DataContainer",
+        "update_origin": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::CropImageGeometry",
+        "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+        "cell_ipf_colors_array_name": "IPFColors",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "mask_array_path": "DataContainer/Cell Data/Mask",
+        "reference_dir": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "use_mask": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::GenerateIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "comparison_data_path": "DataContainer/Cell Data/Confidence Index",
+        "loop": true,
+        "min_confidence": 0.10000000149011612,
+        "selected_comparison": 0,
+        "selected_image_geometry": "DataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::ReplaceElementAttributesWithNeighborValuesFilter",
+        "uuid": "65128c53-d3be-4a69-a559-32a48d603884"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/Examples/ReplaceElementAttributesWithNeighbor.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "simplnx::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

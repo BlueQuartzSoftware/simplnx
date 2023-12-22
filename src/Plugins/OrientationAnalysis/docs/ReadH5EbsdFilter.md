@@ -22,8 +22,8 @@ The **user** is solely responsible for knowing any sample reference frame transf
 If the user does not want the **Read H5Ebsd** filter to perform any transformations then the checkbox can be unchecked and the user can manually perform any desired transformations by inserting the appropriate filters into the pipeline. The suggested filters are:
 
 + {ref}`Rotate Euler Reference Frame <OrientationAnalysis/RotateEulerRefFrameFilter:Description>`
-+ {ref}`Rotate Sample Reference Frame <ComplexCore/RotateSampleRefFrameFilter:Description>`
-+ {ref}`Convert Angles to Degrees or Radians <ComplexCore/ChangeAngleRepresentation:Description>`
++ {ref}`Rotate Sample Reference Frame <SimplnxCore/RotateSampleRefFrameFilter:Description>`
++ {ref}`Convert Angles to Degrees or Radians <SimplnxCore/ChangeAngleRepresentation:Description>`
 
 An excellant reference for this is the following PDF file:
 [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)

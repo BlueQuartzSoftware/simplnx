@@ -1,9 +1,9 @@
 #pragma once
 
-#include "complex/Filter/ParameterTraits.hpp"
-#include "complex/Filter/ValueParameter.hpp"
-#include "complex/Utilities/FilePathGenerator.hpp"
-#include "complex/complex_export.hpp"
+#include "simplnx/Filter/ParameterTraits.hpp"
+#include "simplnx/Filter/ValueParameter.hpp"
+#include "simplnx/Utilities/FilePathGenerator.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include <filesystem>
 #include <list>
@@ -12,7 +12,7 @@
 
 namespace fs = std::filesystem;
 
-namespace complex
+namespace nx::core
 {
 /** @brief RefFrameZDir defined for the Stacking order of images into a 3D Volume. This is taken from
  * EbsdLib. If EbsdLib changes, this should follow suit.
@@ -24,7 +24,7 @@ inline constexpr uint32_t k_HightoLow = 1;
 inline constexpr uint32_t UnknownRefFrameZDirection = 2;
 } // namespace RefFrameZDir
 
-class COMPLEX_EXPORT OEMEbsdScanSelectionParameter : public ValueParameter
+class SIMPLNX_EXPORT OEMEbsdScanSelectionParameter : public ValueParameter
 {
 
 public:
@@ -126,6 +126,6 @@ private:
   ExtensionsType m_AvailableExtensions = {};
   EbsdReaderType m_ReaderType = {};
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::OEMEbsdScanSelectionParameter, "3935c833-aa51-4a58-81e9-3a51972c05ea");
+SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::OEMEbsdScanSelectionParameter, "3935c833-aa51-4a58-81e9-3a51972c05ea");

@@ -1,13 +1,13 @@
 #include "OrientationAnalysis/Filters/CreateEnsembleInfoFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/Parameters/EnsembleInfoParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/EnsembleInfoParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
-using namespace complex;
-using namespace complex::UnitTest;
+using namespace nx::core;
+using namespace nx::core::UnitTest;
 
 TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter execution", "[OrientationAnalysis][CreateEnsembleInfoFilter]")
 {
@@ -29,7 +29,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
 
   SECTION("Missing attribute matrix path")
@@ -43,7 +43,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
 
   SECTION("Invalid crystal structure ensemble phase data")
@@ -57,7 +57,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
 
   SECTION("Invalid phase type ensemble phase data")
@@ -71,20 +71,20 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
 TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Valid filter execution", "[OrientationAnalysis][CreateEnsembleInfoFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",
-                                                             "so3_cubic_high_ipf_001.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",
+                                                              "so3_cubic_high_ipf_001.dream3d");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateEnsembleInfoFilter filter;
@@ -105,11 +105,11 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Valid filter execution
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/so3_cubic_high_ipf_001.dream3d", unit_test::k_TestFilesDir));

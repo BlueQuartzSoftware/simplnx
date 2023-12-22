@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ReadH5OimDataFilter
@@ -34,7 +34,7 @@ public:
   static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -104,7 +104,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ReadH5OimDataFilter, "4ad3d47c-b1e1-4429-bc65-5e021be62ba0");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ReadH5OimDataFilter, "4ad3d47c-b1e1-4429-bc65-5e021be62ba0");
 /* LEGACY UUID FOR THIS FILTER 3ff4701b-3a0c-52e3-910a-fa927aa6584c */

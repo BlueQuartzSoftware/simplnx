@@ -1,10 +1,10 @@
 #include "MergeTwins.hpp"
 
-#include "complex/Common/Numbers.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Common/Numbers.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/Orientation.hpp"
@@ -13,7 +13,7 @@
 
 #include <random>
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 MergeTwins::MergeTwins(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MergeTwinsInputValues* inputValues,

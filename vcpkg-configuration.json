@@ -7,7 +7,7 @@
   "registries": [
     {
       "kind": "git",
-      "repository": "https://github.com/bluequartzsoftware/complex-registry",
+      "repository": "https://github.com/bluequartzsoftware/simplnx-registry",
       "packages": [
         "blosc",
         "boost-mp11",

@@ -1,8 +1,8 @@
-#include "complex/Common/Bit.hpp"
+#include "simplnx/Common/Bit.hpp"
 
 #include <catch2/catch.hpp>
 
-using namespace complex;
+using namespace nx::core;
 
 TEST_CASE("BitTest")
 {

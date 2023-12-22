@@ -1,7 +1,7 @@
-include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
+include("${simplnx_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "TestTwo")
-set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
+set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 
 #------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
@@ -10,7 +10,7 @@ set(FilterList
   Test2Filter
 )
 
-create_complex_plugin(NAME ${PLUGIN_NAME}
+create_simplnx_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
                       DESCRIPTION "Test Plugin for ${PLUGIN_NAME}"
                       VERSION "0.1.0"

@@ -2,13 +2,13 @@
 #include "OrientationAnalysis/Filters/GenerateFaceMisorientationColoringFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
-using namespace complex;
-using namespace complex::UnitTest;
+using namespace nx::core;
+using namespace nx::core::UnitTest;
 
 namespace
 {
@@ -16,26 +16,26 @@ inline constexpr StringLiteral k_FaceMisorientationColors("SurfaceMeshFaceMisori
 inline constexpr StringLiteral k_NXFaceMisorientationColors("NXFaceMisorientationColors");
 inline constexpr StringLiteral k_AvgQuats("AvgQuats");
 
-DataPath smallIn100Group({complex::Constants::k_SmallIN100});
-DataPath featureDataPath = smallIn100Group.createChildPath(complex::Constants::k_Grain_Data);
-DataPath avgEulerAnglesPath = featureDataPath.createChildPath(complex::Constants::k_AvgEulerAngles);
-DataPath featurePhasesPath = featureDataPath.createChildPath(complex::Constants::k_Phases);
-DataPath crystalStructurePath = smallIn100Group.createChildPath(complex::Constants::k_Phase_Data).createChildPath(complex::Constants::k_CrystalStructures);
+DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
+DataPath featureDataPath = smallIn100Group.createChildPath(nx::core::Constants::k_Grain_Data);
+DataPath avgEulerAnglesPath = featureDataPath.createChildPath(nx::core::Constants::k_AvgEulerAngles);
+DataPath featurePhasesPath = featureDataPath.createChildPath(nx::core::Constants::k_Phases);
+DataPath crystalStructurePath = smallIn100Group.createChildPath(nx::core::Constants::k_Phase_Data).createChildPath(nx::core::Constants::k_CrystalStructures);
 DataPath avgQuatsPath = featureDataPath.createChildPath(k_AvgQuats);
 
-DataPath triangleDataContainerPath({complex::Constants::k_TriangleDataContainerName});
-DataPath faceDataGroup = triangleDataContainerPath.createChildPath(complex::Constants::k_FaceData);
+DataPath triangleDataContainerPath({nx::core::Constants::k_TriangleDataContainerName});
+DataPath faceDataGroup = triangleDataContainerPath.createChildPath(nx::core::Constants::k_FaceData);
 
-DataPath faceLabels = faceDataGroup.createChildPath(complex::Constants::k_FaceLabels);
-DataPath faceNormals = faceDataGroup.createChildPath(complex::Constants::k_FaceNormals);
-DataPath faceAreas = faceDataGroup.createChildPath(complex::Constants::k_FaceAreas);
+DataPath faceLabels = faceDataGroup.createChildPath(nx::core::Constants::k_FaceLabels);
+DataPath faceNormals = faceDataGroup.createChildPath(nx::core::Constants::k_FaceNormals);
+DataPath faceAreas = faceDataGroup.createChildPath(nx::core::Constants::k_FaceAreas);
 } // namespace
 
 TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoringFilter: Valid filter execution", "[OrientationAnalysis][GenerateFaceMisorientationColoringFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
@@ -55,7 +55,7 @@ TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoringFilter: Valid 
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // GenerateFaceMisorientationColoringFilter
@@ -73,11 +73,11 @@ TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoringFilter: Valid 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // compare the resulting face IPF Colors array
@@ -90,7 +90,7 @@ TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoringFilter: Invali
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
@@ -116,7 +116,7 @@ TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoringFilter: Invali
 
       // Execute the filter and check the result
       auto convertOrientationsResult = convertOrientationsFilter.execute(dataStructure, convertOrientationsArgs);
-      COMPLEX_RESULT_REQUIRE_VALID(convertOrientationsResult.result);
+      SIMPLNX_RESULT_REQUIRE_VALID(convertOrientationsResult.result);
     }
 
     args.insertOrAssign(GenerateFaceMisorientationColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceLabels));
@@ -137,9 +137,9 @@ TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoringFilter: Invali
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 }

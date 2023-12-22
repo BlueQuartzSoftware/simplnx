@@ -3,21 +3,21 @@
 #include "OrientationAnalysis/Filters/Algorithms/ReadEnsembleInfo.hpp"
 #include "OrientationAnalysis/utilities/inicpp.h"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ReadEnsembleInfoFilter::name() const
@@ -93,7 +93,7 @@ IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructu
   const DataPath phaseTypesPath = cellEnsembleAttributeMatrixPath.createChildPath(pPhaseTypesArrayNameValue);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   int32 numPhases = 0;
@@ -174,4 +174,4 @@ Result<Arguments> ReadEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& js
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

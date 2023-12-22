@@ -1,12 +1,12 @@
 #pragma once
 
-#include "complex/Common/StringLiteral.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
 
-namespace complex
+namespace nx::core
 {
 namespace unit_test
 {
 inline constexpr StringLiteral k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
-inline constexpr StringLiteral k_BinaryDir = "@complex_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
+inline constexpr StringLiteral k_BinaryDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
 }
-} // namespace complex
+} // namespace nx::core

@@ -2,15 +2,15 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Common/Array.hpp"
-#include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKImportImageStack
@@ -108,6 +108,6 @@ protected:
 private:
   int32 m_InstanceId;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportFijiMontageFilter, "4c48ea16-13ef-4281-89cf-315be5fb857d");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKImportFijiMontageFilter, "4c48ea16-13ef-4281-89cf-315be5fb857d");

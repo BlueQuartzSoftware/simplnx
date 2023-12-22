@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 
 /**
@@ -40,4 +40,4 @@ private:
   const RotateEulerRefFrameInputValues* m_InputValues = nullptr;
 };
 
-} // namespace complex
+} // namespace nx::core

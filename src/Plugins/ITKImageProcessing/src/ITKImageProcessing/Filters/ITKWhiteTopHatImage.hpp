@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKWhiteTopHatImage
@@ -39,7 +39,7 @@ public:
   static inline constexpr StringLiteral k_SafeBorder_Key = "safe_border";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -112,6 +112,6 @@ protected:
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKWhiteTopHatImage, "2f377682-d0a8-4dea-8c68-60c2c523a074");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKWhiteTopHatImage, "2f377682-d0a8-4dea-8c68-60c2c523a074");

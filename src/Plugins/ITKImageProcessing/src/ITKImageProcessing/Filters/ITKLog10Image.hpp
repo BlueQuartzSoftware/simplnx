@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKLog10Image
@@ -34,7 +34,7 @@ public:
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -106,6 +106,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKLog10Image, "900ca377-e79d-4b54-b298-33d518238099");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKLog10Image, "900ca377-e79d-4b54-b298-33d518238099");

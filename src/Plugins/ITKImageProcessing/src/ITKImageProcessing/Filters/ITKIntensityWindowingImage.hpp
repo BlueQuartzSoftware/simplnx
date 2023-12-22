@@ -2,10 +2,10 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class ITKIntensityWindowingImage
@@ -45,7 +45,7 @@ public:
   static inline constexpr StringLiteral k_OutputMaximum_Key = "output_maximum";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -118,6 +118,6 @@ protected:
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKIntensityWindowingImage, "ee317bf6-79aa-4dcc-b59e-b0246dc3fcfa");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKIntensityWindowingImage, "ee317bf6-79aa-4dcc-b59e-b0246dc3fcfa");

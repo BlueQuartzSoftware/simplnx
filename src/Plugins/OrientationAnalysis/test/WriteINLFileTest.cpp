@@ -3,15 +3,15 @@
 #include "OrientationAnalysis/Filters/WriteINLFileFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <fstream>
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -65,7 +65,7 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[OrientationAnalysis][WriteINLFileFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteINLFileFilter filter;

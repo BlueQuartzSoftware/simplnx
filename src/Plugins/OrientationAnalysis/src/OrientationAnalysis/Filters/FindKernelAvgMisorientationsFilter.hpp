@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
  * @class FindKernelAvgMisorientationsFilter
@@ -33,7 +33,7 @@ public:
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
 
   /**
-   * @brief Reads SIMPL json and converts it complex Arguments.
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
    * @return Result<Arguments>
    */
@@ -103,6 +103,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindKernelAvgMisorientationsFilter, "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindKernelAvgMisorientationsFilter, "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035");

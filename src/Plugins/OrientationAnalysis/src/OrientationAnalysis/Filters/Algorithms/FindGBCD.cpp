@@ -1,11 +1,11 @@
 #include "FindGBCD.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
-#include "complex/Utilities/TimeUtilities.hpp"
+#include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/TimeUtilities.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -16,7 +16,7 @@
 using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
-using namespace complex;
+using namespace nx::core;
 namespace
 {
 const usize k_NumMisoReps = 576 * 4;

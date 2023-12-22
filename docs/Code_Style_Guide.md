@@ -1,6 +1,6 @@
 # Code Style Guide
 
-This is the style guide for the COMPLEX library. When contributing sources to the complex repository we ask that all contributions follow this style guide. These general rules have been developed over the years in an effort to allow efficient coding practices.
+This is the style guide for the COMPLEX library. When contributing sources to the simplnx repository we ask that all contributions follow this style guide. These general rules have been developed over the years in an effort to allow efficient coding practices.
 
 ## Source Code Line Endings
 
@@ -105,4 +105,4 @@ Using this type of approach allows for quicker code updates when constant values
 
 ## Clang Formatting
 
-`clang-format` is a tool to automatically format C++ code. You should run 'clang-format' on your code before opening a Pull Request to make sure it passes the *clang-format pr* check. You can install `clang-format` and `git-clang-format` with `npm install -g clang-format`. To automatically format a file according to a project's C++ code style, run `clang-format -i path/to/complex/file`, which is supported on macOS/Linux/Windows. If you want to run `clang-format` on all the changed code on your latest git commit (HEAD), you can run `git-clang-format HEAD~1`. Run `git-clang-format -h`  for extra help.
+`clang-format` is a tool to automatically format C++ code. You should run 'clang-format' on your code before opening a Pull Request to make sure it passes the *clang-format pr* check. You can install `clang-format` and `git-clang-format` with `npm install -g clang-format`. To automatically format a file according to a project's C++ code style, run `clang-format -i path/to/simplnx/file`, which is supported on macOS/Linux/Windows. If you want to run `clang-format` on all the changed code on your latest git commit (HEAD), you can run `git-clang-format HEAD~1`. Run `git-clang-format -h`  for extra help.

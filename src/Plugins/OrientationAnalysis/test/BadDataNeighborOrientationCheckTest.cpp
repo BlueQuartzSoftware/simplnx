@@ -4,17 +4,17 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
-#include "complex/Core/Application.hpp"
-#include "complex/Parameters/Dream3dImportParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Parameters/Dream3dImportParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-using namespace complex;
-using namespace complex::Constants;
-using namespace complex::UnitTest;
+using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 /**
  * Read H5Ebsd File
  * MultiThreshold Objects
@@ -35,10 +35,10 @@ using namespace complex::UnitTest;
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Small IN100 Pipeline", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "bad_data_neighbor_orientation_check.tar.gz",
-                                                             "bad_data_neighbor_orientation_check.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "bad_data_neighbor_orientation_check.tar.gz",
+                                                              "bad_data_neighbor_orientation_check.dream3d");
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
 
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
@@ -51,7 +51,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Small IN1
   auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
 
-  // MultiThreshold Objects Filter (From ComplexCore Plugins)
+  // MultiThreshold Objects Filter (From SimplnxCore Plugins)
   SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
 
   // Convert Orientations Filter (From OrientationAnalysis Plugin)
@@ -181,7 +181,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Small IN1
     }
   }
 
-#ifdef COMPLEX_WRITE_TEST_OUTPUT
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/bad_data_neighbor_orientation_check.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 }

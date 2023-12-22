@@ -361,7 +361,7 @@ def write_filter_header(filter_data: FilterData, template: Template, output_dir:
         'UUID': filter_uuid,
         'PARAMETER_KEYS': parameter_keys_str,
     }
-    print(f'    {{complex::Uuid::FromString(\"{FILTERS[filter_data.base_name]}\").value(), complex::FilterTraits<{filter_data.filter_name}>::uuid}}, // {filter_data.filter_name}')
+    print(f'    {{simplnx::Uuid::FromString(\"{FILTERS[filter_data.base_name]}\").value(), nx::core::FilterTraits<{filter_data.filter_name}>::uuid}}, // {filter_data.filter_name}')
 
     output = template.substitute(substitutions)
 
@@ -369,7 +369,7 @@ def write_filter_header(filter_data: FilterData, template: Template, output_dir:
         output_file.write(output)
 
 def make_include_str(param_name: str) -> str:
-    return f'#include \"complex/Parameters/{param_name}.hpp\"'
+    return f'#include \"simplnx/Parameters/{param_name}.hpp\"'
 
 def make_parameter_def_str(type_name: str, key_var: str, human_name: str, help_text: str, default: str, extra: str = '') -> str:
     extra_str = f', {extra}' if extra else ''
@@ -576,7 +576,7 @@ class RadiusTypeParameter(Parameter):
         return 'VectorUInt32Parameter::ValueType'
 
     def get_include_str(self) -> str:
-        return '#include "complex/Parameters/VectorParameter.hpp"'
+        return '#include "simplnx/Parameters/VectorParameter.hpp"'
 
     def get_parameter_def_str(self, prop: PropertyData) -> str:
         return f'  params.insert(std::make_unique<VectorUInt32Parameter>(k_Radius_Key, "Radius", "Radius Dimensions XYZ", {prop.default}, std::vector<std::string>{{"X", "Y", "Z"}}));\n'
@@ -612,7 +612,7 @@ class ArrayTypeParameter(Parameter):
         return 'VectorFloat64Parameter::ValueType'
 
     def get_include_str(self) -> str:
-        return '#include "complex/Parameters/VectorParameter.hpp"'
+        return '#include "simplnx/Parameters/VectorParameter.hpp"'
 
     def get_parameter_def_str(self, prop: PropertyData) -> str:
         return f'  params.insert(std::make_unique<VectorFloat64Parameter>(k_{prop.name}_Key, "{prop.name}", "{prop.detaileddescriptionSet}", {prop.default}, std::vector<std::string>{{"X", "Y", "Z"}}));\n'
@@ -671,9 +671,9 @@ def get_parameter_from_name(filter_data: FilterData, name: str) -> Parameter:
     return get_parameter(next(filter(lambda item: item.name == name, filter_data.members)))
 
 def get_default_parameter_includes() -> List[str]:
-    return ['#include \"complex/Parameters/DataObjectNameParameter.hpp\"',
-        '#include \"complex/Parameters/ArraySelectionParameter.hpp\"',
-        '#include \"complex/Parameters/GeometrySelectionParameter.hpp\"'
+    return ['#include \"simplnx/Parameters/DataObjectNameParameter.hpp\"',
+        '#include \"simplnx/Parameters/ArraySelectionParameter.hpp\"',
+        '#include \"simplnx/Parameters/GeometrySelectionParameter.hpp\"'
     ]
 
 def get_parameter_includes(filter_data: FilterData) -> List[str]:
@@ -751,14 +751,14 @@ PIXEL_TYPES: Dict[str, str] = {
 }
 
 INPUT_PIXEL_TYPES: Dict[str, str] = {
-    'BasicPixelIDTypeList': 'complex::ITK::GetScalarPixelAllowedTypes()',
-    'ScalarPixelIDTypeList': 'complex::ITK::GetScalarPixelAllowedTypes()',
-    'IntegerPixelIDTypeList': 'complex::ITK::GetIntegerScalarPixelAllowedTypes()',
-    'RealPixelIDTypeList': 'complex::ITK::GetFloatingScalarPixelAllowedTypes()',
-    'NonLabelPixelIDTypeList': 'complex::ITK::GetNonLabelPixelAllowedTypes()',
-    'typelist::Append<BasicPixelIDTypeList, VectorPixelIDTypeList>::Type': 'complex::ITK::GetScalarVectorPixelAllowedTypes()',
-    'RealVectorPixelIDTypeList': 'complex::ITK::GetFloatingVectorPixelAllowedTypes()',
-    'SignedPixelIDTypeList': 'complex::ITK::GetSignedIntegerScalarPixelAllowedTypes()',
+    'BasicPixelIDTypeList': 'nx::core::ITK::GetScalarPixelAllowedTypes()',
+    'ScalarPixelIDTypeList': 'nx::core::ITK::GetScalarPixelAllowedTypes()',
+    'IntegerPixelIDTypeList': 'nx::core::ITK::GetIntegerScalarPixelAllowedTypes()',
+    'RealPixelIDTypeList': 'nx::core::ITK::GetFloatingScalarPixelAllowedTypes()',
+    'NonLabelPixelIDTypeList': 'nx::core::ITK::GetNonLabelPixelAllowedTypes()',
+    'typelist::Append<BasicPixelIDTypeList, VectorPixelIDTypeList>::Type': 'nx::core::ITK::GetScalarVectorPixelAllowedTypes()',
+    'RealVectorPixelIDTypeList': 'nx::core::ITK::GetFloatingVectorPixelAllowedTypes()',
+    'SignedPixelIDTypeList': 'nx::core::ITK::GetSignedIntegerScalarPixelAllowedTypes()',
     'typelist2::append<BasicPixelIDTypeList, VectorPixelIDTypeList>::type': 'UNKNOWN INPUT PIXEL TYPE'
 }
 
@@ -872,7 +872,7 @@ def get_test_case(filter_data: FilterData, test: TestData) -> List[str]:
         lines.append('  { // Start Image Comparison Scope\n')
         lines.append(f'    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / \"JSONFilters\" / \"{input_str}\";\n')
         lines.append(f'    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);\n')
-        lines.append('    COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)\n')
+        lines.append('    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)\n')
         lines.append('  } // End Image Comparison Scope\n\n')
 
     lines.append('  Arguments args;\n')
@@ -886,21 +886,21 @@ def get_test_case(filter_data: FilterData, test: TestData) -> List[str]:
 
     lines.append('\n')
     lines.append('  auto preflightResult = filter.preflight(dataStructure, args);\n')
-    lines.append('  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)\n')
+    lines.append('  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)\n')
     lines.append('\n')
     lines.append('  auto executeResult = filter.execute(dataStructure, args);\n')
-    lines.append('  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)\n')
+    lines.append('  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)\n')
     lines.append('\n')
 
     if not test.md5hash:
-        lines.append(f'  const fs::path baselineFilePath = fs::path(complex::unit_test::k_DataDir.view()) / \"JSONFilters/Baseline/BasicFilters_{filter_data.name}_{test.tag}.nrrd\";\n')
+        lines.append(f'  const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / \"JSONFilters/Baseline/BasicFilters_{filter_data.name}_{test.tag}.nrrd\";\n')
         lines.append('  const DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});\n')
         lines.append('  const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);\n')
         lines.append('  const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);\n')
         lines.append('  const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);\n')
         tolerance_str = f', {test.tolerance}' if test.tolerance else ''
         lines.append(f'  Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName){tolerance_str});\n')
-        lines.append('  COMPLEX_RESULT_REQUIRE_VALID(compareResult)\n')
+        lines.append('  SIMPLNX_RESULT_REQUIRE_VALID(compareResult)\n')
     else:
         lines.append('  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));\n')
         lines.append(f'  REQUIRE(md5Hash == \"{test.md5hash}\");\n')
@@ -981,9 +981,9 @@ def write_filter_test(filter_data: FilterData, output_dir: Path):
     output_lines.append('#include \"ITKTestBase.hpp\"')
     output_lines.append('\n')
     output_lines.append('\n')
-    output_lines.append('#include \"complex/Parameters/DataObjectNameParameter.hpp\"')
+    output_lines.append('#include \"simplnx/Parameters/DataObjectNameParameter.hpp\"')
     output_lines.append('\n')
-    output_lines.append('#include \"complex/UnitTest/UnitTestCommon.hpp\"')
+    output_lines.append('#include \"simplnx/UnitTest/UnitTestCommon.hpp\"')
     if includes:
         output_lines.append('\n')
         for i, item in enumerate(includes):
@@ -997,9 +997,9 @@ def write_filter_test(filter_data: FilterData, output_dir: Path):
     output_lines.append('\n')
     output_lines.append('namespace fs = std::filesystem;\n')
     output_lines.append('\n')
-    output_lines.append('using namespace complex;\n')
-    output_lines.append('using namespace complex::Constants;\n')
-    output_lines.append('using namespace complex::UnitTest;\n')
+    output_lines.append('using namespace nx::core;\n')
+    output_lines.append('using namespace nx::core::Constants;\n')
+    output_lines.append('using namespace nx::core::UnitTest;\n')
     output_lines.append('\n')
 
     for i, test in enumerate(filter_data.tests):
@@ -1227,7 +1227,7 @@ def main(input_args: Optional[List[str]] = None) -> None:
     for filter_name in FILTERS:
         if filter_name not in filters_to_process:
             continue
-        #print(f'cp /Users/mjackson/DREAM3D-Dev/DREAM3D_Plugins/ITKImageProcessing/Documentation/ITKImageProcessingFilters/ITK{filter_name}.md /Users/mjackson/Workspace1/complex/src/Plugins/ITKImageProcessing/docs/.')
+        #print(f'cp /Users/mjackson/DREAM3D-Dev/DREAM3D_Plugins/ITKImageProcessing/Documentation/ITKImageProcessingFilters/ITK{filter_name}.md /Users/mjackson/Workspace1/simplnx/src/Plugins/ITKImageProcessing/docs/.')
         write_filter(filter_name, json_dir, filter_output_dir, test_output_dir, header_template, source_template, docs_output_dir)
     
     # this will print out some code that will need to be included into the ITKImageProcessingPlugin.cpp file

@@ -1,15 +1,15 @@
 #include "ITKImageWriter.hpp"
 
-#include "complex/Common/AtomicFile.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
@@ -27,13 +27,13 @@
 #include <filesystem>
 #include <iomanip>
 
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <sstream>
 
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
 namespace cxITKImageWriter
 {
@@ -247,7 +247,7 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const IT
 }
 } // namespace cxITKImageWriter
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ITKImageWriter::name() const
@@ -295,7 +295,7 @@ Parameters ITKImageWriter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
-                                                          complex::ITK::GetScalarPixelAllowedTypes()));
+                                                          nx::core::ITK::GetScalarPixelAllowedTypes()));
 
   return params;
 }
@@ -470,4 +470,4 @@ Result<Arguments> ITKImageWriter::FromSIMPLJson(const nlohmann::json& json)
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'complex'
+project = 'simplnx'
 copyright = '2021, BlueQuartz Software'
 author = 'BlueQuartz Software'
 
@@ -53,4 +53,4 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 # Breathe Configuration
-breathe_default_project = 'complex'
+breathe_default_project = 'simplnx'

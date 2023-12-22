@@ -11,14 +11,14 @@
 #include <itkNumericTraitsVectorPixel.h>
 #include <itkTestingHashImageFilter.h>
 
-#include "complex/Common/Types.hpp"
+#include "simplnx/Common/Types.hpp"
 
 #include <fmt/format.h>
 
 #include <memory>
 #include <vector>
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
@@ -113,7 +113,7 @@ Result<> CompareImagesTyped(const ImageGeom& inputImageGeom, const IDataArray& o
 }
 } // namespace
 
-namespace complex
+namespace nx::core
 {
 namespace ITKTestBase
 {
@@ -305,4 +305,4 @@ void RemoveFiles(const fs::path& dirPath, const std::string& filePattern)
   }
 }
 } // namespace ITKTestBase
-} // namespace complex
+} // namespace nx::core

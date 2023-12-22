@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 #include "OrientationAnalysis/Filters/ReadEnsembleInfoFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-using namespace complex;
+using namespace nx::core;
 using namespace unit_test;
 
 namespace
@@ -61,11 +61,11 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: Valid Filter Execution",
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto* crystalStructures = ds.getDataAs<UInt32Array>(DataPath({Constants::k_DataContainer, Constants::k_EnsembleAttributeMatrix, Constants::k_CrystalStructures}));
   REQUIRE(crystalStructures != nullptr);
@@ -106,7 +106,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("EnsembleInfo misspelled")
   {
@@ -116,7 +116,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("NumberPhases missing")
   {
@@ -126,7 +126,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("Wrong number of phases")
   {
@@ -136,7 +136,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("PhaseType missing")
   {
@@ -146,7 +146,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("CrystalStructure missing")
   {
@@ -156,7 +156,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("PrimaryPhase misspelled")
   {
@@ -166,7 +166,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("Cubic misspelled")
   {
@@ -176,7 +176,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
   SECTION("Incorrect group numbers")
   {
@@ -186,10 +186,10 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 }
