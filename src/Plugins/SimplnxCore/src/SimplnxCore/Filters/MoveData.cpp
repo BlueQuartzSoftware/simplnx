@@ -1,5 +1,6 @@
 #include "MoveData.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/Filter/Actions/MoveDataAction.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
@@ -8,16 +9,8 @@
 
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
 
-namespace
-{
-constexpr int64 k_TupleCountInvalidError = -250;
-constexpr int64 k_MissingFeaturePhasesError = -251;
-
-} // namespace
-
 namespace nx::core
 {
-
 //------------------------------------------------------------------------------
 std::string MoveData::name() const
 {
@@ -80,14 +73,16 @@ IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, cons
     const auto* possibleAM = data.getDataAs<AttributeMatrix>(newParentPath);
     if(possibleAM != nullptr)
     {
-      for(const auto&  path : dataPaths)
+      for(const auto& path : dataPaths)
       {
         const auto* possibleIArray = data.getDataAs<IArray>(path);
         if(possibleIArray != nullptr)
         {
-          if(possibleAM.getShape() != possibleIArray.getTupleShape())
+          if(possibleAM->getShape() != possibleIArray->getTupleShape())
           {
-            resultOutputActions.warnings().push_back(Warning{-69250, fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a runtime error if the sizing remains the same at time of this filters execution. Proceed with caution.", possibleIArray.getName(), possibleIArray.getNumberofTuples(), possibleAM.getName(), possibleAM.getNumberofTuples())});
+            resultOutputActions.warnings().push_back(Warning{-69250, fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a "
+                                                                                 "runtime error if the sizing remains the same at time of this filters execution. Proceed with caution.",
+                                                                                 possibleIArray->getName(), possibleIArray->getNumberOfTuples(), possibleAM->getName(), possibleAM->getNumTuples())});
           }
         }
       }

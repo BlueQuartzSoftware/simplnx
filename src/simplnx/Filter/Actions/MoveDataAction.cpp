@@ -1,7 +1,6 @@
 #include "MoveDataAction.hpp"
 
 #include "simplnx/DataStructure/BaseGroup.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <fmt/core.h>
 
