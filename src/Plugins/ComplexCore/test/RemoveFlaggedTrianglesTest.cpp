@@ -8,13 +8,13 @@ using namespace complex;
 
 namespace
 {
- fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_remove_flagged_triangles/6_6_remove_flagged_triangles.dream3d", complex::unit_test::k_TestFilesDir));
+fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_Remove_Flagged_Triangles/6_6_remove_flagged_triangles.dream3d", complex::unit_test::k_TestFilesDir));
 }
 
 TEST_CASE("ComplexCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "[ComplexCore][RemoveFlaggedTrianglesFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_remove_flagged_triangles.tar.gz",
-                                                             "6_6_remove_flagged_triangles.dream3d");
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Remove_Flagged_Triangles.tar.gz",
+                                                             "6_6_Remove_Flagged_Triangles.dream3d");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
@@ -36,5 +36,4 @@ TEST_CASE("ComplexCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
-
 }

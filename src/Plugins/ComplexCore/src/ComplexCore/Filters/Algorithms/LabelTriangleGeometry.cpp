@@ -42,7 +42,7 @@ Result<> LabelTriangleGeometry::operator()()
       return MakeErrorResult(check, fmt::format("Error finding element neighbors for {} geometry", triangle.getName()));
     }
 
-    const auto* triangleNeighbors = triangle.getElementNeighbors();
+    const TriangleGeom::ElementDynamicList* triangleNeighbors = triangle.getElementNeighbors();
 
     auto& regionIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->RegionIdsPath);
 
@@ -93,8 +93,7 @@ Result<> LabelTriangleGeometry::operator()()
     }
 
     // Resize the Triangle Region AttributeMatrix
-    std::vector<usize> tDims(1, triangleCounts.size());
-    m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->TriangleAMPath)->resizeTuples(tDims);
+    m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->TriangleAMPath)->resizeTuples(std::vector<usize>{triangleCounts.size()});
   }
 
   // copy triangleCounts into the proper DataArray "NumTriangles" in the Feature Attribute Matrix
