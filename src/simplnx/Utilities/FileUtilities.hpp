@@ -53,11 +53,11 @@ Result<> SIMPLNX_EXPORT ValidateInputDir(const fs::path& path);
 Result<> SIMPLNX_EXPORT ValidateDirectoryWritePermission(const fs::path& path, bool isFile);
 
 //-----------------------------------------------------------------------------
-Result<> COMPLEX_EXPORT ValidateOutputFile(const fs::path& path);
+Result<> SIMPLNX_EXPORT ValidateOutputFile(const fs::path& path);
 
 //-----------------------------------------------------------------------------
-Result<> COMPLEX_EXPORT ValidateOutputDir(const fs::path& path);
+Result<> SIMPLNX_EXPORT ValidateOutputDir(const fs::path& path);
 
 //-----------------------------------------------------------------------------
-Result<> COMPLEX_EXPORT ValidateCSVFile(const std::string& filePath);
-} // namespace complex::FileUtilities
+Result<> SIMPLNX_EXPORT ValidateCSVFile(const std::string& filePath);
+} // namespace nx::core::FileUtilities
