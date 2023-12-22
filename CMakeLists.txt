@@ -556,7 +556,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Common/Range3D.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Core/Application.cpp
-  ${SIMPLNX_SOURCE_DIR}/Core/PreferencSIMPLNX
+  ${SIMPLNX_SOURCE_DIR}/Core/Preferences.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Filter/FilterHandle.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/FilterList.cpp
