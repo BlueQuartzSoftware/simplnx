@@ -45,7 +45,7 @@
 #define FSPP_ACCESS_FUNC_NAME access
 #endif
 
-using namespace complex;
+using namespace nx::core;
 
 #ifdef _WIN32
 constexpr int k_CheckWritable = 2;

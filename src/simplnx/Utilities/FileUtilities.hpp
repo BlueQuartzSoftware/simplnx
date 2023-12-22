@@ -31,95 +31,33 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #pragma once
 
-#include <filesystem>
-#include <fmt/format.h>
-#include <fstream>
-#include <string>
-
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/simplnx_export.hpp"
+
+#include <filesystem>
 
 namespace fs = std::filesystem;
 
-namespace nx::core
+namespace nx::core::FileUtilities
 {
-namespace FileUtilities
-{
-Result<> ValidateCSVFile(const std::string& filePath)
-{
-  constexpr int64_t bufferSize = 2048;
+//-----------------------------------------------------------------------------
+bool SIMPLNX_EXPORT HasWriteAccess(const std::string& path);
 
-  auto absPath = fs::absolute(filePath);
+//-----------------------------------------------------------------------------
+Result<> SIMPLNX_EXPORT ValidateInputFile(const fs::path& path);
 
-  if(!fs::exists({absPath}))
-  {
-    return MakeErrorResult(-300, fmt::format("File does not exist: {}", absPath.string()));
-  }
+//-----------------------------------------------------------------------------
+Result<> SIMPLNX_EXPORT ValidateInputDir(const fs::path& path);
 
-  // Obtain the file size
-  const size_t fileSize = fs::file_size(absPath);
+//-----------------------------------------------------------------------------
+Result<> SIMPLNX_EXPORT ValidateDirectoryWritePermission(const fs::path& path, bool isFile);
 
-  // Open the file
-  std::ifstream in(absPath.c_str(), std::ios_base::binary);
-  if(!in.is_open())
-  {
-    return MakeErrorResult(-301, fmt::format("Could not open file for reading: {}", absPath.string()));
-  }
+//-----------------------------------------------------------------------------
+Result<> COMPLEX_EXPORT ValidateOutputFile(const fs::path& path);
 
-  size_t actualSize = bufferSize;
-  if(fileSize <= bufferSize)
-  {
-    actualSize = fileSize;
-  }
+//-----------------------------------------------------------------------------
+Result<> COMPLEX_EXPORT ValidateOutputDir(const fs::path& path);
 
-  // Allocate the buffer
-  std::vector<char> buffer(actualSize, 0);
-
-  // Copy the file contents into the buffer
-  try
-  {
-    in.read(buffer.data(), actualSize);
-  } catch(const std::exception& e)
-  {
-    return MakeErrorResult(-302, fmt::format("There was an error reading the data from file: {}.  Exception: {}", absPath.string(), e.what()));
-  }
-
-  // Check the buffer for invalid characters, tab characters, new-line characters, and carriage return characters
-  bool hasNewLines = false;
-  bool hasCarriageReturns = false;
-  bool hasTabs = false;
-  // If the first line of the file is > 2048 then this will fail! (MJ)
-  for(size_t i = 0; i < actualSize; i++)
-  {
-    const char currentChar = buffer[i];
-
-    if(currentChar < 32 && currentChar != 9 && currentChar != 10 && currentChar != 13)
-    {
-      // This is an unprintable character
-      return MakeErrorResult(-303, fmt::format("Unprintable characters have been detected in file: {}.  Please import a different file.", absPath.string()));
-    }
-    if(currentChar == 9)
-    {
-      hasTabs = true;
-    }
-    else if(currentChar == 10)
-    {
-      hasNewLines = true;
-    }
-    else if(currentChar == 13)
-    {
-      hasCarriageReturns = true;
-    }
-  }
-
-  if(!hasNewLines && !hasCarriageReturns && !hasTabs)
-  {
-    // This might be a binary file
-    return MakeErrorResult(-304, fmt::format("The file \"{}\" might be a binary file, because line-feed, tab, or carriage return characters have not been detected. Using this file may crash the "
-                                             "program or cause unexpected results.  Please import a different file.",
-                                             absPath.string()));
-  }
-
-  return {};
-}
-} // namespace FileUtilities
-} // namespace nx::core
+//-----------------------------------------------------------------------------
+Result<> COMPLEX_EXPORT ValidateCSVFile(const std::string& filePath);
+} // namespace complex::FileUtilities
