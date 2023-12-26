@@ -8,6 +8,11 @@
 
 using namespace nx::core;
 
+namespace
+{
+const int32 k_TupleDimMismatchWarningCode = -27361;
+}
+
 TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][CopyDataObjectFilter]")
 {
   static const DataPath k_DataPath1({Constants::k_SmallIN100, "Phase Data"});
@@ -94,6 +99,22 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Invalid Parameters)", "[SimplnxCore
     args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(true));
     args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(copyPath));
     args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+
+    REQUIRE_FALSE(preflightResult.outputActions.warnings().empty());
+
+    bool found = false;
+    for(const auto& warning : preflightResult.outputActions.warnings())
+    {
+      if(warning.code == ::k_TupleDimMismatchWarningCode)
+      {
+        found = true;
+      }
+    }
+
+    REQUIRE(found);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);

@@ -1,5 +1,6 @@
 #include "MoveData.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/Filter/Actions/MoveDataAction.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
@@ -10,13 +11,6 @@
 
 namespace nx::core
 {
-namespace
-{
-constexpr int64 k_TupleCountInvalidError = -250;
-constexpr int64 k_MissingFeaturePhasesError = -251;
-
-} // namespace
-
 //------------------------------------------------------------------------------
 std::string MoveData::name() const
 {
@@ -73,6 +67,27 @@ IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, cons
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  // Scope AM check since we fully expect it to be a nullptr
+  {
+    const auto* possibleAM = data.getDataAs<AttributeMatrix>(newParentPath);
+    if(possibleAM != nullptr)
+    {
+      for(const auto& path : dataPaths)
+      {
+        const auto* possibleIArray = data.getDataAs<IArray>(path);
+        if(possibleIArray != nullptr)
+        {
+          if(possibleAM->getShape() != possibleIArray->getTupleShape())
+          {
+            resultOutputActions.warnings().push_back(Warning{-69250, fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a "
+                                                                                 "runtime error if the sizing remains the same at time of this filters execution. Proceed with caution.",
+                                                                                 possibleIArray->getName(), possibleIArray->getNumberOfTuples(), possibleAM->getName(), possibleAM->getNumTuples())});
+          }
+        }
+      }
+    }
+  }
 
   for(const auto& dataPath : dataPaths)
   {
