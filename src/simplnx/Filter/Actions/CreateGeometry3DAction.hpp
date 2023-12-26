@@ -1,20 +1,20 @@
 #pragma once
 
-#include "complex/Common/Array.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
-#include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
-#include "complex/Filter/Output.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/complex_export.hpp"
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "simplnx/Filter/Output.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include <fmt/core.h>
 
 #include <utility>
 
-namespace complex
+namespace nx::core
 {
 /**
  * @brief Action for creating a Tetrahedral or Hexehedral Geometry in a DataStructure
@@ -199,23 +199,23 @@ public:
     {
       const DataPath cellsPath = getCreatedPath().createChildPath(m_SharedCellsName);
       // Create the default DataArray that will hold the CellList and Vertices.
-      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
+      Result result = CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString()));
       }
-      SharedCellList* polyhedronList = complex::ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
+      SharedCellList* polyhedronList = ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
       geometry3d->setPolyhedraList(*polyhedronList);
 
       // Create the Vertex Array with a component size of 3
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
-      Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
+      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry3d->setVertices(*vertexArray);
     }
 

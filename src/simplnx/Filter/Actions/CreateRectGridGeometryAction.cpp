@@ -1,15 +1,13 @@
 #include "CreateRectGridGeometryAction.hpp"
 
-#include "complex/DataStructure/Geometry/RectGridGeom.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <fmt/core.h>
 
 #include <memory>
 
-using namespace complex;
-
-namespace complex
+namespace nx::core
 {
 CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, usize xBoundTuples, usize yBoundTuples, usize zBoundTuples, const std::string& cellAttributeMatrixName,
                                                            const std::string& xBoundsName, const std::string& yBoundsName, const std::string& zBoundsName, std::string createdDataFormat)
@@ -192,7 +190,7 @@ Float32Array* CreateRectGridGeometryAction::createBoundArray(DataStructure& data
     errors.insert(errors.end(), result.errors().begin(), result.errors().end());
     return nullptr;
   }
-  Float32Array* boundsArray = complex::ArrayFromPath<float>(dataStructure, boundsPath);
+  Float32Array* boundsArray = ArrayFromPath<float>(dataStructure, boundsPath);
 
   return boundsArray;
 }

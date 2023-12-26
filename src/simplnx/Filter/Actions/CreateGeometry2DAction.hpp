@@ -1,20 +1,20 @@
 #pragma once
 
-#include "complex/Common/Array.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/DataStructure/Geometry/QuadGeom.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/Filter/Output.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/complex_export.hpp"
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Filter/Output.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include <fmt/core.h>
 
 #include <utility>
 
-namespace complex
+namespace nx::core
 {
 /**
  * @brief Action for creating a Triangle or QuadGeometry in a DataStructure
@@ -200,23 +200,23 @@ public:
       DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
       // Create the default DataArray that will hold the FaceList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
+      Result result = CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString()));
       }
-      SharedTriList* triangles = complex::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
+      SharedTriList* triangles = ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
       geometry2d->setFaceList(*triangles);
 
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
-      Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
+      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry2d->setVertices(*vertexArray);
     }
 

@@ -1,19 +1,19 @@
 #pragma once
 
-#include "complex/Common/Array.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
-#include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/Filter/Output.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/complex_export.hpp"
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/Filter/Output.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include <fmt/core.h>
 
 #include <utility>
 
-namespace complex
+namespace nx::core
 {
 /**
  * @brief Action for creating an Edge Geometry in a DataStructure
@@ -200,23 +200,23 @@ public:
       DataPath edgesPath = getCreatedPath().createChildPath(m_SharedEdgesName);
       // Create the default DataArray that will hold the EdgeList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
+      Result result = CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", prefix, edgesPath.toString()));
       }
-      SharedEdgeList* createdEdges = complex::ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
+      SharedEdgeList* createdEdges = ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
       geometry1d->setEdgeList(*createdEdges);
 
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
-      Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
+      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry1d->setVertices(*vertexArray);
     }
 
