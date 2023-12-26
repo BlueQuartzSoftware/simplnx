@@ -261,23 +261,23 @@
         },
         "span-lite_DIR": {
           "type": "PATH",
-          "value": "$env{SRC_DIR}/sdk/span-lite/lib/cmake/span-lite"
+          "value": "$env{PREFIX}/lib/cmake/span-lite"
         },
         "expected-lite_DIR": {
           "type": "PATH",
-          "value": "$env{SRC_DIR}/sdk/expected-lite/lib/cmake/expected-lite"
+          "value": "$env{PREFIX}/lib/cmake/expected-lite"
         },
         "H5Support_DIR": {
           "type": "PATH",
-          "value": "$env{SRC_DIR}/sdk/H5Support/share/H5Support"
+          "value": "$env{PREFIX}/share/H5Support"
         },
         "EbsdLib_DIR": {
           "type": "PATH",
-          "value": "$env{SRC_DIR}/sdk/EbsdLib/share/EbsdLib"
+          "value": "$env{PREFIX}/share/EbsdLib"
         },
         "nod_DIR": {
           "type": "PATH",
-          "value": "$env{SRC_DIR}/sdk/nod/share/nod"
+          "value": "$env{PREFIX}/share/nod"
         },
         "HDF5_NO_FIND_PACKAGE_CONFIG_FILE": {
           "type": "BOOL",
