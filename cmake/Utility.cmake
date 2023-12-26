@@ -460,3 +460,86 @@ function(cmpBuildDateRevisionString)
   endif()
   
 endfunction()
+
+
+#-------------------------------------------------------------------------------
+# @Brief function AddPythonTest
+# @ NAME
+# @ FILE
+# @ PYTHONPATH
+#-------------------------------------------------------------------------------
+function(AddPythonTest)
+  set(options )
+  set(oneValueArgs NAME FILE)
+  set(multiValueArgs PYTHONPATH)
+  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  message(STATUS "ARGS_FILE:${ARGS_FILE}")
+  if(COMPLEX_BUILD_PYTHON)
+    if(WIN32)
+      add_test(NAME ${ARGS_NAME}
+        COMMAND ${complex_SOURCE_DIR}/wrapping/python/testing/anaconda_test.bat
+      )
+
+      set_property(TEST ${ARGS_NAME}
+        PROPERTY
+          ENVIRONMENT
+            "PYTHON_TEST_FILE=${ARGS_FILE}"
+            "Python3_EXECUTABLE=${Python3_EXECUTABLE}"
+    )
+    else()
+      add_test(NAME ${ARGS_NAME}
+        COMMAND ${complex_SOURCE_DIR}/wrapping/python/testing/anaconda_test.sh
+      )
+      set_property(TEST ${ARGS_NAME}
+        PROPERTY
+          ENVIRONMENT
+            "PYTHON_TEST_FILE=${ARGS_FILE}"
+            "Python3_EXECUTABLE=${Python3_EXECUTABLE}"
+      )    
+    endif()
+  else()
+    add_test(NAME ${ARGS_NAME}
+      COMMAND ${Python3_EXECUTABLE} ${ARGS_FILE}
+    )
+  endif()
+
+  if(WIN32)
+    string(REPLACE ";" "\\;" ARGS_PYTHONPATH "${ARGS_PYTHONPATH}")
+  else()
+    string(REPLACE ";" ":" ARGS_PYTHONPATH "${ARGS_PYTHONPATH}")
+  endif()
+
+  set_property(TEST ${ARGS_NAME}
+    APPEND
+    PROPERTY
+      ENVIRONMENT
+      "PYTHONPATH=${ARGS_PYTHONPATH}"
+  )
+endfunction()
+
+#-------------------------------------------------------------------------------
+# @Brief function CreatePythonTests
+# @ PREFIX
+# @ INPUT_DIR
+# @ TEST_NAMES
+#-------------------------------------------------------------------------------
+function(CreatePythonTests)
+  set(options)
+  set(oneValueArgs PREFIX INPUT_DIR)
+  set(multiValueArgs TEST_NAMES)
+  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  set(TESTS_PYTHONPATH
+    "$<TARGET_FILE_DIR:complex>"
+  )
+
+  foreach(test ${ARGS_TEST_NAMES})
+    string(REPLACE "/" "_" test_name ${test})
+    set(PY_TEST_NAME ${ARGS_PREFIX}_${test_name})
+
+    AddPythonTest(NAME ${PY_TEST_NAME}
+      FILE ${ARGS_INPUT_DIR}/${test}.py
+      PYTHONPATH ${TESTS_PYTHONPATH}
+    )
+  endforeach()
+endfunction()

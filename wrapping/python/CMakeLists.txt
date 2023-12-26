@@ -109,8 +109,8 @@ function(simplnx_create_pyi)
   set(PYI_TARGET_NAME ${ARGS_PYTHON_MODULE_NAME}CreateStubFile)
 
   add_custom_target(${PYI_TARGET_NAME} ALL
-    COMMAND ${MYPY_STUBGEN_EXE} -m ${ARGS_PYTHON_MODULE_NAME} -o $<TARGET_FILE_DIR:simplnx>
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
+    COMMAND "${MYPY_STUBGEN_EXE}" -m "${ARGS_PYTHON_MODULE_NAME}" -o "$<TARGET_FILE_DIR:simplnx>"
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py" --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
     COMMENT "${ARGS_PYTHON_MODULE_NAME}: Generating .pyi files"
     WORKING_DIRECTORY $<TARGET_FILE_DIR:simplnx>
   )
@@ -277,4 +277,47 @@ endforeach()
 option(SIMPLNX_ENABLE_SPHINX_DOCS "Enables the Sphinx based documentation generation" OFF)
 if(SIMPLNX_ENABLE_SPHINX_DOCS)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs ${simplnx_BINARY_DIR}/sphinx_docs)
+endif()
+
+#------------------------------------------------------------------------------
+# Create the Python Unit tests
+#------------------------------------------------------------------------------
+option(COMPLEX_ENABLE_PYTHON_TESTS "Enables python based unit tests" OFF)
+if(COMPLEX_ENABLE_PYTHON_TESTS)
+
+    file(READ ${complex_SOURCE_DIR}/wrapping/python/complex_test_dirs.in.py COMPLEX_TEST_DIRS_FILE)
+
+    string(REPLACE "\${CMAKE_LIBRARY_OUTPUT_DIRECTORY}" $<TARGET_FILE_DIR:complex> COMPLEX_TEST_DIRS_FILE ${COMPLEX_TEST_DIRS_FILE})
+    string(REPLACE "\${complex_BINARY_DIR}" ${complex_BINARY_DIR} COMPLEX_TEST_DIRS_FILE ${COMPLEX_TEST_DIRS_FILE})
+    string(REPLACE "\${DREAM3D_DATA_DIR}" ${DREAM3D_DATA_DIR} COMPLEX_TEST_DIRS_FILE ${COMPLEX_TEST_DIRS_FILE})
+    string(REPLACE "\${complex_SOURCE_DIR}" ${complex_SOURCE_DIR} COMPLEX_TEST_DIRS_FILE ${COMPLEX_TEST_DIRS_FILE})
+
+    file(GENERATE
+      OUTPUT "$<TARGET_FILE_DIR:complex>/complex_test_dirs.py"
+      CONTENT ${COMPLEX_TEST_DIRS_FILE}
+    )
+
+    set(PYTHON_TEST_INPUT_DIR "${complex_SOURCE_DIR}/wrapping/python/examples")
+
+    set(COMPLEX_PYTHON_TESTS
+      "angle_conversion" 
+      "basic_arrays" 
+      "basic_ebsd_ipf"
+      "basic_numpy" 
+      "create_ensemble_info" 
+      "generated_file_list" 
+      "geometry_examples" 
+      "import_d3d"      # Dependent on 'basic_ebsd_ipf' running first
+      "import_hdf5"     # Dependent on 'basic_ebsd_ipf' running first
+      "output_file" 
+      "pipeline" 
+      "read_csv_file"
+    #  "read_esprit_data"
+    )
+
+    CreatePythonTests(PREFIX "PY_COMPLEX"
+      INPUT_DIR ${PYTHON_TEST_INPUT_DIR}
+      TEST_NAMES ${COMPLEX_PYTHON_TESTS}
+    )
+
 endif()
