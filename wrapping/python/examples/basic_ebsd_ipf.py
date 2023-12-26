@@ -1,11 +1,52 @@
-# Import the DREAM3D Base library and Plugins
-import simplnx as nx
+"""
+Important Note
+==============
+
+This python file can be used as an example of how to execute a number of DREAM3D-NX
+filters one after another, if you plan to use the codes below (and you are welcome to),
+there are a few things that you, the developer, should take note of:
+
+Import Statements
+-----------------
+
+You will most likely *NOT* need to include the following code:
+
+   .. code:: python
+      
+      import complex_test_dirs as cxtest
+
+Filter Error Detection
+----------------------
+
+In each section of code a filter is created and executed immediately. This may or
+may *not* be what you want to do. You can also preflight the filter to verify the
+correctness of the filters before executing the filter **although** this is done
+for you when the filter is executed. As such, you will want to check the 'result'
+variable to see if there are any errors or warnings. If there **are** any then
+you, as the developer, should act appropriately on the errors or warnings. 
+More specifically, this bit of code:
+
+   .. code:: python
+
+      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+
+is used by the simplnx unit testing framework and should be replaced by your own
+error checking code. You are welcome to look up the function definition and use
+that.
+
+"""
+import complex as cx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
+import complex_test_dirs as cxtest
 
 import numpy as np
-import matplotlib.pyplot as plt
+
+#------------------------------------------------------------------------------
+# Print the various filesystem paths that are pregenerated for this machine.
+#------------------------------------------------------------------------------
+cxtest.print_all_paths()
 
 #------------------------------------------------------------------------------
 # Create a Data Structure
@@ -16,13 +57,10 @@ data_structure = nx.DataStructure()
 result = cxor.ReadAngDataFilter.execute(data_structure=data_structure, 
                                cell_attribute_matrix_name="Scan Data", 
                                cell_ensemble_attribute_matrix_name="Phase Data",
-                               data_container_name=nx.DataPath(["Small IN100"]), 
-                               input_file="DREAM3D_Data/Data/SmallIN100/Slice_1.ang")
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the ReadAngDataFilter")
+                               data_container_name=cx.DataPath(["Small IN100"]), 
+                               input_file=cxtest.GetBuildDirectory() + "/Data/Small_IN100/Slice_1.ang")
+
+cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
 
 #------------------------------------------------------------------------------
 # Rotate the Euler Reference Frame
@@ -30,12 +68,7 @@ else:
 result = cxor.RotateEulerRefFrameFilter.execute(data_structure=data_structure, 
                                                 euler_angles_array_path=nx.DataPath(["Small IN100", "Scan Data", "EulerAngles"]), 
                                                 rotation_axis=[0,0,1,90])
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the RotateEulerRefFrameFilter")
-
+cxtest.check_filter_result(cxor.RotateEulerRefFrameFilter, result)
 
 #------------------------------------------------------------------------------
 # Rotate the Sample Reference Frame 180@010
@@ -49,11 +82,8 @@ result = nx.RotateSampleRefFrameFilter.execute(data_structure=data_structure,
     selected_image_geometry=nx.DataPath(["Small IN100"]),
     #rotation_matrix=[[1,0,0],[0,1,0],[0,0,1]]
     )
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the RotateEulerRefFrameFilter")
+cxtest.check_filter_result(cx.RotateSampleRefFrameFilter, result)
+
 
 #------------------------------------------------------------------------------
 # Create a ThresholdSet to use in the MultiThreshold Objects filter
@@ -75,12 +105,9 @@ dt = nx.DataType.boolean
 result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
                                         array_thresholds=threshold_set, 
                                         created_data_path="Mask",
-                                        created_mask_type=nx.DataType.boolean)
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the MultiThresholdObjects")
+                                        created_mask_type=cx.DataType.boolean)
+cxtest.check_filter_result(cx.MultiThresholdObjects, result)
+
 
 #------------------------------------------------------------------------------
 # Generate the IPF Colors for the <001> direction
@@ -94,28 +121,20 @@ result = cxor.GenerateIPFColorsFilter.execute(    data_structure=data_structure,
     reference_dir=[0,0,1],
     use_mask=True
 )
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the GenerateIPFColorsFilter")
+cxtest.check_filter_result(cxor.GenerateIPFColorsFilter, result)
+
 
 
 #------------------------------------------------------------------------------
 # Write the IPF colors to a PNG file
 #------------------------------------------------------------------------------
-result = cxitk.ITKImageWriter.execute(data_structure=data_structure, file_name="/tmp/Small_IN100_IPF_Z.png", 
-                                      image_array_path=nx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
-                                      image_geom_path=nx.DataPath(["Small IN100"]),
+result = cxitk.ITKImageWriter.execute(data_structure=data_structure, 
+                                      file_name=cxtest.GetTestTempDirectory() + "/Small_IN100_IPF_Z.png", 
+                                      image_array_path=cx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
+                                      image_geom_path=cx.DataPath(["Small IN100"]),
                                       index_offset=0,
                                       plane=0)
-
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the ITKImageWriter")
-
+cxtest.check_filter_result(cxitk.ITKImageWriter, result)
 
 # #------------------------------------------------------------------------------
 # # Show the IPFColors using MatPlotLib
@@ -142,11 +161,8 @@ result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
                                               output_rgb_array_name="CI Color", 
                                               selected_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
                                               selected_preset=color_control_points)
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the GenerateColorTableFilter")
+cxtest.check_filter_result(cx.GenerateColorTableFilter, result)
+
 
 #------------------------------------------------------------------------------
 # Create a Pole Figure
@@ -165,44 +181,21 @@ result = cxor.WritePoleFigureFilter.execute(data_structure=data_structure,
                                             lambert_size=64, 
                                             material_name_array_path=nx.DataPath(["Small IN100", "Phase Data", "MaterialName"]), 
                                             num_colors=32, 
-                                            output_path="small_in100_pole_figure", 
+                                            output_path=cxtest.GetTestTempDirectory() + "/small_in100_pole_figure", 
                                             save_as_image_geometry=True, 
                                             title="Small IN100 Slice 1", 
                                             use_mask=True, 
                                             write_image_to_disk=True)
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the WritePoleFigureFilter")
+cxtest.check_filter_result(cxor.WritePoleFigureFilter, result)
+
 
 
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
-output_file_path = "basic_ebsd_example.dream3d"
-result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
+
+output_file_path = cxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
+result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
-if len(result.errors) != 0:
-    print('Errors: {}', result.errors)
-    print('Warnings: {}', result.warnings)
-else:
-    print("No errors running the WriteDREAM3DFilter")
-
-
-
-#------------------------------------------------------------------------------
-# View with MatPlotLib
-#------------------------------------------------------------------------------
-data_array = data_structure[nx.DataPath(["Small IN100 Pole Figure", "CellData", prefix + "Phase_1"])]
-# Get the underlying DataStore object
-data_store = data_array.store
-npdata = data_store.npview().copy()
-# Remove any dimension with '1'
-npdata = np.squeeze(npdata, axis=0)
-
-plt.imshow(npdata)
-plt.title("Small IN100 Pole Figure")
-plt.axis('off')  # to turn off axes
-plt.show()
+cxtest.check_filter_result(cx.WriteDREAM3DFilter, result)

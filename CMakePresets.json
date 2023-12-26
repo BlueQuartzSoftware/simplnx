@@ -33,6 +33,10 @@
           "type": "BOOL",
           "value": "ON"
         },
+        "SIMPLNX_ENABLE_PYTHON_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
         "SIMPLNX_EMBED_PYTHON": {
           "type": "BOOL",
           "value": "OFF"
@@ -121,6 +125,14 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-osx-v11"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+        },
+        "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
+          "type": "BOOL",
+          "value": "ON"
         }
       }
     },
@@ -138,6 +150,14 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "arm64-osx-dynamic"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+        },
+        "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
+          "type": "BOOL",
+          "value": "ON"
         }
       }
     },
@@ -155,6 +175,10 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-linux-dynamic"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
         }
       }
     },
@@ -278,6 +302,10 @@
         "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
           "type": "BOOL",
           "value": "ON"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/local/anaconda3/envs/nx-build/bin/python"
         }
       }
     },

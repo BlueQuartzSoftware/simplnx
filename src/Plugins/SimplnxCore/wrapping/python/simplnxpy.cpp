@@ -544,8 +544,11 @@ PYBIND11_MODULE(simplnx, mod)
       std::vector<DataPath> outputPaths;
       for(const auto* object : self.getTopLevelData())
       {
-        auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
-        outputPaths.push_back(topLevelPath);
+        if(object != nullptr)
+        {
+          auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
+          outputPaths.push_back(topLevelPath);
+        }
       }
       return outputPaths;
     }
