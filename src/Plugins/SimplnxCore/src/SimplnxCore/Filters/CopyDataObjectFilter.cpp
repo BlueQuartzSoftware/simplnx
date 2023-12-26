@@ -1,5 +1,6 @@
 #include "CopyDataObjectFilter.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -80,7 +81,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
     return {MakeErrorResult<OutputActions>(-27360, "Copied Object(s) have the same parent as original data but the suffix is empty."), {}};
   }
 
-  OutputActions actions;
+  Result<OutputActions> resultOutputActions;
 
   for(const auto& dataArrayPath : dataArrayPaths)
   {
@@ -88,6 +89,27 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
     if(useNewParent)
     {
       parentPath = args.value<DataPath>(k_NewPath_Key);
+      // Scope AM check since we fully expect it to be a nullptr
+      {
+        const auto* possibleAM = data.getDataAs<AttributeMatrix>(parentPath);
+        if(possibleAM != nullptr)
+        {
+          for(const auto& path : dataArrayPaths)
+          {
+            const auto* possibleIArray = data.getDataAs<IArray>(path);
+            if(possibleIArray != nullptr)
+            {
+              if(possibleAM->getShape() != possibleIArray->getTupleShape())
+              {
+                resultOutputActions.warnings().push_back(
+                    Warning{-27361, fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a runtime error if the sizing remains "
+                                                "the same at time of this filters execution. Proceed with caution.",
+                                                possibleIArray->getName(), possibleIArray->getNumberOfTuples(), possibleAM->getName(), possibleAM->getNumTuples())});
+              }
+            }
+          }
+        }
+      }
     }
     std::string newTargetName = dataArrayPath.getTargetName() + suffix;
     DataPath newDataPath = parentPath.createChildPath(newTargetName);
@@ -100,16 +122,16 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
       {
         for(const auto& sourcePath : pathsToBeCopied.value())
         {
-          std::string createdPathName = nx::core::StringUtilities::replace(sourcePath.toString(), dataArrayPath.getTargetName(), newTargetName);
+          std::string createdPathName = StringUtilities::replace(sourcePath.toString(), dataArrayPath.getTargetName(), newTargetName);
           allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
         }
       }
     }
     auto action = std::make_unique<CopyDataObjectAction>(dataArrayPath, newDataPath, allCreatedPaths);
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
-  return {std::move(actions)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
