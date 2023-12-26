@@ -1,5 +1,6 @@
 from ExamplePlugin.CalculateHistogramFilter import CalculateHistogramFilter
 from ExamplePlugin.InterpolateGridDataFilter import InterpolateGridDataFilter
+from ExamplePlugin.CliReaderFilter import CliReaderFilter
 import complex as cx
 
 class ExamplePlugin:
@@ -19,4 +20,4 @@ class ExamplePlugin:
     return 'BlueQuartz Software'
 
   def get_filters(self):
-    return [CalculateHistogramFilter, InterpolateGridDataFilter]
+    return [CalculateHistogramFilter, InterpolateGridDataFilter, CliReaderFilter]
