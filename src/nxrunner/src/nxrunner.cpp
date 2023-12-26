@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ostream>
+#include <stdlib.h>
 #include <string>
 
 #if SIMPLNX_EMBED_PYTHON
