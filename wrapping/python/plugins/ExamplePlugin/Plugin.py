@@ -1,14 +1,14 @@
 from ExamplePlugin.CalculateHistogramFilter import CalculateHistogramFilter
 from ExamplePlugin.InterpolateGridDataFilter import InterpolateGridDataFilter
 from ExamplePlugin.CliReaderFilter import CliReaderFilter
-import complex as cx
+import simplnx as sx
 
 class ExamplePlugin:
   def __init__(self) -> None:
     pass
 
-  def id(self) -> cx.Uuid:
-    return cx.Uuid('7ce1af33-d790-4378-9f75-b81483ce7737')
+  def id(self) -> sx.Uuid:
+    return sx.Uuid('7ce1af33-d790-4378-9f75-b81483ce7737')
 
   def name(self) -> str:
     return 'ExamplePlugin'
