@@ -1,4 +1,10 @@
 from typing import List
+
+# This is required to set matplotlib in a non-interactive mode so that
+# it can be used in a DREAM3DNX pipeline that runs on a non-GUI thread
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
