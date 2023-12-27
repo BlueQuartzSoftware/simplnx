@@ -23,7 +23,7 @@ follows:
 This custom build has **ALL** ***SIMPL*** plugins compiled so you don't need
 to worry about what filters will be available
 
-### Load up ***SIMPL*** DREAM3D and navigate to ***ComplexFilterGen***
+### Load up ***SIMPL*** DREAM3D and navigate to ***SimplnxFilterGen***
 
 Here you will need to set the command arguments using the following syntax:
 
@@ -120,9 +120,9 @@ The syntax for use of ***filterList*** is as follows:
 
 ## SECTION 4 : Multithreading
 
-At the current time, the only filters that should be made parallel are those that could be considered "embarrassingly parallel". It is important to remember that the cost of creating a thread is hefty so it should only be done when there is a sizeable amount of work available for each thread. Complex has two types: ParallelTaskAlgorithm and ParallelDataAlgorithm. Task Runner is for parsing multiple objects and Data Runner is for parsing a single object. 
+At the current time, the only filters that should be made parallel are those that could be considered "embarrassingly parallel". It is important to remember that the cost of creating a thread is hefty so it should only be done when there is a sizeable amount of work available for each thread. Simplnx has two types: ParallelTaskAlgorithm and ParallelDataAlgorithm. Task Runner is for parsing multiple objects and Data Runner is for parsing a single object. 
 
-### Syntax for Complex
+### Syntax for Simplnx
 
 This is an examplar use case and doesn't truly encompass all possible use cases for the functions, but instead serves to show how it should be structured in most cases.  
 

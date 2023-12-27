@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,37 +28,37 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
+import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
 #------------------------------------------------------------------------------
 # Print the various filesystem paths that are pregenerated for this machine.
 #------------------------------------------------------------------------------
-cxtest.print_all_paths()
+nxtest.print_all_paths()
 
 # Create the DataStructure object
 data_structure = nx.DataStructure()
 
-import_data = cx.Dream3dImportParameter.ImportData()
-import_data.file_path = cxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
+import_data = nx.Dream3dImportParameter.ImportData()
+import_data.file_path = nxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
 import_data.data_paths = None  # Use 'None' to import the entire file.
 
 print(f'{import_data.file_path}')
 
-result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
-cxtest.check_filter_result(cx.ReadDREAM3DFilter, result)
+result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+nxtest.check_filter_result(nx.ReadDREAM3DFilter, result)
 
 #------------------------------------------------------------------------------
 # Print out the children of some of the Attribute Matrix groups
@@ -83,9 +83,9 @@ npview[npview < 120] = 0
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
-output_file_path = cxtest.GetTestTempDirectory() + "/import_data.dream3d"
-result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
+output_file_path = nxtest.GetTestTempDirectory() + "/import_data.dream3d"
+result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
-cxtest.check_filter_result(cx.WriteDREAM3DFilter, result)
+nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)
 

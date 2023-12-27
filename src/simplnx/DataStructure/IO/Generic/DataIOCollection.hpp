@@ -37,7 +37,7 @@ public:
 
   /**
    * @brief Returns the IDataIOManager for the specified format name.
-   * Complex comes with HDF5 IO Manager.
+   * Simplnx comes with HDF5 IO Manager.
    * Additional IDataIOManagers are added through plugins.
    * @param formatName
    * @return std::shared_ptr<IDataIOManager>

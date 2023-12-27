@@ -183,7 +183,7 @@ then the new data will be incorporated into the existing data structure. Or, if 
 data structure yet exists (e.g, starting from a “blank slate”), a new one will be 
 created.
 
-.. py:class:: complex.IFilter
+.. py:class:: simplnx.IFilter
 
    This class holds an instantiation of a DREAM3D-NX filter. The filter can be
    preflighted, executed or just held for later execution. 
@@ -205,15 +205,15 @@ created.
 
    .. py:method:: execute()
 
-      :return: A complex.IFilter.Result object that contains any warnings or errors
+      :return: A simplnx.IFilter.Result object that contains any warnings or errors
       that were encountered during the execution of the filter.
-      :rtype: complex.IFilter.Result
+      :rtype: simplnx.IFilter.Result
 
    .. py:method:: preflight()
 
-      :return: A complex.IFilter.Result object that contains any warnings or errors
+      :return: A simplnx.IFilter.Result object that contains any warnings or errors
       that were encountered during the preflight of the filter.
-      :rtype: complex.IFilter.Result
+      :rtype: simplnx.IFilter.Result
 
 .. code:: python
 
