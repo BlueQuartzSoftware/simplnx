@@ -192,7 +192,7 @@ The filter will write the **complete** contents of the DataStructure to the HDF5
         print("No errors running the filter")
 
 
-Creating Geometries in Complex
+Creating Geometries in Simplnx
 ------------------------------
 
 Each of the supported **Geometry** objects can be created using the :ref:`simplnx.CreateGeometryFilter.Execute() <CreateGeometryFilter>` 

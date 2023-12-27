@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,25 +28,25 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
+import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
 #------------------------------------------------------------------------------
 # Print the various filesystem paths that are pregenerated for this machine.
 #------------------------------------------------------------------------------
-cxtest.print_all_paths()
+nxtest.print_all_paths()
 
 # Create a Data Structure
 data_structure = nx.DataStructure()
@@ -54,14 +54,14 @@ data_structure = nx.DataStructure()
 #------------------------------------------------------------------------------
 # Create a top level group: (Not needed)
 #------------------------------------------------------------------------------
-result = cx.CreateDataGroup.execute(data_structure=data_structure,
-                                    data_object_path=cx.DataPath(['Group']))
-cxtest.check_filter_result(cx.CreateDataGroup, result)
+result = nx.CreateDataGroup.execute(data_structure=data_structure,
+                                    data_object_path=nx.DataPath(['Group']))
+nxtest.check_filter_result(nx.CreateDataGroup, result)
 
 
-result = cx.CreateDataGroup.execute(data_structure=data_structure, 
-                                    data_object_path=cx.DataPath("/Some/Path/To/Group"));
-cxtest.check_filter_result(cx.CreateDataGroup, result)
+result = nx.CreateDataGroup.execute(data_structure=data_structure, 
+                                    data_object_path=nx.DataPath("/Some/Path/To/Group"));
+nxtest.check_filter_result(nx.CreateDataGroup, result)
 
 
 #------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ result  = create_array_filter.execute(data_structure=data_structure,
                                         numeric_type=array_type, 
                                         output_data_array=output_array_path, 
                                         tuple_dimensions=tuple_dims)
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 # We can check the output of the filter by simply printing the array
@@ -102,7 +102,7 @@ result  = create_array_filter.execute(data_structure=data_structure,
                                         numeric_type=array_type, 
                                         output_data_array=output_array_path, 
                                         tuple_dimensions=tuple_dims)
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 data_array = data_structure[output_array_path]
@@ -131,7 +131,7 @@ result = create_array_filter.execute(data_structure=data_structure,
                                         numeric_type=array_type, 
                                         output_data_array=output_array_path, 
                                         tuple_dimensions=tuple_dims)
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 npdata = data_structure[output_array_path].npview()
@@ -140,15 +140,15 @@ print(npdata)
 result = nx.CreateAttributeMatrixFilter.execute(data_structure=data_structure, 
                                                 data_object_path=nx.DataPath(["New Attribute Matrix"]), 
                                                 tuple_dimensions = [[100., 200., 300.]])
-cxtest.check_filter_result(cx.CreateAttributeMatrixFilter, result)
+nxtest.check_filter_result(nx.CreateAttributeMatrixFilter, result)
 
 
 
-output_file_path = cxtest.GetTestTempDirectory() + "/output_file_example.dream3d"
-result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
+output_file_path = nxtest.GetTestTempDirectory() + "/output_file_example.dream3d"
+result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
-cxtest.check_filter_result(cx.WriteDREAM3DFilter, result)
+nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)
 
 
 

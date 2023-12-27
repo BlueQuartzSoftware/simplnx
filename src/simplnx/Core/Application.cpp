@@ -182,13 +182,13 @@ void Application::savePreferences()
   m_Preferences->saveToFile(filepath);
 }
 
-std::optional<Uuid> Application::getComplexUuid(const Uuid& simplUuid)
+std::optional<Uuid> Application::getSimplnxUuid(const Uuid& simplUuid)
 {
   for(usize index = 0; index < m_Simpl_Uuids.size(); index++)
   {
     if(m_Simpl_Uuids[index] == simplUuid)
     {
-      return m_Complex_Uuids[index];
+      return m_Simplnx_Uuids[index];
     }
   }
 
@@ -198,9 +198,9 @@ std::optional<Uuid> Application::getComplexUuid(const Uuid& simplUuid)
 std::vector<Uuid> Application::getSimplUuid(const Uuid& simplnxUuid)
 {
   std::vector<usize> indices;
-  for(usize index = 0; index < m_Complex_Uuids.size(); index++)
+  for(usize index = 0; index < m_Simplnx_Uuids.size(); index++)
   {
-    if(m_Complex_Uuids[index] == simplnxUuid)
+    if(m_Simplnx_Uuids[index] == simplnxUuid)
     {
       indices.push_back(index);
     }
@@ -294,8 +294,8 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
     return;
   }
 
-  AbstractPlugin::SIMPLMapType simplToComplexUuids = plugin->getSimplToSimplnxMap();
-  for(auto const& [simplUuid, simplData] : simplToComplexUuids)
+  AbstractPlugin::SIMPLMapType simplToSimplnxUuids = plugin->getSimplToSimplnxMap();
+  for(auto const& [simplUuid, simplData] : simplToSimplnxUuids)
   {
     for(const auto& uuid : m_Simpl_Uuids)
     {
@@ -305,12 +305,12 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
       }
     }
     m_Simpl_Uuids.push_back(simplUuid);
-    m_Complex_Uuids.push_back(simplData.simplnxUuid);
+    m_Simplnx_Uuids.push_back(simplData.simplnxUuid);
   }
 
-  if(m_Simpl_Uuids.size() != m_Complex_Uuids.size())
+  if(m_Simpl_Uuids.size() != m_Simplnx_Uuids.size())
   {
-    throw std::runtime_error(fmt::format("UUID maps are not of the same size! SIMPL UUID Vector size: {} Complex UUID Vector size: {}", m_Simpl_Uuids.size(), m_Complex_Uuids.size()));
+    throw std::runtime_error(fmt::format("UUID maps are not of the same size! SIMPL UUID Vector size: {} Simplnx UUID Vector size: {}", m_Simpl_Uuids.size(), m_Simplnx_Uuids.size()));
   }
 
   for(const auto& pluginIO : plugin->getDataIOManagers())

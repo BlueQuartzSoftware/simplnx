@@ -1,4 +1,4 @@
-# Complex Python Information
+# Simplnx Python Information
 
 ## Checklist when updating Python Bindings
 
@@ -98,6 +98,6 @@ Ensure you are building the python bindings.
 ```shell
 SIMPLNX_BUILD_PYTHON=ON
 SIMPLNX_EMBED_PYTHON=OFF
-SIMPLNX_ENABLE_SPHINX_DOCS=ON
+SIMPLNX_BUILD_PYTHON_DOCS=ON
 Python3_EXECUTABLE=/path/to/python
 ```

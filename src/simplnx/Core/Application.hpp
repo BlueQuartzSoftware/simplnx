@@ -131,13 +131,13 @@ public:
   std::filesystem::path getCurrentDir() const;
 
   /**
-   * @brief Returns the Complex filter UUID [v4] from the SIMPL filter UUID [v5]
+   * @brief Returns the Simplnx filter UUID [v4] from the SIMPL filter UUID [v5]
    * @return std::optional<Uuid>
    */
-  std::optional<Uuid> getComplexUuid(const Uuid& simplUuid);
+  std::optional<Uuid> getSimplnxUuid(const Uuid& simplUuid);
 
   /**
-   * @brief Returns the SIMPL filter UUID(s) [v5] from the Complex filter UUID [v4]
+   * @brief Returns the SIMPL filter UUID(s) [v5] from the Simplnx filter UUID [v4]
    * @return std::optional<std::vector<Uuid>>
    */
   std::vector<Uuid> getSimplUuid(const Uuid& simplnxUuid);
@@ -184,8 +184,8 @@ private:
   // Variables
   std::unique_ptr<nx::core::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
-  std::vector<Uuid> m_Simpl_Uuids;   // no duplicates; index must match m_Complex_Uuids
-  std::vector<Uuid> m_Complex_Uuids; // duplicate allowed conditionally; index must match m_Simpl_Uuids
+  std::vector<Uuid> m_Simpl_Uuids;   // no duplicates; index must match m_Simplnx_Uuids
+  std::vector<Uuid> m_Simplnx_Uuids; // duplicate allowed conditionally; index must match m_Simpl_Uuids
   std::shared_ptr<DataIOCollection> m_DataIOCollection;
   name_type_map m_NamedTypesMap;
   std::unique_ptr<Preferences> m_Preferences = nullptr;

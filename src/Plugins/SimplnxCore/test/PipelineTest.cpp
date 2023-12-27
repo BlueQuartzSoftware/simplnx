@@ -154,7 +154,7 @@ TEST_CASE("PipelineTest:Execute Pipeline")
   REQUIRE(pipeline.push_back(tf2Handle));
 }
 
-TEST_CASE("PipelineTest:Complex Pipeline")
+TEST_CASE("PipelineTest:Simplnx Pipeline")
 {
   auto app = Application::GetOrCreateInstance();
   app->loadPlugins(unit_test::k_BuildDir.view());

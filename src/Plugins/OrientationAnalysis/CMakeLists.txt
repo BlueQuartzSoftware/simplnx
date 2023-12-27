@@ -126,7 +126,7 @@ endforeach()
 target_include_directories(simplnx PUBLIC )
 
 # ------------------------------------------------------------------------------
-# Add a link library to simplnx because it now depends on EbsdLib. Complex will
+# Add a link library to simplnx because it now depends on EbsdLib. Simplnx will
 # be able to find the include dirs from the CMake EbsdLib target
 # ------------------------------------------------------------------------------
 target_link_libraries(simplnx PUBLIC EbsdLib::EbsdLib)

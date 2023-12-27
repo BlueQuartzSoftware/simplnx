@@ -474,10 +474,10 @@ function(AddPythonTest)
   set(multiValueArgs PYTHONPATH)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
   message(STATUS "ARGS_FILE:${ARGS_FILE}")
-  if(COMPLEX_BUILD_PYTHON)
+  if(SIMPLNX_BUILD_PYTHON)
     if(WIN32)
       add_test(NAME ${ARGS_NAME}
-        COMMAND ${complex_SOURCE_DIR}/wrapping/python/testing/anaconda_test.bat
+        COMMAND ${simplnx_SOURCE_DIR}/wrapping/python/testing/anaconda_test.bat
       )
 
       set_property(TEST ${ARGS_NAME}
@@ -488,7 +488,7 @@ function(AddPythonTest)
     )
     else()
       add_test(NAME ${ARGS_NAME}
-        COMMAND ${complex_SOURCE_DIR}/wrapping/python/testing/anaconda_test.sh
+        COMMAND ${simplnx_SOURCE_DIR}/wrapping/python/testing/anaconda_test.sh
       )
       set_property(TEST ${ARGS_NAME}
         PROPERTY
@@ -530,7 +530,7 @@ function(CreatePythonTests)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(TESTS_PYTHONPATH
-    "$<TARGET_FILE_DIR:complex>"
+    "$<TARGET_FILE_DIR:simplnx>"
   )
 
   foreach(test ${ARGS_TEST_NAMES})

@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,15 +28,15 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
-import complex_test_dirs as cxtest
+import simplnx as nx
+import simplnx_test_dirs as nxtest
 
 
 import numpy as np
@@ -74,8 +74,8 @@ degrees_data = npdata.copy()
 radians_data = np.radians(degrees_data)
 
 # Run a D3D filter to convert back to degrees
-result = cx.ChangeAngleRepresentation.execute(data_structure, conversion_type=0, angles_array_path=array_path)
-cxtest.check_filter_result(cx.ChangeAngleRepresentation, result)
+result = nx.ChangeAngleRepresentation.execute(data_structure, conversion_type=0, angles_array_path=array_path)
+nxtest.check_filter_result(nx.ChangeAngleRepresentation, result)
 
 # compare the 2 arrays
 assert np.array_equal(npdata, radians_data)

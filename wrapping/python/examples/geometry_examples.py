@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,25 +28,25 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
+import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
 #------------------------------------------------------------------------------
 # Print the various filesystem paths that are pregenerated for this machine.
 #------------------------------------------------------------------------------
-cxtest.print_all_paths()
+nxtest.print_all_paths()
 
 """
 In the code below we are using some data files that are found in the simplnx
@@ -65,7 +65,7 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          geometry_type=0,  # 0 = Image Geometry
                                          origin=[0.0, 0.0, 0.0],
                                          spacing=[1.0, 1.0, 1.0])
-cxtest.check_filter_result(cx.CreateGeometryFilter, result)
+nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
 
 data_object = data_structure["Image Geometry"]
@@ -86,7 +86,7 @@ create_array_filter = nx.CreateDataArray()
 result = create_array_filter.execute(data_structure=data_structure, component_count=1, data_format="",
                                      initialization_value="10",
                                      numeric_type=array_type, output_data_array=output_array_path)
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 # ------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ result = create_array_filter.execute(data_structure=data_structure,
                                      numeric_type=array_type,
                                      output_data_array=output_array_path,
                                      tuple_dimensions=tuple_dims)
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 x_coords = data_structure[output_array_path].npview()
@@ -130,7 +130,7 @@ result = create_array_filter.execute(data_structure=data_structure,
                                      numeric_type=array_type,
                                      output_data_array=output_array_path,
                                      tuple_dimensions=tuple_dims)
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 y_coords = data_structure[output_array_path].npview()
@@ -148,7 +148,7 @@ result = create_array_filter.execute(data_structure=data_structure,
                                      numeric_type=array_type,
                                      output_data_array=output_array_path,
                                      tuple_dimensions=tuple_dims)
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 z_coords = data_structure[output_array_path].npview()
@@ -164,7 +164,7 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          y_bounds=nx.DataPath("RectGridCoords/Y Coords"),
                                          z_bounds=nx.DataPath("RectGridCoords/Z Coords")
                                          )
-cxtest.check_filter_result(cx.CreateGeometryFilter, result)
+nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
 
 rect_grid_geom = data_structure["RectGrid Geometry"]
@@ -186,12 +186,12 @@ result = nx.CreateDataArray.execute(data_structure,
                                     tuple_dimensions=[[144]],
                                     output_data_array=array_path,
                                     initialization_value='0')
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 # Read the CSV file into the DataArray using the numpy view
 vertex_coords = data_structure[array_path].npview()
-file_path = cxtest.GetComplexSourceDir() + '/test/Data/VertexCoordinates.csv'
+file_path = nxtest.GetSimplnxSourceDir() + '/test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 array_path = nx.DataPath('Triangles')
@@ -201,11 +201,11 @@ result = nx.CreateDataArray.execute(data_structure,
                                     tuple_dimensions=[[242]],
                                     output_data_array=array_path,
                                     initialization_value='0')
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 # Read the CSV file into the DataArray using the numpy view
 triangles = data_structure[array_path].npview()
-file_path = cxtest.GetComplexSourceDir() + '/test/Data/TriangleConnectivity.csv'
+file_path = nxtest.GetSimplnxSourceDir() + '/test/Data/TriangleConnectivity.csv'
 triangles[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
@@ -218,7 +218,7 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          vertex_list_name=nx.DataPath('Vertices'),
                                          triangle_list_name=nx.DataPath('Triangles')
                                          )
-cxtest.check_filter_result(cx.CreateGeometryFilter, result)
+nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
 
 # ------------------------------------------------------------------------------
@@ -232,12 +232,12 @@ result = nx.CreateDataArray.execute(data_structure,
                                     tuple_dimensions=[[144]],
                                     output_data_array=array_path,
                                     initialization_value='0')
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 # Read the CSV file into the DataArray using the numpy view
 vertex_coords = data_structure[array_path].npview()
-file_path = cxtest.GetComplexSourceDir() + '/test/Data/VertexCoordinates.csv'
+file_path = nxtest.GetSimplnxSourceDir() + '/test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 array_path = nx.DataPath('Edges')
@@ -247,11 +247,11 @@ result = nx.CreateDataArray.execute(data_structure,
                                     tuple_dimensions=[[264]],
                                     output_data_array=array_path,
                                     initialization_value='0')
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 # Read the CSV file into the DataArray using the numpy view
-file_path = cxtest.GetComplexSourceDir() + '/test/Data/EdgeConnectivity.csv'
+file_path = nxtest.GetSimplnxSourceDir() + '/test/Data/EdgeConnectivity.csv'
 edges_view = data_structure["Edges"].npview()
 edges_view[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
@@ -264,11 +264,11 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          vertex_list_name=nx.DataPath('Vertices'),
                                          edge_list_name=nx.DataPath('Edges')
                                          )
-cxtest.check_filter_result(cx.CreateGeometryFilter, result)
+nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
 
-output_file_path = cxtest.GetTestTempDirectory() + "/geometry_examples.dream3d"
-result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, export_file_path=output_file_path,
+output_file_path = nxtest.GetTestTempDirectory() + "/geometry_examples.dream3d"
+result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, export_file_path=output_file_path,
                                        write_xdmf_file=True)
-cxtest.check_filter_result(cx.WriteDREAM3DFilter, result)
+nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)
 

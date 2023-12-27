@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,30 +28,30 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import simplnx as nx
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
 #------------------------------------------------------------------------------
 # Print the various filesystem paths that are pregenerated for this machine.
 #------------------------------------------------------------------------------
-cxtest.print_all_paths()
+nxtest.print_all_paths()
 
 # Create the DataStructure object
 data_structure = nx.DataStructure()
 # This file has 7 columns to import
-read_csv_data = cx.ReadCSVDataParameter()
-read_csv_data.input_file_path = cxtest.GetComplexPythonSourceDir() + "/examples/test_csv_data.csv"
+read_csv_data = nx.ReadCSVDataParameter()
+read_csv_data.input_file_path = nxtest.GetSimplnxPythonSourceDir() + "/examples/test_csv_data.csv"
 read_csv_data.start_import_row = 2
 read_csv_data.delimiters = [',']
 read_csv_data.custom_headers = []
@@ -72,4 +72,4 @@ result = nx.ReadCSVFileFilter.execute(data_structure=data_structure,
                                       # The ReadCSVData object with all member variables set.
                                       read_csv_data=read_csv_data # The ReadCSVData object with all member variables set.
                                       )
-cxtest.check_filter_result(cx.ReadCSVFileFilter, result)
+nxtest.check_filter_result(nx.ReadCSVFileFilter, result)
