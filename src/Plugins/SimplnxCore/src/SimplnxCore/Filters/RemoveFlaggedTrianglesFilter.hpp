@@ -1,33 +1,32 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
+#include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "complex/Filter/FilterTraits.hpp"
-#include "complex/Filter/IFilter.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
-namespace complex
+namespace nx::core
 {
 /**
- * @class LabelTriangleGeometryFilter
+ * @class RemoveFlaggedTrianglesFilter
  * @brief This filter will ....
  */
-class COMPLEXCORE_EXPORT LabelTriangleGeometryFilter : public IFilter
+class SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesFilter : public IFilter
 {
 public:
-  LabelTriangleGeometryFilter() = default;
-  ~LabelTriangleGeometryFilter() noexcept override = default;
+  RemoveFlaggedTrianglesFilter() = default;
+  ~RemoveFlaggedTrianglesFilter() noexcept override = default;
 
-  LabelTriangleGeometryFilter(const LabelTriangleGeometryFilter&) = delete;
-  LabelTriangleGeometryFilter(LabelTriangleGeometryFilter&&) noexcept = delete;
+  RemoveFlaggedTrianglesFilter(const RemoveFlaggedTrianglesFilter&) = delete;
+  RemoveFlaggedTrianglesFilter(RemoveFlaggedTrianglesFilter&&) noexcept = delete;
 
-  LabelTriangleGeometryFilter& operator=(const LabelTriangleGeometryFilter&) = delete;
-  LabelTriangleGeometryFilter& operator=(LabelTriangleGeometryFilter&&) noexcept = delete;
+  RemoveFlaggedTrianglesFilter& operator=(const RemoveFlaggedTrianglesFilter&) = delete;
+  RemoveFlaggedTrianglesFilter& operator=(RemoveFlaggedTrianglesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
-  static inline constexpr StringLiteral k_CreatedRegionIdsPath_Key = "created_region_ids_path";
-  static inline constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
-  static inline constexpr StringLiteral k_NumTrianglesName_Key = "num_triangles_name";
+  static inline constexpr StringLiteral k_InputGeometry_Key = "input_geometry";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_OutputGeometry_Key = "output_geometry";
 
   /**
    * @brief Reads SIMPL json and converts it complex Arguments.
@@ -100,7 +99,7 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
-} // namespace complex
+} // namespace nx::core
 
-COMPLEX_DEF_FILTER_TRAITS(complex, LabelTriangleGeometryFilter, "7a7a2c6f-3b03-444d-8b8c-5976b0e5c82e");
-/* LEGACY UUID FOR THIS FILTER a250a228-3b6b-5b37-a6e4-8687484f04c4 */
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, RemoveFlaggedTrianglesFilter, "38155c61-2709-4731-be95-43745bb3f8d8");
+/* LEGACY UUID FOR THIS FILTER 379ccc67-16dd-530a-984f-177db9351bac */

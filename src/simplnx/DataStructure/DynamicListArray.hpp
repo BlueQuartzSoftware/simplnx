@@ -187,7 +187,7 @@ public:
    */
   DataObject* shallowCopy() override
   {
-    throw std::runtime_error("");
+    throw std::runtime_error(fmt::format("Shallow copy is not valid for {} because it is of type DynamicListArray", this->getName()));
   }
 
   /**

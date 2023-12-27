@@ -1,17 +1,17 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
+#include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 
-namespace complex
+namespace nx::core
 {
 
-struct COMPLEXCORE_EXPORT LabelTriangleGeometryInputValues
+struct SIMPLNXCORE_EXPORT LabelTriangleGeometryInputValues
 {
   DataPath TriangleGeomPath;
   DataPath RegionIdsPath;
@@ -25,7 +25,7 @@ struct COMPLEXCORE_EXPORT LabelTriangleGeometryInputValues
  * where a bool mask array specifies.
  */
 
-class COMPLEXCORE_EXPORT LabelTriangleGeometry
+class SIMPLNXCORE_EXPORT LabelTriangleGeometry
 {
 public:
   LabelTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, LabelTriangleGeometryInputValues* inputValues);
@@ -47,4 +47,4 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 };
 
-} // namespace complex
+} // namespace nx::core

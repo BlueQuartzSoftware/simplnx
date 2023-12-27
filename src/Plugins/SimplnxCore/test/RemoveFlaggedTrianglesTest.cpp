@@ -1,20 +1,19 @@
 #include <catch2/catch.hpp>
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/RemoveFlaggedTrianglesFilter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "SimplnxCore/Filters/RemoveFlaggedTrianglesFilter.hpp"
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
-fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_Remove_Flagged_Triangles/6_6_remove_flagged_triangles.dream3d", complex::unit_test::k_TestFilesDir));
+fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_Remove_Flagged_Triangles/6_6_remove_flagged_triangles.dream3d", unit_test::k_TestFilesDir));
 }
 
-TEST_CASE("ComplexCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "[ComplexCore][RemoveFlaggedTrianglesFilter]")
+TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "[SimplnxCore][RemoveFlaggedTrianglesFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Remove_Flagged_Triangles.tar.gz",
-                                                             "6_6_Remove_Flagged_Triangles.dream3d");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "6_6_Remove_Flagged_Triangles.tar.gz", "6_6_Remove_Flagged_Triangles.dream3d");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);

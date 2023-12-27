@@ -1,19 +1,19 @@
 #include "LabelTriangleGeometryFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/LabelTriangleGeometry.hpp"
+#include "SimplnxCore/Filters/Algorithms/LabelTriangleGeometry.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Utilities/SIMPLConversion.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string LabelTriangleGeometryFilter::name() const
@@ -82,7 +82,7 @@ IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataSt
   auto pTriangleAMNameValue = filterArgs.value<std::string>(k_TriangleAttributeMatrixName_Key);
   auto pNumTrianglesNameValue = filterArgs.value<std::string>(k_NumTrianglesName_Key);
 
-  complex::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   {
@@ -153,4 +153,4 @@ Result<Arguments> LabelTriangleGeometryFilter::FromSIMPLJson(const nlohmann::jso
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
-} // namespace complex
+} // namespace nx::core

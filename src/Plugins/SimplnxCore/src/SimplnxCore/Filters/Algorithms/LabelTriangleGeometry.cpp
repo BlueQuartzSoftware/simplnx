@@ -1,10 +1,10 @@
 #include "LabelTriangleGeometry.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 LabelTriangleGeometry::LabelTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,

@@ -1,17 +1,17 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
+#include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 
-namespace complex
+namespace nx::core
 {
-struct COMPLEXCORE_EXPORT RemoveFlaggedTrianglesInputValues
+struct SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesInputValues
 {
   DataPath TriangleGeometry;
   DataPath MaskArrayPath;
@@ -23,7 +23,7 @@ struct COMPLEXCORE_EXPORT RemoveFlaggedTrianglesInputValues
  * @brief This filter replaces values in the target array with a user specified value
  * where a bool mask array specifies.
  */
-class COMPLEXCORE_EXPORT RemoveFlaggedTriangles
+class SIMPLNXCORE_EXPORT RemoveFlaggedTriangles
 {
 public:
   RemoveFlaggedTriangles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RemoveFlaggedTrianglesInputValues* inputValues);
@@ -44,4 +44,4 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
-} // namespace complex
+} // namespace nx::core
