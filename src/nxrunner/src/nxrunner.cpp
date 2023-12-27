@@ -543,6 +543,34 @@ int main(int argc, char* argv[])
   LoadApp();
 
 #if SIMPLNX_EMBED_PYTHON
+  {
+    constexpr const char k_PYTHONHOME[] = "PYTHONHOME";
+    constexpr const char k_CONDA_PREFIX[] = "CONDA_PREFIX";
+
+    std::string condaPrefix;
+    char* condaPrefixPtr = getenv(k_CONDA_PREFIX);
+    if(condaPrefixPtr != nullptr)
+    {
+      condaPrefix = condaPrefixPtr;
+      std::cout << "CONDA_PREFIX=" << condaPrefix << std::endl;
+    }
+
+    std::string pythonHome;
+    char* pythonHomePtr = getenv(k_PYTHONHOME);
+    if(pythonHomePtr != nullptr)
+    {
+      pythonHome = pythonHomePtr;
+      std::cout << "PYTHONHOME=" << pythonHome << std::endl;
+    }
+
+    if(pythonHome.empty() && !condaPrefix.empty())
+    {
+      std::string envVar = fmt::format("{}={}", k_PYTHONHOME, condaPrefix);
+      putenv(envVar.data());
+      std::cout << envVar << std::endl;
+    }
+  }
+
   py::scoped_interpreter guard{};
 
   try
