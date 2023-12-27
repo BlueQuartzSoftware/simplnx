@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,25 +28,25 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
+import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
 #------------------------------------------------------------------------------
 # Print the various filesystem paths that are pregenerated for this machine.
 #------------------------------------------------------------------------------
-cxtest.print_all_paths()
+nxtest.print_all_paths()
 
 # Create a Data Structure
 data_structure = nx.DataStructure()
@@ -55,7 +55,7 @@ ensemble_info_parameter = []
 ensemble_info_parameter.append(["Hexagonal-High 6/mmm","Primary","Phase 1"])
 ensemble_info_parameter.append(["Cubic-High m-3m","Primary","Phase 2"])
 
-create_ensemble_info = cxor.CreateEnsembleInfoFilter()
+create_ensemble_info = nxor.CreateEnsembleInfoFilter()
 result = create_ensemble_info.execute(data_structure=data_structure,
                              cell_ensemble_attribute_matrix_name=nx.DataPath(["Phase Information"]), 
                              crystal_structures_array_name="CrystalStructures", 
@@ -63,4 +63,4 @@ result = create_ensemble_info.execute(data_structure=data_structure,
                              phase_types_array_name="Primary", 
                              ensemble=ensemble_info_parameter
                              )
-cxtest.check_filter_result(cxor.CreateEnsembleInfoFilter, result)
+nxtest.check_filter_result(nxor.CreateEnsembleInfoFilter, result)

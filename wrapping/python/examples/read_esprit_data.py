@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,25 +28,25 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
+import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
 #------------------------------------------------------------------------------
 # Print the various filesystem paths that are pregenerated for this machine.
 #------------------------------------------------------------------------------
-cxtest.print_all_paths()
+nxtest.print_all_paths()
 
 
 # ------------------------------------------------------------------------------
@@ -55,12 +55,12 @@ cxtest.print_all_paths()
 # Create a Data Structure
 data_structure = nx.DataStructure()
 
-param1 = cxor.OEMEbsdScanSelectionParameter.ValueType()
+param1 = nxor.OEMEbsdScanSelectionParameter.ValueType()
 param1.input_file_path = "LEROY_0089_Section_382.h5"
 param1.stacking_order = 0
 param1.scan_names = ["LEROY_0089_Section_382"]
 
-result = cxor.ReadH5EspritDataFilter.execute(data_structure = data_structure, 
+result = nxor.ReadH5EspritDataFilter.execute(data_structure = data_structure, 
                                              cell_attribute_matrix_name = "Cell Data", 
                                              cell_ensemble_attribute_matrix_name = "Cell Ensemble Data", 
                                              degrees_to_radians = True, 
@@ -70,13 +70,13 @@ result = cxor.ReadH5EspritDataFilter.execute(data_structure = data_structure,
                                              selected_scan_names = param1, 
                                              z_spacing = 1.0)
 
-cxtest.check_filter_result(cxor.ReadH5EspritDataFilter, result)
+nxtest.check_filter_result(nxor.ReadH5EspritDataFilter, result)
 
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
-output_file_path = cxtest.GetTestTempDirectory() + "/import_esprit.dream3d"
+output_file_path = nxtest.GetTestTempDirectory() + "/import_esprit.dream3d"
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
-cxtest.check_filter_result(cx.WriteDREAM3DFilter, result)
+nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)

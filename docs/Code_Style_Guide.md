@@ -1,6 +1,6 @@
 # Code Style Guide
 
-This is the style guide for the COMPLEX library. When contributing sources to the simplnx repository we ask that all contributions follow this style guide. These general rules have been developed over the years in an effort to allow efficient coding practices.
+This is the style guide for the SIMPLNX library. When contributing sources to the simplnx repository we ask that all contributions follow this style guide. These general rules have been developed over the years in an effort to allow efficient coding practices.
 
 ## Source Code Line Endings
 
@@ -72,7 +72,7 @@ Note that with C++11, programmers now have the ability to inform the compiler wh
 
 ## Naming conventions
 
-There is an include clang-tidy file that most IDE's can use to assist with some of the major areas. One area is the naming conventions that COMPLEX uses. Here are the basic rules:
+There is an include clang-tidy file that most IDE's can use to assist with some of the major areas. One area is the naming conventions that SIMPLNX uses. Here are the basic rules:
 
 - Class and Structs are `UpperCamelCase`
 - Class private member variables are `m_UpperCamelCase`

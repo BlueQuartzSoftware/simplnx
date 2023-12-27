@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,31 +28,31 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
+import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
 #------------------------------------------------------------------------------
 # Print the various filesystem paths that are pregenerated for this machine.
 #------------------------------------------------------------------------------
-cxtest.print_all_paths()
+nxtest.print_all_paths()
 
-data_structure = cx.DataStructure()
+data_structure = nx.DataStructure()
 
-pipeline = cx.Pipeline().from_file(cxtest.GetComplexSourceDir() + '/src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline')
+pipeline = nx.Pipeline().from_file(nxtest.GetSimplnxSourceDir() + '/src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline')
 
-pipeline.to_file( "test pipeline", cxtest.GetTestTempDirectory() + "/python_pipeline.d3dpipeline")
+pipeline.to_file( "test pipeline", nxtest.GetTestTempDirectory() + "/python_pipeline.d3dpipeline")
 
 
 

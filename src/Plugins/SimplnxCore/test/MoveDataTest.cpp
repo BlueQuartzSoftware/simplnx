@@ -41,7 +41,7 @@ DataStructure createDataStructure()
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::MoveData Successful", "[Complex::Core][MoveData]")
+TEST_CASE("SimplnxCore::MoveData Successful", "[Simplnx::Core][MoveData]")
 {
   MoveData filter;
   Arguments args;
@@ -79,7 +79,7 @@ TEST_CASE("SimplnxCore::MoveData Successful", "[Complex::Core][MoveData]")
   REQUIRE(dataStructure.getDataAs<DataGroup>(newGroup4Path) != nullptr);
 }
 
-TEST_CASE("SimplnxCore::MoveData Unsuccessful", "[Complex::Core][MoveData]")
+TEST_CASE("SimplnxCore::MoveData Unsuccessful", "[Simplnx::Core][MoveData]")
 {
   MoveData filter;
   Arguments args;
@@ -117,7 +117,7 @@ TEST_CASE("SimplnxCore::MoveData Unsuccessful", "[Complex::Core][MoveData]")
   }
 }
 
-TEST_CASE("SimplnxCore::MoveData Tuple Size Mismatches Warning and Failure", "[Complex::Core][MoveData]")
+TEST_CASE("SimplnxCore::MoveData Tuple Size Mismatches Warning and Failure", "[Simplnx::Core][MoveData]")
 {
   MoveData filter;
   Arguments args;

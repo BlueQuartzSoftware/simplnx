@@ -33,7 +33,11 @@
           "type": "BOOL",
           "value": "ON"
         },
-        "SIMPLNX_ENABLE_PYTHON_TESTS": {
+        "SIMPLNX_BUILD_PYTHON_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_BUILD_PYTHON_DOCS": {
           "type": "BOOL",
           "value": "ON"
         },

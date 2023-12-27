@@ -13,7 +13,7 @@ You will most likely *NOT* need to include the following code:
 
    .. code:: python
       
-      import complex_test_dirs as cxtest
+      import simplnx_test_dirs as nxtest
 
 Filter Error Detection
 ----------------------
@@ -28,25 +28,25 @@ More specifically, this bit of code:
 
    .. code:: python
 
-      cxtest.check_filter_result(cxor.ReadAngDataFilter, result)
+      nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
 is used by the simplnx unit testing framework and should be replaced by your own
 error checking code. You are welcome to look up the function definition and use
 that.
 
 """
-import complex as cx
+import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
 #------------------------------------------------------------------------------
 # Print the various filesystem paths that are pregenerated for this machine.
 #------------------------------------------------------------------------------
-cxtest.print_all_paths()
+nxtest.print_all_paths()
 
 
 # ------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ result = nx.CreateDataArray.execute(data_structure=data_structure,
                                     tuple_dimensions=[[99]],
                                     output_data_array=array_path,
                                     initialization_value='0')
-cxtest.check_filter_result(cx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 # Get a numpy.view into the newly created DataArray
@@ -73,19 +73,19 @@ data_store = data_array.store
 npdata = data_store.npview()
 
 # Read the CSV file into the DataArray using the numpy view
-file_path = cxtest.GetComplexPythonSourceDir() + '/examples/angles.csv'
+file_path = nxtest.GetSimplnxPythonSourceDir() + '/examples/angles.csv'
 npdata[:] = np.loadtxt(file_path, delimiter=',')
 
 # ------------------------------------------------------------------------------
 # Run the ConvertOrientation Filter to convert the Eulers to Quaternions
 # ------------------------------------------------------------------------------
 quat_path = nx.DataPath(['Quaternions'])
-result = cxor.ConvertOrientations.execute(data_structure=data_structure,
+result = nxor.ConvertOrientations.execute(data_structure=data_structure,
                                           input_orientation_array_path=array_path,
                                           input_type=0,
                                           output_orientation_array_name='Quaternions',
                                           output_type=2)
-cxtest.check_filter_result(cxor.ConvertOrientations, result)
+nxtest.check_filter_result(nxor.ConvertOrientations, result)
 
 
 # Get the Quaternions and print them out.

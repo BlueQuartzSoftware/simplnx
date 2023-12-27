@@ -7,9 +7,9 @@
  '''
 
 
-import complex as cx
+import simplnx as sx
 
-def check_filter_result(filter: cx.IFilter, result: cx.IFilter.ExecuteResult):
+def check_filter_result(filter: sx.IFilter, result: sx.IFilter.ExecuteResult):
   if len(result.warnings) != 0:
     print(f'{filter.name()} ::  Warnings: {result.warnings}')
   
@@ -25,19 +25,19 @@ def GetBuildDirectory():
   return '${CMAKE_LIBRARY_OUTPUT_DIRECTORY}'
 
 def GetTestDirectory():
-  return '${complex_BINARY_DIR}/Testing'
+  return '${simplnx_BINARY_DIR}/Testing'
 
 def GetTestTempDirectory():
-  return '${complex_BINARY_DIR}/Testing/Temporary'
+  return '${simplnx_BINARY_DIR}/Testing/Temporary'
 
 def GetDataDirectory():
   return '${DREAM3D_DATA_DIR}'
 
-def GetComplexPythonSourceDir():
-    return '${complex_SOURCE_DIR}/wrapping/python'
+def GetSimplnxPythonSourceDir():
+    return '${simplnx_SOURCE_DIR}/wrapping/python'
 
-def GetComplexSourceDir():
-    return '${complex_SOURCE_DIR}'
+def GetSimplnxSourceDir():
+    return '${simplnx_SOURCE_DIR}'
 
 def print_all_paths():
     print(f'#### Important Filesystem Paths ####')
@@ -45,6 +45,6 @@ def print_all_paths():
     print(f'  GetTestDirectory:          {GetTestDirectory()}')
     print(f'  GetTestTempDirectory:      {GetTestTempDirectory()}')
     print(f'  GetDataDirectory:          {GetDataDirectory()}')
-    print(f'  GetComplexPythonSourceDir: {GetComplexPythonSourceDir()}')
-    print(f'  GetComplexSourceDir:       {GetComplexSourceDir()}')
+    print(f'  GetSimplnxPythonSourceDir: {GetSimplnxPythonSourceDir()}')
+    print(f'  GetSimplnxSourceDir:       {GetSimplnxSourceDir()}')
     print('#######################################')

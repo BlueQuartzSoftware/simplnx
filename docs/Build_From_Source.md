@@ -156,7 +156,7 @@ Be default VCPKG will check for updates to the libraries that it compiles. If yo
 
 ## Defining where test data is stored ##
 
-Complex and its plugins require test files to be able to perform the unit tests. By default these will be store inside the build directory. This means that if you have multiple build directories, a separate copy of all the test files will be downloaded for each build directory. The developer can set the `DREAM3D_DATA_DIR` variable to a path that will be used. They will need to set this for **each** build directory. You **MUST** define `DREAM3D_DATA_DIR` using an absolute path. Relative paths **will not work**.
+Simplnx and its plugins require test files to be able to perform the unit tests. By default these will be store inside the build directory. This means that if you have multiple build directories, a separate copy of all the test files will be downloaded for each build directory. The developer can set the `DREAM3D_DATA_DIR` variable to a path that will be used. They will need to set this for **each** build directory. You **MUST** define `DREAM3D_DATA_DIR` using an absolute path. Relative paths **will not work**.
 
 + `-DDREAM3D_DATA_DIR=/opt/local/DREAM3D_Data`
 

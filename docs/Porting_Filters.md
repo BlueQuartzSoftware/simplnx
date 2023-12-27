@@ -23,7 +23,7 @@ static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 - `QMap<> => std::map<>`
 - `QByteArray => std::array<int8> or std::vector<int8>`
 
-## Converting `setErrorCondition` from SIMPL to COMPLEX ##
+## Converting `setErrorCondition` from SIMPL to SIMPLNX ##
 
 SIMPL
 
@@ -31,7 +31,7 @@ SIMPL
     setErrorCondition(nx::core::StlConstants::k_ErrorOpeningFile, "Error opening STL file");
 ```
 
-COMPLEX
+SIMPLNX
 
 ```cpp
     Result<> result =  MakeErrorResult(nx::core::StlConstants::k_ErrorOpeningFile, "Error opening STL file")
