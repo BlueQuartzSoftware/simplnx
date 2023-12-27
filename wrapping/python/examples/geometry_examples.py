@@ -218,7 +218,11 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          vertex_list_name=nx.DataPath('Vertices'),
                                          triangle_list_name=nx.DataPath('Triangles')
                                          )
+<<<<<<< HEAD
 nxtest.check_filter_result(nx.CreateGeometryFilter, result)
+=======
+nxtest.check_filter_result(cx.CreateGeometryFilter, result)
+>>>>>>> cf84ef01a (Various naming updates and organization changes)
 
 
 # ------------------------------------------------------------------------------

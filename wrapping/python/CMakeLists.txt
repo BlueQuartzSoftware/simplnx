@@ -110,7 +110,7 @@ function(simplnx_create_pyi)
 
   add_custom_target(${PYI_TARGET_NAME} ALL
     COMMAND "${MYPY_STUBGEN_EXE}" -m "${ARGS_PYTHON_MODULE_NAME}" -o "$<TARGET_FILE_DIR:simplnx>"
-    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py" --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/utils/fix_pyi_file.py" --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
     COMMENT "${ARGS_PYTHON_MODULE_NAME}: Generating .pyi files"
     WORKING_DIRECTORY $<TARGET_FILE_DIR:simplnx>
   )
@@ -282,10 +282,10 @@ endif()
 #------------------------------------------------------------------------------
 # Create the Python Unit tests
 #------------------------------------------------------------------------------
-option(SIMPLNX_BUILD_PYTHON_TESTS "Enables python based unit tests" OFF)
-if(SIMPLNX_BUILD_PYTHON_TESTS)
+option(SIMPLNX_ENABLE_PYTHON_TESTS "Enables python based unit tests" OFF)
+if(SIMPLNX_ENABLE_PYTHON_TESTS)
 
-    file(READ ${simplnx_SOURCE_DIR}/wrapping/python/simplnx_test_dirs.in.py SIMPLNX_TEST_DIRS_FILE)
+    file(READ ${simplnx_SOURCE_DIR}/wrapping/python/testing/simplnx_test_dirs.in.py SIMPLNX_TEST_DIRS_FILE)
 
     string(REPLACE "\${CMAKE_LIBRARY_OUTPUT_DIRECTORY}" $<TARGET_FILE_DIR:simplnx> SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
     string(REPLACE "\${simplnx_BINARY_DIR}" ${simplnx_BINARY_DIR} SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})

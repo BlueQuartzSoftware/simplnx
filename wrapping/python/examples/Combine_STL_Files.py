@@ -1,8 +1,8 @@
-import complex as cx
+import simplnx as nx
 
 import itkimageprocessing as cxitk
 import orientationanalysis as cxor
-import complex_test_dirs as cxtest
+import simplnx_test_dirs as nxtest
 
 import numpy as np
 
