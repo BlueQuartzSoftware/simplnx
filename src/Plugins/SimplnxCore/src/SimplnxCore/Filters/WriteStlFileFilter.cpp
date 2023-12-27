@@ -7,6 +7,7 @@
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
@@ -57,7 +58,8 @@ Parameters WriteStlFileFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_GroupByFeature, "Group by Feature Phases", "Further partition the stl files by feature phases", false));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", 0ULL, ChoicesParameter::Choices{"Features", "Phases and Features", "None [Single File]"}));
+  // params.insertLinkableParameter(std::make_unique<BoolParameter>(k_GroupByFeature, "Group by Feature Phases", "Further partition the stl files by feature phases", false));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(
@@ -74,7 +76,14 @@ Parameters WriteStlFileFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   // link params
-  params.linkParameters(k_GroupByFeature, k_FeaturePhasesPath_Key, true);
+  //params.linkParameters(k_GroupByFeature, k_FeaturePhasesPath_Key, true);
+
+  //------------ Group by Features -------------
+
+  //------- Group by Features and Phases -------
+  params.linkParameters(k_GroupingType_Key, k_FeaturePhasesPath_Key, 1ULL);
+
+  //--------------- Single File ----------------
 
   return params;
 }
