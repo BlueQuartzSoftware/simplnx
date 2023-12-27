@@ -205,15 +205,15 @@ created.
 
    .. py:method:: execute()
 
-      :return: A simplnx.IFilter.Result object that contains any warnings or errors
-      that were encountered during the execution of the filter.
-      :rtype: simplnx.IFilter.Result
+      :return: A complex.IFilter.Result object that contains any warnings or errors that were encountered during the execution of the filter.
+
+      :rtype: complex.IFilter.Result
 
    .. py:method:: preflight()
 
-      :return: A simplnx.IFilter.Result object that contains any warnings or errors
-      that were encountered during the preflight of the filter.
-      :rtype: simplnx.IFilter.Result
+      :return: A complex.IFilter.Result object that contains any warnings or errors that were encountered during the preflight of the filter.
+
+      :rtype: complex.IFilter.Result
 
 .. code:: python
 
