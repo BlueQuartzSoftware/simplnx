@@ -1,12 +1,12 @@
 from ITKImageProcessing.ITKGrayscaleFillholeImage import ITKGrayscaleFillholeImage
-import complex as cx
+import simplnx as sx
 
 class ITKImageProcessingPlugin:
   def __init__(self) -> None:
     pass
 
-  def id(self) -> cx.Uuid:
-    return cx.Uuid('3efe91e4-a962-465a-8d5a-bd7e5269b0ce')
+  def id(self) -> sx.Uuid:
+    return sx.Uuid('3efe91e4-a962-465a-8d5a-bd7e5269b0ce')
 
   def name(self) -> str:
     return 'ITKImageProcessingPlugin'
