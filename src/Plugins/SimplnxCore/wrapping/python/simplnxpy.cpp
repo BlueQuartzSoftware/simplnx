@@ -161,6 +161,7 @@ auto BindDataStore(py::handle scope, const char* name)
       py::return_value_policy::reference_internal);
   dataStore.def("__getitem__", &DataStore<T>::at);
   dataStore.def("__len__", &DataStore<T>::getSize);
+  dataStore.def("resize_tuples", &DataStore<T>::resizeTuples, "Resize the tuples with the given shape");
   return dataStore;
 }
 
@@ -703,6 +704,7 @@ PYBIND11_MODULE(simplnx, mod)
   iDataArray.def_property_readonly("tdims", &IDataArray::getTupleShape);
   iDataArray.def_property_readonly("cdims", &IDataArray::getComponentShape);
   iDataArray.def_property_readonly("data_type", &IDataArray::getDataType);
+  iDataArray.def("resize_tuples", &IDataArray::resizeTuples, "Resize the tuples with the given shape");
 
   auto dataArrayInt8 = SIMPLNX_PY_BIND_DATA_ARRAY(mod, Int8Array);
   auto dataArrayUInt8 = SIMPLNX_PY_BIND_DATA_ARRAY(mod, UInt8Array);

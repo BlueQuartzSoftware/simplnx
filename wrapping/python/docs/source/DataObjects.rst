@@ -194,6 +194,16 @@ in the example.
    :ivar store: The DataStore object.
    :ivar dtype: The type of data stored in the DataArray
 
+
+   .. py:method:: resize_tuples
+
+      Resize the DataStore with the given shape array.
+
+      :ivar shape: List: The new dimensions of the DataStore in the order from slowest to fastest
+
+DataArray Example Usage
+^^^^^^^^^^^^^^^^^^^^^^^
+
 This code will create a DataArray called "2D Array" with tuple dimensions of [4,5], 
 3 components at each tuple, of type Float32 with every element initialized to "0.0"
 and then print the name, tuple_dimensions and component_dims of the created DatArray object
@@ -249,6 +259,15 @@ from a created DataArray_ by executing the :ref:`Create Data Array <CreateDataAr
 
       Get a value at a specified index. Use of the numpy view into the DataArray is preferred.
 
+   .. py:method:: resize_tuples
+
+      Resize the DataStore with the given shape array.
+
+      :ivar shape: List: The new dimensions of the DataStore in the order from slowest to fastest
+
+
+DataStore Example Usage
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: python
 
