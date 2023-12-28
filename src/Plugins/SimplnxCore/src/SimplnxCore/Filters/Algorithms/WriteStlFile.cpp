@@ -34,6 +34,13 @@ Result<> WriteStlFile::operator()()
   const IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
 
+  auto groupingType = static_cast<GroupingType>(m_InputValues->GroupingType);
+
+  if(groupingType == GroupingType::None)
+  {
+
+  }
+
   const std::filesystem::path outputPath = m_InputValues->OutputStlDirectory;
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
@@ -45,7 +52,7 @@ Result<> WriteStlFile::operator()()
 
   // Store all the unique Spins
   std::map<int32, int32> uniqueGrainIdToPhase;
-  if(m_InputValues->GroupByFeature)
+  if(groupingType == GroupingType::FeaturesAndPhases)
   {
     const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
     for(IGeometry::MeshIndexType i = 0; i < nTriangles; i++)
@@ -54,7 +61,7 @@ Result<> WriteStlFile::operator()()
       uniqueGrainIdToPhase.emplace(featureIds[i * 2 + 1], featurePhases[i * 2 + 1]);
     }
   }
-  else
+  if(groupingType == GroupingType::Features)
   {
     for(IGeometry::MeshIndexType i = 0; i < nTriangles; i++)
     {
@@ -82,7 +89,7 @@ Result<> WriteStlFile::operator()()
   {
     // Generate the output file name
     std::string filename = m_InputValues->OutputStlDirectory.string() + "/" + m_InputValues->OutputStlPrefix;
-    if(m_InputValues->GroupByFeature)
+    if(groupingType == GroupingType::FeaturesAndPhases)
     {
       filename += "Ensemble_" + StringUtilities::number(value) + "_";
     }
@@ -96,14 +103,14 @@ Result<> WriteStlFile::operator()()
     if(f == nullptr)
     {
       fclose(f);
-      atomicFile.setAutoCommit(false); // Set this to false otherwise
+      atomicFile.setAutoCommit(false); // Set this to false
       return {MakeWarningVoidResult(-27875, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", atomicFile.tempFilePath().string(), filename))};
     }
 
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
 
     std::string header = "DREAM3D Generated For Feature ID " + StringUtilities::number(featureId);
-    if(m_InputValues->GroupByFeature)
+    if(groupingType == GroupingType::FeaturesAndPhases)
     {
       header += " Phase " + StringUtilities::number(value);
     }
@@ -111,7 +118,7 @@ Result<> WriteStlFile::operator()()
     if(header.size() >= 80)
     {
       fclose(f);
-      atomicFile.setAutoCommit(false); // Set this to false otherwise
+      atomicFile.setAutoCommit(false); // Set this to false
       atomicFile.removeTempFile();     // Remove the temp file
       return {MakeWarningVoidResult(-27874, fmt::format("Error Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}.", filename, header.length()))};
     }
@@ -139,10 +146,6 @@ Result<> WriteStlFile::operator()()
       IGeometry::MeshIndexType nId1 = triangles[t * 3 + 1];
       IGeometry::MeshIndexType nId2 = triangles[t * 3 + 2];
 
-      vert1[0] = static_cast<float>(vertices[nId0 * 3]);
-      vert1[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
-      vert1[2] = static_cast<float>(vertices[nId0 * 3 + 2]);
-
       if(featureIds[t * 2] == featureId)
       {
         // winding = 0; // 0 = Write it using forward spin
@@ -159,6 +162,10 @@ Result<> WriteStlFile::operator()()
       {
         continue; // We do not match either spin so move to the next triangle
       }
+
+      vert1[0] = static_cast<float>(vertices[nId0 * 3]);
+      vert1[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
+      vert1[2] = static_cast<float>(vertices[nId0 * 3 + 2]);
 
       vert2[0] = static_cast<float>(vertices[nId1 * 3]);
       vert2[1] = static_cast<float>(vertices[nId1 * 3 + 1]);
