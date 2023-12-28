@@ -15,9 +15,9 @@ namespace nx::core
 
 enum class GroupingType : ChoicesParameter::ValueType
 {
-  Features = 0,
-  FeaturesAndPhases = 1,
-  None = 2
+  Features,
+  FeaturesAndPhases,
+  None
 };
 
 struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
