@@ -1,7 +1,13 @@
 cxx_compiler:
   - vs2019 # [win]
 
+c_compiler_version: # [unix]
+  - 9.3.0 # [linux]
+
+cxx_compiler_version:
+  - 9.3.0 # [linux]
+
 python:
+    - 3.11
     - 3.10
     - 3.9
-    - 3.8
