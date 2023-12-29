@@ -7,6 +7,26 @@
 
 using namespace nx::core;
 
+namespace
+{
+template<bool UseFeatures, bool UsePhases>
+struct FileGrouping
+{
+  static inline constexpr bool UsingFeatures = UseFeatures;
+  static inline constexpr bool UsingPhases = UsePhases;
+};
+
+using FeaturesGrouping = FileGrouping<true,false>;
+using FeaturesPhasesGrouping = FileGrouping<true,true>;
+using NoGrouping = FileGrouping<false,false>;
+
+template<class FileGrouping = FeaturesGrouping>
+auto writeOutStl()
+{
+  
+}
+}
+
 // -----------------------------------------------------------------------------
 WriteStlFile::WriteStlFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteStlFileInputValues* inputValues)
 : m_DataStructure(dataStructure)

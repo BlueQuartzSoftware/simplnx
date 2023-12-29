@@ -58,7 +58,7 @@ Parameters WriteStlFileFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", to_underlying(GroupingType::Features),
-                                                                    ChoicesParameter::Choices{"Features", "Phases and Features", "None [Single File]"}));
+                                                                    ChoicesParameter::Choices{"Features", "Phases and Features", "None [Single File]"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(
@@ -75,18 +75,20 @@ Parameters WriteStlFileFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "The feature phases array to further order/index files by", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  // link params
+  // link params -- GroupingType enum is stored in the algorithm header [WriteStlFile.hpp]
   //------------ Group by Features -------------
-  params.linkParameters(k_GroupingType_Key, k_OutputStlDirectory_Key, 0ULL);
-  params.linkParameters(k_GroupingType_Key, k_OutputStlPrefix_Key, 0ULL);
+  params.linkParameters(k_GroupingType_Key, k_OutputStlDirectory_Key, to_underlying(GroupingType::Features));
+  params.linkParameters(k_GroupingType_Key, k_OutputStlPrefix_Key, to_underlying(GroupingType::Features));
+  params.linkParameters(k_GroupingType_Key, k_FeatureIdsPath_Key, to_underlying(GroupingType::Features));
 
   //------- Group by Features and Phases -------
-  params.linkParameters(k_GroupingType_Key, k_OutputStlDirectory_Key, 1ULL);
-  params.linkParameters(k_GroupingType_Key, k_OutputStlPrefix_Key, 1ULL);
-  params.linkParameters(k_GroupingType_Key, k_FeaturePhasesPath_Key, 1ULL);
+  params.linkParameters(k_GroupingType_Key, k_OutputStlDirectory_Key, to_underlying(GroupingType::FeaturesAndPhases));
+  params.linkParameters(k_GroupingType_Key, k_OutputStlPrefix_Key, to_underlying(GroupingType::FeaturesAndPhases));
+  params.linkParameters(k_GroupingType_Key, k_FeatureIdsPath_Key, to_underlying(GroupingType::FeaturesAndPhases));
+  params.linkParameters(k_GroupingType_Key, k_FeaturePhasesPath_Key, to_underlying(GroupingType::FeaturesAndPhases));
 
   //--------------- Single File ----------------
-  params.linkParameters(k_GroupingType_Key, k_OutputStlFile_Key, 2ULL);
+  params.linkParameters(k_GroupingType_Key, k_OutputStlFile_Key, to_underlying(GroupingType::None));
 
   return params;
 }
