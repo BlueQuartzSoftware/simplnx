@@ -16,7 +16,7 @@ using namespace nx::core;
 
 namespace
 {
-const std::string k_ExemplarDir = fmt::format("{}/6_6_write_stl_test", unit_test::k_TestFilesDir);
+const std::string k_ExemplarDir = fmt::format("{}/6_6_write_stl_file_test", unit_test::k_TestFilesDir);
 
 std::vector<char> readIn(fs::path filePath)
 {
@@ -39,7 +39,7 @@ std::vector<char> readIn(fs::path filePath)
   return {};
 }
 
-void CompareResults() // compare hash of both file strings
+void CompareMultipleResults() // compare hash of both file strings
 {
   fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/TriangleFeature_0.stl");
   REQUIRE(fs::exists(writtenFilePath));
@@ -52,11 +52,20 @@ void CompareResults() // compare hash of both file strings
   REQUIRE(fs::exists(exemplarFilePath2));
   REQUIRE(readIn(writtenFilePath2) == readIn(exemplarFilePath2));
 }
+
+void CompareSingleResult() // compare hash of both file strings
+{
+  fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Generated.stl");
+  REQUIRE(fs::exists(writtenFilePath));
+  fs::path exemplarFilePath = fs::path(k_ExemplarDir + "/Exemplar.stl");
+  REQUIRE(fs::exists(exemplarFilePath));
+  REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
+}
 } // namespace
 
-TEST_CASE("SimplnxCore::WriteStlFileFilter: Valid Filter Execution", "[SimplnxCore][WriteStlFileFilter]")
+TEST_CASE("SimplnxCore::WriteStlFileFilter: Multiple File Valid", "[SimplnxCore][WriteStlFileFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_test.tar.gz", "6_6_write_stl_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteStlFileFilter filter;
@@ -79,5 +88,31 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Valid Filter Execution", "[SimplnxCo
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  ::CompareResults();
+  ::CompareMultipleResults();
+}
+
+TEST_CASE("SimplnxCore::WriteStlFileFilter: Single File Valid", "[SimplnxCore][WriteStlFileFilter]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  WriteStlFileFilter filter;
+  auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(WriteStlFileFilter::k_GroupingType_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  args.insertOrAssign(WriteStlFileFilter::k_OutputStlFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Generated.stl")));
+  args.insertOrAssign(WriteStlFileFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(DataPath({"TriangleDataContainer"})));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.valid());
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  REQUIRE(executeResult.result.valid());
+
+  ::CompareSingleResult();
 }

@@ -132,10 +132,12 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
       return MakePreflightErrorResult(-27872, fmt::format("Feature Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
     }
   }
-
-  if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue); featureIds == nullptr)
+  if(pGroupingTypeValue != GroupingType::None)
   {
-    return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
+    if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue); featureIds == nullptr)
+    {
+      return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
+    }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
