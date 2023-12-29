@@ -268,7 +268,7 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::None)
   {
-    AtomicFile atomicFile(m_InputValues->OutputStlFile, false);
+    AtomicFile atomicFile(m_InputValues->OutputStlFile.string(), false);
 
     if(atomicFile.getResult().invalid())
     {
