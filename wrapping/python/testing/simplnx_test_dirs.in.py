@@ -32,14 +32,14 @@ def GetTestTempDirectory():
   return '${simplnx_BINARY_DIR}/Testing/Temporary'
 
 def GetDataDirectory():
-  return '${DREAM3D_DATA_DIR}'
+  return '${DATA_DEST_DIR}'
 
 def GetSimplnxPythonSourceDir():
     return '${simplnx_SOURCE_DIR}/wrapping/python'
 
 def GetSimplnxSourceDir():
-
     return '${simplnx_SOURCE_DIR}'
+
 
 def print_all_paths():
     print(f'#### Important Filesystem Paths ####')

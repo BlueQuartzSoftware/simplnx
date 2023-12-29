@@ -15,7 +15,7 @@ constexpr int32 k_ExecuteWarning = -666000;
 constexpr int32 k_ExecuteError = -666001;
 } // namespace
 
-TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
+TEST_CASE("ErrorWarningFilter::Instantiate Filter", "[ErrorWarningFilter]")
 {
   DataStructure dataStructure;
 
