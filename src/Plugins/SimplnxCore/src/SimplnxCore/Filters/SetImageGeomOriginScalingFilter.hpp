@@ -27,6 +27,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom";
   static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
+  static inline constexpr StringLiteral k_CenterOrigin_Key = "center_origin";
   static inline constexpr StringLiteral k_ChangeResolution_Key = "change_resolution";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";

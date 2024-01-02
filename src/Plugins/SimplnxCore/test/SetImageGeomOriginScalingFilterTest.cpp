@@ -29,7 +29,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter(Instantiate)", "[Simplnx
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
 }
 
-TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter(Valid Parameters)", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
+TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Valid Execution", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
 {
   DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   bool k_ChangeOrigin = true;
@@ -55,5 +55,67 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter(Valid Parameters)", "[Si
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeom.getOrigin() == FloatVec3{7, 6, 5});
+  REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
+}
+
+TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: 0,0,0 Central Origin", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
+{
+  DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
+  bool k_ChangeOrigin = true;
+  bool k_ChangeResolution = true;
+  std::vector<float64> k_Origin{0.0, 0.0, 0.0};
+  std::vector<float64> k_Spacing{2, 2, 2};
+
+  SetImageGeomOriginScalingFilter filter;
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  Arguments args;
+
+  args.insert(SetImageGeomOriginScalingFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insert(SetImageGeomOriginScalingFilter::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
+  args.insert(SetImageGeomOriginScalingFilter::k_CenterOrigin_Key, std::make_any<bool>(false));
+  args.insert(SetImageGeomOriginScalingFilter::k_ChangeResolution_Key, std::make_any<bool>(k_ChangeResolution));
+  args.insert(SetImageGeomOriginScalingFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
+  args.insert(SetImageGeomOriginScalingFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
+  Point3Df center = imageGeom.getBoundingBoxf().center();
+  REQUIRE(center == Point3Df{0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
+}
+
+TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Custom Central Origin", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
+{
+  DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
+  bool k_ChangeOrigin = true;
+  bool k_ChangeResolution = true;
+  std::vector<float64> k_Origin{7.0, 6.0, 5.0};
+  std::vector<float64> k_Spacing{2, 2, 2};
+
+  SetImageGeomOriginScalingFilter filter;
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  Arguments args;
+
+  args.insert(SetImageGeomOriginScalingFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insert(SetImageGeomOriginScalingFilter::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
+  args.insert(SetImageGeomOriginScalingFilter::k_CenterOrigin_Key, std::make_any<bool>(true));
+  args.insert(SetImageGeomOriginScalingFilter::k_ChangeResolution_Key, std::make_any<bool>(k_ChangeResolution));
+  args.insert(SetImageGeomOriginScalingFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
+  args.insert(SetImageGeomOriginScalingFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
+  Point3Df center = imageGeom.getBoundingBoxf().center();
+  REQUIRE(center == Point3Df{7.0, 6.0, 5.0});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
 }
