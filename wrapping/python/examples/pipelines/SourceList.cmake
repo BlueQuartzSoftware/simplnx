@@ -1,41 +1,5 @@
 
 #------------------------------------------------------------------------------
-# Add the examples/Pipelines/Complex folder
-#------------------------------------------------------------------------------
-set(PYTHON_TEST_INPUT_DIR "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/Complex")
-
-set(SIMPLNX_PYTHON_TESTS
-  AlignSectionsMutualInformation
-  AppendImageGeometryZSlice
-  ApplyTransformation_Demo
-  ApplyTransformation_Image
-  ApplyTransformation_Node
-  ArrayCalculatorExample
-  AvizoWriters
-  CombineSTLFiles
-  EnsembleInfoReader
-  FindBiasedFeatures
-  FindBoundaryCells
-  FindLargestCrossSections
-  Import_ASCII
-  Import_CSV_Data
-  Import_STL_Model
-  ReplaceElementAttributesWithNeighbor
-  ResamplePorosityImage
-  ResampleRectGridToImageGeom
-  SurfaceNets_Demo
-  Triangle_Face_Data_Demo
-  VtkRectilinearGridWriter  
-)
-
-CreatePythonTests(PREFIX "PY::SimplnxCore"
-  INPUT_DIR ${PYTHON_TEST_INPUT_DIR}
-  TEST_NAMES ${SIMPLNX_PYTHON_TESTS}
-)
-
-
-
-#------------------------------------------------------------------------------
 # Add the examples/pipelines/ITKImageProcessing folder
 #------------------------------------------------------------------------------
 set(PYTHON_TEST_INPUT_DIR "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/ITKImageProcessing")
@@ -83,5 +47,42 @@ CreatePythonTests(PREFIX "PY::OrientationAnalysis"
   TEST_NAMES ${SIMPLNX_PYTHON_TESTS}
 )
 
+
+#------------------------------------------------------------------------------
+# Add the examples/Pipelines/Complex folder
+#
+# These are going last because there are pipelines in here that depend on
+# output files that are generated in the other plugins.
+#------------------------------------------------------------------------------
+set(PYTHON_TEST_INPUT_DIR "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/Complex")
+
+set(SIMPLNX_PYTHON_TESTS
+  AlignSectionsMutualInformation
+  AppendImageGeometryZSlice
+  ApplyTransformation_Demo
+  ApplyTransformation_Image
+  ApplyTransformation_Node
+  ArrayCalculatorExample
+  AvizoWriters
+  CombineSTLFiles
+  EnsembleInfoReader
+  FindBiasedFeatures
+  FindBoundaryCells
+  FindLargestCrossSections
+  Import_ASCII
+  Import_CSV_Data
+  Import_STL_Model
+  ReplaceElementAttributesWithNeighbor
+  ResamplePorosityImage
+  ResampleRectGridToImageGeom
+  SurfaceNets_Demo
+  Triangle_Face_Data_Demo
+  VtkRectilinearGridWriter  
+)
+
+CreatePythonTests(PREFIX "PY::SimplnxCore"
+  INPUT_DIR ${PYTHON_TEST_INPUT_DIR}
+  TEST_NAMES ${SIMPLNX_PYTHON_TESTS}
+)
 
 
