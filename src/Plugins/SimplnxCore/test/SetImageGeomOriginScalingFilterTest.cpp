@@ -72,7 +72,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: 0,0,0 Central Origin", 
 
   args.insert(SetImageGeomOriginScalingFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(SetImageGeomOriginScalingFilter::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
-  args.insert(SetImageGeomOriginScalingFilter::k_CenterOrigin_Key, std::make_any<bool>(false));
+  args.insert(SetImageGeomOriginScalingFilter::k_CenterOrigin_Key, std::make_any<bool>(true));
   args.insert(SetImageGeomOriginScalingFilter::k_ChangeResolution_Key, std::make_any<bool>(k_ChangeResolution));
   args.insert(SetImageGeomOriginScalingFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
   args.insert(SetImageGeomOriginScalingFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
@@ -84,8 +84,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: 0,0,0 Central Origin", 
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
-  Point3Df center = imageGeom.getBoundingBoxf().center();
-  REQUIRE(center == Point3Df{0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom.getBoundingBoxf().center() == Point3Df{0.0f, 0.0f, 0.0f});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
 }
 
@@ -115,7 +114,6 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Custom Central Origin",
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
-  Point3Df center = imageGeom.getBoundingBoxf().center();
-  REQUIRE(center == Point3Df{7.0, 6.0, 5.0});
+  REQUIRE(imageGeom.getBoundingBoxf().center() == Point3Df{7.0, 6.0, 5.0});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
 }

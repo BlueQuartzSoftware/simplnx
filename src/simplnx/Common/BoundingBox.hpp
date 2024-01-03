@@ -137,7 +137,7 @@ public:
    */
   PointType center() const
   {
-    return {(m_Lower + sideLengths()) / static_cast<ValueType>(2.0)};
+    return {m_Lower + (sideLengths() / static_cast<ValueType>(2.0))};
   }
 
   /**
