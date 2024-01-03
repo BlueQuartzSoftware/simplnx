@@ -12,7 +12,7 @@ data_structure = nx.DataStructure()
 # Filter 1
 # Instantiate Import Data
 import_data = nx.Dream3dImportParameter.ImportData()
-import_data.file_path = "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+import_data.file_path = nxtest.GetDataDirectory() + "/Output/Statistics/SmallIN100_CrystalStats.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
 filter = nx.ReadDREAM3DFilter()
