@@ -14,7 +14,7 @@ class SIMPLNX_EXPORT UpdateImageGeomAction : public IDataAction
 public:
   UpdateImageGeomAction() = delete;
 
-  UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path);
+  UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path, bool centerOrigin = false);
 
   ~UpdateImageGeomAction() noexcept override;
 
@@ -71,5 +71,6 @@ private:
   std::optional<FloatVec3> m_Origin;
   std::optional<FloatVec3> m_Spacing;
   DataPath m_Path;
+  bool m_CenterOrigin;
 };
 } // namespace nx::core

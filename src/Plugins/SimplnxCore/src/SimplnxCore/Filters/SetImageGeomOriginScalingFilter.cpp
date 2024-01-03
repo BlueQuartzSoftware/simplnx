@@ -54,6 +54,8 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Path to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", true));
+  params.insert(
+      std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Origin_Key, "Origin  (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float64>{0.0, 0.0, 0.0},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
@@ -62,6 +64,8 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
+  params.linkParameters(k_ChangeOrigin_Key, k_CenterOrigin_Key, std::make_any<bool>(true));
+
   params.linkParameters(k_ChangeResolution_Key, k_Spacing_Key, std::make_any<bool>(true));
   return params;
 }
@@ -78,6 +82,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
+  auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
   auto shouldChangeResolution = filterArgs.value<bool>(k_ChangeResolution_Key);
   auto origin = filterArgs.value<std::vector<float64>>(k_Origin_Key);
   auto spacing = filterArgs.value<std::vector<float64>>(k_Spacing_Key);
@@ -92,16 +97,18 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  bool centerOrigin = false;
   if(shouldChangeOrigin)
   {
     optOrigin = originVec;
+    centerOrigin = shouldCenterOrigin;
   }
   if(shouldChangeResolution)
   {
     spacingVec = spacingVec;
   }
 
-  auto action = std::make_unique<UpdateImageGeomAction>(optOrigin, spacingVec, imageGeomPath);
+  auto action = std::make_unique<UpdateImageGeomAction>(optOrigin, spacingVec, imageGeomPath, centerOrigin);
 
   resultOutputActions.value().appendAction(std::move(action));
 
