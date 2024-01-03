@@ -8,10 +8,11 @@ using namespace nx::core;
 
 namespace nx::core
 {
-UpdateImageGeomAction::UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path)
+UpdateImageGeomAction::UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path, bool centerOrigin)
 : m_Origin(origin)
 , m_Spacing(spacing)
 , m_Path(path)
+, m_CenterOrigin(centerOrigin)
 {
 }
 
@@ -26,13 +27,32 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode mode) c
     return MakeErrorResult(-6701, fmt::format("{}Unable to find ImageGeom at '{}'", prefix, path().toString()));
   }
 
+  if(shouldUpdateSpacing())
+  {
+    image->setSpacing(m_Spacing.value());
+  }
+
   if(shouldUpdateOrigin())
   {
     image->setOrigin(m_Origin.value());
   }
-  if(shouldUpdateSpacing())
+
+  // This must be done last since spacing affects it and the origin may not be set resulting in invalid access
+  if(m_CenterOrigin)
   {
-    image->setSpacing(m_Spacing.value());
+    Point3Df origin = image->getOrigin();
+    BoundingBox3Df bounds = image->getBoundingBoxf();
+    Point3Df centerPoint = bounds.center();
+    Point3Df minPoint = bounds.getMinPoint();
+
+    for(uint8 i = 0; i < 3; i++)
+    {
+      // absolute center - absolute min point = absolute offset
+      float32 offset = std::abs(centerPoint[i]) - std::abs(minPoint[i]);
+      // subtract absolute offset and save point into "new" origin
+      origin[i] -= offset;
+    }
+    image->setOrigin(origin);
   }
 
   return {};
