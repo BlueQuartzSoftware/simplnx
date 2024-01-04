@@ -35,11 +35,12 @@ result = filter.execute(
 # Filter 3
 # Instantiate Filter
 filter = nx.WriteVtkRectilinearGridFilter()
+output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/SmallIN100_Final.vtk"
 # Execute Filter
 result = filter.execute(
     data_structure=data_structure,
     image_geometry_path=nx.DataPath("DataContainer"),
-    output_file=nxtest.GetDataDirectory() + "/Output/Examples/SmallIN100_Final.vtk",
+    output_file=output_file_path,
     write_binary_file=True,
     selected_data_array_paths=[
  nx.DataPath("DataContainer/CellData/Confidence Index"), 
@@ -57,5 +58,12 @@ result = filter.execute(
  nx.DataPath("DataContainer/CellData/Y Position")]
 )
 nxtest.check_filter_result(filter, result)
+
+
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_file(output_file_path)
+# *****************************************************************************
 
 print("===> Pipeline Complete")

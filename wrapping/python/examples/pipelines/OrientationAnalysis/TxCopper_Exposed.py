@@ -126,4 +126,10 @@ result = filter.execute(
 )
 nxtest.check_filter_result(filter, result)
 
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_dir(nxtest.GetDataDirectory() + "/Output/TexturedCopper/")
+# *****************************************************************************
+
 print("===> Pipeline Complete")

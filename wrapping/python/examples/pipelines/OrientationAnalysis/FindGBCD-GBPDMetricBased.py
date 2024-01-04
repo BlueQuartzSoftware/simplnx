@@ -46,8 +46,8 @@ result = filter.execute(
     data_structure=data_structure,
     chosen_limit_dists=2,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    dist_output_file=nxtest.GetDataDirectory() + "/Output/Examples/gbcd_distribution.dat",
-    err_output_file=nxtest.GetDataDirectory() + "/Output/Examples/gbcd_distribution_errors.dat",
+    dist_output_file=nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/gbcd_distribution.dat",
+    err_output_file=nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/gbcd_distribution_errors.dat",
     exclude_triple_lines=True,
     feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
     feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
@@ -72,8 +72,8 @@ filter = cxor.FindGBPDMetricBasedFilter()
 result = filter.execute(
     data_structure=data_structure,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    dist_output_file=nxtest.GetDataDirectory() + "/Output/Examples/gbpd_distribution.dat",
-    err_output_file=nxtest.GetDataDirectory() + "/Output/Examples/gbpd_distribution_errors.dat",
+    dist_output_file=nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/gbpd_distribution.dat",
+    err_output_file=nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/gbpd_distribution_errors.dat",
     exclude_triple_lines=False,
     feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
     feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
@@ -89,5 +89,14 @@ result = filter.execute(
     triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(filter, result)
+
+
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_dir(nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/")
+# *****************************************************************************
+
+
 
 print("===> Pipeline Complete")

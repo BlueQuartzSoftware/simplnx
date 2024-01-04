@@ -368,12 +368,21 @@ nxtest.check_filter_result(filter, result)
 # Filter 24
 # Instantiate Filter
 filter = nx.WriteDREAM3DFilter()
+output_file_path = nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr.dream3d"
+
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    export_file_path=nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-aptr12-corr/fw-ar-IF1-aptr12-corr.dream3d",
+    export_file_path=output_file_path,
     write_xdmf_file=True
 )
 nxtest.check_filter_result(filter, result)
+
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_file(output_file_path)
+nxtest.cleanup_test_dir(nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-aptr12-corr/")
+# *****************************************************************************
 
 print("===> Pipeline Complete")

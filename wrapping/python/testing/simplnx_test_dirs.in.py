@@ -6,7 +6,9 @@
 
  '''
 
-
+import os
+import shutil
+from pathlib import Path
 
 import simplnx as nx
 
@@ -50,3 +52,17 @@ def print_all_paths():
     print(f'  GetSimplnxPythonSourceDir: {GetSimplnxPythonSourceDir()}')
     print(f'  GetSimplnxSourceDir:       {GetSimplnxSourceDir()}')
     print('#######################################')
+
+def cleanup_test_file(file_path: str):
+  if os.path.exists(file_path):
+    os.remove(file_path)
+
+  # Check if replace the extension with ".xdmf" the file exists and we can replace it
+  filename = Path(file_path)
+  filename_replace_ext = filename.with_suffix('.xdmf')
+  if os.path.exists(filename_replace_ext):
+    os.remove(filename_replace_ext)
+
+def cleanup_test_dir(dir_path: str):
+  if os.path.exists(dir_path):
+    shutil.rmtree(dir_path)

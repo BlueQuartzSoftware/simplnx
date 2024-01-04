@@ -108,4 +108,12 @@ result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure,
 
 nxtest.check_filter_result(filter, result)
 
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_file(output_file_path)
+# *****************************************************************************
+
+
+
 print("===> Pipeline Complete")

@@ -110,7 +110,7 @@ nxtest.check_filter_result(filter, result)
 
 # Filter 6
 # Output file path for Filter 4
-output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/FindBiasedFeatures.dream3d"
+output_file_path = nxtest.GetDataDirectory() + "/Output/FindBiasedFeatures/FindBiasedFeatures.dream3d"
 # Instantiate Filter
 filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
@@ -118,5 +118,12 @@ result = filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True)
 nxtest.check_filter_result(filter, result)
+
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_file(output_file_path)
+# *****************************************************************************
+
 
 print("===> Pipeline Complete")

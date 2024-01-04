@@ -51,7 +51,7 @@ nxtest.check_filter_result(filter, result)
 
 # Filter 4
 # Define output file path
-output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/EdaxOIMData.dream3d"
+output_file_path = nxtest.GetDataDirectory() + "/Output/EdaxOIMData/EdaxOIMData.dream3d"
 # Instantiate Filter
 filter = cx.WriteDREAM3DFilter()
 # Execute WriteDREAM3DFilter with Parameters

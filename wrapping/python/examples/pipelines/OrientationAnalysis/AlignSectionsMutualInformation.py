@@ -6,13 +6,12 @@ import simplnx_test_dirs as nxtest
 
 import numpy as np
 
-#Create a Data Structure
+# Create a Data Structure
 data_structure = nx.DataStructure()
 
 # Filter 1
-# Instantiate Filter
-filter = cxor.ReadH5EbsdFilter()
 
+# Create the ReadH5EbsdFileParameter and assign values to it.
 h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
 h5ebsdParameter.euler_representation=0
 h5ebsdParameter.end_slice=117
@@ -21,6 +20,8 @@ h5ebsdParameter.input_file_path=nxtest.GetDataDirectory() + "/Output/Reconstruct
 h5ebsdParameter.start_slice=1
 h5ebsdParameter.use_recommended_transform=True
 
+# Instantiate Filter
+filter = cxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
@@ -32,7 +33,7 @@ result = filter.execute(
 nxtest.check_filter_result(filter, result)
 
 # Filter 2
-# Instantiate Filter
+# Set Up Thresholds and Instantiate Filter
 threshold_1 = nx.ArrayThreshold()
 threshold_1.array_path = nx.DataPath("DataContainer/CellData/Image Quality")
 threshold_1.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
@@ -45,12 +46,16 @@ threshold_2.value = 0.1
 
 threshold_set = nx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1, threshold_2]
+dt = nx.DataType.boolean
 
+# Instantiate Filter
+filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
-result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
-                                            array_thresholds=threshold_set,
-                                            created_data_path = "Mask",
-                                            created_mask_type = nx.DataType.boolean,
+result = filter.execute(
+    data_structure=data_structure,
+    array_thresholds=threshold_set,
+    created_data_path="Mask",
+    created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(filter, result)
 
@@ -69,49 +74,40 @@ nxtest.check_filter_result(filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = cxor.EBSDSegmentFeaturesFilter()
+filter = cxor.AlignSectionsMutualInformationFilter()
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    active_array_name="Active",
-    cell_feature_attribute_matrix_name="CellFeatureData",
+    alignment_shift_file_name=nxtest.GetDataDirectory() + "/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_ids_array_name="FeatureIds",
-    grid_geometry_path=nx.DataPath("DataContainer"),
     mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
     misorientation_tolerance=5.0,
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
-    randomize_features=True,
-    use_mask=True
+    selected_image_geometry_path=nx.DataPath("DataContainer"),
+    use_mask=True,
+    write_alignment_shifts=True
 )
 nxtest.check_filter_result(filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.FindLargestCrossSectionsFilter()
+filter = nx.WriteDREAM3DFilter()
+# Set Output File Path
+output_file_path = nxtest.GetDataDirectory() + "/Output/AlignSectionsMutualInformation/SmallIN100_AlignSectionsMutualInformation.dream3d"
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    image_geometry_path=nx.DataPath("DataContainer"),
-    largest_cross_sections_array_path="LargestCrossSections",
-    plane=0
+    export_file_path=output_file_path,
+    write_xdmf_file=True
 )
 nxtest.check_filter_result(filter, result)
 
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_file(output_file_path)
+# *****************************************************************************
 
-# Filter 6
-# Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
-# Define output file path
-output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/SmallIN100_LargestCrossSections.dream3d"
-# Execute WriteDREAM3DFilter with Parameters
-result = filter.execute(data_structure=data_structure, 
-                                        export_file_path=output_file_path, 
-                                        write_xdmf_file=True
-)
-nxtest.check_filter_result(filter, result)
 
 print("===> Pipeline Complete")

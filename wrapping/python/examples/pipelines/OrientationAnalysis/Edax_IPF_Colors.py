@@ -90,15 +90,22 @@ nxtest.check_filter_result(filter, result)
 # Filter 6
 # Instantiate Filter
 filter = cxitk.ITKImageWriter()
+output_file_path = nxtest.GetDataDirectory() + "/Output/Edax_IPF_Colors/Small_IN100_Slice_1.png"
 # Execute Filter with Parameters
 result = filter.execute(
     data_structure=data_structure,
-    file_name=nxtest.GetDataDirectory() + "/Output/Edax_IPF_Colors/Small_IN100_Slice_1.png",
+    file_name=output_file_path,
     image_array_path=nx.DataPath("DataContainer/Cell Data/IPFColors"),
     image_geom_path=nx.DataPath("DataContainer"),
     index_offset=0,
     plane=0
 )
 nxtest.check_filter_result(filter, result)
+
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_file(output_file_path)
+# *****************************************************************************
 
 print("===> Pipeline Complete")

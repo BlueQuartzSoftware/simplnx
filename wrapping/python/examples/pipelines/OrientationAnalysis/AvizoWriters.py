@@ -23,11 +23,12 @@ nxtest.check_filter_result(filter, result)
 # Filter 2
 # Instantiate Filter
 filter = nx.WriteAvizoUniformCoordinateFilter()
+output_file_path = nxtest.GetDataDirectory() + "/Output/AzizoWriter/SmallIN100_AvizoUniform.am"
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     geometry_path=nx.DataPath("DataContainer"),
-    output_file=nxtest.GetDataDirectory() + "/Output/Examples/SmallIN100_AvizoUniform.am",
+    output_file=output_file_path,
     units="meters",
     write_binary_file=False
 )
@@ -36,14 +37,22 @@ nxtest.check_filter_result(filter, result)
 # Filter 3
 # Instantiate Filter
 filter = nx.WriteAvizoUniformCoordinateFilter()
+output_file_path = nxtest.GetDataDirectory() + "/Output/AzizoWriter/SmallIN100_AvizoRectilinear.am"
+
 # Execute Filter with Parameters
 result = filter.execute(data_structure=data_structure,
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     geometry_path=nx.DataPath("DataContainer"),
-    output_file=nxtest.GetDataDirectory() + "/Output/Examples/SmallIN100_AvizoRectilinear.am",
+    output_file=output_file_path,
     units="meters",
     write_binary_file=False
 )
 nxtest.check_filter_result(filter, result)
+
+# *****************************************************************************
+# THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
+# If you are using this code, you should COMMENT out the next line
+nxtest.cleanup_test_dir(nxtest.GetDataDirectory() + "/Output/AzizoWriter")
+# *****************************************************************************
 
 print("===> Pipeline Complete")
