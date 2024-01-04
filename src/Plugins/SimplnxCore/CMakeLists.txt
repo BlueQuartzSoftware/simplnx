@@ -69,6 +69,7 @@ set(FilterList
   FindVolFractionsFilter
   GenerateColorTableFilter
   GenerateVectorColorsFilter
+  GeneratePythonSkeletonFilter
   IdentifySample
   ImageContouringFilter
   InitializeData
@@ -168,6 +169,7 @@ set(AlgorithmList
   FindVertexToTriangleDistances
   GenerateColorTable
   GenerateVectorColors
+  GeneratePythonSkeleton
   ImageContouring
   KMeans
   KMedoids
@@ -311,6 +313,8 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CeilOperator.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonFilterTemplateFile.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.hpp"
 
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.h"
