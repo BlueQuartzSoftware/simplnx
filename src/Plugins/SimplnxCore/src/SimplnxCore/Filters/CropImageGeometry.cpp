@@ -158,10 +158,16 @@ Parameters CropImageGeometry::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_UsePhysicalBounds_Key, "Use Physical Units For Bounds", "If true define physical coordinates for bounds, If false define voxel indices for bounds", false));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "Lower bound of the volume to crop out", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "Upper bound of the volume to crop out", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+  params.insert(std::make_unique<VectorFloat64Parameter>(k_MinCoord_Key, "Min Coordinate (Physical Units)", "Lower bound of the volume to crop out", std::vector<float64>{0.0, 0.0, 0.0},
+                                                         std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat64Parameter>(k_MaxCoord_Key, "MMin Coordinate (Physical Units) [Inclusive]", "Upper bound of the volume to crop out", std::vector<float64>{0.0, 0.0, 0.0},
+                                                         std::vector<std::string>{"X", "Y", "Z"}));
   // params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
@@ -180,6 +186,12 @@ Parameters CropImageGeometry::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The DataPath to store the created Image Geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_UsePhysicalBounds_Key, k_MinVoxel_Key, false);
+  params.linkParameters(k_UsePhysicalBounds_Key, k_MaxVoxel_Key, false);
+
+  params.linkParameters(k_UsePhysicalBounds_Key, k_MinCoord_Key, false);
+  params.linkParameters(k_UsePhysicalBounds_Key, k_MaxCoord_Key, false);
+
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrix_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
@@ -204,6 +216,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
   auto cellFeatureAmPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+  auto pUsePhysicalBounds = filterArgs.value<bool>(k_UsePhysicalBounds_Key);
 
   auto xMin = minVoxels[0];
   auto xMax = maxVoxels[0];
