@@ -1,6 +1,6 @@
 import numpy as np
 from pathlib import Path
-from typing import Dict
+from typing import List
 import copy
 
 class Polyline(object):
@@ -32,49 +32,33 @@ class Hatches(object):
 
 def parse_header(file):
     units = 1.  #default to 1, will be overwritten by anything read from the fileheader.
+    hatch_labels = {}
     line = file.readline().strip()
     while not line.startswith("$$HEADEREND"):
         if line and line.startswith("$$UNITS"):
             key, val = line.split("/")
             units = float(val)
+        elif line and line.startswith("$$LABEL"):
+            key, val = line.split("/")
+            hatch_id, hatch_desc = val.split(",")
+            hatch_labels[int(hatch_id)] = hatch_desc.strip()
         line = file.readline()
         
-    return units
+    return units, hatch_labels
 
-def parse_string_type(number_str):
-    # Check if it's a boolean
-    if number_str.lower() in ["true", "false"]:
-        return np.bool_
-
-    try:
-        value = int(number_str)
-        if np.iinfo(np.int8).min <= value <= np.iinfo(np.int8).max:
-            return np.int8
-        elif np.iinfo(np.int16).min <= value <= np.iinfo(np.int16).max:
-            return np.int16
-        elif np.iinfo(np.int32).min <= value <= np.iinfo(np.int32).max:
-            return np.int32
-        else:
-            return np.int64
-    except ValueError:
-        try:
-            value = float(number_str)
-            if np.finfo(np.float32).min <= value <= np.finfo(np.float32).max:
-                return np.float32
-            else:
-                return np.float64
-        except ValueError:
-            return np.nan
-
-def parse_geometry_array_info(full_path: Path) -> Dict[str, np.dtype]:
-    array_info = {}
+def parse_geometry_array_names(full_path: Path):
+    array_names = []
 
     with open(str(full_path), 'r') as file:
         record = False
+        has_labels = False
         for line in file:
             line = line.strip()
             if not line:
                 continue
+
+            if not has_labels and line.startswith("$$LABEL"):
+                has_labels = True
 
             if '$$GEOMETRYSTART' in line:
                 record = True
@@ -87,11 +71,10 @@ def parse_geometry_array_info(full_path: Path) -> Dict[str, np.dtype]:
                 tag, value_str = line.split("/", 1)
                 tag = tag.replace('$', '')
                 tag = tag.capitalize()
-                np_type = parse_string_type(value_str)
-                if tag:
-                    array_info[tag] = np_type
+                if tag and tag not in array_names:
+                    array_names.append(tag)
 
-    return array_info
+    return array_names, has_labels
                 
 
 def parse_geometry(file, units):
@@ -158,14 +141,14 @@ def parse_file(full_path: Path):
             if not line:
                 pass
             elif line.startswith("$$HEADERSTART"):
-                units = parse_header(file)
+                units, hatch_labels = parse_header(file)
             elif line.startswith("$$GEOMETRYSTART"):
                 if units is None:
                     raise Exception("No $$HEADERSTART tag was found!") 
                 layer_features, layer_heights = parse_geometry(file, units)
             line = file.readline().strip()
     
-    return layer_features, layer_heights
+    return layer_features, layer_heights, hatch_labels
 
 if __name__ == "__main__":
     full_path = Path("/Users/bluequartz/Downloads/B10.cli")
