@@ -229,20 +229,23 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(xMax < xMin)
+  if(!pUsePhysicalBounds)
   {
-    const std::string errMsg = fmt::format("X Max (%1) less than X Min (%2)", xMax, xMin);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
-  }
-  if(yMax < yMin)
-  {
-    const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-    return {MakeErrorResult<OutputActions>(-5551, errMsg)};
-  }
-  if(zMax < zMin)
-  {
-    const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-    return {MakeErrorResult<OutputActions>(-5552, errMsg)};
+    if(xMax < xMin)
+    {
+      const std::string errMsg = fmt::format("X Max (%1) less than X Min (%2)", xMax, xMin);
+      return {MakeErrorResult<OutputActions>(-5550, errMsg)};
+    }
+    if(yMax < yMin)
+    {
+      const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
+      return {MakeErrorResult<OutputActions>(-5551, errMsg)};
+    }
+    if(zMax < zMin)
+    {
+      const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
+      return {MakeErrorResult<OutputActions>(-5552, errMsg)};
+    }
   }
 
   // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
@@ -250,6 +253,128 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
   auto srcOrigin = srcImageGeom->getOrigin();
+
+  if(pUsePhysicalBounds)
+  {
+    auto max = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MaxCoord_Key);
+    auto min = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MinCoord_Key);
+
+    // Validate basic information about the coordinates
+    if(max == min)
+    {
+      const std::string errMsg = "Nothing would be removed because the coordinate points fall on top of one another. Consider incrementing/decrementing a value accordingly.";
+      return {MakeErrorResult<OutputActions>(-5556, errMsg)};
+    }
+
+    for(uint8 i = 0; i < 3; i++)
+    {
+      if(max[i] < min[i])
+      {
+        const std::string errMsg = fmt::format("The max value ({}) is lower then the min value ({}), consider swapping the cropping coordinates", max[i], min[i]);
+        return {MakeErrorResult<OutputActions>(-5559, errMsg)};
+      }
+    }
+
+    auto bounds = srcImageGeom->getBoundingBoxf();
+    const Point3Df& minPoint = bounds.getMinPoint();
+    const Point3Df& maxPoint = bounds.getMaxPoint();
+
+    // Check entire geom would not be cropped
+    {
+      uint8 xOB = 0;
+      uint8 yOB = 0;
+      uint8 zOB = 0;
+
+      if(max[0] > maxPoint[0])
+      {
+        xOB++;
+      }
+
+      if(max[1] > maxPoint[1])
+      {
+        yOB++;
+      }
+
+      if(max[2] > maxPoint[3])
+      {
+        zOB++;
+      }
+
+      if(min[0] < minPoint[0])
+      {
+        xOB++;
+      }
+
+      if(min[1] < minPoint[1])
+      {
+        yOB++;
+      }
+
+      if(min[2] < minPoint[3])
+      {
+        zOB++;
+      }
+
+      if(xOB > 1 && yOB > 1 && zOB > 1)
+      {
+        const std::string errMsg = "All of the geometry would be cropped adjust your bounds or consider using the Delete Data filter.";
+        return {MakeErrorResult<OutputActions>(-5557, errMsg)};
+      }
+    }
+
+    // check cropping bounds box actually contains a section of the geometry
+    {
+      bool xNoCrop = false;
+      bool yNoCrop = false;
+      bool zNoCrop = false;
+
+      if(min[0] > maxPoint[0])
+      {
+        xNoCrop = true;
+      }
+
+      if(min[1] > maxPoint[1])
+      {
+        yNoCrop = true;
+      }
+
+      if(min[2] > maxPoint[3])
+      {
+        zNoCrop = true;
+      }
+
+      if(max[0] < minPoint[0])
+      {
+        xNoCrop = true;
+      }
+
+      if(max[1] < minPoint[1])
+      {
+        yNoCrop = true;
+      }
+
+      if(max[2] < minPoint[3])
+      {
+        zNoCrop = true;
+      }
+
+      if(xNoCrop && yNoCrop && zNoCrop)
+      {
+        const std::string errMsg = "The crop region falls outside of all geometry bounds, adjust physical bounds so crop region intersects/contains a part of the geometry";
+        return {MakeErrorResult<OutputActions>(-5558, errMsg)};
+      }
+    }
+
+    // if we have made it here the coordinate bounds are valid so figure out and assign index values to xMax, xMin, ...
+    auto srcSpacing = srcImageGeom->getSpacing();
+    xMin = (min[0] < srcOrigin[0]) ? 0 : static_cast<uint64>(std::floor((min[0] - srcOrigin[0]) / spacing[0]));
+    yMin = (min[1] < srcOrigin[1]) ? 0 : static_cast<uint64>(std::floor((min[1] - srcOrigin[1]) / spacing[1]));
+    zMin = (min[2] < srcOrigin[2]) ? 0 : static_cast<uint64>(std::floor((min[2] - srcOrigin[2]) / spacing[2]));
+
+    xMax = (max[0] > maxPoint[0]) ? srcImageGeom->getNumXCells() - 1 : static_cast<uint64>(std::floor((maxPoint[0] - max[0]) / spacing[0]));
+    yMax = (max[1] > maxPoint[1]) ? srcImageGeom->getNumYCells() - 1 : static_cast<uint64>(std::floor((maxPoint[1] - max[1]) / spacing[1]));
+    zMax = (max[2] > maxPoint[2]) ? srcImageGeom->getNumZCells() - 1 : static_cast<uint64>(std::floor((maxPoint[2] - max[2]) / spacing[2]));
+  }
 
   if(xMax > srcImageGeom->getNumXCells() - 1)
   {
