@@ -104,7 +104,7 @@ void FlipAboutXAxis(DataArray<T>& dataArray, Vec3<usize>& dims)
 {
   auto& tempDataStore = dataArray.getDataStoreRef();
   usize numComp = tempDataStore.getNumberOfComponents();
-  size_t rowLCV = (dims[1] % 2 == 1) ? (dims[1] - 1 / 2) : dims[1] / 2;
+  size_t rowLCV = (dims[1] % 2 == 1) ? ((dims[1] - 1) / 2) : dims[1] / 2;
   usize bottomRow = dims[1] - 1;
 
   for(usize row = 0; row < rowLCV; row++)
