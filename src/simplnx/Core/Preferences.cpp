@@ -238,7 +238,7 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 
 void Preferences::checkUseOoc()
 {
-  m_UseOoc = !value(k_PreferredLargeDataFormat_Key).empty();
+  m_UseOoc = !value(k_PreferredLargeDataFormat_Key).get<std::string>().empty();
 }
 
 bool Preferences::useOocData() const
