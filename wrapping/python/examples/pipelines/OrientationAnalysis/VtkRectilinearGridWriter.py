@@ -16,17 +16,17 @@ import_data.file_path = nxtest.GetDataDirectory() + "/Output/Reconstruction/Smal
 import_data.data_paths = None
 
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         import_file_data=import_data)
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.DeleteData()
+nx_filter = nx.DeleteData()
 # Execute Filter
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     removed_data_path=[nx.DataPath("DataContainer/CellEnsembleData/MaterialName"),
                        nx.DataPath("MergeTwins SeedValue")]
@@ -34,10 +34,10 @@ result = filter.execute(
 
 # Filter 3
 # Instantiate Filter
-filter = nx.WriteVtkRectilinearGridFilter()
+nx_filter = nx.WriteVtkRectilinearGridFilter()
 output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/SmallIN100_Final.vtk"
 # Execute Filter
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     image_geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
@@ -57,7 +57,7 @@ result = filter.execute(
  nx.DataPath("DataContainer/CellData/X Position"),
  nx.DataPath("DataContainer/CellData/Y Position")]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # *****************************************************************************

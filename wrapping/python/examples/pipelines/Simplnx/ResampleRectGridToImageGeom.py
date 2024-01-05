@@ -25,23 +25,23 @@ read_csv_data.headers_line = 1
 read_csv_data.header_mode = nx.ReadCSVDataParameter.HeaderMode.Custom
 
 # Instantiate Filter
-filter = nx.ReadCSVFileFilter()
+nx_filter = nx.ReadCSVFileFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     created_data_group=nx.DataPath("Bounds"),
     read_csv_data=read_csv_data,
     # selected_data_group: DataPath = ...,
     use_existing_group=False,
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 2
 # Instantiate Filter
-filter = nx.CreateGeometryFilter()
+nx_filter = nx.CreateGeometryFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_handling=1,
     cell_attribute_matrix_name="CellData",
@@ -65,14 +65,14 @@ result = filter.execute(
     y_bounds=nx.DataPath("Bounds/y"),
     z_bounds=nx.DataPath("Bounds/z")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 3
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -84,13 +84,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"),
     scalar_type=nx.NumericType.float32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -102,14 +102,14 @@ result = filter.execute(
     output_data_array=nx.DataPath("RectGridGeometry/CellData/ImageQuality"),
     scalar_type=nx.NumericType.float32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 5
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -121,13 +121,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("RectGridGeometry/CellData/SEM Signal"),
     scalar_type=nx.NumericType.float32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -139,14 +139,14 @@ result = filter.execute(
     output_data_array=nx.DataPath("RectGridGeometry/CellData/Fit"),
     scalar_type=nx.NumericType.float32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 7
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -158,13 +158,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("RectGridGeometry/CellData/EulerAngles"),
     scalar_type=nx.NumericType.float32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -176,14 +176,14 @@ result = filter.execute(
     output_data_array=nx.DataPath("RectGridGeometry/CellData/Phases"),
     scalar_type=nx.NumericType.int32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 9
 # Instantiate Filter
-filter = nx.ResampleRectGridToImageGeomFilter()
+nx_filter = nx.ResampleRectGridToImageGeomFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     dimensions=[20, 20, 20],
     image_geom_cell_attribute_matrix="CellData",
@@ -196,18 +196,18 @@ result = filter.execute(
                                nx.DataPath("RectGridGeometry/CellData/Phases"),
                                nx.DataPath("RectGridGeometry/CellData/SEM Signal")]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 output_file_path = nxtest.GetDataDirectory() + "/Examples/ResampleRectGridToImageGeom.dream3d"
-result = filter.execute(data_structure=data_structure, 
+result = nx_filter.execute(data_structure=data_structure, 
                         export_file_path=output_file_path, 
                         write_xdmf_file=True)
 
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

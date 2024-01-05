@@ -11,9 +11,9 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter 
-filter = nx.CombineStlFilesFilter()
+nx_filter = nx.CombineStlFilesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     face_attribute_matrix_name="Face Data",
     face_normals_array_name="Face Normals",
@@ -21,17 +21,17 @@ result = filter.execute(
     triangle_data_container_name=nx.DataPath("TriangleGeometry"),
     vertex_attribute_matrix_name="Vertex Data"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter 
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 output_file_path = nxtest.GetDataDirectory() + "/Output/CombinedStlFiles.dream3d"
-result = filter.execute(data_structure=data_structure, 
+result = nx_filter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

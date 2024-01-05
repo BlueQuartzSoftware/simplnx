@@ -24,9 +24,9 @@ generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 2
 
 # Instantiate Filter
-filter = cxitk.ITKImportImageStack()
+nx_filter = cxitk.ITKImportImageStack()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name="Cell Data",
     image_data_array_path="ImageData",
@@ -36,14 +36,14 @@ result = filter.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 2
 # Instantiate Filter
-filter = nx.ResampleImageGeomFilter()
+nx_filter = nx.ResampleImageGeomFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
     #exact_dimensions: List[int] = ...,
@@ -56,14 +56,14 @@ result = filter.execute(
     selected_image_geometry=nx.DataPath("Porosity_Image"),
     spacing=[2.0, 2.0, 2.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 3
 # Instantiate Filter
-filter = nx.ResampleImageGeomFilter()
+nx_filter = nx.ResampleImageGeomFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
     #exact_dimensions: List[int] = ...,
@@ -77,14 +77,14 @@ result = filter.execute(
     #spacing: List[float] = ...
 )
 # Error/Result Handling for Filter
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 4
 # Instantiate Filter
-filter = nx.ResampleImageGeomFilter()
+nx_filter = nx.ResampleImageGeomFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix_path: DataPath = ...,
     exact_dimensions=[262, 195, 82],
@@ -98,7 +98,7 @@ result = filter.execute(
     #spacing: List[float] = ...
 )
 # Error/Result Handling for Filter
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 5
@@ -108,7 +108,7 @@ output_file_path = nxtest.GetDataDirectory() + "/Output/ResamplePorosityImage.dr
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

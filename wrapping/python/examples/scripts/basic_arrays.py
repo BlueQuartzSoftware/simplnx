@@ -71,7 +71,7 @@ nxtest.check_filter_result(nx.CreateDataGroup, result)
 output_array_path = nx.DataPath(["Group", "1D Array"])
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArray()
 result  = create_array_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
@@ -94,7 +94,7 @@ print(npdata)
 # Example, and Image where 5 wide x 2 High
 output_array_path = nx.DataPath(["2D Array"])
 tuple_dims = [[2,5]]
-create_array_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArray()
 result  = create_array_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
@@ -123,7 +123,7 @@ print(npdata)
 # Example, and Image where 5 wide x 2 High
 output_array_path = nx.DataPath(["3D Array"])
 tuple_dims = [[3, 2, 5]]
-create_array_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArray()
 result = create_array_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 

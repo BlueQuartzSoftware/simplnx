@@ -11,33 +11,33 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cxor.ReadAngDataFilter()
+nx_filter = cxor.ReadAngDataFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
     data_container_name=nx.DataPath("DataContainer"),
     input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang",
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = cxor.RotateEulerRefFrameFilter()
+nx_filter = cxor.RotateEulerRefFrameFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
     rotation_axis=[0.0, 0.0, 1.0, 90.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.RotateSampleRefFrameFilter()
+nx_filter = nx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     created_image_geometry=nx.DataPath("beans"),
     remove_original_geometry=False,
@@ -46,11 +46,11 @@ result = filter.execute(
     rotation_representation=0,
     selected_image_geometry=nx.DataPath("DataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Set Threshold Conditions
 threshold_1 = nx.ArrayThreshold()
 threshold_1.array_path = nx.DataPath("DataContainer/Cell Data/Confidence Index")
@@ -62,19 +62,19 @@ threshold_set = nx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1]
 
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="Mask",
     created_mask_type=nx.DataType.boolean
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.ConditionalSetValue()
+nx_filter = nx.ConditionalSetValue()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     conditional_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     invert_mask=False,
@@ -82,13 +82,13 @@ result = filter.execute(
     selected_array_path=nx.DataPath("DataContainer/Cell Data/Confidence Index"),
     use_conditional=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = nx.CalculateArrayHistogramFilter()
+nx_filter = nx.CalculateArrayHistogramFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     #data_group_name=nx.DataPath("DataContainer/Statistics"),
     histogram_suffix=" Histogram",
@@ -100,14 +100,14 @@ result = filter.execute(
     selected_array_paths=[nx.DataPath("DataContainer/Cell Data/Confidence Index")],
     user_defined_range=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-filter = nx.WriteASCIIDataFilter()
+nx_filter = nx.WriteASCIIDataFilter()
 output_file_path = nxtest.GetDataDirectory() + "/Output/OrientationAnalysis/Test/CI_Histogram.csv"
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     #file_extension: str = ...,
     delimiter=2,
@@ -118,7 +118,7 @@ result = filter.execute(
     output_style=1,
     selected_data_array_paths=[nx.DataPath("DataContainer/Statistics/Confidence Index Histogram")]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

@@ -11,43 +11,43 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Set import parameters
 import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = nxtest.GetDataDirectory() + "/Output/Reconstruction/SmallIN100_Final.dream3d"
 import_data.data_paths = None
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure, import_file_data=import_data)
-nxtest.check_filter_result(filter, result)
+result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.WriteAvizoUniformCoordinateFilter()
+nx_filter = nx.WriteAvizoUniformCoordinateFilter()
 output_file_path = nxtest.GetDataDirectory() + "/Output/AzizoWriter/SmallIN100_AvizoUniform.am"
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     units="meters",
     write_binary_file=False
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.WriteAvizoUniformCoordinateFilter()
+nx_filter = nx.WriteAvizoUniformCoordinateFilter()
 output_file_path = nxtest.GetDataDirectory() + "/Output/AzizoWriter/SmallIN100_AvizoRectilinear.am"
 
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     units="meters",
     write_binary_file=False
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

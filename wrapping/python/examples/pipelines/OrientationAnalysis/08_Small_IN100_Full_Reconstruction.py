@@ -20,16 +20,16 @@ filter_parameter.input_file_path=nxtest.GetDataDirectory() + "/Output/Reconstruc
 filter_parameter.start_slice=6
 filter_parameter.use_recommended_transform=True
 
-filter = cxor.ReadH5EbsdFilter()
+nx_filter = cxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("DataContainer"),
     read_h5_ebsd_parameter=filter_parameter
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Set Up Thresholds and Instantiate Filter
@@ -48,21 +48,21 @@ threshold_set.thresholds = [threshold_1, threshold_2]
 dt = nx.DataType.boolean
 
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="Mask",
     created_mask_type=nx.DataType.boolean
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = cxor.ConvertOrientations()
+nx_filter = cxor.ConvertOrientations()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
     input_type=0,
@@ -70,13 +70,13 @@ result = filter.execute(
     output_type=2
 
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = cxor.AlignSectionsMisorientationFilter()
+nx_filter = cxor.AlignSectionsMisorientationFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
@@ -88,25 +88,25 @@ result = filter.execute(
     write_alignment_shifts=False
     # alignment_shift_file_name: PathLike = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.IdentifySample()
+nx_filter = nx.IdentifySample()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     fill_holes=False,
     mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
     image_geometry=nx.DataPath("DataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = nx.AlignSectionsFeatureCentroidFilter()
+nx_filter = nx.AlignSectionsFeatureCentroidFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
     reference_slice=0,
@@ -116,14 +116,14 @@ result = filter.execute(
     write_alignment_shifts=False
     # alignment_shift_file_name: PathLike = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 7
 # Instantiate Filter
-filter = cxor.BadDataNeighborOrientationCheckFilter()
+nx_filter = cxor.BadDataNeighborOrientationCheckFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
@@ -133,13 +133,13 @@ result = filter.execute(
     number_of_neighbors=4,
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-filter = cxor.NeighborOrientationCorrelationFilter()
+nx_filter = cxor.NeighborOrientationCorrelationFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     correlation_array_path=nx.DataPath("DataContainer/CellData/Confidence Index"),
@@ -151,13 +151,13 @@ result = filter.execute(
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats")
     # ignored_data_array_paths: List[DataPath] = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
 # Instantiate Filter
-filter = cxor.EBSDSegmentFeaturesFilter()
+nx_filter = cxor.EBSDSegmentFeaturesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
     cell_feature_attribute_matrix_name="CellFeatureData",
@@ -171,27 +171,27 @@ result = filter.execute(
     randomize_features=True,
     use_mask=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 10
 # Instantiate Filter
-filter = nx.FindFeaturePhasesFilter()
+nx_filter = nx.FindFeaturePhasesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_features_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     feature_phases_array_name="Phases"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 11
 # Instantiate Filter
-filter = cxor.FindAvgOrientationsFilter()
+nx_filter = cxor.FindAvgOrientationsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     avg_euler_angles_array_path="AvgEulerAngles",
     avg_quats_array_path="AvgQuats",
@@ -201,13 +201,13 @@ result = filter.execute(
     cell_quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 12
 # Instantiate Filter
-filter = nx.FindNeighbors()
+nx_filter = nx.FindNeighbors()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_feature_arrays=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids=nx.DataPath("DataContainer/CellData/FeatureIds"),
@@ -220,14 +220,14 @@ result = filter.execute(
     # boundary_cells: str = ...,  # Not currently part of the code
     # surface_features: str = ...  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 13
 # Instantiate Filter
-filter = cxor.MergeTwinsFilter()
+nx_filter = cxor.MergeTwinsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
     angle_tolerance=2.0,
@@ -243,13 +243,13 @@ result = filter.execute(
     use_non_contiguous_neighbors=False
     # non_contiguous_neighbor_list_array_path: DataPath = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 14
 # Instantiate Filter
-filter = nx.CalculateFeatureSizesFilter()
+nx_filter = nx.CalculateFeatureSizesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     equivalent_diameters_path="EquivalentDiameters",
     feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
@@ -259,13 +259,13 @@ result = filter.execute(
     save_element_sizes=False,
     volumes_path="Volumes"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 15
 # Instantiate Filter
-filter = nx.RemoveMinimumSizeFeaturesFilter()
+nx_filter = nx.RemoveMinimumSizeFeaturesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     apply_single_phase=False,
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
@@ -275,14 +275,14 @@ result = filter.execute(
     # feature_phases_path: DataPath = ...,  # Not currently part of the code
     # phase_number: int = ...  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 16
 # Instantiate Filter
-filter = nx.FindNeighbors()
+nx_filter = nx.FindNeighbors()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_feature_arrays=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids=nx.DataPath("DataContainer/CellData/FeatureIds"),
@@ -295,13 +295,13 @@ result = filter.execute(
     # boundary_cells: str = ...,  # Not currently part of the code
     # surface_features: str = ...  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 17
 # Instantiate Filter
-filter = nx.MinNeighbors()
+nx_filter = nx.MinNeighbors()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     apply_to_single_phase=False,
     cell_attribute_matrix=nx.DataPath("DataContainer/CellData"),
@@ -313,13 +313,13 @@ result = filter.execute(
     # feature_phases: DataPath = ...,  # Not currently part of the code
     # ignored_voxel_arrays: List[DataPath] = ...  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 18
 # Instantiate Filter
-filter = nx.FillBadDataFilter()
+nx_filter = nx.FillBadDataFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     min_allowed_defect_size=1000,
@@ -328,14 +328,14 @@ result = filter.execute(
     # cell_phases_array_path: DataPath = ...,  # Not currently part of the code
     # ignored_data_array_paths: List[DataPath] = ...  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 19
 # Instantiate Filter
-filter = nx.ErodeDilateBadDataFilter()
+nx_filter = nx.ErodeDilateBadDataFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     num_iterations=2,
@@ -346,13 +346,13 @@ result = filter.execute(
     z_dir_on=True,
     ignored_data_array_paths=[]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 20
 # Instantiate Filter
-filter = nx.ErodeDilateBadDataFilter()
+nx_filter = nx.ErodeDilateBadDataFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     num_iterations=2,
@@ -363,13 +363,13 @@ result = filter.execute(
     z_dir_on=True,
     ignored_data_array_paths=[]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 21
 # Instantiate Filter
-filter = cxor.GenerateIPFColorsFilter()
+nx_filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
     cell_ipf_colors_array_name="IPFColors",
@@ -379,21 +379,21 @@ result = filter.execute(
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 22
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = nxtest.GetDataDirectory() + "/Output/Reconstruction/SmallIN100_Final.dream3d"
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

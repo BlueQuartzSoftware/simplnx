@@ -11,9 +11,9 @@ data_structure = cx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cxor.ReadH5OimDataFilter()
+nx_filter = cxor.ReadH5OimDataFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("Cell Ensemble Data"),
@@ -23,18 +23,18 @@ result = filter.execute(
     #selected_scan_names: ValueType = ...,
     z_spacing=1.0
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Define output file path
 output_file_path = nxtest.GetDataDirectory() + "/Output/H5EspritData/H5EspritData.dream3d"
 # Instantiate Filter
-filter = cx.WriteDREAM3DFilter()
+nx_filter = cx.WriteDREAM3DFilter()
 # Execute WriteDREAM3DFilter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 print("===> Pipeline Complete")

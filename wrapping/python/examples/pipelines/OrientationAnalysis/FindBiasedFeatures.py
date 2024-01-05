@@ -15,18 +15,18 @@ import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = nxtest.GetDataDirectory() + "/Output/Statistics/SmallIN100_CrystalStats.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         import_file_data=import_data
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.DeleteData()
+nx_filter = nx.DeleteData()
 # Execute Filter With Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     removed_data_path=[nx.DataPath("DataContainer/CellFeatureData/Centroids"),
                        nx.DataPath("DataContainer/CellFeatureData/EquivalentDiameters"),
@@ -44,14 +44,14 @@ result = filter.execute(
                        nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
                        nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles")]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 2
 # Instantiate Filter
-filter = nx.FindNeighbors()
+nx_filter = nx.FindNeighbors()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     #boundary_cells: str = ...,
     cell_feature_arrays=nx.DataPath("DataContainer/CellFeatureData"),
@@ -64,26 +64,26 @@ result = filter.execute(
     store_surface_features=False
     #surface_features: str = ...
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.FindFeatureCentroidsFilter()
+nx_filter = nx.FindFeatureCentroidsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_path="Centroids",
     feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     selected_image_geometry=nx.DataPath("DataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.FindSurfaceFeatures()
+nx_filter = nx.FindSurfaceFeatures()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     feature_geometry_path=nx.DataPath("DataContainer"),
@@ -91,13 +91,13 @@ result = filter.execute(
     mark_feature_0_neighbors=True,
     surface_features_array_path="SurfaceFeatures"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.FindBiasedFeaturesFilter()
+nx_filter = nx.FindBiasedFeaturesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     biased_features_array_name="BiasedFeatures",
     calc_by_phase=True,
@@ -106,18 +106,18 @@ result = filter.execute(
     phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
     surface_features_array_path=nx.DataPath("DataContainer/CellFeatureData/SurfaceFeatures")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Output file path for Filter 4
 output_file_path = nxtest.GetDataDirectory() + "/Output/FindBiasedFeatures/FindBiasedFeatures.dream3d"
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True)
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

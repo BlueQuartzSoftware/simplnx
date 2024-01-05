@@ -11,7 +11,7 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cxor.ReadH5EbsdFilter()
+nx_filter = cxor.ReadH5EbsdFilter()
 
 h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
 h5ebsdParameter.euler_representation=0
@@ -22,14 +22,14 @@ h5ebsdParameter.start_slice=1
 h5ebsdParameter.use_recommended_transform=True
 
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("DataContainer"),
     read_h5_ebsd_parameter=h5ebsdParameter
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
@@ -52,26 +52,26 @@ result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
                                             created_data_path = "Mask",
                                             created_mask_type = nx.DataType.boolean,
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = cxor.ConvertOrientations()
+nx_filter = cxor.ConvertOrientations()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
     input_type=0,
     output_orientation_array_name="Quats",
     output_type=2
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = cxor.EBSDSegmentFeaturesFilter()
+nx_filter = cxor.EBSDSegmentFeaturesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
     cell_feature_attribute_matrix_name="CellFeatureData",
@@ -85,13 +85,13 @@ result = filter.execute(
     randomize_features=True,
     use_mask=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.FindLargestCrossSectionsFilter()
+nx_filter = nx.FindLargestCrossSectionsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
@@ -99,20 +99,20 @@ result = filter.execute(
     largest_cross_sections_array_path="LargestCrossSections",
     plane=0
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 6
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Define output file path
 output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/SmallIN100_LargestCrossSections.dream3d"
 # Execute WriteDREAM3DFilter with Parameters
-result = filter.execute(data_structure=data_structure, 
+result = nx_filter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

@@ -21,16 +21,16 @@ h5ebsdParameter.start_slice=1
 h5ebsdParameter.use_recommended_transform=True
 
 # Instantiate Filter
-filter = cxor.ReadH5EbsdFilter()
+nx_filter = cxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("DataContainer"),
     read_h5_ebsd_parameter=h5ebsdParameter
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Set Up Thresholds and Instantiate Filter
@@ -49,34 +49,34 @@ threshold_set.thresholds = [threshold_1, threshold_2]
 dt = nx.DataType.boolean
 
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="Mask",
     created_mask_type=nx.DataType.boolean
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = cxor.ConvertOrientations()
+nx_filter = cxor.ConvertOrientations()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
     input_type=0,
     output_orientation_array_name="Quats",
     output_type=2
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = cxor.AlignSectionsMutualInformationFilter()
+nx_filter = cxor.AlignSectionsMutualInformationFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     alignment_shift_file_name=nxtest.GetDataDirectory() + "/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
@@ -88,20 +88,20 @@ result = filter.execute(
     use_mask=True,
     write_alignment_shifts=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = nxtest.GetDataDirectory() + "/Output/AlignSectionsMutualInformation/SmallIN100_AlignSectionsMutualInformation.dream3d"
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

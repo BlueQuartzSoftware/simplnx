@@ -58,7 +58,7 @@ data_structure = nx.DataStructure()
 output_array_path = nx.DataPath(["3D Array"])
 array_type = nx.NumericType.float32
 tuple_dims = [[3, 2,5]]
-create_array_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArray()
 result  = create_array_filter.execute(data_structure=data_structure, component_count=1, data_format="", initialization_value="10", 
                             numeric_type=array_type, output_data_array=output_array_path, tuple_dimensions=tuple_dims)
 nxtest.check_filter_result(nx.CreateDataArray, result)

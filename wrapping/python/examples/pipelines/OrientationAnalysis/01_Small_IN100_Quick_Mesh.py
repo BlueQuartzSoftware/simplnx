@@ -15,18 +15,18 @@ import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = nxtest.GetDataDirectory() + "/Output/Statistics/SmallIN100_CrystalStats.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                          import_file_data=import_data)
 
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.CropImageGeometry()
+nx_filter = nx.CropImageGeometry()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids=nx.DataPath("DataContainer/CellData/FeatureIds"),
@@ -36,24 +36,24 @@ result = filter.execute(
     renumber_features=True,
     selected_image_geometry=nx.DataPath("DataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-#filter = nx.MoveData()
+#nx_filter = nx.MoveData()
 # Execute Filter with Parameters
-#result = filter.execute(
+#result = nx_filter.execute(
 #    data_structure=data_structure,
 #     data=[nx.DataPath("DataContainer/CellEnsembleData")],
 #     new_parent=nx.DataPath("DataContainer")
 # )
-# nxtest.check_filter_result(filter, result)
+# nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.QuickSurfaceMeshFilter()
+nx_filter = nx.QuickSurfaceMeshFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     face_data_group_name=("FaceData"),
     face_feature_attribute_matrix_name=("Face Feature Data"),
@@ -66,20 +66,20 @@ result = filter.execute(
     triangle_geometry_name=nx.DataPath("TriangleDataContainer"),
     vertex_data_group_name=("VertexData")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Set Output File Path
 output_file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # *****************************************************************************

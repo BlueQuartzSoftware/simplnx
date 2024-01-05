@@ -11,29 +11,29 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = nx.CreateDataGroup()
+nx_filter = nx.CreateDataGroup()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     data_object_path=nx.DataPath("Group 1")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.CreateDataGroup()
+nx_filter = nx.CreateDataGroup()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     data_object_path=nx.DataPath("Group 1/Group 2")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.CreateGeometryFilter()
+nx_filter = nx.CreateGeometryFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_handling=0,
     cell_attribute_matrix_name="Cell Data",
@@ -57,14 +57,14 @@ result = filter.execute(
     #y_bounds: DataPath = ..., (not used here)
     #z_bounds: DataPath = ...  (not used here)
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 4
 # Instantiate Filter
-filter = nx.CreateDataArray()
+nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     component_count=1,
     data_format="",
@@ -73,13 +73,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data/Data"),
     tuple_dimensions=[[2.0, 10.0, 10.0]]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.ApplyTransformationToGeometryFilter()
+nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data"),
     interpolation_type=1,
@@ -88,7 +88,7 @@ result = filter.execute(
     transformation_type=5,
     translate_geometry_to_global_origin=False
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 print("===> Pipeline Complete")

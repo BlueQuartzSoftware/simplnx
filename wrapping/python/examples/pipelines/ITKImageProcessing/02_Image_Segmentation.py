@@ -24,9 +24,9 @@ generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 2
 
 # Instantiate Filter
-filter = cxitk.ITKImportImageStack()
+nx_filter = cxitk.ITKImportImageStack()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name="Cell Data",
     image_data_array_path="ImageData",
@@ -36,7 +36,7 @@ result = filter.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Set Up Thresholds and Instantiate Filter
@@ -50,9 +50,9 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean  # This line specifies the DataType for the threshold
 
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="Mask",
@@ -62,14 +62,14 @@ result = filter.execute(
     # custom_false_value: float = ...,  # Not currently part of the code
     # custom_true_value: float = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 3
 # Instantiate Filter
-filter = nx.ScalarSegmentFeaturesFilter()
+nx_filter = nx.ScalarSegmentFeaturesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     active_array_path="Active",
     cell_feature_group_path="CellFeatureData",
@@ -81,13 +81,13 @@ result = filter.execute(
     scalar_tolerance=0,
     use_mask=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.CalculateFeatureSizesFilter()
+nx_filter = nx.CalculateFeatureSizesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     equivalent_diameters_path="EquivalentDiameters",
     feature_attribute_matrix=nx.DataPath("ImageDataContainer/CellFeatureData"),
@@ -97,25 +97,25 @@ result = filter.execute(
     save_element_sizes=False,
     volumes_path="Volumes"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.CopyFeatureArrayToElementArray()
+nx_filter = nx.CopyFeatureArrayToElementArray()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     created_array_suffix="Created Array Suffix",
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     selected_feature_array_path=[nx.DataPath("ImageDataContainer/CellFeatureData/EquivalentDiameters")]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = nx.CreateDataArray()
+nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     component_count=1,
@@ -125,13 +125,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("ImageDataContainer/Cell Data/Phases")
     # tuple_dimensions: List[List[float]] = ...  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-filter = nx.ConditionalSetValue()
+nx_filter = nx.ConditionalSetValue()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     conditional_array_path=nx.DataPath("ImageDataContainer/Cell Data/Mask"),
     invert_mask=False,
@@ -140,54 +140,54 @@ result = filter.execute(
     use_conditional=True
     # remove_value: str = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-filter = nx.FindFeaturePhasesFilter()
+nx_filter = nx.FindFeaturePhasesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_features_attribute_matrix_path=nx.DataPath("ImageDataContainer/CellFeatureData"),
     cell_phases_array_path=nx.DataPath("ImageDataContainer/Cell Data/Phases"),
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     feature_phases_array_name="Phases"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 # Filter 9
 
 # Instantiate Filter
-filter = nx.FindFeatureCentroidsFilter()
+nx_filter = nx.FindFeatureCentroidsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_path="Centroids",
     feature_attribute_matrix=nx.DataPath("ImageDataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     selected_image_geometry=nx.DataPath("ImageDataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 10
 # Instantiate Filter
-filter = nx.CreateAttributeMatrixFilter()
+nx_filter = nx.CreateAttributeMatrixFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     data_object_path=nx.DataPath("Ensemble AttributeMatrix"),
     tuple_dimensions=[[3.0]]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 11
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 output_file_path = nxtest.GetDataDirectory() + "/Output/ImagesStack/Images.dream3d"
-result = filter.execute(data_structure=data_structure, 
+result = nx_filter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

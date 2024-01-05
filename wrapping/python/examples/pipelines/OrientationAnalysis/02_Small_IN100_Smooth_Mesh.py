@@ -15,16 +15,16 @@ import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure, import_file_data=import_data)
-nxtest.check_filter_result(filter, result)
+result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.LaplacianSmoothingFilter()
+nx_filter = nx.LaplacianSmoothingFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     iteration_steps=100,
     lambda_value=0.25,
@@ -38,18 +38,18 @@ result = filter.execute(
     triple_line_lambda=0.2,
     use_taubin_smoothing=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure, 
+result = nx_filter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

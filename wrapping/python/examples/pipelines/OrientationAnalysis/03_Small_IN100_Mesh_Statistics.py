@@ -15,49 +15,49 @@ import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure, import_file_data=import_data)
-nxtest.check_filter_result(filter, result)
+result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.CalculateTriangleAreasFilter()
+nx_filter = nx.CalculateTriangleAreasFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     triangle_areas_array_path="FaceAreas",
     triangle_geometry_data_path=nx.DataPath("TriangleDataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.TriangleNormalFilter()
+nx_filter = nx.TriangleNormalFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_normals_array_path="FaceNormals",
     tri_geometry_data_path=nx.DataPath("TriangleDataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.TriangleDihedralAngleFilter()
+nx_filter = nx.TriangleDihedralAngleFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_dihedral_angles_array_name="FaceDihedralAngles",
     tri_geometry_data_path=nx.DataPath("TriangleDataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = cxor.GenerateFaceIPFColoringFilter()
+nx_filter = cxor.GenerateFaceIPFColoringFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
@@ -66,13 +66,13 @@ result = filter.execute(
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = cxor.GenerateFaceMisorientationColoringFilter()
+nx_filter = cxor.GenerateFaceMisorientationColoringFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
@@ -80,13 +80,13 @@ result = filter.execute(
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_misorientation_colors_array_name="FaceMisorientationColors"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-filter = nx.SharedFeatureFaceFilter()
+nx_filter = nx.SharedFeatureFaceFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     feature_face_ids_array_name="SharedFeatureFaceId",
@@ -96,20 +96,20 @@ result = filter.execute(
     randomize_features=False,
     triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 output_file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
 # Check result for errors or warnings
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

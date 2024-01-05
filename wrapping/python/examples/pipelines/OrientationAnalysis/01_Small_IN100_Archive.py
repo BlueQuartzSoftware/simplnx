@@ -24,9 +24,9 @@ generated_file_list_value.end_index = 117
 generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 0
 
-filter = cxor.EbsdToH5EbsdFilter()
+nx_filter = cxor.EbsdToH5EbsdFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     input_file_list_info=generated_file_list_value,
     output_file_path=nxtest.GetDataDirectory() + "/Output/Reconstruction/Small_IN100.h5ebsd",
@@ -35,6 +35,6 @@ result = filter.execute(
     z_spacing=0.25
 )
 
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 print("===> Pipeline Complete")

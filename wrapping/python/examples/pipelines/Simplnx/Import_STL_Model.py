@@ -11,9 +11,9 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = nx.ReadStlFileFilter()
+nx_filter = nx.ReadStlFileFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
@@ -22,24 +22,24 @@ result = filter.execute(
     triangle_geometry_name=nx.DataPath("[Triangle Geometry]"),
     vertex_attribute_matrix="Vertex Data"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.CalculateTriangleAreasFilter()
+nx_filter = nx.CalculateTriangleAreasFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     triangle_areas_array_path="Areas",
     triangle_geometry_data_path=nx.DataPath("[Triangle Geometry]")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.CreateDataArray()
+nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=True,
     component_count=1,
@@ -49,6 +49,6 @@ result = filter.execute(
     output_data_array=nx.DataPath("Node Type"),
     tuple_dimensions=[[1.0]]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 print("===> Pipeline Complete")

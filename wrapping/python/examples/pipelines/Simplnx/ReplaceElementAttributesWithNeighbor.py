@@ -11,16 +11,16 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cxor.ReadAngDataFilter()
+nx_filter = cxor.ReadAngDataFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
     data_container_name=nx.DataPath("DataContainer"),
     input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate ArrayThreshold objects
@@ -40,22 +40,22 @@ threshold_set.thresholds = [threshold_1, threshold_2]
 dt = nx.DataType.boolean
 
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Execute filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="Mask",
     created_mask_type=nx.DataType.boolean
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 3
 # Instantiate Filter
-filter = nx.RotateSampleRefFrameFilter()
+nx_filter = nx.RotateSampleRefFrameFilter()
 # Execute Filter
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
@@ -63,25 +63,25 @@ result = filter.execute(
     rotation_representation=0,
     selected_image_geometry=nx.DataPath("DataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = cxor.RotateEulerRefFrameFilter()
+nx_filter = cxor.RotateEulerRefFrameFilter()
 # Execute Filter
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
     rotation_axis=[0.0, 0.0, 1.0, 90.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 5
 # Instantiate Filter
-filter = nx.SetImageGeomOriginScalingFilter()
+nx_filter = nx.SetImageGeomOriginScalingFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     change_origin=True,
     change_resolution=True,
@@ -89,13 +89,13 @@ result = filter.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = nx.CropImageGeometry()
+nx_filter = nx.CropImageGeometry()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     #cell_feature_attribute_matrix: DataPath = ...,
     #created_image_geometry: DataPath = ...,
@@ -107,13 +107,13 @@ result = filter.execute(
     selected_image_geometry=nx.DataPath("DataContainer")
    # update_origin=False
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-filter = cxor.GenerateIPFColorsFilter()
+nx_filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPFColors"),
@@ -123,13 +123,13 @@ result = filter.execute(
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-filter = nx.ReplaceElementAttributesWithNeighborValuesFilter()
+nx_filter = nx.ReplaceElementAttributesWithNeighborValuesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     comparison_data_path=nx.DataPath("DataContainer/Cell Data/Confidence Index"),
     loop=True,
@@ -137,19 +137,19 @@ result = filter.execute(
     selected_comparison=0,
     selected_image_geometry=nx.DataPath("DataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
 output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/ReplaceElementAttributesWithNeighbor.dream3d"
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

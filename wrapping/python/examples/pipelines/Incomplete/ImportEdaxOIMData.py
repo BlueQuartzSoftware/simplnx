@@ -11,9 +11,9 @@ data_structure = cx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cxor.ReadH5OimDataFilter()
+nx_filter = cxor.ReadH5OimDataFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("Cell Ensemble Data"),
@@ -22,24 +22,24 @@ result = filter.execute(
     read_pattern_data=False,
     z_spacing=1.0
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = cxor.RotateEulerRefFrameFilter()
+nx_filter = cxor.RotateEulerRefFrameFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     euler_angles_array_path=cx.DataPath("ImageGeom/Cell Data/EulerAngles"),
     rotation_axis=[0.0, 0.0, 1.0, 90.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = cx.RotateSampleRefFrameFilter()
+nx_filter = cx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     remove_original_geometry=True,
     rotate_slice_by_slice=True,
@@ -47,18 +47,18 @@ result = filter.execute(
     rotation_representation=("Axis Angle"),
     selected_image_geometry=cx.DataPath("ImageGeom")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Define output file path
 output_file_path = nxtest.GetDataDirectory() + "/Output/EdaxOIMData/EdaxOIMData.dream3d"
 # Instantiate Filter
-filter = cx.WriteDREAM3DFilter()
+nx_filter = cx.WriteDREAM3DFilter()
 # Execute WriteDREAM3DFilter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 print("===> Pipeline Complete")

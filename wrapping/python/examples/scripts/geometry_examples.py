@@ -82,7 +82,7 @@ else:
 # AttributeMatrix that we generated in the last filter.
 output_array_path = nx.DataPath("Image Geometry/Cell Data/Float Cell Data")
 array_type = nx.NumericType.float32
-create_array_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArray()
 result = create_array_filter.execute(data_structure=data_structure, component_count=1, data_format="",
                                      initialization_value="10",
                                      numeric_type=array_type, output_data_array=output_array_path)
@@ -104,7 +104,7 @@ else:
 output_array_path = nx.DataPath("RectGridCoords/X Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArray()
 result = create_array_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
@@ -122,7 +122,7 @@ x_coords[:] = np.arange(0, 10, 1)
 output_array_path = nx.DataPath("RectGridCoords/Y Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArray()
 result = create_array_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
@@ -140,7 +140,7 @@ y_coords[:] = np.arange(10, 20, 1)
 output_array_path = nx.DataPath("RectGridCoords/Z Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArray()
 result = create_array_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",

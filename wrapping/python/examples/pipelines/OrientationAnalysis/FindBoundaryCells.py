@@ -17,17 +17,17 @@ import_data.file_path = nxtest.GetDataDirectory() + "/Output/Reconstruction/Smal
 import_data.data_paths = None
 
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         import_file_data=import_data)
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.FindBoundaryCellsFilter()
+nx_filter = nx.FindBoundaryCellsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     boundary_cells_array_name="BoundaryCells",
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
@@ -35,19 +35,19 @@ result = filter.execute(
     image_geometry_path=nx.DataPath("DataContainer"),
     include_volume_boundary=True,
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Output file path for Filter 3
 output_file_path = nxtest.GetDataDirectory() + "/Output/FindBoundaryCells/SmallIN100_BoundaryCells.dream3d"
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

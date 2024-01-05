@@ -11,9 +11,9 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = nx.CreateImageGeometry()
+nx_filter = nx.CreateImageGeometry()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name="Cell Data",
     dimensions=[60, 80, 100],
@@ -21,13 +21,13 @@ result = filter.execute(
     origin=[100.0, 100.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -39,13 +39,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("[Image Geometry]/Cell Data/Confidence Index"),
     scalar_type=nx.NumericType.float32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -57,13 +57,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
     scalar_type=nx.NumericType.int32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -75,13 +75,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
     scalar_type=nx.NumericType.float32
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = nx.ReadTextDataArrayFilter()
+nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     data_format="",
@@ -93,6 +93,6 @@ result = filter.execute(
     output_data_array=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
     scalar_type=nx.NumericType.uint8
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 print("===> Pipeline Complete")

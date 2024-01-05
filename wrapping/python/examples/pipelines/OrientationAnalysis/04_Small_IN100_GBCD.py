@@ -15,16 +15,16 @@ import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
 import_data.data_paths = None
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure, import_file_data=import_data)
-nxtest.check_filter_result(filter, result)
+result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = cxor.FindGBCDFilter()
+nx_filter = cxor.FindGBCDFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     face_ensemble_attribute_matrix_name="FaceEnsembleData",
@@ -37,14 +37,14 @@ result = filter.execute(
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
     triangle_geometry=nx.DataPath("TriangleDataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 3
 # Instantiate Filter
-filter = cxor.GenerateGBCDPoleFigureFilter()
+nx_filter = cxor.GenerateGBCDPoleFigureFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_intensity_array_name="MRD",
@@ -55,13 +55,13 @@ result = filter.execute(
     output_image_dimension=100,
     phase_of_interest=1
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = cxor.GenerateGBCDPoleFigureFilter()
+nx_filter = cxor.GenerateGBCDPoleFigureFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_intensity_array_name="MRD",
@@ -72,13 +72,13 @@ result = filter.execute(
     output_image_dimension=100,
     phase_of_interest=1
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-filter = cxor.GenerateGBCDPoleFigureFilter()
+nx_filter = cxor.GenerateGBCDPoleFigureFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_intensity_array_name="MRD",
@@ -89,13 +89,13 @@ result = filter.execute(
     output_image_dimension=100,
     phase_of_interest=1
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = cxor.WriteGBCDGMTFileFilter()
+nx_filter = cxor.WriteGBCDGMTFileFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     gbcd_array_path=nx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
@@ -103,13 +103,13 @@ result = filter.execute(
     output_file="Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat",
     phase_of_interest=1
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-filter = cxor.WriteGBCDTriangleDataFilter()
+nx_filter = cxor.WriteGBCDTriangleDataFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
     output_file="Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph",
@@ -117,19 +117,19 @@ result = filter.execute(
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_GBCD.dream3d"
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
                         write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

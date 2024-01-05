@@ -73,18 +73,18 @@ import_data.data_paths =[
           ]
 
 # Instantiate Filter
-filter = nx.ReadDREAM3DFilter()
+nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = filter.execute(data_structure=data_structure,
+result = nx_filter.execute(data_structure=data_structure,
                         import_file_data=import_data)
 
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-filter = nx.SharedFeatureFaceFilter()
+nx_filter = nx.SharedFeatureFaceFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     feature_face_ids_array_name="SharedFeatureFaceId",
@@ -94,13 +94,13 @@ result = filter.execute(
     randomize_features=False,
     triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = cxor.FindGBCDMetricBasedFilter()
+nx_filter = cxor.FindGBCDMetricBasedFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     chosen_limit_dists=0,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
@@ -120,20 +120,20 @@ result = filter.execute(
     surface_mesh_feature_face_labels_array_path=nx.DataPath("TriangleDataContainer/SharedFeatureFace/FaceLabels"),
     triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
 output_file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_GBCD_Metric.dream3d"
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure, 
     export_file_path=output_file_path, 
     write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

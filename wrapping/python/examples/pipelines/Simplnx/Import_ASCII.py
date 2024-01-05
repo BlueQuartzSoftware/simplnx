@@ -11,9 +11,9 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = nx.CreateGeometryFilter()
+nx_filter = nx.CreateGeometryFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_handling=0,
     cell_attribute_matrix_name="Cell Data",
@@ -37,7 +37,7 @@ result = filter.execute(
     #y_bounds: DataPath = ...,
     #z_bounds: DataPath = ...
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 
@@ -54,22 +54,22 @@ read_csv_data.headers_line = 1
 read_csv_data.header_mode = nx.ReadCSVDataParameter.HeaderMode.Custom
 
 # Instantiate Filter
-filter = nx.ReadCSVFileFilter()
+nx_filter = nx.ReadCSVFileFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     created_data_group=nx.DataPath("Imported Data"),
     read_csv_data=read_csv_data,
     selected_data_group=nx.DataPath("[Image Geometry]/Cell Data"),
     use_existing_group=True,
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.CreateDataArray()
+nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     advanced_options=False,
     component_count=1,
@@ -79,13 +79,13 @@ result = filter.execute(
     output_data_array=nx.DataPath("[Image Geometry]/Cell Data/Phase")
     #tuple_dimensions=[]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.CombineAttributeArraysFilter()
+nx_filter = nx.CombineAttributeArraysFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     move_values=True,
     normalize_data=False,
@@ -94,7 +94,7 @@ result = filter.execute(
                                nx.DataPath("[Image Geometry]/Cell Data/phi2")],
     stacked_data_array_name="Eulers"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Define ensemble info parameters
@@ -104,9 +104,9 @@ ensemble_info_parameter.append(["Hexagonal-High 6/mmm", "Primary", "Phase 1"])
 ensemble_info_parameter.append(["Cubic-High m-3m", "Primary", "Phase 2"])
 
 # Instantiate Filter
-filter = cxor.CreateEnsembleInfoFilter()
+nx_filter = cxor.CreateEnsembleInfoFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_ensemble_attribute_matrix_name=nx.DataPath("[Image Geometry]/CellEnsembleData"),
     crystal_structures_array_name="CrystalStructures",
@@ -114,13 +114,13 @@ result = filter.execute(
     phase_types_array_name="PhaseTypes",
     ensemble=ensemble_info_parameter
     )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = cxor.GenerateIPFColorsFilter()
+nx_filter = cxor.GenerateIPFColorsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_euler_angles_array_path=nx.DataPath("[Image Geometry]/Cell Data/Eulers"),
     cell_ipf_colors_array_name="IPFColors",
@@ -130,17 +130,17 @@ result = filter.execute(
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=False
     )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 7
 # Instantiate Filter
-filter = cxitk.ITKImageWriter()
+nx_filter = cxitk.ITKImageWriter()
 # Output file path for Filter 7
 output_file_path = nxtest.GetDataDirectory() + "/Output/Import_ASCII/IPF.png"
 
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     file_name=output_file_path,
     image_array_path=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
@@ -148,7 +148,7 @@ result = filter.execute(
     index_offset=0,
     plane=0
     )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

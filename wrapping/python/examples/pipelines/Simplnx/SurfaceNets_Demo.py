@@ -24,9 +24,9 @@ generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 2
 
 # Instantiate Filter
-filter = cxitk.ITKImportImageStack()
+nx_filter = cxitk.ITKImportImageStack()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name="Optical Data",
     image_data_array_path="Image Data",
@@ -36,7 +36,7 @@ result = filter.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate ArrayThreshold objects
@@ -50,21 +50,21 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean
 
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Execute filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="Mask",
     created_mask_type=nx.DataType.boolean
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.ScalarSegmentFeaturesFilter()
+nx_filter = nx.ScalarSegmentFeaturesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     active_array_path="Active",
     cell_feature_group_path="Pore Data",
@@ -76,13 +76,13 @@ result = filter.execute(
     scalar_tolerance=0,
     use_mask=False
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.SurfaceNetsFilter()
+nx_filter = nx.SurfaceNetsFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     apply_smoothing=True,
     face_data_group_name="Face Data",
@@ -98,7 +98,7 @@ result = filter.execute(
     triangle_geometry_name=nx.DataPath("TriangleDataContainer"),
     vertex_data_group_name="Vertex Data"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 output_file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SurfaceNets_Demo.dream3d"
@@ -106,7 +106,7 @@ result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure,
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines

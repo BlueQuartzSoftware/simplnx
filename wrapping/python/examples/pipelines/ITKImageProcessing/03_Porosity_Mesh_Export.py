@@ -11,7 +11,7 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-filter = cxitk.ITKImportImageStack()
+nx_filter = cxitk.ITKImportImageStack()
 
 generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
 generated_file_list_value.input_path = nxtest.GetDataDirectory() + "/Porosity_Image/"
@@ -27,7 +27,7 @@ generated_file_list_value.padding_digits = 2
 
 
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name="Cell Data",
     image_data_array_path="ImageData",
@@ -37,7 +37,7 @@ result = filter.execute(
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Set Up Thresholds and Instantiate Filter
@@ -51,9 +51,9 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean
 
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="Mask",
@@ -63,13 +63,13 @@ result = filter.execute(
     # custom_false_value: float = ...,  # Not currently part of the code
     # custom_true_value: float = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-filter = nx.ScalarSegmentFeaturesFilter()
+nx_filter = nx.ScalarSegmentFeaturesFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     active_array_path="Active",
     cell_feature_group_path="CellFeatureData",
@@ -81,13 +81,13 @@ result = filter.execute(
     scalar_tolerance=0,
     use_mask=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-filter = nx.QuickSurfaceMeshFilter()
+nx_filter = nx.QuickSurfaceMeshFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     face_data_group_name="Face Data",
     face_feature_attribute_matrix_name="Face Feature Data",
@@ -101,14 +101,14 @@ result = filter.execute(
     triangle_geometry_name=nx.DataPath("TriangleDataContainer"),
     vertex_data_group_name="Vertex Data"
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 5
 # Instantiate Filter
-filter = nx.LaplacianSmoothingFilter()
+nx_filter = nx.LaplacianSmoothingFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     iteration_steps=15,
     lambda_value=0.2,
@@ -122,13 +122,13 @@ result = filter.execute(
     triple_line_lambda=0.1,
     use_taubin_smoothing=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-filter = nx.SplitAttributeArrayFilter()
+nx_filter = nx.SplitAttributeArrayFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     delete_original_array=True,
     multicomponent_array=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
@@ -136,7 +136,7 @@ result = filter.execute(
     select_components_to_extract=False
     # components_to_extract: List[List[float]] = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 7
@@ -151,9 +151,9 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean  # This line specifies the DataType for the threshold
 
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="FaceLabels-0 Mask",
@@ -163,7 +163,7 @@ result = filter.execute(
     # custom_false_value: float = ...,  # Not currently part of the code
     # custom_true_value: float = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 8
@@ -178,9 +178,9 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean  # This line specifies the DataType for the threshold
 
 # Instantiate Filter
-filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds=threshold_set,
     created_data_path="FaceLabels-1 Mask",
@@ -190,13 +190,13 @@ result = filter.execute(
     # custom_false_value: float = ...,  # Not currently part of the code
     # custom_true_value: float = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
 # Instantiate Filter
-filter = nx.ConditionalSetValue()
+nx_filter = nx.ConditionalSetValue()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     conditional_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels-0 Mask"),
     invert_mask=False,
@@ -205,14 +205,14 @@ result = filter.execute(
     use_conditional=True
     # remove_value: str = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 
 # Filter 10
 # Instantiate Filter
-filter = nx.ConditionalSetValue()
+nx_filter = nx.ConditionalSetValue()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     conditional_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels-1 Mask"),
     invert_mask=False,
@@ -221,13 +221,13 @@ result = filter.execute(
     use_conditional=True
     # remove_value: str = ...,  # Not currently part of the code
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 11
 # Instantiate Filter
-filter = nx.CombineAttributeArraysFilter()
+nx_filter = nx.CombineAttributeArraysFilter()
 # Execute Filter with Parameters
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     move_values=True,
     normalize_data=False,
@@ -237,19 +237,19 @@ result = filter.execute(
         nx.DataPath("TriangleDataContainer/Face Data/FaceLabels-1")
     ]
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # Filter 12
 # Instantiate Filter
-filter = nx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
 output_file_path = nxtest.GetDataDirectory() + "/Output/Porosity_Analysis.dream3d"
-result = filter.execute(
+result = nx_filter.execute(
     data_structure=data_structure,
     export_file_path=output_file_path,
     write_xdmf_file=True
 )
-nxtest.check_filter_result(filter, result)
+nxtest.check_filter_result(nx_filter, result)
 
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
