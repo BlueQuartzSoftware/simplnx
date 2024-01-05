@@ -284,20 +284,20 @@ endif()
 #------------------------------------------------------------------------------
 option(SIMPLNX_BUILD_PYTHON_TESTS "Enables python based unit tests" OFF)
 if(SIMPLNX_BUILD_PYTHON_TESTS)
-  
-  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Data")
+ 
   get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
   if(is_multi_config)
-    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/Data")
+    set(CX_CONFIG_DIR "$<CONFIG>")
+  else()
+    set(CX_CONFIG_DIR ".")
   endif()
 
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")
+  
   # Create a computer specific python file that defines the locations of various directories
   file(READ ${simplnx_SOURCE_DIR}/wrapping/python/testing/simplnx_test_dirs.in.py SIMPLNX_TEST_DIRS_FILE)
 
-  string(REPLACE "\${CMAKE_LIBRARY_OUTPUT_DIRECTORY}" $<TARGET_FILE_DIR:simplnx> SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
-  string(REPLACE "\${simplnx_BINARY_DIR}" ${simplnx_BINARY_DIR} SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
-  string(REPLACE "\${DATA_DEST_DIR}" ${DATA_DEST_DIR} SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
-  string(REPLACE "\${simplnx_SOURCE_DIR}" ${simplnx_SOURCE_DIR} SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
+  string(CONFIGURE "${SIMPLNX_TEST_DIRS_FILE}" SIMPLNX_TEST_DIRS_FILE)
 
   file(GENERATE
     OUTPUT "$<TARGET_FILE_DIR:simplnx>/simplnx_test_dirs.py"

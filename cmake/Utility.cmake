@@ -473,7 +473,7 @@ function(AddPythonTest)
   set(oneValueArgs NAME FILE)
   set(multiValueArgs PYTHONPATH)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-  message(STATUS "ARGS_FILE:${ARGS_FILE}")
+  # message(STATUS "ARGS_FILE:${ARGS_FILE}")
   if(SIMPLNX_BUILD_PYTHON)
     if(WIN32)
       add_test(NAME ${ARGS_NAME}

@@ -24,29 +24,29 @@ Filter Changes 1.2.0
 +----------------------------------------+---------------------------------------+-----------+
 | Old File Name                          | New File Name                         | Type      |
 +========================================+=======================================+===========+
-| WriteAbaqusHexahedronFilter           | WriteAbaqusHexahedronFilter           | Filter    |
+| WriteAbaqusHexahedronFilter            | WriteAbaqusHexahedronFilter           | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| WriteAvizoRectilinearCoordinateFilter | WriteAvizoRectilinearCoordinateFilter | Filter    |
+| WriteAvizoRectilinearCoordinateFilter  | WriteAvizoRectilinearCoordinateFilter | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| WriteAvizoUniformCoordinateFilter     | WriteAvizoUniformCoordinateFilter     | Filter    |
+| WriteAvizoUniformCoordinateFilter      | WriteAvizoUniformCoordinateFilter     | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| WriteDREAM3DFilter                    | WriteDREAM3DFilter                    | Filter    |
+| WriteDREAM3DFilter                     | WriteDREAM3DFilter                    | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| WriteFeatureDataCSVFilter             | WriteFeatureDataCSVFilter             | Filter    |
+| WriteFeatureDataCSVFilter              | WriteFeatureDataCSVFilter             | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| ReadDeformKeyFileV12Filter           | ReadDeformKeyFileV12Filter            | Filter    |
+| ReadDeformKeyFileV12Filter             | ReadDeformKeyFileV12Filter            | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| ReadVolumeGraphicsFileFilter         | ReadVolumeGraphicsFileFilter          | Filter    |
+| ReadVolumeGraphicsFileFilter           | ReadVolumeGraphicsFileFilter          | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| ReadBinaryCTNorthstarFilter          | ReadBinaryCTNorthstarFilter           | Filter    |
+| ReadBinaryCTNorthstarFilter            | ReadBinaryCTNorthstarFilter           | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| WriteLosAlamosFFTFilter               | WriteLosAlamosFFTFilter               | Filter    |
+| WriteLosAlamosFFTFilter                | WriteLosAlamosFFTFilter               | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| ReadRawBinaryFilter                  | ReadRawBinaryFilter                   | Filter    |
+| ReadRawBinaryFilter                    | ReadRawBinaryFilter                   | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| ReadStlFileFilter                    | ReadStlFileFilter                     | Filter    |
+| ReadStlFileFilter                      | ReadStlFileFilter                     | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
-| WriteVtkRectilinearGridFilter         | WriteVtkRectilinearGridFilter         | Filter    |
+| WriteVtkRectilinearGridFilter          | WriteVtkRectilinearGridFilter         | Filter    |
 +----------------------------------------+---------------------------------------+-----------+
 
 - OrientationAnalysis
@@ -54,16 +54,16 @@ Filter Changes 1.2.0
 +------------------------------+-----------------------------+-----------+
 | Old File Name                | New File Name               | Type      |
 +==============================+=============================+===========+
-| ReadEnsembleInfoFilter     | ReadEnsembleInfoFilter      | Filter    |
+| ReadEnsembleInfoFilter       | ReadEnsembleInfoFilter      | Filter    |
 +------------------------------+-----------------------------+-----------+
-| WriteGBCDGMTFileFilter      | WriteGBCDGMTFileFilter      | Filter    |
+| WriteGBCDGMTFileFilter       | WriteGBCDGMTFileFilter      | Filter    |
 +------------------------------+-----------------------------+-----------+
-| WriteGBCDTriangleDataFilter | WriteGBCDTriangleDataFilter | Filter    |
+| WriteGBCDTriangleDataFilter  | WriteGBCDTriangleDataFilter | Filter    |
 +------------------------------+-----------------------------+-----------+
-| ReadH5Data                 | ReadH5Data                  | Utility   |
+| ReadH5Data                   | ReadH5Data                  | Utility   |
 +------------------------------+-----------------------------+-----------+
-| ReadH5OimDataFilter        | ReadH5OimDataFilter         | Filter    |
+| ReadH5OimDataFilter          | ReadH5OimDataFilter         | Filter    |
 +------------------------------+-----------------------------+-----------+
-| WriteINLFileFilter              | WriteINLFileFilter          | Filter    |
+| WriteINLFileFilter           | WriteINLFileFilter          | Filter    |
 +------------------------------+-----------------------------+-----------+
 
