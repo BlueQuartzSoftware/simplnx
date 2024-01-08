@@ -83,7 +83,7 @@ else:
 output_array_path = nx.DataPath("Image Geometry/Cell Data/Float Cell Data")
 array_type = nx.NumericType.float32
 create_array_nx_filter = nx.CreateDataArray()
-result = create_array_filter.execute(data_structure=data_structure, component_count=1, data_format="",
+result = create_array_nx_filter.execute(data_structure=data_structure, component_count=1, data_format="",
                                      initialization_value="10",
                                      numeric_type=array_type, output_data_array=output_array_path)
 nxtest.check_filter_result(nx.CreateDataArray, result)
@@ -105,7 +105,7 @@ output_array_path = nx.DataPath("RectGridCoords/X Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
 create_array_nx_filter = nx.CreateDataArray()
-result = create_array_filter.execute(data_structure=data_structure,
+result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
                                      initialization_value="0",
@@ -123,7 +123,7 @@ output_array_path = nx.DataPath("RectGridCoords/Y Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
 create_array_nx_filter = nx.CreateDataArray()
-result = create_array_filter.execute(data_structure=data_structure,
+result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
                                      initialization_value="0",
@@ -141,7 +141,7 @@ output_array_path = nx.DataPath("RectGridCoords/Z Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
 create_array_nx_filter = nx.CreateDataArray()
-result = create_array_filter.execute(data_structure=data_structure,
+result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
                                      initialization_value="0",
