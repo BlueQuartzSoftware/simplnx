@@ -718,7 +718,7 @@ def get_itk_filter_struct(filter_data: FilterData) -> str:
   auto createFilter() const
   {{
     using FilterType = {filter_type};
-    auto nx_filter = FilterType::New();{setters_str}
+    auto filter = FilterType::New();{setters_str}
     return filter;
   }}
 }};'''
