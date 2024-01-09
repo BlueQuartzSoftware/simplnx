@@ -11,8 +11,8 @@ namespace nx::core
 class SIMPLNXCORE_EXPORT CropImageGeometry : public IFilter
 {
 public:
-  CropImageGeometry() = default;
-  ~CropImageGeometry() noexcept override = default;
+  CropImageGeometry();
+  ~CropImageGeometry() noexcept override;
 
   CropImageGeometry(const CropImageGeometry&) = delete;
   CropImageGeometry(CropImageGeometry&&) noexcept = delete;
@@ -105,6 +105,9 @@ protected:
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                        const std::atomic_bool& shouldCancel) const override;
+
+private:
+  int32 m_InstanceId;
 };
 } // namespace nx::core
 

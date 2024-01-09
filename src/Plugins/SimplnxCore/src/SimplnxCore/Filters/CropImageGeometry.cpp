@@ -32,6 +32,19 @@ using namespace nx::core;
 
 namespace
 {
+struct CropImageGeometryFilterCache
+{
+  uint64 xMin;
+  uint64 xMax;
+  uint64 yMax;
+  uint64 yMin;
+  uint64 zMax;
+  uint64 zMin;
+};
+
+std::atomic_int32_t s_InstanceId = 0;
+std::map<int32, CropImageGeometryFilterCache> s_HeaderCache;
+
 const std::string k_TempGeometryName = ".cropped_image_geometry";
 
 /**
@@ -123,6 +136,19 @@ private:
 } // namespace
 
 //------------------------------------------------------------------------------
+CropImageGeometry::CropImageGeometry()
+: m_InstanceId(s_InstanceId.fetch_add(1))
+{
+  s_HeaderCache[m_InstanceId] = {};
+}
+
+//------------------------------------------------------------------------------
+CropImageGeometry::~CropImageGeometry() noexcept
+{
+  s_HeaderCache.erase(m_InstanceId);
+}
+
+//------------------------------------------------------------------------------
 std::string CropImageGeometry::name() const
 {
   return FilterTraits<CropImageGeometry>::name;
@@ -166,7 +192,7 @@ Parameters CropImageGeometry::parameters() const
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_MinCoord_Key, "Min Coordinate (Physical Units)", "Lower bound of the volume to crop out", std::vector<float64>{0.0, 0.0, 0.0},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_MaxCoord_Key, "MMin Coordinate (Physical Units) [Inclusive]", "Upper bound of the volume to crop out", std::vector<float64>{0.0, 0.0, 0.0},
+  params.insert(std::make_unique<VectorFloat64Parameter>(k_MaxCoord_Key, "Min Coordinate (Physical Units) [Inclusive]", "Upper bound of the volume to crop out", std::vector<float64>{0.0, 0.0, 0.0},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
   // params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
@@ -218,12 +244,19 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   auto pUsePhysicalBounds = filterArgs.value<bool>(k_UsePhysicalBounds_Key);
 
-  auto xMin = minVoxels[0];
-  auto xMax = maxVoxels[0];
-  auto yMax = maxVoxels[1];
-  auto yMin = minVoxels[1];
-  auto zMax = maxVoxels[2];
-  auto zMin = minVoxels[2];
+  uint64& xMin = s_HeaderCache[m_InstanceId].xMin;
+  uint64& xMax = s_HeaderCache[m_InstanceId].xMax;
+  uint64& yMax = s_HeaderCache[m_InstanceId].yMax;
+  uint64& yMin = s_HeaderCache[m_InstanceId].yMin;
+  uint64& zMax = s_HeaderCache[m_InstanceId].zMax;
+  uint64& zMin = s_HeaderCache[m_InstanceId].zMin;
+
+  xMin = minVoxels[0];
+  xMax = maxVoxels[0];
+  yMax = maxVoxels[1];
+  yMin = minVoxels[1];
+  zMax = maxVoxels[2];
+  zMin = minVoxels[2];
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -561,12 +594,12 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
   auto cellFeatureAMPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   auto removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
 
-  uint64 xMin = minVoxels[0];
-  uint64 xMax = maxVoxels[0];
-  uint64 yMax = maxVoxels[1];
-  uint64 yMin = minVoxels[1];
-  uint64 zMax = maxVoxels[2];
-  uint64 zMin = minVoxels[2];
+  uint64 xMin = s_HeaderCache[m_InstanceId].xMin;
+  uint64 xMax = s_HeaderCache[m_InstanceId].xMax;
+  uint64 yMax = s_HeaderCache[m_InstanceId].yMax;
+  uint64 yMin = s_HeaderCache[m_InstanceId].yMin;
+  uint64 zMax = s_HeaderCache[m_InstanceId].zMax;
+  uint64 zMin = s_HeaderCache[m_InstanceId].zMin;
 
   auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
