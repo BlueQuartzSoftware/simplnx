@@ -85,9 +85,14 @@ public:
    */
   DynamicListArray(const DynamicListArray& other)
   : DataObject(other)
-  , m_Array(other.m_Array)
   , m_Size(other.m_Size)
   {
+    allocate(other.m_Size);
+
+    for(usize i = 0; i < other.m_Size; i++)
+    {
+      setElementList(i, other.m_Array[i]);
+    }
   }
 
   /**
@@ -187,7 +192,7 @@ public:
    */
   DataObject* shallowCopy() override
   {
-    throw std::runtime_error(fmt::format("Shallow copy is not valid for {} because it is of type DynamicListArray", this->getName()));
+    return new DynamicListArray(*this);
   }
 
   /**
