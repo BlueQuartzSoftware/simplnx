@@ -18,6 +18,8 @@ namespace
 {
 Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string&& header, const IGeometry::MeshIndexArrayType& triangles, const Float32Array& vertices)
 {
+  Result<> result;
+
   // Create output file writer in binary write out mode to ensure cross-compatibility
   FILE* filePtr = fopen(path.string().c_str(), "wb");
 
@@ -32,14 +34,13 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
   { // Scope header output processing to keep overhead low and increase readability
     if(header.size() >= 80)
     {
-      fclose(filePtr);
-      return {MakeWarningVoidResult(-27884,
-                                    fmt::format("Error Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}.", path.filename().string(), header.length()))};
+      result = MakeWarningVoidResult(-27884,
+                                     fmt::format("Warning: Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}. Only the first 80 bytes will be written.",
+                                                 path.filename().string(), header.length()));
     }
 
     std::array<char, 80> stlFileHeader = {};
     stlFileHeader.fill(0);
-
     size_t headLength = 80;
     if(header.length() < 80)
     {
@@ -112,12 +113,13 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
   fseek(filePtr, 80L, SEEK_SET);
   fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
   fclose(filePtr);
-  return {};
+  return result;
 }
 
 Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string&& header, const IGeometry::MeshIndexArrayType& triangles, const Float32Array& vertices,
                           const Int32Array& featureIds, const int32 featureId)
 {
+  Result<> result;
   // Create output file writer in binary write out mode to ensure cross-compatibility
   FILE* filePtr = fopen(path.string().c_str(), "wb");
 
@@ -132,9 +134,9 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
   { // Scope header output processing to keep overhead low and increase readability
     if(header.size() >= 80)
     {
-      fclose(filePtr);
-      return {MakeWarningVoidResult(-27874,
-                                    fmt::format("Error Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}.", path.filename().string(), header.length()))};
+      result = MakeWarningVoidResult(-27874,
+                                     fmt::format("Warning: Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}. Only the first 80 bytes will be written.",
+                                                 path.filename().string(), header.length()));
     }
 
     std::array<char, 80> stlFileHeader = {};
@@ -228,7 +230,7 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
   fseek(filePtr, 80L, SEEK_SET);
   fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
   fclose(filePtr);
-  return {};
+  return result;
 }
 } // namespace
 
