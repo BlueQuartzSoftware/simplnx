@@ -6,21 +6,29 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 
 namespace nx::core
 {
 
+enum class GroupingType : ChoicesParameter::ValueType
+{
+  Features,
+  FeaturesAndPhases,
+  None
+};
+
 struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
 {
-  bool GroupByFeature;
+  ChoicesParameter::ValueType GroupingType;
+  FileSystemPathParameter::ValueType OutputStlFile;
   FileSystemPathParameter::ValueType OutputStlDirectory;
   StringParameter::ValueType OutputStlPrefix;
   DataPath FeatureIdsPath;
   DataPath FeaturePhasesPath;
   DataPath TriangleGeomPath;
-  // DataPath FaceNormalsPath;
 };
 
 /**

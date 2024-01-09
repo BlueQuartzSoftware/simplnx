@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
@@ -57,24 +57,38 @@ Parameters WriteStlFileFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_GroupByFeature, "Group by Feature Phases", "Further partition the stl files by feature phases", false));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", to_underlying(GroupingType::Features),
+                                                                    ChoicesParameter::Choices{"Features", "Phases and Features", "None [Single File]"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(
       std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "STL File Prefix", "The prefix name of created files (other values will be appended later - including the .stl extension)", "Triangle"));
+
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlFile_Key, "Output STL File", "STL File to dump the Triangle Geometry to", fs::path(),
+                                                          FileSystemPathParameter::ExtensionsType{".stl"}, FileSystemPathParameter::PathType::OutputFile, false));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Selected Triangle Geometry", "The geometry to print", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
-  //  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The triangle normals array to be printed in the stl file", DataPath{},
-  //                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "The feature phases array to further order/index files by", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  // link params
-  params.linkParameters(k_GroupByFeature, k_FeaturePhasesPath_Key, true);
+  // link params -- GroupingType enum is stored in the algorithm header [WriteStlFile.hpp]
+  //------------ Group by Features -------------
+  params.linkParameters(k_GroupingType_Key, k_OutputStlDirectory_Key, to_underlying(GroupingType::Features));
+  params.linkParameters(k_GroupingType_Key, k_OutputStlPrefix_Key, to_underlying(GroupingType::Features));
+  params.linkParameters(k_GroupingType_Key, k_FeatureIdsPath_Key, to_underlying(GroupingType::Features));
+
+  //------- Group by Features and Phases -------
+  params.linkParameters(k_GroupingType_Key, k_OutputStlDirectory_Key, to_underlying(GroupingType::FeaturesAndPhases));
+  params.linkParameters(k_GroupingType_Key, k_OutputStlPrefix_Key, to_underlying(GroupingType::FeaturesAndPhases));
+  params.linkParameters(k_GroupingType_Key, k_FeatureIdsPath_Key, to_underlying(GroupingType::FeaturesAndPhases));
+  params.linkParameters(k_GroupingType_Key, k_FeaturePhasesPath_Key, to_underlying(GroupingType::FeaturesAndPhases));
+
+  //--------------- Single File ----------------
+  params.linkParameters(k_GroupingType_Key, k_OutputStlFile_Key, to_underlying(GroupingType::None));
 
   return params;
 }
@@ -89,12 +103,11 @@ IFilter::UniquePointer WriteStlFileFilter::clone() const
 IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                            const std::atomic_bool& shouldCancel) const
 {
-  auto pGroupByPhasesValue = filterArgs.value<bool>(k_GroupByFeature);
+  auto pGroupingTypeValue = static_cast<GroupingType>(filterArgs.value<ChoicesParameter::ValueType>(k_GroupingType_Key));
   auto pOutputStlDirectoryValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
   auto pTriangleGeomPathValue = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
   auto pFeatureIdsPathValue = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
   auto pFeaturePhasesPathValue = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
-  //  auto pFaceNormalsPathValue = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -112,17 +125,19 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
         -27871, fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}", triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max()));
   }
 
-  if(pGroupByPhasesValue)
+  if(pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
     if(auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue); featurePhases == nullptr)
     {
       return MakePreflightErrorResult(-27872, fmt::format("Feature Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
     }
   }
-
-  if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue); featureIds == nullptr)
+  if(pGroupingTypeValue != GroupingType::None)
   {
-    return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
+    if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue); featureIds == nullptr)
+    {
+      return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
+    }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
@@ -135,13 +150,13 @@ Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arg
 {
   WriteStlFileInputValues inputValues;
 
-  inputValues.GroupByFeature = filterArgs.value<bool>(k_GroupByFeature);
+  inputValues.GroupingType = filterArgs.value<ChoicesParameter::ValueType>(k_GroupingType_Key);
+  inputValues.OutputStlFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlFile_Key);
   inputValues.OutputStlDirectory = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
   inputValues.OutputStlPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputStlPrefix_Key);
   inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
   inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   inputValues.TriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
-  // inputValues.FaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
 
   return WriteStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
