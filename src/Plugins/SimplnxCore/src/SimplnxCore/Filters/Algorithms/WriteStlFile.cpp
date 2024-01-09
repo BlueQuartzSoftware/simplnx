@@ -1,8 +1,11 @@
 #include "WriteStlFile.hpp"
 
+// NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast, cppcoreguidelines-pro-bounds-pointer-arithmetic)
+
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
@@ -16,12 +19,12 @@ namespace
 Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string&& header, const IGeometry::MeshIndexArrayType& triangles, const Float32Array& vertices)
 {
   // Create output file writer in binary write out mode to ensure cross-compatibility
-  FILE* file = fopen(path.string().c_str(), "wb");
+  FILE* filePtr = fopen(path.string().c_str(), "wb");
 
-  if(file == nullptr)
+  if(filePtr == nullptr)
   {
-    fclose(file);
-    return {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", path.string(), path.filename().string()))};
+    fclose(filePtr);
+    return {MakeWarningVoidResult(-27886, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", path.string(), path.filename().string()))};
   }
 
   int32 triCount = 0;
@@ -29,38 +32,40 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
   { // Scope header output processing to keep overhead low and increase readability
     if(header.size() >= 80)
     {
-      fclose(file);
-      return {MakeWarningVoidResult(-27874,
+      fclose(filePtr);
+      return {MakeWarningVoidResult(-27884,
                                     fmt::format("Error Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}.", path.filename().string(), header.length()))};
     }
 
-    char h[80];
+    std::array<char, 80> stlFileHeader = {};
+    stlFileHeader.fill(0);
+
     size_t headLength = 80;
     if(header.length() < 80)
     {
       headLength = static_cast<size_t>(header.length());
     }
 
-    std::string c_str = header;
-    memset(h, 0, 80);
-    memcpy(h, c_str.data(), headLength);
+    // std::string c_str = header;
+    memcpy(stlFileHeader.data(), header.data(), headLength);
     // Return the number of bytes written - which should be 80
-    fwrite(h, 1, 80, file);
+    fwrite(stlFileHeader.data(), 1, 80, filePtr);
   }
 
-  fwrite(&triCount, 1, 4, file);
+  fwrite(&triCount, 1, 4, filePtr);
   triCount = 0; // Reset this to Zero. Increment for every triangle written
 
   size_t totalWritten = 0;
-  float u[3] = {0.0f, 0.0f, 0.0f}, w[3] = {0.0f, 0.0f, 0.0f};
+  std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
+  std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
 
-  unsigned char data[50];
-  auto* normal = reinterpret_cast<float32*>(data);
-  auto* vert1 = reinterpret_cast<float32*>(data + 12);
-  auto* vert2 = reinterpret_cast<float32*>(data + 24);
-  auto* vert3 = reinterpret_cast<float32*>(data + 36);
-  auto* attrByteCount = reinterpret_cast<uint16*>(data + 48);
-  *attrByteCount = 0;
+  std::array<char, 50> data = {};
+  nonstd::span<float32> normalPtr(reinterpret_cast<float32*>(data.data()), 3);
+  nonstd::span<float32> vert1Ptr(reinterpret_cast<float32*>(data.data() + 12), 3);
+  nonstd::span<float32> vert2Ptr(reinterpret_cast<float32*>(data.data() + 24), 3);
+  nonstd::span<float32> vert3Ptr(reinterpret_cast<float32*>(data.data() + 36), 3);
+  nonstd::span<uint16> attrByteCountPtr(reinterpret_cast<uint16*>(data.data() + 48), 2);
+  attrByteCountPtr[0] = 0;
 
   // Loop over all the triangles for this spin
   for(IGeometry::MeshIndexType triangle = 0; triangle < numTriangles; ++triangle)
@@ -70,49 +75,43 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
     IGeometry::MeshIndexType nId1 = triangles[triangle * 3 + 1];
     IGeometry::MeshIndexType nId2 = triangles[triangle * 3 + 2];
 
-    vert1[0] = static_cast<float>(vertices[nId0 * 3]);
-    vert1[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
-    vert1[2] = static_cast<float>(vertices[nId0 * 3 + 2]);
+    vert1Ptr[0] = static_cast<float>(vertices[nId0 * 3]);
+    vert1Ptr[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
+    vert1Ptr[2] = static_cast<float>(vertices[nId0 * 3 + 2]);
 
-    vert2[0] = static_cast<float>(vertices[nId1 * 3]);
-    vert2[1] = static_cast<float>(vertices[nId1 * 3 + 1]);
-    vert2[2] = static_cast<float>(vertices[nId1 * 3 + 2]);
+    vert2Ptr[0] = static_cast<float>(vertices[nId1 * 3]);
+    vert2Ptr[1] = static_cast<float>(vertices[nId1 * 3 + 1]);
+    vert2Ptr[2] = static_cast<float>(vertices[nId1 * 3 + 2]);
 
-    vert3[0] = static_cast<float>(vertices[nId2 * 3]);
-    vert3[1] = static_cast<float>(vertices[nId2 * 3 + 1]);
-    vert3[2] = static_cast<float>(vertices[nId2 * 3 + 2]);
+    vert3Ptr[0] = static_cast<float>(vertices[nId2 * 3]);
+    vert3Ptr[1] = static_cast<float>(vertices[nId2 * 3 + 1]);
+    vert3Ptr[2] = static_cast<float>(vertices[nId2 * 3 + 2]);
 
     // Compute the normal
-    u[0] = vert2[0] - vert1[0];
-    u[1] = vert2[1] - vert1[1];
-    u[2] = vert2[2] - vert1[2];
+    vecA[0] = vert2Ptr[0] - vert1Ptr[0];
+    vecA[1] = vert2Ptr[1] - vert1Ptr[1];
+    vecA[2] = vert2Ptr[2] - vert1Ptr[2];
 
-    w[0] = vert3[0] - vert1[0];
-    w[1] = vert3[1] - vert1[1];
-    w[2] = vert3[2] - vert1[2];
+    vecB[0] = vert3Ptr[0] - vert1Ptr[0];
+    vecB[1] = vert3Ptr[1] - vert1Ptr[1];
+    vecB[2] = vert3Ptr[2] - vert1Ptr[2];
 
-    normal[0] = u[1] * w[2] - u[2] * w[1];
-    normal[1] = u[2] * w[0] - u[0] * w[2];
-    normal[2] = u[0] * w[1] - u[1] * w[0];
+    MatrixMath::CrossProduct(vecA.data(), vecB.data(), normalPtr.data());
+    MatrixMath::Normalize3x1(normalPtr.data());
 
-    float length = sqrtf(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
-    normal[0] = normal[0] / length;
-    normal[1] = normal[1] / length;
-    normal[2] = normal[2] / length;
-
-    totalWritten = fwrite(data, 1, 50, file);
+    totalWritten = fwrite(data.data(), 1, 50, filePtr);
     if(totalWritten != 50)
     {
-      fclose(file);
+      fclose(filePtr);
       return {MakeWarningVoidResult(
-          -27873, fmt::format("Error Writing STL File '{}'. Not enough elements written for Triangle {}. Wrote {} of 50. No file written.", path.filename().string(), triangle, totalWritten))};
+          -27883, fmt::format("Error Writing STL File '{}'. Not enough elements written for Triangle {}. Wrote {} of 50. No file written.", path.filename().string(), triangle, totalWritten))};
     }
     triCount++;
   }
 
-  fseek(file, 80L, SEEK_SET);
-  fwrite(reinterpret_cast<char*>(&triCount), 1, 4, file);
-  fclose(file);
+  fseek(filePtr, 80L, SEEK_SET);
+  fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
+  fclose(filePtr);
   return {};
 }
 
@@ -120,11 +119,11 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
                           const Int32Array& featureIds, const int32 featureId)
 {
   // Create output file writer in binary write out mode to ensure cross-compatibility
-  FILE* file = fopen(path.string().c_str(), "wb");
+  FILE* filePtr = fopen(path.string().c_str(), "wb");
 
-  if(file == nullptr)
+  if(filePtr == nullptr)
   {
-    fclose(file);
+    fclose(filePtr);
     return {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", path.string(), path.filename().string()))};
   }
 
@@ -133,38 +132,39 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
   { // Scope header output processing to keep overhead low and increase readability
     if(header.size() >= 80)
     {
-      fclose(file);
+      fclose(filePtr);
       return {MakeWarningVoidResult(-27874,
                                     fmt::format("Error Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}.", path.filename().string(), header.length()))};
     }
 
-    char h[80];
+    std::array<char, 80> stlFileHeader = {};
+    stlFileHeader.fill(0);
     size_t headLength = 80;
     if(header.length() < 80)
     {
       headLength = static_cast<size_t>(header.length());
     }
 
-    std::string c_str = header;
-    memset(h, 0, 80);
-    memcpy(h, c_str.data(), headLength);
+    // std::string c_str = header;
+    memcpy(stlFileHeader.data(), header.data(), headLength);
     // Return the number of bytes written - which should be 80
-    fwrite(h, 1, 80, file);
+    fwrite(stlFileHeader.data(), 1, 80, filePtr);
   }
 
-  fwrite(&triCount, 1, 4, file);
+  fwrite(&triCount, 1, 4, filePtr);
   triCount = 0; // Reset this to Zero. Increment for every triangle written
 
   size_t totalWritten = 0;
-  float u[3] = {0.0f, 0.0f, 0.0f}, w[3] = {0.0f, 0.0f, 0.0f};
+  std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
+  std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
 
-  unsigned char data[50];
-  auto* normal = reinterpret_cast<float32*>(data);
-  auto* vert1 = reinterpret_cast<float32*>(data + 12);
-  auto* vert2 = reinterpret_cast<float32*>(data + 24);
-  auto* vert3 = reinterpret_cast<float32*>(data + 36);
-  auto* attrByteCount = reinterpret_cast<uint16*>(data + 48);
-  *attrByteCount = 0;
+  std::array<char, 50> data = {};
+  nonstd::span<float32> normalPtr(reinterpret_cast<float32*>(data.data()), 3);
+  nonstd::span<float32> vert1Ptr(reinterpret_cast<float32*>(data.data() + 12), 3);
+  nonstd::span<float32> vert2Ptr(reinterpret_cast<float32*>(data.data() + 24), 3);
+  nonstd::span<float32> vert3Ptr(reinterpret_cast<float32*>(data.data() + 36), 3);
+  nonstd::span<uint16> attrByteCountPtr(reinterpret_cast<uint16*>(data.data() + 48), 2);
+  attrByteCountPtr[0] = 0;
 
   // Loop over all the triangles for this spin
   for(IGeometry::MeshIndexType triangle = 0; triangle < numTriangles; ++triangle)
@@ -191,49 +191,43 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
       continue; // We do not match either spin so move to the next triangle
     }
 
-    vert1[0] = static_cast<float>(vertices[nId0 * 3]);
-    vert1[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
-    vert1[2] = static_cast<float>(vertices[nId0 * 3 + 2]);
+    vert1Ptr[0] = static_cast<float>(vertices[nId0 * 3]);
+    vert1Ptr[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
+    vert1Ptr[2] = static_cast<float>(vertices[nId0 * 3 + 2]);
 
-    vert2[0] = static_cast<float>(vertices[nId1 * 3]);
-    vert2[1] = static_cast<float>(vertices[nId1 * 3 + 1]);
-    vert2[2] = static_cast<float>(vertices[nId1 * 3 + 2]);
+    vert2Ptr[0] = static_cast<float>(vertices[nId1 * 3]);
+    vert2Ptr[1] = static_cast<float>(vertices[nId1 * 3 + 1]);
+    vert2Ptr[2] = static_cast<float>(vertices[nId1 * 3 + 2]);
 
-    vert3[0] = static_cast<float>(vertices[nId2 * 3]);
-    vert3[1] = static_cast<float>(vertices[nId2 * 3 + 1]);
-    vert3[2] = static_cast<float>(vertices[nId2 * 3 + 2]);
+    vert3Ptr[0] = static_cast<float>(vertices[nId2 * 3]);
+    vert3Ptr[1] = static_cast<float>(vertices[nId2 * 3 + 1]);
+    vert3Ptr[2] = static_cast<float>(vertices[nId2 * 3 + 2]);
 
     // Compute the normal
-    u[0] = vert2[0] - vert1[0];
-    u[1] = vert2[1] - vert1[1];
-    u[2] = vert2[2] - vert1[2];
+    vecA[0] = vert2Ptr[0] - vert1Ptr[0];
+    vecA[1] = vert2Ptr[1] - vert1Ptr[1];
+    vecA[2] = vert2Ptr[2] - vert1Ptr[2];
 
-    w[0] = vert3[0] - vert1[0];
-    w[1] = vert3[1] - vert1[1];
-    w[2] = vert3[2] - vert1[2];
+    vecB[0] = vert3Ptr[0] - vert1Ptr[0];
+    vecB[1] = vert3Ptr[1] - vert1Ptr[1];
+    vecB[2] = vert3Ptr[2] - vert1Ptr[2];
 
-    normal[0] = u[1] * w[2] - u[2] * w[1];
-    normal[1] = u[2] * w[0] - u[0] * w[2];
-    normal[2] = u[0] * w[1] - u[1] * w[0];
+    MatrixMath::CrossProduct(vecA.data(), vecB.data(), normalPtr.data());
+    MatrixMath::Normalize3x1(normalPtr.data());
 
-    float length = sqrtf(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
-    normal[0] = normal[0] / length;
-    normal[1] = normal[1] / length;
-    normal[2] = normal[2] / length;
-
-    totalWritten = fwrite(data, 1, 50, file);
+    totalWritten = fwrite(data.data(), 1, 50, filePtr);
     if(totalWritten != 50)
     {
-      fclose(file);
+      fclose(filePtr);
       return {MakeWarningVoidResult(
           -27873, fmt::format("Error Writing STL File '{}'. Not enough elements written for Feature Id {}. Wrote {} of 50. No file written.", path.filename().string(), featureId, totalWritten))};
     }
     triCount++;
   }
 
-  fseek(file, 80L, SEEK_SET);
-  fwrite(reinterpret_cast<char*>(&triCount), 1, 4, file);
-  fclose(file);
+  fseek(filePtr, 80L, SEEK_SET);
+  fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
+  fclose(filePtr);
   return {};
 }
 } // namespace
@@ -392,3 +386,5 @@ Result<> WriteStlFile::operator()()
 
   return {};
 }
+
+// NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast, cppcoreguidelines-pro-bounds-pointer-arithmetic)
