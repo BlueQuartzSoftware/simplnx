@@ -2,7 +2,7 @@ import simplnx as sx
 import numpy as np
 from typing import List, Dict
 from pathlib import Path
-from utilities.cli_tools import parse_file, parse_geometry_array_names
+from ExamplePlugin.utilities.cli_tools import parse_file, parse_geometry_array_names
 
 class CliReaderFilter:
   CLI_FILE_PATH = 'cli_file_path'
@@ -59,11 +59,8 @@ class CliReaderFilter:
 
     output_actions = sx.OutputActions()
     output_actions.append_action(sx.CreateEdgeGeometryAction(geometry_path=output_edge_geom_path, num_edges=1, num_vertices=1, vertex_attribute_matrix_name=output_vertex_attrmat_name, edge_attribute_matrix_name=output_edge_attrmat_name, shared_vertices_name=shared_vertices_array_name, shared_edges_name=shared_edges_array_name))
-    
-    feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
-    output_actions.append_action(sx.CreateAttributeMatrixAction(feature_attr_mat_path, [1]))
 
-    array_names, has_labels = parse_geometry_array_names(Path(cli_file_path))
+    array_names, num_of_labels = parse_geometry_array_names(Path(cli_file_path))
     # Because extra geometric data is not included in the specification, we are setting 'Layer' array to int32 and all other arrays to float32
     edge_attr_mat_path = output_edge_geom_path.create_child_path(output_edge_attrmat_name)
     for array_name in array_names:
@@ -73,12 +70,15 @@ class CliReaderFilter:
       array_path = edge_attr_mat_path.create_child_path(array_name)
       output_actions.append_action(sx.CreateArrayAction(dtype, [1], [1], array_path))
     
-    if has_labels:
+    if num_of_labels > 0:
       array_path = edge_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
       output_actions.append_action(sx.CreateArrayAction(sx.DataType.int32, [1], [1], array_path))
 
+      feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
+      output_actions.append_action(sx.CreateAttributeMatrixAction(feature_attr_mat_path, [num_of_labels]))
+
       label_array_path = feature_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
-      output_actions.append_action(sx.CreateStringArrayAction([1], label_array_path))
+      output_actions.append_action(sx.CreateStringArrayAction([num_of_labels], label_array_path))
 
     return sx.IFilter.PreflightResult(output_actions)
 
@@ -148,13 +148,9 @@ class CliReaderFilter:
       array_view = array.store.npview()
       array_view[:] = values_arr
     
-    message_handler(sx.IFilter.Message(sx.IFilter.Message.Type.Info, f"Saving Feature Array '{self.LABEL_ARRAY_NAME}'..."))
     feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
     label_feature_array_path = feature_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
-    label_feature_array: sx.IDataArray = data_structure[label_feature_array_path]
-    label_feature_array.resize_tuples([len(hatch_labels)])
-    label_strs = hatch_labels.values()
-    label_strs_arr = np.array(label_strs)
-    label_feature_array_view = label_feature_array.store.npview()
-    label_feature_array_view[:] = label_strs_arr
+    label_feature_array: sx.StringArray = data_structure[label_feature_array_path]
+    message_handler(sx.IFilter.Message(sx.IFilter.Message.Type.Info, f"Saving Feature Array '{self.LABEL_ARRAY_NAME}'..."))
+    label_feature_array.initialize_with_list(list(hatch_labels.values()))
     return sx.Result()

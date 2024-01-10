@@ -51,14 +51,14 @@ def parse_geometry_array_names(full_path: Path):
 
     with open(str(full_path), 'r') as file:
         record = False
-        has_labels = False
+        num_of_labels = 0
         for line in file:
             line = line.strip()
             if not line:
                 continue
 
-            if not has_labels and line.startswith("$$LABEL"):
-                has_labels = True
+            if line.startswith("$$LABEL"):
+                num_of_labels = num_of_labels + 1
 
             if '$$GEOMETRYSTART' in line:
                 record = True
@@ -74,7 +74,7 @@ def parse_geometry_array_names(full_path: Path):
                 if tag and tag not in array_names:
                     array_names.append(tag)
 
-    return array_names, has_labels
+    return array_names, num_of_labels
                 
 
 def parse_geometry(file, units):
