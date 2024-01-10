@@ -747,16 +747,16 @@ constexpr StringLiteral k_ZMinKey = "ZMin";
 constexpr StringLiteral k_XMaxKey = "XMax";
 constexpr StringLiteral k_YMaxKey = "YMax";
 constexpr StringLiteral k_ZMaxKey = "ZMax";
-constexpr StringLiteral k_OldBoxDimensionsKey = "OldBoxDimensions";
-constexpr StringLiteral k_NewBoxDimensionsKey = "NewBoxDimensions";
-constexpr StringLiteral k_UpdateOriginKey = "UpdateOrigin";
+// constexpr StringLiteral k_OldBoxDimensionsKey = "OldBoxDimensions";
+// constexpr StringLiteral k_NewBoxDimensionsKey = "NewBoxDimensions";
+// constexpr StringLiteral k_UpdateOriginKey = "UpdateOrigin";
 constexpr StringLiteral k_SaveAsNewDataContainerKey = "SaveAsNewDataContainer";
 constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 constexpr StringLiteral k_RenumberFeaturesKey = "RenumberFeatures";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
-} // namespace SIMPL
+} // namespace SIMPLdw
 } // namespace
 
 Result<Arguments> CropImageGeometry::FromSIMPLJson(const nlohmann::json& json)
