@@ -194,7 +194,6 @@ Parameters CropImageGeometry::parameters() const
                                                          std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_MaxCoord_Key, "Min Coordinate (Physical Units) [Inclusive]", "Upper bound of the volume to crop out", std::vector<float64>{0.0, 0.0, 0.0},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
-  // params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
   params.insertSeparator({"Input Geometry and Data"});
@@ -238,7 +237,6 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  // auto shouldUpdateOrigin = true; // filterArgs.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
   auto cellFeatureAmPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
@@ -404,9 +402,9 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     yMin = (min[1] < srcOrigin[1]) ? 0 : static_cast<uint64>(std::floor((min[1] - srcOrigin[1]) / spacing[1]));
     zMin = (min[2] < srcOrigin[2]) ? 0 : static_cast<uint64>(std::floor((min[2] - srcOrigin[2]) / spacing[2]));
 
-    xMax = (max[0] > maxPoint[0]) ? srcImageGeom->getNumXCells() - 1 : static_cast<uint64>(std::floor((maxPoint[0] - max[0]) / spacing[0]));
-    yMax = (max[1] > maxPoint[1]) ? srcImageGeom->getNumYCells() - 1 : static_cast<uint64>(std::floor((maxPoint[1] - max[1]) / spacing[1]));
-    zMax = (max[2] > maxPoint[2]) ? srcImageGeom->getNumZCells() - 1 : static_cast<uint64>(std::floor((maxPoint[2] - max[2]) / spacing[2]));
+    xMax = (max[0] > maxPoint[0]) ? srcImageGeom->getNumXCells() - 1 : static_cast<uint64>(std::floor((max[0] - srcOrigin[0]) / spacing[0]));
+    yMax = (max[1] > maxPoint[1]) ? srcImageGeom->getNumYCells() - 1 : static_cast<uint64>(std::floor((max[1] - srcOrigin[1]) / spacing[1]));
+    zMax = (max[2] > maxPoint[2]) ? srcImageGeom->getNumZCells() - 1 : static_cast<uint64>(std::floor((max[2] - srcOrigin[2]) / spacing[2]));
   }
 
   if(xMax > srcImageGeom->getNumXCells() - 1)
@@ -756,7 +754,7 @@ constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath"
 constexpr StringLiteral k_RenumberFeaturesKey = "RenumberFeatures";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
-} // namespace SIMPLdw
+} // namespace SIMPL
 } // namespace
 
 Result<Arguments> CropImageGeometry::FromSIMPLJson(const nlohmann::json& json)
