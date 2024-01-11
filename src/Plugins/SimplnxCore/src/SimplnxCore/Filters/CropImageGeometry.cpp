@@ -214,8 +214,8 @@ Parameters CropImageGeometry::parameters() const
   params.linkParameters(k_UsePhysicalBounds_Key, k_MinVoxel_Key, false);
   params.linkParameters(k_UsePhysicalBounds_Key, k_MaxVoxel_Key, false);
 
-  params.linkParameters(k_UsePhysicalBounds_Key, k_MinCoord_Key, false);
-  params.linkParameters(k_UsePhysicalBounds_Key, k_MaxCoord_Key, false);
+  params.linkParameters(k_UsePhysicalBounds_Key, k_MinCoord_Key, true);
+  params.linkParameters(k_UsePhysicalBounds_Key, k_MaxCoord_Key, true);
 
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrix_Key, true);
@@ -282,8 +282,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
   const auto spacing = GetCurrentVolumeDataContainerResolutions(dataStructure, srcImagePath);
 
-  const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
-  auto srcOrigin = srcImageGeom->getOrigin();
+  const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(srcImagePath);
+  auto srcOrigin = srcImageGeomPtr->getOrigin();
 
   if(pUsePhysicalBounds)
   {
@@ -293,135 +293,80 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     // Validate basic information about the coordinates
     if(max == min)
     {
-      const std::string errMsg = "Nothing would be removed because the coordinate points fall on top of one another. Consider incrementing/decrementing a value accordingly.";
-      return {MakeErrorResult<OutputActions>(-5556, errMsg)};
+      const std::string errMsg = "All minimum and maximum values are equal. The cropped region would be a ZERO volume. Please change the maximum values to be larger than the minimum values.";
+      return {MakeErrorResult<OutputActions>(-50556, errMsg)};
     }
 
+    auto bounds = srcImageGeomPtr->getBoundingBoxf();
+    const Point3Df& minPoint = bounds.getMinPoint();
+    const Point3Df& maxPoint = bounds.getMaxPoint();
+
+    std::vector<std::string> errLabels = {"X", "Y", "Z"};
     for(uint8 i = 0; i < 3; i++)
     {
       if(max[i] < min[i])
       {
-        const std::string errMsg = fmt::format("The max value ({}) is lower then the min value ({}), consider swapping the cropping coordinates", max[i], min[i]);
-        return {MakeErrorResult<OutputActions>(-5559, errMsg)};
-      }
-    }
-
-    auto bounds = srcImageGeom->getBoundingBoxf();
-    const Point3Df& minPoint = bounds.getMinPoint();
-    const Point3Df& maxPoint = bounds.getMaxPoint();
-
-    // Check entire geom would not be cropped
-    {
-      uint8 xOB = 0;
-      uint8 yOB = 0;
-      uint8 zOB = 0;
-
-      if(max[0] > maxPoint[0])
-      {
-        xOB++;
+        const std::string errMsg =
+            fmt::format("The max value {} ({}) is lower then the min value {} ({}). Please ensure the maximum value is greater than the minimum value.", errLabels[i], max[i], errLabels[i], min[i]);
+        return {MakeErrorResult<OutputActions>(-50559, errMsg)};
       }
 
-      if(max[1] > maxPoint[1])
+      if(max[i] < minPoint[i] && min[i] < minPoint[i])
       {
-        yOB++;
+        const std::string errMsg = fmt::format(
+            "Both the Minimum and Maximum {} crop values are less than the minimum {} bounds ({}). Please ensure at least part of the crop is within the bounding box of min=[{}] and max=[{}]",
+            errLabels[i], errLabels[i], maxPoint[i], fmt::join(minPoint.begin(), minPoint.end(), ","), fmt::join(maxPoint.begin(), maxPoint.end(), ","));
+        return {MakeErrorResult<OutputActions>(-50560, errMsg)};
       }
 
-      if(max[2] > maxPoint[3])
+      if(max[i] > maxPoint[i] && min[i] > maxPoint[i])
       {
-        zOB++;
+        const std::string errMsg = fmt::format(
+            "Both the Minimum and Maximum {} crop values are greater than the maximum {} bounds ({}). Please ensure at least part of the crop is within the bounding box of min=[{}] and max=[{}]",
+            errLabels[i], errLabels[i], maxPoint[i], fmt::join(minPoint.begin(), minPoint.end(), ","), fmt::join(maxPoint.begin(), maxPoint.end(), ","));
+        return {MakeErrorResult<OutputActions>(-50560, errMsg)};
       }
 
-      if(min[0] < minPoint[0])
+      if(min[i] < minPoint[i])
       {
-        xOB++;
+        resultOutputActions.m_Warnings.push_back(
+            Warning({-50503, fmt::format("The {} minimum crop value {} is less than the {} minimum bounds value of {}. The filter will use the minimum bounds value instead.", errLabels[i], min[i],
+                                         errLabels[i], minPoint[i])}));
       }
-
-      if(min[1] < minPoint[1])
+      if(max[i] > maxPoint[i])
       {
-        yOB++;
-      }
-
-      if(min[2] < minPoint[3])
-      {
-        zOB++;
-      }
-
-      if(xOB > 1 && yOB > 1 && zOB > 1)
-      {
-        const std::string errMsg = "All of the geometry would be cropped adjust your bounds or consider using the Delete Data filter.";
-        return {MakeErrorResult<OutputActions>(-5557, errMsg)};
-      }
-    }
-
-    // check cropping bounds box actually contains a section of the geometry
-    {
-      bool xNoCrop = false;
-      bool yNoCrop = false;
-      bool zNoCrop = false;
-
-      if(min[0] > maxPoint[0])
-      {
-        xNoCrop = true;
-      }
-
-      if(min[1] > maxPoint[1])
-      {
-        yNoCrop = true;
-      }
-
-      if(min[2] > maxPoint[3])
-      {
-        zNoCrop = true;
-      }
-
-      if(max[0] < minPoint[0])
-      {
-        xNoCrop = true;
-      }
-
-      if(max[1] < minPoint[1])
-      {
-        yNoCrop = true;
-      }
-
-      if(max[2] < minPoint[3])
-      {
-        zNoCrop = true;
-      }
-
-      if(xNoCrop && yNoCrop && zNoCrop)
-      {
-        const std::string errMsg = "The crop region falls outside of all geometry bounds, adjust physical bounds so crop region intersects/contains a part of the geometry";
-        return {MakeErrorResult<OutputActions>(-5558, errMsg)};
+        resultOutputActions.m_Warnings.push_back(
+            Warning({-50503, fmt::format("The {} maximum crop value {} is greater than the {} maximum bounds value of {}. The filter will use the maximum bounds value instead.", errLabels[i], max[i],
+                                         errLabels[i], maxPoint[i])}));
       }
     }
 
     // if we have made it here the coordinate bounds are valid so figure out and assign index values to xMax, xMin, ...
-    auto srcSpacing = srcImageGeom->getSpacing();
+    auto srcSpacing = srcImageGeomPtr->getSpacing();
     xMin = (min[0] < srcOrigin[0]) ? 0 : static_cast<uint64>(std::floor((min[0] - srcOrigin[0]) / spacing[0]));
     yMin = (min[1] < srcOrigin[1]) ? 0 : static_cast<uint64>(std::floor((min[1] - srcOrigin[1]) / spacing[1]));
     zMin = (min[2] < srcOrigin[2]) ? 0 : static_cast<uint64>(std::floor((min[2] - srcOrigin[2]) / spacing[2]));
 
-    xMax = (max[0] > maxPoint[0]) ? srcImageGeom->getNumXCells() - 1 : static_cast<uint64>(std::floor((max[0] - srcOrigin[0]) / spacing[0]));
-    yMax = (max[1] > maxPoint[1]) ? srcImageGeom->getNumYCells() - 1 : static_cast<uint64>(std::floor((max[1] - srcOrigin[1]) / spacing[1]));
-    zMax = (max[2] > maxPoint[2]) ? srcImageGeom->getNumZCells() - 1 : static_cast<uint64>(std::floor((max[2] - srcOrigin[2]) / spacing[2]));
+    xMax = (max[0] > maxPoint[0]) ? srcImageGeomPtr->getNumXCells() - 1 : static_cast<uint64>(std::floor((max[0] - srcOrigin[0]) / spacing[0]));
+    yMax = (max[1] > maxPoint[1]) ? srcImageGeomPtr->getNumYCells() - 1 : static_cast<uint64>(std::floor((max[1] - srcOrigin[1]) / spacing[1]));
+    zMax = (max[2] > maxPoint[2]) ? srcImageGeomPtr->getNumZCells() - 1 : static_cast<uint64>(std::floor((max[2] - srcOrigin[2]) / spacing[2]));
   }
 
-  if(xMax > srcImageGeom->getNumXCells() - 1)
+  if(xMax > srcImageGeomPtr->getNumXCells() - 1)
   {
-    const std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXCells() - 1);
+    const std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeomPtr->getNumXCells() - 1);
     return {MakeErrorResult<OutputActions>(-5553, errMsg)};
   }
 
-  if(yMax > srcImageGeom->getNumYCells() - 1)
+  if(yMax > srcImageGeomPtr->getNumYCells() - 1)
   {
-    const std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYCells() - 1);
+    const std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeomPtr->getNumYCells() - 1);
     return {MakeErrorResult<OutputActions>(-5554, errMsg)};
   }
 
-  if(zMax > srcImageGeom->getNumZCells() - 1)
+  if(zMax > srcImageGeomPtr->getNumZCells() - 1)
   {
-    const std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZCells() - 1);
+    const std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeomPtr->getNumZCells() - 1);
     return {MakeErrorResult<OutputActions>(-5555, errMsg)};
   }
 
@@ -473,7 +418,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   // not need to manually copy these arrays to the destination image geometry
   {
     // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
-    const AttributeMatrix* selectedCellData = srcImageGeom->getCellData();
+    const AttributeMatrix* selectedCellData = srcImageGeomPtr->getCellData();
     if(selectedCellData == nullptr)
     {
       return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
@@ -497,11 +442,11 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
 
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
-    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(),
-                                                                                                                          srcImageGeom->getOrigin(), srcImageGeom->getUnits())});
+    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
+                                                                                                                          srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
     preflightUpdatedValues.push_back(
-        {"Cropped Image Geometry Info",
-         nx::core::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin, srcImageGeom->getUnits())});
+        {"Cropped Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin,
+                                                                                                     srcImageGeomPtr->getUnits())});
   }
   // This section covers the option of renumbering the Feature Data where we need to do a
   // similar creation of the Data Arrays based on the arrays in the Source Image Geometry's
