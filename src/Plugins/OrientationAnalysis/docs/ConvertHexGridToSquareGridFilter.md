@@ -2,7 +2,7 @@
 
 ## Group (Subgroup)
 
-Sampling (Resolution)
+Conversion, ANG File, EDAX, Hex Grid
 
 ## Description
 
@@ -11,6 +11,8 @@ This **Filter** will convert TSL .ang files on hexagonal grids to TSL .ang files
 This **Filter** is useful since most DREAM3D-NX routines for analyzing Ebsd data require a square grid.  After using this **Filter** to bulk convert the EDAX/TSL .ang files to square grids, it is suggested to use the {ref}`Import Orientation File(s) to H5Ebsd <OrientationAnalysis/EbsdToH5EbsdFilter:Description>` **Filter** to convert the square grid .ang files to the H5Ebsd format. The user can then use the {ref}`Read H5Ebsd File <OrientationAnalysis/ReadH5EbsdFilter:Description>` **Filter** to import the H5Ebsd file into DREAM.3D for analysis.
 
 The use of this **Filter** is similar to the use of the {ref}`Import Orientation File(s) to H5Ebsd <OrientationAnalysis/EbsdToH5EbsdFilter:Description>`  **Filter**.  Please consult that **Filter's** documentation for a detailed description of the various user interface elements.  Note that unlike the {ref}`Import Orientation File(s) to H5Ebsd <OrientationAnalysis/EbsdToH5EbsdFilter:Description>` **Filter**, this **Filter** does not require either the *Stacking Order* or the *Reference Frame* to be modified.
+
+![Images/ConvertHexGridToSquareGridFilter_1.png](Images/ConvertHexGridToSquareGridFilter_1.png)
 
 % Auto generated parameter table will be inserted here
 
