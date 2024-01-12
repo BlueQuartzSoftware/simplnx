@@ -74,3 +74,4 @@ result = nxitk.ITKImportImageStack.execute(data_structure=data_structure,
                                    origin=[0., 0., 0.], 
                                    spacing=[1., 1.,1.])
 nxtest.check_filter_result(nxitk.ITKImportImageStack, result)
+

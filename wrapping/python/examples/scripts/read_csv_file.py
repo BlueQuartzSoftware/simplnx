@@ -73,3 +73,4 @@ result = nx.ReadCSVFileFilter.execute(data_structure=data_structure,
                                       read_csv_data=read_csv_data # The ReadCSVData object with all member variables set.
                                       )
 nxtest.check_filter_result(nx.ReadCSVFileFilter, result)
+

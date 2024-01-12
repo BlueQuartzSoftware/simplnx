@@ -94,3 +94,4 @@ data_store = data_array.store
 npdata = data_store.npview()
 
 print(npdata)
+

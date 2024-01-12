@@ -177,3 +177,4 @@ children_paths = data_structure.get_children(nx.DataPath("Some/Path/To"))
 print(children_paths)
 
 print(f'data_structure.size: {data_structure.size}')
+

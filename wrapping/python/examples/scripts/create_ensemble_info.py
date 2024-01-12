@@ -64,3 +64,4 @@ result = create_ensemble_info.execute(data_structure=data_structure,
                              ensemble=ensemble_info_parameter
                              )
 nxtest.check_filter_result(nxor.CreateEnsembleInfoFilter, result)
+

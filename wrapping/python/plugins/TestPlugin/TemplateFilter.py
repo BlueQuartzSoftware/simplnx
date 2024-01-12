@@ -38,3 +38,4 @@ class TemplateFilter:
     value: float = args[TemplateFilter.TEST_KEY]
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Execute: {value}'))
     return nx.Result()
+

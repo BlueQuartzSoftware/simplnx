@@ -88,3 +88,4 @@ class CreateArrayFilter:
     data[:] = value
 
     return nx.Result()
+

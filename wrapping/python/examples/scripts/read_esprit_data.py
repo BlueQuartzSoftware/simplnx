@@ -80,3 +80,4 @@ result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure,
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)
+

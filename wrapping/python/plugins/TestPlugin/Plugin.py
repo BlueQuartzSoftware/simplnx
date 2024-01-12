@@ -21,3 +21,4 @@ class TestPythonPlugin:
 
   def get_filters(self):
     return [CreateArrayFilter, InitializeDataPythonFilter, TemplateFilter]
+

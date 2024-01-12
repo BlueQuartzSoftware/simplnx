@@ -7,3 +7,4 @@ def get_plugin():
   return TestPythonPlugin()
 
 __all__ = ['TestPythonPlugin', 'CreateArrayFilter', 'InitializeDataPythonFilter', 'TemplateFilter', 'get_plugin']
+
