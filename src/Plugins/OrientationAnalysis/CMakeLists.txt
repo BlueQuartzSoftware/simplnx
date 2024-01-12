@@ -367,6 +367,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
                    COMMAND_EXPAND_LISTS
                    VERBATIM
                  )
+  set_target_properties(Copy_${PLUGIN_NAME}_Small_IN100 PROPERTIES FOLDER ZZ_COPY_FILES)
 
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
     ARCHIVE_NAME 6_6_ImportH5Data.tar.gz
