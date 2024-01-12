@@ -28,10 +28,10 @@ set(ItkComponents
   ITKOptimizers
 
   # ITKRegistrationCommon
-  ITKReview
+  # ITKReview
+  # ITKTestKernel
   ITKSmoothing
   ITKStatistics
-  ITKTestKernel
   ITKTransform
   ITKWatersheds
 )
@@ -78,7 +78,9 @@ set(FilterList
 set(AlgorithmList
 )
 
-if(NOT SIMPLNX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
+if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN
+   # AND NOT SIMPLNX_CONDA_BUILD
+)
   list(APPEND FilterList
     ITKBinaryContourImage
     ITKBinaryOpeningByReconstructionImage
@@ -95,8 +97,8 @@ if(NOT SIMPLNX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKSignedMaurerDistanceMapImage
     ITKValuedRegionalMaximaImage
     ITKValuedRegionalMinimaImage
-)
-  endif()
+  )
+endif()
 
 
 # ------------------------------------------------------------------------------

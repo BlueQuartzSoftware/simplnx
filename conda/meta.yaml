@@ -25,12 +25,17 @@ source:
     folder: span-lite
   - url: https://raw.githubusercontent.com/BlueQuartzSoftware/simplnx-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
     folder: nod
+  - git_url: https://github.com/insightsoftwareconsortium/ITK
+    git_rev: v5.2.1
+    folder: itk
 
 build:
   number: 0
   script_env:
+    - SIMPLNX_CMAKE_PRESET=conda-win # [win]
     - SIMPLNX_CMAKE_PRESET=conda-linux # [linux]
     - SIMPLNX_CMAKE_PRESET=conda-osx # [osx]
+    - ITK_VERSION=5.2.1
 
 requirements:
   build:
@@ -46,8 +51,6 @@ requirements:
     - eigen
     - fmt =10
     - hdf5 =1.12
-    - libitk =5.2
-    - libitk-devel =5.2
     - nlohmann_json
     - pybind11 >=2.10
     - reproc-cpp
@@ -58,12 +61,12 @@ requirements:
     - myst-parser
     - sphinx-markdown-tables
     - sphinx_rtd_theme
+
   run:
     - python
     - numpy
     - fmt =10
     - hdf5 =1.12
-    - libitk =5.2
     - reproc-cpp
     - tbb
     - zlib
