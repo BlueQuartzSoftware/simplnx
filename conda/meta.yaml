@@ -1,5 +1,5 @@
 {% set name = "simplnx" %}
-{% set version = "1.2.2" %}
+{% set version = "1.2.3" %}
 
 package:
   name: {{ name|lower }}
@@ -40,7 +40,7 @@ build:
 requirements:
   build:
     - {{ compiler('cxx') }}
-    - cmake >=3.19
+    - cmake >=3.26
     - ninja
     - git
   host:

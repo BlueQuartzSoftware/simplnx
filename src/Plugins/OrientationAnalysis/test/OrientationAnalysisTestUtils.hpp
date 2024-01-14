@@ -43,8 +43,8 @@ namespace nx::core
 const Uuid k_ReadTextDataArrayFilterId = *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4");
 const FilterHandle k_ReadTextDataArrayFilterHandle(k_ReadTextDataArrayFilterId, k_SimplnxCorePluginId);
 // Make sure we can instantiate the Read DREAM3D Data File
-const Uuid k_ImportDream3dFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
-const FilterHandle k_ImportDream3dFilterHandle(k_ImportDream3dFilterId, k_SimplnxCorePluginId);
+const Uuid k_ReadDREAM3DFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
+const FilterHandle k_ReadDREAM3DFilterHandle(k_ReadDREAM3DFilterId, k_SimplnxCorePluginId);
 // Make sure we can instantiate the Read RenameDataObject
 const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("911a3aa9-d3c2-4f66-9451-8861c4b726d5");
 const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_SimplnxCorePluginId);

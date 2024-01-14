@@ -1,0 +1,81 @@
+digraph G {
+  //rankdir=LR;
+
+  label="Python Testing File Dependency"
+	labelloc="t"
+  fontname="Fira Mono"
+  fontcolor="#FFFFFA"
+  fontsize=20
+	
+
+	graph [splines=true 
+        bgcolor="#242627"
+        ]
+
+	node [shape=record 
+        style="filled" 
+        fillcolor="#1D7ECD" 
+        fontcolor="#FFFFFA"
+        fontname="Fira Mono"
+        margin="0.61,0.1"
+        ]
+    
+  edge [
+        // dir=back 
+        arrowtail=default
+        arrowhead=normal
+        style="" 
+        // headport="w" 
+        // tailport="e"
+        color="#FFFFFA"
+        ]
+
+
+"Small_IN100.h5ebsd" [shape=record  fillcolor="#23882A"]
+"SmallIN100_Final.dream3d" [shape=record  fillcolor="#23882A"]
+"SmallIN100_Morph.dream3d" [shape=record  fillcolor="#23882A"]
+"SmallIN100_BoundaryCells.dream3d" [shape=record  fillcolor="#23882A"]
+"SmallIN100_AvizoRectilinear.am" [shape=record  fillcolor="#23882A"]
+"SmallIN100_Final.vtk" [shape=record  fillcolor="#23882A"]
+"SmallIN100_CrystalStats.dream3d" [shape=record  fillcolor="#23882A"]
+"SmallIN100_Mesh.dream3d" [shape=record  fillcolor="#23882A"]
+"FindBiasedFeatures.dream3d" [shape=record  fillcolor="#23882A"]
+"SmallIN100_Smoothed.dream3d" [shape=record  fillcolor="#23882A"]
+"SmallIN100_MeshStats.dream3d" [shape=record  fillcolor="#23882A"]
+"SmallIN100_GBCD.dream3d" [shape=record  fillcolor="#23882A"]
+"SmallIN100_GBCD_Metric.dream3d" [shape=record  fillcolor="#23882A"]
+"ResamplePorosityImage.dream3d" [shape=record  fillcolor="#23882A"]
+"SurfaceNets_Demo.dream3d" [shape=record  fillcolor="#23882A"]
+"ResampleRectGridToImageGeom.dream3d" [shape=record  fillcolor="#23882A"]
+
+  "01_Small_IN100_Archive" -> "Small_IN100.h5ebsd"
+
+  "Small_IN100.h5ebsd" -> AlignSectionsMutualInformation
+  "Small_IN100.h5ebsd" -> FindLargestCrossSections
+    
+  "Small_IN100.h5ebsd" -> "08_Small_IN100_Full_Reconstruction" -> "SmallIN100_Final.dream3d"
+
+  "SmallIN100_Final.dream3d" -> "01_Small_IN100_Morphological_Statistics" -> "SmallIN100_Morph.dream3d"
+  "SmallIN100_Final.dream3d" -> "FindBoundaryCells" -> "SmallIN100_BoundaryCells.dream3d"
+  "SmallIN100_Final.dream3d" -> "AvizoWriters" -> "SmallIN100_AvizoRectilinear.am"
+  "SmallIN100_Final.dream3d" -> "VtkRectilinearGridWriter" -> "SmallIN100_Final.vtk"
+  
+  "SmallIN100_Morph.dream3d" -> "05_Small_IN100_Crystallographic_Statistics" -> "SmallIN100_CrystalStats.dream3d"
+  
+  "SmallIN100_CrystalStats.dream3d"->"01_Small_IN100_Quick_Mesh"-> "SmallIN100_Mesh.dream3d"
+  "SmallIN100_CrystalStats.dream3d" -> "FindBiasedFeatures" -> "FindBiasedFeatures.dream3d"
+
+  "SmallIN100_Mesh.dream3d" -> "02_Small_IN100_Smooth_Mesh" -> "SmallIN100_Smoothed.dream3d"
+  "SmallIN100_Smoothed.dream3d" -> "03_Small_IN100_Mesh_Statistics" -> "SmallIN100_MeshStats.dream3d"
+  "SmallIN100_MeshStats.dream3d" -> "04_Small_IN100_GBCD" -> "SmallIN100_GBCD.dream3d"
+  "SmallIN100_MeshStats.dream3d" -> "05_Small_IN100_GBCD_Metric" -> "SmallIN100_GBCD_Metric.dream3d"
+
+
+  "SmallIN100_MeshStats.dream3d" -> "FindGBCD-GBPDMetricBased"
+
+  "ResamplePorosityImage" -> "ResamplePorosityImage.dream3d"
+  "SurfaceNets_Demo" -> "SurfaceNets_Demo.dream3d"
+  "ResampleRectGridToIamgeGeom" -> "ResampleRectGridToImageGeom.dream3d"
+
+
+}

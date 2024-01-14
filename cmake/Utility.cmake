@@ -275,7 +275,7 @@ function(create_pipeline_tests)
     get_filename_component(test_file_name ${pipeline_file_path} NAME_WE)
     string(REPLACE "/" "-" test_file_name "${test_file_name}")
 
-    add_test(NAME "${ARGS_PLUGIN_NAME} ${padding}${test_index} ${test_file_name}"
+    add_test(NAME "PIPELINE::${ARGS_PLUGIN_NAME}::${padding}${test_index}_${test_file_name}"
             COMMAND "${PIPELINE_RUNNER_NAME}$<$<CONFIG:Debug>:${PIPELINE_RUNNER_DEBUG}>" --execute ${pipeline_file_path}
             #CONFIGURATIONS Debug
             WORKING_DIRECTORY ${TEST_WORKING_DIR})
@@ -473,7 +473,7 @@ function(AddPythonTest)
   set(oneValueArgs NAME FILE)
   set(multiValueArgs PYTHONPATH)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-  message(STATUS "ARGS_FILE:${ARGS_FILE}")
+  # message(STATUS "ARGS_FILE:${ARGS_FILE}")
   if(SIMPLNX_BUILD_PYTHON)
     if(WIN32)
       add_test(NAME ${ARGS_NAME}

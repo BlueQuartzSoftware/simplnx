@@ -110,7 +110,7 @@ function(simplnx_create_pyi)
 
   add_custom_target(${PYI_TARGET_NAME} ALL
     COMMAND "${MYPY_STUBGEN_EXE}" -m "${ARGS_PYTHON_MODULE_NAME}" -o "$<TARGET_FILE_DIR:simplnx>"
-    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/fix_pyi_file.py" --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/utils/fix_pyi_file.py" --input_file "$<TARGET_FILE_DIR:simplnx>/${ARGS_PYTHON_MODULE_NAME}.pyi"
     COMMENT "${ARGS_PYTHON_MODULE_NAME}: Generating .pyi files"
     WORKING_DIRECTORY $<TARGET_FILE_DIR:simplnx>
   )
@@ -284,40 +284,27 @@ endif()
 #------------------------------------------------------------------------------
 option(SIMPLNX_BUILD_PYTHON_TESTS "Enables python based unit tests" OFF)
 if(SIMPLNX_BUILD_PYTHON_TESTS)
+ 
+  get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+  if(is_multi_config)
+    set(CX_CONFIG_DIR "$<CONFIG>")
+  else()
+    set(CX_CONFIG_DIR ".")
+  endif()
 
-    file(READ ${simplnx_SOURCE_DIR}/wrapping/python/simplnx_test_dirs.in.py SIMPLNX_TEST_DIRS_FILE)
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data")
+  
+  # Create a computer specific python file that defines the locations of various directories
+  file(READ ${simplnx_SOURCE_DIR}/wrapping/python/testing/simplnx_test_dirs.in.py SIMPLNX_TEST_DIRS_FILE)
 
-    string(REPLACE "\${CMAKE_LIBRARY_OUTPUT_DIRECTORY}" $<TARGET_FILE_DIR:simplnx> SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
-    string(REPLACE "\${simplnx_BINARY_DIR}" ${simplnx_BINARY_DIR} SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
-    string(REPLACE "\${DREAM3D_DATA_DIR}" ${DREAM3D_DATA_DIR} SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
-    string(REPLACE "\${simplnx_SOURCE_DIR}" ${simplnx_SOURCE_DIR} SIMPLNX_TEST_DIRS_FILE ${SIMPLNX_TEST_DIRS_FILE})
+  string(CONFIGURE "${SIMPLNX_TEST_DIRS_FILE}" SIMPLNX_TEST_DIRS_FILE)
 
-    file(GENERATE
-      OUTPUT "$<TARGET_FILE_DIR:simplnx>/simplnx_test_dirs.py"
-      CONTENT ${SIMPLNX_TEST_DIRS_FILE}
-    )
+  file(GENERATE
+    OUTPUT "$<TARGET_FILE_DIR:simplnx>/simplnx_test_dirs.py"
+    CONTENT ${SIMPLNX_TEST_DIRS_FILE}
+  )
 
-    set(PYTHON_TEST_INPUT_DIR "${simplnx_SOURCE_DIR}/wrapping/python/examples")
-
-    set(SIMPLNX_PYTHON_TESTS
-      "angle_conversion" 
-      "basic_arrays" 
-      "basic_ebsd_ipf"
-      "basic_numpy" 
-      "create_ensemble_info" 
-      "generated_file_list" 
-      "geometry_examples" 
-      "import_d3d"      # Dependent on 'basic_ebsd_ipf' running first
-      "import_hdf5"     # Dependent on 'basic_ebsd_ipf' running first
-      "output_file" 
-      "pipeline" 
-      "read_csv_file"
-    #  "read_esprit_data"
-    )
-
-    CreatePythonTests(PREFIX "PY_SIMPLNX"
-      INPUT_DIR ${PYTHON_TEST_INPUT_DIR}
-      TEST_NAMES ${SIMPLNX_PYTHON_TESTS}
-    )
-
+  # Include CMake files that define the tests that need to be run
+  include(${simplnx_SOURCE_DIR}/wrapping/python/examples/scripts/SourceList.cmake)
+  include(${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/SourceList.cmake)
 endif()
