@@ -329,13 +329,13 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
   return {metadata};
 }
 
-struct ImportVolumeGraphicsFileFilterCache
+struct ReadVolumeGraphicsFileFilterCache
 {
   fs::path VgiDataFilePath;
 };
 
 std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ImportVolumeGraphicsFileFilterCache> s_HeaderCache;
+std::map<int32, ReadVolumeGraphicsFileFilterCache> s_HeaderCache;
 
 } // namespace
 

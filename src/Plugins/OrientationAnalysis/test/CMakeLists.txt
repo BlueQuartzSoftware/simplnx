@@ -288,7 +288,7 @@ fi
     "${SIMPLNX_CTEST_TEST_DRIVER}" @ONLY)
 
   string(REPLACE "/" "_" test "${test}")
-  add_test(NAME ${PLUGIN_NAME}_${ARGS_TEST_INDEX} COMMAND "${SIMPLNX_CTEST_TEST_DRIVER}")
+  add_test(NAME "PIPELINE::${PLUGIN_NAME}::${ARGS_TEST_INDEX}" COMMAND "${SIMPLNX_CTEST_TEST_DRIVER}")
 endfunction()
 
 # ------------------------------------------------------------------------------
