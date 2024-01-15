@@ -127,6 +127,7 @@ inline std::string GeneratePythonFilter(const std::string& filterName, const std
  */
 inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& pluginPath, const std::string& filterName)
 {
+  Result<> result;
   std::string pluginName = pluginPath.stem().string();
 
   fs::path pluginPyPath = pluginPath / "Plugin.py";
@@ -155,10 +156,10 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
       std::size_t filterInsertPos = content.find(k_FilterIncludeInsertToken);
       if(filterInsertPos == std::string::npos)
       {
-        return MakeWarningVoidResult(
-            -2002, fmt::format("Plugin file ('{0}') does not contain the filter insert token ('{1}'), so the filter import statement could not be automatically inserted into the plugin "
-                               "file.  This plugin file must be manually updated to include the filter import statement.",
-                               pluginFilePath.string(), k_FilterNameInsertToken));
+        result.warnings().push_back(
+            {-2002, fmt::format("Plugin file ('{0}') does not contain the filter insert token ('{1}'), so the filter import statement could not be automatically inserted into the plugin "
+                                "file.  This plugin file must be manually updated to include the filter import statement.",
+                                pluginFilePath.string(), k_FilterNameInsertToken)});
       }
       filterInsertPos--; // Go back one character to insert before the newline
 
@@ -171,10 +172,10 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
       std::size_t filterInsertPos = content.find(k_FilterNameInsertToken);
       if(filterInsertPos == std::string::npos)
       {
-        return MakeWarningVoidResult(-2002,
-                                     fmt::format("Plugin file ('{0}') does not contain the filter insert token ('{1}'), so the filter name ('{2}') could not be automatically inserted into the plugin "
-                                                 "file.  This plugin file must be manually updated to include the filter name ('{2}').",
-                                                 pluginFilePath.string(), k_FilterNameInsertToken, filterName));
+        result.warnings().push_back(
+            {-2002, fmt::format("Plugin file ('{0}') does not contain the filter insert token ('{1}'), so the filter name ('{2}') could not be automatically inserted into the plugin "
+                                "file.  This plugin file must be manually updated to include the filter name ('{2}').",
+                                pluginFilePath.string(), k_FilterNameInsertToken, filterName)});
       }
       filterInsertPos -= 2; // Go back two characters to insert before the closing brace
 
@@ -191,7 +192,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     out_file.close();
   }
 
-  return {};
+  return result;
 }
 
 /**
