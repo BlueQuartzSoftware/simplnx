@@ -14,6 +14,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT GeneratePythonSkeletonInputValues
 {
+  bool useExistingPlugin;
+  std::filesystem::path pluginInputDir;
   std::filesystem::path pluginOutputDir;
   std::string pluginName;
   std::string pluginHumanName;

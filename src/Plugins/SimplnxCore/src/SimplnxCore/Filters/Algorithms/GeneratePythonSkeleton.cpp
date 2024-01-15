@@ -32,8 +32,12 @@ const std::atomic_bool& GeneratePythonSkeleton::getCancel()
 // -----------------------------------------------------------------------------
 Result<> GeneratePythonSkeleton::operator()()
 {
-
-  auto result = nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginName, "Description", m_InputValues->filterNames);
-
-  return {};
+  if(m_InputValues->useExistingPlugin)
+  {
+    return nx::core::WritePythonFiltersToPlugin(m_InputValues->pluginInputDir, m_InputValues->filterNames);
+  }
+  else
+  {
+    return nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginName, "Description", m_InputValues->filterNames);
+  }
 }
