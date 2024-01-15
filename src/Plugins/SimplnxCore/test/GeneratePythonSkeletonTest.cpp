@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "SimplnxCore/Filters/GeneratePythonPluginSkeletonFilter.hpp"
+#include "SimplnxCore/Filters/GeneratePythonSkeletonFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -12,14 +12,14 @@
 namespace fs = std::filesystem;
 using namespace nx::core;
 
-TEST_CASE("SimplnxCore::GeneratePythonPluginSkeleton")
+TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 {
 
   // DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/generate_vector_colors/6_6_generate_vector_colors.dream3d", unit_test::k_TestFilesDir)));
   DataStructure dataStructure;
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
-    GeneratePythonPluginSkeletonFilter filter;
+    GeneratePythonSkeletonFilter filter;
     Arguments args;
 
     const std::string k_PluginName = "ExampleToolbox";
@@ -28,11 +28,10 @@ TEST_CASE("SimplnxCore::GeneratePythonPluginSkeleton")
     const std::string k_FilterNames = "SomeFilter,OtherFilter,ThirdFilter";
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(GeneratePythonPluginSkeletonFilter::k_PluginName_Key, std::make_any<std::string>(k_PluginName));
-    args.insertOrAssign(GeneratePythonPluginSkeletonFilter::k_PluginHumanName_Key, std::make_any<std::string>(k_PluginHumanName));
-    args.insertOrAssign(GeneratePythonPluginSkeletonFilter::k_PluginOutputDirectory_Key,
-                        std::make_any<FileSystemPathParameter::ValueType>("/Users/mjackson/Workspace1/simplnx/wrapping/python/plugins"));
-    args.insertOrAssign(GeneratePythonPluginSkeletonFilter::k_PluginFilterNames, std::make_any<std::string>(k_FilterNames));
+    args.insertOrAssign(GeneratePythonSkeletonFilter::k_PluginName_Key, std::make_any<std::string>(k_PluginName));
+    args.insertOrAssign(GeneratePythonSkeletonFilter::k_PluginHumanName_Key, std::make_any<std::string>(k_PluginHumanName));
+    args.insertOrAssign(GeneratePythonSkeletonFilter::k_PluginOutputDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>("/Users/mjackson/Workspace1/simplnx/wrapping/python/plugins"));
+    args.insertOrAssign(GeneratePythonSkeletonFilter::k_PluginFilterNames, std::make_any<std::string>(k_FilterNames));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

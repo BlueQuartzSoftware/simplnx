@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class GeneratePythonPluginSkeletonFilter
+ * @class GeneratePythonSkeletonFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT GeneratePythonPluginSkeletonFilter : public IFilter
+class SIMPLNXCORE_EXPORT GeneratePythonSkeletonFilter : public IFilter
 {
 public:
-  GeneratePythonPluginSkeletonFilter() = default;
-  ~GeneratePythonPluginSkeletonFilter() noexcept override = default;
+  GeneratePythonSkeletonFilter() = default;
+  ~GeneratePythonSkeletonFilter() noexcept override = default;
 
-  GeneratePythonPluginSkeletonFilter(const GeneratePythonPluginSkeletonFilter&) = delete;
-  GeneratePythonPluginSkeletonFilter(GeneratePythonPluginSkeletonFilter&&) noexcept = delete;
+  GeneratePythonSkeletonFilter(const GeneratePythonSkeletonFilter&) = delete;
+  GeneratePythonSkeletonFilter(GeneratePythonSkeletonFilter&&) noexcept = delete;
 
-  GeneratePythonPluginSkeletonFilter& operator=(const GeneratePythonPluginSkeletonFilter&) = delete;
-  GeneratePythonPluginSkeletonFilter& operator=(GeneratePythonPluginSkeletonFilter&&) noexcept = delete;
+  GeneratePythonSkeletonFilter& operator=(const GeneratePythonSkeletonFilter&) = delete;
+  GeneratePythonSkeletonFilter& operator=(GeneratePythonSkeletonFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_PluginName_Key = "plugin_name";
@@ -103,5 +103,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, GeneratePythonPluginSkeletonFilter, "1a35f50d-a9f5-9ea2-af70-5b9cf894e45f");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, GeneratePythonSkeletonFilter, "1a35f50d-a9f5-9ea2-af70-5b9cf894e45f");
 /* LEGACY UUID FOR THIS FILTER ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc */

@@ -69,7 +69,7 @@ set(FilterList
   FindVolFractionsFilter
   GenerateColorTableFilter
   GenerateVectorColorsFilter
-  GeneratePythonPluginSkeletonFilter
+  GeneratePythonSkeletonFilter
   IdentifySample
   ImageContouringFilter
   InitializeData
@@ -169,7 +169,7 @@ set(AlgorithmList
   FindVertexToTriangleDistances
   GenerateColorTable
   GenerateVectorColors
-  GeneratePythonPluginSkeleton
+  GeneratePythonSkeleton
   ImageContouring
   KMeans
   KMedoids

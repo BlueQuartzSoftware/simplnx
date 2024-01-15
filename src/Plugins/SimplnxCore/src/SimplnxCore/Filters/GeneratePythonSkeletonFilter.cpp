@@ -1,6 +1,6 @@
-#include "GeneratePythonPluginSkeletonFilter.hpp"
+#include "GeneratePythonSkeletonFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/GeneratePythonPluginSkeleton.hpp"
+#include "SimplnxCore/Filters/Algorithms/GeneratePythonSkeleton.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -17,38 +17,38 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string GeneratePythonPluginSkeletonFilter::name() const
+std::string GeneratePythonSkeletonFilter::name() const
 {
-  return FilterTraits<GeneratePythonPluginSkeletonFilter>::name.str();
+  return FilterTraits<GeneratePythonSkeletonFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string GeneratePythonPluginSkeletonFilter::className() const
+std::string GeneratePythonSkeletonFilter::className() const
 {
-  return FilterTraits<GeneratePythonPluginSkeletonFilter>::className;
+  return FilterTraits<GeneratePythonSkeletonFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid GeneratePythonPluginSkeletonFilter::uuid() const
+Uuid GeneratePythonSkeletonFilter::uuid() const
 {
-  return FilterTraits<GeneratePythonPluginSkeletonFilter>::uuid;
+  return FilterTraits<GeneratePythonSkeletonFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string GeneratePythonPluginSkeletonFilter::humanName() const
+std::string GeneratePythonSkeletonFilter::humanName() const
 {
-  return "Generate Python Plugin Skeleton";
+  return "Generate Python Skeleton";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> GeneratePythonPluginSkeletonFilter::defaultTags() const
+std::vector<std::string> GeneratePythonSkeletonFilter::defaultTags() const
 {
   return {className(), "Generic", "Python",    "Plugin", "Skeleton", "Generate", "Create", "Template", "Code",  "Produce",
           "Form",      "Develop", "Construct", "Make",   "Build",    "Engineer", "Invent", "Initiate", "Design"};
 }
 
 //------------------------------------------------------------------------------
-Parameters GeneratePythonPluginSkeletonFilter::parameters() const
+Parameters GeneratePythonSkeletonFilter::parameters() const
 {
   Parameters params;
 
@@ -64,14 +64,14 @@ Parameters GeneratePythonPluginSkeletonFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer GeneratePythonPluginSkeletonFilter::clone() const
+IFilter::UniquePointer GeneratePythonSkeletonFilter::clone() const
 {
-  return std::make_unique<GeneratePythonPluginSkeletonFilter>();
+  return std::make_unique<GeneratePythonSkeletonFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GeneratePythonPluginSkeletonFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult GeneratePythonSkeletonFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                     const std::atomic_bool& shouldCancel) const
 {
 
   auto pluginOutputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_PluginOutputDirectory_Key);
@@ -89,17 +89,17 @@ IFilter::PreflightResult GeneratePythonPluginSkeletonFilter::preflightImpl(const
 }
 
 //------------------------------------------------------------------------------
-Result<> GeneratePythonPluginSkeletonFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel) const
+Result<> GeneratePythonSkeletonFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
-  GeneratePythonPluginSkeletonInputValues inputValues;
+  GeneratePythonSkeletonInputValues inputValues;
 
   inputValues.pluginOutputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_PluginOutputDirectory_Key);
   inputValues.pluginName = filterArgs.value<StringParameter::ValueType>(k_PluginName_Key);
   inputValues.pluginHumanName = filterArgs.value<StringParameter::ValueType>(k_PluginHumanName_Key);
   inputValues.filterNames = filterArgs.value<StringParameter::ValueType>(k_PluginFilterNames);
 
-  return GeneratePythonPluginSkeleton(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return GeneratePythonSkeleton(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 } // namespace nx::core

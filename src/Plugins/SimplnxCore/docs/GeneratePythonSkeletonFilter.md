@@ -1,4 +1,4 @@
-# Generate Python Plugin Skeleton
+# Generate Python Skeleton
 
 ## Group
 

@@ -1,4 +1,4 @@
-#include "GeneratePythonPluginSkeleton.hpp"
+#include "GeneratePythonSkeleton.hpp"
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/Common/RgbColor.hpp"
@@ -11,8 +11,8 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-GeneratePythonPluginSkeleton::GeneratePythonPluginSkeleton(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                           GeneratePythonPluginSkeletonInputValues* inputValues)
+GeneratePythonSkeleton::GeneratePythonSkeleton(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                               GeneratePythonSkeletonInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -21,16 +21,16 @@ GeneratePythonPluginSkeleton::GeneratePythonPluginSkeleton(DataStructure& dataSt
 }
 
 // -----------------------------------------------------------------------------
-GeneratePythonPluginSkeleton::~GeneratePythonPluginSkeleton() noexcept = default;
+GeneratePythonSkeleton::~GeneratePythonSkeleton() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& GeneratePythonPluginSkeleton::getCancel()
+const std::atomic_bool& GeneratePythonSkeleton::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> GeneratePythonPluginSkeleton::operator()()
+Result<> GeneratePythonSkeleton::operator()()
 {
 
   auto result = nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginName, "Description", m_InputValues->filterNames);

@@ -69,7 +69,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindVolFractionsTest.cpp
   GenerateColorTableTest.cpp
   GenerateVectorColorsTest.cpp
-    GeneratePythonPluginSkeletonTest.cpp
+    GeneratePythonSkeletonTest.cpp
   IdentifySampleTest.cpp
   ImageContouringTest.cpp
   ImageGeomTest.cpp
