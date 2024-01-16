@@ -1,7 +1,7 @@
 from typing import List
 import simplnx as nx
 
-class @PYTHON_FILTER_NAME@:
+class #PYTHON_FILTER_NAME#:
   """
   This section should contain the 'keys' that store each parameter. The value of the key should be snake_case. The name
   of the value should be ALL_CAPITOL_KEY
@@ -13,28 +13,28 @@ class @PYTHON_FILTER_NAME@:
     :return: The Filter's Uuid value
     :rtype: string
     """
-    return nx.Uuid('@PYTHON_FILTER_UUID@')
+    return nx.Uuid('#PYTHON_FILTER_UUID#')
 
   def human_name(self) -> str:
     """This returns the name of the filter as a user of DREAM3DNX would see it
     :return: The filter's human name
     :rtype: string
     """
-    return '@PYTHON_FILTER_HUMAN_NAME@'
+    return '#PYTHON_FILTER_HUMAN_NAME#'
 
   def class_name(self) -> str:
     """The returns the name of the class that implements the filter
     :return: The name of the implementation class
     :rtype: string
     """
-    return '@PYTHON_FILTER_NAME@'
+    return '#PYTHON_FILTER_NAME#'
 
   def name(self) -> str:
     """The returns the name of filter
     :return: The name of the filter
     :rtype: string
     """
-    return '@PYTHON_FILTER_NAME@'
+    return '#PYTHON_FILTER_NAME#'
 
   def default_tags(self) -> List[str]:
     """This returns the default tags for this filter
@@ -46,9 +46,9 @@ class @PYTHON_FILTER_NAME@:
   def clone(self):
     """Clones the filter
     :return: A new instance of the filter
-    :rtype:  @PYTHON_FILTER_NAME@
+    :rtype:  #PYTHON_FILTER_NAME#
     """
-    return @PYTHON_FILTER_NAME@()
+    return #PYTHON_FILTER_NAME#()
 
   def parameters(self) -> nx.Parameters:
     """This function defines the parameters that are needed by the filter. Parameters collect the values from the user
@@ -56,7 +56,7 @@ class @PYTHON_FILTER_NAME@:
     """
     params = nx.Parameters()
 
-    params.insert(nx.Float64Parameter(@PYTHON_FILTER_NAME@.TEST_KEY, 'Test', '', 0.0))
+    params.insert(nx.Float64Parameter(#PYTHON_FILTER_NAME#.TEST_KEY, 'Test', '', 0.0))
 
     return params
 
@@ -67,7 +67,7 @@ class @PYTHON_FILTER_NAME@:
     :returns:
     :rtype: nx.IFilter.PreflightResult
     """
-    value: float = args[@PYTHON_FILTER_NAME@.TEST_KEY]
+    value: float = args[#PYTHON_FILTER_NAME#.TEST_KEY]
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Preflight: {value}'))
     return nx.IFilter.PreflightResult()
 
@@ -77,7 +77,7 @@ class @PYTHON_FILTER_NAME@:
     :rtype: nx.IFilter.ExecuteResult
     """
 
-    value: float = args[@PYTHON_FILTER_NAME@.TEST_KEY]
+    value: float = args[#PYTHON_FILTER_NAME#.TEST_KEY]
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Execute: {value}'))
     return nx.Result()
 

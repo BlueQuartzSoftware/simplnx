@@ -31,9 +31,9 @@ inline std::string GeneratePythonFilter(const std::string& filterName, const std
 {
   std::string content = k_PythonFilterTemplate;
 
-  content = StringUtilities::replace(content, "@PYTHON_FILTER_NAME@", filterName);
-  content = StringUtilities::replace(content, "@PYTHON_FILTER_HUMAN_NAME@", humanName);
-  content = StringUtilities::replace(content, "@PYTHON_FILTER_UUID@", uuidString);
+  content = StringUtilities::replace(content, "#PYTHON_FILTER_NAME#", filterName);
+  content = StringUtilities::replace(content, "#PYTHON_FILTER_HUMAN_NAME#", humanName);
+  content = StringUtilities::replace(content, "#PYTHON_FILTER_UUID#", uuidString);
 
   return content;
 }
@@ -213,13 +213,13 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
 {
   std::string content = k_PluginPythonFile;
 
-  content = StringUtilities::replace(content, "@PLUGIN_NAME@", pluginName);
-  content = StringUtilities::replace(content, "@PLUGIN_UUID@", Uuid::GenerateV4().str());
-  content = StringUtilities::replace(content, "@PLUGIN_SHORT_NAME@", pluginShortName);
-  content = StringUtilities::replace(content, "@PLUGIN_DESCRIPTION@", pluginDescription);
+  content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+  content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
+  content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
+  content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
 
   auto filterList = StringUtilities::split(pluginFilterList, ',');
-  content = StringUtilities::replace(content, "@PLUGIN_FILTER_LIST@", fmt::format("{}", fmt::join(filterList, ",")));
+  content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", fmt::format("{}", fmt::join(filterList, ",")));
 
   std::string importStatements;
   for(const auto& name : filterList)
@@ -227,7 +227,7 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
     importStatements.append(fmt::format("from {}.{} import {}\n", pluginName, name, name));
   }
 
-  content = StringUtilities::replace(content, "@PLUGIN_IMPORT_CODE@", importStatements);
+  content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", importStatements);
 
   return content;
 }
@@ -282,10 +282,10 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       }
       std::string content = k_PluginInitPythonFile;
 
-      content = StringUtilities::replace(content, "@PLUGIN_NAME@", pluginName);
-      content = StringUtilities::replace(content, "@PLUGIN_UUID@", Uuid::GenerateV4().str());
-      content = StringUtilities::replace(content, "@PLUGIN_SHORT_NAME@", pluginShortName);
-      content = StringUtilities::replace(content, "@PLUGIN_DESCRIPTION@", pluginDescription);
+      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+      content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
+      content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
+      content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
 
       auto filterList = StringUtilities::split(pluginFilterList, ',');
 
@@ -295,7 +295,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
         aList.append(fmt::format("'{}', ", name));
       }
       aList.append("'get_plugin'");
-      content = StringUtilities::replace(content, "@PLUGIN_FILTER_LIST@", aList);
+      content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", aList);
 
       std::string importStatements;
       for(const auto& name : filterList)
@@ -303,7 +303,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
         importStatements.append(fmt::format("from {}.{} import {}\n", pluginName, name, name));
       }
 
-      content = StringUtilities::replace(content, "@PLUGIN_IMPORT_CODE@", importStatements);
+      content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", importStatements);
 
       fout << content;
     }
