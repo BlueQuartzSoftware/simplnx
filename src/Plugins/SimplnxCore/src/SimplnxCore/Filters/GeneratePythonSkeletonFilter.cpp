@@ -58,10 +58,10 @@ Parameters GeneratePythonSkeletonFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_PluginName_Key, "Name of Plugin", "This is the name of the plugin.", "ExamplePlugin"));
   params.insert(std::make_unique<StringParameter>(k_PluginHumanName_Key, "Human Name of Plugin", "This is the user facing name of the plugin.", "ExamplePlugin"));
 
-  params.insert(std::make_unique<FileSystemPathParameter>(k_PluginOutputDirectory_Key, "Plugin Output Directory", "", fs::path(""), FileSystemPathParameter::ExtensionsType{},
-                                                          FileSystemPathParameter::PathType::OutputDir));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_PluginInputDirectory_Key, "Existing Plugin Location", "", fs::path(""), FileSystemPathParameter::ExtensionsType{},
-                                                          FileSystemPathParameter::PathType::InputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_PluginOutputDirectory_Key, "Plugin Output Directory", "The path to the output directory where the new plugin will be generated.",
+                                                          fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_PluginInputDirectory_Key, "Existing Plugin Location", "The location of the existing plugin's top level directory on the file system.",
+                                                          fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputDir));
 
   params.insert(
       std::make_unique<StringParameter>(k_PluginFilterNames, "Filter Names (comma-separated)", "The names of filters that will be created, separated by commas (,).", "FirstFilter,SecondFilter"));
