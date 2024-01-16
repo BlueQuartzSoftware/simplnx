@@ -118,6 +118,6 @@ protected:
   StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings);
 
 private:
-  collection_type m_Strings;
+  std::shared_ptr<collection_type> m_Strings = std::make_shared<collection_type>();
 };
 } // namespace nx::core
