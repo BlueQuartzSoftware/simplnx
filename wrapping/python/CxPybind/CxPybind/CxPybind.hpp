@@ -587,7 +587,8 @@ protected:
       Parameters params = parameters();
       auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
       auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-      auto result = m_Object.attr("preflight_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), messageHandler, shouldCancelProxy).cast<PreflightResult>();
+      auto result = m_Object.attr("preflight_impl")(py::cast(data, py::return_value_policy::reference), ConvertArgsToDict(Internals::Instance(), params, args), messageHandler, shouldCancelProxy)
+                        .cast<PreflightResult>();
       return result;
     } catch(const py::error_already_set& pyException)
     {
@@ -606,7 +607,10 @@ protected:
       Parameters params = parameters();
       auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
       auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-      auto result = m_Object.attr("execute_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), /* pipelineNode,*/ messageHandler, shouldCancelProxy).cast<Result<>>();
+      auto result =
+          m_Object
+              .attr("execute_impl")(py::cast(data, py::return_value_policy::reference), ConvertArgsToDict(Internals::Instance(), params, args), /* pipelineNode,*/ messageHandler, shouldCancelProxy)
+              .cast<Result<>>();
       return result;
     } catch(const py::error_already_set& pyException)
     {
