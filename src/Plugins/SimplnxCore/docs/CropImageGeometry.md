@@ -2,24 +2,66 @@
 
 ## Description
 
-This **Filter** allows the user to crop a region of interest (ROI) from an **Image Geometry**.  The input parameters are in units of voxels.  For example, if a **Image Geometry** has dimensions of 100x100x100 voxels and each voxel was 0.25 x 0.25 x 0.25 units per voxel, then if the user wanted to crop the last 5 microns in the X direction, then the user would enter the following:
+This **Filter** allows the user to crop a region of interest (ROI) from an **Image Geometry**.  The input parameters are in units of voxels or physical coordinates.  
 
-Bounds: 100 voxels * 0.25 micron/voxel = 25 microns
+## Examples
 
-    Xmin = 80 (20 micron),
-    Xmax = 99 (25 micro),
-    Ymin = 0 (0 micron),
-    Ymax = 99 (25 micron),
-    Zmin = 0 (0 micron),
-    Zmax = 99 (25 micron)
+In the following examples, the following image is being used.
 
-*Note:* The input parameters are *inclusive* and begin at *0*, so in the above example *0-99* covers the entire range of **Cells** in a given dimension.
+- Origin:     [0.0, 0.0, 0.0]
+- Spacing:    {0.5, 0.5, 1.0}
+- Dimensions: {100, 100, 1}
 
-## Global Position of Cropped Region
+So the bounds of the image is (0-50 micron, 0-50 micron, 0-1 micron)
 
-Figure 1 shows the position of the cropped region relative to the original image.
+![Base image for examples](Images/CropImageGeometry_1.png)
 
-![Figure 1](Images/CropImageGeometry_1.png)
+### Example 1
+
+If the user wanted to crop the last 50 voxels in the X and Y axis then the user would use the following values:
+
+    Xmin = 50,
+    Xmax = 99,
+    Ymin = 50,
+    Ymax = 99,
+    Zmin = 0,
+    Zmax = 0 
+
+![Cropped image using voxels as the bounds](Images/CropImageGeometry_2.png)
+
+**Note:** the units in the above image is in microns.
+
+**Note:** The input parameters are *inclusive* and begin at *0*, so in the above example *50-99* will include the last 50 voxels.
+
+### Example 2
+
+If the user would like to crop out the `middle` 50 voxels from the image, these are the inputs:
+
+    Xmin = 25,
+    Xmax = 74,
+    Ymin = 25,
+    Ymax = 74,
+    Zmin = 0,
+    Zmax = 0
+
+![Cropped image using voxels as the bounds](Images/CropImageGeometry_3.png)
+
+### Example 3
+
+In this example the user is going to define the crop using physical coordinates and also selecting an upper bound that exceeds the actual bounds of the image. In this case, the filter will instead use the maximum bounds from that axis.
+
+    Xmin = 30 microns,
+    Xmax = 65 microns,
+    Ymin = 30 microns,
+    Ymax = 65 microns,
+    Zmin = 0 microns,
+    Zmax = 65 microns
+
+**Note:** This will work because at least some portion of the cropped image is within the original image. If **ALL** cropped values fall out side of the image bounds then the filter will error out in preflight.
+
+![Cropped image using voxels as the bounds](Images/CropImageGeometry_4.png)
+
+User may note that the way the bounds are determined are affected by the origin and spacing, so be sure to take these into account when supplying coordinate bounds for the crop.
 
 ## Renumber Features
 
