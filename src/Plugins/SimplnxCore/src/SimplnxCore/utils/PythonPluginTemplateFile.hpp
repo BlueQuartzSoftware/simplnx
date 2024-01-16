@@ -370,7 +370,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
   }
   auto outputPath = pluginRootPath / "Plugin.py";
   {
-    AtomicFile tempFile(outputPath, true);
+    AtomicFile tempFile(outputPath.string(), true);
     {
       // Scope this so that the file closes first before we then 'commit' with the atomic file
       std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -388,7 +388,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
   // Write the __init__.py file
   outputPath = pluginRootPath / "__init__.py";
   {
-    AtomicFile initTempFile(outputPath, true);
+    AtomicFile initTempFile(outputPath.string(), true);
     {
       // Scope this so that the file closes first before we then 'commit' with the atomic file
       std::ofstream fout(initTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
