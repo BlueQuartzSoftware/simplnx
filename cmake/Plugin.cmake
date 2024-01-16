@@ -281,6 +281,7 @@ function(create_simplnx_plugin)
     PUBLIC
       $<BUILD_INTERFACE:${${ARGS_NAME}_SOURCE_DIR}/src>
       $<BUILD_INTERFACE:${ARGS_GENERATED_DIR}>
+      $<BUILD_INTERFACE:${${ARGS_NAME}_BINARY_DIR}/../>
   )
 
   if(SIMPLNX_ENABLE_INSTALL)
