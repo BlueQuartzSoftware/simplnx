@@ -21,7 +21,7 @@ The following parameters are available when **Use Existing Plugin** is OFF:
 
 ### Using An Existing Plugin ###
 
-If the **Use Existing Plugin** parameter is ON, then this filter will generate new Python skeleton filters in an existing plugin.  If the existing plugin was not created using the **Generate Python Skeleton** filter, some additional edits may need to be done in a few of the other plugin files.
+If the **Use Existing Plugin** parameter is ON, then this filter will generate new Python skeleton filters in an existing plugin.  If the existing plugin was created manually and NOT created using this filter, some additional edits will need to be done in a few of the other plugin files.
 
 The following parameters are available when **Use Existing Plugin** is ON:
 
