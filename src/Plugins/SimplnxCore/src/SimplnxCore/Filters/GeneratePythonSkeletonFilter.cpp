@@ -38,7 +38,7 @@ Uuid GeneratePythonSkeletonFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string GeneratePythonSkeletonFilter::humanName() const
 {
-  return "Generate Python Skeleton";
+  return "Generate Python Plugin or Python Filter";
 }
 
 //------------------------------------------------------------------------------

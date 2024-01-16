@@ -1,4 +1,4 @@
-# Generate Python Skeleton
+# Generate Python Plugin or Python Filter
 
 ## Group
 
