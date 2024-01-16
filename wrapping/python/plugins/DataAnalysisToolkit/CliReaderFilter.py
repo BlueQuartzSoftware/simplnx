@@ -2,7 +2,7 @@ import simplnx as sx
 import numpy as np
 from typing import List, Dict
 from pathlib import Path
-from ExamplePlugin.utilities.cli_tools import parse_file, parse_geometry_array_names
+from DataAnalysisToolkit.utilities.cli_tools import parse_file, parse_geometry_array_names
 
 class CliReaderFilter:
   CLI_FILE_PATH = 'cli_file_path'
