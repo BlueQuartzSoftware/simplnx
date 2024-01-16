@@ -176,7 +176,7 @@ inline Result<> WritePythonFilterToFile(const std::filesystem::path& outputPath,
 {
 
   std::string content = GeneratePythonFilter(filterName, humanName, uuidString);
-  auto outputFilePath = fmt::format("{}{}{}.py", outputPath.string(), static_cast<char>(std::filesystem::path::preferred_separator), filterName);
+  auto outputFilePath = fmt::format("{}{}{}.py", outputPath.string(), std::string{std::filesystem::path::preferred_separator}, filterName);
   AtomicFile tempFile(outputFilePath, true);
   {
     // Scope this so that the file closes first before we then 'commit' with the atomic file
