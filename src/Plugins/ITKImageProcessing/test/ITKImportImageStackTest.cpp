@@ -144,8 +144,8 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
 
 void CompareXYFlippedGeometries(DataStructure& dataStructure)
 {
-  UnitTest::CompareImageGeometry(dataStructure, k_XFlippedImageDataPath, k_XGeneratedImageGeomPath);
-  UnitTest::CompareImageGeometry(dataStructure, k_YFlippedImageDataPath, k_YGeneratedImageGeomPath);
+  UnitTest::CompareImageGeometry(dataStructure, ::k_XFlipImageGeomPath, k_XGeneratedImageGeomPath);
+  UnitTest::CompareImageGeometry(dataStructure, ::k_YFlipImageGeomPath, k_YGeneratedImageGeomPath);
 
   // Processed
   DataPath k_XGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
