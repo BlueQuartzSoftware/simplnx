@@ -69,6 +69,7 @@ set(FilterList
   FindVolFractionsFilter
   GenerateColorTableFilter
   GenerateVectorColorsFilter
+  GeneratePythonSkeletonFilter
   IdentifySample
   ImageContouringFilter
   InitializeData
@@ -168,6 +169,7 @@ set(AlgorithmList
   FindVertexToTriangleDistances
   GenerateColorTable
   GenerateVectorColors
+  GeneratePythonSkeleton
   ImageContouring
   KMeans
   KMedoids
@@ -244,10 +246,10 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++)
 # can use the target_sources(...) cmake call
 
 set(PLUGIN_EXTRA_SOURCES
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorItem.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorItem.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ICalculatorArray.hpp"
@@ -336,10 +338,22 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 )
 
 #------------------------------------------------------------------------------
+# Configure the Python Plugin Generation Header file
+# This will read the template files into the CMake variables, then configure
+# the template file to use the contents of those files. This should allow easier
+# updating of those template files.
+file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonFilterTemplate.py" PYTHON_FILTER_TEMPLATE)
+file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginInitTemplate.py" PYTHON_PLUGIN_INIT_TEMPLATE)
+file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplate.py" PYTHON_PLUGIN_TEMPLATE)
+
+configure_file("${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.in.hpp"
+                "${${PLUGIN_NAME}_BINARY_DIR}/utils/PythonPluginTemplateFile.hpp")
+
+#------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
 # you can use the target_include_directories(.....) cmake call
 # target_include_directories(${PLUGIN_NAME}
-#     PUBLIC
+#     PRIVATE
 #     additional include directories here
 # )
 
