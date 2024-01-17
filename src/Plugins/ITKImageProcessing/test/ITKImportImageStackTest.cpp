@@ -31,6 +31,7 @@ const std::string k_ImageDataName = "ImageData";
 const ChoicesParameter::ValueType k_NoImageTransform = 0;
 const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
 const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
+const fs::path k_ImageFlipStackDir = fs::path(fmt::format("{}/{}", unit_test::k_TestFilesDir, k_FlippedImageStackDirName));
 
 // Exemplar Array Paths
 const DataPath k_XFlippedImageDataPath = k_XFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
@@ -41,13 +42,79 @@ const DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(Co
 constexpr AbstractPlugin::IdType k_ITKImageProcessingID = *Uuid::FromString("115b0d10-ab97-5a18-88e8-80d35056a28e");
 const FilterHandle k_ImportImageStackFilterHandle(nx::core::FilterTraits<ITKImportImageStack>::uuid, k_ITKImageProcessingID);
 
-void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& filePrefix, const fs::path& imageFlipStackDir)
+void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& filePrefix)
+{
+  // Filter needs RotateSampleRefFrameFilter to run
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  auto* filterList = nx::core::Application::Instance()->getFilterList();
+  REQUIRE(filterList != nullptr);
+
+  // Define Shared parameters
+  std::vector<float32> k_Origin = {0.0f, 0.0f, 0.0f};
+  std::vector<float32> k_Spacing = {1.0f, 1.0f, 1.0f};
+  GeneratedFileListParameter::ValueType k_FileListInfo;
+
+  // Set File list for reads
+  {
+    k_FileListInfo.inputPath = k_ImageFlipStackDir;
+    k_FileListInfo.startIndex = 1;
+    k_FileListInfo.endIndex = 1;
+    k_FileListInfo.incrementIndex = 1;
+    k_FileListInfo.fileExtension = ".tiff";
+    k_FileListInfo.filePrefix = filePrefix;
+    k_FileListInfo.fileSuffix = "";
+    k_FileListInfo.paddingDigits = 1;
+    k_FileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  }
+
+  // Run generated X flip
+  {
+    auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
+    REQUIRE(nullptr != importImageStackFilter);
+
+    Arguments args;
+
+    args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
+    args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+    args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+    args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
+    args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
+
+    auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    auto executeResult = importImageStackFilter->execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+
+  // Run generated Y flip
+  {
+    auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
+    REQUIRE(nullptr != importImageStackFilter);
+
+    Arguments args;
+
+    args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
+    args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+    args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+    args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
+    args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
+
+    auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    auto executeResult = importImageStackFilter->execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+}
+
+void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& filePrefix)
 {
   {
     ITKImageReader filter;
     Arguments args;
 
-    fs::path filePath = imageFlipStackDir / (filePrefix + "flip_x.png");
+    fs::path filePath = k_ImageFlipStackDir / (filePrefix + "flip_x.tiff");
     args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
     args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_XFlipImageGeomPath);
     args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_XFlippedImageDataPath);
@@ -62,7 +129,7 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
     ITKImageReader filter;
     Arguments args;
 
-    fs::path filePath = imageFlipStackDir / (filePrefix + "flip_y.png");
+    fs::path filePath = k_ImageFlipStackDir / (filePrefix + "flip_y.tiff");
     args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
     args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_YFlipImageGeomPath);
     args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_YFlippedImageDataPath);
@@ -77,6 +144,9 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
 
 void CompareXYFlippedGeometries(DataStructure& dataStructure)
 {
+  UnitTest::CompareImageGeometry(dataStructure, k_XFlippedImageDataPath, k_XGeneratedImageGeomPath);
+  UnitTest::CompareImageGeometry(dataStructure, k_YFlippedImageDataPath, k_YGeneratedImageGeomPath);
+
   // Processed
   DataPath k_XGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
   DataPath k_YGeneratedImageDataPath = k_YGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
@@ -229,76 +299,19 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Even X/Y"
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
-  fs::path k_ImageFlipStackDir = fs::path(fmt::format("{}/{}", unit_test::k_TestFilesDir, k_FlippedImageStackDirName));
   const std::string k_FilePrefix = "image_flip_even_even_";
 
-  // Filter needs RotateSampleRefFrameFilter to run
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = nx::core::Application::Instance()->getFilterList();
-  REQUIRE(filterList != nullptr);
-
   DataStructure dataStructure;
-  {
-    // Define Shared parameters
-    std::vector<float32> k_Origin = {0.0f, 0.0f, 0.0f};
-    std::vector<float32> k_Spacing = {1.0f, 1.0f, 1.0f};
-    GeneratedFileListParameter::ValueType k_FileListInfo;
-    // Set File list for reads
-    {
-      k_FileListInfo.inputPath = k_ImageFlipStackDir;
-      k_FileListInfo.startIndex = 1;
-      k_FileListInfo.endIndex = 1;
-      k_FileListInfo.incrementIndex = 1;
-      k_FileListInfo.fileExtension = ".png";
-      k_FileListInfo.filePrefix = k_FilePrefix;
-      k_FileListInfo.fileSuffix = "";
-      k_FileListInfo.paddingDigits = 1;
-      k_FileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-    }
 
-    // Run generated X flip
-    {
-      auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
-      REQUIRE(nullptr != importImageStackFilter);
-
-      Arguments args;
-
-      args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-      args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-      args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-      args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
-      args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
-
-      auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      auto executeResult = importImageStackFilter->execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    }
-
-    // Run generated Y flip
-    {
-      auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
-      REQUIRE(nullptr != importImageStackFilter);
-
-      Arguments args;
-
-      args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-      args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-      args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-      args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
-      args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
-
-      auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      auto executeResult = importImageStackFilter->execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    }
-  }
+  // Generate XY Image Geometries with ITKImportImageStack
+  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
 
   // Read in exemplars
-  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix, k_ImageFlipStackDir);
+  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/even_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
@@ -308,76 +321,19 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Odd X/Y",
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
-  fs::path k_ImageFlipStackDir = fs::path(fmt::format("{}/{}", unit_test::k_TestFilesDir, k_FlippedImageStackDirName));
   const std::string k_FilePrefix = "image_flip_even_odd_";
 
-  // Filter needs RotateSampleRefFrameFilter to run
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = nx::core::Application::Instance()->getFilterList();
-  REQUIRE(filterList != nullptr);
-
   DataStructure dataStructure;
-  {
-    // Define Shared parameters
-    std::vector<float32> k_Origin = {0.0f, 0.0f, 0.0f};
-    std::vector<float32> k_Spacing = {1.0f, 1.0f, 1.0f};
-    GeneratedFileListParameter::ValueType k_FileListInfo;
-    // Set File list for reads
-    {
-      k_FileListInfo.inputPath = k_ImageFlipStackDir;
-      k_FileListInfo.startIndex = 1;
-      k_FileListInfo.endIndex = 1;
-      k_FileListInfo.incrementIndex = 1;
-      k_FileListInfo.fileExtension = ".png";
-      k_FileListInfo.filePrefix = k_FilePrefix;
-      k_FileListInfo.fileSuffix = "";
-      k_FileListInfo.paddingDigits = 1;
-      k_FileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-    }
 
-    // Run generated X flip
-    {
-      auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
-      REQUIRE(nullptr != importImageStackFilter);
-
-      Arguments args;
-
-      args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-      args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-      args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-      args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
-      args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
-
-      auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      auto executeResult = importImageStackFilter->execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    }
-
-    // Run generated Y flip
-    {
-      auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
-      REQUIRE(nullptr != importImageStackFilter);
-
-      Arguments args;
-
-      args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-      args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-      args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-      args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
-      args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
-
-      auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      auto executeResult = importImageStackFilter->execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    }
-  }
+  // Generate XY Image Geometries with ITKImportImageStack
+  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
 
   // Read in exemplars
-  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix, k_ImageFlipStackDir);
+  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/even_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
@@ -387,76 +343,19 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Even X/Y",
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
-  fs::path k_ImageFlipStackDir = fs::path(fmt::format("{}/{}", unit_test::k_TestFilesDir, k_FlippedImageStackDirName));
   const std::string k_FilePrefix = "image_flip_odd_even_";
 
-  // Filter needs RotateSampleRefFrameFilter to run
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = nx::core::Application::Instance()->getFilterList();
-  REQUIRE(filterList != nullptr);
-
   DataStructure dataStructure;
-  {
-    // Define Shared parameters
-    std::vector<float32> k_Origin = {0.0f, 0.0f, 0.0f};
-    std::vector<float32> k_Spacing = {1.0f, 1.0f, 1.0f};
-    GeneratedFileListParameter::ValueType k_FileListInfo;
-    // Set File list for reads
-    {
-      k_FileListInfo.inputPath = k_ImageFlipStackDir;
-      k_FileListInfo.startIndex = 1;
-      k_FileListInfo.endIndex = 1;
-      k_FileListInfo.incrementIndex = 1;
-      k_FileListInfo.fileExtension = ".png";
-      k_FileListInfo.filePrefix = k_FilePrefix;
-      k_FileListInfo.fileSuffix = "";
-      k_FileListInfo.paddingDigits = 1;
-      k_FileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-    }
 
-    // Run generated X flip
-    {
-      auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
-      REQUIRE(nullptr != importImageStackFilter);
-
-      Arguments args;
-
-      args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-      args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-      args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-      args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
-      args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
-
-      auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      auto executeResult = importImageStackFilter->execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    }
-
-    // Run generated Y flip
-    {
-      auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
-      REQUIRE(nullptr != importImageStackFilter);
-
-      Arguments args;
-
-      args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-      args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-      args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-      args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
-      args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
-
-      auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      auto executeResult = importImageStackFilter->execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    }
-  }
+  // Generate XY Image Geometries with ITKImportImageStack
+  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
 
   // Read in exemplars
-  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix, k_ImageFlipStackDir);
+  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
@@ -466,76 +365,19 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Odd X/Y", 
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
-  fs::path k_ImageFlipStackDir = fs::path(fmt::format("{}/{}", unit_test::k_TestFilesDir, k_FlippedImageStackDirName));
   const std::string k_FilePrefix = "image_flip_odd_odd_";
 
-  // Filter needs RotateSampleRefFrameFilter to run
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = nx::core::Application::Instance()->getFilterList();
-  REQUIRE(filterList != nullptr);
-
   DataStructure dataStructure;
-  {
-    // Define Shared parameters
-    std::vector<float32> k_Origin = {0.0f, 0.0f, 0.0f};
-    std::vector<float32> k_Spacing = {1.0f, 1.0f, 1.0f};
-    GeneratedFileListParameter::ValueType k_FileListInfo;
-    // Set File list for reads
-    {
-      k_FileListInfo.inputPath = k_ImageFlipStackDir;
-      k_FileListInfo.startIndex = 1;
-      k_FileListInfo.endIndex = 1;
-      k_FileListInfo.incrementIndex = 1;
-      k_FileListInfo.fileExtension = ".png";
-      k_FileListInfo.filePrefix = k_FilePrefix;
-      k_FileListInfo.fileSuffix = "";
-      k_FileListInfo.paddingDigits = 1;
-      k_FileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-    }
 
-    // Run generated X flip
-    {
-      auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
-      REQUIRE(nullptr != importImageStackFilter);
-
-      Arguments args;
-
-      args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-      args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-      args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-      args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
-      args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
-
-      auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      auto executeResult = importImageStackFilter->execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    }
-
-    // Run generated Y flip
-    {
-      auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
-      REQUIRE(nullptr != importImageStackFilter);
-
-      Arguments args;
-
-      args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-      args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-      args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-      args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
-      args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
-
-      auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      auto executeResult = importImageStackFilter->execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    }
-  }
+  // Generate XY Image Geometries with ITKImportImageStack
+  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
 
   // Read in exemplars
-  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix, k_ImageFlipStackDir);
+  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
