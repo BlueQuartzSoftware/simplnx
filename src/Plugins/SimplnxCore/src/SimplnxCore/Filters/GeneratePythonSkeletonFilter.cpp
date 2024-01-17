@@ -93,7 +93,7 @@ IFilter::PreflightResult GeneratePythonSkeletonFilter::preflightImpl(const DataS
 
   if(!useExistingPlugin)
   {
-    preflightUpdatedValues.push_back({"Generated Plugin Directory", fmt::format("", pluginOutputDir.string(), fs::path::preferred_separator, pluginName)});
+    preflightUpdatedValues.push_back({"Generated Plugin Directory", fmt::format("", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName)});
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

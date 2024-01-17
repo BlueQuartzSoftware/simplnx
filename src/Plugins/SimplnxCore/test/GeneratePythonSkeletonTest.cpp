@@ -19,7 +19,7 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
     GeneratePythonSkeletonFilter filter;
     Arguments args;
 
-    const std::filesystem::path k_OutputDirectory = fs::path(unit_test::k_BinaryTestOutputDir);
+    const std::filesystem::path k_OutputDirectory = fs::path(unit_test::k_BinaryTestOutputDir.str());
     const std::string k_PluginName = "ExampleToolbox";
 
     // Generate filters into a new plugin
