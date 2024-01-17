@@ -1,6 +1,7 @@
 #include "DynamicTableParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -14,9 +15,13 @@ DynamicTableParameter::DynamicTableParameter(const std::string& name, const std:
 , m_DefaultValue(defaultValue)
 , m_TableInfo(tableInfo)
 {
-  if(m_TableInfo.validate(m_DefaultValue).invalid())
+  auto result = m_TableInfo.validate(m_DefaultValue);
+  if(result.invalid())
   {
-    throw std::runtime_error("DynamicTableParameter: The default value is invalid");
+    std::vector<std::string_view> errMsgs;
+    std::transform(result.errors().cbegin(), result.errors().cend(), std::back_inserter(errMsgs), [](const Error& err) { return err.message; });
+    std::string errMsgsStr = StringUtilities::join(errMsgs, "\n\n");
+    throw std::runtime_error(fmt::format("DynamicTableParameter: The default value is invalid:\n\n{}", errMsgsStr));
   }
 }
 
