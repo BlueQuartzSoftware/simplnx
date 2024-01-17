@@ -32,6 +32,10 @@ const ChoicesParameter::ValueType k_NoImageTransform = 0;
 const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
 const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
 
+// Exemplar Array Paths
+const DataPath k_XFlippedImageDataPath = k_XFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+const DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+
 // Make sure we can instantiate the ITK Import Image Stack Filter
 // ITK Image Processing Plugin Uuid
 constexpr AbstractPlugin::IdType k_ITKImageProcessingID = *Uuid::FromString("115b0d10-ab97-5a18-88e8-80d35056a28e");
@@ -44,11 +48,9 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
     Arguments args;
 
     fs::path filePath = imageFlipStackDir / (filePrefix + "flip_x.png");
-    DataPath arrayPath = ::k_XFlipImageGeomPath.createChildPath(::k_ImageDataName);
-    DataPath imagePath = arrayPath.getParent();
     args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
-    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imagePath);
-    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
+    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_XFlipImageGeomPath);
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_XFlippedImageDataPath);
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -61,11 +63,9 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
     Arguments args;
 
     fs::path filePath = imageFlipStackDir / (filePrefix + "flip_y.png");
-    DataPath arrayPath = ::k_YFlipImageGeomPath.createChildPath(::k_ImageDataName);
-    DataPath imagePath = arrayPath.getParent();
     args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
-    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imagePath);
-    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
+    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_YFlipImageGeomPath);
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_YFlippedImageDataPath);
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -84,8 +84,6 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
   const auto& yGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(k_YGeneratedImageDataPath);
 
   // Exemplar
-  DataPath k_XFlippedImageDataPath = k_XFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
-  DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
   const auto& xFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_XFlippedImageDataPath);
   const auto& yFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_YFlippedImageDataPath);
 
