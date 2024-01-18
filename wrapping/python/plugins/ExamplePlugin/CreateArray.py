@@ -21,7 +21,7 @@ class CreateArrayFilter:
     return nx.Uuid('14c4ab0e-f7fd-464e-a54b-013346506351')
 
   def human_name(self) -> str:
-    return 'CreateArrayFilter (Python)'
+    return 'Create Data Array (Python)'
 
   def class_name(self) -> str:
     return 'CreateArrayFilter'

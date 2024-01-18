@@ -5,6 +5,9 @@ Insert documentation here.
 
 from ExamplePlugin.ExampleFilter1 import ExampleFilter1
 from ExamplePlugin.ExampleFilter2 import ExampleFilter2
+from ExamplePlugin.CreateArray import CreateArrayFilter
+from ExamplePlugin.InitializeData import InitializeDataPythonFilter
+from ExamplePlugin.TemplateFilter import TemplateFilter
 
 # FILTER_INCLUDE_INSERT
 
@@ -27,4 +30,4 @@ class ExamplePlugin:
     return 'Description'
 
   def get_filters(self):
-    return [ExampleFilter1,ExampleFilter2] # FILTER_NAME_INSERT
+    return [ExampleFilter1,ExampleFilter2,CreateArrayFilter,InitializeDataPythonFilter,TemplateFilter] # FILTER_NAME_INSERT
