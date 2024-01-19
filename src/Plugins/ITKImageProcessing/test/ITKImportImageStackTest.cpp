@@ -1,11 +1,13 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 #include "ITKImageProcessing/Filters/ITKImportImageStack.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -20,6 +22,144 @@ namespace
 const std::string k_ImageStackDir = unit_test::k_DataDir.str() + "/ImageStack";
 const DataPath k_ImageGeomPath = {{"ImageGeometry"}};
 const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellDataName).createChildPath("ImageData");
+const std::string k_FlippedImageStackDirName = "image_flip_test_images";
+const DataPath k_XGeneratedImageGeomPath = DataPath({"xGeneratedImageGeom"});
+const DataPath k_YGeneratedImageGeomPath = DataPath({"yGeneratedImageGeom"});
+const DataPath k_XFlipImageGeomPath = DataPath({"xFlipImageGeom"});
+const DataPath k_YFlipImageGeomPath = DataPath({"yFlipImageGeom"});
+const std::string k_ImageDataName = "ImageData";
+const ChoicesParameter::ValueType k_NoImageTransform = 0;
+const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
+const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
+const fs::path k_ImageFlipStackDir = fs::path(fmt::format("{}/{}", unit_test::k_TestFilesDir, k_FlippedImageStackDirName));
+
+// Exemplar Array Paths
+const DataPath k_XFlippedImageDataPath = k_XFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+const DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+
+// Make sure we can instantiate the ITK Import Image Stack Filter
+// ITK Image Processing Plugin Uuid
+constexpr AbstractPlugin::IdType k_ITKImageProcessingID = *Uuid::FromString("115b0d10-ab97-5a18-88e8-80d35056a28e");
+const FilterHandle k_ImportImageStackFilterHandle(nx::core::FilterTraits<ITKImportImageStack>::uuid, k_ITKImageProcessingID);
+
+void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& filePrefix)
+{
+  // Filter needs RotateSampleRefFrameFilter to run
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  auto* filterList = nx::core::Application::Instance()->getFilterList();
+  REQUIRE(filterList != nullptr);
+
+  // Define Shared parameters
+  std::vector<float32> k_Origin = {0.0f, 0.0f, 0.0f};
+  std::vector<float32> k_Spacing = {1.0f, 1.0f, 1.0f};
+  GeneratedFileListParameter::ValueType k_FileListInfo;
+
+  // Set File list for reads
+  {
+    k_FileListInfo.inputPath = k_ImageFlipStackDir.string();
+    k_FileListInfo.startIndex = 1;
+    k_FileListInfo.endIndex = 1;
+    k_FileListInfo.incrementIndex = 1;
+    k_FileListInfo.fileExtension = ".tiff";
+    k_FileListInfo.filePrefix = filePrefix;
+    k_FileListInfo.fileSuffix = "";
+    k_FileListInfo.paddingDigits = 1;
+    k_FileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  }
+
+  // Run generated X flip
+  {
+    auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
+    REQUIRE(nullptr != importImageStackFilter);
+
+    Arguments args;
+
+    args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
+    args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+    args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+    args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
+    args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
+
+    auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    auto executeResult = importImageStackFilter->execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+
+  // Run generated Y flip
+  {
+    auto importImageStackFilter = filterList->createFilter(::k_ImportImageStackFilterHandle);
+    REQUIRE(nullptr != importImageStackFilter);
+
+    Arguments args;
+
+    args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
+    args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+    args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+    args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
+    args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
+
+    auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    auto executeResult = importImageStackFilter->execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+}
+
+void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& filePrefix)
+{
+  {
+    ITKImageReader filter;
+    Arguments args;
+
+    fs::path filePath = k_ImageFlipStackDir / (filePrefix + "flip_x.tiff");
+    args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
+    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_XFlipImageGeomPath);
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_XFlippedImageDataPath);
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+  {
+    ITKImageReader filter;
+    Arguments args;
+
+    fs::path filePath = k_ImageFlipStackDir / (filePrefix + "flip_y.tiff");
+    args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
+    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_YFlipImageGeomPath);
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_YFlippedImageDataPath);
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+}
+
+void CompareXYFlippedGeometries(DataStructure& dataStructure)
+{
+  UnitTest::CompareImageGeometry(dataStructure, ::k_XFlipImageGeomPath, k_XGeneratedImageGeomPath);
+  UnitTest::CompareImageGeometry(dataStructure, ::k_YFlipImageGeomPath, k_YGeneratedImageGeomPath);
+
+  // Processed
+  DataPath k_XGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+  DataPath k_YGeneratedImageDataPath = k_YGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+  const auto& xGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(k_XGeneratedImageDataPath);
+  const auto& yGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(k_YGeneratedImageDataPath);
+
+  // Exemplar
+  const auto& xFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_XFlippedImageDataPath);
+  const auto& yFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_YFlippedImageDataPath);
+
+  UnitTest::CompareDataArrays<uint8>(xGeneratedImageData, xFlippedImageData);
+  UnitTest::CompareDataArrays<uint8>(yGeneratedImageData, yFlippedImageData);
+}
 } // namespace
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoInput", "[ITKImageProcessing][ITKImportImageStack]")
@@ -153,4 +293,92 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImagePro
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
   REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
+}
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Even X/Y", "[ITKImageProcessing][ITKImportImageStack]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
+
+  const std::string k_FilePrefix = "image_flip_even_even_";
+
+  DataStructure dataStructure;
+
+  // Generate XY Image Geometries with ITKImportImageStack
+  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
+
+  // Read in exemplars
+  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/even_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
+
+  // Compare against exemplars
+  ::CompareXYFlippedGeometries(dataStructure);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Odd X/Y", "[ITKImageProcessing][ITKImportImageStack]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
+
+  const std::string k_FilePrefix = "image_flip_even_odd_";
+
+  DataStructure dataStructure;
+
+  // Generate XY Image Geometries with ITKImportImageStack
+  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
+
+  // Read in exemplars
+  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/even_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
+
+  // Compare against exemplars
+  ::CompareXYFlippedGeometries(dataStructure);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Even X/Y", "[ITKImageProcessing][ITKImportImageStack]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
+
+  const std::string k_FilePrefix = "image_flip_odd_even_";
+
+  DataStructure dataStructure;
+
+  // Generate XY Image Geometries with ITKImportImageStack
+  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
+
+  // Read in exemplars
+  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
+
+  // Compare against exemplars
+  ::CompareXYFlippedGeometries(dataStructure);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Odd X/Y", "[ITKImageProcessing][ITKImportImageStack]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
+
+  const std::string k_FilePrefix = "image_flip_odd_odd_";
+
+  DataStructure dataStructure;
+
+  // Generate XY Image Geometries with ITKImportImageStack
+  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
+
+  // Read in exemplars
+  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
+
+  // Compare against exemplars
+  ::CompareXYFlippedGeometries(dataStructure);
 }
