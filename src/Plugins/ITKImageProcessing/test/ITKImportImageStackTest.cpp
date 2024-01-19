@@ -56,7 +56,7 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
 
   // Set File list for reads
   {
-    k_FileListInfo.inputPath = k_ImageFlipStackDir;
+    k_FileListInfo.inputPath = k_ImageFlipStackDir.string();
     k_FileListInfo.startIndex = 1;
     k_FileListInfo.endIndex = 1;
     k_FileListInfo.incrementIndex = 1;
