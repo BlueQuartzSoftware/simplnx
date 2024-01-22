@@ -95,17 +95,16 @@ IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure&
   // These will be returned through the preflightResult variable to the
   // user interface. You could make these member variables instead if needed.
   std::stringstream ss;
-  std::array<float, 3> halfRes = {pSpacingValue[0] * 0.5F, pSpacingValue[1] * 0.5F, pSpacingValue[2] * 0.5F};
   ss << "Extents:\n"
      << "X Extent: 0 to " << pDimensionsValue[0] - 1 << " (dimension: " << pDimensionsValue[0] << ")\n"
      << "Y Extent: 0 to " << pDimensionsValue[1] - 1 << " (dimension: " << pDimensionsValue[1] << ")\n"
      << "Z Extent: 0 to " << pDimensionsValue[2] - 1 << " (dimension: " << pDimensionsValue[2] << ")\n"
      << "Bounds:\n"
-     << "X Range: " << (pOriginValue[0] - halfRes[0]) << " to " << (pOriginValue[0] - halfRes[0] + static_cast<float>(pDimensionsValue[0]) * pSpacingValue[0])
+     << "X Range: " << pOriginValue[0] << " to " << (pOriginValue[0] + static_cast<float>(pDimensionsValue[0]) * pSpacingValue[0])
      << " (delta: " << (static_cast<float>(pDimensionsValue[0]) * pSpacingValue[0]) << ")\n"
-     << "Y Range: " << (pOriginValue[1] - halfRes[1]) << " to " << (pOriginValue[1] - halfRes[1] + static_cast<float>(pDimensionsValue[1]) * pSpacingValue[1])
+     << "Y Range: " << (pOriginValue[1]) << " to " << (pOriginValue[1] + static_cast<float>(pDimensionsValue[1]) * pSpacingValue[1])
      << " (delta: " << (static_cast<float>(pDimensionsValue[1]) * pSpacingValue[1]) << ")\n"
-     << "Z Range: " << (pOriginValue[2] - halfRes[2]) << " to " << (pOriginValue[2] - halfRes[2] + static_cast<float>(pDimensionsValue[2]) * pSpacingValue[2])
+     << "Z Range: " << (pOriginValue[2]) << " to " << (pOriginValue[2] + static_cast<float>(pDimensionsValue[2]) * pSpacingValue[2])
      << " (delta: " << (static_cast<float>(pDimensionsValue[2]) * pSpacingValue[2]) << ")\n";
   std::string boxDimensions = ss.str();
 
