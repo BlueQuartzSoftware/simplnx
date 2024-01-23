@@ -361,17 +361,18 @@ protected:
   {
     static typename DynamicListArray<T, K>::ElementList linkInit = {0, nullptr};
 
-    // This makes sure we deallocate any lists that have been created
-    for(usize i = 0; i < this->m_Size; i++)
-    {
-      if(this->m_Array[i].cells != nullptr)
-      {
-        delete[] this->m_Array[i].cells;
-      }
-    }
-    // Now delete all the "ElementList" structures
     if(this->m_Array != nullptr)
     {
+      // This makes sure we deallocate any lists that have been created
+      for(usize i = 0; i < this->m_Size; i++)
+      {
+        if(this->m_Array[i].cells != nullptr)
+        {
+          delete[] this->m_Array[i].cells;
+        }
+      }
+
+      // Now delete all the "ElementList" structures
       delete[] this->m_Array;
     }
 
