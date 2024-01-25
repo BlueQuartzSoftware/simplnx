@@ -30,14 +30,15 @@ public:
     for(usize index = start; index < end; index++)
     {
       // pull old vertices
-      Point3Df oldVertexIndices = m_OriginalTriangle.getVertexCoordinate(m_NewTrianglesIndex[index]);
+      usize oldVertexIndices[3] = {0, 0, 0};
+      m_OriginalTriangle.getFacePointIds(m_NewTrianglesIndex[index], oldVertexIndices);
 
       // locate new vertex index for each vertex index
       usize newVertexIndices[3] = {0, 0, 0};
       for(usize vertIndex = 0; vertIndex < 3; vertIndex++)
       {
-        const auto& itr = lower_bound(m_NewVerticesIndex.begin(), m_NewVerticesIndex.end(), oldVertexIndices[vertIndex]); // find first instance of value as iterator
-        usize indexOfTarget = std::distance(m_NewVerticesIndex.begin(), itr);
+        const auto& itr = lower_bound(m_NewVerticesIndex.cbegin(), m_NewVerticesIndex.cend(), oldVertexIndices[vertIndex]); // find first instance of value as iterator
+        usize indexOfTarget = std::distance(m_NewVerticesIndex.cbegin(), itr);
         newVertexIndices[vertIndex] = indexOfTarget;
       }
 
@@ -108,39 +109,39 @@ Result<> RemoveFlaggedTriangles::operator()()
   }
 
   // flatten a list of the indices of vertices used by the triangles
-  std::vector<usize> pseudoVertexList; // also used as a pseudo look up table in PopulateReducedGeometryTrianglesImpl
+  std::vector<usize> VertexListIndices; // also used as a pseudo look up table in PopulateReducedGeometryTrianglesImpl
   for(usize& index : newTrianglesIndexList)
   {
     usize vertIDs[3] = {0, 0, 0};
     originalTriangle.getFacePointIds(index, vertIDs);
-    pseudoVertexList.push_back(vertIDs[0]);
-    pseudoVertexList.push_back(vertIDs[1]);
-    pseudoVertexList.push_back(vertIDs[2]);
+    VertexListIndices.push_back(vertIDs[0]);
+    VertexListIndices.push_back(vertIDs[1]);
+    VertexListIndices.push_back(vertIDs[2]);
   }
   if(getCancel())
   {
     return {};
   }
 
-  if(pseudoVertexList.empty())
+  if(VertexListIndices.empty())
   {
     return MakeErrorResult(-67881, "Re-evaluate mask conditions - with current configuration all vertices will be dumped!");
   }
 
   // clear duplicate values out of vector
-  std::sort(pseudoVertexList.begin(), pseudoVertexList.end()); // orders ascending !!!!! Basis for later search !!!!!
-  auto dupes = std::unique(pseudoVertexList.begin(), pseudoVertexList.end());
-  pseudoVertexList.erase(dupes, pseudoVertexList.end());
+  std::sort(VertexListIndices.begin(), VertexListIndices.end()); // orders ascending !!!!! Basis for later search !!!!!
+  auto dupes = std::unique(VertexListIndices.begin(), VertexListIndices.end());
+  VertexListIndices.erase(dupes, VertexListIndices.end());
 
   // define new sizing
-  size = pseudoVertexList.size();
+  size = VertexListIndices.size();
   reducedTriangle.resizeVertexList(size); // resize accordingly
 
   // load reduced Geometry Vertex list according to used vertices
   Point3Df coords = {0.0f, 0.0f, 0.0f};
   for(usize i = 0; i < size; i++)
   {
-    coords = originalTriangle.getVertexCoordinate(pseudoVertexList[i]);
+    coords = originalTriangle.getVertexCoordinate(VertexListIndices[i]);
     reducedTriangle.setVertexCoordinate(i, coords);
   }
 
@@ -150,12 +151,13 @@ Result<> RemoveFlaggedTriangles::operator()()
   }
 
   // Set up preprocessing conditions (allocation for parallelization)
-  reducedTriangle.resizeFaceList(newTrianglesIndexList.size()); // resize accordingly
+  size = newTrianglesIndexList.size();
+  reducedTriangle.resizeFaceList(size); // resize accordingly
 
   // parse triangles and reassign indexes to match new vertex list
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, size);
-  dataAlg.execute(PopulateReducedGeometryTrianglesImpl(originalTriangle, reducedTriangle, newTrianglesIndexList, pseudoVertexList));
+  dataAlg.execute(PopulateReducedGeometryTrianglesImpl(originalTriangle, reducedTriangle, newTrianglesIndexList, VertexListIndices));
 
   return {};
 }
