@@ -30,10 +30,9 @@ Result<> LabelTriangleGeometry::operator()()
 {
   // Scope other values since underlying arrays will be changed by the time they are need again
   std::vector<uint32> triangleCounts = {0, 0};
+  auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
 
   {
-    auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
-
     usize numTris = triangle.getNumberOfFaces();
 
     auto check = triangle.findElementNeighbors(); // use auto since return time is a class declared typename
@@ -95,6 +94,9 @@ Result<> LabelTriangleGeometry::operator()()
     // Resize the Triangle Region AttributeMatrix
     m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->TriangleAMPath)->resizeTuples(std::vector<usize>{triangleCounts.size()});
   }
+
+  // Clear ElementDynamicList so write out is possible
+  triangle.deleteElementNeighbors();
 
   // copy triangleCounts into the proper DataArray "NumTriangles" in the Feature Attribute Matrix
   auto& numTriangles = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->NumTrianglesPath);
