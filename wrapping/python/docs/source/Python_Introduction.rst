@@ -68,22 +68,36 @@ the :ref:`DataStructure`. Executing a simplnx filter can be done in one of two w
    can be useful if the developer would like to build up a list of filters and then
    execute them one after another.
 
-An example of executing a file in immediate mode is the following code snippet.
+An example of executing a file in immediate mode using a filter from the simplnx library:
 
 .. code:: python
 
-    result  = cx.CreateDataArray.execute(data_structure=data_structure, 
+    import simplnx as sx
+
+    result  = sx.CreateDataArray.execute(data_structure=data_structure, 
                                         component_count=1, 
                                         data_format="", 
                                         initialization_value="10", 
-                                        numeric_type=cx.NumericType.float32, 
-                                        output_data_array=cx.DataPath(["3D Array"]), 
+                                        numeric_type=sx.NumericType.float32, 
+                                        output_data_array=sx.DataPath(["3D Array"]), 
                                         tuple_dimensions= [[3, 2, 5]])
-    npdata = data_structure[cx.DataPath(["3D Array"])].npview()
-
+    npdata = data_structure[sx.DataPath(["3D Array"])].npview()
 
 The resulting :ref:`DataArray <DataArray>` is available for use immediately following the execution of the filter.
 This would not be the case had the filter just been instantiated but not executed.
+
+An example of executing the Python filter **ExampleFilter2** from plugin **ExamplePlugin** in immediate mode:
+
+.. code:: python
+
+    from ExamplePlugin import ExampleFilter2
+
+    f = sx.PyFilter(ExampleFilter2())
+    ds = sx.DataStructure()
+    result = f.preflight2(ds)
+    result = f.execute2(ds)
+
+In this way, developers can execute Python filters from Python.  This can be useful if the developer needs to debug their Python filter and see variables.
 
 Creating a DataGroup
 --------------------
