@@ -1,5 +1,5 @@
-Filter Parameter Classes
-========================
+API for Users
+==============
 
 .. _Result:
 .. py:class:: Result

@@ -1,24 +1,5 @@
-Filter Parameter Classes
-========================
-
-.. _Result:
-.. py:class:: Result
-
-   The object that encapsulates any warnings or errors from either preflighting or executing a simplnx.Filter object.
-   It can be queried for the list of errors or warnings and thus printed if needed.
-
-   .. code:: python
-
-      result = cxor.ConvertOrientations.execute(data_structure=data_structure,
-                                          input_orientation_array_path=array_path,
-                                          input_type=0,
-                                          output_orientation_array_name='Quaternions',
-                                          output_type=2)
-      if len(result.errors) != 0:
-         print('Errors: {}', result.errors)
-         print('Warnings: {}', result.warnings)
-      else:
-         print("No errors running the ConvertOrientations")
+API for Developers
+===================
 
 General Parameters 
 ------------------
