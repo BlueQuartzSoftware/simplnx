@@ -22,6 +22,10 @@ class ExampleFilter2:
   PARAM14_KEY = "param14"
   PARAM15_KEY = "param15"
   PARAM16_KEY = "param16"
+  PARAM17_KEY = "param17"
+  PARAM18_KEY = "param18"
+  PARAM19_KEY = "param19"
+  PARAM20_KEY = "param20"
 
   def uuid(self) -> sx.Uuid:
     """This returns the UUID of the filter. Each filter has a unique UUID value
@@ -82,12 +86,21 @@ class ExampleFilter2:
     dynamic_table_info = sx.DynamicTableInfo(sx.DynamicTableInfo.VectorInfo(row_info), sx.DynamicTableInfo.VectorInfo(col_info))
     params.insert(sx.DynamicTableParameter(ExampleFilter2.PARAM13_KEY, 'DynamicTableParameter', 'DynamicTableParameter Example Help Text', default_table, dynamic_table_info))
 
+    params.insert(sx.Parameters.Separator("3rd Group of Parameters"))
+    params.insert(sx.MultiPathSelectionParameter(ExampleFilter2.PARAM19_KEY, "Objects to copy", "A list of DataPaths to the DataObjects to be copied", [sx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), sx.DataPath(["Small IN100", "Scan Data", "Euler Angles"])]))
+    params.insert(sx.NeighborListSelectionParameter(ExampleFilter2.PARAM20_KEY, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", sx.DataPath([]), set([sx.DataType.int32])))
+
+    params.insert(sx.Parameters.Separator("Calculator Parameter"))
+    calc_param = sx.CalculatorParameter.ValueType( sx.DataPath(["Small IN100","Scan Data"]), "Confidence Index * 10", sx.CalculatorParameter.AngleUnits.Radians)
+    params.insert(sx.CalculatorParameter(ExampleFilter2.PARAM18_KEY, "CalculatorParameter", "Example help text for calculator parameter", calc_param))
+
     params.insert(sx.Parameters.Separator("Required Data Objects"))
     params.insert(sx.DataGroupSelectionParameter(ExampleFilter2.PARAM9_KEY, 'DataGroupSelectionParameter', 'Example data group selection help text', sx.DataPath([]), set([sx.BaseGroup.GroupType.DataGroup])))
     params.insert(sx.DataPathSelectionParameter(ExampleFilter2.PARAM10_KEY, 'DataPathSelectionParameter', 'Example data path selection help text', sx.DataPath([])))
     params.insert(sx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', sx.DataPath([]), sx.get_all_data_types(), [[1]]))
     params.insert(sx.GeometrySelectionParameter(ExampleFilter2.PARAM11_KEY, 'GeometrySelectionParameter', 'Example geometry selection help text', sx.DataPath([]), set()))
     params.insert(sx.MultiArraySelectionParameter(ExampleFilter2.PARAM12_KEY, 'MultiArraySelectionParameter', 'Example multiarray selection help text', [], set([sx.IArray.ArrayType.Any]), sx.get_all_data_types(), [[1]]))
+    params.insert(sx.AttributeMatrixSelectionParameter(ExampleFilter2.PARAM17_KEY, "Cell Attribute Matrix", "Example attribute matrix selection help text", sx.DataPath([])))
 
     params.link_parameters(ExampleFilter2.PARAM7_KEY, ExampleFilter2.PARAM9_KEY, True)
     params.link_parameters(ExampleFilter2.PARAM3_KEY, ExampleFilter2.PARAM10_KEY, 0)
