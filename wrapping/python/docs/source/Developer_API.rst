@@ -645,7 +645,7 @@ General Parameters
 
       import simplnx as sx
 
-      params.insert(sx.DataStoreFormatParameter('data_store_format_key', 'Data Store Format', 'Data Format', 'This value will specify which data format is used by the array\'s data store. An empty string results in in-memory data store.', ""))
+      params.insert(sx.DataStoreFormatParameter('data_store_format_key', 'Data Store Format', 'This value will specify which data format is used by the array\'s data store. An empty string results in in-memory data store.', ""))
 
 .. _DataTypeParameter:
 .. py:class:: DataTypeParameter

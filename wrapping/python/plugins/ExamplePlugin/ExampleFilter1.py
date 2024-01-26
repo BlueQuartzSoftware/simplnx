@@ -108,7 +108,7 @@ class ExampleFilter1:
     params.insert(sx.DataObjectNameParameter(ExampleFilter1.PARAM11_KEY, 'DataObjectNameParameter', 'Example help text for DataObjectNameParameter', 'Data Group'))
     params.insert(sx.NumericTypeParameter(ExampleFilter1.PARAM6_KEY, 'Numeric Type', 'Example numeric type help text', sx.NumericType.int32))
     params.insert(sx.DataTypeParameter(ExampleFilter1.PARAM13_KEY, "Data Type", "Example data type help text", sx.DataType.float64))
-    params.insert(sx.DataStoreFormatParameter(ExampleFilter1.PARAM12_KEY, 'Data Store Format', 'Data Format', 'This value will specify which data format is used by the array\'s data store. An empty string results in in-memory data store.', ""))
+    params.insert(sx.DataStoreFormatParameter(ExampleFilter1.PARAM12_KEY, 'Data Store Format', 'This value will specify which data format is used by the array\'s data store. An empty string results in in-memory data store.', ""))
 
     import_data = sx.Dream3dImportParameter.ImportData()
     import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
