@@ -153,7 +153,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
 
   auto* filterListPtr = Application::Instance()->getFilterList();
 
-  if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
+  if(convertToGrayscale && !filterListPtr->containsPlugin(k_SimplnxCorePluginId))
   {
     return MakeErrorResult(-18542, "SimplnxCore was not instantiated in this instance, so color to grayscale is not a valid option.");
   }
@@ -221,7 +221,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
         gray.rename(imageDataPath.getTargetName());
       }
     }
-    else
+    else if(convertToGrayscale && !validInputForGrayScaleConversion)
     {
       outputResult.warnings().emplace_back(Warning{
           -74320, fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.", imageDataPath.getTargetName())});
