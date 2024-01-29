@@ -13,5 +13,6 @@ echo "PATH: %PATH%"
 :: where python.exe
 echo "Python Version: "
 %PYTHON_EXECUTABLE% --version
+if %errorlevel% neq 0 exit 1
 
 %PYTHON_EXECUTABLE% "%PYTHON_TEST_FILE%"
