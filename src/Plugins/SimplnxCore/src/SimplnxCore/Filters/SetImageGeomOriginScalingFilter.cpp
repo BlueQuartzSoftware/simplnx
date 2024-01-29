@@ -55,18 +55,17 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Path to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", true));
   params.insert(
-      std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
+      std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Input Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Origin_Key, "Origin  (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float64>{0.0, 0.0, 0.0},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeResolution_Key, "Set Spacing", "Specifies if the spacing should be changed", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", true));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float64>{1, 1, 1},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
   params.linkParameters(k_ChangeOrigin_Key, k_CenterOrigin_Key, std::make_any<bool>(true));
-
-  params.linkParameters(k_ChangeResolution_Key, k_Spacing_Key, std::make_any<bool>(true));
+  params.linkParameters(k_ChangeSpacing_Key, k_Spacing_Key, std::make_any<bool>(true));
   return params;
 }
 
@@ -83,7 +82,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
-  auto shouldChangeResolution = filterArgs.value<bool>(k_ChangeResolution_Key);
+  auto shouldChangeResolution = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<std::vector<float64>>(k_Origin_Key);
   auto spacing = filterArgs.value<std::vector<float64>>(k_Spacing_Key);
 
@@ -152,7 +151,7 @@ Result<Arguments> SetImageGeomOriginScalingFilter::FromSIMPLJson(const nlohmann:
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeomPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeOriginKey, k_ChangeOrigin_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeResolutionKey, k_ChangeResolution_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeResolutionKey, k_ChangeSpacing_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
