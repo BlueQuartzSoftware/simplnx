@@ -18,7 +18,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
     data_container_name=nx.DataPath("DataContainer"),
-    input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang"
+    input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -140,7 +140,7 @@ result = nx_filter.execute(
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
-output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/ReplaceElementAttributesWithNeighbor.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/Examples/ReplaceElementAttributesWithNeighbor.dream3d"
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters

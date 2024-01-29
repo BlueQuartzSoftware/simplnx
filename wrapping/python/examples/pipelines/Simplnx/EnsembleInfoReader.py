@@ -31,7 +31,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     created_attribute_array_path=nx.DataPath("[Image Geometry]/Cell Data/Quats"),
     endian=0,
-    input_file=nxtest.GetDataDirectory() + "/OrientationAnalysis/quats.raw",
+    input_file=nxtest.get_data_directory() / "OrientationAnalysis/quats.raw",
     number_of_components=4,
     scalar_type=nx.NumericType.float32,
     skip_header_bytes=0,
@@ -78,7 +78,7 @@ result = nx_filter.execute(
     cell_ensemble_attribute_matrix_name=("Cell Ensemble"),
     crystal_structures_array_name=("CrystalStructures"),
     data_container_name=nx.DataPath("[Image Geometry]"),
-    input_file=nxtest.GetDataDirectory() + "/OrientationAnalysis/Ensemble.ini",
+    input_file=nxtest.get_data_directory() / "OrientationAnalysis/Ensemble.ini",
     phase_types_array_name=("PhaseTypes")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -104,7 +104,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output file path
-output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/EnsembleInfoReaderExample.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/Examples/EnsembleInfoReaderExample.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

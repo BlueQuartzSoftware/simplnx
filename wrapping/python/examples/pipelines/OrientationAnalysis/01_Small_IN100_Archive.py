@@ -13,7 +13,7 @@ data_structure = nx.DataStructure()
 # Instantiate Filter
 
 generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
-generated_file_list_value.input_path = nxtest.GetDataDirectory() + "/Small_IN100"
+generated_file_list_value.input_path = str(nxtest.get_data_directory() / "Small_IN100")
 generated_file_list_value.ordering = nx.GeneratedFileListParameter.Ordering.HighToLow
 
 generated_file_list_value.file_prefix = "Slice_"
@@ -29,7 +29,7 @@ nx_filter = cxor.EbsdToH5EbsdFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     input_file_list_info=generated_file_list_value,
-    output_file_path=nxtest.GetDataDirectory() + "/Output/Reconstruction/Small_IN100.h5ebsd",
+    output_file_path=nxtest.get_data_directory() / "Output/Reconstruction/Small_IN100.h5ebsd",
     reference_frame=0,
     stacking_order=1,
     z_spacing=0.25

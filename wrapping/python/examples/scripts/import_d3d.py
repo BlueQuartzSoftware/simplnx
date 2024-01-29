@@ -52,7 +52,7 @@ nxtest.print_all_paths()
 data_structure = nx.DataStructure()
 
 import_data = nx.Dream3dImportParameter.ImportData()
-import_data.file_path = nxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
+import_data.file_path = nxtest.get_test_temp_directory() / "basic_ebsd_example.dream3d"
 import_data.data_paths = None  # Use 'None' to import the entire file.
 
 print(f'{import_data.file_path}')
@@ -83,7 +83,7 @@ npview[npview < 120] = 0
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
-output_file_path = nxtest.GetTestTempDirectory() + "/import_data.dream3d"
+output_file_path = nxtest.get_test_temp_directory() / "import_data.dream3d"
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)

@@ -114,7 +114,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Define output file path
-output_file_path = nxtest.GetDataDirectory() + "//Output/ArrayCalculatorExampleResults.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/ArrayCalculatorExampleResults.dream3d"
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters

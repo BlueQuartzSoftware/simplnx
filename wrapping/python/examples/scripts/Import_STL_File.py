@@ -26,7 +26,7 @@ else:
 
 
 
-output_file_path = nxtest.GetDataDirectory() + "/Output/ImportSTLFile.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/ImportSTLFile.dream3d"
 result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)

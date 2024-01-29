@@ -51,7 +51,7 @@ nxtest.print_all_paths()
 data_structure = nx.DataStructure()
 # This file has 7 columns to import
 read_csv_data = nx.ReadCSVDataParameter()
-read_csv_data.input_file_path = nxtest.GetSimplnxPythonSourceDir() + "/examples/data/test_csv_data.csv"
+read_csv_data.input_file_path = str(nxtest.get_simplnx_python_source_dir() / "examples/data/test_csv_data.csv")
 read_csv_data.start_import_row = 2
 read_csv_data.delimiters = [',']
 read_csv_data.custom_headers = []

@@ -18,7 +18,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("Small IN100"),
-    input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang"
+    input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -31,7 +31,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("Transform [Rotate]"),
-    input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang"
+    input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -64,7 +64,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("Transform [Scale]"),
-    input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang"
+    input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -96,7 +96,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("Transform [Translate]"),
-    input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang"
+    input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -128,7 +128,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("Transform [Rotation-Interpolation]"),
-    input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang"
+    input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -161,7 +161,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("Transform [Scale-Interpolation]"),
-    input_file=nxtest.GetDataDirectory() + "/Small_IN100/Slice_1.ang"
+    input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -188,7 +188,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = nxtest.GetDataDirectory() + "/Output/Transformation/ApplyTransformation_Image.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/Transformation/ApplyTransformation_Image.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

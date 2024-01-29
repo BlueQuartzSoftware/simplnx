@@ -18,7 +18,7 @@ result = nx_filter.execute(
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
     scale_output=False,
-    stl_file_path=nxtest.GetDataDirectory() + "/STL_Models/ASTMD638_specimen.stl",
+    stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
     triangle_geometry_name=nx.DataPath("Blade"),
     vertex_attribute_matrix="Vertex Data"
 )
@@ -34,7 +34,7 @@ result = nx_filter.execute(
     face_normals_data_path="Face Normals",
     #scale_factor: float = ...,
     scale_output=False,
-    stl_file_path=nxtest.GetDataDirectory() + "/STL_Models/ASTMD638_specimen.stl",
+    stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
     triangle_geometry_name=nx.DataPath("Blade [Rotation]"),
     vertex_attribute_matrix="Vertex Data"
 )
@@ -68,7 +68,7 @@ result = nx_filter.execute(
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
     scale_output=False,
-    stl_file_path=nxtest.GetDataDirectory() + "/STL_Models/ASTMD638_specimen.stl",
+    stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
     triangle_geometry_name=nx.DataPath("Blade [Translation]"),
     vertex_attribute_matrix="Vertex Data"
 )
@@ -97,7 +97,7 @@ result = nx_filter.execute(
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
     scale_output=False,
-    stl_file_path=nxtest.GetDataDirectory() + "/STL_Models/ASTMD638_specimen.stl",
+    stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
     triangle_geometry_name=nx.DataPath("Blade [Scale]"),
     vertex_attribute_matrix="Vertex Data"
 )
@@ -121,7 +121,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = nxtest.GetDataDirectory() + "/Output/ApplyTransformation_Node.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/ApplyTransformation_Node.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

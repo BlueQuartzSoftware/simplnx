@@ -19,7 +19,7 @@ result = nx_filter.execute(
     face_normals_data_path="Face Normals",
     scale_factor=1.0,
     scale_output=False,
-    stl_file_path=nxtest.GetDataDirectory() + "/STL_Models/ASTMD638_specimen.stl",
+    stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
     triangle_geometry_name=nx.DataPath("[Triangle Geometry]"),
     vertex_attribute_matrix="Vertex Data"
 )

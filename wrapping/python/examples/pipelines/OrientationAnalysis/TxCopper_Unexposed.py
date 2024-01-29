@@ -20,7 +20,7 @@ result = nx_filter.execute(
     data_container_name=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
-    input_file=nxtest.GetDataDirectory() + "/Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf"
+    input_file=nxtest.get_data_directory() / "Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -91,7 +91,7 @@ nx_filter = cxitk.ITKImageWriter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    file_name=nxtest.GetDataDirectory() + "/Output/TexturedCopper/IPF_Unexposed.png",
+    file_name=nxtest.get_data_directory() / "Output/TexturedCopper/IPF_Unexposed.png",
     image_array_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/IPF_Unexposed_001"),
     image_geom_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
     index_offset=0,
@@ -117,7 +117,7 @@ result = nx_filter.execute(
     lambert_size=64,
     material_name_array_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2/Phase Data/MaterialName"),
     num_colors=32,
-    output_path=nxtest.GetDataDirectory() + "/Output/TexturedCopper",
+    output_path=nxtest.get_data_directory() / "Output/TexturedCopper",
     save_as_image_geometry=True,
     title="Cugrid_after 2nd_15kv_2kx_2 Unexposed",
     use_mask=True,
@@ -128,7 +128,7 @@ nxtest.check_filter_result(nx_filter, result)
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
 # If you are using this code, you should COMMENT out the next line
-nxtest.cleanup_test_dir(nxtest.GetDataDirectory() + "/Output/TexturedCopper/")
+nxtest.cleanup_test_dir(nxtest.get_data_directory() / "Output/TexturedCopper/")
 # *****************************************************************************
 
 

@@ -12,7 +12,7 @@ data_structure = nx.DataStructure()
 #Filter 1
 
 generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
-generated_file_list_value.input_path = nxtest.GetDataDirectory() + "/Porosity_Image"
+generated_file_list_value.input_path = str(nxtest.get_data_directory() / "Porosity_Image")
 generated_file_list_value.ordering = nx.GeneratedFileListParameter.Ordering.LowToHigh
 
 generated_file_list_value.file_prefix = "slice_"
@@ -103,7 +103,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Define output file path
-output_file_path = nxtest.GetDataDirectory() + "/Output/ResamplePorosityImage.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/ResamplePorosityImage.dream3d"
 # Execute WriteDREAM3DFilter with Parameters
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 

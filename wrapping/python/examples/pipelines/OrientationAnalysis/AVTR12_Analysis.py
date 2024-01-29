@@ -20,7 +20,7 @@ result = nx_filter.execute(
     data_container_name=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
-    input_file=nxtest.GetDataDirectory() + "/T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf"
+    input_file=nxtest.get_data_directory() / "T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -110,7 +110,7 @@ nx_filter = cxitk.ITKImageWriter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    file_name=nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_001.png",
+    file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_001.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_001"),
     image_geom_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
@@ -140,7 +140,7 @@ nx_filter = cxitk.ITKImageWriter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    file_name=nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_010.png",
+    file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_010.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_010"),
     image_geom_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
@@ -169,7 +169,7 @@ nx_filter = cxitk.ITKImageWriter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    file_name=nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_100.png",
+    file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_100.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_100"),
     image_geom_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
@@ -331,7 +331,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
     delimiter_choice_int=2,
-    feature_data_file=nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-avtr12-corr/FeatureData.csv",
+    feature_data_file=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/FeatureData.csv",
     write_neighborlist_data=False,
     write_num_features_line=True
 )
@@ -359,7 +359,7 @@ nx_filter = nx.WriteASCIIDataFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     delimiter=2,
-    output_path=nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-avtr12-corr/EqDiamHistogram.csv",
+    output_path=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/EqDiamHistogram.csv",
     output_style=1,
     selected_data_array_paths=[nx.DataPath("fw-ar-IF1-avtr12-corr/Histograms/EquivalentDiameters Histogram")]
 )
@@ -368,7 +368,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Filter 24
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
-output_file_path = nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -381,7 +381,7 @@ nxtest.check_filter_result(nx_filter, result)
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
 # If you are using this code, you should COMMENT out the next line
 nxtest.cleanup_test_file(output_file_path)
-nxtest.cleanup_test_dir(nxtest.GetDataDirectory() + "/Output/fw-ar-IF1-avtr12-corr/")
+nxtest.cleanup_test_dir(nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/")
 # *****************************************************************************
 
 

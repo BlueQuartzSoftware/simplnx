@@ -20,7 +20,7 @@ result = nx_filter.execute(
     data_container_name=nx.DataPath("DataContainer"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=False,
-    input_file=nxtest.GetDataDirectory() + "/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
+    input_file=nxtest.get_data_directory() / "T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
 )
 nxtest.check_filter_result(nx_filter, result)
 
