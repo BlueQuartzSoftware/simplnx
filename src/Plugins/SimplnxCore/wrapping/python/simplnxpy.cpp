@@ -137,10 +137,9 @@ template <class ParameterT>
 auto BindVectorParameter(py::handle scope, const char* name)
 {
   auto vectorParameter = py::class_<ParameterT, IParameter>(scope, name);
-  vectorParameter.def(py::init<const std::string&, const std::string&, const std::string&, const typename ParameterT::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a,
-                      "names"_a);
+  vectorParameter.def(py::init<const std::string&, const std::string&, const std::string&, const typename ParameterT::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
   vectorParameter.def(py::init<const std::string&, const std::string&, const std::string&, const typename ParameterT::ValueType&, const typename ParameterT::NamesType&>(), "name"_a, "human_name"_a,
-                      "help_text"_a, "default_value"_a);
+                      "help_text"_a, "default_value"_a, "names"_a);
   return vectorParameter;
 }
 
