@@ -60,3 +60,95 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][
   const std::vector<usize> expectedArrayComponentDims = {3};
   REQUIRE(arrayComponentDims == expectedArrayComponentDims);
 }
+
+TEST_CASE("ITKImageProcessing::ITKImageReader: Override Origin", "[ITKImageProcessing][ITKImageReader]")
+{
+  ITKImageReader filter;
+  DataStructure dataStructure;
+  Arguments args;
+
+  bool k_ChangeOrigin = false;
+  bool k_ChangeResolution = false;
+
+  std::vector<float64> k_Origin{-32.0, -32.0, 0.0};
+  std::vector<float64> k_Spacing{1.0, 1.0, 1.0};
+
+  fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / "test/data/PngTest.png";
+  DataPath arrayPath{{"ImageGeom", "ImageArray"}};
+  DataPath imagePath = arrayPath.getParent();
+  args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
+  args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imagePath);
+  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
+  args.insertOrAssign(ITKImageReader::k_ChangeOrigin_Key, true);
+
+  args.insert(ITKImageReader::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
+  args.insert(ITKImageReader::k_CenterOrigin_Key, std::make_any<bool>(false));
+  args.insert(ITKImageReader::k_ChangeSpacing_Key, std::make_any<bool>(k_ChangeResolution));
+  args.insert(ITKImageReader::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
+  args.insert(ITKImageReader::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imagePath);
+  REQUIRE(imageGeom != nullptr);
+
+  SizeVec3 imageDims = imageGeom->getDimensions();
+  const SizeVec3 expectedImageDims = {64, 64, 1};
+  REQUIRE(imageDims == expectedImageDims);
+
+  std::vector<float64> imageOrigin = imageGeom->getOrigin().toContainer<std::vector<float64>>();
+  REQUIRE(imageOrigin == k_Origin);
+
+  std::vector<float64> imageSpacing = imageGeom->getSpacing().toContainer<std::vector<float64>>();
+  REQUIRE(imageSpacing == k_Spacing);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImageReader: Centering Origin in Geometry", "[ITKImageProcessing][ITKImageReader]")
+{
+  ITKImageReader filter;
+  DataStructure dataStructure;
+  Arguments args;
+
+  bool k_ChangeOrigin = false;
+  bool k_ChangeResolution = false;
+
+  std::vector<float64> k_Origin{0.0, 0.0, 0.0};
+  std::vector<float64> k_Spacing{1.0, 1.0, 1.0};
+
+  fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / "test/data/PngTest.png";
+  DataPath arrayPath{{"ImageGeom", "ImageArray"}};
+  DataPath imagePath = arrayPath.getParent();
+  args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
+  args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imagePath);
+  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
+  args.insertOrAssign(ITKImageReader::k_ChangeOrigin_Key, true);
+
+  args.insert(ITKImageReader::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
+  args.insert(ITKImageReader::k_CenterOrigin_Key, std::make_any<bool>(true));
+  args.insert(ITKImageReader::k_ChangeSpacing_Key, std::make_any<bool>(k_ChangeResolution));
+  args.insert(ITKImageReader::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
+  args.insert(ITKImageReader::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imagePath);
+  REQUIRE(imageGeom != nullptr);
+
+  SizeVec3 imageDims = imageGeom->getDimensions();
+  const SizeVec3 expectedImageDims = {64, 64, 1};
+  REQUIRE(imageDims == expectedImageDims);
+
+  std::vector<float64> imageOrigin = imageGeom->getOrigin().toContainer<std::vector<float64>>();
+  REQUIRE(imageOrigin == std::vector<float64>{-32.0, -32.0, -0.5});
+
+  std::vector<float64> imageSpacing = imageGeom->getSpacing().toContainer<std::vector<float64>>();
+  REQUIRE(imageSpacing == k_Spacing);
+}
