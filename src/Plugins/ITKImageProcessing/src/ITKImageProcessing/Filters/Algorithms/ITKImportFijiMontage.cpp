@@ -196,7 +196,7 @@ private:
       }
       else
       {
-        imageDataPath = DataPath({bound.ImageName, bound.ImageName, m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
+        imageDataPath = DataPath({bound.ImageName, m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
       }
 
       // Ensure that we are dealing with in-core memory ONLY
