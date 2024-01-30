@@ -13,14 +13,14 @@ This filter can generate skeleton code for the new filters in an existing Python
     - Add the **Generate Python Plugin and/or Python Filters** filter to your pipeline.
 
 #. **Configure the Filter:**
-    #. **New Python Plugin**
+    **New Python Plugin**
         .. image:: Images/Generate_Python_Plugin.png
         - Turn OFF *Use Existing Plugin*.
         - Input the programmatic name and human name for the new plugin.
         - Select the output directory for the new plugin.
         - Set the desired programmatic names for your new filters (separated by commas).
     
-    #. **Existing Python Plugin**
+    **Existing Python Plugin**
         .. image:: Images/Generate_Python_Plugin_2.png
         - Turn ON *Use Existing Plugin*.
         - Select the existing plugin location on the file system (the top-level directory of the existing plugin).
@@ -53,7 +53,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
         """
         TEST_KEY = 'test'
 
-- **UUID Method:** This method returns the unique identifier for the new filter.  This unique identifier was automatically generated and typically does not need to be modified.
+- **UUID Method:** This method returns the unique identifier for the new filter.  This unique identifier is automatically generated and should not be modified.
 
     .. code-block:: python
 
@@ -64,7 +64,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
             """
             return nx.Uuid('caad34b3-54e3-4276-962e-b59cd88b7320')
 
-- **Human Name Method:** This method returns the human-readable name for the filter.  This value is typically used in the DREAM3D-NX GUI.  It is set, by default, to the programmatic name of the filter and should probably be modified to something more human-readable.
+- **Human Name Method:** This method returns the human-readable name for the filter.  This name is typically used in the DREAM3D-NX GUI.  It is set, by default, to the programmatic name of the filter and should probably be modified to something more human-readable.
 
     .. code-block:: python
 
@@ -73,7 +73,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
             :return: The filter's human name
             :rtype: string
             """
-            return 'FirstFilter'    # This could be updated to return 'First Filter' or any other human-readable name.
+            return 'FirstFilter'    # This could be updated to return 'First Filter' or '1st Filter', or any other human-readable name.
 
 - **Class Name Method:** This method returns the programmatic name for the filter.
 
@@ -97,7 +97,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
             """
             return 'FirstFilter'
 
-- **Default Tags Method:** This method returns all the tags that are used to match with this filter when searching.  For example, if this filter has the tag *Foo* then any time *Foo* is searched in the Filter List, this filter will match and appear in the search results.  The default tag for Python filters is *python*, but feel free to add more if needed.
+- **Default Tags Method:** This method returns all the tags that are used to match this filter when searching.  For example if this filter has the tag *Foo*, then any time *Foo* is searched in the Filter List, this filter will match and appear in the search results.  The default tag for Python filters is *python*, but feel free to add more if needed.
 
     .. code-block:: python
 
@@ -123,8 +123,8 @@ The skeleton provides a basic structure with placeholders and conventions that a
 
     .. code-block:: python
 
-        def parameters(self) -> sx.Parameters:
-            params = sx.Parameters()
+        def parameters(self) -> nx.Parameters:
+            params = nx.Parameters()
 
             # Add your parameters here
 
@@ -134,10 +134,10 @@ The skeleton provides a basic structure with placeholders and conventions that a
 
     .. code-block:: python
 
-        def preflight_impl(self, data_structure: sx.DataStructure, args: dict, message_handler: sx.IFilter.MessageHandler, should_cancel: sx.AtomicBoolProxy) -> sx.IFilter.PreflightResult:
+        def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
             # Preflight logic
 
-        def execute_impl(self, data_structure: sx.DataStructure, args: dict, message_handler: sx.IFilter.MessageHandler, should_cancel: sx.AtomicBoolProxy) -> sx.IFilter.ExecuteResult:
+        def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
             # Execution logic
 
 3. Defining Parameters
@@ -149,9 +149,10 @@ Parameters determine what inputs are available to users; they make your filter c
    
         .. code-block:: python
 
-            MY_PARAMETER_KEY = 'my_parameter'
-            INPUT_ARRAY_PATH = 'input_array_path'
-            OUTPUT_ARRAY_PATH = 'output_array_path'
+            OUTPUT_ARRAY_PATH = 'output_array_path_key'
+            INIT_VALUE_KEY = 'init_value_key'
+            NUM_TUPLES_KEY = 'num_tuples_key'
+            NUM_COMPS_KEY = 'num_comps_key'
     
 2. **Implement the `parameters` Method:**
     - Create instances of parameter classes provided by *simplnx* and add them to your filter.
@@ -159,15 +160,20 @@ Parameters determine what inputs are available to users; they make your filter c
         .. code-block:: python
 
             def parameters(self):
-                params = sx.Parameters()
+                params = nx.Parameters()
 
-                params.insert(sx.Float32Parameter(FirstFilter.MY_PARAMETER_KEY, 'My Parameter', 'Description of my parameter', 1.0))
+                # Create a 'Number of Tuples' input, where the filter's user can input an unsigned 64-bit integer
+                params.insert(nx.UInt64Parameter(FirstFilter.NUM_TUPLES_KEY, 'Number of Tuples', 'Number of Tuples', 1))
 
-                default_input_data_path = sx.DataPath(["Small IN100", "Scan Data", "Data"])
-                params.insert(sx.ArraySelectionParameter(FirstFilter.INPUT_ARRAY_PATH, 'Array Selection', 'Example array selection help text', default_input_data_path, sx.get_all_data_types(), [[1]]))
+                # Create a 'Number of Components' input, where the filter's user can input an unsigned 64-bit integer
+                params.insert(nx.UInt64Parameter(FirstFilter.NUM_COMPS_KEY, 'Number of Components', 'Number of Components', 1))
 
-                default_output_data_path = sx.DataPath(["Small IN100", "Scan Data", "Data"])
-                params.insert(sx.ArrayCreationParameter(FirstFilter.OUTPUT_ARRAY_PATH, 'Array Creation', 'Example array creation help text', default_output_data_path))
+                # Create an 'Initialization Value' input, where the filter's user can input the value that will be used to initialize the output array
+                params.insert(nx.Float32Parameter(FirstFilter.INIT_VALUE_KEY, 'Initialization Value', 'This value will be used to fill the new array', '0.0'))
+
+                # Create the input that allows the filter's user to pick the path where the output array will be stored in the data structure
+                default_output_data_path = nx.DataPath(["Small IN100", "Scan Data", "Output"])
+                params.insert(nx.ArrayCreationParameter(FirstFilter.OUTPUT_ARRAY_PATH, 'Array Creation', 'Example array creation help text', default_output_data_path))
 
                 return params
     
@@ -177,103 +183,106 @@ Parameters determine what inputs are available to users; they make your filter c
 -------------------------------------------------------
 The `preflight_impl` method allows you to perform checks, validations, and setup tasks before the filter's main execution.
 
+**Example Preflight Method:**
+    This example creates a new 32-bit float output array using the number of tuples, number of components, and output array path provided by the user.  It also validates that the initialization value is not set to 0.
+
+    .. code-block:: python
+
+        def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
+            # Retrieve the filter parameter values from the args dictionary using the filter's parameter keys
+            num_of_tuples: int = args[FirstFilter.NUM_TUPLES_KEY]
+            num_of_components: int = args[FirstFilter.NUM_COMPS_KEY]
+            init_value: float = args[FirstFilter.INIT_VALUE_KEY]
+            output_array_path: nx.DataPath = args[FirstFilter.OUTPUT_ARRAY_PATH]
+
+            # Return a preflight error if the init value is 0
+            if init_value == '0.0':
+                return nx.IFilter.PreflightResult(errors=[nx.Error(-123, 'Init Value cannot be 0.')])
+
+            # Create the new output array.  This is done via a CreateArrayAction, which we will create and then append to the output actions.
+            # This will create the new output array and add it to the data structure so that it can be used later in the "execute_impl" method.
+            output_actions = nx.OutputActions()
+            output_actions.append_action(nx.CreateArrayAction(nx.DataType.float32, [num_of_tuples], [num_of_components], output_array_path))
+
+            # Return the output actions
+            return nx.IFilter.PreflightResult(output_actions)
+
 **Key Aspects:**
 
 - **Parameter Retrieval and Validation:**
-  - Extract and validate the parameters to ensure they meet your filter's requirements.
+    - Extract and validate the parameters to ensure they meet your filter's requirements.
   
+        .. code-block:: python
+
+            init_value: float = args[FirstFilter.INIT_VALUE_KEY]
+            if init_value == '0.0':
+                return nx.IFilter.PreflightResult(errors=[nx.Error(-123, 'Init Value cannot be 0.')])
+    
+- **Output Actions Setup:**
+    - If your filter creates new data arrays, create and add the CreateArrayActions to the `output_actions` object.
+  
+        .. code-block:: python
+
+            output_actions = nx.OutputActions()
+            output_actions.append_action(nx.CreateArrayAction(nx.DataType.float32, [num_of_tuples], [num_of_components], output_array_path))
+
+5. Writing the Execute Implementation
+---------------------------------------------------
+In `execute_impl`, you'll implement the core functionality of your filter.
+
+**Example Execute Method:**
+    This example sets the initialization value provided by the user into every index of the newly created output array.
+
     .. code-block:: python
 
-       my_param = args[FirstFilter.MY_PARAMETER_KEY]
-       if my_param < 0:
-           raise ValueError('My Parameter must be positive')
-        
-        input_arr_path: sx.DataPath = args[FirstFilter.INPUT_ARRAY_PATH]
-        output_arr_path: sx.DataPath = args[FirstFilter.OUTPUT_ARRAY_PATH]
+        def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
+            # Retrieve the needed filter parameter values from the args dictionary using the filter's parameter keys
+            init_value: float = args[FirstFilter.INIT_VALUE_KEY]
+            output_array_path: nx.DataPath = args[FirstFilter.OUTPUT_ARRAY_PATH]
+
+            # Get a reference to the output data array from the data structure
+            output_data_array: nx.IDataArray = data_structure[output_array_path]
+
+            # Get a numpy view of the output data array
+            data = data_array.store.npview()
+
+            # Set the init value into every index of the array
+            data[:] = init_value
+
+            return nx.Result()
+
+**Key Aspects:**
+
+- **Parameter Retrieval:**
+    - Extract the necessary parameters from the args dictionary.
+  
+        .. code-block:: python
+
+            # Retrieve the needed filter parameter values from the args dictionary using the filter's parameter keys
+            init_value: float = args[FirstFilter.INIT_VALUE_KEY]
+            output_array_path: nx.DataPath = args[FirstFilter.OUTPUT_ARRAY_PATH]
 
 - **Access Data Arrays/Objects From The Data Structure:**
     - Use DataPaths to get a reference to data arrays and other data objects from the data structure.
 
         .. code-block:: python
 
-            input_array: sx.IDataArray = data_structure[input_arr_path]
-            output_array: sx.IDataArray = data_structure[output_arr_path]
+             # Get a reference to the output data array from the data structure
+            output_data_array: nx.IDataArray = data_structure[output_array_path]
     
-- **Output Actions Setup:**
-  - If your filter generates new data arrays, define their structure and add the creation actions to the `output_actions` object.
+- **Manipulating Data Arrays With Numpy:**
+    - Get a numpy view into data arrays and then set values into the arrays using numpy.
   
-    .. code-block:: python
+        .. code-block:: python
 
-       output_actions = sx.OutputActions()
-       output_actions.append_action(sx.CreateArrayAction(data_type, dimensions, component_dimensions, output_path))
+            # Get a numpy view of the output data array
+            data = data_array.store.npview()
 
-- **Example Preflight Method:**
-
-    .. code-block:: python
-
-        def preflight_impl(self, data_structure: sx.DataStructure, args: dict, message_handler: sx.IFilter.MessageHandler, should_cancel: sx.AtomicBoolProxy) -> sx.IFilter.PreflightResult:
-            # Retrieve the filter parameter values from the args dictionary using the filter's parameter keys
-            input_pts_arr_path: sx.DataPath = args[InterpolateGridDataFilter.INPUT_POINTS_ARRAY_PATH]
-            input_data_arr_path: sx.DataPath = args[InterpolateGridDataFilter.INPUT_DATA_ARRAY_PATH]
-            target_pts_arr_path: sx.DataPath = args[InterpolateGridDataFilter.TARGET_POINTS_ARRAY_PATH]
-            interpolation_method: int = args[InterpolateGridDataFilter.INTERPOLATION_METHOD]
-            use_fill_value: bool = args[InterpolateGridDataFilter.USE_FILL_VALUE]
-            fill_value: float = args[InterpolateGridDataFilter.FILL_VALUE]
-            interpolated_data_arr_path: sx.DataPath = args[InterpolateGridDataFilter.INTERPOLATED_DATA_ARRAY_PATH]
-
-            # Return a preflight warning if the interpolation method is set to Linear and Use Fill Value is also turned on
-            if interpolation_method == InterpolateGridDataFilter.InterpolationMethod.LINEAR and use_fill_value == True:
-                return sx.IFilter.PreflightResult(sx.OutputActions(), [sx.Warning(200, f'The Fill Value ({fill_value}) will have no effect with the currently selected interpolation method ("Nearest").')])
-
-            # Access data arrays from the data structure using DataPaths
-            input_points_array: sx.IDataArray = data_structure[input_pts_arr_path]
-            input_data_array: sx.IDataArray = data_structure[input_data_arr_path]
-            target_points_array: sx.IDataArray = data_structure[target_pts_arr_path]
-
-            # Return a preflight error if the "Input Pts" and "Input Data" arrays do not have the same number of total tuples
-            input_pts_array_size = math.prod(input_points_array.tdims)
-            input_data_array_size = math.prod(input_data_array.tdims)
-            input_points_array_str = 'x'.join(str(num) for num in input_points_array.tdims)
-            input_data_array_str = 'x'.join(str(num) for num in input_data_array.tdims)
-            if input_pts_array_size != input_data_array_size:
-            return sx.IFilter.PreflightResult(sx.OutputActions(), [sx.Error(-1000, f"Array '{str(input_pts_arr_path)}' has tuple dimensions {input_points_array_str} ({input_pts_array_size} tuples) and array '{str(input_data_arr_path)}' has tuple dimensions {input_data_array_str} ({input_data_array_size} tuples).  The total number of tuples for these two arrays should be the same ({input_pts_array_size} != {input_data_array_size}).")])
-        
-            # Create the new Interpolated Data array.  This is done via a CreateArrayAction, which will create the array and add it to the data structure.
-            output_actions = sx.OutputActions()
-            output_actions.append_action(sx.CreateArrayAction(input_data_array.data_type, target_points_array.tdims, input_data_array.cdims, interpolated_data_arr_path))
-
-            # Return the output actions
-            return sx.IFilter.PreflightResult(output_actions)
-
-5. Writing the Execute Implementation
----------------------------------------------------
-In `execute_impl`, you'll implement the core functionality of your filter.
-
-**Key Aspects:**
-
-- **Accessing Data Arrays:**
-  - Use the paths from the parameters to access the necessary data arrays from the `data_structure`.
-  
-    .. code-block:: python
-
-       input_array = data_structure[args[MyCustomFilter.INPUT_ARRAY_PATH]]
-       output_array = data_structure[args[MyCustomFilter.OUTPUT_ARRAY_PATH]]
-    
-- **Implementing the Filter Algorithm:**
-  - Apply your filter's core logic to the input data and store the results in the output arrays.
-  
-    .. code-block:: python
-
-       # Example: Simple processing logic
-       output_array[:] = input_array * my_param
-    
-- **Storing the Results:**
-  - Ensure that the results of your processing are correctly stored in the output arrays or any other specified data structure.
-  
-    .. code-block:: python
-
-       data_structure[args[MyCustomFilter.OUTPUT_ARRAY_PATH]] = output_array
+            # Set the init value into every index of the array
+            data[:] = init_value
 
 Conclusion
 ----------
 By following this guide, you can create a custom Python filter for *simplnx* that is configurable, follows best practices, and integrates smoothly into data processing pipelines. Remember to thoroughly test your filter with different parameter configurations and datasets to ensure its robustness and correctness.
+
+For more Python filter examples, check out the `ExamplePlugin <https://github.com/BlueQuartzSoftware/simplnx/tree/develop/wrapping/python/plugins/ExamplePlugin>`_.
