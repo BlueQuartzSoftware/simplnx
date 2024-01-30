@@ -16,7 +16,7 @@ h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
 h5ebsdParameter.euler_representation=0
 h5ebsdParameter.end_slice=117
 h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
-h5ebsdParameter.input_file_path=nxtest.GetDataDirectory() + "/Output/Reconstruction/Small_IN100.h5ebsd"
+h5ebsdParameter.input_file_path=str(nxtest.get_data_directory() / "Output/Reconstruction/Small_IN100.h5ebsd")
 h5ebsdParameter.start_slice=1
 h5ebsdParameter.use_recommended_transform=True
 
@@ -78,7 +78,7 @@ nx_filter = cxor.AlignSectionsMutualInformationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    alignment_shift_file_name=nxtest.GetDataDirectory() + "/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
+    alignment_shift_file_name=nxtest.get_data_directory() / "Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
@@ -94,7 +94,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = nxtest.GetDataDirectory() + "/Output/AlignSectionsMutualInformation/SmallIN100_AlignSectionsMutualInformation.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/AlignSectionsMutualInformation/SmallIN100_AlignSectionsMutualInformation.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

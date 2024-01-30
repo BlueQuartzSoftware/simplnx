@@ -375,6 +375,7 @@ std::string MakePythonSignature(std::string_view funcName, const Internals& inte
 
 inline void PyPrintMessage(const IFilter::Message& message)
 {
+  py::gil_scoped_acquire acquireGIL{};
   py::print(fmt::format("{}", message.message));
 }
 
@@ -426,6 +427,7 @@ auto BindFilter(py::handle scope, const Internals& internals)
           }
 
           Arguments convertedArgs = ConvertDictToArgs(internals, filter.parameters(), kwargs);
+          py::gil_scoped_release releaseGIL{};
           IFilter::ExecuteResult result = filter.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
           return result;
         },

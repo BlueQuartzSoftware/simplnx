@@ -50,9 +50,9 @@ nxtest.print_all_paths()
 
 data_structure = nx.DataStructure()
 
-pipeline = nx.Pipeline().from_file(nxtest.GetSimplnxSourceDir() + '/src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline')
+pipeline = nx.Pipeline().from_file(nxtest.get_simplnx_source_dir() / 'src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline')
 
-pipeline.to_file( "test pipeline", nxtest.GetTestTempDirectory() + "/python_pipeline.d3dpipeline")
+pipeline.to_file( "test pipeline", nxtest.get_test_temp_directory() / "python_pipeline.d3dpipeline")
 
 
 

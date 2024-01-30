@@ -282,9 +282,8 @@ endif()
 #------------------------------------------------------------------------------
 # Create the Python Unit tests
 #------------------------------------------------------------------------------
-option(SIMPLNX_BUILD_PYTHON_TESTS "Enables python based unit tests" OFF)
+option(SIMPLNX_BUILD_PYTHON_TESTS "Enables python based unit tests" ON)
 if(SIMPLNX_BUILD_PYTHON_TESTS)
- 
   get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
   if(is_multi_config)
     set(CX_CONFIG_DIR "$<CONFIG>")

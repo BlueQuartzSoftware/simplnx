@@ -4,7 +4,7 @@
 # echo "complex_CONDA_ENV: $complex_CONDA_ENV"
 echo "PYTHON_TEST_FILE: $PYTHON_TEST_FILE"
 echo "PYTHONPATH: $PYTHONPATH"
-echo "Python3_EXECUTABLE: $Python3_EXECUTABLE"
+echo "PYTHON_EXECUTABLE: $PYTHON_EXECUTABLE"
 
 # echo "Sourcing $complex_ANACONDA_DIR/etc/profile.d/conda.sh"
 # source "$complex_ANACONDA_DIR"/etc/profile.d/conda.sh
@@ -19,4 +19,4 @@ echo "PATH: $PATH"
 #PYTHONEXE=`which python`
 #echo "Python Version: " `${PYTHONEXE}  --version`
 
-${Python3_EXECUTABLE} "$PYTHON_TEST_FILE"
+${PYTHON_EXECUTABLE} "$PYTHON_TEST_FILE"

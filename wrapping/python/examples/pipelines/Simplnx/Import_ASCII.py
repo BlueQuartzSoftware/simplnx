@@ -43,7 +43,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Define ReadCSVData parameters
 read_csv_data = nx.ReadCSVDataParameter()
-read_csv_data.input_file_path = nxtest.GetDataDirectory() + "/ASCIIData/EulersRotated.csv"
+read_csv_data.input_file_path = str(nxtest.get_data_directory() / "ASCIIData/EulersRotated.csv")
 read_csv_data.start_import_row = 1
 read_csv_data.delimiters = [',']
 read_csv_data.custom_headers = ['phi1', 'Phi', 'phi2']
@@ -137,7 +137,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = cxitk.ITKImageWriter()
 # Output file path for Filter 7
-output_file_path = nxtest.GetDataDirectory() + "/Output/Import_ASCII/IPF.png"
+output_file_path = nxtest.get_data_directory() / "Output/Import_ASCII/IPF.png"
 
 # Execute Filter with Parameters
 result = nx_filter.execute(
@@ -153,7 +153,7 @@ nxtest.check_filter_result(nx_filter, result)
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
 # If you are using this code, you should COMMENT out the next line
-nxtest.cleanup_test_dir(nxtest.GetDataDirectory() + "/Output/Import_ASCII/")
+nxtest.cleanup_test_dir(nxtest.get_data_directory() / "Output/Import_ASCII/")
 # *****************************************************************************
 
 print("===> Pipeline Complete")

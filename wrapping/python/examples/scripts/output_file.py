@@ -67,7 +67,7 @@ nxtest.check_filter_result(nx.CreateDataArray, result)
 npdata = data_structure[output_array_path].npview()
 print(npdata)
 
-output_file_path = nxtest.GetTestTempDirectory() + "/output_file_example.dream3d"
+output_file_path = nxtest.get_test_temp_directory() / "output_file_example.dream3d"
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)

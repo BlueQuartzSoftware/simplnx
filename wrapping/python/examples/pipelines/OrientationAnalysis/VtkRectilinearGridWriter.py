@@ -12,7 +12,7 @@ data_structure = nx.DataStructure()
 # Filter 1
 
 import_data = nx.Dream3dImportParameter.ImportData()
-import_data.file_path = nxtest.GetDataDirectory() + "/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_data.file_path = str(nxtest.get_data_directory() / "Output/Reconstruction/SmallIN100_Final.dream3d")
 import_data.data_paths = None
 
 # Instantiate Filter
@@ -35,7 +35,7 @@ result = nx_filter.execute(
 # Filter 3
 # Instantiate Filter
 nx_filter = nx.WriteVtkRectilinearGridFilter()
-output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/SmallIN100_Final.vtk"
+output_file_path = nxtest.get_data_directory() / "Output/Examples/SmallIN100_Final.vtk"
 # Execute Filter
 result = nx_filter.execute(
     data_structure=data_structure,

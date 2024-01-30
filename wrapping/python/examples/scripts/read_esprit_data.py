@@ -75,7 +75,7 @@ nxtest.check_filter_result(nxor.ReadH5EspritDataFilter, result)
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
-output_file_path = nxtest.GetTestTempDirectory() + "/import_esprit.dream3d"
+output_file_path = nxtest.get_test_temp_directory() / "import_esprit.dream3d"
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)

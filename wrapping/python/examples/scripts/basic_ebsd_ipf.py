@@ -58,7 +58,7 @@ result = nxor.ReadAngDataFilter.execute(data_structure=data_structure,
                                cell_attribute_matrix_name="Scan Data", 
                                cell_ensemble_attribute_matrix_name="Phase Data",
                                data_container_name=nx.DataPath(["Small IN100"]), 
-                               input_file=nxtest.GetBuildDirectory() + "/Data/Small_IN100/Slice_1.ang")
+                               input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang")
 
 nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 
@@ -129,7 +129,7 @@ nxtest.check_filter_result(nxor.GenerateIPFColorsFilter, result)
 # Write the IPF colors to a PNG file
 #------------------------------------------------------------------------------
 result = nxitk.ITKImageWriter.execute(data_structure=data_structure, 
-                                      file_name=nxtest.GetTestTempDirectory() + "/Small_IN100_IPF_Z.png", 
+                                      file_name=nxtest.get_test_temp_directory() / "Small_IN100_IPF_Z.png", 
                                       image_array_path=nx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
                                       image_geom_path=nx.DataPath(["Small IN100"]),
                                       index_offset=0,
@@ -181,7 +181,7 @@ result = nxor.WritePoleFigureFilter.execute(data_structure=data_structure,
                                             lambert_size=64, 
                                             material_name_array_path=nx.DataPath(["Small IN100", "Phase Data", "MaterialName"]), 
                                             num_colors=32, 
-                                            output_path=nxtest.GetTestTempDirectory() + "/small_in100_pole_figure", 
+                                            output_path=nxtest.get_test_temp_directory() / "small_in100_pole_figure", 
                                             save_as_image_geometry=True, 
                                             title="Small IN100 Slice 1", 
                                             use_mask=True, 
@@ -194,7 +194,7 @@ nxtest.check_filter_result(nxor.WritePoleFigureFilter, result)
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
 
-output_file_path = nxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
+output_file_path = nxtest.get_test_temp_directory() / "basic_ebsd_example.dream3d"
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)

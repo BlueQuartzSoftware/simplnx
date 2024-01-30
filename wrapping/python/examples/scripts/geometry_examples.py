@@ -191,7 +191,7 @@ nxtest.check_filter_result(nx.CreateDataArray, result)
 
 # Read the CSV file into the DataArray using the numpy view
 vertex_coords = data_structure[array_path].npview()
-file_path = nxtest.GetSimplnxSourceDir() + '/test/Data/VertexCoordinates.csv'
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 array_path = nx.DataPath('Triangles')
@@ -205,7 +205,7 @@ nxtest.check_filter_result(nx.CreateDataArray, result)
 
 # Read the CSV file into the DataArray using the numpy view
 triangles = data_structure[array_path].npview()
-file_path = nxtest.GetSimplnxSourceDir() + '/test/Data/TriangleConnectivity.csv'
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/TriangleConnectivity.csv'
 triangles[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
@@ -237,7 +237,7 @@ nxtest.check_filter_result(nx.CreateDataArray, result)
 
 # Read the CSV file into the DataArray using the numpy view
 vertex_coords = data_structure[array_path].npview()
-file_path = nxtest.GetSimplnxSourceDir() + '/test/Data/VertexCoordinates.csv'
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 array_path = nx.DataPath('Edges')
@@ -251,7 +251,7 @@ nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
 # Read the CSV file into the DataArray using the numpy view
-file_path = nxtest.GetSimplnxSourceDir() + '/test/Data/EdgeConnectivity.csv'
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/EdgeConnectivity.csv'
 edges_view = data_structure["Edges"].npview()
 edges_view[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
@@ -267,7 +267,7 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
 nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
 
-output_file_path = nxtest.GetTestTempDirectory() + "/geometry_examples.dream3d"
+output_file_path = nxtest.get_test_temp_directory() / "geometry_examples.dream3d"
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, export_file_path=output_file_path,
                                        write_xdmf_file=True)
 nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)

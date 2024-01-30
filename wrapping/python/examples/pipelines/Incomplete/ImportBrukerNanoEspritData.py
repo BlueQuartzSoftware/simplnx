@@ -27,7 +27,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Define output file path
-output_file_path = nxtest.GetDataDirectory() + "/Output/H5EspritData/H5EspritData.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/H5EspritData/H5EspritData.dream3d"
 # Instantiate Filter
 nx_filter = cx.WriteDREAM3DFilter()
 # Execute WriteDREAM3DFilter with Parameters

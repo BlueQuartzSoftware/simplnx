@@ -54,7 +54,7 @@ data_structure = nx.DataStructure()
 
 
 generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
-generated_file_list_value.input_path = nxtest.GetBuildDirectory() + "/Data/Porosity_Image"
+generated_file_list_value.input_path = str(nxtest.get_data_directory() / "Porosity_Image")
 generated_file_list_value.ordering = nx.GeneratedFileListParameter.Ordering.LowToHigh
 
 generated_file_list_value.file_prefix = "slice_"

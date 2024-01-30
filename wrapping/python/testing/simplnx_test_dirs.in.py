@@ -12,7 +12,7 @@ from pathlib import Path
 
 import simplnx as nx
 
-def check_filter_result(filter: nx.IFilter, result: nx.IFilter.ExecuteResult):
+def check_filter_result(filter: nx.IFilter, result: nx.IFilter.ExecuteResult) -> None:
   if len(result.warnings) != 0:
     print(f'{filter.name()} ::  Warnings: {result.warnings}')
   
@@ -23,37 +23,35 @@ def check_filter_result(filter: nx.IFilter, result: nx.IFilter.ExecuteResult):
   
   print(f"{filter.name()} :: No errors running the filter")
 
+def get_build_directory() -> Path:
+  return Path('${CMAKE_LIBRARY_OUTPUT_DIRECTORY}')
 
-def GetBuildDirectory():
-  return '${CMAKE_LIBRARY_OUTPUT_DIRECTORY}'
+def get_test_directory() -> Path:
+  return Path('${simplnx_BINARY_DIR}/Testing')
 
-def GetTestDirectory():
-  return '${simplnx_BINARY_DIR}/Testing'
+def get_test_temp_directory() -> Path:
+  return Path('${simplnx_BINARY_DIR}/Testing/Temporary')
 
-def GetTestTempDirectory():
-  return '${simplnx_BINARY_DIR}/Testing/Temporary'
+def get_data_directory() -> Path:
+  return Path('${DATA_DEST_DIR}')
 
-def GetDataDirectory():
-  return '${DATA_DEST_DIR}'
+def get_simplnx_python_source_dir() -> Path:
+  return Path('${simplnx_SOURCE_DIR}/wrapping/python')
 
-def GetSimplnxPythonSourceDir():
-    return '${simplnx_SOURCE_DIR}/wrapping/python'
+def get_simplnx_source_dir() -> Path:
+  return Path('${simplnx_SOURCE_DIR}')
 
-def GetSimplnxSourceDir():
-    return '${simplnx_SOURCE_DIR}'
+def print_all_paths() -> None:
+  print(f'##### Important Filesystem Paths #####')
+  print(f'  get_build_directory:           {get_build_directory()}')
+  print(f'  get_test_directory:            {get_test_directory()}')
+  print(f'  get_test_temp_directory:       {get_test_temp_directory()}')
+  print(f'  get_data_directory:            {get_data_directory()}')
+  print(f'  get_simplnx_python_source_dir: {get_simplnx_python_source_dir()}')
+  print(f'  get_simplnx_source_dir:        {get_simplnx_source_dir()}')
+  print('#######################################')
 
-
-def print_all_paths():
-    print(f'#### Important Filesystem Paths ####')
-    print(f'  GetBuildDirectory:         {GetBuildDirectory()}')
-    print(f'  GetTestDirectory:          {GetTestDirectory()}')
-    print(f'  GetTestTempDirectory:      {GetTestTempDirectory()}')
-    print(f'  GetDataDirectory:          {GetDataDirectory()}')
-    print(f'  GetSimplnxPythonSourceDir: {GetSimplnxPythonSourceDir()}')
-    print(f'  GetSimplnxSourceDir:       {GetSimplnxSourceDir()}')
-    print('#######################################')
-
-def cleanup_test_file(file_path: str):
+def cleanup_test_file(file_path: str) -> None:
   if os.path.exists(file_path):
     os.remove(file_path)
 
@@ -63,6 +61,6 @@ def cleanup_test_file(file_path: str):
   if os.path.exists(filename_replace_ext):
     os.remove(filename_replace_ext)
 
-def cleanup_test_dir(dir_path: str):
+def cleanup_test_dir(dir_path: str) -> None:
   if os.path.exists(dir_path):
     shutil.rmtree(dir_path)
