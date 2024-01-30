@@ -122,7 +122,7 @@
     {
       "args": {
         "change_origin": true,
-        "change_resolution": true,
+        "change_spacing": true,
         "image_geom": "DataContainer",
         "origin": [
           0.0,

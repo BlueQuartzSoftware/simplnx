@@ -8,7 +8,19 @@ ITKImageProcessing (ITKImageProcessing)
 
 ## Description
 
-Reads images through ITK
+Reads images through the ITK software library [https://www.itk.org](https://www.itk.org)
+
+The following image types are supported:
+
+- PNG
+- TIFF
+- BMP
+- JPG
+- NRRD
+- MHA
+
+The user is required to set the origin and spacing (Length units per pixel) for the imported image. The default values are an origin
+of (0,0,0) and a spacing of (1,1,1). Any values stored in the actual input file **will be overridden** by the values from the user interface
 
 % Auto generated parameter table will be inserted here
 

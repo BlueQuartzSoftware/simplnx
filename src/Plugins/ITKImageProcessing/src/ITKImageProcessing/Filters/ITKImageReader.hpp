@@ -29,6 +29,15 @@ public:
   static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_path";
   static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
 
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+
+  static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
+  static inline constexpr StringLiteral k_CenterOrigin_Key = "center_origin";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+
+  static inline constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json

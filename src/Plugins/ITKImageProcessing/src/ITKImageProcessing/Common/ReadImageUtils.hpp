@@ -167,7 +167,24 @@ Result<> ReadImageExecute(const std::string& fileName, ArgsT&&... args)
   }
 }
 
+struct ImageReaderOptions
+{
+  bool OverrideOrigin = false;
+  bool OriginAtCenterOfGeometry = false;
+  bool OverrideSpacing = false;
+  FloatVec3 Origin;
+  FloatVec3 Spacing;
+};
+
 //------------------------------------------------------------------------------
-Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, std::string cellDataName, DataPath arrayPath);
+/**
+ * @brief
+ * @param fileName
+ * @param imageGeomPath
+ * @param cellDataName
+ * @param arrayPath
+ * @return
+ */
+Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, std::string cellDataName, DataPath arrayPath, const ImageReaderOptions& imageReaderOptions);
 
 } // namespace cxItkImageReader
