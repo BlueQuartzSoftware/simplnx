@@ -32,8 +32,8 @@ General Parameters
       - **Description**: A brief description or help text for the parameter. This text is intended to guide the user in understanding the purpose of the parameter and how to use it.
       - **Type**: string (str)
 
-   - ``default_value`` : :ref:`DataPath<DataPath>`
-      - **Description**: The default value for the parameter. For the `ArrayCreationParameter`, this is a :ref:`DataPath<DataPath>` object that points to the location within the data structure where the data array will be created.
+   - ``default_value`` : :ref:`DataPath <DataPath>`
+      - **Description**: The default value for the parameter. For the `ArrayCreationParameter`, this is a :ref:`DataPath <DataPath>` object that points to the location within the data structure where the data array will be created.
       - **Type**: `DataPath`
 
    Usage
@@ -73,7 +73,7 @@ General Parameters
       - **Description**: A brief description or help text for the parameter.
       - **Type**: string (str)
 
-   - ``default_value`` : :ref:`DataPath<DataPath>`
+   - ``default_value`` : :ref:`DataPath <DataPath>`
       - **Description**: The default DataPath pointing to the array to be selected.
       - **Type**: `DataPath`
 
@@ -190,7 +190,7 @@ General Parameters
 
   This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjects>` filter.
 
-  :ivar array_path: The :ref:`DataPath<DataPath>` to the array to use for this ArrayThreshold
+  :ivar array_path: The :ref:`DataPath <DataPath>` to the array to use for this ArrayThreshold
   :ivar comparison: Int. The comparison operator to use. 0=">", 1="<", 2="=", 3="!="
   :ivar value: Numerical Value. The value for the comparison
 
@@ -244,7 +244,7 @@ General Parameters
       - **Description**: A brief description or help text for the parameter.
       - **Type**: string (str)
 
-   - ``default_value`` : :ref:`DataPath<DataPath>`
+   - ``default_value`` : :ref:`DataPath <DataPath>`
       - **Description**: The default DataPath pointing to the Attribute Matrix to be selected.
       - **Type**: `DataPath`
 
@@ -329,7 +329,7 @@ General Parameters
 
    .. py:class::    CalculatorParameter.ValueType
 
-   :ivar selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray<DataArray>` that will be used in the equations
+   :ivar selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray <DataArray>` that will be used in the equations
    :ivar equation: String. The equation that will be evaluated
    :ivar units: cx.CalculatorParameter.AngleUnits.Radians or cx.CalculatorParameter.AngleUnits.Degrees
 
@@ -351,7 +351,7 @@ General Parameters
       - **Description**: The default value or expression for the calculator parameter.
       - **Type**: `CalculatorParameter.ValueType`
       - **Internal Data**: The values that are contained within the CalculatorParameter.ValueType.
-         - selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray<DataArray>` that will be used in the equations.
+         - selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray <DataArray>` that will be used in the equations.
          - equation: String. The equation that will be evaluated.
          - units: sx.CalculatorParameter.AngleUnits.Radians or sx.CalculatorParameter.AngleUnits.Degrees
 
@@ -449,7 +449,7 @@ General Parameters
       - **Description**: A brief description or help text for the parameter.
       - **Type**: string (str)
 
-   - ``default_value`` : :ref:`DataPath<DataPath>`
+   - ``default_value`` : :ref:`DataPath <DataPath>`
       - **Description**: The default DataPath for the data group to be created.
       - **Type**: `DataPath`
 
@@ -489,7 +489,7 @@ General Parameters
       - **Description**: A brief description or help text for the parameter.
       - **Type**: string (str)
 
-   - ``default_value`` : :ref:`DataPath<DataPath>`
+   - ``default_value`` : :ref:`DataPath <DataPath>`
       - **Description**: The default DataPath pointing to the data group to be selected.
       - **Type**: `DataPath`
 
@@ -557,7 +557,7 @@ General Parameters
 
    Description
    ~~~~~~~~~~~
-   The ``DataPathSelectionParameter`` is used for selecting a :ref:`DataPath<DataPath>` to a data object within the :ref:`DataStructure<DataStructure>`.
+   The ``DataPathSelectionParameter`` is used for selecting a :ref:`DataPath <DataPath>` to a data object within the :ref:`DataStructure<DataStructure>`.
 
    Inputs
    ~~~~~~
@@ -573,7 +573,7 @@ General Parameters
       - **Description**: A brief description or help text for the parameter.
       - **Type**: string (str)
 
-   - ``default_value`` : :ref:`DataPath<DataPath>`
+   - ``default_value`` : :ref:`DataPath <DataPath>`
       - **Description**: The default DataPath to be selected.
       - **Type**: `DataPath`
 
@@ -716,7 +716,7 @@ General Parameters
       - **Type**: `Dream3dImportParameter.ImportData`
       - **Internal Data**:
          - **file_path**: Path to the .dream3d file on the file system
-         - **data_paths**: List of :ref:`DataPath<DataPath>` objects. Use the python 'None' value to indicate that you want to read **ALL** the data from file.
+         - **data_paths**: List of :ref:`DataPath <DataPath>` objects. Use the python 'None' value to indicate that you want to read **ALL** the data from file.
 
    Usage
    ~~~~~~
@@ -734,7 +734,7 @@ General Parameters
 .. py:class:: DynamicTableParameter
 
    Declarations
-   ~~~~~~~~~~~
+   ~~~~~~~~~~~~
    .. code-block:: python
 
       DynamicTableParameter(name: str, human_name: str, help_text: str, default_value: List[List[float]], table_info: DynamicTableInfo)
@@ -1115,7 +1115,7 @@ General Parameters
       - **Description**: A brief description or help text for the parameter.
       - **Type**: string (str)
 
-   - ``default_value`` : :ref:`DataPath<DataPath>`
+   - ``default_value`` : :ref:`DataPath <DataPath>`
       - **Description**: The default path to the geometry data.
       - **Type**: `DataPath`
 
@@ -1188,7 +1188,7 @@ General Parameters
       a number of member variables that need to be set correctly before passing it into the filter parameter as the default value.
 
       - ``column_data_types`` : List[DataType]
-         - **Description**: The data types of the columns in the CSV file. Indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`.
+         - **Description**: The data types of the columns in the CSV file. Indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray <DataArray>`.
          - **Type**: List of :ref:`cx.DataType<DataTypeParameter>`
 
       - ``consecutive_delimiters`` : bool
@@ -1377,7 +1377,7 @@ General Parameters
       - ``input_file`` : str
          - **Description**: The file path to the input HDF5 file.
       - ``parent`` : Optional[DataPath]
-         - **Description**: The :ref:`DataPath<DataPath>` object to a parent group to create the :ref:`DataArray<DataArray>`s into. If left blank, the :ref:`DataArray<DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`.
+         - **Description**: The :ref:`DataPath <DataPath>` object to a parent group to create the :ref:`DataArrays <DataArray>` into. If left blank, the :ref:`DataArray <DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`.
 
    Usage
    ~~~~~~
@@ -1468,7 +1468,7 @@ General Parameters
 
    Description
    ~~~~~~~~~~~
-   This parameter represents a list of :ref:`DataPath<DataPath>` objects. The end point of each :ref:`DataPath<DataPath>` object can be any object in the  :ref:`DataStructure<DataStructure>`
+   This parameter represents a list of :ref:`DataPath <DataPath>` objects. The end point of each :ref:`DataPath <DataPath>` object can be any object in the  :ref:`DataStructure<DataStructure>`
 
    Inputs
    ~~~~~~
@@ -1638,8 +1638,9 @@ General Parameters
 Numerical Parameters
 --------------------
 
-   Declarations
-   ~~~~~~~~~~~
+Declarations
+~~~~~~~~~~~~
+
    .. code-block:: python
 
       class Int8Parameter(IParameter):
@@ -1672,13 +1673,13 @@ Numerical Parameters
       class Float64Parameter(IParameter):
          def __init__(self, name: str, human_name: str, help_text: str, default_value: float) -> None: ...
 
-   Description
-   ~~~~~~~~~~~
+Description
+~~~~~~~~~~~
 
    This group of parameters wrap a specific native C++ numeric type and can be used to add integer/float inputs to a filter.  Their default values can be instantiated using standard python integers or decimal values.
 
-   Inputs
-   ~~~~~~
+Inputs
+~~~~~~
    - ``name`` : str
       - **Description**: The programmatic name of the parameter.
       - **Type**: string (str)
@@ -1695,8 +1696,8 @@ Numerical Parameters
       - **Description**: The default value for the parameter, expected to be within the range of the chosen float or integer type.
       - **Type**: Integer or Float
 
-   Usage
-   ~~~~~~
+Usage
+~~~~~~
 
    .. code-block:: python
 
@@ -1706,10 +1707,11 @@ Numerical Parameters
       params.insert(sx.Int32Parameter('int32_key', 'Int32Parameter', 'The 2nd parameter', 0))
 
 Numerical Vector Parameters
---------------------
+---------------------------
 
-   Declarations
-   ~~~~~~~~~~~
+Declarations
+~~~~~~~~~~~~
+
    .. code-block:: python
 
       class VectorInt8Parameter(IParameter):
@@ -1772,13 +1774,13 @@ Numerical Vector Parameters
          @overload
          def __init__(self, name: str, human_name: str, help_text: str, default_value: List[float], names: List[str]) -> None: ...
 
-   Description
-   ~~~~~~~~~~~
+Description
+~~~~~~~~~~~
 
    This group of parameters can be used to gather more than a single scalar value from the user. For example, an Origin for an Image Geometry or the dimensions of a DataArray. It is represented as a list of numerical values.
 
-   Inputs
-   ~~~~~~
+Inputs
+~~~~~~
    - ``name`` : str
       - **Description**: The programmatic name of the parameter.
       - **Type**: string (str)
@@ -1799,8 +1801,8 @@ Numerical Vector Parameters
       - **Description**: The list of names that describe each value in the vector.
       - **Type**: List of strings
 
-   Usage
-   ~~~~~~
+Usage
+~~~~~~
 
    .. code-block:: python
 

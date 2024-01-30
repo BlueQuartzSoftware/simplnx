@@ -3,6 +3,7 @@ Writing a New Python Filter
 
 1. Generating the Skeleton Code
 -----------------------------------------------------------------
+
 **Generate Python Plugin and/or Python Filters** is a powerful filter in *simplnx* that kickstarts the development of new Python filters by generating the skeleton code for the new filters.
 
 This filter can generate skeleton code for the new filters in an existing Python plugin, or it can also generate the skeleton code for a new Python plugin.
@@ -15,6 +16,7 @@ This filter can generate skeleton code for the new filters in an existing Python
 #. **Configure the Filter:**
     **New Python Plugin**
         .. image:: Images/Generate_Python_Plugin.png
+
         - Turn OFF *Use Existing Plugin*.
         - Input the programmatic name and human name for the new plugin.
         - Select the output directory for the new plugin.
@@ -22,6 +24,7 @@ This filter can generate skeleton code for the new filters in an existing Python
     
     **Existing Python Plugin**
         .. image:: Images/Generate_Python_Plugin_2.png
+
         - Turn ON *Use Existing Plugin*.
         - Select the existing plugin location on the file system (the top-level directory of the existing plugin).
         - Set the desired programmatic names for your new filters (separated by commas).
@@ -32,7 +35,8 @@ This filter can generate skeleton code for the new filters in an existing Python
         - If *Use Existing Plugin* is ON, then the new filters will be generated inside the existing plugin.
 
 2. Understanding the Filter Skeleton Structure
----------------------------------------
+----------------------------------------------
+
 The skeleton provides a basic structure with placeholders and conventions that align with *simplnx*'s architecture.
 
 **Components:**
