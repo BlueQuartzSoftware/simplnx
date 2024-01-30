@@ -4,7 +4,7 @@ namespace cxItkImageReader
 {
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, std::string cellDataName, DataPath arrayPath)
+Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, std::string cellDataName, DataPath arrayPath, const ImageReaderOptions& imageReaderOptions)
 {
   OutputActions actions;
 
@@ -30,14 +30,38 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
     uint32 nDims = imageIO->GetNumberOfDimensions();
 
     std::vector<size_t> dims = {1, 1, 1};
-    std::vector<float32> origin = {0.0f, 0.0f, 0.0f};
-    std::vector<float32> spacing = {1.0f, 1.0f, 1.0f};
+    FloatVec3 origin = {0.0f, 0.0f, 0.0f};
+    FloatVec3 spacing = {1.0f, 1.0f, 1.0f};
 
     for(uint32 i = 0; i < nDims; i++)
     {
       dims[i] = static_cast<usize>(imageIO->GetDimensions(i));
       origin[i] = static_cast<float32>(imageIO->GetOrigin(i));
       spacing[i] = static_cast<float32>(imageIO->GetSpacing(i));
+    }
+
+    if(imageReaderOptions.OverrideSpacing)
+    {
+      spacing = imageReaderOptions.Spacing;
+    }
+
+    if(imageReaderOptions.OverrideOrigin)
+    {
+      DataStructure junk;
+      ImageGeom* imageGeomPtr = ImageGeom::Create(junk, "Junk");
+
+      origin = imageReaderOptions.Origin;
+
+      imageGeomPtr->setDimensions(dims);
+      imageGeomPtr->setOrigin(origin);
+      imageGeomPtr->setSpacing(spacing);
+
+      if(imageReaderOptions.OriginAtCenterOfGeometry)
+      {
+        BoundingBox3Df bounds = imageGeomPtr->getBoundingBoxf();
+        FloatVec3 centerPoint(bounds.center());
+        origin = origin - (centerPoint - origin);
+      }
     }
 
     uint32 nComponents = imageIO->GetNumberOfComponents();
@@ -47,7 +71,8 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     std::vector<usize> cDims = {nComponents};
 
-    actions.appendAction(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing), cellDataName));
+    actions.appendAction(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), origin.toContainer<CreateImageGeometryAction::OriginType>(),
+                                                                     spacing.toContainer<CreateImageGeometryAction::SpacingType>(), cellDataName));
     actions.appendAction(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), std::move(arrayPath)));
 
   } catch(const itk::ExceptionObject& err)
