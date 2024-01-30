@@ -2,41 +2,37 @@
 
 ## Group (Subgroup)
 
-Rotation & Transformation
+Rotation, Scale & Transformation
 
 ## Description
 
-This **Filter** applies a spatial transformation to either and unstructured **Geometry** or an ImageGeometry. An "
-unstructured" **Geometry** is any geometry that requires explicit definition of **Vertex** positions. Specifically, *
-*Vertex**, **Edge**, **Triangle**, **Quadrilateral**, and **Tetrahedral** **Geometries** may be transformed by this *
-*Filter**. The transformation is applied in place, so the input **Geometry** will be modified.
+### Unstructured Grid Geometries
 
-If the user selects an **Image Geometry** then they will need to select which kind of **Interpolation Method* will be
-used when transferring the data from the old geometry to the newly transformed geometry. If the user selects *any other*
-kind of geometry then the user should select the "No Interpolation" selection to disable the requirement for a *Cell Attribute Matrix*.
+This **Filter** applies a spatial transformation to either and unstructured **Geometry** or an **Image Geometry**. An "unstructured" **Geometry** is any geometry that requires explicit definition of **Vertex** positions. Specifically, **Vertex**, **Edge**, **Triangle**, **Quadrilateral**, and **Tetrahedral** **Geometries** may be transformed by this **Filter**. The transformation is applied in place, so the input **Geometry** will be modified.
+
+- **NO** interpolation will take place as the only changes that take place are the actual coordinates of the vertices.
+
+### Image Geometry
+
+If the user selects an **Image Geometry** then there are 2 additional required filter parameters that need to be set:
+
+- **Interpolation Method**: This will be used when transferring the data from the old geometry to the newly transformed geometry.
+- **Cell Attribute Matrix**: This Attribute Matrix holds the data that is associated with each cell of the image geometry.
 
 The linear/Bi-Linear/Tri-Linear Interpolation is adapted from the equations presented
 in [https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf, page 36}](https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf)
 
 ### Caveats
 
-- If the user selects an **unstructured** based geometry, **NO** interpolation will take place as the only changes that
-take place are the actual coordinates of the vertices.
+- The **Scale** and **Rotation** transformation types will automatically translate the volume to (0, 0, 0), apply the scaling/rotation, and then translate the volume back to its original location.  If the **Manual Transformation Matrix** or **Pre-Computed Transformation Matrix** types are selected, then it is up to the user to make sure that those translations are included, if necessary.
 
-- If the user selects an **Image Geometry** then the user should select one of the *Interpolation* methods and then also
-select the appropriate *Cell Attribute Matrix*.
-
-The **Scale** and **Rotation** transformation types will automatically translate the volume to (0, 0, 0), apply the scaling/rotation,
-and then translate the volume back to its original location.  If the **Manual Transformation Matrix** or **Pre-Computed Transformation
-Matrix** types are selected, then it is up to the user to make sure that those translations are included, if necessary.
-
-## Example Transformations
+## Example Image Geometry Transformations
 
 | Description | Example Output Image |
 |-------------|----------------------|
-| Untransformed |  ![](Images/ApplyTransformation_AsRead.png) |
-| After Rotation of <001> 45 Degrees | ![](Images/ApplyTransformation_Rotated.png) |
-| Scaled (2.0, 2.0, 1.0)  | ![](Images/ApplyTransformation_Scaled.png) |
+| Input Image |  ![Input Image](Images/ApplyTransformation_AsRead.png) |
+| After Rotation of 45 Degrees around the <001> axis | ![Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_Rotated.png) |
+| Scaled by 2x in the X and Y axis  | ![Scaled by 2x in the X and Y axis.](Images/ApplyTransformation_Scaled.png) |
 
 ## Transformation Information
 
@@ -55,9 +51,9 @@ The user may select from a variety of options for the type of transformation to 
 
 ## Example Pipelines
 
-+ Pipelines/SimplnxCore/Examples/apply_transformation_basic.d3dpipeline
-+ Pipelines/SimplnxCore/Examples/apply_transformation_image.d3dpipeline
-+ Pipelines/SimplnxCore/Examples/apply_transformation_node.d3dpipeline
+- Pipelines/SimplnxCore/Examples/apply_transformation_basic.d3dpipeline
+- Pipelines/SimplnxCore/Examples/apply_transformation_image.d3dpipeline
+- Pipelines/SimplnxCore/Examples/apply_transformation_node.d3dpipeline
 
 ## License & Copyright
 

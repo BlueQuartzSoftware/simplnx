@@ -68,7 +68,7 @@ std::string ApplyTransformationToGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ApplyTransformationToGeometryFilter::defaultTags() const
 {
-  return {className(), "DREAM3D Review", "Rotation/Transforming"};
+  return {className(), "Scale", "Flip", "Mirror", "Rotation", "Transforming"};
 }
 
 //------------------------------------------------------------------------------
@@ -171,8 +171,9 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
     case k_NoTransformIdx: // No-Op
     {
-      resultOutputActions.warnings().push_back(Warning{82001, "No transformation has been selected, so this filter will perform no operations"});
+      resultOutputActions.warnings().push_back(Warning{82001, "No transformation has been selected. This filter will NOT modify any data."});
       transformationMatrixDesc = "No transformation matrix selected.";
+      break;
     }
     case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
     {
@@ -237,16 +238,28 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
     preflightUpdatedValues.push_back({"Generated Transformation Matrix", transformationMatrixDesc});
 
-    auto pInterpolationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
-    // auto pDataArraySelectionValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
+    std::stringstream errorMessage;
+    errorMessage << "You have selected to transform an 'Image Geometry', please correct the following issues:\n";
+    bool imageGeomInterpolationError = false;
 
-    // For nearest neighbor we can use any data array as we are only going to copy from a hit cell, no interpolation
+    auto pInterpolationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
+    if(pInterpolationTypeValue == k_NoInterpolationIdx)
+    {
+      errorMessage << "* Select either 'Nearest Neighbor Resampling' or 'Linear Interpolation' from the 'Image Geometry Resampling/Interpolation' parameter section.\n";
+      imageGeomInterpolationError = true;
+    }
+
     const auto* srcCellAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
     if(nullptr == srcCellAttrMatrixPtr)
     {
-      return {MakeErrorResult<OutputActions>(
-          -82006, fmt::format("DataPath '{}' is not an Cell AttributeMatrix. Please select the Cell level AttributeMatrix of the Image Geometry", pCellAttributeMatrixPath.toString()))};
+      errorMessage << "* Select the Image Geometry's cell level Attribute Matrix. This will contain all the data that will be interpolated onto the new Image Geometry.";
+      imageGeomInterpolationError = true;
     }
+    if(imageGeomInterpolationError)
+    {
+      return {MakeErrorResult<OutputActions>(-82006, errorMessage.str())};
+    }
+
     std::vector<std::string> selectedCellArrayNames = srcCellAttrMatrixPtr->getDataMap().getNames();
 
     if(pInterpolationTypeValue == k_LinearInterpolationIdx)
@@ -417,7 +430,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     // An image geometry was not chosen, so throw a warning communicating to the user that the cell attribute matrix will not be used
     if(!pCellAttributeMatrixPath.getTargetName().empty())
     {
-      auto warning = Warning{-5555, fmt::format("The Selected Geometry is not an image geometry, so the Attribute Matrix '{}' will not be used when applying this transformation.",
+      auto warning = Warning{-5555, fmt::format("The selected geometry is not an 'Image Geometry'. NO interpolation is performed on the data. The 'Cell Attribute Matrix' DataPath can be empty.",
                                                 pCellAttributeMatrixPath.getTargetName())};
       resultOutputActions.warnings().push_back(warning);
     }
