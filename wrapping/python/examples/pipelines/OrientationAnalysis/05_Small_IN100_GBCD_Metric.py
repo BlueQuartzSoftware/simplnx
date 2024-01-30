@@ -12,7 +12,7 @@ data_structure = nx.DataStructure()
 # Filter 1
 # Instantiate Import Data Parameter
 import_data = nx.Dream3dImportParameter.ImportData()
-import_data.file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
+import_data.file_path = str(nxtest.get_data_directory() / "Output/SurfaceMesh/SmallIN100_MeshStats.dream3d")
 import_data.data_paths =[
             nx.DataPath("DataContainer"),
             nx.DataPath("DataContainer/CellData"),
@@ -126,7 +126,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_GBCD_Metric.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/SurfaceMesh/SmallIN100_GBCD_Metric.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure, 

@@ -16,7 +16,7 @@ filter_parameter = cxor.ReadH5EbsdFileParameter.ValueType()
 filter_parameter.euler_representation=0
 filter_parameter.end_slice=117
 filter_parameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
-filter_parameter.input_file_path=nxtest.GetDataDirectory() + "/Output/Reconstruction/Small_IN100.h5ebsd"
+filter_parameter.input_file_path=str(nxtest.get_data_directory() / "Output/Reconstruction/Small_IN100.h5ebsd")
 filter_parameter.start_slice=6
 filter_parameter.use_recommended_transform=True
 
@@ -386,7 +386,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = nxtest.GetDataDirectory() + "/Output/Reconstruction/SmallIN100_Final.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/Reconstruction/SmallIN100_Final.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

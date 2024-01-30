@@ -80,7 +80,7 @@ dataset2.tuple_dims = "1,201,189"
 dataset2.component_dims = "3"
 
 import_hdf5_param = nx.ReadHDF5DatasetParameter.ValueType()
-import_hdf5_param.input_file = nxtest.GetTestTempDirectory() + "/basic_ebsd_example.dream3d"
+import_hdf5_param.input_file = str(nxtest.get_test_temp_directory() / "basic_ebsd_example.dream3d")
 import_hdf5_param.datasets = [dataset1, dataset2]
 # import_hdf5_param.parent = nx.DataPath(["Imported Data"])
 

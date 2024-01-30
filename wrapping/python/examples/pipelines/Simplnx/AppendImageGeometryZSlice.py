@@ -32,7 +32,7 @@ result = nx_filter.execute(
     advanced_options=True,
     data_format="",
     delimiter_choice=0,
-    input_file=nxtest.GetDataDirectory() + "/ASCIIData/ConfidenceIndex.csv",
+    input_file=nxtest.get_data_directory() / "ASCIIData/ConfidenceIndex.csv",
     n_comp=1,
     n_skip_lines=0,
     n_tuples=[[480000.0]],
@@ -50,7 +50,7 @@ result = nx_filter.execute(
     advanced_options=True,
     data_format="",
     delimiter_choice=0,
-    input_file=nxtest.GetDataDirectory() + "/ASCIIData/FeatureIds.csv",
+    input_file=nxtest.get_data_directory() / "ASCIIData/FeatureIds.csv",
     n_comp=1,
     n_skip_lines=0,
     n_tuples=[[480000.0]],
@@ -69,7 +69,7 @@ result = nx_filter.execute(
     advanced_options=True,
     data_format="",
     delimiter_choice=0,
-    input_file=nxtest.GetDataDirectory() + "/ASCIIData/ImageQuality.csv",
+    input_file=nxtest.get_data_directory() / "ASCIIData/ImageQuality.csv",
     n_comp=1,
     n_skip_lines=0,
     n_tuples=[[480000.0]],
@@ -86,7 +86,7 @@ result = nx_filter.execute(
     advanced_options=True,
     data_format="",
     delimiter_choice=0,
-    input_file=nxtest.GetDataDirectory() + "/ASCIIData/IPFColor.csv",
+    input_file=nxtest.get_data_directory() / "ASCIIData/IPFColor.csv",
     n_comp=3,
     n_skip_lines=0,
     n_tuples=[[480000.0]],
@@ -149,7 +149,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = nxtest.GetDataDirectory() + "/Output/Examples/AppendImageGeometryZSlice.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/Examples/AppendImageGeometryZSlice.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

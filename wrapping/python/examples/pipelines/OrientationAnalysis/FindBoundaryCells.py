@@ -13,7 +13,7 @@ data_structure = nx.DataStructure()
 # Instantiate Import Data
 
 import_data = nx.Dream3dImportParameter.ImportData()
-import_data.file_path = nxtest.GetDataDirectory() + "/Output/Reconstruction/SmallIN100_Final.dream3d"
+import_data.file_path = str(nxtest.get_data_directory() / "Output/Reconstruction/SmallIN100_Final.dream3d")
 import_data.data_paths = None
 
 # Instantiate Filter
@@ -39,7 +39,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Output file path for Filter 3
-output_file_path = nxtest.GetDataDirectory() + "/Output/FindBoundaryCells/SmallIN100_BoundaryCells.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/FindBoundaryCells/SmallIN100_BoundaryCells.dream3d"
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters

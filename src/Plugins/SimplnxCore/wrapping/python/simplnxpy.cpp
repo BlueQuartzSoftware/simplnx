@@ -1110,6 +1110,7 @@ PYBIND11_MODULE(simplnx, mod)
   filter.def("human_name", &IFilter::humanName);
   filter.def("preflight2", [internals](const IFilter& self, DataStructure& dataStructure, const py::kwargs& kwargs) {
     Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
+    py::gil_scoped_release releaseGIL{};
     IFilter::PreflightResult result = self.preflight(dataStructure, convertedArgs, CreatePyMessageHandler());
     return result;
   });
@@ -1117,6 +1118,7 @@ PYBIND11_MODULE(simplnx, mod)
       "execute2",
       [internals](const IFilter& self, DataStructure& dataStructure, const py::kwargs& kwargs) {
         Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
+        py::gil_scoped_release releaseGIL{};
         IFilter::ExecuteResult result = self.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
         return result;
       },

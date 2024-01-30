@@ -18,7 +18,7 @@ result = nx_filter.execute(
     face_attribute_matrix="Face Data",
     face_normals_data_path="Face Normals",
     #scale_factor: float = ...,
-    stl_file_path=nxtest.GetDataDirectory() + "/STL_Models/Cylinder.stl",
+    stl_file_path=nxtest.get_data_directory() / "STL_Models/Cylinder.stl",
     triangle_geometry_name=nx.DataPath("[Triangle Geometry]"),
     vertex_attribute_matrix="Vertex Data"
 )

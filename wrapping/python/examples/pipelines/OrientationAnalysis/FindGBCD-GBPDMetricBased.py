@@ -12,7 +12,7 @@ data_structure = nx.DataStructure()
 # Filter 1
 # Instantiate Import Data
 import_data = nx.Dream3dImportParameter.ImportData()
-import_data.file_path = nxtest.GetDataDirectory() + "/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
+import_data.file_path = str(nxtest.get_data_directory() / "Output/SurfaceMesh/SmallIN100_MeshStats.dream3d")
 import_data.data_paths = None
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
@@ -46,8 +46,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     chosen_limit_dists=2,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    dist_output_file=nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/gbcd_distribution.dat",
-    err_output_file=nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/gbcd_distribution_errors.dat",
+    dist_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbcd_distribution.dat",
+    err_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbcd_distribution_errors.dat",
     exclude_triple_lines=True,
     feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
     feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
@@ -72,8 +72,8 @@ nx_filter = cxor.FindGBPDMetricBasedFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    dist_output_file=nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/gbpd_distribution.dat",
-    err_output_file=nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/gbpd_distribution_errors.dat",
+    dist_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbpd_distribution.dat",
+    err_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbpd_distribution_errors.dat",
     exclude_triple_lines=False,
     feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
     feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
@@ -94,7 +94,7 @@ nxtest.check_filter_result(nx_filter, result)
 # *****************************************************************************
 # THIS SECTION IS ONLY HERE FOR CLEANING UP THE CI Machines
 # If you are using this code, you should COMMENT out the next line
-nxtest.cleanup_test_dir(nxtest.GetDataDirectory() + "/Output/GBPDMetricBased/")
+nxtest.cleanup_test_dir(nxtest.get_data_directory() / "Output/GBPDMetricBased/")
 # *****************************************************************************
 
 

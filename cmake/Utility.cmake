@@ -476,27 +476,21 @@ function(AddPythonTest)
   # message(STATUS "ARGS_FILE:${ARGS_FILE}")
   if(SIMPLNX_BUILD_PYTHON)
     if(WIN32)
-      add_test(NAME ${ARGS_NAME}
-        COMMAND ${simplnx_SOURCE_DIR}/wrapping/python/testing/anaconda_test.bat
-      )
-
-      set_property(TEST ${ARGS_NAME}
-        PROPERTY
-          ENVIRONMENT
-            "PYTHON_TEST_FILE=${ARGS_FILE}"
-            "Python3_EXECUTABLE=${Python3_EXECUTABLE}"
-    )
+      set(test_driver_file ${simplnx_SOURCE_DIR}/wrapping/python/testing/anaconda_test.bat)
     else()
-      add_test(NAME ${ARGS_NAME}
-        COMMAND ${simplnx_SOURCE_DIR}/wrapping/python/testing/anaconda_test.sh
-      )
-      set_property(TEST ${ARGS_NAME}
-        PROPERTY
-          ENVIRONMENT
-            "PYTHON_TEST_FILE=${ARGS_FILE}"
-            "Python3_EXECUTABLE=${Python3_EXECUTABLE}"
-      )    
+      set(test_driver_file ${simplnx_SOURCE_DIR}/wrapping/python/testing/anaconda_test.sh)
     endif()
+
+    add_test(NAME ${ARGS_NAME}
+      COMMAND ${test_driver_file}
+    )
+
+    set_property(TEST ${ARGS_NAME}
+      PROPERTY
+        ENVIRONMENT
+          "PYTHON_TEST_FILE=${ARGS_FILE}"
+          "PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}"
+    )
   else()
     add_test(NAME ${ARGS_NAME}
       COMMAND ${Python3_EXECUTABLE} ${ARGS_FILE}

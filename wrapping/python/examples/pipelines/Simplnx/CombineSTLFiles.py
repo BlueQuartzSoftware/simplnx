@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     face_attribute_matrix_name="Face Data",
     face_normals_array_name="Face Normals",
-    stl_files_path=nxtest.GetDataDirectory() + "/STL_Models",
+    stl_files_path=nxtest.get_data_directory() / "STL_Models",
     triangle_data_container_name=nx.DataPath("TriangleGeometry"),
     vertex_attribute_matrix_name="Vertex Data"
 )
@@ -27,7 +27,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter 
 nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters
-output_file_path = nxtest.GetDataDirectory() + "/Output/CombinedStlFiles.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/CombinedStlFiles.dream3d"
 result = nx_filter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)

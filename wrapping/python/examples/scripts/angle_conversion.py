@@ -73,7 +73,7 @@ data_store = data_array.store
 npdata = data_store.npview()
 
 # Read the CSV file into the DataArray using the numpy view
-file_path = nxtest.GetSimplnxPythonSourceDir() + '/examples/data/angles.csv'
+file_path = nxtest.get_simplnx_python_source_dir() / 'examples/data/angles.csv'
 npdata[:] = np.loadtxt(file_path, delimiter=',')
 
 # ------------------------------------------------------------------------------
