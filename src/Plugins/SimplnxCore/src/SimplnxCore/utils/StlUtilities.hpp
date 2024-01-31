@@ -19,13 +19,28 @@ inline constexpr int32_t k_StlHeaderParseError = -1104;
 inline constexpr int32_t k_TriangleCountParseError = -1105;
 inline constexpr int32_t k_TriangleParseError = -1106;
 inline constexpr int32_t k_AttributeParseError = -1107;
+
+enum class StlFileType : int
+{
+  Binary = 0,
+  ASCI = 1,
+  FileOpenError = 2,
+  HeaderParseError = 3
+};
 } // namespace StlConstants
 
 namespace StlUtilities
 {
 // -----------------------------------------------------------------------------
-// Returns 0 for Binary, 1 for ASCII, anything else is an error.
-int32_t DetermineStlFileType(const fs::path& path);
+/**
+ * @brief This function will determine if the given STL file is ASCII or BINARY.
+ *
+ * This could give a false positive for BINARY for _any_ file that doesn't have
+ * the first few lines of a valid ASCII STL file.
+ * @param path The path to the file to check
+ * @return Enumeration that represents either the type of file or a possible parsing error
+ */
+StlConstants::StlFileType DetermineStlFileType(const fs::path& path);
 
 /**
  * @brief Returns the number of triangles in the file according to the header. This
@@ -34,5 +49,13 @@ int32_t DetermineStlFileType(const fs::path& path);
  * @return Number of triangle faces
  */
 int32_t NumFacesFromHeader(const fs::path& path);
+
+/**
+ * @brief A very basic function to convert a well behaved ASCII STL File into a binary STL file
+ * @param inputPath The input ASCII STL File
+ * @param outputPath The output Binary STL file
+ */
+void ConvertAsciiToBinaryStl(const std::filesystem::path& inputPath, const std::filesystem::path& outputPath);
+
 } // namespace StlUtilities
 } // namespace nx::core
