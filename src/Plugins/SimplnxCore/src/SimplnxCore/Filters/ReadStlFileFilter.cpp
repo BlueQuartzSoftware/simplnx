@@ -112,37 +112,28 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-
-  // Collect all the errors
-  std::vector<Error> errors;
-
   // Validate that the STL File is binary and readable.
-  int32_t stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
-  if(stlFileType < 0)
+  StlConstants::StlFileType stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
+  if(stlFileType == StlConstants::StlFileType::ASCI)
   {
-    Error result = {StlConstants::k_UnsupportedFileType,
-                    fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string())};
-    errors.push_back(result);
+    return {MakeErrorResult<OutputActions>(
+        StlConstants::k_UnsupportedFileType,
+        fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()))};
   }
-  if(stlFileType > 0)
+  if(stlFileType == StlConstants::StlFileType::FileOpenError)
   {
-    Error result = {StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the STL file.", pStlFilePathValue.string())};
-    errors.push_back(result);
+    return {MakeErrorResult<OutputActions>(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file.", pStlFilePathValue.string()))};
+  }
+  if(stlFileType == StlConstants::StlFileType::HeaderParseError)
+  {
+    return {MakeErrorResult<OutputActions>(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file.", pStlFilePathValue.string()))};
   }
 
   // Now get the number of Triangles according to the STL Header
   int32_t numTriangles = StlUtilities::NumFacesFromHeader(pStlFilePathValue);
   if(numTriangles < 0)
   {
-    Error result = {StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the STL file.", pStlFilePathValue.string())};
-    errors.push_back(result);
-  }
-
-  if(!errors.empty())
-  {
-    return {nonstd::make_unexpected(std::move(errors))};
+    return {MakeErrorResult<OutputActions>(numTriangles, fmt::format("Error extracting the number of triangles from the STL file.", pStlFilePathValue.string()))};
   }
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
