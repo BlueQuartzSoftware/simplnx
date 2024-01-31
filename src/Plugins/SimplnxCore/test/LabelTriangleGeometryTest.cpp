@@ -8,22 +8,23 @@ using namespace nx::core;
 
 namespace
 {
-// fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_Label_Triangle_Geometry/6_6_Label_Triangle_Geometry.dream3d", nx::core::unit_test::k_TestFilesDir));
-fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/reverse_triangle_winding/6_6_reverse_triangle_winding.dream3d", nx::core::unit_test::k_TestFilesDir));
-static constexpr StringLiteral k_AttributeMatrixName = "Attribute Matrix";
-static constexpr StringLiteral k_NumTrianglesName = "Num Triangles Array";
+fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test/label_triangle_geometry_test.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test/data_to_generate_test/combined_stls.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-const DataPath k_TriangleGeomPath({Constants::k_DataContainer});
+static constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
+static constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
+static constexpr StringLiteral k_RegionIdsName = "Region Ids";
+
+const DataPath k_TriangleGeomPath({"TriangleGeometry"});
+const DataPath k_CreatedRegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(k_RegionIdsName);
+const DataPath k_CellFeatureAMPath = k_TriangleGeomPath.createChildPath(k_CreatedAMName);
+const DataPath k_NumTrianglesPath = k_CellFeatureAMPath.createChildPath(k_NumTrianglesName);
 } // namespace
 
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[SimplnxCore][LabelTriangleGeometryFilter]")
 {
-  // const nx::core::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Label_Triangle_Geometry.tar.gz",
-  //                                                            "6_6_Label_Triangle_Geometry.dream3d");
-
-  // WIP: Upload 6_6_Label_Triangle_Geometry test data
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "reverse_triangle_winding.tar.gz",
-                                                              "reverse_triangle_winding.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "label_triangle_geometry_test.tar.gz",
+                                                              "label_triangle_geometry_test");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
@@ -33,10 +34,10 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(LabelTriangleGeometryFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
-    args.insertOrAssign(LabelTriangleGeometryFilter::k_CreatedRegionIdsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer.str(), "Triangles", "Region IDs"})));
-    args.insertOrAssign(LabelTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>(k_AttributeMatrixName));
-    args.insertOrAssign(LabelTriangleGeometryFilter::k_NumTrianglesName_Key, std::make_any<std::string>(k_NumTrianglesName));
+    args.insertOrAssign(LabelTriangleGeometryFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(::k_TriangleGeomPath));
+    args.insertOrAssign(LabelTriangleGeometryFilter::k_CreatedRegionIdsPath_Key, std::make_any<DataPath>(::k_CreatedRegionIdsPath));
+    args.insertOrAssign(LabelTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>(::k_CreatedAMName));
+    args.insertOrAssign(LabelTriangleGeometryFilter::k_NumTrianglesName_Key, std::make_any<std::string>(::k_NumTrianglesName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -46,4 +47,9 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
+
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(k_ExemplarDataFilePath);
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_CellFeatureAMPath, ::k_TriangleGeomPath.toString());
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_TriangleGeomPath.createChildPath(Constants::k_Face_Data), ::k_TriangleGeomPath.toString());
 }

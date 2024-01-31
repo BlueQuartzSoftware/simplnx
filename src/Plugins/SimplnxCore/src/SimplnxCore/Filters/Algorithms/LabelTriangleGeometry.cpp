@@ -95,8 +95,10 @@ Result<> LabelTriangleGeometry::operator()()
     m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->TriangleAMPath)->resizeTuples(std::vector<usize>{triangleCounts.size()});
   }
 
-  // Clear ElementDynamicList so write out is possible
+  // Clear ElementDynamicLists so write out is possible
   triangle.deleteElementNeighbors();
+  // Remove elements containing vertices, because Element neighbors created it quietly under the covers
+  triangle.deleteElementsContainingVert();
 
   // copy triangleCounts into the proper DataArray "NumTriangles" in the Feature Attribute Matrix
   auto& numTriangles = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->NumTrianglesPath);
