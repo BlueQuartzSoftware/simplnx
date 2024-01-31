@@ -330,4 +330,4 @@ private:
 };
 
 using CreateEdgeGeometryAction = CreateGeometry1DAction<EdgeGeom>;
-} // namespace complex
+} // namespace nx::core

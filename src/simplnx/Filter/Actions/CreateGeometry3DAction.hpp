@@ -330,4 +330,4 @@ private:
 
 using CreateTetrahedralGeometryAction = CreateGeometry3DAction<TetrahedralGeom>;
 using CreateHexahedralGeometryAction = CreateGeometry3DAction<HexahedralGeom>;
-} // namespace complex
+} // namespace nx::core

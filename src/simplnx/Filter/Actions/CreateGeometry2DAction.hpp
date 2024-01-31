@@ -331,4 +331,4 @@ private:
 
 using CreateTriangleGeometryAction = CreateGeometry2DAction<TriangleGeom>;
 using CreateQuadGeometryAction = CreateGeometry2DAction<QuadGeom>;
-} // namespace complex
+} // namespace nx::core
