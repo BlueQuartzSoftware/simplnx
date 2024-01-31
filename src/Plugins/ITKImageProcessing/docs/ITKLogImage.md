@@ -8,6 +8,8 @@ ITKImageIntensity (ImageIntensity)
 
 ## Description
 
+![](Images/ITKLogImageFilter.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

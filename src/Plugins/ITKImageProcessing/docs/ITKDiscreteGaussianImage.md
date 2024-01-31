@@ -19,6 +19,8 @@ When the Gaussian kernel is small, this filter tends to run faster than itk::Rec
 - NeighborhoodOperator
 - RecursiveGaussianImageFilter
 
+![](Images/ITKDiscreteGaussianImageFilter.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

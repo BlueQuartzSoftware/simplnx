@@ -22,6 +22,8 @@ Note that these definitions indicate that pixels equal to the threshold value ar
 
 The pixels must support the operators >= and <=.
 
+![](Images/ITKThresholdImageFilter.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

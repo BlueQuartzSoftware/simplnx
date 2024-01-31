@@ -29,6 +29,8 @@ return this->m_BackgroundValue;
 
 Where "!" is the unary Logical NOT operator in C++.
 
+![](Images/ITKNotImageFilter.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

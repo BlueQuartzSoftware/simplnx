@@ -12,6 +12,9 @@ IntensityWindowingImageFilter applies pixel-wise a linear transformation to the 
 
 All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.* RescaleIntensityImageFilter
 
+![](Images/ITKIntensityWindowingImageFilter.png)
+![](Images/ITKIntensityWindowingImageFilter_2.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

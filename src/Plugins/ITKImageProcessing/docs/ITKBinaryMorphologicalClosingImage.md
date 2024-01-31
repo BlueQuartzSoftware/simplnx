@@ -22,6 +22,8 @@ This code was contributed in the Insight Journal paper: "Binary morphological cl
 
 - MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleErodeImageFilter
 
+![](Images/ITKBinaryClosing.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

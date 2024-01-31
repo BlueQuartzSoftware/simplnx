@@ -10,6 +10,8 @@ ITKImageIntensity (ImageIntensity)
 
 The computations are performed using std::sqrt(x).
 
+![](Images/ITKSqrtImageFilter.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

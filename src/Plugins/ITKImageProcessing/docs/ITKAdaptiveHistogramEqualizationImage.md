@@ -22,6 +22,8 @@ The boundary condition ignores the part of the neighborhood outside the image, a
 
 For detail description, reference "Adaptive Image Contrast Enhancement using Generalizations of Histogram Equalization." J.Alex Stark. IEEE Transactions on Image Processing, May 2000.
 
+![](Images/ITKAdaptiveImageHistogram.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
