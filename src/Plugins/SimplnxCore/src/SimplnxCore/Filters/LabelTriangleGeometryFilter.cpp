@@ -86,12 +86,12 @@ IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataSt
   std::vector<PreflightValue> preflightUpdatedValues;
 
   {
-    const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
-    if(triangleGeom == nullptr)
+    const auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
+    if(triangleGeomPtr == nullptr)
     {
       return MakePreflightErrorResult(-34510, fmt::format("{} is not a valid Triangle Geometry", pTriangleGeomPathValue.toString()));
     }
-    usize numTris = triangleGeom->getNumberOfFaces();
+    usize numTris = triangleGeomPtr->getNumberOfFaces();
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{numTris}, std::vector<usize>{1}, pRegionIdsNameValue);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }

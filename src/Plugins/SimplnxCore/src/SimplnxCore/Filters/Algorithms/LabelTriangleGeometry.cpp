@@ -41,7 +41,7 @@ Result<> LabelTriangleGeometry::operator()()
       return MakeErrorResult(check, fmt::format("Error finding element neighbors for {} geometry", triangle.getName()));
     }
 
-    const TriangleGeom::ElementDynamicList* triangleNeighbors = triangle.getElementNeighbors();
+    const TriangleGeom::ElementDynamicList* triangleNeighborsPtr = triangle.getElementNeighbors();
 
     auto& regionIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->RegionIdsPath);
 
@@ -57,22 +57,22 @@ Result<> LabelTriangleGeometry::operator()()
         triangleCounts[regionCount]++;
 
         usize size = 0;
-        triList[size] = i;
+        triList[size] = static_cast<int32>(i);
         size++;
         while(size > 0)
         {
           TriangleGeom::MeshIndexType tri = triList[size - 1];
           size -= 1;
-          uint16_t tCount = triangleNeighbors->getNumberOfElements(tri);
-          TriangleGeom::MeshIndexType* data = triangleNeighbors->getElementListPointer(tri);
+          uint16_t tCount = triangleNeighborsPtr->getNumberOfElements(tri);
+          TriangleGeom::MeshIndexType* dataPtr = triangleNeighborsPtr->getElementListPointer(tri);
           for(int j = 0; j < tCount; j++)
           {
-            TriangleGeom::MeshIndexType neighTri = data[j];
+            TriangleGeom::MeshIndexType neighTri = dataPtr[j];
             if(regionIds[neighTri] == 0)
             {
               regionIds[neighTri] = regionCount;
               triangleCounts[regionCount]++;
-              triList[size] = neighTri;
+              triList[size] = static_cast<int32>(neighTri);
               size++;
               if(size >= triList.size())
               {

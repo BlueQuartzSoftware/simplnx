@@ -9,7 +9,7 @@ namespace nx::core
 {
 /**
  * @class LabelTriangleGeometryFilter
- * @brief This filter will ....
+ * @brief
  */
 class SIMPLNXCORE_EXPORT LabelTriangleGeometryFilter : public IFilter
 {
