@@ -186,14 +186,14 @@ Parameters CropImageGeometry::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UsePhysicalBounds_Key, "Use Physical Units For Bounds", "If true define physical coordinates for bounds, If false define voxel indices for bounds", false));
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "Lower bound of the volume to crop out", std::vector<uint64>{0, 0, 0},
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "Lower bound of voxels of the volume to crop out", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "Upper bound of the volume to crop out", std::vector<uint64>{0, 0, 0},
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "Upper bound in voxels of the volume to crop out", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_MinCoord_Key, "Min Coordinate (Physical Units)", "Lower bound of the volume to crop out", std::vector<float64>{0.0, 0.0, 0.0},
+  params.insert(std::make_unique<VectorFloat64Parameter>(k_MinCoord_Key, "Min Coordinate (Physical Units)", "Lower bound in real units of the volume to crop.", std::vector<float64>{0.0, 0.0, 0.0},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_MaxCoord_Key, "Min Coordinate (Physical Units) [Inclusive]", "Upper bound of the volume to crop out", std::vector<float64>{0.0, 0.0, 0.0},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat64Parameter>(k_MaxCoord_Key, "Max Coordinate (Physical Units) [Inclusive]", "Upper bound in real units of the volume to crop.",
+                                                         std::vector<float64>{0.0, 0.0, 0.0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
   params.insertSeparator({"Input Geometry and Data"});
