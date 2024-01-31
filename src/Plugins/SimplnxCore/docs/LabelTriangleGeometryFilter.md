@@ -1,36 +1,25 @@
-# Label Triangle Geometry #
+# Label Triangle Geometry
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Surface Meshing (Geometry)
 
-## Description ##
+## Description
 
 This **Filter** accepts a **Triangle Geometry** and checks the connectivity of **Triangles** and assigns them **region ID**s in a mask accordingly as well as providing a count for the number of **Triangles** in each **Region**.
 
-## Required Geometry ###
+Note: Our connectivity is different from other connectivity algorithms, in that it is dependent on the dimensionality of the geometry it is run on. A triangle geometry is two dimensional thus it must share one edge with another triangle to be considered connected. Only one shared vertex will not be enough to count triangles as connected. See the following image for reference:
 
-**Triangle Geometry**
+![Connectivity Image](/Images/connectivity_image.png)
 
-## Required Objects ##
+The image in question demonstrates what geometric shapes would be considered connected according to matching color scheme. The colors are relative to the shapes dimensionality. Thus the fact there is a yellow triangle and a yellow cube does not mean they are related.
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Data Container** | CAD Geometry | **Triangle Geometry** | N/A | This is the **Triangle Geometry** to be operated on. |
+% Auto generated parameter table will be inserted here
 
-## Created Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Face Attribute Array** | Region Ids | int32_t | (1)/(1) | The mask list for **SharedTriList** that holds traingles respective **Region ID**. |
-| **Attribute Matrix** | Cell Feature Attribute Matrix | FaceFeature | (1)/(0)  | A holding container for **NumTriangles** and respective masks. |
-| **FaceFeature Attribute Array** | NumTriangles | int64_t | (1)/(1) | This is a mask for each **Region ID** that contains the amount of **Triangles** in each **Region**. |
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
+## DREAM3D-NX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.
