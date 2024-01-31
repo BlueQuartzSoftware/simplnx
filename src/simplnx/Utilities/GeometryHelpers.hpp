@@ -94,7 +94,7 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
  * @return int32
  */
 template <typename T, typename K>
-ErrorCode   FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, IGeometry::Type geometryType)
+ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, IGeometry::Type geometryType)
 {
   DataStructure* dataStructure = dynamicList->getDataStructure();
   auto parentId = dynamicList->getParentIds().front();
@@ -182,7 +182,7 @@ ErrorCode   FindElementNeighbors(const DataArray<K>* elemList, const DynamicList
         for(usize i = 0; i < numVertsPerElem; i++)
         {
           for(usize j = 0; j < numVertsPerElem; j++)
-          { 
+          {
             if(elems[offset + i] == *(vertCell + j))
             {
               vCount++;
