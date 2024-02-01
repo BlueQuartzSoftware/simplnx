@@ -56,6 +56,6 @@ void IParallelAlgorithm::setParallelizationEnabled(bool doParallel)
 // -----------------------------------------------------------------------------
 void IParallelAlgorithm::requireArraysInMemory(const AlgorithmArrays& arrays)
 {
-  setParallelizationEnabled(!CheckArraysInMemory(arrays));
+  setParallelizationEnabled(CheckArraysInMemory(arrays));
 }
 } // namespace nx::core
