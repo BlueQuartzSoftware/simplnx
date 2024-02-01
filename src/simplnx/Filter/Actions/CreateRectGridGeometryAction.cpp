@@ -227,4 +227,4 @@ std::vector<DataPath> CreateRectGridGeometryAction::getAllCreatedPaths() const
   }
   return createdPaths;
 }
-} // namespace complex
+} // namespace nx::core
