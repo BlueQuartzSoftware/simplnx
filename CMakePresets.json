@@ -245,15 +245,15 @@
         },
         "SimplnxCore_INSTALL_PIPELINES": {
           "type": "BOOL",
-          "value": "OFF"
+          "value": "ON"
         },
         "ITKImageProcessing_INSTALL_PIPELINES": {
           "type": "BOOL",
-          "value": "OFF"
+          "value": "ON"
         },
         "OrientationAnalysis_INSTALL_PIPELINES": {
           "type": "BOOL",
-          "value": "OFF"
+          "value": "ON"
         },
         "OrientationAnalysis_INSTALL_DATA_FILES": {
           "type": "BOOL",
