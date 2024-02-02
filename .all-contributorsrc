@@ -66,7 +66,7 @@
     },
     {
       "login": "bpenniebq",
-      "name": "bpenniebq",
+      "name": "Braden Pennie",
       "avatar_url": "https://avatars.githubusercontent.com/u/106270421?v=4",
       "profile": "https://github.com/bpenniebq",
       "contributions": [
@@ -75,7 +75,7 @@
     },
     {
       "login": "john-stone-ics",
-      "name": "john-stone-ics",
+      "name": "John Stone",
       "avatar_url": "https://avatars.githubusercontent.com/u/18195504?v=4",
       "profile": "https://github.com/john-stone-ics",
       "contributions": [
@@ -99,6 +99,15 @@
       "contributions": [
         "research",
         "data"
+      ]
+    },
+    {
+      "login": "ajacksonbq",
+      "name": "Alex Jackson",
+      "avatar_url": "",
+      "profile": "https://github.com/ajackson",
+      "contributions": [
+        "code"
       ]
     }
   ],
