@@ -196,7 +196,7 @@ IGeometry::StatusCode TriangleGeom::findElementsContainingVert()
 
 IGeometry::StatusCode TriangleGeom::findElementNeighbors()
 {
-  StatusCode err = 0;
+  StatusCode err;
   if(getElementsContainingVert() == nullptr)
   {
     err = findElementsContainingVert();
@@ -205,7 +205,7 @@ IGeometry::StatusCode TriangleGeom::findElementNeighbors()
       return err;
     }
   }
-  auto triangleNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
+  auto triangleNeighbors = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, IGeometry::Type::Triangle);
   if(triangleNeighbors == nullptr)
   {

@@ -85,9 +85,14 @@ public:
    */
   DynamicListArray(const DynamicListArray& other)
   : DataObject(other)
-  , m_Array(other.m_Array)
   , m_Size(other.m_Size)
   {
+    allocate(other.m_Size);
+
+    for(usize i = 0; i < other.m_Size; i++)
+    {
+      setElementList(i, other.m_Array[i]);
+    }
   }
 
   /**
@@ -187,7 +192,7 @@ public:
    */
   DataObject* shallowCopy() override
   {
-    throw std::runtime_error("");
+    return new DynamicListArray(*this);
   }
 
   /**
@@ -356,17 +361,18 @@ protected:
   {
     static typename DynamicListArray<T, K>::ElementList linkInit = {0, nullptr};
 
-    // This makes sure we deallocate any lists that have been created
-    for(usize i = 0; i < this->m_Size; i++)
-    {
-      if(this->m_Array[i].cells != nullptr)
-      {
-        delete[] this->m_Array[i].cells;
-      }
-    }
-    // Now delete all the "ElementList" structures
     if(this->m_Array != nullptr)
     {
+      // This makes sure we deallocate any lists that have been created
+      for(usize i = 0; i < this->m_Size; i++)
+      {
+        if(this->m_Array[i].cells != nullptr)
+        {
+          delete[] this->m_Array[i].cells;
+        }
+      }
+
+      // Now delete all the "ElementList" structures
       delete[] this->m_Array;
     }
 

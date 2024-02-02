@@ -1,0 +1,38 @@
+# Remove Flagged Triangles
+
+## Group (Subgroup)
+
+Surface Meshing (Misc)
+
+## Description
+
+This **Filter** removes **Triangles** from the supplied **Triangle Geometry** that are flagged by a boolean mask array as **true**.  A new reduced **Geometry** is created that contains all the remaining **Triangles**.  It is unknown until run time how many **Triangles** will be removed from the **Geometry**. Therefore, this **Filter** requires that a new **TriangleGeom** be created to contain the reduced **Triangle Geometry**. This new **Geometry** will *NOT* contain copies of any **Feature Attribute Matrix** or **Ensemble Attribute Matrix** from the original **Geometry**. 
+
+- Additionally, all **Vertex** data will be copied, with tuples *removed* for any **Vertices** removed by the **Filter**.  The user must supply a name for the reduced **Geometry**.
+
+The mask is expected to be over the triangles themselves so it should be based on something from the ***Face Data*** **Attribute Matrix**, generally we suggest basing the mask on the created **Region Ids** array from the *Label Triangle Geometry Filter*.
+
+*Note:* Since it cannot be known before run time how many **Vertices** will be removed, the new **Vertex Geometry** and
+all associated **Vertex** data to be copied will be initialized to have size 0.
+
+## Example Output
+
+- The next figure shows a triangle geometry that has had a mask generated. Yellow parts are flagged as true.
+
+![Masked triangle geometries for removal.](Images/RemoveFlaggedTriangles_1.png)
+
+- The next figure shows the result of running the filter.
+
+![Resulting triangle geometry](Images/RemoveFlaggedTriangles_2.png)
+
+% Auto generated parameter table will be inserted here
+
+## Example Pipelines
+
+## License & Copyright
+
+Please see the description file distributed with this plugin.
+
+## DREAM3D-NX Help
+
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.
