@@ -39,6 +39,8 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   neighpoints[5] = (dims[0] * dims[1]);
   int64 nextSeed = 0;
 
+  auto start = std::chrono::steady_clock::now();
+
   while(seed >= 0)
   {
     if(m_ShouldCancel)
@@ -113,13 +115,18 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
       voxelslist.assign(initialVoxelsListSize, -1);
       gnum++;
-      if(gnum % 100 == 0)
+
+      auto now = std::chrono::steady_clock::now();
+      // Only send updates every 1 second
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
       {
-        std::string ss = fmt::format("Current Feature Count: {}", gnum);
-        m_MessageHandler({IFilter::Message::Type::Info, ss});
+        std::string message = fmt::format("Features Found: {}", gnum);
+        m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, 0});
+        start = std::chrono::steady_clock::now();
       }
     }
   }
+
   m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Total Features Found: {}", gnum)});
 
   return {};
