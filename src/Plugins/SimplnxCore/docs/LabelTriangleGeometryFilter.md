@@ -10,9 +10,19 @@ This **Filter** accepts a **Triangle Geometry** and checks the connectivity of *
 
 Note: Our connectivity is different from other connectivity algorithms, in that it is dependent on the dimensionality of the geometry it is run on. A triangle geometry is two dimensional thus it must share one edge with another triangle to be considered connected. Only one shared vertex will not be enough to count triangles as connected. See the following image for reference:
 
-![Connectivity Image](/Images/connectivity_image.png)
+![Connectivity Image](Images/connectivity_image.png)
 
 The image in question demonstrates what geometric shapes would be considered connected according to matching color scheme. The colors are relative to the shapes dimensionality. Thus the fact there is a yellow triangle and a yellow cube does not mean they are related.
+
+- 1D Geometry: Two edges are considered connected if they share a vertex.
+- 2D Geometry: Triangle and Quad Geometries are considered connected if they share an entire edge. As shown in the image above, Triangles 1 & 2 are connected while triangles 2 & 3 are **not** connected.
+- 3D Geometry: Hexahedron/Tetrahedron: In the image above the hexahedrons 4,5, and 6 are **not** considered connected while 6 & 7 are considered connected.
+
+## Example Output
+
+The image below shows a single STL file that contains 12 different geometries. This filter labeled each geometry with a unique "Region ID" and the visualization is colored by those "Region Ids"
+
+![Filter Output](Images/LabelTriangleGeometry_1.png)
 
 % Auto generated parameter table will be inserted here
 

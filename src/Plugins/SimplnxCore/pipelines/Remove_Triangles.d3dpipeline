@@ -1,0 +1,113 @@
+{
+  "isDisabled": false,
+  "name": "Untitled Pipeline",
+  "pipeline": [
+    {
+      "args": {
+        "face_attribute_matrix": "Face Data",
+        "face_normals_data_path": "Face Normals",
+        "scale_factor": 1.0,
+        "scale_output": false,
+        "stl_file_path": "Data/STL_Models/Example_Triangle_Geometry.stl",
+        "triangle_geometry_name": "TriangleDataContainer",
+        "vertex_attribute_matrix": "Vertex Data"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ReadStlFileFilter",
+        "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_region_ids_path": "TriangleDataContainer/Face Data/Region Ids",
+        "num_triangles_name": "NumTriangles",
+        "triangle_attribute_matrix_name": "CAD Part Data",
+        "triangle_geom_path": "TriangleDataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::LabelTriangleGeometryFilter",
+        "uuid": "7a7a2c6f-3b03-444d-8b8c-5976b0e5c82e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "TriangleDataContainer/Face Data/Region Ids",
+              "comparison": 0,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 9.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "Mask",
+        "created_mask_type": 1,
+        "custom_false_value": 0.0,
+        "custom_true_value": 1.0,
+        "use_custom_false_value": false,
+        "use_custom_true_value": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "TriangleDataContainer/Face Data/Region Ids",
+              "comparison": 0,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 9.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "Mask2",
+        "created_mask_type": 10,
+        "custom_false_value": 0.0,
+        "custom_true_value": 1.0,
+        "use_custom_false_value": false,
+        "use_custom_true_value": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_geometry": "TriangleDataContainer",
+        "mask_array_path": "TriangleDataContainer/Face Data/Mask2",
+        "output_geometry": "Part 10"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::RemoveFlaggedTrianglesFilter",
+        "uuid": "38155c61-2709-4731-be95-43745bb3f8d8"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1
+}

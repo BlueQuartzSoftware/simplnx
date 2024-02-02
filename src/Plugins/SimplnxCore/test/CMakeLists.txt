@@ -208,7 +208,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_write_stl_test.tar.gz SHA512 d1e929246f73515b006d99392414a4b5a2afe6c96261a7cbccbcbb68cc0be1e43a987f6ab4a8fff21914fe3f15bf7f59b4387d8314cbdf8697f5c8cea40fa481)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_interpolate_point_cloud_to_regular_grid.tar.gz SHA512 287500082913dfbf62c5f66ec5185c3db53cedc20a2c89c28b23a208ddfca47c377d557d2f509c1d72f3aff8aadc3058e6932159a6cef73f33227ad433f14752)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_resample_rect_grid_to_image_geom.tar.gz SHA512  58cabfb83deeef7aff1252963a8cb378745ca00fc120a9623f699b4c9c618d216c4d3fa88e964772706a0096e979abc741be7ba6f96a2398162b3f6d4ec8ec13)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_combine_stl_files.tar.gz SHA512 109dfb39ac04213a7d8bc8ef3d852f112177ad1a1c624926e980c2a3e30af04ff3c48b8cf315d04fd2b8d0270b1defa33078511243d9ac2def37a8b43884120b)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_combine_stl_files_v2.tar.gz SHA512 40235976b9897365c338587056dc9ba90466b3eca58d6b310d59f7df16592b53647349daa1c7247cdcf01b5940596ad53d39eb734549dda4e829ae93a5928a4a)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_avizo_writers.tar.gz SHA512 f776eb5c86e06bde0fb1ee76dbdf95e4fd1457697033b2c639cac376db3ba0b05410ed4074fb10a47dd26ef79c78a02b5bb77c04cfe1299e8a33d8b3bff09749)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME vtk_rectilinear_grid_writer.tar.gz SHA512 9fef02b5269609503d03dd0126cc635cc1c1156894cff18b0184b334d705b850ca1a06ae0d1c66a352a32dd9ad9fb74f24255c7de1399b06bbec7d2e2b41941b )
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d.tar.gz SHA512 6dd8a3412532bdc7481f7781c7087b4477c6a1efbe6b214f997dad30c53c59714a751be522f084b98065fe75100c74df901bb8af2f512ef47344d8f7941575cf )
@@ -247,7 +247,8 @@ set(PREBUILT_PIPELINE_NAMES
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_CSV_Data.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_STL_Model.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Triangle_Face_Data_Demo.d3dpipeline"
-
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Remove_Triangles.d3dpipeline"
+  
   # These are workflow files
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII_Data.d3dworkflow"
 
