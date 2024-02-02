@@ -747,6 +747,15 @@ foreach(param ${CoreParameters})
   )
 endforeach()
 
+# Generate Supporting Color Table File
+file(READ ${simplnx_SOURCE_DIR}/resources/ColorTablePresets/ColorTablePresets.json COLOR_TABLE_JSON)
+set(SIMPLNX_GENERATED_COLOR_TABLE_HEADER ${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.hpp)
+configure_file(${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.in.hpp ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER})
+list(APPEND SIMPLNX_HDRS
+  ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER}
+)
+
+# Generate Python-Bindings Supporting Files
 set(SIMPLNX_GENERATED_PYTHON_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/SimplnxPython.hpp)
 set(SIMPLNX_PYTHON_MODULE "simplnx")
 configure_file(${simplnx_SOURCE_DIR}/wrapping/python/CxPybind/SimplnxPython.hpp.in ${SIMPLNX_GENERATED_PYTHON_HEADER})
