@@ -118,6 +118,8 @@
 #include "SimplnxCore/Filters/KMedoidsFilter.hpp"
 #include "SimplnxCore/Filters/KMeansFilter.hpp"
 #include "SimplnxCore/Filters/SilhouetteFilter.hpp"
+#include "SimplnxCore/Filters/LabelTriangleGeometryFilter.hpp"
+#include "SimplnxCore/Filters/RemoveFlaggedTrianglesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace nx::core
@@ -241,6 +243,8 @@ namespace nx::core
     {nx::core::Uuid::FromString("f7486aa6-3049-5be7-8511-ae772b70c90b").value(), {nx::core::FilterTraits<KMedoidsFilter>::uuid, &KMedoidsFilter::FromSIMPLJson}}, // KMedoids
     {nx::core::Uuid::FromString("b56a04de-0ca0-509d-809f-52219fca9c98").value(), {nx::core::FilterTraits<KMeansFilter>::uuid, &KMeansFilter::FromSIMPLJson}}, // KMeans
     {nx::core::Uuid::FromString("f84d4d69-9ea5-54b6-a71c-df76d76d50cf").value(), {nx::core::FilterTraits<SilhouetteFilter>::uuid, &SilhouetteFilter::FromSIMPLJson}}, // Silhouette
+    {nx::core::Uuid::FromString("a250a228-3b6b-5b37-a6e4-8687484f04c4").value(), {nx::core::FilterTraits<LabelTriangleGeometryFilter>::uuid, &LabelTriangleGeometryFilter::FromSIMPLJson}}, // LabelTriangleGeometry
+    {nx::core::Uuid::FromString("379ccc67-16dd-530a-984f-177db9351bac").value(), {nx::core::FilterTraits<RemoveFlaggedTrianglesFilter>::uuid, &RemoveFlaggedTrianglesFilter::FromSIMPLJson}}, // RemoveFlaggedTriangles
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

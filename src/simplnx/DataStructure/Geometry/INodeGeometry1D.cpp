@@ -122,7 +122,10 @@ const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementNeighbors(
 
 void INodeGeometry1D::deleteElementNeighbors()
 {
-  getDataStructureRef().removeData(m_CellNeighborsDataArrayId);
+  if(!getDataStructureRef().removeData(m_CellNeighborsDataArrayId))
+  {
+    throw std::runtime_error(fmt::format("{}({}): Function {}: Unable to remove Element Neighbors", "deleteElementNeighbors()", __FILE__, __LINE__));
+  }
   m_CellNeighborsDataArrayId.reset();
 }
 

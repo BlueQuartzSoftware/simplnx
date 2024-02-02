@@ -174,6 +174,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
           continue;
         } // We already added this element so loop again
         //      qDebug() << "   Comparing Element " << vertIdxs[vt] << "\n";
+        auto vertCell = elemList->cbegin() + (vertIdxs[vt] * elemList->getNumberOfComponents());
         usize vCount = 0;
         // Loop over all the vertex indices of this element and try to match numSharedVerts of them to the current loop element
         // If there is numSharedVerts match then that element is a neighbor of the source. If there are more than numVertsPerElem
@@ -182,7 +183,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
         {
           for(usize j = 0; j < numVertsPerElem; j++)
           {
-            if(elems[offset + i] == elems[offset + j])
+            if(elems[offset + i] == *(vertCell + j))
             {
               vCount++;
             }
