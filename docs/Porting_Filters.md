@@ -135,10 +135,11 @@ code such as `vertex[index]` to get/set a value but the code `vertex = i` to mov
 
 ## Selecting Geometry from a Parameter
 
-If you need to have the user select a Geometry then you should use a `DataPathSelectionParameter`.
+If you need to have the user select a Geometry then you should use a `GeometrySelectionParameter`.
 
 ```cpp
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry to Sample", "", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeomPath_Key, "Input Image Geometry", "DataPath to input Image Geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 ```
 
 ## Transferring Data from one Geometry to Another
@@ -152,8 +153,8 @@ of how to perform this transfer of data.
 
 There are several classes that can be used to help the developer write parallel algorithms.
 
-`simplnx/Utilities/ParallelAlgorithm` and `simplnx/Utilties/ParallelTaskAlgorithm` are the two main classes depending
-on the situation. `AlignSections.cpp` and `CropImageGeoemtry.cpp` both use a task based
+`simplnx/Utilities/ParallelAlgorithm` and `simplnx/Utilities/ParallelTaskAlgorithm` are the two main classes depending
+on the situation. `AlignSections.cpp` and `CropImageGeometry.cpp` both use a task based
 parallelism. `RotateSampleRefFrameFilter.cpp` shows an example
 of using ParallelData3DAlgorithm.
 
@@ -257,4 +258,4 @@ these should be used as needed by the filter.
 
 ## Processing a Geometry In Place
 
-Sometimes a filter needs allow the user to process it's geometry "in place" in order to ease the number of filters that are needed to remove temporary DataObjecsts. If your filter needs this kind of capability, then take a look at the "CropImageGeometry" or "RotateSampleRefFrame" filters.
+Sometimes a filter needs allow the user to process it's geometry "in place" in order to ease the number of filters that are needed to remove temporary DataObjects. If your filter needs this kind of capability, then take a look at the "CropImageGeometry" or "RotateSampleRefFrame" filters.
