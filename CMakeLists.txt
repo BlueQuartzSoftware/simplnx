@@ -135,6 +135,13 @@ if(SIMPLNX_BUILD_TESTS AND SIMPLNX_DOWNLOAD_TEST_FILES)
   set_target_properties(Fetch_Remote_Data_Files PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
 endif()
 
+if(SIMPLNX_CONDA_BUILD)
+  include(GNUInstallDirs)
+  set(SIMPLNX_PIPELINE_INSTALL_DIR "${CMAKE_INSTALL_DATAROOTDIR}/simplnx/pipelines")
+else()
+  set(SIMPLNX_PIPELINE_INSTALL_DIR "pipelines")
+endif()
+
 # -----------------------------------------------------------------------
 # Find dependent libraries
 # -----------------------------------------------------------------------
