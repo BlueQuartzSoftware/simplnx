@@ -209,6 +209,11 @@ endif()
 # Force HDF5 1.10 API
 target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
+target_compile_options( simplnx PUBLIC
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>: "-ffp-contract=off">
+ )
+
+
 if(SIMPLNX_ENABLE_MULTICORE)
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_ENABLE_MULTICORE")
   target_link_libraries(simplnx PUBLIC TBB::tbb)
