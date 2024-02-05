@@ -86,7 +86,14 @@ An example of executing a file in immediate mode using a filter from the simplnx
 The resulting :ref:`DataArray <DataArray>` is available for use immediately following the execution of the filter.
 This would not be the case had the filter just been instantiated but not executed.
 
-An example of executing the Python filter **ExampleFilter2** from plugin **ExamplePlugin** in immediate mode:
+Executing Python filters directly from Python is similar, but has an additional line of code that is required.
+
+.. code:: python
+
+    from ExamplePlugin import ExampleFilter2
+    f = sx.PyFilter(ExampleFilter2())
+
+This code wraps the Python filter ExampleFilter2 into a PyFilter instance so that it can be executed by *simplnx*.  Here is the full example of executing the Python filter **ExampleFilter2** from plugin **ExamplePlugin** in immediate mode:
 
 .. code:: python
 
