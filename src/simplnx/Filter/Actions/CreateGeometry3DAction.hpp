@@ -199,23 +199,23 @@ public:
     {
       const DataPath cellsPath = getCreatedPath().createChildPath(m_SharedCellsName);
       // Create the default DataArray that will hold the CellList and Vertices.
-      nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
+      Result result = CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString()));
       }
-      SharedCellList* polyhedronList = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
+      SharedCellList* polyhedronList = ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
       geometry3d->setPolyhedraList(*polyhedronList);
 
       // Create the Vertex Array with a component size of 3
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = nx::core::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
-      Float32Array* vertexArray = nx::core::ArrayFromPath<float>(dataStructure, vertexPath);
+      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry3d->setVertices(*vertexArray);
     }
 

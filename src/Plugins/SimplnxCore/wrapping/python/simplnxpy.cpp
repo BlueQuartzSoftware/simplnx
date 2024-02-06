@@ -24,6 +24,7 @@
 #include <simplnx/DataStructure/Geometry/TetrahedralGeom.hpp>
 #include <simplnx/DataStructure/Geometry/TriangleGeom.hpp>
 #include <simplnx/DataStructure/Geometry/VertexGeom.hpp>
+#include <simplnx/DataStructure/StringArray.hpp>
 #include <simplnx/Filter/Actions/CopyArrayInstanceAction.hpp>
 #include <simplnx/Filter/Actions/CopyDataObjectAction.hpp>
 #include <simplnx/Filter/Actions/CreateArrayAction.hpp>
@@ -705,6 +706,46 @@ PYBIND11_MODULE(simplnx, mod)
   iDataArray.def_property_readonly("cdims", &IDataArray::getComponentShape);
   iDataArray.def_property_readonly("data_type", &IDataArray::getDataType);
   iDataArray.def("resize_tuples", &IDataArray::resizeTuples, "Resize the tuples with the given shape");
+
+  py::class_<StringArray, IArray, std::shared_ptr<StringArray>> stringArray(mod, "StringArray");
+  stringArray.def(
+      "initialize_with_list",
+      [](StringArray& strArr, const py::list& pyList) {
+        if(pyList.size() > strArr.size())
+        {
+          throw std::invalid_argument("Unable to initialize: Input list is larger than target array.");
+        }
+
+        std::transform(pyList.begin(), pyList.end(), strArr.begin(), [](const py::handle& item) {
+          if(!py::isinstance<py::str>(item))
+          {
+            throw std::invalid_argument("List must contain only strings.");
+          }
+          return item.cast<std::string>();
+        });
+      },
+      "Initializes the StringArray with a list of strings.  If the number of strings in the list is smaller than the StringArray size, then the StringArray will be initialized with the string list "
+      "and the leftover elements at the end of the array will remain unchanged.  If the number of strings in the list is larger than the StringArray size, this method will throw an exception.");
+  stringArray.def("__len__", [](StringArray& strArr) { return strArr.size(); });
+  stringArray.def("__getitem__", [](StringArray& strArr, usize index) {
+    if(index >= strArr.size())
+    {
+      throw py::index_error("Index out of range");
+    }
+    return strArr[index];
+  });
+  stringArray.def("__setitem__", [](StringArray& strArr, usize index, const std::string& value) {
+    if(index >= strArr.size())
+    {
+      throw py::index_error("Index out of range");
+    }
+    strArr[index] = value;
+  });
+  stringArray.def("__iter__", [](StringArray& strArr) { return py::make_iterator(strArr.begin(), strArr.end()); });
+  stringArray.def_property_readonly("tdims", &StringArray::getTupleShape);
+  stringArray.def_property_readonly("cdims", &StringArray::getComponentShape);
+  stringArray.def_property_readonly("values", &StringArray::values);
+  stringArray.def("resize_tuples", &StringArray::resizeTuples, "Resize the tuples with the given shape");
 
   auto dataArrayInt8 = SIMPLNX_PY_BIND_DATA_ARRAY(mod, Int8Array);
   auto dataArrayUInt8 = SIMPLNX_PY_BIND_DATA_ARRAY(mod, UInt8Array);

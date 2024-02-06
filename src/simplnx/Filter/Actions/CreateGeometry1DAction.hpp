@@ -200,23 +200,23 @@ public:
       DataPath edgesPath = getCreatedPath().createChildPath(m_SharedEdgesName);
       // Create the default DataArray that will hold the EdgeList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
+      Result result = CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", prefix, edgesPath.toString()));
       }
-      SharedEdgeList* createdEdges = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
+      SharedEdgeList* createdEdges = ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
       geometry1d->setEdgeList(*createdEdges);
 
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = nx::core::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
-      Float32Array* vertexArray = nx::core::ArrayFromPath<float>(dataStructure, vertexPath);
+      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry1d->setVertices(*vertexArray);
     }
 
