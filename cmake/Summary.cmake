@@ -1,6 +1,6 @@
 function(OSInformation)
     if(APPLE)
-        exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
+        execute_process(COMMAND uname -v OUTPUT_VARIABLE DARWIN_VERSION)
         string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
 
         if(DARWIN_VERSION EQUAL 19) # macOS 10.15 Catalina (Xcode 11.x or Xcode 12.x)
