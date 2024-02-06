@@ -211,7 +211,7 @@ target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
 target_compile_options(simplnx
   PUBLIC
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:"-ffp-contract=off">
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off>
 )
 
 if(SIMPLNX_ENABLE_MULTICORE)
