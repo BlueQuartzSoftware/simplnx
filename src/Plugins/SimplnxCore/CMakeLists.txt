@@ -94,6 +94,7 @@ set(FilterList
   ReadDeformKeyFileV12Filter
   ReadDREAM3DFilter
   ReadHDF5DatasetFilter
+  ReadPeregrineHDF5FileFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
   ReadTextDataArrayFilter
@@ -187,6 +188,7 @@ set(AlgorithmList
   QuickSurfaceMesh
   ReadBinaryCTNorthstar
   ReadDeformKeyFileV12
+  ReadPeregrineHDF5File
   ReadRawBinary
   ReadStlFile
   ReadVolumeGraphicsFile
