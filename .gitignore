@@ -28,5 +28,4 @@ CMakeLists.txt.*
 test_data/
 CMakeUserPresets.json
 Workspace
-/__pycache__/
-/Data/
+__pycache__/

@@ -7,8 +7,6 @@
 
 #include <memory>
 
-using namespace nx::core;
-
 namespace nx::core
 {
 CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, usize xBoundTuples, usize yBoundTuples, usize zBoundTuples, const std::string& cellAttributeMatrixName,
@@ -192,7 +190,7 @@ Float32Array* CreateRectGridGeometryAction::createBoundArray(DataStructure& data
     errors.insert(errors.end(), result.errors().begin(), result.errors().end());
     return nullptr;
   }
-  Float32Array* boundsArray = nx::core::ArrayFromPath<float>(dataStructure, boundsPath);
+  Float32Array* boundsArray = ArrayFromPath<float>(dataStructure, boundsPath);
 
   return boundsArray;
 }

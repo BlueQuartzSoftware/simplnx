@@ -200,23 +200,23 @@ public:
       DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
       // Create the default DataArray that will hold the FaceList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
+      Result result = CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString()));
       }
-      SharedTriList* triangles = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
+      SharedTriList* triangles = ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
       geometry2d->setFaceList(*triangles);
 
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = nx::core::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
-      Float32Array* vertexArray = nx::core::ArrayFromPath<float>(dataStructure, vertexPath);
+      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry2d->setVertices(*vertexArray);
     }
 
