@@ -6,7 +6,20 @@ IO (Output)
 
 ## Description
 
-This **Filter** creates a standard pole figure image for each **Ensemble** in a selected **Data Container** with an **Image Geometry**. The **Filter** uses Euler angles in radians and requires the crystal structures for each **Ensemble** array and the corresponding **Ensemble** Ids on the **Cells**. The **Filter** also optionally can use a *mask* array to determine which **Cells** are valid for the pole figure computation.
+This **Filter** creates a standard crystallographic pole figure image for each **Ensemble** (phase)in a selected **Data Container**. The **Filter** uses Euler angles in radians and requires the crystal structures and material names for each **Ensemble** array and the corresponding **Ensemble** Ids on the **Cells**. The **Filter** also optionally can use a *mask* array to determine which **Cells** are valid for the pole figure computation.
+
+In a practicale sense, this means that the following information is available to the filter:
+
+- Cell Level
+
+  - Euler Angles (Float 32) ordered as sets of (phi1, Phi, phi2).
+  - Phases (Int32) This is the phase that each Euler angle belongs to
+  - Optional Mask(boolean or uint8) True/1 if the Euler angle should be included in the pole figure.
+
+- Ensemble Level (Phase Information)
+
+  - Laue Class (UInt32)
+  - Material Names (String)
 
 ### Algorithm Choice
 
@@ -18,7 +31,7 @@ This **Filter** creates a standard pole figure image for each **Ensemble** in a 
 
 ### Layout
 
-The 3 pole figures can be laid out in a Square, Horizontal row or vertical column. Supporting informatio (including the color bar legend for color pole figures) will also be printed on the image.
+The 3 pole figures can be laid out in a Square, Horizontal row or vertical column. Supporting information (including the color bar legend for color pole figures) will also be printed on the image.
 
 | Lambert Projection | Discrete |
 |--------------------|----------|
@@ -28,8 +41,8 @@ The 3 pole figures can be laid out in a Square, Horizontal row or vertical colum
 
 ## Example Pipelines
 
-+ TxCopper_Exposed
-+ TxCopper_Unexposed
+- TxCopper_Exposed
+- TxCopper_Unexposed
 
 ## License & Copyright
 
