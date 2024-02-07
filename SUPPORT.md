@@ -14,7 +14,7 @@ If you experience or witness unacceptable behaviorâ€”or have any other concernsâ
 
 ## Community ##
 
-For those looking to engage with the DREAM3DNX community, see the discussions board of [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions). All of our filter documentation now links back to this repository.
+For those looking to engage with the DREAM3DNX community, see the discussions board of [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/discussions). All of our filter documentation now links back to this repository.
 
 ## Contact ##
 

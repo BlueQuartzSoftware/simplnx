@@ -11,14 +11,14 @@ This repository needs many different kinds of contribution not all of which requ
   - Suggest User Interface updates and/or add accesibility options
   - Create new logos or images
   - Report bugs and test GUI client which can be downloaded from [dream3d.io](http://www.dream3d.io/)
-  - Answer questions from fellow users in [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions)
+  - Answer questions from fellow users in [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/discussions)
 - **For Python Developers:**
   - Create new examples of use cases and as a Jupyter Notebook or sdd to documentation
   - Create filters for simplnx from new papers and dissertations
   - Fix bugs in filters or the python bindings
   - Update exisitng filters to expand functionality or optimize
 - **For Operating System Power Users and CyberSecurity Experts:**
-  - Report security vulnerabilities in [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues)
+  - Report security vulnerabilities in [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions)
   - Add CMake presets for compiling on unique operating systems not already supported
   - Create packages of DREAM3DNX and/or simplnx (with the nxrunner cli) and submit them to your favorite package manager (AUR, Flatpak, etc.)
   - Create ways to run simplnx (with the nxrunner cli) in containers (such as Docker container)
@@ -131,16 +131,16 @@ For the basic code styling simplnx uses `clang-format`, the formatting file is i
 ```markdown
 ## DREAM3D-NX Help ##
 
-If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues) GItHub site where the community of DREAM3D-NX users can help answer your questions.
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GItHub site where the community of DREAM3D-NX users can help answer your questions.
 ```
 
 ## Community
 
-For those looking to engage with the DREAM3DNX community, see the discussions board of [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions). All of our filter documentation now links back to this repository.
+For those looking to engage with the DREAM3DNX community, see the discussions board of [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/discussions). All of our filter documentation now links back to this repository.
 
 ## Additional Notes
 
-We put together a specifc discussion category, called [Contributor Questions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/categories/contributor-questions), where you can quickly get help with issues related to development directly from maintainers.
+We put together a specifc discussion category, called [Contributor Questions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/discussions/categories/contributor-questions), where you can quickly get help with issues related to development directly from maintainers.
 
 It is highly recommended for new code contributors to look at the [porting filters guidelines](/docs/Porting_Filters.md) to get a better idea of API and see how to bring older filters over from [SIMPL](https://github.com/BlueQuartzSoftware/SIMPL).
 
