@@ -209,10 +209,10 @@ endif()
 # Force HDF5 1.10 API
 target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
-target_compile_options(simplnx
-  PUBLIC
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off>
-)
+target_compile_options( simplnx PUBLIC
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>: "-ffp-contract=off">
+ )
+
 
 if(SIMPLNX_ENABLE_MULTICORE)
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_ENABLE_MULTICORE")
@@ -749,9 +749,9 @@ endforeach()
 
 # Generate Supporting Color Table File
 file(READ ${simplnx_SOURCE_DIR}/resources/ColorTablePresets/ColorTablePresets.json COLOR_TABLE_JSON)
-set(SIMPLNX_GENERATED_COLOR_TABLE_HEADER ${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.hpp)
+set(SIMPLNX_GENERATED_COLOR_TABLE_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/util/ColorTable.hpp)
 configure_file(${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.in.hpp ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER})
-list(APPEND SIMPLNX_HDRS
+list(APPEND SIMPLNX_GENERATED_HEADERS
   ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER}
 )
 

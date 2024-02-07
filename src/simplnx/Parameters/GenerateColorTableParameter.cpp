@@ -1,10 +1,10 @@
 #include "GenerateColorTableParameter.hpp"
 
-#include <fmt/core.h>
-
-#include <nlohmann/json.hpp>
-
+#include "simplnx/util/ColorTable.hpp"
 #include "simplnx/Common/Any.hpp"
+
+#include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 namespace nx::core
 {
