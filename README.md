@@ -57,11 +57,11 @@ If you experience or witness unacceptable behaviorâ€”or have any other concernsâ
 
 ## Community
 
-For those looking to engage with the DREAM3DNX community, see the discussions board of [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions).
+For those looking to engage with the DREAM3DNX community, see the discussions board of [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/discussions).
 
 ## Contact Us
 
-You can talk directly with developers in the [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions).
+You can talk directly with developers in the [DREAM3DNX-Issues discussions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/discussions).
 
 If this doesn't work for you you can reach out to our team at our general address [info@bluequartz.net](mailto:info@bluequartz.net).
 
@@ -73,7 +73,7 @@ Thanks so much for your interest in contributing to `simplnx`!
 
 The `simplnx` project needs all sorts of contributions, so don't be discouraged if you are unfamiliar with C++. We have all sorts of tasks that can be done without any prior coding knowledge. We need have non-coding tasks, computer power user tasks, security research tasks, Python tasks, and C++ tasks, all of which are outlined in our [Contributing Guide](/CONTRIBUTING.md).
 
-We also understand the struggle involved with getting started on a new project and the frustration that can come with learning a new codebase. To help cut down on the stress of this we set up a discussion section specifically for [Contributor Questions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/categories/contributor-questions) where you can quickly get a response directly from maintainers.
+We also understand the struggle involved with getting started on a new project and the frustration that can come with learning a new codebase. To help cut down on the stress of this we set up a discussion section specifically for [Contributor Questions](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions/discussions/categories/contributor-questions) where you can quickly get a response directly from maintainers.
 
 The average response time for new pull requests is same-day if it's Monday-Thursday (often times less than 1 hour), but Friday-Sunday response time is variable.
 
