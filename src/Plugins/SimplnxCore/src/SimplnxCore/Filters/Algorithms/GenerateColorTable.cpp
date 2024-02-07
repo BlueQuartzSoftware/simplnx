@@ -172,37 +172,15 @@ struct GenerateColorArrayFunctor
   template <typename ScalarType>
   void operator()(DataStructure& dataStructure, const GenerateColorTableInputValues* inputValues)
   {
+    const std::vector<std::vector<float64>>& controlPoints = inputValues->ControlPoints;
+    const usize numControlColors = controlPoints.size();
 
-    const nlohmann::json presetControlPoints = inputValues->SelectedPreset["RGBPoints"];
-    const DataPath rgbArrayPath = inputValues->RgbArrayPath;
-
-    const DataArray<ScalarType>& arrayPtr = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath);
-    if(arrayPtr.getNumberOfTuples() <= 0)
-    {
-      return;
-    }
-
-    if(presetControlPoints.empty())
-    {
-      return;
-    }
-
-    const usize numControlColors = presetControlPoints.size() / 4;
-    const usize numComponents = 4;
-    std::vector<std::vector<float64>> controlPoints(numControlColors, std::vector<float64>(numComponents));
-
-    // Migrate colorControlPoints values from QJsonArray to 2D array.  Store A-values in binPoints vector.
+    // Store A-values in binPoints vector.
     std::vector<float32> binPoints;
-    for(usize i = 0; i < numControlColors; i++)
+    binPoints.reserve(numControlColors);
+    for(const auto& pointsVector : controlPoints)
     {
-      for(usize j = 0; j < numComponents; j++)
-      {
-        controlPoints[i][j] = static_cast<float32>(presetControlPoints[numComponents * i + j].get<float64>());
-        if(j == 0)
-        {
-          binPoints.push_back(static_cast<float32>(controlPoints[i][j]));
-        }
-      }
+      binPoints.push_back(static_cast<float32>(pointsVector[0]));
     }
 
     // Normalize binPoints values
@@ -213,12 +191,18 @@ struct GenerateColorArrayFunctor
       binPoint = (binPoint - binMin) / (binMax - binMin);
     }
 
-    auto& colorArray = dataStructure.getDataRefAs<UInt8Array>(rgbArrayPath);
+    auto& colorArray = dataStructure.getDataRefAs<UInt8Array>(inputValues->RgbArrayPath);
 
     nx::core::IDataArray* goodVoxelsArray = nullptr;
     if(inputValues->UseMask)
     {
       goodVoxelsArray = dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath);
+    }
+
+    const DataArray<ScalarType>& arrayPtr = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath);
+    if(arrayPtr.getNumberOfTuples() <= 0)
+    {
+      return;
     }
 
     ParallelDataAlgorithm dataAlg;

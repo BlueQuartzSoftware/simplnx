@@ -14,7 +14,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT GenerateColorTableInputValues
 {
-  nlohmann::json SelectedPreset;
+  std::vector<std::vector<float64>> ControlPoints;
   DataPath SelectedDataArrayPath;
   DataPath RgbArrayPath;
   bool UseMask;

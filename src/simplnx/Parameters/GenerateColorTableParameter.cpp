@@ -1,7 +1,7 @@
 #include "GenerateColorTableParameter.hpp"
 
-#include "simplnx/util/ColorTable.hpp"
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/util/ColorTable.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -38,7 +38,27 @@ Result<std::any> GenerateColorTableParameter::fromJson(const nlohmann::json& jso
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
   }
 
-  return {{std::make_any<nlohmann::json>(json)}};
+  const nlohmann::json& presetControlPoints = json["RGBPoints"];
+
+  if(presetControlPoints.empty())
+  {
+    return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value for key '{}' is not an object", prefix, "RGBPoints"));
+  }
+
+  const usize numControlColors = presetControlPoints.size() / 4;
+  const usize numComponents = 4;
+  std::vector<std::vector<float64>> controlPoints(numControlColors, std::vector<float64>(numComponents));
+
+  // Migrate colorControlPoints values from QJsonArray to 2D array.
+  for(usize i = 0; i < numControlColors; i++)
+  {
+    for(usize j = 0; j < numComponents; j++)
+    {
+      controlPoints[i][j] = static_cast<float32>(presetControlPoints[numComponents * i + j].get<float64>());
+    }
+  }
+
+  return {{std::make_any<std::vector<std::vector<float64>>>(std::move(controlPoints))}};
 }
 
 IParameter::UniquePointer GenerateColorTableParameter::clone() const

@@ -98,7 +98,6 @@ IFilter::UniquePointer GenerateColorTableFilter::clone() const
 IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel) const
 {
-  auto pSelectedPresetValue = filterArgs.value<nlohmann::json>(k_SelectedPreset_Key);
   auto pSelectedDataArrayPathValue = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   auto pRgbArrayPathValue = pSelectedDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
 
@@ -150,7 +149,7 @@ Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, con
 {
   GenerateColorTableInputValues inputValues;
 
-  inputValues.SelectedPreset = filterArgs.value<nlohmann::json>(k_SelectedPreset_Key);
+  inputValues.ControlPoints = filterArgs.value<std::vector<std::vector<float64>>>(k_SelectedPreset_Key);
   inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
