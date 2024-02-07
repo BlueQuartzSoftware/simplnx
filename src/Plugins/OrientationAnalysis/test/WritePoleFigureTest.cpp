@@ -21,7 +21,42 @@ using namespace nx::core::UnitTest;
 namespace
 {
 const std::string k_ImagePrefix("fw-ar-IF1-aptr12-corr Discrete Pole Figure");
+
+template <typename T>
+void CompareComponentsOfArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, usize compIndex)
+{
+  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
+
+  const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
+  const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
+  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
+
+  usize exemplaryNumComp = exemplaryDataArray.getNumberOfComponents();
+  usize generatedNumComp = generatedDataArray.getNumberOfComponents();
+
+  REQUIRE(exemplaryNumComp == 4);
+  REQUIRE(generatedNumComp == 3);
+
+  REQUIRE(compIndex < exemplaryNumComp);
+  REQUIRE(compIndex < generatedNumComp);
+
+  INFO(fmt::format("Bad Comparison\n  Input Data Array:'{}'\n  Output DataArray: '{}'", exemplaryDataPath.toString(), computedPath.toString()));
+
+  usize start = 0;
+  usize numTuples = exemplaryDataArray.getNumberOfTuples();
+  for(usize i = start; i < numTuples; i++)
+  {
+    auto oldVal = exemplaryDataArray[i * exemplaryNumComp + compIndex];
+    auto newVal = generatedDataArray[i * generatedNumComp + compIndex];
+    INFO(fmt::format("Index: {} Comp: {}", i, compIndex));
+
+    REQUIRE(oldVal == newVal);
+  }
 }
+
+} // namespace
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
@@ -51,7 +86,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
   args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr Discrete Pole Figure [CALCULATED]"})));
 
-  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure [CALCULATED]", "CellData", fmt::format("{}Phase_{}", k_ImagePrefix, 1)});
+  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure [CALCULATED]", "CellData", fmt::format("{}{}", k_ImagePrefix, 1)});
   DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure", "CellData", "Image"});
 
   args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
@@ -71,7 +106,9 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
   WriteTestDataStructure(dataStructure, fmt::format("{}/write_pole_figure-1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  CompareArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
 }
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis][WritePoleFigureFilter]")
@@ -102,7 +139,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
   args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked [CALCULATED]"})));
 
-  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked [CALCULATED]", "CellData", fmt::format("{}Phase_{}", k_ImagePrefix, 1)});
+  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked [CALCULATED]", "CellData", fmt::format("{}{}", k_ImagePrefix, 1)});
   DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked", "CellData", "Image"});
 
   args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
@@ -123,7 +160,9 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
   WriteTestDataStructure(dataStructure, fmt::format("{}/write_pole_figure-2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  CompareArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
 }
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis][WritePoleFigureFilter]")
@@ -154,7 +193,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis]
   args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked Color [CALCULATED]"})));
 
-  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked Color [CALCULATED]", "CellData", fmt::format("{}Phase_{}", k_ImagePrefix, 1)});
+  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked Color [CALCULATED]", "CellData", fmt::format("{}{}", k_ImagePrefix, 1)});
   DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked Color", "CellData", "Image"});
 
   args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
@@ -175,5 +214,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis]
   WriteTestDataStructure(dataStructure, fmt::format("{}/write_pole_figure-3.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  CompareArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
+  CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
 }

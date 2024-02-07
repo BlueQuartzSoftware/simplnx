@@ -362,21 +362,14 @@ Result<> WritePoleFigure::operator()()
   // Find how many phases we have by getting the number of Crystal Structures
   const size_t numPhases = crystalStructures.getNumberOfTuples();
 
-  // Loop over all the voxels gathering the Eulers for a specific phase into an array
+  // Create the Image Geometry that will serve as the final storage location for each
+  // pole figure. We are just giving it a default size for now, it will be resized
+  // further down the algorithm.
   std::vector<usize> tupleShape = {1, static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize)};
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->OutputImageGeometryPath);
   auto cellAttrMatPath = imageGeom.getCellDataPath();
   imageGeom.setDimensions({static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize), 1});
   imageGeom.getCellData()->resizeTuples(tupleShape);
-  for(size_t phase = 1; phase < numPhases; ++phase)
-  {
-    auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("{}Phase_{}", m_InputValues->ImagePrefix, phase));
-    auto arrayCreationResult = nx::core::CreateArray<uint8>(m_DataStructure, tupleShape, {4ULL}, imageArrayPath, IDataAction::Mode::Execute);
-    if(arrayCreationResult.invalid())
-    {
-      return arrayCreationResult;
-    }
-  }
 
   // Loop over all the voxels gathering the Eulers for a specific phase into an array
   for(size_t phase = 1; phase < numPhases; ++phase)
@@ -666,22 +659,43 @@ Result<> WritePoleFigure::operator()()
       }
 
       // Fetch the rendered RGBA pixels from the entire canvas.
-      std::vector<unsigned char> image(static_cast<size_t>(pageHeight * pageWidth * 4));
-      context.get_image_data(image.data(), pageWidth, pageHeight, pageWidth * 4, 0, 0);
+      std::vector<unsigned char> rgbaCanvasImage(static_cast<size_t>(pageHeight * pageWidth * 4));
+      context.get_image_data(rgbaCanvasImage.data(), pageWidth, pageHeight, pageWidth * 4, 0, 0);
       if(m_InputValues->SaveAsImageGeometry)
       {
+        // Ensure the final Image Geometry is sized correctly.
         imageGeom.setDimensions({static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1});
         imageGeom.getCellData()->resizeTuples({1, static_cast<usize>(pageHeight), static_cast<usize>(pageWidth)});
+        tupleShape[0] = 1;
+        tupleShape[1] = pageHeight;
+        tupleShape[2] = pageWidth;
+        // Create an output array to hold the RGB formatted color image
+        auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("{}{}", m_InputValues->ImagePrefix, phase));
+        auto arrayCreationResult = nx::core::CreateArray<uint8>(m_DataStructure, tupleShape, {3ULL}, imageArrayPath, IDataAction::Mode::Execute);
+        if(arrayCreationResult.invalid())
+        {
+          return arrayCreationResult;
+        }
 
-        auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("{}Phase_{}", m_InputValues->ImagePrefix, phase));
+        // Get a reference to the RGB final array and then copy ONLY the RGB pixels from the
+        // canvas RGBA data.
         auto& imageData = m_DataStructure.getDataRefAs<UInt8Array>(imageArrayPath);
-        std::copy(image.begin(), image.end(), imageData.begin());
+
+        imageData.fill(0);
+        size_t tupleCount = pageHeight * pageWidth;
+        for(size_t t = 0; t < tupleCount; t++)
+        {
+          imageData[t * 3 + 0] = rgbaCanvasImage[t * 4 + 0];
+          imageData[t * 3 + 1] = rgbaCanvasImage[t * 4 + 1];
+          imageData[t * 3 + 2] = rgbaCanvasImage[t * 4 + 2];
+        }
       }
 
+      // Write out the full RGBA data
       if(m_InputValues->WriteImageToDisk)
       {
-        const std::string filename = fmt::format("{}/{}Phase_{}.tiff", m_InputValues->OutputPath.string(), m_InputValues->ImagePrefix, phase);
-        auto result = TiffWriter::WriteImage(filename, pageWidth, pageHeight, 4, image.data());
+        const std::string filename = fmt::format("{}/{}{}.tiff", m_InputValues->OutputPath.string(), m_InputValues->ImagePrefix, phase);
+        auto result = TiffWriter::WriteImage(filename, pageWidth, pageHeight, 4, rgbaCanvasImage.data());
         if(result.first < 0)
         {
           return MakeErrorResult(-53900, fmt::format("Error writing pole figure image '{}' to disk.\n    Error Code from Tiff Writer: {}\n    Message: {}", filename, result.first, result.second));
