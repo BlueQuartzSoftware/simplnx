@@ -7,7 +7,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include <optional>
 #include <string>
 
 namespace 
@@ -22,6 +21,7 @@ namespace nx::core
  */
 class SIMPLNX_EXPORT ColorTable
 {
+     
 };
 
 }
