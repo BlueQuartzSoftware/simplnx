@@ -19,7 +19,7 @@ namespace
 class CalculateCentroidsImpl
 {
 public:
-  CalculateCentroidsImpl(const TriangleGeom* triangleGeom, Float32Array* centroids, const std::atomic_bool& shouldCancel)
+  CalculateCentroidsImpl(const TriangleGeom* triangleGeom, Float64Array* centroids, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_Centroids(centroids)
   , m_ShouldCancel(shouldCancel)
@@ -52,7 +52,7 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float32Array* m_Centroids = nullptr;
+  Float64Array* m_Centroids = nullptr;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -83,7 +83,7 @@ Result<> TriangleCentroid::operator()()
   const AttributeMatrix& faceAttributeMatrix = triangleGeom->getFaceAttributeMatrixRef();
 
   const DataPath pCentroidsPath = m_InputValues->TriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(m_InputValues->CentroidsArrayName);
-  auto* centroidsArray = m_DataStructure.getDataAs<Float32Array>(pCentroidsPath);
+  auto* centroidsArray = m_DataStructure.getDataAs<Float64Array>(pCentroidsPath);
 
   // Parallel algorithm to calculate the centroids
   ParallelDataAlgorithm dataAlg;
