@@ -429,17 +429,26 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 
     s_HeaderCache[s_InstanceId].FilePath = readCSVData.inputFilePath;
 
-    usize lineCount = 0;
-    while(!in.eof())
-    {
-      std::string line;
-      std::getline(in, line);
-      lineCount++;
+    // usize lineCount = 0;
+    usize lineCount = std::count_if(std::istreambuf_iterator<char>{in}, {}, [](char c) { return c == '\n'; });
 
-      if(headerMode == ReadCSVData::HeaderMode::LINE && lineCount == readCSVData.headersLine)
+    if(headerMode == ReadCSVData::HeaderMode::LINE)
+    {
+
+      in.seekg(0); // Rewind back to the beginning.
+      usize currentLine = 0;
+      while(!in.eof())
       {
-        s_HeaderCache[s_InstanceId].Headers = line;
-        s_HeaderCache[s_InstanceId].HeadersLine = readCSVData.headersLine;
+        std::string line;
+        std::getline(in, line);
+        currentLine++;
+
+        if(currentLine == readCSVData.headersLine)
+        {
+          s_HeaderCache[s_InstanceId].Headers = line;
+          s_HeaderCache[s_InstanceId].HeadersLine = readCSVData.headersLine;
+          break;
+        }
       }
     }
 
