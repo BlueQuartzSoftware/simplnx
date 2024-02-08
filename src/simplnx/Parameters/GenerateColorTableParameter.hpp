@@ -17,10 +17,11 @@ namespace nx::core
 class SIMPLNX_EXPORT GenerateColorTableParameter : public ValueParameter
 {
 public:
-  using ValueType = nlohmann::json;
+  using ValueType = std::vector<float64>;
+  static constexpr usize k_ControlPointCompSize = 4;
 
   GenerateColorTableParameter() = delete;
-  GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue = {});
   ~GenerateColorTableParameter() override = default;
 
   GenerateColorTableParameter(const GenerateColorTableParameter&) = delete;

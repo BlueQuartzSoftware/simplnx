@@ -5,8 +5,6 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/GenerateColorTableParameter.hpp"
 
 namespace nx::core
@@ -14,7 +12,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT GenerateColorTableInputValues
 {
-  std::vector<std::vector<float64>> ControlPoints;
+  GenerateColorTableParameter::ValueType ControlPoints;
   DataPath SelectedDataArrayPath;
   DataPath RgbArrayPath;
   bool UseMask;

@@ -66,7 +66,7 @@ Parameters GenerateColorTableFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator({"Input Parameters"});
-  params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array", nlohmann::json{}));
+  params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array"));
   params.insertSeparator({"Required Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array",
                                                           "The complete path to the data array from which to create the rgb array by applying the selected preset color scheme", DataPath{},
@@ -149,7 +149,7 @@ Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, con
 {
   GenerateColorTableInputValues inputValues;
 
-  inputValues.ControlPoints = filterArgs.value<std::vector<std::vector<float64>>>(k_SelectedPreset_Key);
+  inputValues.ControlPoints = filterArgs.value<GenerateColorTableParameter::ValueType>(k_SelectedPreset_Key);
   inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);

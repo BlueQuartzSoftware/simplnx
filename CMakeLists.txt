@@ -750,7 +750,7 @@ endforeach()
 # Generate Supporting Color Table File
 file(READ ${simplnx_SOURCE_DIR}/resources/ColorTablePresets/ColorTablePresets.json COLOR_TABLE_JSON)
 set(SIMPLNX_GENERATED_COLOR_TABLE_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/util/ColorTable.hpp)
-configure_file(${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.in.hpp ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER})
+cmpConfigureFileWithMD5Check(CONFIGURED_TEMPLATE_PATH ${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.in.hpp GENERATED_FILE_PATH ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER})
 list(APPEND SIMPLNX_GENERATED_HEADERS
   ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER}
 )

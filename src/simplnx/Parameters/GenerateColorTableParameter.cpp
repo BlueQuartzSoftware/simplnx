@@ -46,19 +46,19 @@ Result<std::any> GenerateColorTableParameter::fromJson(const nlohmann::json& jso
   }
 
   const usize numControlColors = presetControlPoints.size() / 4;
-  const usize numComponents = 4;
-  std::vector<std::vector<float64>> controlPoints(numControlColors, std::vector<float64>(numComponents));
+  const usize numComponents = k_ControlPointCompSize;
+  std::vector<float64> controlPoints(numControlColors * numComponents);
 
   // Migrate colorControlPoints values from QJsonArray to 2D array.
   for(usize i = 0; i < numControlColors; i++)
   {
     for(usize j = 0; j < numComponents; j++)
     {
-      controlPoints[i][j] = static_cast<float32>(presetControlPoints[numComponents * i + j].get<float64>());
+      controlPoints[i * numComponents + j] = static_cast<float32>(presetControlPoints[numComponents * i + j].get<float64>());
     }
   }
 
-  return {{std::make_any<std::vector<std::vector<float64>>>(std::move(controlPoints))}};
+  return {{std::make_any<ValueType>(std::move(controlPoints))}};
 }
 
 IParameter::UniquePointer GenerateColorTableParameter::clone() const

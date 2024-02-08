@@ -5,8 +5,6 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include <nlohmann/json.hpp>
-
 using namespace nx::core;
 
 namespace
@@ -39,7 +37,7 @@ template <typename T>
 class GenerateColorTableImpl
 {
 public:
-  GenerateColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<std::vector<float64>>& controlPoints, int numControlColors, UInt8Array& colorArray,
+  GenerateColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const GenerateColorTableParameter::ValueType& controlPoints, int numControlColors, UInt8Array& colorArray,
                          const nx::core::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
   : m_ArrayPtr(arrayPtr)
   , m_BinPoints(binPoints)
@@ -50,6 +48,7 @@ public:
   , m_ArrayMax(arrayPtr[0])
   , m_GoodVoxels(goodVoxels)
   , m_InvalidColor(invalidColor)
+  , m_CompSize(GenerateColorTableParameter::k_ControlPointCompSize)
   {
     for(int i = 1; i < arrayPtr.getNumberOfTuples(); i++)
     {
@@ -108,7 +107,7 @@ public:
       }
 
       // Find the fractional distance traveled between the beginning and end of the current color bin
-      float32 currFraction = 0.0f;
+      float32 currFraction;
       if(rightBinIndex < m_BinPoints.size())
       {
         currFraction = (nValue - m_BinPoints[leftBinIndex]) / (m_BinPoints[rightBinIndex] - m_BinPoints[leftBinIndex]);
@@ -126,9 +125,9 @@ public:
       }
 
       // Calculate the RGB values
-      const unsigned char redVal = (m_ControlPoints[leftBinIndex][1] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][1] * currFraction) * 255;
-      const unsigned char greenVal = (m_ControlPoints[leftBinIndex][2] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][2] * currFraction) * 255;
-      const unsigned char blueVal = (m_ControlPoints[leftBinIndex][3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][3] * currFraction) * 255;
+      const unsigned char redVal = (m_ControlPoints[leftBinIndex * m_CompSize + 1] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * m_CompSize + 1] * currFraction) * 255;
+      const unsigned char greenVal = (m_ControlPoints[leftBinIndex * m_CompSize + 2] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * m_CompSize + 2] * currFraction) * 255;
+      const unsigned char blueVal = (m_ControlPoints[leftBinIndex * m_CompSize + 3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * m_CompSize + 3] * currFraction) * 255;
 
       colorArrayDS.setComponent(i, 0, redVal);
       colorArrayDS.setComponent(i, 1, greenVal);
@@ -161,10 +160,11 @@ private:
   T m_ArrayMin;
   T m_ArrayMax;
   int m_NumControlColors;
-  const std::vector<std::vector<float64>>& m_ControlPoints;
+  const GenerateColorTableParameter::ValueType& m_ControlPoints;
   UInt8Array& m_ColorArray;
   const nx::core::IDataArray* m_GoodVoxels = nullptr;
   const std::vector<uint8>& m_InvalidColor;
+  const usize m_CompSize;
 };
 
 struct GenerateColorArrayFunctor
@@ -172,15 +172,16 @@ struct GenerateColorArrayFunctor
   template <typename ScalarType>
   void operator()(DataStructure& dataStructure, const GenerateColorTableInputValues* inputValues)
   {
-    const std::vector<std::vector<float64>>& controlPoints = inputValues->ControlPoints;
-    const usize numControlColors = controlPoints.size();
+    // Control Points is a flattened 2D array with an unknown tuple count and a component size of 4
+    const GenerateColorTableParameter::ValueType& controlPoints = inputValues->ControlPoints;
+    const usize numControlColors = controlPoints.size() / GenerateColorTableParameter::k_ControlPointCompSize;
 
     // Store A-values in binPoints vector.
     std::vector<float32> binPoints;
     binPoints.reserve(numControlColors);
-    for(const auto& pointsVector : controlPoints)
+    for(usize i = 0; i < numControlColors; i++)
     {
-      binPoints.push_back(static_cast<float32>(pointsVector[0]));
+      binPoints.push_back(static_cast<float32>(controlPoints[i * GenerateColorTableParameter::k_ControlPointCompSize]));
     }
 
     // Normalize binPoints values

@@ -1,22 +1,23 @@
 #include "ColorPresetsUtilities.hpp"
 
-#include <fmt/format.h>
-#include <fstream>
-#include <sstream>
+#include "simplnx/util/ColorTable.hpp"
 
-namespace nx::core
+#include <fmt/format.h>
+
+namespace nx::core::ColorTableUtilities
 {
 // -----------------------------------------------------------------------------
-Result<nlohmann::json> ReadRGBPresets(const std::string& presetsJson)
+Result<nlohmann::json> LoadAllRGBPresets()
 {
   nlohmann::json allPresets;
   try
   {
-    allPresets = nlohmann::json::parse(presetsJson);
-  } catch(nlohmann::json::parse_error& exception)
+    // insert additional presets here
+    allPresets.update(ColorTable::k_ColorTableJson);
+  } catch(nlohmann::json::type_error& exception)
   {
     // "Failed to parse presets file" error
-    return MakeErrorResult<nlohmann::json>(-1000, fmt::format("Failed to parse presets json string: {}", exception.what()));
+    return MakeErrorResult<nlohmann::json>(-1000, fmt::format("Failed to combine presets json string: {}", exception.what()));
   }
 
   nlohmann::json rgbPresets;
@@ -29,14 +30,5 @@ Result<nlohmann::json> ReadRGBPresets(const std::string& presetsJson)
   }
 
   return {rgbPresets};
-}
-
-// -----------------------------------------------------------------------------
-Result<nlohmann::json> ReadRGBPresets(const fs::path& presetsFilePath)
-{
-  const std::ifstream iStream(presetsFilePath.string());
-  std::stringstream buffer;
-  buffer << iStream.rdbuf();
-  return ReadRGBPresets(buffer.str());
 }
 } // namespace nx::core
