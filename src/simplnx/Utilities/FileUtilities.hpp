@@ -44,6 +44,61 @@ namespace nx::core
 {
 namespace FileUtilities
 {
+
+/**
+ * @brief
+ * @param filepath
+ * @return
+ */
+int64 LinesInFile(const std::string& filepath)
+{
+  const usize BUFFER_SIZE = 16384;
+  usize lines = 0;
+  usize bytes = 0;
+
+  FILE* fd = fopen(filepath.c_str(), "rb");
+  if(nullptr == fd)
+  {
+    return -1;
+  }
+
+  // Check if the very last character is NOT a newline character
+  fseek(fd, -1, SEEK_END);
+  char last[1];
+  fread(last, 1, 1, fd);
+  if(last[0] != '\n')
+  {
+    lines++;
+  }
+  rewind(fd);
+
+  // Read through the rest of the file
+  char buf[BUFFER_SIZE + 1];
+  while(true)
+  {
+    memset(buf, 0, BUFFER_SIZE + 1);
+    ssize_t bytes_read = fread(buf, 1, BUFFER_SIZE, fd);
+    if(bytes_read <= 0)
+    {
+      break;
+    }
+
+    bytes += bytes_read;
+    char* end = buf + bytes_read;
+    usize buflines = 0;
+
+    for(char* p = buf; p < end; p++)
+    {
+      buflines += *p == '\n';
+    }
+    lines += buflines;
+  }
+  fclose(fd);
+  return lines;
+}
+
+
+
 Result<> ValidateCSVFile(const std::string& filePath)
 {
   constexpr int64_t bufferSize = 2048;
