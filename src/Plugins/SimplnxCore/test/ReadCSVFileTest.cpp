@@ -79,7 +79,21 @@ void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::string>
   }
 }
 
-// -----------------------------------------------------------------------------
+/**
+ *
+ * @param inputFilePath
+ * @param startImportRow
+ * @param headerMode
+ * @param headersLine
+ * @param delimiters
+ * @param customHeaders
+ * @param dataTypes
+ * @param skippedArrayMask
+ * @param tupleDims
+ * @param values
+ * @param newGroupName
+ * @return
+ */
 Arguments createArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
                           const std::vector<std::string>& customHeaders, const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrayMask, const std::vector<usize>& tupleDims,
                           nonstd::span<std::string> values, const std::string& newGroupName)

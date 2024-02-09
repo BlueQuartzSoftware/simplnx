@@ -16,8 +16,8 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/ReadCSVFileParameter.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -308,7 +308,6 @@ IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize hea
   headerCache.HeadersLine = headersLineNum;
   return {};
 }
-
 
 } // namespace
 

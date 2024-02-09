@@ -688,6 +688,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayThreshold.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
