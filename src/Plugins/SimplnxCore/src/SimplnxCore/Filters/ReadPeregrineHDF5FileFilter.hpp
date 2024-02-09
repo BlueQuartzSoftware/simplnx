@@ -27,11 +27,15 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputFilePath_Key = "input_file_path";
-  static inline constexpr StringLiteral k_ReadSubvolume_Key = "read_subvolume";
-  static inline constexpr StringLiteral k_SubvolumeDimensions_Key = "subvolume_dimensions";
+  static inline constexpr StringLiteral k_ReadSlicesSubvolume_Key = "read_slices_subvolume";
+  static inline constexpr StringLiteral k_SlicesSubvolumeMinMaxX_Key = "slices_subvolume_minmax_x";
+  static inline constexpr StringLiteral k_SlicesSubvolumeMinMaxY_Key = "slices_subvolume_minmax_y";
+  static inline constexpr StringLiteral k_SlicesSubvolumeMinMaxZ_Key = "slices_subvolume_minmax_z";
   static inline constexpr StringLiteral k_ReadCameraData_Key = "read_camera_data";
   static inline constexpr StringLiteral k_ReadPartIds_Key = "read_part_ids";
   static inline constexpr StringLiteral k_ReadSampleIds_Key = "read_sample_ids";
+  static inline constexpr StringLiteral k_ReadAnomalyDetection_Key = "read_anomaly_detection";
+  static inline constexpr StringLiteral k_ReadXRayCT_Key = "read_x_ray_ct";
   static inline constexpr StringLiteral k_SegmentationResults_Key = "segmentation_results";
   static inline constexpr StringLiteral k_SliceData_Key = "slice_data";
   static inline constexpr StringLiteral k_SliceDataCellAttrMat_Key = "slice_data_cell_attr_mat";
@@ -41,6 +45,12 @@ public:
   static inline constexpr StringLiteral k_SampleIdsArrayName_Key = "sample_ids_array_name";
   static inline constexpr StringLiteral k_RegisteredData_Key = "registered_data";
   static inline constexpr StringLiteral k_RegisteredDataCellAttrMat_Key = "registered_data_cell_attr_mat";
+  static inline constexpr StringLiteral k_AnomalyDetectionArrayName_Key = "anomaly_detection_array_name";
+  static inline constexpr StringLiteral k_XRayCTArrayName_Key = "xray_ct_array_name";
+  static inline constexpr StringLiteral k_ReadRegisteredDataSubvolume_Key = "read_registered_data_subvolume";
+  static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxX_Key = "registered_data_subvolume_minmax_x";
+  static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxY_Key = "registered_data_subvolume_minmax_y";
+  static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxZ_Key = "registered_data_subvolume_minmax_z";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

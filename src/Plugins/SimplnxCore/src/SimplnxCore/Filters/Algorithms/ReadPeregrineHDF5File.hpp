@@ -7,7 +7,6 @@
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-#include <array>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -17,19 +16,30 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ReadPeregrineHDF5FileInputValues
 {
   fs::path inputFilePath;
-  std::string segmentationResultsList;
+  std::string segmentationResultsStr;
   bool readCameraData;
   bool readPartIds;
   bool readSampleIds;
-  bool readSubvolume;
-  std::vector<uint64> subvolumeDims;
+  bool readSlicesSubvolume;
+  std::vector<uint64> slicesSubvolumeMinMaxX;
+  std::vector<uint64> slicesSubvolumeMinMaxY;
+  std::vector<uint64> slicesSubvolumeMinMaxZ;
   DataPath sliceDataImageGeomPath;
   std::string sliceDataCellAttrMatName;
-  std::string cameraDataArrayName;
+  std::string cameraData0ArrayName;
+  std::string cameraData1ArrayName;
   std::string partIdsArrayName;
   std::string sampleIdsArrayName;
   DataPath registeredDataImageGeomPath;
   std::string registeredDataCellAttrMatName;
+  bool readRegisteredDataSubvolume;
+  std::vector<uint64> registeredDataSubvolumeMinMaxX;
+  std::vector<uint64> registeredDataSubvolumeMinMaxY;
+  std::vector<uint64> registeredDataSubvolumeMinMaxZ;
+  bool readAnomalyDetection;
+  std::string anomalyDetectionArrayName;
+  bool readXRayCT;
+  std::string xRayCTArrayName;
 };
 
 /**
@@ -49,6 +59,14 @@ public:
   ReadPeregrineHDF5File& operator=(ReadPeregrineHDF5File&&) noexcept = delete;
 
   Result<> operator()();
+
+  static inline constexpr StringLiteral k_CameraDataPath0 = "/slices/camera_data/visible/0";
+  static inline constexpr StringLiteral k_CameraDataPath1 = "/slices/camera_data/visible/1";
+  static inline constexpr StringLiteral k_PartIdsPath = "/slices/part_ids";
+  static inline constexpr StringLiteral k_SampleIdsPath = "/slices/sample_ids";
+  static inline constexpr StringLiteral k_SegmentationResultsParentPath = "/slices/segmentation_results";
+  static inline constexpr StringLiteral k_RegisteredAnomalyDetectionPath = "/slices/registered_data/anomaly_detection";
+  static inline constexpr StringLiteral k_RegisteredXRayCTPath = "/slices/registered_data/x-ray_ct";
 
 private:
   DataStructure& m_DataStructure;
