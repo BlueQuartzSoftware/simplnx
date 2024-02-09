@@ -21,6 +21,7 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <cstdio>
 #include <fstream>
 
 using namespace nx::core;
@@ -309,6 +310,74 @@ IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize hea
   headerCache.HeadersLine = headersLineNum;
   return {};
 }
+
+/* Read FD and return a summary.  */
+usize wc_lines(const std::string& filepath)
+{
+  const usize BUFFER_SIZE = 16 * 1024;
+  usize lines = 0, bytes = 0;
+  bool long_lines = false;
+
+  FILE* fd = fopen(filepath.c_str(), "rb");
+  if(nullptr == fd)
+  {
+    return 0;
+  }
+
+  // Check if the very last character is NOT a newline character
+  fseek(fd, -1, SEEK_END);
+  char last[1];
+  fread(last, 1, 1, fd);
+  if(last[0] != '\n')
+  {
+    lines++;
+  }
+  rewind(fd);
+
+  // Read through the rest of the file
+  char buf[BUFFER_SIZE + 1];
+  while(true)
+  {
+    memset(buf, 0, BUFFER_SIZE + 1);
+    ssize_t bytes_read = fread(buf, 1, BUFFER_SIZE, fd);
+    if(bytes_read <= 0)
+    {
+      break;
+    }
+
+    bytes += bytes_read;
+    char* end = buf + bytes_read;
+    usize buflines = 0;
+
+    //  if (! long_lines)
+    // {
+    /* Avoid function call overhead for shorter lines.  */
+    for(char* p = buf; p < end; p++)
+    {
+      buflines += *p == '\n';
+    }
+    //}
+    //    else
+    //    {
+    //      /* rawmemchr is more efficient with longer lines.  */
+    //      *end = '\n';
+    //      for (char *p = buf; (p = rawmemchr (p, '\n')) < end; p++)
+    //        buflines++;
+    //    }
+
+    /* If the average line length in the block is >= 15, then use
+        memchr for the next block, where system specific optimizations
+        may outweigh function call overhead.
+        FIXME: This line length was determined in 2015, on both
+        x86_64 and ppc64, but it's worth re-evaluating in future with
+        newer compilers, CPUs, or memchr() implementations etc.  */
+    // long_lines = 15 * buflines <= bytes_read;
+    lines += buflines;
+  }
+  fclose(fd);
+  return lines;
+}
+
 } // namespace
 
 namespace nx::core
@@ -421,6 +490,8 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   StringVector headers;
   if(readCSVData.inputFilePath != s_HeaderCache[s_InstanceId].FilePath)
   {
+    usize lineCount = wc_lines(inputFilePath);
+
     std::fstream in(inputFilePath.c_str(), std::ios_base::in);
     if(!in.is_open())
     {
@@ -429,26 +500,18 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 
     s_HeaderCache[s_InstanceId].FilePath = readCSVData.inputFilePath;
 
-    // usize lineCount = 0;
-    usize lineCount = std::count_if(std::istreambuf_iterator<char>{in}, {}, [](char c) { return c == '\n'; });
-
-    if(headerMode == ReadCSVData::HeaderMode::LINE)
+    usize currentLine = 0;
+    while(!in.eof())
     {
+      std::string line;
+      std::getline(in, line);
+      currentLine++;
 
-      in.seekg(0); // Rewind back to the beginning.
-      usize currentLine = 0;
-      while(!in.eof())
+      if(headerMode == ReadCSVData::HeaderMode::LINE && currentLine == readCSVData.headersLine)
       {
-        std::string line;
-        std::getline(in, line);
-        currentLine++;
-
-        if(currentLine == readCSVData.headersLine)
-        {
-          s_HeaderCache[s_InstanceId].Headers = line;
-          s_HeaderCache[s_InstanceId].HeadersLine = readCSVData.headersLine;
-          break;
-        }
+        s_HeaderCache[s_InstanceId].Headers = line;
+        s_HeaderCache[s_InstanceId].HeadersLine = readCSVData.headersLine;
+        break;
       }
     }
 
