@@ -41,9 +41,8 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/FeatureFaceCurvature.hpp"
 #include "SimplnxCore/SimplnxCore_export.hpp"
-
-class FeatureFaceCurvatureFilter;
 
 namespace nx::core
 {
@@ -55,10 +54,10 @@ namespace nx::core
 class SIMPLNXCORE_EXPORT CalculateTriangleGroupCurvatures
 {
 public:
-  CalculateTriangleGroupCurvatures(int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting, Float64Array* principleCurvature1, Float64Array* principleCurvature2,
-                                   Float64Array* principleDirection1, Float64Array* principleDirection2, Float64Array* gaussianCurvature, Float64Array* meanCurvature, Float64Array* weingartenMatrix,
-                                   TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals, Float64Array* surfaceMeshTriangleCentroids,
-                                   const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
+  CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting, Float64Array* principleCurvature1,
+                                   Float64Array* principleCurvature2, Float64Array* principleDirection1, Float64Array* principleDirection2, Float64Array* gaussianCurvature,
+                                   Float64Array* meanCurvature, Float64Array* weingartenMatrix, TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals,
+                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
 
   virtual ~CalculateTriangleGroupCurvatures();
 
@@ -77,6 +76,7 @@ protected:
   std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data) const;
 
 private:
+  FeatureFaceCurvature* m_Filter = nullptr;
   int64_t m_NRing;
   std::vector<int64_t> m_TriangleIds;
   bool m_UseNormalsForCurveFitting;
