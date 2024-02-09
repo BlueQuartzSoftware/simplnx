@@ -19,13 +19,25 @@ jobs:
       matrix:
         os:
           - macos-11
+          - macos-14
+        include:
+          - os: macos-11
+            preset: ci-macos-x64
+          - os: macos-14
+            preset: ci-macos-arm64
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
-      - uses: actions/checkout@v4
+      - name: Checkout vcpkg
+        run: |
+            git clone https://www.github.com/microsoft/vcpkg && cd vcpkg && ./bootstrap-vcpkg.sh
+            VCPKG_INSTALLATION_ROOT=${{github.workspace}}/vcpkg
+            echo "$VCPKG_INSTALLATION_ROOT" >> $GITHUB_PATH
+            echo "VCPKG_INSTALLATION_ROOT=$VCPKG_INSTALLATION_ROOT" >> "$GITHUB_ENV"
+        if: matrix.os == 'macos-14'
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -57,7 +69,7 @@ jobs:
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
         run: |
-          cmake --preset ci-macos-x64 ${{github.workspace}}
+          cmake --preset ${{matrix.preset}} ${{github.workspace}}
       - name: Build
         run: |
           cmake --build ${{github.workspace}}/complex/build
