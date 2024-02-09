@@ -155,6 +155,7 @@ set(AlgorithmList
   ExecuteProcess
   ExtractComponentAsArray
   ExtractVertexGeometry
+  FeatureFaceCurvature
   FillBadData
   FindArrayStatistics
   FindBiasedFeatures
