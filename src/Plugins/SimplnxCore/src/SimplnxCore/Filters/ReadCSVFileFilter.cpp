@@ -16,7 +16,6 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/ReadCSVFileParameter.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -311,12 +310,16 @@ IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize hea
   return {};
 }
 
-/* Read FD and return a summary.  */
-usize wc_lines(const std::string& filepath)
+/**
+ * @brief
+ * @param filepath
+ * @return
+ */
+usize linesInFile(const std::string& filepath)
 {
-  const usize BUFFER_SIZE = 16 * 1024;
-  usize lines = 0, bytes = 0;
-  bool long_lines = false;
+  const usize BUFFER_SIZE = 16384;
+  usize lines = 0;
+  usize bytes = 0;
 
   FILE* fd = fopen(filepath.c_str(), "rb");
   if(nullptr == fd)
@@ -349,29 +352,10 @@ usize wc_lines(const std::string& filepath)
     char* end = buf + bytes_read;
     usize buflines = 0;
 
-    //  if (! long_lines)
-    // {
-    /* Avoid function call overhead for shorter lines.  */
     for(char* p = buf; p < end; p++)
     {
       buflines += *p == '\n';
     }
-    //}
-    //    else
-    //    {
-    //      /* rawmemchr is more efficient with longer lines.  */
-    //      *end = '\n';
-    //      for (char *p = buf; (p = rawmemchr (p, '\n')) < end; p++)
-    //        buflines++;
-    //    }
-
-    /* If the average line length in the block is >= 15, then use
-        memchr for the next block, where system specific optimizations
-        may outweigh function call overhead.
-        FIXME: This line length was determined in 2015, on both
-        x86_64 and ppc64, but it's worth re-evaluating in future with
-        newer compilers, CPUs, or memchr() implementations etc.  */
-    // long_lines = 15 * buflines <= bytes_read;
     lines += buflines;
   }
   fclose(fd);
@@ -490,7 +474,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   StringVector headers;
   if(readCSVData.inputFilePath != s_HeaderCache[s_InstanceId].FilePath)
   {
-    usize lineCount = wc_lines(inputFilePath);
+    usize lineCount = linesInFile(inputFilePath);
 
     std::fstream in(inputFilePath.c_str(), std::ios_base::in);
     if(!in.is_open())
@@ -776,7 +760,6 @@ namespace
 namespace SIMPL
 {
 constexpr StringLiteral k_SelectedPathKey = "Wizard_SelectedPath";
-constexpr StringLiteral k_TupleDimsKey = "Wizard_TupleDims";
 } // namespace SIMPL
 } // namespace
 
