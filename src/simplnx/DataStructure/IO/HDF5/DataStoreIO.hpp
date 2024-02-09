@@ -231,9 +231,11 @@ inline std::unique_ptr<DataStore<T>> ReadDataStore(const nx::core::HDF5::Dataset
 
   // Create DataStore
   auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
-  if(!datasetReader.readIntoSpan(dataStore->createSpan()))
+  Result<> result = datasetReader.readIntoSpan(dataStore->createSpan());
+  if(result.invalid())
   {
-    throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {}/{}", nx::core::HDF5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+    throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {}/{}:\n\n{}", nx::core::HDF5::Support::GetObjectPath(datasetReader.getParentId()),
+                                         datasetReader.getName(), result.errors()[0].message));
   }
 
   return dataStore;

@@ -229,7 +229,8 @@ std::vector<T> DatasetReader::readAsVector() const
 
   std::vector<T> data(numElements);
 
-  if(!readIntoSpan<T>(data))
+  Result<> result = readIntoSpan<T>(data);
+  if(result.invalid())
   {
     return {};
   }
@@ -238,49 +239,70 @@ std::vector<T> DatasetReader::readAsVector() const
 }
 
 template <class T>
-bool DatasetReader::readIntoSpan(nonstd::span<T> data) const
+Result<> DatasetReader::readIntoSpan(nonstd::span<T> data, const std::optional<std::vector<hsize_t>>& start, const std::optional<std::vector<hsize_t>>& count) const
 {
   if(!isValid())
   {
-    return false;
+    return MakeErrorResult(-1000, "DatasetReader error: DatasetReader object is not valid.");
   }
 
   hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
-    return false;
+    return MakeErrorResult(-1001, "DatasetReader error: Unsupported span data type.");
   }
 
-  auto spaceId = getDataspaceId();
-  if(spaceId > 0)
+  hid_t datasetId = getId();
+  hid_t fileSpaceId = H5Dget_space(datasetId);
+  if(fileSpaceId < 0)
   {
-    int32_t rank = H5Sget_simple_extent_ndims(spaceId);
-    if(rank > 0)
+    return MakeErrorResult(-1002, "DatasetReader error: Unable to open the dataspace.");
+  }
+
+  hsize_t totalElements;
+  std::vector<hsize_t> memDims;
+  if(start.has_value() && count.has_value())
+  {
+    // Select hyperslab in the file.
+    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, count->data(), NULL) < 0)
     {
-      hsize_t numElements = getNumElements();
-      // std::cout << "NumElements: " << numElements << std::endl;
-      if(numElements != data.size())
-      {
-        return false;
-      }
-      herr_t error = H5Dread(getId(), dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
-      if(error < 0)
-      {
-        std::cout << "Error Reading Data.'" << getName() << "'" << std::endl;
-      }
+      return MakeErrorResult(-1003, "DatasetReader error: Unable to select hyperslab.");
     }
-    // auto error = H5Sclose(spaceId);
-    // if(error < 0)
-    //{
-    //  std::cout << "Error Closing Data Space" << std::endl;
-    //}
+    memDims = count.value();
   }
   else
   {
-    std::cout << "Error Opening SpaceID" << std::endl;
+    // Use the entire dataset
+    int rank = H5Sget_simple_extent_ndims(fileSpaceId);
+    std::vector<hsize_t> dims(rank), maxDims(rank);
+    H5Sget_simple_extent_dims(fileSpaceId, dims.data(), maxDims.data());
+    memDims = dims;
   }
 
-  return true;
+  totalElements = std::accumulate(memDims.begin(), memDims.end(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());
+
+  if(data.size() != totalElements)
+  {
+    return MakeErrorResult(-1004, "DatasetReader error: Span size does not match the number of elements to read.");
+  }
+
+  hid_t memSpaceId = H5Screate_simple(memDims.size(), memDims.data(), NULL);
+  if(memSpaceId < 0)
+  {
+    return MakeErrorResult(-1005, "DatasetReader error: Unable to create memory dataspace.");
+  }
+
+  if(H5Dread(datasetId, dataType, memSpaceId, fileSpaceId, H5P_DEFAULT, data.data()) < 0)
+  {
+    H5Sclose(memSpaceId);
+    H5Sclose(fileSpaceId);
+    return MakeErrorResult(-1006, fmt::format("DatasetReader error: Unable to read dataset '{}'", getName()));
+  }
+
+  H5Sclose(memSpaceId);
+  H5Sclose(fileSpaceId);
+
+  return {};
 }
 
 std::vector<hsize_t> DatasetReader::getDimensions() const
@@ -358,18 +380,30 @@ template SIMPLNX_EXPORT std::vector<size_t> DatasetReader::readAsVector<size_t>(
 template SIMPLNX_EXPORT std::vector<float> DatasetReader::readAsVector<float>() const;
 template SIMPLNX_EXPORT std::vector<double> DatasetReader::readAsVector<double>() const;
 
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<int8_t>(nonstd::span<int8_t>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<int16_t>(nonstd::span<int16_t>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<int32_t>(nonstd::span<int32_t>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<int64_t>(nonstd::span<int64_t>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<uint8_t>(nonstd::span<uint8_t>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<uint16_t>(nonstd::span<uint16_t>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<uint32_t>(nonstd::span<uint32_t>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<uint64_t>(nonstd::span<uint64_t>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<bool>(nonstd::span<bool>) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                     const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                      const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int32_t>(nonstd::span<int32_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                      const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int64_t>(nonstd::span<int64_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                      const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint8_t>(nonstd::span<uint8_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                      const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint16_t>(nonstd::span<uint16_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                       const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint32_t>(nonstd::span<uint32_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                       const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                       const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                   const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
 #ifdef __APPLE__
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<size_t>(nonstd::span<size_t>) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<size_t>(nonstd::span<size_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                     const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
 #endif
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<float>(nonstd::span<float>) const;
-template SIMPLNX_EXPORT bool DatasetReader::readIntoSpan<double>(nonstd::span<double>) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                    const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
+                                                                     const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
 } // namespace nx::core::HDF5
