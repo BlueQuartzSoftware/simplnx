@@ -14,6 +14,7 @@ jobs:
   build:
     env:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+      VCPKG_INSTALLATION_ROOT: ${{github.workspace}}/vcpkg
     strategy:
       fail-fast: false
       matrix:
@@ -29,7 +30,7 @@ jobs:
       - name: Checkout VCPKG
         run: |
           git clone https://www.github.com/microsoft/vcpkg && cd vcpkg && ./bootstrap-vcpkg.sh
-
+          echo "$VCPKG_INSTALLATION_ROOT" >> $GITHUB_PATH
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -61,10 +62,10 @@ jobs:
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
         run: |
-          export PATH=$PATH:${{github.workspace}}/vcpkg; export VCPKG_INSTALLATION_ROOT=${{github.workspace}}/vcpkg; cmake --preset ci-macos-arm64 ${{github.workspace}}
+          cmake --preset ci-macos-arm64 ${{github.workspace}}
       - name: Build
         run: |
-          export PATH=$PATH:${{github.workspace}}/vcpkg; export VCPKG_INSTALLATION_ROOT=${{github.workspace}}/vcpkg; cmake --build --preset ci-macos-arm64
+          cmake --build --preset ci-macos-arm64
       - name: Test
         run: |
-          export PATH=$PATH:${{github.workspace}}/vcpkg; export VCPKG_INSTALLATION_ROOT=${{github.workspace}}/vcpkg; ctest --preset ci-macos-arm64
+          ctest --preset ci-macos-arm64
