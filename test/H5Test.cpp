@@ -799,3 +799,125 @@ TEST_CASE("H5 Utilities")
   objectName = nx::core::HDF5::GetNameFromBuffer("/Data");
   REQUIRE(objectName == "Data");
 }
+
+// #include "hdf5.h"
+// #include <stdio.h>
+
+/* Function prototypes */
+herr_t list_groups(hid_t loc_id, const char* name, const H5L_info_t* info, void* operator_data);
+herr_t list_datasets(hid_t loc_id, const char* name, const H5O_info_t* info, void* operator_data);
+herr_t list_attributes(hid_t loc_id, const char* name, const H5A_info_t* info, void* operator_data);
+
+int indent_level = 0;
+
+/* Function to list groups */
+herr_t list_groups(hid_t loc_id, const char* name, const H5L_info_t* info, void* operator_data)
+{
+  indent_level++;
+  H5O_info_t obj_info;
+  H5Oget_info_by_name(loc_id, name, &obj_info, H5P_DEFAULT);
+
+  if(obj_info.type == H5O_TYPE_GROUP)
+  {
+  //  printf("Group: %s  \n", name);
+    std::cout << fmt::format("\n{: >{}}:Group: {}", "", indent_level*3, name) << std::endl;
+
+    H5Aiterate_by_name(loc_id, name, H5_INDEX_NAME, H5_ITER_NATIVE, NULL, list_attributes, NULL, H5P_DEFAULT);
+    H5Literate_by_name(loc_id, name, H5_INDEX_NAME, H5_ITER_NATIVE, NULL, list_groups, NULL, H5P_DEFAULT);
+  }
+  else if(obj_info.type == H5O_TYPE_DATASET)
+  {
+    //printf("Dataset: %s  \n", name);
+    std::cout << fmt::format("\n{: >{}}:Dataset: {}", "", indent_level*3, name) << std::endl;
+
+   // H5Aiterate_by_name(loc_id, name, H5_INDEX_NAME, H5_ITER_NATIVE, NULL, list_attributes, NULL, H5P_DEFAULT);
+  }
+  indent_level--;
+
+  return 0;
+}
+
+/* Function to list attributes */
+herr_t list_attributes(hid_t loc_id, const char* name, const H5A_info_t* info, void* operator_data)
+{
+  hid_t attr_id, type_id, space_id;
+  H5T_class_t type_class;
+  H5S_class_t space_class;
+  size_t type_size;
+
+  //printf("  Attribute: %s  ", name);
+  std::cout << fmt::format("{: >{}}:Attribute: {}\n", "", indent_level*3, name) << std::endl;
+
+  /* Open the attribute */
+  attr_id = H5Aopen(loc_id, name, H5P_DEFAULT);
+
+  /* Get the datatype */
+  type_id = H5Aget_type(attr_id);
+  type_class = H5Tget_class(type_id);
+  type_size = H5Tget_size(type_id);
+  printf("    Type: ");
+  switch(type_class)
+  {
+  case H5T_INTEGER:
+    printf("Integer  ");
+    break;
+  case H5T_FLOAT:
+    printf("Float  ");
+    break;
+  case H5T_STRING:
+    printf("String  ");
+    break;
+  default:
+    printf("Other  ");
+    break;
+  }
+  printf("    Size: %zu  ", type_size);
+
+  /* Get the dataspace and display its type (scalar, simple, etc.) */
+  space_id = H5Aget_space(attr_id);
+  space_class = H5Sget_simple_extent_type(space_id);
+  printf("    Dataspace: ");
+  switch(space_class)
+  {
+  case H5S_SCALAR:
+    printf("Scalar ");
+    break;
+  case H5S_SIMPLE:
+    printf("Simple ");
+    break;
+  default:
+    printf("Other ");
+    break;
+  }
+
+  /* Close the attribute, dataspace, and datatype */
+  H5Sclose(space_id);
+  H5Tclose(type_id);
+  H5Aclose(attr_id);
+  printf("\n");
+  return 0;
+}
+
+TEST_CASE("List Contents")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
+
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
+
+  hid_t file_id;
+
+  /* Open the HDF5 file */
+  file_id = H5Fopen(baseDataFilePath.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  REQUIRE(file_id > 0);
+  if(file_id < 0)
+  {
+    printf("Could not open file: %s  ", baseDataFilePath.c_str());
+  }
+
+  /* Recursively list groups and datasets */
+  H5Literate(file_id, H5_INDEX_NAME, H5_ITER_NATIVE, NULL, list_groups, NULL);
+
+  /* Close the file */
+  H5Fclose(file_id);
+}
