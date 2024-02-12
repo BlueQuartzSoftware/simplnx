@@ -1,5 +1,6 @@
 #include "AtomicFile.hpp"
 
+#include "simplnx/Utilities/FileUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <fmt/format.h>
@@ -29,17 +30,65 @@ std::string randomDirName()
 AtomicFile::AtomicFile(const std::string& filename, bool autoCommit)
 : m_FilePath(fs::path(filename))
 , m_AutoCommit(autoCommit)
+, m_Result({})
 {
+  // If the path is relative, then make it absolute
+  if(!m_FilePath.is_absolute())
+  {
+    try
+    {
+      m_FilePath = fs::absolute(m_FilePath);
+    } catch(const std::filesystem::filesystem_error& error)
+    {
+      m_Result = MergeResults(m_Result, MakeErrorResult(-15780, fmt::format("When attempting to create an absolute path, AtomicFile encountered the following error: '{}'", error.what())));
+    }
+  }
+
+  // Validate write permissions
+  auto result = FileUtilities::ValidateDirectoryWritePermission(m_FilePath, true);
+  if(result.invalid())
+  {
+    m_Result = MergeResults(m_Result, result);
+  }
+
   m_TempFilePath = fs::path(fmt::format("{}/{}/{}", m_FilePath.parent_path().string(), ::randomDirName(), m_FilePath.filename().string()));
-  m_Result = createOutputDirectories();
+  result = createOutputDirectories();
+  if(result.invalid())
+  {
+    m_Result = MergeResults(m_Result, result);
+  }
 }
 
 AtomicFile::AtomicFile(fs::path&& filepath, bool autoCommit)
 : m_FilePath(std::move(filepath))
 , m_AutoCommit(autoCommit)
+, m_Result({})
 {
+  // If the path is relative, then make it absolute
+  if(!m_FilePath.is_absolute())
+  {
+    try
+    {
+      m_FilePath = fs::absolute(m_FilePath);
+    } catch(const std::filesystem::filesystem_error& error)
+    {
+      m_Result = MergeResults(m_Result, MakeErrorResult(-15780, fmt::format("When attempting to create an absolute path, AtomicFile encountered the following error: '{}'", error.what())));
+    }
+  }
+
+  // Validate write permissions
+  auto result = FileUtilities::ValidateDirectoryWritePermission(m_FilePath, true);
+  if(result.invalid())
+  {
+    m_Result = MergeResults(m_Result, result);
+  }
+
   m_TempFilePath = fs::path(fmt::format("{}/{}/{}", m_FilePath.parent_path().string(), ::randomDirName(), m_FilePath.filename().string()));
-  m_Result = createOutputDirectories();
+  result = createOutputDirectories();
+  if(result.invalid())
+  {
+    m_Result = MergeResults(m_Result, result);
+  }
 }
 
 AtomicFile::~AtomicFile()

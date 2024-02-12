@@ -38,8 +38,8 @@ public:
 private:
   fs::path m_FilePath;
   fs::path m_TempFilePath;
+  Result<> m_Result;
   bool m_AutoCommit = false;
-  Result<> m_Result = {};
 
   Result<> createOutputDirectories();
 };
