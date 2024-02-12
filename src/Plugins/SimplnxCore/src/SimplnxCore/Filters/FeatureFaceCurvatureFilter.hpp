@@ -15,9 +15,6 @@ namespace nx::core
 class SIMPLNXCORE_EXPORT FeatureFaceCurvatureFilter : public IFilter
 {
 public:
-  using FaceIds_t = std::vector<int64_t>;
-  using SharedFeatureFaces_t = std::map<int32_t, FaceIds_t>;
-
   FeatureFaceCurvatureFilter() = default;
   ~FeatureFaceCurvatureFilter() noexcept override = default;
 

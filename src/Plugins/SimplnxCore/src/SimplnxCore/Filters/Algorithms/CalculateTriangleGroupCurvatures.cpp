@@ -46,12 +46,13 @@
 namespace nx::core
 {
 // -----------------------------------------------------------------------------
-CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting, Float64Array* principleCurvature1,
-                                                                   Float64Array* principleCurvature2, Float64Array* principleDirection1, Float64Array* principleDirection2,
-                                                                   Float64Array* gaussianCurvature, Float64Array* meanCurvature, Float64Array* weingartenMatrix, TriangleGeom* trianglesGeom,
-                                                                   Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals, Float64Array* surfaceMeshTriangleCentroids,
-                                                                   const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-: m_NRing(nring)
+CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting,
+                                                                   Float64Array* principleCurvature1, Float64Array* principleCurvature2, Float64Array* principleDirection1,
+                                                                   Float64Array* principleDirection2, Float64Array* gaussianCurvature, Float64Array* meanCurvature, Float64Array* weingartenMatrix,
+                                                                   TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals,
+                                                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+: m_Filter(filter)
+, m_NRing(nring)
 , m_TriangleIds(triangleIds)
 , m_UseNormalsForCurveFitting(useNormalsForCurveFitting)
 , m_PrincipleCurvature1(principleCurvature1)
@@ -327,7 +328,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
   } // End Loop over this triangle
 
   // Send some feedback
-  m_MessageHandler(fmt::format("Progress: {} / {}", m_TriangleIds.size(), tCount));
+  m_Filter->sendThreadSafeProgressMessage(1);
 }
 
 // -----------------------------------------------------------------------------
