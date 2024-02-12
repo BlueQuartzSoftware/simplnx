@@ -1,7 +1,8 @@
 #include "FileUtilities.hpp"
 
-#include <filesystem>
 #include <fmt/format.h>
+
+#include <filesystem>
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -36,8 +37,8 @@ int64 LinesInFile(const std::string& filepath)
   while(true)
   {
     memset(buf, 0, BUFFER_SIZE + 1);
-    ssize_t bytes_read = fread(buf, 1, BUFFER_SIZE, fd);
-    if(bytes_read <= 0)
+    size_t bytes_read = fread(buf, 1, BUFFER_SIZE, fd);
+    if(bytes_read == 0)
     {
       break;
     }
