@@ -95,7 +95,7 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
 
   std::vector<Point3Df> centroids = {{0.5F, 0.333333F, 0.0F}, {3.0F, 0.333333, 0.0F}, {6.66667, 0.0F, 0.0F}, {9.0F, 0.0F, 0.0F}};
 
-  const auto& calculatedCentroids = dataStructure.getDataRefAs<Float32Array>(triangleCentroidsDataPath);
+  const auto& calculatedCentroids = dataStructure.getDataRefAs<Float64Array>(triangleCentroidsDataPath);
 
   for(size_t t = 0; t < 4; t++)
   {

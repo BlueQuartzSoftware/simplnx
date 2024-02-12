@@ -20,8 +20,8 @@ using namespace nx::core;
 namespace
 {
 const fs::path k_TestInput = fs::path(unit_test::k_BinaryDir.view()) / "ReadCSVFileTest" / "Input.txt";
-constexpr int32 k_InvalidArgumentErrorCode = -100;
-constexpr int32 k_OverflowErrorCode = -101;
+constexpr int32 k_InvalidArgumentErrorCode = -10351;
+constexpr int32 k_OverflowErrorCode = -10353;
 constexpr int32 k_BlankLineErrorCode = -119;
 constexpr int32 k_EmptyFile = -100;
 constexpr int32 k_InconsistentCols = -104;
@@ -79,7 +79,21 @@ void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::string>
   }
 }
 
-// -----------------------------------------------------------------------------
+/**
+ *
+ * @param inputFilePath
+ * @param startImportRow
+ * @param headerMode
+ * @param headersLine
+ * @param delimiters
+ * @param customHeaders
+ * @param dataTypes
+ * @param skippedArrayMask
+ * @param tupleDims
+ * @param values
+ * @param newGroupName
+ * @return
+ */
 Arguments createArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
                           const std::vector<std::string>& customHeaders, const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrayMask, const std::vector<usize>& tupleDims,
                           nonstd::span<std::string> values, const std::string& newGroupName)
@@ -159,10 +173,11 @@ void TestCase_TestPrimitives_Error(nonstd::span<std::string> values, int32 expec
   std::string arrayName = "Array";
   DataPath arrayPath = DataPath({newGroupName, arrayName});
 
+  usize tupleCount = std::count_if(values.begin(), values.end(), [](const std::string& s) { return !s.empty(); });
+
   ReadCSVFileFilter filter;
   DataStructure dataStructure;
-  Arguments args =
-      createArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {arrayName}, {GetDataType<T>()}, {false}, {static_cast<usize>(values.size())}, values, newGroupName);
+  Arguments args = createArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {arrayName}, {GetDataType<T>()}, {false}, {tupleCount}, values, newGroupName);
 
   // Create the test input data file
   fs::create_directories(k_TestInput.parent_path());
@@ -542,37 +557,5 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 6): Invalid filter execution - B
   v = {std::to_string(std::numeric_limits<bool>::min()), "", std::to_string(std::numeric_limits<bool>::max())};
   TestCase_TestPrimitives_Error<bool>(v, k_BlankLineErrorCode);
 
-  // End line blank tests
-  v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max()), ""};
-  TestCase_TestPrimitives_Error<int8>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<int16>::min()), std::to_string(std::numeric_limits<int16>::max()), ""};
-  TestCase_TestPrimitives_Error<int16>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<int32>::min()), std::to_string(std::numeric_limits<int32>::max()), ""};
-  TestCase_TestPrimitives_Error<int32>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<int64>::min()), std::to_string(std::numeric_limits<int64>::max()), ""};
-  TestCase_TestPrimitives_Error<int64>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<uint8>::min()), std::to_string(std::numeric_limits<uint8>::max()), ""};
-  TestCase_TestPrimitives_Error<uint8>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<uint16>::min()), std::to_string(std::numeric_limits<uint16>::max()), ""};
-  TestCase_TestPrimitives_Error<uint16>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<uint32>::min()), std::to_string(std::numeric_limits<uint32>::max()), ""};
-  TestCase_TestPrimitives_Error<uint32>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<uint64>::min()), std::to_string(std::numeric_limits<uint64>::max()), ""};
-  TestCase_TestPrimitives_Error<uint64>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<float32>::min()), std::to_string(std::numeric_limits<float32>::max()), ""};
-  TestCase_TestPrimitives_Error<float32>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<float64>::min()), std::to_string(std::numeric_limits<float64>::max()), ""};
-  TestCase_TestPrimitives_Error<float64>(v, k_BlankLineErrorCode);
-
-  v = {std::to_string(std::numeric_limits<bool>::min()), std::to_string(std::numeric_limits<bool>::max()), ""};
-  TestCase_TestPrimitives_Error<bool>(v, k_BlankLineErrorCode);
+  // Blank lines at the end of the file are not counted in the line count
 }

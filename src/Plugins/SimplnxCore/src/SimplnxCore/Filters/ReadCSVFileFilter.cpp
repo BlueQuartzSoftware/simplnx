@@ -16,11 +16,10 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/ReadCSVFileParameter.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
+#include <cstdio>
 #include <fstream>
 
 using namespace nx::core;
@@ -309,6 +308,7 @@ IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize hea
   headerCache.HeadersLine = headersLineNum;
   return {};
 }
+
 } // namespace
 
 namespace nx::core
@@ -421,6 +421,11 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   StringVector headers;
   if(readCSVData.inputFilePath != s_HeaderCache[s_InstanceId].FilePath)
   {
+    int64 lineCount = nx::core::FileUtilities::LinesInFile(inputFilePath);
+    if(lineCount < 0)
+    {
+      return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::FILE_NOT_OPEN), fmt::format("Could not open file for reading: {}", inputFilePath)), {}};
+    }
     std::fstream in(inputFilePath.c_str(), std::ios_base::in);
     if(!in.is_open())
     {
@@ -429,17 +434,18 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 
     s_HeaderCache[s_InstanceId].FilePath = readCSVData.inputFilePath;
 
-    usize lineCount = 0;
+    usize currentLine = 0;
     while(!in.eof())
     {
       std::string line;
       std::getline(in, line);
-      lineCount++;
+      currentLine++;
 
-      if(headerMode == ReadCSVData::HeaderMode::LINE && lineCount == readCSVData.headersLine)
+      if(headerMode == ReadCSVData::HeaderMode::LINE && currentLine == readCSVData.headersLine)
       {
         s_HeaderCache[s_InstanceId].Headers = line;
         s_HeaderCache[s_InstanceId].HeadersLine = readCSVData.headersLine;
+        break;
       }
     }
 
@@ -704,7 +710,6 @@ namespace
 namespace SIMPL
 {
 constexpr StringLiteral k_SelectedPathKey = "Wizard_SelectedPath";
-constexpr StringLiteral k_TupleDimsKey = "Wizard_TupleDims";
 } // namespace SIMPL
 } // namespace
 

@@ -42,15 +42,15 @@ namespace
     value = FUNCTION(input);                                                                                                                                                                           \
   } catch(const std::invalid_argument& e)                                                                                                                                                              \
   {                                                                                                                                                                                                    \
-    return nx::core::MakeErrorResult<TYPE>(-100, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                               \
+    return nx::core::MakeErrorResult<TYPE>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                             \
   } catch(const std::out_of_range& e)                                                                                                                                                                  \
   {                                                                                                                                                                                                    \
-    return nx::core::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                      \
+    return nx::core::MakeErrorResult<TYPE>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                    \
   }                                                                                                                                                                                                    \
                                                                                                                                                                                                        \
   if(value > std::numeric_limits<TYPE>::max() || value < std::numeric_limits<TYPE>::min())                                                                                                             \
   {                                                                                                                                                                                                    \
-    return nx::core::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                      \
+    return nx::core::MakeErrorResult<TYPE>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                    \
   }                                                                                                                                                                                                    \
                                                                                                                                                                                                        \
   return {static_cast<TYPE>(value)};
@@ -73,7 +73,7 @@ namespace
     {                                                                                                                                                                                                  \
       if(!input.empty() && input.at(0) == '-')                                                                                                                                                         \
       {                                                                                                                                                                                                \
-        return nx::core::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                  \
+        return nx::core::MakeErrorResult<TYPE>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                \
       }                                                                                                                                                                                                \
                                                                                                                                                                                                        \
       SIMPLNX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                                 \
@@ -92,10 +92,10 @@ namespace
         value = static_cast<TYPE>(FUNCTION(input));                                                                                                                                                    \
       } catch(const std::invalid_argument& e)                                                                                                                                                          \
       {                                                                                                                                                                                                \
-        return nx::core::MakeErrorResult<TYPE>(-100, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                           \
+        return nx::core::MakeErrorResult<TYPE>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                         \
       } catch(const std::out_of_range& e)                                                                                                                                                              \
       {                                                                                                                                                                                                \
-        return nx::core::MakeErrorResult<TYPE>(-101, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                  \
+        return nx::core::MakeErrorResult<TYPE>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                \
       }                                                                                                                                                                                                \
       return {value};                                                                                                                                                                                  \
     }                                                                                                                                                                                                  \
