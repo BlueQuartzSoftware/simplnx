@@ -600,13 +600,13 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 
   // Create the arrays
   std::vector<usize> tupleDims(readCSVData.tupleDims.size());
-  std::transform(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), tupleDims.begin(), [](float64 d) { return static_cast<usize>(d); });
+  std::transform(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), tupleDims.begin(), [](usize d) { return d; });
   if(useExistingAM)
   {
     const AttributeMatrix& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
     tupleDims = am.getShape();
 
-    auto totalLinesRead = std::accumulate(tupleDims.begin(), tupleDims.end(), 1UL, std::multiplies<>());
+    auto totalLinesRead = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
 
     std::string msg = fmt::format("The Array Tuple Dimensions ({}) will be ignored and the Existing Attribute Matrix tuple dimensions ({}) will be used. The total number of lines read will be {}.",
                                   fmt::join(readCSVData.tupleDims, "x"), fmt::join(tupleDims, "x"), totalLinesRead);

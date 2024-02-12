@@ -75,7 +75,7 @@ Result<> ExtractVertexGeometry::operator()()
   VertexGeom& vertexGeometry = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexGeometryPath);
 
   SizeVec3 dims = inputGeometry.getDimensions();
-  const usize cellCount = std::accumulate(dims.begin(), dims.end(), static_cast<usize>(1ULL), std::multiplies<>());
+  const usize cellCount = std::accumulate(dims.begin(), dims.end(), static_cast<usize>(1), std::multiplies<>());
   usize totalCells = cellCount; // We save this here because it may change based on the use_mask flag.
   usize vertexCount = cellCount;
   DataPath vertexAttributeMatrixDataPath = vertexGeometry.getVertexAttributeMatrixDataPath();
