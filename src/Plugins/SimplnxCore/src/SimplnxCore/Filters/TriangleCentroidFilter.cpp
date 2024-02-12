@@ -95,7 +95,7 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   {
     DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCentroidsArrayName);
     // Create the face areas DataArray Action and store it into the resultOutputActions
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, createArrayDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, createArrayDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
