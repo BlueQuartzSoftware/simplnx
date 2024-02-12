@@ -18,6 +18,8 @@ InvertIntensityImageFilter inverts intensity of pixels by subtracting pixel valu
 
 - IntensityWindowingImageFilter ShiftScaleImageFilter
 
+![](Images/ITKInvertIntensityImageFilter.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

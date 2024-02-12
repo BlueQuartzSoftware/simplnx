@@ -16,6 +16,8 @@ Top-hats are described in Chapter 4.5 of Pierre Soille's book "Morphological Ima
 
 ### Related Filters
 
+![](Images/ITKWhiteTopHat.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

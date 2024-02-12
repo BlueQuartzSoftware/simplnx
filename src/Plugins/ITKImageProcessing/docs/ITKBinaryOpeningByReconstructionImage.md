@@ -20,6 +20,8 @@ The structuring element is assumed to be composed of binary values (zero or one)
 
 This implementation was taken from the Insight Journal paper: <https://www.insight-journal.org/browse/publication/176> * MorphologyImageFilter , OpeningByReconstructionImageFilter , BinaryClosingByReconstructionImageFilter
 
+![](Images/ITKOpeningByReconstruction.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

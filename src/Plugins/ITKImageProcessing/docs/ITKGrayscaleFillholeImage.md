@@ -19,6 +19,8 @@ Principles and Applications", Second Edition, Springer, 2003.* ReconstructionByE
 
 - MorphologyImageFilter , GrayscaleErodeImageFilter , GrayscaleFunctionErodeImageFilter , BinaryErodeImageFilter
 
+![](Images/ITKGrayscaleFillHole.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

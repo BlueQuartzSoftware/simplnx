@@ -15,6 +15,8 @@ This filter also includes an option to use the valley emphasis algorithm from H.
 - OtsuMultipleThresholdsCalculator
 - ThresholdLabelerImageFilter
 
+![](Images/ITKOtsuThreshold.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

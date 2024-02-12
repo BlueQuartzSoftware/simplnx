@@ -30,6 +30,8 @@ Note that the input and the mask images must be of the same size.
 
  Wiki Examples:*All Examples* Apply a mask to an image
 
+![](Images/ITKMaskImageFilter.png)
+
 % Auto generated parameter table will be inserted here
 
 ## References
