@@ -134,6 +134,8 @@ Result<> FeatureFaceCurvature::operator()()
   g->wait(); // Wait for all the threads to complete before moving on.
 #endif
 
+  // Remove elements containing vertices, because Element neighbors created it quietly under the covers
+  triangleGeomPtr->deleteElementsContainingVert();
   return {};
 }
 
