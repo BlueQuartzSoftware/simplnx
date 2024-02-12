@@ -20,6 +20,8 @@ The default values for LowerThreshold and UpperThreshold are: LowerThreshold = N
 
 Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.
 
+![](Images/ITKBinaryThreshold.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

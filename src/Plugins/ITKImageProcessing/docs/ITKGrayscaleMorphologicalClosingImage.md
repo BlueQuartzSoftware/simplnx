@@ -12,6 +12,8 @@ Close an image using grayscale morphology.
 
 The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.* MorphologyImageFilter , GrayscaleFunctionErodeImageFilter , BinaryErodeImageFilter
 
+![](Images/ITKGrayscaleClosing.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

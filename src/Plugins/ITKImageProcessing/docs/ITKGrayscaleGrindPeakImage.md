@@ -21,6 +21,8 @@ Principles and Applications", Second Edition, Springer, 2003.* GrayscaleGeodesic
 
 - MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
+![](Images/ITKGrayscaleGrindPeak.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

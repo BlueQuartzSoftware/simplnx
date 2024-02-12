@@ -23,6 +23,8 @@ N.Nikopoulos et al. "An efficient algorithm for 3d binary
 morphological transformations with 3d structuring elements
 for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9. No. 3. 2000. pp. 283-286.* ImageToImageFilter BinaryErodeImageFilter BinaryMorphologyImageFilter
 
+![](Images/ITKBinaryDilation.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
