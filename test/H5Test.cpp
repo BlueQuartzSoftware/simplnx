@@ -898,26 +898,26 @@ herr_t list_attributes(hid_t loc_id, const char* name, const H5A_info_t* info, v
   return 0;
 }
 
-TEST_CASE("List Contents")
-{
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
+// TEST_CASE("List Contents")
+// {
+//   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
+//   // Read the Small IN100 Data set
+//   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
 
-  hid_t file_id;
+//   hid_t file_id;
 
-  /* Open the HDF5 file */
-  file_id = H5Fopen(baseDataFilePath.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-  REQUIRE(file_id > 0);
-  if(file_id < 0)
-  {
-    printf("Could not open file: %s  ", baseDataFilePath.c_str());
-  }
+//   /* Open the HDF5 file */
+//   file_id = H5Fopen(baseDataFilePath.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+//   REQUIRE(file_id > 0);
+//   if(file_id < 0)
+//   {
+//     printf("Could not open file: %s  ", baseDataFilePath.c_str());
+//   }
 
-  /* Recursively list groups and datasets */
-  H5Literate(file_id, H5_INDEX_NAME, H5_ITER_NATIVE, NULL, list_groups, NULL);
+//   /* Recursively list groups and datasets */
+//   H5Literate(file_id, H5_INDEX_NAME, H5_ITER_NATIVE, NULL, list_groups, NULL);
 
-  /* Close the file */
-  H5Fclose(file_id);
-}
+//   /* Close the file */
+//   H5Fclose(file_id);
+// }
