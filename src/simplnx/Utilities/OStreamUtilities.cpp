@@ -200,18 +200,13 @@ struct PrintDataArray
  * @param mesgHandler The message handler to dump progress updates to
  * // default parameters
  * @param delimiter The delimiter to insert between values
- * @param componentsPerLine The number of components per line
+ * @return A result object with any errors or warnings
  */
 Result<> PrintStringArray(std::ostream& outputStrm, const StringArray& inputStringArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                          const std::string& delimiter = ",", int32 componentsPerLine = 0)
+                          const std::string& delimiter = ",")
 {
   auto start = std::chrono::steady_clock::now();
   auto numTuples = inputStringArray.getNumberOfTuples();
-  auto maxLine = static_cast<size_t>(componentsPerLine);
-  if(componentsPerLine == 0)
-  {
-    maxLine = static_cast<size_t>(inputStringArray.getNumberOfComponents());
-  }
 
   for(size_t tuple = 0; tuple < numTuples; tuple++)
   {
@@ -226,19 +221,7 @@ Result<> PrintStringArray(std::ostream& outputStrm, const StringArray& inputStri
         return {};
       }
     }
-
-    for(size_t index = 0; index < inputStringArray.getNumberOfComponents(); index++)
-    {
-      outputStrm << inputStringArray[index];
-      if(index != maxLine - 1)
-      {
-        outputStrm << delimiter;
-      }
-      else
-      {
-        outputStrm << "\n";
-      }
-    }
+    outputStrm << inputStringArray[tuple] << "\n";
   }
 
   return {};
@@ -251,6 +234,39 @@ public:
   virtual ~ITupleWriter() = default;
   virtual void write(std::ostream& outputStrm, usize tupleIndex) const = 0;
   virtual void writeHeader(std::ostream& outputStrm) const = 0;
+};
+
+class StringTupleWriter : public ITupleWriter
+{
+  using DataArrayType = StringArray;
+
+public:
+  StringTupleWriter(const StringArray& iDataArray, const std::string& delimiter)
+  : m_DataArray(dynamic_cast<const StringArray&>(iDataArray))
+  , m_Delimiter(delimiter)
+  {
+  }
+  ~StringTupleWriter() override = default;
+
+  StringTupleWriter(const StringTupleWriter&) = delete;
+  StringTupleWriter(StringTupleWriter&&) noexcept = delete;
+
+  StringTupleWriter& operator=(const StringTupleWriter&) = delete;
+  StringTupleWriter& operator=(StringTupleWriter&&) noexcept = delete;
+
+  void write(std::ostream& outputStrm, usize tupleIndex) const override
+  {
+    outputStrm << m_Delimiter << m_DataArray[tupleIndex] << m_Delimiter;
+  }
+
+  void writeHeader(std::ostream& outputStrm) const override
+  {
+    outputStrm << m_DataArray.getName();
+  }
+
+private:
+  const DataArrayType& m_DataArray;
+  const std::string m_Delimiter = "'";
 };
 
 template <typename ScalarType>
@@ -396,11 +412,7 @@ void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
       auto* stringArray = dataStructure.getDataAs<StringArray>(dataPath);
       if(stringArray != nullptr)
       {
-        if(exportToBinary)
-        {
-          throw std::runtime_error(fmt::format("{}({}): Function {}: Error. Cannot print a StringArray to binary: '{}'", "PrintDataSetsToMultipleFiles", __FILE__, __LINE__, dataPath.getTargetName()));
-        }
-        PrintStringArray(outStrm, *stringArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
+        PrintStringArray(outStrm, *stringArray, mesgHandler, shouldCancel, delimiter);
       }
       auto* neighborList = dataStructure.getDataAs<INeighborList>(dataPath);
       if(neighborList != nullptr)
@@ -449,7 +461,7 @@ void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath,
   auto* stringArray = dataStructure.getDataAs<StringArray>(objectPath);
   if(stringArray != nullptr)
   {
-    PrintStringArray(outputStrm, *stringArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
+    PrintStringArray(outputStrm, *stringArray, mesgHandler, shouldCancel, delimiter);
   }
   auto* neighborList = dataStructure.getDataAs<INeighborList>(objectPath);
   if(neighborList != nullptr)
@@ -476,7 +488,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
                                const std::atomic_bool& shouldCancel, const std::string& delimiter, bool includeIndex, bool includeHeaders, bool writeFirstIndex, const std::string& indexName,
                                const std::vector<DataPath>& neighborLists, bool writeNumOfFeatures)
 {
-  const auto& firstDataArray = dataStructure.getDataRefAs<IDataArray>(objectPaths[0]);
+  const auto& firstDataArray = dataStructure.getDataRefAs<IArray>(objectPaths[0]);
   usize numTuples = firstDataArray.getNumberOfTuples();
   auto start = std::chrono::steady_clock::now();
 
@@ -484,8 +496,18 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   std::vector<std::shared_ptr<ITupleWriter>> writers;
   for(const auto& selectedArrayPath : objectPaths)
   {
-    const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedArrayPath);
-    ExecuteDataFunction(AddTupleWriter{}, iDataArray.getDataType(), writers, iDataArray, delimiter);
+    auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    if(nullptr != dataArrayPtr)
+    {
+      const auto& iDataArrayRef = dataStructure.getDataRefAs<IDataArray>(selectedArrayPath);
+      ExecuteDataFunction(AddTupleWriter{}, iDataArrayRef.getDataType(), writers, iDataArrayRef, delimiter);
+    }
+    auto* stringArrayPtr = dataStructure.getDataAs<StringArray>(selectedArrayPath);
+    if(nullptr != stringArrayPtr)
+    {
+      const auto& iDataArrayRef = dataStructure.getDataRefAs<StringArray>(selectedArrayPath);
+      writers.push_back(std::make_shared<StringTupleWriter>(iDataArrayRef, "'"));
+    }
   }
   size_t writersCount = writers.size();
 

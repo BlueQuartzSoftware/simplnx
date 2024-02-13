@@ -136,8 +136,8 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
   std::set<size_t> types;
   for(const auto& dataPath : dataArrayPaths)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
-    types.insert(dataArray->getNumberOfTuples());
+    const auto* iArrayPtr = dataStructure.getDataAs<IArray>(dataPath);
+    types.insert(iArrayPtr->getNumberOfTuples());
   }
   return types.size() == 1;
 }
