@@ -26,7 +26,8 @@ IParameter::AcceptedTypes GenerateColorTableParameter::acceptedTypes() const
 
 nlohmann::json GenerateColorTableParameter::toJson(const std::any& value) const
 {
-  const auto& json = GetAnyRef<ValueType>(value);
+  const auto& nameStr = GetAnyRef<ValueType>(value);
+  nlohmann::json json = nameStr;
   return json;
 }
 
