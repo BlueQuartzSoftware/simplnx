@@ -8,26 +8,19 @@
 #include <string>
 #include <vector>
 
+
 namespace nx::core
 {
 SIMPLNX_EXPORT constexpr StringLiteral k_DefaultColorTableJsonStr = R"~(@COLOR_TABLE_JSON@)~";
 
-template<bool UseCustomColorTables = false>
 class ColorTable
 {
   ColorTable()
-  : m_AllColorTablesJson((){
-    if constexpr(UseCustomColorTables)
-    {
-      return nlohmann::json::object({k_DefaultColorTableJsonStr})
-    }
-    else
-    {
-     return nlohmann::json::object({k_DefaultColorTableJsonStr})
-    }
-    }
-    )
   {
+    if(m_AllColorTablesJson.empty())
+    {
+      m_AllColorTablesJson = nlohmann::json(k_DefaultColorTableJsonStr);
+    }
   }
   ~ColorTable() = default;
   
@@ -35,7 +28,7 @@ class ColorTable
  * @brief ReadRGBPresets This method will combine RGB json presets from the ColorTable.hpp JSON string
  * @return The json object result
    */
-  static Result<nlohmann::json> LoadAllRGBPresets()
+  Result<nlohmann::json> LoadAllRGBPresets() const
   {
     nlohmann::json rgbPresets;
     for(const auto& preset : m_AllColorTablesJson)
