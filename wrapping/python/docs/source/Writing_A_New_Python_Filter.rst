@@ -76,7 +76,49 @@ This filter can generate skeleton code for the new filters in an existing Python
         - If *Use Existing Plugin* is OFF, then the new plugin directory structure and new filters will be generated at the specified output directory.
         - If *Use Existing Plugin* is ON, then the new filters will be generated inside the existing plugin at the specified location.
 
-2. Understanding the Plugin Structure
+2. Loading The New Plugin
+-------------------------
+After you have generated your Python plugin/filters, close the current instance of DREAM3D-NX.  Now, from the same Anaconda command prompt as before:
+
+- Export the `PYTHONPATH` environment variable and have that point to a folder that you will be saving your new plugin into or a folder that holds your currently in-development plugin.  Set the `SIMPLNX_PYTHON_PLUGINS` environment variable to the name of your plugin.  Multiple plugin names should be separated by commas.
+
+    **MacOS/Linux**
+
+        .. code:: shell
+
+            export PYTHONPATH=/path/to/plugin/parent/directory
+            export SIMPLNX_PYTHON_PLUGINS=[NAME_OF_PLUGIN]
+
+    **Windows**
+
+        .. code:: shell
+
+            set PYTHONPATH=/path/to/plugin/parent/directory
+            set SIMPLNX_PYTHON_PLUGINS=[NAME_OF_PLUGIN]
+
+- Re-launch **DREAM3D-NX** again.
+
+    **MacOS**
+
+        .. code:: shell
+
+            $(conda info --envs | grep '*' | awk '{print $3}')/bin/DREAM3DNX.app/Contents/MacOS/DREAM3DNX
+    
+    **Linux**
+
+        .. code:: shell
+
+            dream3dnx
+
+    **Windows**
+
+        .. code:: shell
+
+            dream3dnx.exe
+
+You should now see your new filters loaded in the DREAM3D-NX user interface.  Search for your filter's name in the Filter List to verify.
+
+3. Understanding the Plugin Structure
 -------------------------------------
 
 Python plugins in *simplnx* contain 2 main files (**__init__.py** and **Plugin.py**) and the filter files.
@@ -87,7 +129,7 @@ Python plugins in *simplnx* contain 2 main files (**__init__.py** and **Plugin.p
 
 - **Filter Files:** The Python modules that contain the parameter setup, validation, and execution logic for each filter.
 
-3. Understanding the Filter Skeleton Structure
+4. Understanding the Filter Skeleton Structure
 ----------------------------------------------
 
 The skeleton provides a basic structure with placeholders and conventions that align with *simplnx*'s architecture.
@@ -199,7 +241,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
         def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
             # Execution logic
 
-4. Defining Parameters
+5. Defining Parameters
 ----------------------
 Parameters determine what inputs are available to users; they make your filter configurable and adaptable to different datasets and scenarios.
 
@@ -240,9 +282,19 @@ Parameters determine what inputs are available to users; they make your filter c
 
     To see examples of how to instantiate each parameter, check out `ExampleFilter1 <https://github.com/BlueQuartzSoftware/simplnx/tree/develop/wrapping/python/plugins/ExamplePlugin/ExampleFilter1.py>`__ and `ExampleFilter2 <https://github.com/BlueQuartzSoftware/simplnx/tree/develop/wrapping/python/plugins/ExamplePlugin/ExampleFilter2.py>`__.
 
-5. Writing the Preflight Implementation
+6. Writing the Preflight Implementation
 ---------------------------------------
-The `preflight_impl` method allows you to perform checks, validations, and setup tasks before the filter's main execution.
+The `preflight_impl` method allows you to perform checks, validations, and setup tasks before the filter's main execution. There are a number of basic steps that are performed but each
+step could have any number of details associated to it. **The Preflight method should not be I/O or calculation intensive as it will be run every time a parameter in this filter or
+any other filter is modified.**
+
+- Extract the input parameters values into local variables.
+- Test those values for any non-allowed values, ranges or other conditions
+- Use 'Actions' to modify the DataStructure as needed. These can be Array or Geometry creation or deletion.
+
+Each Parameter will do some basic kinds of sanity checks before the code execution ever makes it to your filter's 'preflight' method. For instance, 'File Input' parameters will already
+ensure that the file exists on the file system so the developer does not need to redo this kind of validation. DataArray/GeometrySelection types of parameters will ensure
+that the DataStructure DataPath already exists as another example. The filter parameter section will review the kinds of checks that each parameter perform
 
 **Example Preflight Method:**
     This example creates a new 32-bit float output array using the number of tuples, number of components, and output array path provided by the user.  It also validates that the initialization value is not set to 0.
@@ -268,7 +320,7 @@ The `preflight_impl` method allows you to perform checks, validations, and setup
             # Return the output actions
             return nx.IFilter.PreflightResult(output_actions)
 
-**Key Aspects:**
+**Examples of the Major Steps:**
 
 - **Parameter Retrieval and Validation:**
     - Extract and validate the parameters to ensure they meet your filter's requirements.
@@ -287,9 +339,11 @@ The `preflight_impl` method allows you to perform checks, validations, and setup
             output_actions = nx.OutputActions()
             output_actions.append_action(nx.CreateArrayAction(nx.DataType.float32, [num_of_tuples], [num_of_components], output_array_path))
 
-6. Writing the Execute Implementation
+8. Writing the Execute Implementation
 -------------------------------------
-In `execute_impl`, you'll implement the core functionality of your filter.
+
+The `execute_impl` method holds the core functionality of the filter. This function is generally where the actual calculations are
+performed.
 
 **Example Execute Method:**
     This example sets the initialization value provided by the user into every index of the newly created output array.
@@ -341,48 +395,6 @@ In `execute_impl`, you'll implement the core functionality of your filter.
 
             # Set the init value into every index of the array
             data[:] = init_value
-
-7. Loading The New Plugin
--------------------------
-After you have generated your Python plugin/filters, close the current instance of DREAM3D-NX.  Now, from the same Anaconda command prompt as before:
-
-- Export the `PYTHONPATH` environment variable and have that point to a folder that you will be saving your new plugin into or a folder that holds your currently in-development plugin.  Set the `SIMPLNX_PYTHON_PLUGINS` environment variable to the name of your plugin.  Multiple plugin names should be separated by commas.
-
-    **MacOS/Linux**
-
-        .. code:: shell
-
-            export PYTHONPATH=/path/to/plugin/parent/directory
-            export SIMPLNX_PYTHON_PLUGINS=[NAME_OF_PLUGIN]
-
-    **Windows**
-
-        .. code:: shell
-
-            set PYTHONPATH=/path/to/plugin/parent/directory
-            set SIMPLNX_PYTHON_PLUGINS=[NAME_OF_PLUGIN]
-
-- Re-launch **DREAM3D-NX** again.
-
-    **MacOS**
-
-        .. code:: shell
-
-            $(conda info --envs | grep '*' | awk '{print $3}')/bin/DREAM3DNX.app/Contents/MacOS/DREAM3DNX
-    
-    **Linux**
-
-        .. code:: shell
-
-            dream3dnx
-
-    **Windows**
-
-        .. code:: shell
-
-            dream3dnx.exe
-
-You should now see your new filters loaded in the DREAM3D-NX user interface.  Search for your filter's name in the Filter List to verify.
 
 Conclusion
 ----------
