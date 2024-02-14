@@ -120,7 +120,7 @@ IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStruc
   {
     goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
-    const nx::core::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
+    const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
     if(nullptr == goodVoxelsArray)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
@@ -149,7 +149,7 @@ Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, con
 {
   GenerateColorTableInputValues inputValues;
 
-  inputValues.ControlPoints = filterArgs.value<GenerateColorTableParameter::ValueType>(k_SelectedPreset_Key);
+  inputValues.PresetName = filterArgs.value<GenerateColorTableParameter::ValueType>(k_SelectedPreset_Key);
   inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);

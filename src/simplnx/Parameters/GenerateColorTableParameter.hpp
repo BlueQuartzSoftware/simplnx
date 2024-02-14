@@ -18,7 +18,6 @@ class SIMPLNX_EXPORT GenerateColorTableParameter : public ValueParameter
 {
 public:
   using ValueType = std::string;
-  static constexpr usize k_ControlPointCompSize = 4;
 
   GenerateColorTableParameter() = delete;
   GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue = {});

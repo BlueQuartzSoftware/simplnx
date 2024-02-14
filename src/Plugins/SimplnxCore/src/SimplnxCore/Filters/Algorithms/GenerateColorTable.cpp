@@ -37,7 +37,7 @@ template <typename T>
 class GenerateColorTableImpl
 {
 public:
-  GenerateColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const GenerateColorTableParameter::ValueType& controlPoints, int numControlColors, UInt8Array& colorArray,
+  GenerateColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, int numControlColors, UInt8Array& colorArray,
                          const nx::core::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
   : m_ArrayPtr(arrayPtr)
   , m_BinPoints(binPoints)
@@ -48,7 +48,6 @@ public:
   , m_ArrayMax(arrayPtr[0])
   , m_GoodVoxels(goodVoxels)
   , m_InvalidColor(invalidColor)
-  , m_CompSize(GenerateColorTableParameter::k_ControlPointCompSize)
   {
     for(int i = 1; i < arrayPtr.getNumberOfTuples(); i++)
     {
@@ -125,9 +124,15 @@ public:
       }
 
       // Calculate the RGB values
-      const unsigned char redVal = (m_ControlPoints[leftBinIndex * m_CompSize + 1] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * m_CompSize + 1] * currFraction) * 255;
-      const unsigned char greenVal = (m_ControlPoints[leftBinIndex * m_CompSize + 2] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * m_CompSize + 2] * currFraction) * 255;
-      const unsigned char blueVal = (m_ControlPoints[leftBinIndex * m_CompSize + 3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * m_CompSize + 3] * currFraction) * 255;
+      const unsigned char redVal =
+          (m_ControlPoints[leftBinIndex * ColorTable::k_ControlPointCompSize + 1] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * ColorTable::k_ControlPointCompSize + 1] * currFraction) *
+          255;
+      const unsigned char greenVal =
+          (m_ControlPoints[leftBinIndex * ColorTable::k_ControlPointCompSize + 2] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * ColorTable::k_ControlPointCompSize + 2] * currFraction) *
+          255;
+      const unsigned char blueVal =
+          (m_ControlPoints[leftBinIndex * ColorTable::k_ControlPointCompSize + 3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * ColorTable::k_ControlPointCompSize + 3] * currFraction) *
+          255;
 
       colorArrayDS.setComponent(i, 0, redVal);
       colorArrayDS.setComponent(i, 1, greenVal);
@@ -160,28 +165,26 @@ private:
   T m_ArrayMin;
   T m_ArrayMax;
   int m_NumControlColors;
-  const GenerateColorTableParameter::ValueType& m_ControlPoints;
+  const std::vector<float32>& m_ControlPoints;
   UInt8Array& m_ColorArray;
   const nx::core::IDataArray* m_GoodVoxels = nullptr;
   const std::vector<uint8>& m_InvalidColor;
-  const usize m_CompSize;
 };
 
 struct GenerateColorArrayFunctor
 {
   template <typename ScalarType>
-  void operator()(DataStructure& dataStructure, const GenerateColorTableInputValues* inputValues)
+  Result<> operator()(DataStructure& dataStructure, const GenerateColorTableInputValues* inputValues, const std::vector<float32>& controlPoints)
   {
     // Control Points is a flattened 2D array with an unknown tuple count and a component size of 4
-    const GenerateColorTableParameter::ValueType& controlPoints = inputValues->ControlPoints;
-    const usize numControlColors = controlPoints.size() / GenerateColorTableParameter::k_ControlPointCompSize;
+    const usize numControlColors = controlPoints.size() / ColorTable::k_ControlPointCompSize;
 
     // Store A-values in binPoints vector.
     std::vector<float32> binPoints;
     binPoints.reserve(numControlColors);
     for(usize i = 0; i < numControlColors; i++)
     {
-      binPoints.push_back(static_cast<float32>(controlPoints[i * GenerateColorTableParameter::k_ControlPointCompSize]));
+      binPoints.push_back(controlPoints[i * ColorTable::k_ControlPointCompSize]);
     }
 
     // Normalize binPoints values
@@ -200,15 +203,16 @@ struct GenerateColorArrayFunctor
       goodVoxelsArray = dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath);
     }
 
-    const DataArray<ScalarType>& arrayPtr = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath);
-    if(arrayPtr.getNumberOfTuples() <= 0)
+    const DataArray<ScalarType>& arrayRef = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath);
+    if(arrayRef.getNumberOfTuples() <= 0)
     {
-      return;
+      return MakeErrorResult(-34381, fmt::format("Array {} is empty", arrayRef.getName()));
     }
 
     ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0, arrayPtr.getNumberOfTuples());
-    dataAlg.execute(GenerateColorTableImpl(arrayPtr, binPoints, controlPoints, numControlColors, colorArray, goodVoxelsArray, inputValues->InvalidColor));
+    dataAlg.setRange(0, arrayRef.getNumberOfTuples());
+    dataAlg.execute(GenerateColorTableImpl(arrayRef, binPoints, controlPoints, numControlColors, colorArray, goodVoxelsArray, inputValues->InvalidColor));
+    return {};
   }
 };
 } // namespace
@@ -235,6 +239,19 @@ const std::atomic_bool& GenerateColorTable::getCancel()
 Result<> GenerateColorTable::operator()()
 {
   const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
-  ExecuteDataFunction(GenerateColorArrayFunctor{}, selectedIDataArray.getDataType(), m_DataStructure, m_InputValues);
+
+  auto controlPointsResult = m_ColorTable.ExtractContolPoints(m_InputValues->PresetName);
+  if(controlPointsResult.invalid())
+  {
+    auto error = *controlPointsResult.errors().begin();
+    return MakeErrorResult(error.code, error.message);
+  }
+  auto controlPoints = controlPointsResult.value();
+  if(controlPoints.empty())
+  {
+    return MakeErrorResult(-34380, fmt::format("No valid points found from preset {}", m_InputValues->PresetName));
+  }
+
+  ExecuteDataFunction(GenerateColorArrayFunctor{}, selectedIDataArray.getDataType(), m_DataStructure, m_InputValues, controlPoints);
   return {};
 }

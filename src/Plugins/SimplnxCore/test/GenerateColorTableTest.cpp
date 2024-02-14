@@ -7,7 +7,6 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/ColorPresetsUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 namespace fs = std::filesystem;
@@ -53,17 +52,17 @@ const std::string k_XRayPresetName = "X Ray";
 
 std::map<std::string, nlohmann::json> ReadPresets()
 {
-  Result<nlohmann::json> result = ReadRGBPresets(k_PresetsFilePath);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
+//  Result<nlohmann::json> result = ReadRGBPresets(k_PresetsFilePath);
+//  SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   std::map<std::string, nlohmann::json> presetsMap;
-  for(const nlohmann::json& preset : result.value())
-  {
-    if(preset.contains("Name") && preset.contains("RGBPoints") && preset["Name"].is_string())
-    {
-      presetsMap.insert({preset["Name"].get<std::string>(), preset});
-    }
-  }
+//  for(const nlohmann::json& preset : result.value())
+//  {
+//    if(preset.contains("Name") && preset.contains("RGBPoints") && preset["Name"].is_string())
+//    {
+//      presetsMap.insert({preset["Name"].get<std::string>(), preset});
+//    }
+//  }
 
   return presetsMap;
 }
