@@ -9,8 +9,8 @@
 #include "simplnx/Filter/IFilter.hpp"
 
 #include "EbsdLib/IO/BrukerNano/H5EspritReader.h"
-#include "EbsdLib/IO/TSL/H5OIMReader.h"
 #include "EbsdLib/IO/HKL/H5OINAReader.h"
+#include "EbsdLib/IO/TSL/H5OIMReader.h"
 
 namespace nx::core
 {

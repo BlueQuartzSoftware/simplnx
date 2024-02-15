@@ -1,12 +1,9 @@
 # ------------------------------------------------------------------------------
 # Required EbsdLib and H5Support
 # ------------------------------------------------------------------------------
-#find_package(H5Support REQUIRED)
+find_package(H5Support REQUIRED)
 
-#find_package(EbsdLib REQUIRED)
-
-add_subdirectory(${complex_SOURCE_DIR}/../H5Support ${complex_BINARY_DIR}/H5Support)
-add_subdirectory(${complex_SOURCE_DIR}/../EbsdLib ${complex_BINARY_DIR}/EbsdLib)
+find_package(EbsdLib REQUIRED)
 
 # ------------------------------------------------------------------------------
 # EbsdLib needs install rules for creating packages

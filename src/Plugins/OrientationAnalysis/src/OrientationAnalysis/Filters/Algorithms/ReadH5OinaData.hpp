@@ -1,9 +1,9 @@
 #pragma once
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
-#include "OrientationAnalysis/utilities/ImportH5Data.hpp"
+#include "OrientationAnalysis/utilities/ReadH5Data.hpp"
 
-namespace complex
+namespace nx::core
 {
 
 /**
@@ -12,10 +12,10 @@ namespace complex
  * intermediate .h5ebsd file.
  */
 
-class ORIENTATIONANALYSIS_EXPORT ReadH5OinaData : public ImportH5Data<H5OINAReader>
+class ORIENTATIONANALYSIS_EXPORT ReadH5OinaData : public ReadH5Data<H5OINAReader>
 {
 public:
-  ReadH5OinaData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportH5DataInputValues* inputValues);
+  ReadH5OinaData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5DataInputValues* inputValues);
   ~ReadH5OinaData() noexcept override;
 
   ReadH5OinaData(const ReadH5OinaData&) = delete;
@@ -26,7 +26,6 @@ public:
   Result<> operator()();
 
   Result<> copyRawEbsdData(int index) override;
-
 };
 
-} // namespace complex
+} // namespace nx::core

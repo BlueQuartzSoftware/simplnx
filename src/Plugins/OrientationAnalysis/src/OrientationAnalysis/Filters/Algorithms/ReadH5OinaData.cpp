@@ -1,15 +1,15 @@
 #include "ReadH5OinaData.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
-using namespace complex;
+using namespace nx::core;
 
 namespace
 {
 
 template <typename T>
-void copyRawData(const ImportH5DataInputValues* m_InputValues, size_t totalPoints, DataStructure& m_DataStructure, H5OINAReader& m_Reader, const std::string& name, usize offset)
+void copyRawData(const ReadH5DataInputValues* m_InputValues, size_t totalPoints, DataStructure& m_DataStructure, H5OINAReader& m_Reader, const std::string& name, usize offset)
 {
   using ArrayType = DataArray<T>;
   auto& dataRef = m_DataStructure.getDataRefAs<ArrayType>(m_InputValues->CellAttributeMatrixPath.createChildPath(name));
@@ -21,7 +21,7 @@ void copyRawData(const ImportH5DataInputValues* m_InputValues, size_t totalPoint
 }
 
 template <typename T>
-void convertHexEulerAngle(const ImportH5DataInputValues* m_InputValues, size_t totalPoints, DataStructure& m_DataStructure)
+void convertHexEulerAngle(const ReadH5DataInputValues* m_InputValues, size_t totalPoints, DataStructure& m_DataStructure)
 {
   using ArrayType = DataArray<T>;
 
@@ -49,8 +49,8 @@ void convertHexEulerAngle(const ImportH5DataInputValues* m_InputValues, size_t t
 } // namespace
 
 // -----------------------------------------------------------------------------
-ReadH5OinaData::ReadH5OinaData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportH5DataInputValues* inputValues)
-: ImportH5Data<H5OINAReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
+ReadH5OinaData::ReadH5OinaData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5DataInputValues* inputValues)
+: ReadH5Data<H5OINAReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
 {
 }
 
@@ -105,7 +105,6 @@ Result<> ReadH5OinaData::copyRawEbsdData(int index)
       convertHexEulerAngle<uint8>(m_InputValues, totalPoints, m_DataStructure);
     }
   }
-
 
   if(m_InputValues->ReadPatternData)
   {

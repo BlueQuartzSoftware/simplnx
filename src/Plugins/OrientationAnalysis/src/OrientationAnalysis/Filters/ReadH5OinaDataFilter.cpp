@@ -3,18 +3,18 @@
 #include "OrientationAnalysis/Filters/Algorithms/ReadH5OinaData.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Filter/Actions/CreateStringArrayAction.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/H5OINAReader.h"
@@ -22,9 +22,9 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+using namespace nx::core;
 
-namespace complex
+namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ReadH5OinaDataFilter::name() const
@@ -66,12 +66,10 @@ Parameters ReadH5OinaDataFilter::parameters() const
   params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5oina file. Oxford can store multiple scans in a single file",
                                                                 OEMEbsdScanSelectionParameter::ValueType{},
                                                                 /* OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::EDAX}, */
-                                                                OEMEbsdScanSelectionParameter::EbsdReaderType::H5Oina,
-                                                                OEMEbsdScanSelectionParameter::ExtensionsType{".h5oina"}));
+                                                                OEMEbsdScanSelectionParameter::EbsdReaderType::H5Oina, OEMEbsdScanSelectionParameter::ExtensionsType{".h5oina"}));
   params.insert(std::make_unique<BoolParameter>(k_EdaxHexagonalAlignment_Key, "Convert Hexagonal X-Axis to EDAX Standard",
                                                 "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", true));
-  params.insert(std::make_unique<BoolParameter>(k_ConvertPhaseToInt32_Key, "Convert Phase Data to In32",
-                                                "Native Phases data value is uint8. Convert to Int32 for better filter compatibility", true));
+  params.insert(std::make_unique<BoolParameter>(k_ConvertPhaseToInt32_Key, "Convert Phase Data to Int32", "Native Phases data value is uint8. Convert to Int32 for better filter compatibility", true));
   params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<BoolParameter>(k_ReadPatternData_Key, "Import Pattern Data", "Whether or not to import the pattern data", false));
@@ -94,7 +92,7 @@ IFilter::UniquePointer ReadH5OinaDataFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+                                                             const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
@@ -105,12 +103,11 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
   auto pConvertPhaseData = filterArgs.value<bool>(k_ConvertPhaseToInt32_Key);
 
-
   DataPath cellEnsembleAMPath = pImageGeometryNameValue.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   DataPath cellAMPath = pImageGeometryNameValue.createChildPath(pCellAttributeMatrixNameValue);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   if(pZSpacingValue <= 0)
@@ -198,9 +195,9 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
 
 //------------------------------------------------------------------------------
 Result<> ReadH5OinaDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+                                           const std::atomic_bool& shouldCancel) const
 {
-  ImportH5DataInputValues inputValues;
+  ReadH5DataInputValues inputValues;
 
   inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
@@ -212,4 +209,4 @@ Result<> ReadH5OinaDataFilter::executeImpl(DataStructure& dataStructure, const A
 
   return ReadH5OinaData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
-} // namespace complex
+} // namespace nx::core
