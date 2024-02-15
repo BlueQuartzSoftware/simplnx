@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
+#include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/GenerateColorTableParameter.hpp"
@@ -66,7 +67,8 @@ Parameters GenerateColorTableFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator({"Input Parameters"});
-  params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array"));
+  params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array",
+                                                              ColorTableUtilities::GetDefaultRGBPresetName()));
   params.insertSeparator({"Required Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array",
                                                           "The complete path to the data array from which to create the rgb array by applying the selected preset color scheme", DataPath{},

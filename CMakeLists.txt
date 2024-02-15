@@ -487,7 +487,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
@@ -704,7 +704,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
