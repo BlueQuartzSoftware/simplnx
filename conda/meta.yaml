@@ -40,7 +40,7 @@ build:
 requirements:
   build:
     - {{ compiler('cxx') }}
-    - cmake >=3.26
+    - cmake =3.26
     - ninja
     - git
   host:
@@ -51,7 +51,7 @@ requirements:
     - eigen
     - fmt =10
     - hdf5 >=1.14.3 # [py>=312]
-    - hdf5 =1.12 # [py>=39 and py<312]
+    - hdf5 =1.12 # [py<=311]
     - nlohmann_json
     - pybind11 >=2.10
     - reproc-cpp
@@ -68,7 +68,7 @@ requirements:
     - numpy
     - fmt =10
     - hdf5 >=1.14.3 # [py>=312]
-    - hdf5 =1.12 # [py>=39 and py<312]
+    - hdf5 =1.12 # [py<=311]
     - reproc-cpp
     - tbb
     - zlib
