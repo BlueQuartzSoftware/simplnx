@@ -465,10 +465,12 @@ std::vector<hsize_t> DatasetIO::getDimensions() const
   return dims;
 }
 
-IdType DatasetIO::CreateDatasetChunkProperties(nonstd::span<const hsize_t> dims)
+IdType DatasetIO::CreateDatasetChunkProperties(const DimsType& dims)
 {
+  std::vector<hsize_t> hDims(dims.size());
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
   auto cparms = H5Pcreate(H5P_DATASET_CREATE);
-  auto status = H5Pset_chunk(cparms, dims.size(), dims.data());
+  auto status = H5Pset_chunk(cparms, hDims.size(), hDims.data());
   if(status < 0)
   {
     return H5P_DEFAULT;
@@ -505,7 +507,9 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
     return MakeErrorResult(-105, "DataType was unknown");
   }
 
-  hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
+  std::vector<hsize_t> hDims(dims.size());
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
+  hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
   if(dataspaceId >= 0)
   {
     Result<> result = findAndDeleteAttribute();
@@ -558,7 +562,9 @@ Result<> DatasetIO::writeChunk(const DimsType& dims, nonstd::span<const T> value
     return MakeErrorResult(-100, "DataType was unknown");
   }
 
-  hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
+  std::vector<hsize_t> hDims(dims.size());
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
+  hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
   if(dataspaceId >= 0)
   {
     Result<> result = findAndDeleteAttribute();

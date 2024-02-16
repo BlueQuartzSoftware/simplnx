@@ -414,7 +414,10 @@ Result<> AttributeIO::writeVector(const DimsVector& dims, const std::vector<T>& 
     return MakeErrorResult(-102, "DataType was unkown");
   }
 
-  hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
+  std::vector<hsize_t> hDims(dims.size());
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsVector::value_type x) { return static_cast<hsize_t>(x);});
+  hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
+
   if(dataspaceId >= 0)
   {
     // Delete any existing attribute
