@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 #include <filesystem>
 
@@ -60,13 +61,17 @@ public:
 
   Result<> operator()();
 
-  static inline constexpr StringLiteral k_CameraDataPath0 = "/slices/camera_data/visible/0";
-  static inline constexpr StringLiteral k_CameraDataPath1 = "/slices/camera_data/visible/1";
-  static inline constexpr StringLiteral k_PartIdsPath = "/slices/part_ids";
-  static inline constexpr StringLiteral k_SampleIdsPath = "/slices/sample_ids";
-  static inline constexpr StringLiteral k_SegmentationResultsParentPath = "/slices/segmentation_results";
-  static inline constexpr StringLiteral k_RegisteredAnomalyDetectionPath = "/slices/registered_data/anomaly_detection";
-  static inline constexpr StringLiteral k_RegisteredXRayCTPath = "/slices/registered_data/x-ray_ct";
+  static inline constexpr StringLiteral k_CameraData0H5Path = "/slices/camera_data/visible/0";
+  static inline constexpr StringLiteral k_CameraData1H5Path = "/slices/camera_data/visible/1";
+  static inline constexpr StringLiteral k_PartIdsH5Path = "/slices/part_ids";
+  static inline constexpr StringLiteral k_SampleIdsH5Path = "/slices/sample_ids";
+  static inline constexpr StringLiteral k_SegmentationResultsH5ParentPath = "/slices/segmentation_results";
+  static inline constexpr StringLiteral k_RegisteredAnomalyDetectionH5Path = "/slices/registered_data/anomaly_detection";
+  static inline constexpr StringLiteral k_RegisteredXRayCtH5Path = "/slices/registered_data/x-ray_ct";
+
+protected:
+  Result<> readSliceDatasets(nx::core::HDF5::FileReader& h5FileReader);
+  Result<> readRegisteredDatasets(nx::core::HDF5::FileReader& h5FileReader);
 
 private:
   DataStructure& m_DataStructure;

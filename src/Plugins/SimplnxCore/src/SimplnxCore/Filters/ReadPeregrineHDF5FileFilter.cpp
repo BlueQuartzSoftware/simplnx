@@ -80,7 +80,7 @@ Result<std::vector<usize>> readSliceDimensions(nx::core::HDF5::FileReader& h5Fil
   for(const auto& segmentationResult : segmentationResultsList)
   {
     std::string segmentationResultPath;
-    segmentationResultPath.append(ReadPeregrineHDF5File::k_SegmentationResultsParentPath).append("/").append(segmentationResult);
+    segmentationResultPath.append(ReadPeregrineHDF5File::k_SegmentationResultsH5ParentPath).append("/").append(segmentationResult);
 
     Result<std::vector<usize>> dimsResult = readDatasetDimensions(h5FileReader, segmentationResultPath);
     if(dimsResult.invalid())
@@ -119,10 +119,10 @@ Result<> validateSubvolumeDimensions(std::vector<usize>& volumeDims, std::vector
     return MakeErrorResult(-3020, fmt::format("Subvolume minimum X dimension '{}' is larger than the subvolume maximum X dimension '{}'.", subvolumeMinMaxX[0], subvolumeMinMaxX[1]));
   }
 
-  if(subvolumeX > volumeDims[0])
+  if(subvolumeX > volumeDims[2])
   {
     return MakeErrorResult(-3021, fmt::format("Subvolume X dimension '{}' ({} - {} + 1) is larger than the X dimension value found in the input file data ('{}')", subvolumeX, subvolumeMinMaxX[1],
-                                              subvolumeMinMaxX[0], volumeDims[0]));
+                                              subvolumeMinMaxX[0], volumeDims[2]));
   }
 
   if(subvolumeMinMaxY[0] > subvolumeMinMaxY[1])
@@ -141,10 +141,10 @@ Result<> validateSubvolumeDimensions(std::vector<usize>& volumeDims, std::vector
     return MakeErrorResult(-3024, fmt::format("Subvolume minimum Z dimension '{}' is larger than the subvolume maximum Z dimension '{}'.", subvolumeMinMaxZ[0], subvolumeMinMaxZ[1]));
   }
 
-  if(subvolumeZ > volumeDims[2])
+  if(subvolumeZ > volumeDims[0])
   {
     return MakeErrorResult(-3025, fmt::format("Subvolume Z dimension '{}' ({} - {} + 1) is larger than the Z dimension value found in the input file data ('{}')", subvolumeZ, subvolumeMinMaxZ[1],
-                                              subvolumeMinMaxZ[0], volumeDims[2]));
+                                              subvolumeMinMaxZ[0], volumeDims[0]));
   }
 
   return {};
@@ -363,8 +363,8 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
     {
       return {nonstd::make_unexpected(result.errors())};
     }
-    slicesImageGeomDims = {slicesSubvolumeMinMaxX[1] - slicesSubvolumeMinMaxX[0] + 1, slicesSubvolumeMinMaxY[1] - slicesSubvolumeMinMaxY[0] + 1,
-                           slicesSubvolumeMinMaxZ[1] - slicesSubvolumeMinMaxZ[0] + 1};
+    slicesImageGeomDims = {slicesSubvolumeMinMaxZ[1] - slicesSubvolumeMinMaxZ[0] + 1, slicesSubvolumeMinMaxY[1] - slicesSubvolumeMinMaxY[0] + 1,
+                           slicesSubvolumeMinMaxX[1] - slicesSubvolumeMinMaxX[0] + 1};
   }
 
   Result<CreateImageGeometryAction::SpacingType> spacingResult = calculateSpacing(h5FileReader);
@@ -374,11 +374,10 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
   }
 
   std::vector<float32> origin = {0.0f, 0.0f, 0.0f};
+  std::vector<float32> spacing = spacingResult.value();
 
-  actions.appendAction(std::make_unique<CreateImageGeometryAction>(sliceDataImageGeomPath, slicesImageGeomDims, origin, spacingResult.value(), sliceDataCellAttrMatName));
-
-  // Reverse the dimensions to use when creating arrays
-  std::reverse(slicesImageGeomDims.begin(), slicesImageGeomDims.end());
+  actions.appendAction(
+      std::make_unique<CreateImageGeometryAction>(sliceDataImageGeomPath, std::vector<usize>(slicesImageGeomDims.rbegin(), slicesImageGeomDims.rend()), origin, spacing, sliceDataCellAttrMatName));
 
   for(const auto& segmentationResult : segmentationResultsList)
   {
@@ -388,7 +387,7 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
 
   if(readCameraData)
   {
-    Result<> result = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_CameraDataPath0, sliceDims);
+    Result<> result = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_CameraData0H5Path, sliceDims);
     if(result.invalid())
     {
       return {nonstd::make_unexpected(result.errors())};
@@ -397,7 +396,7 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
     DataPath cameraData0Path = sliceDataImageGeomPath.createChildPath(sliceDataCellAttrMatName).createChildPath(cameraData0ArrayName);
     actions.appendAction(std::make_unique<CreateArrayAction>(DataType::float32, slicesImageGeomDims, std::vector<usize>{1}, cameraData0Path));
 
-    result = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_CameraDataPath1, sliceDims);
+    result = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_CameraData1H5Path, sliceDims);
     if(result.invalid())
     {
       return {nonstd::make_unexpected(result.errors())};
@@ -409,7 +408,7 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
 
   if(readPartIds)
   {
-    Result<> result = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_PartIdsPath, sliceDims);
+    Result<> result = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_PartIdsH5Path, sliceDims);
     if(result.invalid())
     {
       return {nonstd::make_unexpected(result.errors())};
@@ -421,7 +420,7 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
 
   if(readSampleIds)
   {
-    Result<> result = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_SampleIdsPath, sliceDims);
+    Result<> result = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_SampleIdsH5Path, sliceDims);
     if(result.invalid())
     {
       return {nonstd::make_unexpected(result.errors())};
@@ -431,14 +430,15 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
     actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint32, slicesImageGeomDims, std::vector<usize>{1}, sampleIdsPath));
   }
 
-  Result<std::vector<usize>> anomalyDetectionDimsResult = readDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_RegisteredAnomalyDetectionPath);
+  Result<std::vector<usize>> anomalyDetectionDimsResult = readDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_RegisteredAnomalyDetectionH5Path);
   if(anomalyDetectionDimsResult.invalid())
   {
     return {nonstd::make_unexpected(anomalyDetectionDimsResult.errors())};
   }
   std::vector<usize> registeredDataDims = anomalyDetectionDimsResult.value();
+  std::vector<usize> registeredDataImgGeomDims = registeredDataDims;
 
-  Result<> xRayCTDimsValidationResult = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_RegisteredXRayCTPath, registeredDataDims);
+  Result<> xRayCTDimsValidationResult = validateDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_RegisteredXRayCtH5Path, registeredDataDims);
   if(xRayCTDimsValidationResult.invalid())
   {
     return {nonstd::make_unexpected(xRayCTDimsValidationResult.errors())};
@@ -451,25 +451,47 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
     {
       return {nonstd::make_unexpected(subvolumeValidationResult.errors())};
     }
-    registeredDataDims = {registeredDataSubvolumeMinMaxX[1] - registeredDataSubvolumeMinMaxX[0] + 1, registeredDataSubvolumeMinMaxY[1] - registeredDataSubvolumeMinMaxY[0] + 1,
-                          registeredDataSubvolumeMinMaxZ[1] - registeredDataSubvolumeMinMaxZ[0] + 1};
+    registeredDataImgGeomDims = {registeredDataSubvolumeMinMaxZ[1] - registeredDataSubvolumeMinMaxZ[0] + 1, registeredDataSubvolumeMinMaxY[1] - registeredDataSubvolumeMinMaxY[0] + 1,
+                                 registeredDataSubvolumeMinMaxX[1] - registeredDataSubvolumeMinMaxX[0] + 1};
   }
 
-  actions.appendAction(std::make_unique<CreateImageGeometryAction>(registeredDataImageGeomPath, registeredDataDims, origin, spacingResult.value(), registeredDataCellAttrMatName));
-
-  // Reverse the dimensions to use when creating arrays
-  std::reverse(registeredDataDims.begin(), registeredDataDims.end());
+  actions.appendAction(std::make_unique<CreateImageGeometryAction>(registeredDataImageGeomPath, std::vector<usize>(registeredDataImgGeomDims.rbegin(), registeredDataImgGeomDims.rend()), origin,
+                                                                   spacing, registeredDataCellAttrMatName));
 
   if(readAnomalyDetection)
   {
     DataPath anomalyDetectionPath = registeredDataImageGeomPath.createChildPath(registeredDataCellAttrMatName).createChildPath(anomalyDetectionArrayName);
-    actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, registeredDataDims, std::vector<usize>{1}, anomalyDetectionPath));
+    actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, registeredDataImgGeomDims, std::vector<usize>{1}, anomalyDetectionPath));
   }
 
   if(readXRayCT)
   {
     DataPath xRayCTPath = registeredDataImageGeomPath.createChildPath(registeredDataCellAttrMatName).createChildPath(xRayCTArrayName);
-    actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, registeredDataDims, std::vector<usize>{1}, xRayCTPath));
+    actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, registeredDataImgGeomDims, std::vector<usize>{1}, xRayCTPath));
+  }
+
+  if(readSlicesSubvolume)
+  {
+    std::stringstream ss;
+    ss << "Extents:\n"
+       << "X Extent: 0 to " << sliceDims[2] - 1 << " (dimension: " << sliceDims[2] << ")\n"
+       << "Y Extent: 0 to " << sliceDims[1] - 1 << " (dimension: " << sliceDims[1] << ")\n"
+       << "Z Extent: 0 to " << sliceDims[0] - 1 << " (dimension: " << sliceDims[0] << ")\n";
+    std::string sliceDataDimsStr = ss.str();
+
+    preflightUpdatedValues.push_back({"Original Slice Data Dimensions (in pixels)", sliceDataDimsStr});
+  }
+
+  if(readRegisteredDataSubvolume)
+  {
+    std::stringstream ss;
+    ss << "Extents:\n"
+       << "X Extent: 0 to " << registeredDataDims[2] - 1 << " (dimension: " << registeredDataDims[2] << ")\n"
+       << "Y Extent: 0 to " << registeredDataDims[1] - 1 << " (dimension: " << registeredDataDims[1] << ")\n"
+       << "Z Extent: 0 to " << registeredDataDims[0] - 1 << " (dimension: " << registeredDataDims[0] << ")\n";
+    std::string registeredDataDimsStr = ss.str();
+
+    preflightUpdatedValues.push_back({"Original Registered Data Dimensions (in pixels)", registeredDataDimsStr});
   }
 
   return {{actions}, std::move(preflightUpdatedValues)};
