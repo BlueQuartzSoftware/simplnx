@@ -415,7 +415,7 @@ Result<> AttributeIO::writeVector(const DimsVector& dims, const std::vector<T>& 
   }
 
   std::vector<hsize_t> hDims(dims.size());
-  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsVector::value_type x) { return static_cast<hsize_t>(x);});
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsVector::value_type x) { return static_cast<hsize_t>(x); });
   hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
 
   if(dataspaceId >= 0)

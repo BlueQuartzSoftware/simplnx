@@ -92,7 +92,7 @@ public:
       return MakeErrorResult(-1, "DataType was unknown");
     }
     std::vector<hsize_t> hDims(dims.size());
-    std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
+    std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
     hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
 
     if(dataspaceId >= 0)
@@ -147,7 +147,7 @@ public:
       return MakeErrorResult(-100, "DataType was unkown");
     }
     std::vector<hsize_t> hDims(dims.size());
-    std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
+    std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
     hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
     if(dataspaceId >= 0)
     {
@@ -230,7 +230,7 @@ protected:
   static IdType CreateDatasetChunkProperties(const DimsType& chunkDims);
 
   /**
-   * @brief 
+   * @brief
    * @param chunkDims
    * @return Returns the property ID if successful. Returns H5P_DEFAULT otherwise.
    */

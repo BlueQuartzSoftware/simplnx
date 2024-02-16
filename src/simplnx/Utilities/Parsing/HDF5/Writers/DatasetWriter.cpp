@@ -130,7 +130,7 @@ void DatasetWriter::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdTyp
 IdType DatasetWriter::CreateDatasetChunkProperties(const DimsType& chunkDims)
 {
   std::vector<hsize_t> hDims(chunkDims.size());
-  std::transform(chunkDims.begin(), chunkDims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
+  std::transform(chunkDims.begin(), chunkDims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
   auto cparms = H5Pcreate(H5P_DATASET_CREATE);
   auto status = H5Pset_chunk(cparms, hDims.size(), hDims.data());
   if(status < 0)

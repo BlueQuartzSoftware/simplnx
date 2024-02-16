@@ -53,8 +53,7 @@ inline Result<> WriteDataStoreChunk(nx::core::HDF5::DatasetWriter& datasetWriter
 }
 
 template <>
-inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetWriter& datasetWriter, const AbstractDataStore<bool>& store, 
-                                            const nx::core::HDF5::DatasetWriter::DimsType& h5dims,
+inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetWriter& datasetWriter, const AbstractDataStore<bool>& store, const nx::core::HDF5::DatasetWriter::DimsType& h5dims,
                                           const nx::core::HDF5::DatasetWriter::DimsType& chunkDims, const IDataStore::ShapeType& index)
 {
   auto rank = chunkDims.size();
@@ -84,13 +83,8 @@ inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetWriter& dataset
 }
 
 template <typename T>
-inline Result<> RecursivelyWriteChunks(nx::core::HDF5::DatasetWriter& datasetWriter, 
-                                      const AbstractDataStore<T>& store, 
-                                      const nx::core::HDF5::DatasetWriter::DimsType& h5dims,
-                                       const nx::core::HDF5::DatasetWriter::DimsType& chunkDims, 
-                                       IDataStore::ShapeType index, 
-                                       const nx::core::HDF5::DatasetWriter::DimsType& chunkLayout, 
-                                       uint64 i = 0)
+inline Result<> RecursivelyWriteChunks(nx::core::HDF5::DatasetWriter& datasetWriter, const AbstractDataStore<T>& store, const nx::core::HDF5::DatasetWriter::DimsType& h5dims,
+                                       const nx::core::HDF5::DatasetWriter::DimsType& chunkDims, IDataStore::ShapeType index, const nx::core::HDF5::DatasetWriter::DimsType& chunkLayout, uint64 i = 0)
 {
   // uint64 rank = chunkLayout.size();
   const uint64 rank = chunkDims.size();

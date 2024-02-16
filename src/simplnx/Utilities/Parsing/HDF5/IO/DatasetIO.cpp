@@ -468,7 +468,7 @@ std::vector<hsize_t> DatasetIO::getDimensions() const
 IdType DatasetIO::CreateDatasetChunkProperties(const DimsType& dims)
 {
   std::vector<hsize_t> hDims(dims.size());
-  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
   auto cparms = H5Pcreate(H5P_DATASET_CREATE);
   auto status = H5Pset_chunk(cparms, hDims.size(), hDims.data());
   if(status < 0)
@@ -508,7 +508,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
   }
 
   std::vector<hsize_t> hDims(dims.size());
-  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
   hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
   if(dataspaceId >= 0)
   {
@@ -563,7 +563,7 @@ Result<> DatasetIO::writeChunk(const DimsType& dims, nonstd::span<const T> value
   }
 
   std::vector<hsize_t> hDims(dims.size());
-  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x);});
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
   hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
   if(dataspaceId >= 0)
   {
