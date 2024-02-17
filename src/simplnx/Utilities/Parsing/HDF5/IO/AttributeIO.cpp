@@ -9,6 +9,7 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
+#include <algorithm>
 
 namespace nx::core::HDF5
 {
