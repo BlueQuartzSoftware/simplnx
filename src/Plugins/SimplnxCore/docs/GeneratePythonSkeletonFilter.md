@@ -1,46 +1,47 @@
-# Generate Python Plugin or Python Filter
-
-## Group
-
-Python
+# Generate Python Plugin and/or Filters
 
 ## Description
+The **Generate Python Plugin and/or Filters** is a powerful tool in the DREAM3D-NX environment that allows users to generate or update Python plugins and filter codes. This filter provides an interface for setting up and configuring Python filters within DREAM3D-NX pipelines, either by creating new plugins or by adding to existing ones.
 
-This **Filter** generates the Python skeleton code for a new DREAM3D-NX/SIMPL-NX filters.  These new Python filters can either be written to a newly generated Python plugin, or to an existing Python plugin.
+## Usage
 
-### Generating A New Plugin
+### Configuration
+The filter requires several parameters to be set, which dictate whether a new plugin is created or an existing one is modified. Key parameters include:
 
-If the **Use Existing Plugin** parameter is OFF, then this filter will generate both a new Python skeleton plugin and new Python skeleton filters.
+- `Use Existing Plugin`: A flag indicating whether to modify an existing plugin.
+- `Name of Plugin`: The name of the plugin.
+- `Human Name of Plugin`: A human-readable name for the plugin.
+- `Existing Plugin Location`: The directory where the existing plugin is located (for updates).
+- `Plugin Output Directory`: The directory where the new plugin will be stored.
+- `Filter Names`: A list of filter names to be included in the plugin, separated by commas.
 
-The following parameters are available when **Use Existing Plugin** is OFF:
+### Generating a New Plugin
+To generate a new Python plugin:
+1. Set `Use Existing Plugin` to `Off`.
+2. Provide a `Name of Plugin`, `Human Name of Plugin`, `Plugin Output Directory`, and a list of `Filter Names`.
+3. Execute the filter. It will generate the necessary plugin structure and files in the specified output directory.
 
-+ Name of Plugin - The name of the plugin, referred to in the generated code.
-+ Human Name of Plugin - The human-readable version of the plugin name.
-+ Plugin Output Directory - The location on the file system where the plugin will be generated.
-+ Filter Names - The names of filters that will be generated in the new plugin, separated by commas.
+### Updating an Existing Plugin
+To add filters to an existing Python plugin:
+1. Set `Use Existing Plugin` to `On`.
+2. Provide the `Existing Plugin Location` where the existing plugin is located.
+3. Provide the `Name of Plugin`, `Human Name of Plugin`, and the list of `Filter Names` you wish to add.
+4. Execute the filter. It will update the existing plugin with the new filters.
 
-### Using An Existing Plugin
+#### Manual Plugin Creation
 
-If the **Use Existing Plugin** parameter is ON, then this filter will generate new Python skeleton filters in an existing plugin.  If the existing plugin was created manually and NOT created using this filter, some additional edits will need to be done in a few of the other plugin files.
+If your plugin was not generated using the provided filter but was instead created manually, you may need to perform additional steps to ensure proper integration:
 
-The following parameters are available when **Use Existing Plugin** is ON:
+1. **Python Import Statements**:
+   - In the absence of the `# FILTER_INCLUDE_INSERT` token, you must manually insert the Python import statements for the new filters into both the `__init__.py` file and the `Plugin.py` file.
 
-+ Existing Plugin Location - The file system path where the existing plugin is located.
-+ Filter Names - The names of filters that will be generated in the existing plugin, separated by commas.
-
-**NOTE:** This option searches the existing plugin's **\_\_init\_\_.py** and **Plugin.py** files for the following comment tokens:
-
-1. \# FILTER_INCLUDE_INSERT
-2. \# FILTER_NAME_INSERT
-
-Both of these tokens are included in both files for any plugin that was originally generated using this filter.
-
-#### What if my plugin was created manually (not generated using this filter)?
-
-+ If the **\# FILTER_INCLUDE_INSERT** token cannot be found, then the Python import statements for the new filters will need to be manually added to both files.
-+ If the **\# FILTER_NAME_INSERT** token cannot be found, then each filter name will need to be manually added to the **all** and **get_filters** methods in the **\_\_init\_\_.py** and **Plugin.py** files, respectively.
+2. **Filter Name Insertion**:
+   - If the `# FILTER_NAME_INSERT` token is missing, you need to manually add each filter name to specific methods in two files:
+       - In the `__init__.py` file, add to the `all` method.
+       - In the `Plugin.py` file, add to the `get_filters` method. 
 
 ## Example Pipelines
+None
 
 ## License & Copyright
 

@@ -27,8 +27,10 @@ by creating a new virtual environment
    Overview
    DataObjects
    Geometry
-   API
+   User_API
+   Developer_API
    Python_Introduction
+   Writing_A_New_Python_Filter
    Reference_Frame_Notes
    ReleaseNotes_110
    ReleaseNotes_120

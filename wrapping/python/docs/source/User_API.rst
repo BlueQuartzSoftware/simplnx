@@ -1,5 +1,8 @@
-Filter Parameter Classes
-========================
+API for Users
+==============
+
+Error & Warning Reporting
+--------------------------
 
 .. _Result:
 .. py:class:: Result
@@ -26,7 +29,8 @@ General Parameters
 .. _ArrayCreationParameter:
 .. py:class:: ArrayCreationParameter
 
-   This parameter holds a :ref:`DataPath<DataPath>` value that points to the location within the DataStructure of where
+
+   This parameter holds a :ref:`DataPath <DataPath>` value that points to the location within the DataStructure of where
    the DataArray will be created.
 
   .. code:: python
@@ -36,7 +40,7 @@ General Parameters
 .. _ArraySelectionParameter:
 .. py:class:: ArraySelectionParameter
 
-   This parameter holds a :ref:`DataPath<DataPath>` value that points to the location within the DataStructure of where
+   This parameter holds a :ref:`DataPath <DataPath>` value that points to the location within the DataStructure of where
    the DataArray will be read.
 
   .. code:: python
@@ -62,7 +66,7 @@ General Parameters
 
   This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjects>` filter.
 
-  :ivar array_path: The :ref:`DataPath<DataPath>` to the array to use for this ArrayThreshold
+  :ivar array_path: The :ref:`DataPath <DataPath>` to the array to use for this ArrayThreshold
   :ivar comparison: Int. The comparison operator to use. 0=">", 1="<", 2="=", 3="!="
   :ivar value: Numerical Value. The value for the comparison
 
@@ -92,7 +96,7 @@ General Parameters
 .. _AttributeMatrixSelectionParameter:
 .. py:class:: AttributeMatrixSelectionParameter
 
-   This parameter holds a :ref:`DataPath<DataPath>` value that points to the location within the DataStructure of a selected AttributeMatrix.
+   This parameter holds a :ref:`DataPath <DataPath>` value that points to the location within the DataStructure of a selected AttributeMatrix.
 
   .. code:: python
 
@@ -114,7 +118,7 @@ General Parameters
 
    .. py:class::    CalculatorParameter.ValueType
 
-   :ivar selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray<DataArray>` that will be used in the equations
+   :ivar selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray <DataArray>` that will be used in the equations
    :ivar equation: String. The equation that will be evaluated
    :ivar units: cx.CalculatorParameter.AngleUnits.Radians or cx.CalculatorParameter.AngleUnits.Degrees
 
@@ -144,7 +148,7 @@ General Parameters
 .. _DataGroupCreationParameter:
 .. py:class:: DataGroupCreationParameter
 
-   This parameter holds a :ref:`DataPath<DataPath>` value that points to the location within the DataStructure of a :ref:`DataGroup<DataGroup>` that will be created
+   This parameter holds a :ref:`DataPath <DataPath>` value that points to the location within the DataStructure of a :ref:`DataGroup<DataGroup>` that will be created
    by the filter.
 
   .. code:: python
@@ -154,7 +158,7 @@ General Parameters
 .. _DataGroupSelectionParameter:
 .. py:class:: DataGroupSelectionParameter
 
-   This parameter holds a :ref:`DataPath<DataPath>` value that points to the location within the DataStructure of a :ref:`DataGroup<DataGroup>` that will be used in the filter.
+   This parameter holds a :ref:`DataPath <DataPath>` value that points to the location within the DataStructure of a :ref:`DataGroup<DataGroup>` that will be used in the filter.
 
   .. code:: python
 
@@ -172,7 +176,7 @@ General Parameters
 .. _DataPathSelectionParameter:
 .. py:class:: DataPathSelectionParameter
 
-   This parameter holds a :ref:`DataPath<DataPath>` object that represents an object within the :ref:`DataStructure<DataStructure>`.
+   This parameter holds a :ref:`DataPath <DataPath>` object that represents an object within the :ref:`DataStructure<DataStructure>`.
 
   .. code:: python
 
@@ -217,7 +221,7 @@ General Parameters
       The ImportData object has 2 member variables that can be set.
 
    :ivar file_path: Path to the .dream3d file on the file system
-   :ivar data_paths: List of :ref:`DataPath<DataPath>` objects. Use the python 'None' value to indicate that you want to read **ALL** the data from file.
+   :ivar data_paths: List of :ref:`DataPath <DataPath>` objects. Use the python 'None' value to indicate that you want to read **ALL** the data from file.
 
 .. code:: python
 
@@ -381,7 +385,7 @@ General Parameters
 .. _GeometrySelectionParameter:
 .. py:class:: GeometrySelectionParameter
 
-   This parameter represents the :ref:`DataPath<DataPath>` to a valid :ref:`simplnx.Geometry() <Geometry Descriptions>`
+   This parameter represents the :ref:`DataPath <DataPath>` to a valid :ref:`simplnx.Geometry() <Geometry Descriptions>`
 
 .. _ReadCSVDataParameter:
 .. py:class:: ReadCSVDataParameter
@@ -408,8 +412,8 @@ General Parameters
    :ivar start_import_row: Int.  What line number does the data start on. ONE (1) Based numbering scheme.
    :ivar delimiters: List[string]. List of delimiters that will be used to separate the lines of the file into columns.
    :ivar consecutive_delimiters: Bool. Should consecutive delimiters be counted as a single delimiter.
-   :ivar custom_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of the created  :ref:`DataArray<DataArray>`.
-   :ivar data_types: List[:ref:`cx.DataType<DataTypeParameter>`]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray<DataArray>`.
+   :ivar custom_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of the created  :ref:`DataArray <DataArray>`.
+   :ivar data_types: List[:ref:`cx.DataType<DataTypeParameter>`]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray <DataArray>`.
    :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray <DataArray>`.
    :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArrays <DataArray>`.
    :ivar headers_line: Int. The line number of the file that has the headers listed on a single line. ONE (1) based indexing.
@@ -498,7 +502,7 @@ General Parameters
 
       :ivar input_file: A "PathLike" value to the HDF5 file on the file system
       :ivar datasets: list[ReadHDF5DatasetParameter.DatasetImportInfo, ....]
-      :ivar parent: Optional: The :ref:`DataPath<DataPath>` object to a parente group to create the :ref:`DataArray<DataArray>` into. If left blank the :ref:`DataArray<DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`
+      :ivar parent: Optional: The :ref:`DataPath <DataPath>` object to a parente group to create the :ref:`DataArray <DataArray>` into. If left blank the :ref:`DataArray <DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`
 
    .. py:class:: ReadHDF5DatasetParameter.DatasetImportInfo
 
@@ -533,8 +537,8 @@ General Parameters
 .. _MultiArraySelectionParameter:
 .. py:class:: MultiArraySelectionParameter
 
-   This parameter represents a list of :ref:`DataPath<DataPath>` objects where each :ref:`DataPath<DataPath>` object
-   points to a  :ref:`DataArray<DataArray>`
+   This parameter represents a list of :ref:`DataPath <DataPath>` objects where each :ref:`DataPath <DataPath>` object
+   points to a  :ref:`DataArray <DataArray>`
 
    .. code:: python
 
@@ -543,7 +547,7 @@ General Parameters
 .. _MultiPathSelectionParameter:
 .. py:class:: MultiPathSelectionParameter
 
-   This parameter represents a list of :ref:`DataPath<DataPath>` objects. The end point of each :ref:`DataPath<DataPath>`
+   This parameter represents a list of :ref:`DataPath <DataPath>` objects. The end point of each :ref:`DataPath <DataPath>`
    object can be any object in the  :ref:`DataStructure<DataStructure>`
 
    .. code:: python
@@ -554,7 +558,7 @@ General Parameters
 .. _NeighborListSelectionParameter:
 .. py:class:: NeighborListSelectionParameter
 
-   This parameter represents a :ref:`DataPath<DataPath>` object that has an end point of a 'cx.NeighborList' object
+   This parameter represents a :ref:`DataPath <DataPath>` object that has an end point of a 'cx.NeighborList' object
 
 .. _NumericTypeParameter:
 .. py:class:: NumericTypeParameter
