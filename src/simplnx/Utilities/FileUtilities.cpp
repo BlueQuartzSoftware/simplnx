@@ -25,7 +25,7 @@ int64 LinesInFile(const std::string& filepath)
   // Check if the very last character is NOT a newline character
   fseek(fd, -1, SEEK_END);
   char last[1];
-  fread(last, 1, 1, fd);
+  auto bytsRead = fread(last, 1, 1, fd);
   if(last[0] != '\n')
   {
     lines++;

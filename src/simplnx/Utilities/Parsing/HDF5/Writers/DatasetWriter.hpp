@@ -91,8 +91,10 @@ public:
     {
       return MakeErrorResult(-1, "DataType was unknown");
     }
+    std::vector<hsize_t> hDims(dims.size());
+    std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
+    hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
 
-    hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
     if(dataspaceId >= 0)
     {
       auto result = findAndDeleteAttribute();
@@ -144,8 +146,9 @@ public:
     {
       return MakeErrorResult(-100, "DataType was unkown");
     }
-
-    hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
+    std::vector<hsize_t> hDims(dims.size());
+    std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
+    hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
     if(dataspaceId >= 0)
     {
       auto result = findAndDeleteAttribute();
@@ -221,11 +224,16 @@ protected:
 
   /**
    * @brief Applies chunking to the dataset and sets the chunk dimensions.
-   * @param dims
+   * @param chunkDims
    * @return Returns the property ID if successful. Returns H5P_DEFAULT otherwise.
    */
-  static IdType CreateDatasetChunkProperties(nonstd::span<const hsize_t> dims);
+  static IdType CreateDatasetChunkProperties(const DimsType& chunkDims);
 
+  /**
+   * @brief
+   * @param chunkDims
+   * @return Returns the property ID if successful. Returns H5P_DEFAULT otherwise.
+   */
   static IdType CreateTransferChunkProperties(const DimsType& chunkDims);
 
   /**

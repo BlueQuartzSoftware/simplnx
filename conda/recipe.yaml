@@ -51,7 +51,10 @@ requirements:
     - boost_mp11
     - eigen
     - fmt =10
-    - hdf5 =1.12
+    - sel(py>=312):
+      - hdf5 >=1.14.3
+    - sel(py>=39 and py<312):
+      - hdf5 >=1.12
     - nlohmann_json
     - pybind11 >=2.10
     - reproc-cpp
@@ -66,7 +69,10 @@ requirements:
     - python
     - numpy
     - fmt =10
-    - hdf5 =1.12
+    - sel(py>=312):
+      - hdf5 >=1.14.3
+    - sel(py>=39 and py<312):
+      - hdf5 >=1.12
     - reproc-cpp
     - tbb
     - zlib

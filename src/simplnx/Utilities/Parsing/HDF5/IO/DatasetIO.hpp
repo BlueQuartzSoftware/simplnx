@@ -291,7 +291,7 @@ protected:
    * @param dims
    * @return Returns the property ID if successful. Returns H5P_DEFAULT otherwise.
    */
-  static IdType CreateDatasetChunkProperties(nonstd::span<const hsize_t> dims);
+  static IdType CreateDatasetChunkProperties(const DimsType& dims);
 
   static IdType CreateTransferChunkProperties(const DimsType& chunkDims);
 
