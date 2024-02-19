@@ -72,13 +72,13 @@ size_t GroupReader::getNumChildren() const
     return 0;
   }
 
-  SizeType numChildren;
+  hsize_t numChildren;
   auto err = H5Gget_num_objs(getId(), &numChildren);
   if(err < 0)
   {
     return 0;
   }
-  return numChildren;
+  return static_cast<size_t>(numChildren);
 }
 
 std::vector<std::string> GroupReader::getChildNames() const
