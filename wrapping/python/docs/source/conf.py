@@ -23,7 +23,7 @@ autosectionlabel_prefix_document = True
 templates_path = ['_templates']
 exclude_patterns = []
 
-
+suppress_warnings = ['autosectionlabel.*']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

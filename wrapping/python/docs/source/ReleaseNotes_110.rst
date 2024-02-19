@@ -10,7 +10,7 @@ Version 1.1.0
 API Additions 1.1.0
 ^^^^^^^^^^^^^^^^^^^
 
-- DataPath: A :ref:`DataPath<DataPath>` object can now be constructed with a "/" separated string in addition to a list of strings.
+- DataPath: A :ref:`DataPath <DataPath>` object can now be constructed with a "/" separated string in addition to a list of strings.
 
   .. code:: python
 
