@@ -1,9 +1,9 @@
 #pragma once
 
+#include <algorithm>
 #include <any>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"

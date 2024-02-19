@@ -6,10 +6,10 @@
 
 #include <H5Apublic.h>
 
+#include <algorithm>
 #include <iostream>
 #include <numeric>
 #include <vector>
-#include <algorithm>
 
 namespace nx::core::HDF5
 {
