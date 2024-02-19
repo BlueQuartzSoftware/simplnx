@@ -96,7 +96,10 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
 
   const usize totalTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   const usize incomingTupleCount = std::accumulate(arrayTupleShape.cbegin(), arrayTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
-
+  if(totalTuples != incomingTupleCount)
+  {
+    std::cout << "AttributeMatrix: CanInsert() Failed with object " << obj->getName() << ". totalTuples=" << totalTuples << "  incomingTupleCount=" << incomingTupleCount << "\n";
+  }
   return (totalTuples == incomingTupleCount);
 }
 

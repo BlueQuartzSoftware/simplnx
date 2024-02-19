@@ -30,6 +30,10 @@ DataMap DataMap::deepCopy(const DataPath& parentCopyPath) const
   {
     const auto& dataObj = m_Map.at(key);
     const auto copy = dataObj->deepCopy(parentCopyPath.createChildPath(dataObj->getName()));
+    if(copy == nullptr)
+    {
+      throw std::runtime_error(fmt::format("A deep copy request for parent '{}' failed on child object '{}' ", parentCopyPath.toString(), dataObj->getName()));
+    }
     dataMap.m_Map[key] = copy;
   }
   return dataMap;
