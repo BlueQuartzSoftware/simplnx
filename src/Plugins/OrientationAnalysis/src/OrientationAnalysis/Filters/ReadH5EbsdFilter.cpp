@@ -103,7 +103,8 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   if(err < 0)
   {
     // This really should have been hit during the parameter validation... but just in case.
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    preflightUpdatedValues.push_back({"ERROR:", fmt::format("Could not read input file {}", pReadH5EbsdFilterValue.inputFilePath)});
+    return {MakeErrorResult<OutputActions>(-67500, fmt::format("Could not read input file '{}'", pReadH5EbsdFilterValue.inputFilePath)), std::move(preflightUpdatedValues)};
   }
 
   std::vector<int64_t> dims = {0, 0, 0};
@@ -121,12 +122,6 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   resultOutputActions.value().appendAction(
       std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(imageGeomDims), std::move(origin), std::move(spacing), pCellAttributeMatrixNameValue));
 
-  // Create the Ensemble AttributeMatrix
-  {
-    auto createDataGroupAction = std::make_unique<CreateAttributeMatrixAction>(pCellEnsembleAttributeMatrixNameValue, std::vector<size_t>{2});
-    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
-  }
-
   EbsdLib::OEM m_Manufacturer = {EbsdLib::OEM::Unknown};
   std::string manufacturer = reader->getManufacturer();
   if(manufacturer == EbsdLib::Ang::Manufacturer)
@@ -143,12 +138,14 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   {
     AngFields angFeatures;
     reader = H5AngVolumeReader::New();
+    reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = angFeatures.getFilterFeatures<std::vector<std::string>>();
   }
   else if(m_Manufacturer == EbsdLib::OEM::Oxford)
   {
     CtfFields cfeatures;
     reader = H5CtfVolumeReader::New();
+    reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = cfeatures.getFilterFeatures<std::vector<std::string>>();
   }
   else
@@ -161,7 +158,6 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   {
     m_SelectedArrayNames.insert(selectedArrayName);
   }
-  // std::set<std::string> m_DataArrayNames = reader->getDataArrayNames();
 
   std::vector<size_t> cDims = {1ULL};
   for(int32_t i = 0; i < names.size(); ++i)
@@ -205,7 +201,20 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
 
   // Now create the Ensemble arrays for the XTal Structures, Material Names and LatticeConstants
   cDims[0] = 1;
-  tupleDims = {2};
+  tupleDims = {static_cast<size_t>(reader->getNumPhases() + 1)};
+  if(tupleDims[0] == 0)
+  {
+    return {MakeErrorResult<OutputActions>(-67501,
+                                           fmt::format("H5EBSD File: Number of phases is ZERO. This should not have happened. Please check the source data.", pReadH5EbsdFilterValue.inputFilePath)),
+            std::move(preflightUpdatedValues)};
+  }
+
+  // Create the Ensemble AttributeMatrix
+  {
+    auto createDataGroupAction = std::make_unique<CreateAttributeMatrixAction>(pCellEnsembleAttributeMatrixNameValue, tupleDims);
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
+  }
+
   {
     const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, tupleDims, cDims, dataArrayPath);
