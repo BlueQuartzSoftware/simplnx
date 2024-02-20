@@ -313,11 +313,8 @@ Result<> ReadH5Ebsd::operator()()
   std::array<float, 3> eulerTransAxis = volumeInfoReader->getEulerTransformationAxis();
   float eulerTransAngle = volumeInfoReader->getEulerTransformationAngle();
 
-  // This will effectively close the reader
+  // This will effectively close the reader and free any memory being used
   volumeInfoReader = H5EbsdVolumeInfo::NullPointer();
-
-  // Now create the specific reader that we need.
-  H5EbsdVolumeReader::Pointer ebsdReader;
 
   std::set<std::string> mSelectedArrayNames;
   for(const auto& selectedArrayName : m_InputValues->hdf5DataPaths)
@@ -352,7 +349,6 @@ Result<> ReadH5Ebsd::operator()()
     return {MakeErrorResult(-50001, fmt::format("Could not determine or match a supported manufacturer from the data file. Supported manufacturer codes are: '{}' and '{}'", EbsdLib::Ctf::Manufacturer,
                                                 EbsdLib::Ang::Manufacturer))};
   }
-
   // Sanity Check the Error Condition or the state of the EBSD Reader Object.
   if(m_InputValues->useRecommendedTransform)
   {
