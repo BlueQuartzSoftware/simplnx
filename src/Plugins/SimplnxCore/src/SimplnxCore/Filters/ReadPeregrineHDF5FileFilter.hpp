@@ -6,6 +6,7 @@
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Parameters.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 namespace nx::core
 {
@@ -51,6 +52,13 @@ public:
   static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxX_Key = "registered_data_subvolume_minmax_x";
   static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxY_Key = "registered_data_subvolume_minmax_y";
   static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxZ_Key = "registered_data_subvolume_minmax_z";
+  static inline constexpr StringLiteral k_ReadScanData_Key = "read_scan_data";
+  static inline constexpr StringLiteral k_ScanData_Key = "scan_data";
+  static inline constexpr StringLiteral k_ScanDataCellAttrMat_Key = "scan_data_cell_attr_mat";
+  static inline constexpr StringLiteral k_ScanDataVertexAttrMat_Key = "scan_data_vertex_attr_mat";
+  static inline constexpr StringLiteral k_ScanDataVertexListName_Key = "scan_data_vertex_list_name";
+  static inline constexpr StringLiteral k_ScanDataEdgeListName_Key = "scan_data_edge_list_name";
+  static inline constexpr StringLiteral k_TimeOfTravelArrayName_Key = "time_of_travel_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -102,6 +110,12 @@ public:
   UniquePointer clone() const override;
 
 protected:
+  IFilter::PreflightResult preflightSliceDatasets(const nx::core::HDF5::FileReader& h5FileReader, const std::vector<float32>& origin, const std::vector<float32>& spacing,
+                                                  const Arguments& filterArgs) const;
+  IFilter::PreflightResult preflightRegisteredDatasets(const nx::core::HDF5::FileReader& h5FileReader, const std::vector<float32>& origin, const std::vector<float32>& spacing,
+                                                       const Arguments& filterArgs) const;
+  IFilter::PreflightResult preflightScanDatasets(const nx::core::HDF5::FileReader& h5FileReader, const Arguments& filterArgs) const;
+
   /**
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.

@@ -1,8 +1,9 @@
 #include "ReadPeregrineHDF5FileFilter.hpp"
 
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -11,7 +12,6 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/ReadPeregrineHDF5File.hpp"
@@ -28,9 +28,10 @@ const std::string k_YCameraDimensionPath = "printer/y_camera_dimension";
 const std::string k_LayerThicknessPath = "material/layer_thickness";
 const std::string k_XUnitsPath = "printer/x_camera_dimension/units";
 const std::string k_YUnitsPath = "printer/y_camera_dimension/units";
+const std::string k_ScansGroupPath = "/scans";
 
 //------------------------------------------------------------------------------
-Result<std::vector<usize>> readDatasetDimensions(nx::core::HDF5::FileReader& h5FileReader, const std::string& h5DatasetPath)
+Result<std::vector<usize>> readDatasetDimensions(const nx::core::HDF5::FileReader& h5FileReader, const std::string& h5DatasetPath)
 {
   nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(h5DatasetPath);
   if(!datasetReader.isValid())
@@ -61,7 +62,7 @@ Result<> validateDatasetDimensions(const std::string& datasetPath, std::vector<u
 }
 
 //------------------------------------------------------------------------------
-Result<> validateDatasetDimensions(nx::core::HDF5::FileReader& h5FileReader, const std::string& datasetPath, std::vector<usize>& sliceDims)
+Result<> validateDatasetDimensions(const nx::core::HDF5::FileReader& h5FileReader, const std::string& datasetPath, std::vector<usize>& sliceDims)
 {
   Result<std::vector<usize>> dimsResult = readDatasetDimensions(h5FileReader, datasetPath);
   if(dimsResult.invalid())
@@ -74,7 +75,7 @@ Result<> validateDatasetDimensions(nx::core::HDF5::FileReader& h5FileReader, con
 }
 
 //------------------------------------------------------------------------------
-Result<std::vector<usize>> readSliceDimensions(nx::core::HDF5::FileReader& h5FileReader, std::vector<std::string>& segmentationResultsList)
+Result<std::vector<usize>> readSliceDimensions(const nx::core::HDF5::FileReader& h5FileReader, std::vector<std::string>& segmentationResultsList)
 {
   std::vector<usize> sliceDims;
   for(const auto& segmentationResult : segmentationResultsList)
@@ -261,21 +262,30 @@ Parameters ReadPeregrineHDF5FileFilter::parameters() const
   params.insert(std::make_unique<VectorUInt64Parameter>(k_RegisteredDataSubvolumeMinMaxZ_Key, "Registered Data Subvolume Min/Max Z Dimension",
                                                         "The min/max indices of the Z dimension for the Registered Data subvolume.", std::vector<uint64>{0ULL, 99ULL},
                                                         std::vector<std::string>{"Z Min", "Z Max"}));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadScanData_Key, "Read Scan Data", "Specifies whether or not to read the scan data from the input file.", true));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_SliceData_Key, "Slice Data Image Geometry", "The path to the newly created Slice Data image geometry", DataPath({"Slice Data"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_SliceData_Key, "Slice Data Geometry", "The path to the newly created Slice Data image geometry", DataPath({"Slice Data"})));
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_SliceDataCellAttrMat_Key, "Slice Data Cell Attribute Matrix Name", "The name of the Slice Data cell attribute matrix", ImageGeom::k_CellDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CameraData0ArrayName_Key, "Camera Data 0 Array Name", "The name of the camera data 0 array.", "Camera Data 0"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CameraData1ArrayName_Key, "Camera Data 1 Array Name", "The name of the camera data 1 array.", "Camera Data 1"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_PartIdsArrayName_Key, "Part Ids Array Name", "The name of the part ids array.", "Part Ids"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SampleIdsArrayName_Key, "Sample Ids Array Name", "The name of the sample ids array.", "Sample Ids"));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_RegisteredData_Key, "Registered Data Image Geometry", "The path to the newly created Registered Data image geometry",
-                                                             DataPath({"Registered Data"})));
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_RegisteredData_Key, "Registered Data Geometry", "The path to the newly created Registered Data image geometry", DataPath({"Registered Data"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_RegisteredDataCellAttrMat_Key, "Registered Data Cell Attribute Matrix Name", "The name of the Registered Data cell attribute matrix",
                                                           ImageGeom::k_CellDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AnomalyDetectionArrayName_Key, "Anomaly Detection Array Name", "The name of the Anomaly Detection array.", "Anomaly Detection"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_XRayCTArrayName_Key, "X-Ray CT Array Name", "The name of the X-Ray CT array.", "X-Ray CT"));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_ScanData_Key, "Scan Data Geometry", "The path to the newly created Scan Data edge geometry", DataPath({"Scan Data"})));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_ScanDataCellAttrMat_Key, "Scan Data Edge Attribute Matrix Name", "The name of the Scan Data edge attribute matrix", EdgeGeom::k_EdgeDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ScanDataVertexAttrMat_Key, "Scan Data Vertex Attribute Matrix Name", "The name of the Scan Data vertex attribute matrix",
+                                                          EdgeGeom::k_VertexDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ScanDataVertexListName_Key, "Scan Data Vertex List Array Name", "The name of the Scan Data vertex list array.", "Vertices"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ScanDataEdgeListName_Key, "Scan Data Edge List Array Name", "The name of the Scan Data edge list array.", "Edges"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_TimeOfTravelArrayName_Key, "Scan Data Time of Travel Array Name", "The name of the Scan Data Time of Travel array.", "Time of Travel"));
 
   params.linkParameters(k_ReadSlicesSubvolume_Key, k_SlicesSubvolumeMinMaxX_Key, true);
   params.linkParameters(k_ReadSlicesSubvolume_Key, k_SlicesSubvolumeMinMaxY_Key, true);
@@ -289,6 +299,12 @@ Parameters ReadPeregrineHDF5FileFilter::parameters() const
   params.linkParameters(k_ReadSampleIds_Key, k_SampleIdsArrayName_Key, true);
   params.linkParameters(k_ReadAnomalyDetection_Key, k_AnomalyDetectionArrayName_Key, true);
   params.linkParameters(k_ReadXRayCT_Key, k_XRayCTArrayName_Key, true);
+  params.linkParameters(k_ReadScanData_Key, k_ScanData_Key, true);
+  params.linkParameters(k_ReadScanData_Key, k_ScanDataCellAttrMat_Key, true);
+  params.linkParameters(k_ReadScanData_Key, k_ScanDataVertexAttrMat_Key, true);
+  params.linkParameters(k_ReadScanData_Key, k_ScanDataVertexListName_Key, true);
+  params.linkParameters(k_ReadScanData_Key, k_ScanDataEdgeListName_Key, true);
+  params.linkParameters(k_ReadScanData_Key, k_TimeOfTravelArrayName_Key, true);
 
   return params;
 }
@@ -300,10 +316,9 @@ IFilter::UniquePointer ReadPeregrineHDF5FileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightSliceDatasets(const nx::core::HDF5::FileReader& h5FileReader, const std::vector<float32>& origin, const std::vector<float32>& spacing,
+                                                                             const Arguments& filterArgs) const
 {
-  auto inputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto segmentationResultsStr = filterArgs.value<StringParameter::ValueType>(k_SegmentationResults_Key);
   auto readCameraData = filterArgs.value<BoolParameter::ValueType>(k_ReadCameraData_Key);
   auto readPartIds = filterArgs.value<BoolParameter::ValueType>(k_ReadPartIds_Key);
@@ -318,16 +333,6 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
   auto cameraData1ArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CameraData1ArrayName_Key);
   auto partIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PartIdsArrayName_Key);
   auto sampleIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SampleIdsArrayName_Key);
-  auto registeredDataImageGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_RegisteredData_Key);
-  auto registeredDataCellAttrMatName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RegisteredDataCellAttrMat_Key);
-  auto readRegisteredDataSubvolume = filterArgs.value<BoolParameter::ValueType>(k_ReadRegisteredDataSubvolume_Key);
-  auto registeredDataSubvolumeMinMaxX = filterArgs.value<VectorUInt64Parameter::ValueType>(k_RegisteredDataSubvolumeMinMaxX_Key);
-  auto registeredDataSubvolumeMinMaxY = filterArgs.value<VectorUInt64Parameter::ValueType>(k_RegisteredDataSubvolumeMinMaxY_Key);
-  auto registeredDataSubvolumeMinMaxZ = filterArgs.value<VectorUInt64Parameter::ValueType>(k_RegisteredDataSubvolumeMinMaxZ_Key);
-  auto readAnomalyDetection = filterArgs.value<BoolParameter::ValueType>(k_ReadAnomalyDetection_Key);
-  auto anomalyDetectionArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AnomalyDetectionArrayName_Key);
-  auto readXRayCT = filterArgs.value<BoolParameter::ValueType>(k_ReadXRayCT_Key);
-  auto xRayCTArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_XRayCTArrayName_Key);
 
   OutputActions actions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -338,13 +343,6 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
   {
     return {nonstd::make_unexpected(
         std::vector<Error>{Error{-3000, "The segmentation results are empty.  Please input the segmentation results that this filter should read from the input file, separated by commas."}})};
-  }
-
-  nx::core::HDF5::FileReader h5FileReader(inputFilePath.string());
-  hid_t fileId = h5FileReader.getId();
-  if(fileId < 0)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-3001, fmt::format("Error opening Peregrine HDF5 file: '{}'", inputFilePath.string())}})};
   }
 
   Result<std::vector<usize>> sliceDimsResult = readSliceDimensions(h5FileReader, segmentationResultsList);
@@ -366,15 +364,6 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
     slicesImageGeomDims = {slicesSubvolumeMinMaxZ[1] - slicesSubvolumeMinMaxZ[0] + 1, slicesSubvolumeMinMaxY[1] - slicesSubvolumeMinMaxY[0] + 1,
                            slicesSubvolumeMinMaxX[1] - slicesSubvolumeMinMaxX[0] + 1};
   }
-
-  Result<CreateImageGeometryAction::SpacingType> spacingResult = calculateSpacing(h5FileReader);
-  if(spacingResult.invalid())
-  {
-    return {nonstd::make_unexpected(spacingResult.errors())};
-  }
-
-  std::vector<float32> origin = {0.0f, 0.0f, 0.0f};
-  std::vector<float32> spacing = spacingResult.value();
 
   actions.appendAction(
       std::make_unique<CreateImageGeometryAction>(sliceDataImageGeomPath, std::vector<usize>(slicesImageGeomDims.rbegin(), slicesImageGeomDims.rend()), origin, spacing, sliceDataCellAttrMatName));
@@ -430,6 +419,39 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
     actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint32, slicesImageGeomDims, std::vector<usize>{1}, sampleIdsPath));
   }
 
+  if(readSlicesSubvolume)
+  {
+    std::stringstream ss;
+    ss << "Extents:\n"
+       << "X Extent: 0 to " << sliceDims[2] - 1 << " (dimension: " << sliceDims[2] << ")\n"
+       << "Y Extent: 0 to " << sliceDims[1] - 1 << " (dimension: " << sliceDims[1] << ")\n"
+       << "Z Extent: 0 to " << sliceDims[0] - 1 << " (dimension: " << sliceDims[0] << ")\n";
+    std::string sliceDataDimsStr = ss.str();
+
+    preflightUpdatedValues.push_back({"Original Slice Data Dimensions (in pixels)", sliceDataDimsStr});
+  }
+
+  return {{actions}, std::move(preflightUpdatedValues)};
+}
+
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightRegisteredDatasets(const nx::core::HDF5::FileReader& h5FileReader, const std::vector<float32>& origin,
+                                                                                  const std::vector<float32>& spacing, const Arguments& filterArgs) const
+{
+  auto registeredDataImageGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_RegisteredData_Key);
+  auto registeredDataCellAttrMatName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RegisteredDataCellAttrMat_Key);
+  auto readRegisteredDataSubvolume = filterArgs.value<BoolParameter::ValueType>(k_ReadRegisteredDataSubvolume_Key);
+  auto registeredDataSubvolumeMinMaxX = filterArgs.value<VectorUInt64Parameter::ValueType>(k_RegisteredDataSubvolumeMinMaxX_Key);
+  auto registeredDataSubvolumeMinMaxY = filterArgs.value<VectorUInt64Parameter::ValueType>(k_RegisteredDataSubvolumeMinMaxY_Key);
+  auto registeredDataSubvolumeMinMaxZ = filterArgs.value<VectorUInt64Parameter::ValueType>(k_RegisteredDataSubvolumeMinMaxZ_Key);
+  auto readAnomalyDetection = filterArgs.value<BoolParameter::ValueType>(k_ReadAnomalyDetection_Key);
+  auto anomalyDetectionArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AnomalyDetectionArrayName_Key);
+  auto readXRayCT = filterArgs.value<BoolParameter::ValueType>(k_ReadXRayCT_Key);
+  auto xRayCTArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_XRayCTArrayName_Key);
+
+  OutputActions actions;
+  std::vector<PreflightValue> preflightUpdatedValues;
+
   Result<std::vector<usize>> anomalyDetectionDimsResult = readDatasetDimensions(h5FileReader, ReadPeregrineHDF5File::k_RegisteredAnomalyDetectionH5Path);
   if(anomalyDetectionDimsResult.invalid())
   {
@@ -470,18 +492,6 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
     actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, registeredDataImgGeomDims, std::vector<usize>{1}, xRayCTPath));
   }
 
-  if(readSlicesSubvolume)
-  {
-    std::stringstream ss;
-    ss << "Extents:\n"
-       << "X Extent: 0 to " << sliceDims[2] - 1 << " (dimension: " << sliceDims[2] << ")\n"
-       << "Y Extent: 0 to " << sliceDims[1] - 1 << " (dimension: " << sliceDims[1] << ")\n"
-       << "Z Extent: 0 to " << sliceDims[0] - 1 << " (dimension: " << sliceDims[0] << ")\n";
-    std::string sliceDataDimsStr = ss.str();
-
-    preflightUpdatedValues.push_back({"Original Slice Data Dimensions (in pixels)", sliceDataDimsStr});
-  }
-
   if(readRegisteredDataSubvolume)
   {
     std::stringstream ss;
@@ -492,6 +502,114 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
     std::string registeredDataDimsStr = ss.str();
 
     preflightUpdatedValues.push_back({"Original Registered Data Dimensions (in pixels)", registeredDataDimsStr});
+  }
+
+  return {{actions}, std::move(preflightUpdatedValues)};
+}
+
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightScanDatasets(const nx::core::HDF5::FileReader& h5FileReader, const nx::core::Arguments& filterArgs) const
+{
+  auto scanDataEdgeGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_ScanData_Key);
+  auto scanDataVertexAttrMatName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ScanDataVertexAttrMat_Key);
+  auto scanDataEdgeAttrMatName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ScanDataCellAttrMat_Key);
+  auto vertexListArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ScanDataVertexListName_Key);
+  auto edgeListArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ScanDataEdgeListName_Key);
+  auto timeOfTravelArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_TimeOfTravelArrayName_Key);
+
+  OutputActions actions;
+  std::vector<PreflightValue> preflightUpdatedValues;
+
+  nx::core::HDF5::GroupReader groupReader = h5FileReader.openGroup(k_ScansGroupPath);
+  if(!groupReader.isValid())
+  {
+    return {MakeErrorResult<OutputActions>(-4032, fmt::format("Error opening group at path '{}' in HDF5 file '{}'", k_ScansGroupPath, h5FileReader.getName()))};
+  }
+
+  usize zCount = groupReader.getNumChildren();
+  usize numEdges = 0;
+  for(usize i = 0; i < zCount; i++)
+  {
+    fs::path scanPath = fs::path(k_ScansGroupPath) / std::to_string(i);
+    Result<std::vector<usize>> scanDimsResult = readDatasetDimensions(h5FileReader, scanPath.string());
+    if(scanDimsResult.invalid())
+    {
+      return {nonstd::make_unexpected(scanDimsResult.errors())};
+    }
+    std::vector<usize> scanDims = scanDimsResult.value();
+    if(scanDims.size() != 2)
+    {
+      return {MakeErrorResult<OutputActions>(
+          -4033, fmt::format("Scan dataset at path '{}' in HDF5 file '{}' MUST have 2 dimensions, but instead it has {} dimensions.", k_ScansGroupPath, h5FileReader.getName(), scanDims.size()))};
+    }
+    numEdges += scanDims[0];
+  }
+
+  usize numVertices = 0;
+
+  actions.appendAction(
+      std::make_unique<CreateEdgeGeometryAction>(scanDataEdgeGeomPath, numEdges, numVertices, scanDataVertexAttrMatName, scanDataEdgeAttrMatName, vertexListArrayName, edgeListArrayName));
+
+  DataPath timeOfTravelArrayPath = scanDataEdgeGeomPath.createChildPath(scanDataEdgeAttrMatName).createChildPath(timeOfTravelArrayName);
+  actions.appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{numEdges}, std::vector<usize>{1}, timeOfTravelArrayPath));
+
+  return {{actions}, std::move(preflightUpdatedValues)};
+}
+
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                    const std::atomic_bool& shouldCancel) const
+{
+  auto inputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
+  auto readScanData = filterArgs.value<BoolParameter::ValueType>(k_ReadScanData_Key);
+
+  OutputActions actions;
+  std::vector<PreflightValue> preflightUpdatedValues;
+
+  nx::core::HDF5::FileReader h5FileReader(inputFilePath.string());
+  hid_t fileId = h5FileReader.getId();
+  if(fileId < 0)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-3001, fmt::format("Error opening Peregrine HDF5 file: '{}'", inputFilePath.string())}})};
+  }
+
+  Result<CreateImageGeometryAction::SpacingType> spacingResult = calculateSpacing(h5FileReader);
+  if(spacingResult.invalid())
+  {
+    return {nonstd::make_unexpected(spacingResult.errors())};
+  }
+
+  std::vector<float32> origin = {0.0f, 0.0f, 0.0f};
+  std::vector<float32> spacing = spacingResult.value();
+
+  auto result = preflightSliceDatasets(h5FileReader, origin, spacing, filterArgs);
+  if(result.outputActions.invalid())
+  {
+    return result;
+  }
+
+  actions = MergeOutputActions(actions, result.outputActions.value());
+  preflightUpdatedValues.insert(preflightUpdatedValues.end(), result.outputValues.begin(), result.outputValues.end());
+
+  result = preflightRegisteredDatasets(h5FileReader, origin, spacing, filterArgs);
+  if(result.outputActions.invalid())
+  {
+    return result;
+  }
+
+  actions = MergeOutputActions(actions, result.outputActions.value());
+  preflightUpdatedValues.insert(preflightUpdatedValues.end(), result.outputValues.begin(), result.outputValues.end());
+
+  if(readScanData)
+  {
+    result = preflightScanDatasets(h5FileReader, filterArgs);
+    if(result.outputActions.invalid())
+    {
+      return result;
+    }
+
+    actions = MergeOutputActions(actions, result.outputActions.value());
+    preflightUpdatedValues.insert(preflightUpdatedValues.end(), result.outputValues.begin(), result.outputValues.end());
   }
 
   return {{actions}, std::move(preflightUpdatedValues)};
