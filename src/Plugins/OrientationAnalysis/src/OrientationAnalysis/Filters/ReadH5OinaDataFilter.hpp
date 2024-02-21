@@ -9,8 +9,7 @@ namespace nx::core
 {
 /**
  * @class ReadH5OinaDataFilter
- * @brief This filter will read a single .h5 file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the
- * intermediate .h5ebsd file.
+ * @brief This filter will read a single .h5oina file into a new Image Geometry, allowing the immediate use of Filters on the data.
  */
 class ORIENTATIONANALYSIS_EXPORT ReadH5OinaDataFilter : public IFilter
 {

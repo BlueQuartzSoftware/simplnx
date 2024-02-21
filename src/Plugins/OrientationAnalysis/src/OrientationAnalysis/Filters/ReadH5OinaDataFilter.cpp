@@ -47,7 +47,7 @@ Uuid ReadH5OinaDataFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ReadH5OinaDataFilter::humanName() const
 {
-  return "Import Oxford Aztec Data (.h5oina)";
+  return "Read Oxford Aztec Data (.h5oina)";
 }
 
 //------------------------------------------------------------------------------
@@ -64,9 +64,8 @@ Parameters ReadH5OinaDataFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5oina file. Oxford can store multiple scans in a single file",
-                                                                OEMEbsdScanSelectionParameter::ValueType{},
-                                                                /* OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::EDAX}, */
-                                                                OEMEbsdScanSelectionParameter::EbsdReaderType::H5Oina, OEMEbsdScanSelectionParameter::ExtensionsType{".h5oina"}));
+                                                                OEMEbsdScanSelectionParameter::ValueType{}, OEMEbsdScanSelectionParameter::EbsdReaderType::H5Oina,
+                                                                OEMEbsdScanSelectionParameter::ExtensionsType{".h5oina"}));
   params.insert(std::make_unique<BoolParameter>(k_EdaxHexagonalAlignment_Key, "Convert Hexagonal X-Axis to EDAX Standard",
                                                 "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", true));
   params.insert(std::make_unique<BoolParameter>(k_ConvertPhaseToInt32_Key, "Convert Phase Data to Int32", "Native Phases data value is uint8. Convert to Int32 for better filter compatibility", true));
