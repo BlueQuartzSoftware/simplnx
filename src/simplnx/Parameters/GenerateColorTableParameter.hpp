@@ -20,7 +20,7 @@ public:
   using ValueType = std::string;
 
   GenerateColorTableParameter() = delete;
-  GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue = {});
+  GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
   ~GenerateColorTableParameter() override = default;
 
   GenerateColorTableParameter(const GenerateColorTableParameter&) = delete;

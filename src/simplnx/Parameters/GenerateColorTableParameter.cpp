@@ -34,17 +34,12 @@ nlohmann::json GenerateColorTableParameter::toJson(const std::any& value) const
 Result<std::any> GenerateColorTableParameter::fromJson(const nlohmann::json& json) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'GenerateColorTableParameter' JSON Error: ";
-  if(!json.empty() && !json.is_object())
+  if(!json.empty() && !json.is_string())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
   }
 
-  if(!json.contains("Name"))
-  {
-    return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value for key '{}' is not an object", prefix, "Name"));
-  }
-
-  return {{std::make_any<ValueType>(json["Name"])}};
+  return {{std::make_any<ValueType>(json.get<ValueType>())}};
 }
 
 IParameter::UniquePointer GenerateColorTableParameter::clone() const

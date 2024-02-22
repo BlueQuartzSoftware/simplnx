@@ -22,19 +22,33 @@ Result<nlohmann::json> ColorTableUtilities::LoadAllRGBPresets()
 
 Result<std::vector<float32>> ColorTableUtilities::ExtractContolPoints(const std::string& presetName)
 {
+  if(presetName.empty())
+  {
+    return MakeErrorResult<std::vector<float32>>(-36781, fmt::format("{}({}): Function {}: Search argument is empty!", __FILE__, __LINE__, "ColorTableUtilities::ExtractContolPoints"));
+  }
+
+  bool found = false;
   for(const auto& preset : ColorTable::k_DefaultColorTableJson)
   {
-    if(preset.contains("Name") && preset["ColorSpace"] == presetName)
+    if(preset.contains("Name") && preset["Name"] == presetName)
     {
+      found = true;
       if(preset.contains("RGBPoints"))
       {
-        // Migrate colorControlPoints values from JsonArray to 2D array.
+        // Migrate colorControlPoints values from JsonArray to array.
         return {{preset["RGBPoints"].get<std::vector<float32>>()}};
       }
     }
   }
 
-  return MakeErrorResult<std::vector<float32>>(-36782, fmt::format("Unable to find the object for name {} in the JSON Table", presetName));
+  if(!found)
+  {
+    return MakeErrorResult<std::vector<float32>>(-36782, fmt::format("{}({}): Function {}: Found the object for name '{}' in the JSON Table, but no 'RGBPoints' found", __FILE__, __LINE__,
+                                                                     "ColorTableUtilities::ExtractContolPoints", presetName));
+  }
+
+  return MakeErrorResult<std::vector<float32>>(
+      -36783, fmt::format("{}({}): Function {}: Unable to find the object for name '{}' in the JSON Table", __FILE__, __LINE__, "ColorTableUtilities::ExtractContolPoints", presetName));
 }
 
 std::string ColorTableUtilities::GetDefaultRGBPresetName()
