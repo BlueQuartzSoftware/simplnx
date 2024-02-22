@@ -690,6 +690,7 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<DataGroup, BaseGroup, std::shared_ptr<DataGroup>> dataGroup(mod, "DataGroup");
 
   py::class_<AttributeMatrix, BaseGroup, std::shared_ptr<AttributeMatrix>> attributeMatrix(mod, "AttributeMatrix");
+  attributeMatrix.def("resize_tuples", &AttributeMatrix::resizeTuples, "Resize the tuples with the given shape");
 
   py::class_<IArray, DataObject, std::shared_ptr<IArray>> iArray(mod, "IArray");
   iArray.def_property_readonly("tuple_shape", &IArray::getTupleShape);
