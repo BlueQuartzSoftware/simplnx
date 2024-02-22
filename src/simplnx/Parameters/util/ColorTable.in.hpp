@@ -9,4 +9,4 @@ namespace nx::core::ColorTable
 {
 constexpr StringLiteral k_DefaultColorTableJsonStr = R"~(@COLOR_TABLE_JSON@)~";
 static const nlohmann::json k_DefaultColorTableJson = R"~(@COLOR_TABLE_JSON@)~"_json;
-}
+} // namespace nx::core::ColorTable
