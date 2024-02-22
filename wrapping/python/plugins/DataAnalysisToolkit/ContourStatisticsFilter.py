@@ -46,7 +46,7 @@ class ContourStatisticsFilter:
     :return: The default tags for the filter
     :rtype: list
     """
-    return ['python', 'contour', 'detection', '']
+    return ['python', 'contour', 'statistics', 'detection', 'opencv', 'cv2']
 
   def clone(self):
     """Clones the filter
