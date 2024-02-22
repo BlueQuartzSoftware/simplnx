@@ -1,6 +1,7 @@
 from DataAnalysisToolkit.CalculateHistogramFilter import CalculateHistogramFilter
 from DataAnalysisToolkit.InterpolateGridDataFilter import InterpolateGridDataFilter
 from DataAnalysisToolkit.CliReaderFilter import CliReaderFilter
+from DataAnalysisToolkit.ContourStatisticsFilter import ContourStatisticsFilter
 import simplnx as sx
 
 class DataAnalysisToolkit:
@@ -20,4 +21,4 @@ class DataAnalysisToolkit:
     return 'BlueQuartz Software'
 
   def get_filters(self):
-    return [CalculateHistogramFilter, InterpolateGridDataFilter, CliReaderFilter]
+    return [CalculateHistogramFilter, InterpolateGridDataFilter, CliReaderFilter, ContourStatisticsFilter]
