@@ -7,7 +7,7 @@ import simplnx_test_dirs as nxtest
 import numpy as np
 
 #Create a Data Structure
-data_structure = cx.DataStructure()
+data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("Cell Ensemble Data"),
-    image_geometry_name=cx.DataPath("ImageGeom"),
+    image_geometry_name=nx.DataPath("ImageGeom"),
     origin=[0.0, 0.0, 0.0],
     read_pattern_data=False,
     #selected_scan_names: ValueType = ...,
@@ -29,7 +29,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Define output file path
 output_file_path = nxtest.get_data_directory() / "Output/H5EspritData/H5EspritData.dream3d"
 # Instantiate Filter
-nx_filter = cx.WriteDREAM3DFilter()
+nx_filter = nx.WriteDREAM3DFilter()
 # Execute WriteDREAM3DFilter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,

@@ -10,14 +10,14 @@ import numpy as np
 # Create a DataArray that is as long as my CSV file (99 Rows in this case)
 # ------------------------------------------------------------------------------
 # Create a Data Structure
-data_structure = cx.DataStructure()
+data_structure = nx.DataStructure()
 
 
-result = cx.CombineStlFilesFilter.execute(data_structure=data_structure ,
+result = nx.CombineStlFilesFilter.execute(data_structure=data_structure ,
                                            face_attribute_matrix_name="Face Data" ,
                                             face_normals_array_name="FaceNormals" ,
                                             stl_files_path="/Users/alexjackson/DREAM3DNXData/Data/STL_Models" ,
-                                            triangle_data_container_name=cx.DataPath(["TriangleGeometry"]),
+                                            triangle_data_container_name=nx.DataPath(["TriangleGeometry"]),
                                             vertex_attribute_matrix_name= "Vertex Data")
 
 if len(result.errors) != 0:
@@ -30,7 +30,7 @@ else:
 
 
 output_file_path = nxtest.get_data_directory() / "Output/CombinedStlFiles.dream3d"
-result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
+result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
 if len(result.errors) != 0:

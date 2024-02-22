@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 import io
-import simplnx as sx
+import simplnx as nx
 
 class CalculateHistogramFilter:
   INPUT_ARRAY_PATH = 'input_array_path'
@@ -27,8 +27,8 @@ class CalculateHistogramFilter:
   COUNTS = 'counts'
   BIN_BOUNDS = 'bin_bounds'
 
-  def uuid(self) -> sx.Uuid:
-    return sx.Uuid('5b4d8eba-ea79-4239-9e88-3d35c89b9da7')
+  def uuid(self) -> nx.Uuid:
+    return nx.Uuid('5b4d8eba-ea79-4239-9e88-3d35c89b9da7')
 
   def human_name(self) -> str:
     return 'Matplotlib: Calculate Histogram (Python)'
@@ -45,28 +45,28 @@ class CalculateHistogramFilter:
   def clone(self):
     return CalculateHistogramFilter()
 
-  def parameters(self) -> sx.Parameters:
-    params = sx.Parameters()
+  def parameters(self) -> nx.Parameters:
+    params = nx.Parameters()
 
-    params.insert(sx.Parameters.Separator("General Parameters"))
-    params.insert(sx.UInt64Parameter(CalculateHistogramFilter.NUMBER_OF_BINS, 'Number of Bins', 'The number of bins in the histogram.', 10))
-    params.insert_linkable_parameter(sx.BoolParameter(CalculateHistogramFilter.GENERATE_HISTOGRAM_IMAGE, 'Generate Histogram Image', 'Determines whether or not to generate an output histogram image.', True))
+    params.insert(nx.Parameters.Separator("General Parameters"))
+    params.insert(nx.UInt64Parameter(CalculateHistogramFilter.NUMBER_OF_BINS, 'Number of Bins', 'The number of bins in the histogram.', 10))
+    params.insert_linkable_parameter(nx.BoolParameter(CalculateHistogramFilter.GENERATE_HISTOGRAM_IMAGE, 'Generate Histogram Image', 'Determines whether or not to generate an output histogram image.', True))
 
-    params.insert(sx.Parameters.Separator("Histogram Image Parameters"))
-    params.insert(sx.VectorUInt64Parameter(CalculateHistogramFilter.HISTOGRAM_IMAGE_SIZE, 'Histogram Image Size', 'The width and height of the output histogram image.', [800, 600], ['Width', 'Height']))
-    params.insert(sx.UInt64Parameter(CalculateHistogramFilter.HISTOGRAM_IMAGE_DPI, 'Histogram Image DPI (dots per inch)', 'The dots per inch of the output histogram image.', 100))
-    params.insert(sx.StringParameter(CalculateHistogramFilter.HISTOGRAM_TITLE, 'Histogram Title', 'The title of the histogram.', 'Histogram'))
-    params.insert(sx.StringParameter(CalculateHistogramFilter.HISTOGRAM_X_LABEL, 'Histogram X Label', 'The label shown along the X axis of the histogram.', 'Value'))
-    params.insert(sx.StringParameter(CalculateHistogramFilter.HISTOGRAM_Y_LABEL, 'Histogram Y Label', 'The label shown along the Y axis of the histogram.', 'Frequency'))
-    params.insert(sx.Parameters.Separator("Required Data Objects"))
-    params.insert(sx.ArraySelectionParameter(CalculateHistogramFilter.INPUT_ARRAY_PATH, 'Input Array', 'The dataset that will be used to calculate the histogram.', sx.DataPath(), sx.get_all_data_types()))
-    params.insert(sx.Parameters.Separator("Created Data Objects"))
-    params.insert(sx.DataGroupCreationParameter(CalculateHistogramFilter.HISTOGRAM_STATS_ATTRMAT_PATH, 'Histogram Stats Attribute Matrix', 'The path to the newly created histogram statistics attribute matrix.', sx.DataPath("Histogram Statistics")))
-    params.insert(sx.DataObjectNameParameter(CalculateHistogramFilter.COUNTS, 'Histogram Counts', 'The name of the array that will contain the number of values that appear in each bin.', "Counts"))
-    params.insert(sx.DataObjectNameParameter(CalculateHistogramFilter.BIN_BOUNDS, 'Histogram Bin Bounds', 'The name of the array that will contain the minimum and maximum values for each bin.', "Bin Bounds"))
-    params.insert(sx.DataGroupCreationParameter(CalculateHistogramFilter.HISTOGRAM_GEOM_PATH, 'Histogram Image Geometry', 'The path to the newly created histogram image geometry.', sx.DataPath("Histogram Image Geometry")))
-    params.insert(sx.DataObjectNameParameter(CalculateHistogramFilter.HISTOGRAM_CELLATTRMAT_NAME, 'Histogram Cell Attribute Matrix Name', 'The name of the histogram cell attribute matrix.', "Cell Data"))
-    params.insert(sx.DataObjectNameParameter(CalculateHistogramFilter.HISTOGRAM_DATA_NAME, 'Histogram Array Name', 'The name of the histogram data array.', "Histogram Image Data"))
+    params.insert(nx.Parameters.Separator("Histogram Image Parameters"))
+    params.insert(nx.VectorUInt64Parameter(CalculateHistogramFilter.HISTOGRAM_IMAGE_SIZE, 'Histogram Image Size', 'The width and height of the output histogram image.', [800, 600], ['Width', 'Height']))
+    params.insert(nx.UInt64Parameter(CalculateHistogramFilter.HISTOGRAM_IMAGE_DPI, 'Histogram Image DPI (dots per inch)', 'The dots per inch of the output histogram image.', 100))
+    params.insert(nx.StringParameter(CalculateHistogramFilter.HISTOGRAM_TITLE, 'Histogram Title', 'The title of the histogram.', 'Histogram'))
+    params.insert(nx.StringParameter(CalculateHistogramFilter.HISTOGRAM_X_LABEL, 'Histogram X Label', 'The label shown along the X axis of the histogram.', 'Value'))
+    params.insert(nx.StringParameter(CalculateHistogramFilter.HISTOGRAM_Y_LABEL, 'Histogram Y Label', 'The label shown along the Y axis of the histogram.', 'Frequency'))
+    params.insert(nx.Parameters.Separator("Required Data Objects"))
+    params.insert(nx.ArraySelectionParameter(CalculateHistogramFilter.INPUT_ARRAY_PATH, 'Input Array', 'The dataset that will be used to calculate the histogram.', nx.DataPath(), nx.get_all_data_types()))
+    params.insert(nx.Parameters.Separator("Created Data Objects"))
+    params.insert(nx.DataGroupCreationParameter(CalculateHistogramFilter.HISTOGRAM_STATS_ATTRMAT_PATH, 'Histogram Stats Attribute Matrix', 'The path to the newly created histogram statistics attribute matrix.', nx.DataPath("Histogram Statistics")))
+    params.insert(nx.DataObjectNameParameter(CalculateHistogramFilter.COUNTS, 'Histogram Counts', 'The name of the array that will contain the number of values that appear in each bin.', "Counts"))
+    params.insert(nx.DataObjectNameParameter(CalculateHistogramFilter.BIN_BOUNDS, 'Histogram Bin Bounds', 'The name of the array that will contain the minimum and maximum values for each bin.', "Bin Bounds"))
+    params.insert(nx.DataGroupCreationParameter(CalculateHistogramFilter.HISTOGRAM_GEOM_PATH, 'Histogram Image Geometry', 'The path to the newly created histogram image geometry.', nx.DataPath("Histogram Image Geometry")))
+    params.insert(nx.DataObjectNameParameter(CalculateHistogramFilter.HISTOGRAM_CELLATTRMAT_NAME, 'Histogram Cell Attribute Matrix Name', 'The name of the histogram cell attribute matrix.', "Cell Data"))
+    params.insert(nx.DataObjectNameParameter(CalculateHistogramFilter.HISTOGRAM_DATA_NAME, 'Histogram Array Name', 'The name of the histogram data array.', "Histogram Image Data"))
 
     params.link_parameters(CalculateHistogramFilter.GENERATE_HISTOGRAM_IMAGE, CalculateHistogramFilter.HISTOGRAM_IMAGE_SIZE, True)
     params.link_parameters(CalculateHistogramFilter.GENERATE_HISTOGRAM_IMAGE, CalculateHistogramFilter.HISTOGRAM_IMAGE_DPI, True)
@@ -79,11 +79,11 @@ class CalculateHistogramFilter:
 
     return params
 
-  def preflight_impl(self, data_structure: sx.DataStructure, args: dict, message_handler: sx.IFilter.MessageHandler, should_cancel: sx.AtomicBoolProxy) -> sx.IFilter.PreflightResult:
+  def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
     histogram_image_size: list = args[CalculateHistogramFilter.HISTOGRAM_IMAGE_SIZE]
     num_of_bins: int = args[CalculateHistogramFilter.NUMBER_OF_BINS]
     generate_histogram_image: bool = args[CalculateHistogramFilter.GENERATE_HISTOGRAM_IMAGE]
-    histogram_geom_path: sx.DataPath = args[CalculateHistogramFilter.HISTOGRAM_GEOM_PATH]
+    histogram_geom_path: nx.DataPath = args[CalculateHistogramFilter.HISTOGRAM_GEOM_PATH]
     histogram_stats_attrmat_path = args[CalculateHistogramFilter.HISTOGRAM_STATS_ATTRMAT_PATH]
     histogram_cellattrmat_name: str = args[CalculateHistogramFilter.HISTOGRAM_CELLATTRMAT_NAME]
     histogram_data_array_name: str = args[CalculateHistogramFilter.HISTOGRAM_DATA_NAME]
@@ -91,31 +91,31 @@ class CalculateHistogramFilter:
     bin_bounds_name: str = args[CalculateHistogramFilter.BIN_BOUNDS]
 
     if num_of_bins <= 0:
-      return sx.IFilter.PreflightResult(sx.OutputActions(), [sx.Error(-1000, "The number of bins should be at least 1.")])
+      return nx.IFilter.PreflightResult(nx.OutputActions(), [nx.Error(-1000, "The number of bins should be at least 1.")])
     
-    output_actions = sx.OutputActions()
+    output_actions = nx.OutputActions()
 
     if generate_histogram_image == True:
       geom_dims = [histogram_image_size[0], histogram_image_size[1], 1]
       geom_origin = [0, 0, 0]
       geom_spacing = [1, 1, 1]
 
-      output_actions.append_action(sx.CreateImageGeometryAction(histogram_geom_path, geom_dims, geom_origin, geom_spacing, histogram_cellattrmat_name))
+      output_actions.append_action(nx.CreateImageGeometryAction(histogram_geom_path, geom_dims, geom_origin, geom_spacing, histogram_cellattrmat_name))
       histogram_data_array_path = histogram_geom_path.create_child_path(histogram_cellattrmat_name).create_child_path(histogram_data_array_name)
-      output_actions.append_action(sx.CreateArrayAction(sx.DataType.uint8, list(reversed(geom_dims)), [3], histogram_data_array_path))
+      output_actions.append_action(nx.CreateArrayAction(nx.DataType.uint8, list(reversed(geom_dims)), [3], histogram_data_array_path))
 
-    output_actions.append_action(sx.CreateAttributeMatrixAction(histogram_stats_attrmat_path, [num_of_bins]))
+    output_actions.append_action(nx.CreateAttributeMatrixAction(histogram_stats_attrmat_path, [num_of_bins]))
 
     counts_path = histogram_stats_attrmat_path.create_child_path(counts_name)
-    output_actions.append_action(sx.CreateArrayAction(sx.DataType.uint64, [num_of_bins], [1], counts_path))
+    output_actions.append_action(nx.CreateArrayAction(nx.DataType.uint64, [num_of_bins], [1], counts_path))
 
     bin_bounds_path = histogram_stats_attrmat_path.create_child_path(bin_bounds_name)
-    output_actions.append_action(sx.CreateArrayAction(sx.DataType.float32, [num_of_bins], [2], bin_bounds_path))
+    output_actions.append_action(nx.CreateArrayAction(nx.DataType.float32, [num_of_bins], [2], bin_bounds_path))
 
-    return sx.IFilter.PreflightResult(output_actions)
+    return nx.IFilter.PreflightResult(output_actions)
 
-  def execute_impl(self, data_structure: sx.DataStructure, args: dict, message_handler: sx.IFilter.MessageHandler, should_cancel: sx.AtomicBoolProxy) -> sx.IFilter.ExecuteResult:
-    input_data_path: sx.DataPath = args[CalculateHistogramFilter.INPUT_ARRAY_PATH]
+  def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
+    input_data_path: nx.DataPath = args[CalculateHistogramFilter.INPUT_ARRAY_PATH]
     histogram_image_size: list = args[CalculateHistogramFilter.HISTOGRAM_IMAGE_SIZE]
     histogram_image_dpi: int = args[CalculateHistogramFilter.HISTOGRAM_IMAGE_DPI]
     num_of_bins: int = args[CalculateHistogramFilter.NUMBER_OF_BINS]
@@ -123,14 +123,14 @@ class CalculateHistogramFilter:
     histogram_title: str = args[CalculateHistogramFilter.HISTOGRAM_TITLE]
     histogram_x_label: str = args[CalculateHistogramFilter.HISTOGRAM_X_LABEL]
     histogram_y_label: str = args[CalculateHistogramFilter.HISTOGRAM_Y_LABEL]
-    histogram_geom_path: sx.DataPath = args[CalculateHistogramFilter.HISTOGRAM_GEOM_PATH]
+    histogram_geom_path: nx.DataPath = args[CalculateHistogramFilter.HISTOGRAM_GEOM_PATH]
     histogram_stats_attrmat_path = args[CalculateHistogramFilter.HISTOGRAM_STATS_ATTRMAT_PATH]
     histogram_cellattrmat_name: str = args[CalculateHistogramFilter.HISTOGRAM_CELLATTRMAT_NAME]
     histogram_data_array_name: str = args[CalculateHistogramFilter.HISTOGRAM_DATA_NAME]
     counts_name: str = args[CalculateHistogramFilter.COUNTS]
     bin_bounds_name: str = args[CalculateHistogramFilter.BIN_BOUNDS]
 
-    message_handler(sx.IFilter.Message(sx.IFilter.Message.Type.Info, f'Calculating Histogram Counts and Bin Bounds...'))
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Calculating Histogram Counts and Bin Bounds...'))
 
     input_data_array = data_structure[input_data_path]
     input_data_store = input_data_array.store
@@ -156,7 +156,7 @@ class CalculateHistogramFilter:
     bin_bounds_npdata[:] = bin_min_max_pairs
 
     if generate_histogram_image == True:
-      message_handler(sx.IFilter.Message(sx.IFilter.Message.Type.Info, f'Generating Histogram Image...'))
+      message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Generating Histogram Image...'))
 
       # Calculate figure size in inches
       figure_width_in = histogram_image_size[0] / histogram_image_dpi
@@ -191,4 +191,4 @@ class CalculateHistogramFilter:
       npdata = data_store.npview()
       npdata[:] = img_array
 
-    return sx.Result()
+    return nx.Result()

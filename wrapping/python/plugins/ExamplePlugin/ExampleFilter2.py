@@ -1,5 +1,5 @@
 from typing import List
-import simplnx as sx
+import simplnx as nx
 
 class ExampleFilter2:
   """
@@ -27,12 +27,12 @@ class ExampleFilter2:
   PARAM19_KEY = "param19"
   PARAM20_KEY = "param20"
 
-  def uuid(self) -> sx.Uuid:
+  def uuid(self) -> nx.Uuid:
     """This returns the UUID of the filter. Each filter has a unique UUID value
     :return: The Filter's Uuid value
     :rtype: string
     """
-    return sx.Uuid('654236f1-1fc7-4a1f-9ade-5a6206ef4283')
+    return nx.Uuid('654236f1-1fc7-4a1f-9ade-5a6206ef4283')
 
   def human_name(self) -> str:
     """This returns the name of the filter as a user of DREAM3DNX would see it
@@ -69,65 +69,65 @@ class ExampleFilter2:
     """
     return ExampleFilter2()
 
-  def parameters(self) -> sx.Parameters:
+  def parameters(self) -> nx.Parameters:
     """This function defines the parameters that are needed by the filter. Parameters collect the values from the user
        or through a pipeline file.
     """
-    params = sx.Parameters()
+    params = nx.Parameters()
 
-    params.insert(sx.Parameters.Separator("1st Group of Parameters"))
-    params.insert_linkable_parameter(sx.BoolParameter(ExampleFilter2.PARAM7_KEY, 'Bool Parameter', 'Example bool help text', True))
-    params.insert_linkable_parameter(sx.ChoicesParameter(ExampleFilter2.PARAM3_KEY, 'Choices Parameter', 'Example choices help text', 0, ["foo", "bar", "baz"]))
+    params.insert(nx.Parameters.Separator("1st Group of Parameters"))
+    params.insert_linkable_parameter(nx.BoolParameter(ExampleFilter2.PARAM7_KEY, 'Bool Parameter', 'Example bool help text', True))
+    params.insert_linkable_parameter(nx.ChoicesParameter(ExampleFilter2.PARAM3_KEY, 'Choices Parameter', 'Example choices help text', 0, ["foo", "bar", "baz"]))
 
-    params.insert(sx.Parameters.Separator("2nd Group of Parameters"))
+    params.insert(nx.Parameters.Separator("2nd Group of Parameters"))
     default_table = [[10, 20], [30, 40]]
-    row_info = sx.DynamicTableInfo.DynamicVectorInfo(0, "Row {}")
-    col_info = sx.DynamicTableInfo.DynamicVectorInfo(2, "Col {}")
-    dynamic_table_info = sx.DynamicTableInfo(sx.DynamicTableInfo.VectorInfo(row_info), sx.DynamicTableInfo.VectorInfo(col_info))
-    params.insert(sx.DynamicTableParameter(ExampleFilter2.PARAM13_KEY, 'DynamicTableParameter', 'DynamicTableParameter Example Help Text', default_table, dynamic_table_info))
+    row_info = nx.DynamicTableInfo.DynamicVectorInfo(0, "Row {}")
+    col_info = nx.DynamicTableInfo.DynamicVectorInfo(2, "Col {}")
+    dynamic_table_info = nx.DynamicTableInfo(nx.DynamicTableInfo.VectorInfo(row_info), nx.DynamicTableInfo.VectorInfo(col_info))
+    params.insert(nx.DynamicTableParameter(ExampleFilter2.PARAM13_KEY, 'DynamicTableParameter', 'DynamicTableParameter Example Help Text', default_table, dynamic_table_info))
 
-    params.insert(sx.Parameters.Separator("3rd Group of Parameters"))
-    params.insert(sx.MultiPathSelectionParameter(ExampleFilter2.PARAM19_KEY, "Objects to copy", "A list of DataPaths to the DataObjects to be copied", [sx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), sx.DataPath(["Small IN100", "Scan Data", "Euler Angles"])]))
-    params.insert(sx.NeighborListSelectionParameter(ExampleFilter2.PARAM20_KEY, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", sx.DataPath([]), set([sx.DataType.int32])))
+    params.insert(nx.Parameters.Separator("3rd Group of Parameters"))
+    params.insert(nx.MultiPathSelectionParameter(ExampleFilter2.PARAM19_KEY, "Objects to copy", "A list of DataPaths to the DataObjects to be copied", [nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), nx.DataPath(["Small IN100", "Scan Data", "Euler Angles"])]))
+    params.insert(nx.NeighborListSelectionParameter(ExampleFilter2.PARAM20_KEY, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", nx.DataPath([]), set([nx.DataType.int32])))
 
-    params.insert(sx.Parameters.Separator("Calculator Parameter"))
-    calc_param = sx.CalculatorParameter.ValueType( sx.DataPath(["Small IN100","Scan Data"]), "Confidence Index * 10", sx.CalculatorParameter.AngleUnits.Radians)
-    params.insert(sx.CalculatorParameter(ExampleFilter2.PARAM18_KEY, "CalculatorParameter", "Example help text for calculator parameter", calc_param))
+    params.insert(nx.Parameters.Separator("Calculator Parameter"))
+    calc_param = nx.CalculatorParameter.ValueType( nx.DataPath(["Small IN100","Scan Data"]), "Confidence Index * 10", nx.CalculatorParameter.AngleUnits.Radians)
+    params.insert(nx.CalculatorParameter(ExampleFilter2.PARAM18_KEY, "CalculatorParameter", "Example help text for calculator parameter", calc_param))
 
-    params.insert(sx.Parameters.Separator("Required Data Objects"))
-    params.insert(sx.DataGroupSelectionParameter(ExampleFilter2.PARAM9_KEY, 'DataGroupSelectionParameter', 'Example data group selection help text', sx.DataPath([]), set([sx.BaseGroup.GroupType.DataGroup])))
-    params.insert(sx.DataPathSelectionParameter(ExampleFilter2.PARAM10_KEY, 'DataPathSelectionParameter', 'Example data path selection help text', sx.DataPath([])))
-    params.insert(sx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', sx.DataPath([]), sx.get_all_data_types(), [[1]]))
-    params.insert(sx.GeometrySelectionParameter(ExampleFilter2.PARAM11_KEY, 'GeometrySelectionParameter', 'Example geometry selection help text', sx.DataPath([]), set()))
-    params.insert(sx.MultiArraySelectionParameter(ExampleFilter2.PARAM12_KEY, 'MultiArraySelectionParameter', 'Example multiarray selection help text', [], set([sx.IArray.ArrayType.Any]), sx.get_all_data_types(), [[1]]))
-    params.insert(sx.AttributeMatrixSelectionParameter(ExampleFilter2.PARAM17_KEY, "Cell Attribute Matrix", "Example attribute matrix selection help text", sx.DataPath([])))
+    params.insert(nx.Parameters.Separator("Required Data Objects"))
+    params.insert(nx.DataGroupSelectionParameter(ExampleFilter2.PARAM9_KEY, 'DataGroupSelectionParameter', 'Example data group selection help text', nx.DataPath([]), set([nx.BaseGroup.GroupType.DataGroup])))
+    params.insert(nx.DataPathSelectionParameter(ExampleFilter2.PARAM10_KEY, 'DataPathSelectionParameter', 'Example data path selection help text', nx.DataPath([])))
+    params.insert(nx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', nx.DataPath([]), nx.get_all_data_types(), [[1]]))
+    params.insert(nx.GeometrySelectionParameter(ExampleFilter2.PARAM11_KEY, 'GeometrySelectionParameter', 'Example geometry selection help text', nx.DataPath([]), set()))
+    params.insert(nx.MultiArraySelectionParameter(ExampleFilter2.PARAM12_KEY, 'MultiArraySelectionParameter', 'Example multiarray selection help text', [], set([nx.IArray.ArrayType.Any]), nx.get_all_data_types(), [[1]]))
+    params.insert(nx.AttributeMatrixSelectionParameter(ExampleFilter2.PARAM17_KEY, "Cell Attribute Matrix", "Example attribute matrix selection help text", nx.DataPath([])))
 
     params.link_parameters(ExampleFilter2.PARAM7_KEY, ExampleFilter2.PARAM9_KEY, True)
     params.link_parameters(ExampleFilter2.PARAM3_KEY, ExampleFilter2.PARAM10_KEY, 0)
     params.link_parameters(ExampleFilter2.PARAM3_KEY, ExampleFilter2.PARAM6_KEY, 1)
     params.link_parameters(ExampleFilter2.PARAM3_KEY, ExampleFilter2.PARAM11_KEY, 2)
 
-    params.insert(sx.Parameters.Separator("Created Data Objects"))
-    params.insert(sx.DataGroupCreationParameter(ExampleFilter2.PARAM8_KEY, 'DataGroupCreationParameter', 'Example data group creation help text', sx.DataPath([])))
-    params.insert(sx.ArrayCreationParameter(ExampleFilter2.PARAM5_KEY, 'Array Creation', 'Example array creation help text', sx.DataPath([])))
+    params.insert(nx.Parameters.Separator("Created Data Objects"))
+    params.insert(nx.DataGroupCreationParameter(ExampleFilter2.PARAM8_KEY, 'DataGroupCreationParameter', 'Example data group creation help text', nx.DataPath([])))
+    params.insert(nx.ArrayCreationParameter(ExampleFilter2.PARAM5_KEY, 'Array Creation', 'Example array creation help text', nx.DataPath([])))
 
     return params
 
-  def preflight_impl(self, data_structure: sx.DataStructure, args: dict, message_handler: sx.IFilter.MessageHandler, should_cancel: sx.AtomicBoolProxy) -> sx.IFilter.PreflightResult:
+  def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
     """This method preflights the filter and should ensure that all inputs are sanity checked as best as possible. Array
     sizes can be checked if the arrays are actually know at preflight time. Some filters will not be able to report output
     array sizes during preflight (segmentation filters for example).
     :returns:
-    :rtype: sx.IFilter.PreflightResult
+    :rtype: nx.IFilter.PreflightResult
     """
 
-    return sx.IFilter.PreflightResult()
+    return nx.IFilter.PreflightResult()
 
-  def execute_impl(self, data_structure: sx.DataStructure, args: dict, message_handler: sx.IFilter.MessageHandler, should_cancel: sx.AtomicBoolProxy) -> sx.IFilter.ExecuteResult:
+  def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
     """ This method actually executes the filter algorithm and reports results.
     :returns:
-    :rtype: sx.IFilter.ExecuteResult
+    :rtype: nx.IFilter.ExecuteResult
     """
 
-    return sx.Result()
+    return nx.Result()
 

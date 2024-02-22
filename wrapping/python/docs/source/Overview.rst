@@ -217,7 +217,7 @@ created.
 
 .. code:: python
 
-   create_array_filter = cx.CreateDataArray()
+   create_array_filter = nx.CreateDataArray()
    print(f'{create_array_filter.name()}')
    print(f'{create_array_filter.human_name()}')
    print(f'{create_array_filter.uuid()}')

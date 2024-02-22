@@ -47,7 +47,7 @@ then :ref:`DataStructure` goes out of scope those items will also be cleaned up.
 .. code:: python
 
     # Create a Data Structure
-    data_structure = cx.DataStructure()
+    data_structure = nx.DataStructure()
 
 
 Executing a Filter
@@ -72,16 +72,16 @@ An example of executing a file in immediate mode using a filter from the simplnx
 
 .. code:: python
 
-    import simplnx as sx
+    import simplnx as nx
 
-    result  = sx.CreateDataArray.execute(data_structure=data_structure, 
+    result  = nx.CreateDataArray.execute(data_structure=data_structure, 
                                         component_count=1, 
                                         data_format="", 
                                         initialization_value="10", 
-                                        numeric_type=sx.NumericType.float32, 
-                                        output_data_array=sx.DataPath(["3D Array"]), 
+                                        numeric_type=nx.NumericType.float32, 
+                                        output_data_array=nx.DataPath(["3D Array"]), 
                                         tuple_dimensions= [[3, 2, 5]])
-    npdata = data_structure[sx.DataPath(["3D Array"])].npview()
+    npdata = data_structure[nx.DataPath(["3D Array"])].npview()
 
 The resulting :ref:`DataArray <DataArray>` is available for use immediately following the execution of the filter.
 This would not be the case had the filter just been instantiated but not executed.
@@ -91,7 +91,7 @@ Executing Python filters directly from Python is similar, but has an additional 
 .. code:: python
 
     from ExamplePlugin import ExampleFilter2
-    f = sx.PyFilter(ExampleFilter2())
+    f = nx.PyFilter(ExampleFilter2())
 
 This code wraps the Python filter ExampleFilter2 into a PyFilter instance so that it can be executed by *simplnx*.  Here is the full example of executing the Python filter **ExampleFilter2** from plugin **ExamplePlugin** in immediate mode:
 
@@ -99,8 +99,8 @@ This code wraps the Python filter ExampleFilter2 into a PyFilter instance so tha
 
     from ExamplePlugin import ExampleFilter2
 
-    f = sx.PyFilter(ExampleFilter2())
-    ds = sx.DataStructure()
+    f = nx.PyFilter(ExampleFilter2())
+    ds = nx.DataStructure()
     result = f.preflight2(ds)
     result = f.execute2(ds)
 
@@ -114,8 +114,8 @@ A :ref:`DataGroup` can be created with the :ref:`simplnx.CreateDataGroup.Execute
 .. code:: python
 
     # Create a top level group: (Not needed)
-    result = cx.CreateDataGroup.execute(data_structure=data_structure,
-                                        Data_Object_Path=cx.DataPath(['Group']))
+    result = nx.CreateDataGroup.execute(data_structure=data_structure,
+                                        Data_Object_Path=nx.DataPath(['Group']))
 
 Creating a DataArray
 --------------------
@@ -127,12 +127,12 @@ of the method is as follows.
 .. code:: python
 
     # Instantiate and execute immediately teh CreateDataArray Filter
-    result  = cx.CreateDataArray.execute(data_structure=data_structure, 
+    result  = nx.CreateDataArray.execute(data_structure=data_structure, 
                                         component_count=1, 
                                         data_format="", 
                                         initialization_value="10", 
-                                        numeric_type=cx.NumericType.float32, 
-                                        output_data_array=cx.DataPath(["3D Array"]), 
+                                        numeric_type=nx.NumericType.float32, 
+                                        output_data_array=nx.DataPath(["3D Array"]), 
                                         tuple_dimensions= [[3, 2, 5]])
     # The returned result holds any warnings or errors that occurred during execution
     if len(result.errors) != 0:
@@ -141,7 +141,7 @@ of the method is as follows.
     else:
         print("No errors running the filter")
     # We get a numpy view of the created DataArray
-    npdata = data_structure[cx.DataPath(["3D Array"])].store.npview()
+    npdata = data_structure[nx.DataPath(["3D Array"])].store.npview()
 
 This can be useful to get external data into the DataStructure so that any of the filters
 can be applied to that data. For instance, using Numpy's 'load' function can load
@@ -167,16 +167,16 @@ In order to import a .dream3d file, we need to tell **simplnx** which data to im
 
 .. code:: python
 
-    # Create the DataStructure object    data_structure = cx.DataStructure()
-    # Create a cx.Dream3dImportParameter.ImportData object and set its values
-    import_data = cx.Dream3dImportParameter.ImportData()
+    # Create the DataStructure object    data_structure = nx.DataStructure()
+    # Create a nx.Dream3dImportParameter.ImportData object and set its values
+    import_data = nx.Dream3dImportParameter.ImportData()
     # Set the path to the file on the file system
     import_data.file_path = "/tmp/basic_ebsd.dream3d"
     # Set the import_data.data_paths value to 'None' which signals to the filter to
     # import EVERY piece of data from the file.
     import_data.data_paths = None
     # Instantiate and execte the filter immediately.
-    result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+    result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
     # Check for any execution warnings or errors
     if len(result.errors) != 0:
         print('Errors: {}', result.errors)
@@ -190,7 +190,7 @@ Once the filter executes, you can fetch data from the DataStructure using the us
 .. code:: python
 
     # We get a numpy view of the created DataArray
-    npdata = data_structure[cx.DataPath(["3D Array"])].store.npview()
+    npdata = data_structure[nx.DataPath(["3D Array"])].store.npview()
 
 
 Exporting a .dream3d File
@@ -203,7 +203,7 @@ The filter will write the **complete** contents of the DataStructure to the HDF5
 .. code:: python
 
     output_file_path = "output_file_example.dream3d"
-    result = cx.WriteDREAM3DFilter.execute(data_structure=data_structure,
+    result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure,
                                             export_file_path=output_file_path, 
                                             write_xdmf_file=True)
     if len(result.errors) != 0:
@@ -221,13 +221,13 @@ Here is an example of creating the simplest of Geometries, the Image Geometry
 
 .. code:: python
 
-    # Create the DataStructure object    data_structure = cx.DataStructure()
+    # Create the DataStructure object    data_structure = nx.DataStructure()
     ig_dims = [10, 20, 30] # <===== NOTE: These are in XYZ order
-    result = cx.CreateGeometryFilter.execute(  data_structure=data_structure,
+    result = nx.CreateGeometryFilter.execute(  data_structure=data_structure,
         array_handling= 0,  # This does not matter for Image Geometry
         cell_attribute_matrix_name="Cell Data",
         dimensions=ig_dims, # Note that the dimensions are list as  X, Y, Z
-        geometry_name=cx.DataPath(["Image Geometry"]),
+        geometry_name=nx.DataPath(["Image Geometry"]),
         geometry_type=0, # 0 = Image Geometry. See the complete fiter documentation for the possible values
         origin=[0.0, 0.0, 0.0],
         spacing=[1.0, 1.0, 1.0])
@@ -250,9 +250,9 @@ connectivity from a sample file.
 .. code:: python
 
     # Create the vertex array and fill it from data on disk
-    array_path = cx.DataPath(['Vertices'])
-    result = cx.CreateDataArray.execute(data_structure,
-                                        numeric_type=cx.NumericType.float32,
+    array_path = nx.DataPath(['Vertices'])
+    result = nx.CreateDataArray.execute(data_structure,
+                                        numeric_type=nx.NumericType.float32,
                                         component_count=3,
                                         tuple_dimensions=[[144]],
                                         output_data_array=array_path,
@@ -262,9 +262,9 @@ connectivity from a sample file.
     vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
     # Create the triangle connectivity array and fill it from data on disk
-    array_path = cx.DataPath(['Triangles'])
-    result = cx.CreateDataArray.execute(data_structure,
-                                        numeric_type=cx.NumericType.uint64,
+    array_path = nx.DataPath(['Triangles'])
+    result = nx.CreateDataArray.execute(data_structure,
+                                        numeric_type=nx.NumericType.uint64,
                                         component_count=3,
                                         tuple_dimensions=[[242]],
                                         output_data_array=array_path,
@@ -273,15 +273,15 @@ connectivity from a sample file.
     file_path = 'simplnx/test/Data/TriangleConnectivity.csv'
     triangles[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
-    result = cx.CreateGeometryFilter.execute(data_structure=data_structure,
+    result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
         array_handling= 1,  # Move the arrays from their original location.
-        geometry_name=cx.DataPath(["Triangle Geometry"]),
+        geometry_name=nx.DataPath(["Triangle Geometry"]),
         geometry_type=4,
         face_attribute_matrix_name="Triangle Data",
         edge_attribute_matrix_name="Triangle Edge Data",
         vertex_attribute_matrix_name="Vertex Data",
-        vertex_list_name=cx.DataPath(['Vertices']),
-        triangle_list_name=cx.DataPath(['Triangles'])
+        vertex_list_name=nx.DataPath(['Vertices']),
+        triangle_list_name=nx.DataPath(['Triangles'])
         )
     if len(result.errors) != 0:
         print('Errors: {}', result.errors)
@@ -314,12 +314,12 @@ The next code section was take from `basic_arrays.py <https://github.com/bluequa
     import numpy as np
 
     # Create a Data Structure
-    data_structure = cx.DataStructure()    
+    data_structure = nx.DataStructure()    
 
-    output_array_path = cx.DataPath(["1D Array"])
-    array_type = cx.NumericType.float32
+    output_array_path = nx.DataPath(["1D Array"])
+    array_type = nx.NumericType.float32
     tuple_dims = [[10]]
-    create_array_filter = cx.CreateDataArray()
+    create_array_filter = nx.CreateDataArray()
     result  = create_array_filter.execute(data_structure=data_structure, 
                                         component_count=1, 
                                         data_format="", 
@@ -336,11 +336,11 @@ The next code section was take from `basic_arrays.py <https://github.com/bluequa
 .. code:: python
 
     import simplnx as nx
-    data_structure = cx.DataStructure()
+    data_structure = nx.DataStructure()
     # Create a DataArray to copy the Euler Angles into 
-    array_path = cx.DataPath(['Euler Angles'])
-    result = cx.CreateDataArray.execute(data_structure=data_structure,
-                                    numeric_type=cx.NumericType.float32,
+    array_path = nx.DataPath(['Euler Angles'])
+    result = nx.CreateDataArray.execute(data_structure=data_structure,
+                                    numeric_type=nx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[99]],
                                     output_data_array=array_path,
@@ -350,7 +350,7 @@ The next code section was take from `basic_arrays.py <https://github.com/bluequa
     file_path = 'angles.csv'
     npdata[:] = np.loadtxt(file_path, delimiter=',')
     # Run the ConvertOrientation Filter to convert the Eulers to Quaternions
-    quat_path = cx.DataPath(['Quaternions'])
+    quat_path = nx.DataPath(['Quaternions'])
     result = cxor.ConvertOrientations.execute(data_structure=data_structure,
                                             input_orientation_array_path=array_path,
                                             input_type=0,

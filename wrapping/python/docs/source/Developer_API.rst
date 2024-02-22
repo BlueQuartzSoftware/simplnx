@@ -12,7 +12,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      ArrayCreationParameter(name: str, human_name: str, help_text: str, default_value: DataPath)
+      ArrayCreationParameter(name: str, human_name: str, help_text: str, default_value: DataPath) -> None
 
    Description
    ~~~~~~~~~~~
@@ -41,10 +41,10 @@ General Parameters
 
    .. code:: python
       
-      import simplnx as sx
+      import simplnx as nx
       
-      data_path = sx.DataPath(["Small IN100", "Scan Data", "Data"])
-      params.insert(sx.ArrayCreationParameter(ExampleFilter2.PARAM5_KEY, 'Array Creation', 'Example array creation help text', data_path))
+      data_path = nx.DataPath(["Small IN100", "Scan Data", "Data"])
+      params.insert(nx.ArrayCreationParameter(ExampleFilter2.PARAM5_KEY, 'Array Creation', 'Example array creation help text', data_path))
 
 .. _ArraySelectionParameter:
 .. py:class:: ArraySelectionParameter
@@ -53,7 +53,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      ArraySelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[DataType], required_comps: List[List[int]] = ..., location: ArraySelectionParameter.DataLocation = ...)
+      ArraySelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[DataType], required_comps: List[List[int]] = ..., location: ArraySelectionParameter.DataLocation = ...) -> None
 
    Description
    ~~~~~~~~~~~
@@ -94,10 +94,10 @@ General Parameters
 
    .. code:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      data_path = sx.DataPath(["Small IN100", "Scan Data", "Data"])
-      params.insert(sx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', data_path, sx.get_all_data_types(), [[1]]))
+      data_path = nx.DataPath(["Small IN100", "Scan Data", "Data"])
+      params.insert(nx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', data_path, nx.get_all_data_types(), [[1]]))
 
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
@@ -106,7 +106,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      ArrayThresholdsParameter(name: str, human_name: str, help_text: str, default_value: ArrayThresholdSet, required_comps: List[List[int]] = ...)
+      ArrayThresholdsParameter(name: str, human_name: str, help_text: str, default_value: ArrayThresholdSet, required_comps: List[List[int]] = ...) -> None
 
    Description
    ~~~~~~~~~~~
@@ -174,9 +174,9 @@ General Parameters
    ~~~~~~
    .. code:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.ArrayThresholdsParameter('data_thresholds_key', 'Data Thresholds', 'DataArray thresholds to mask', sx.ArrayThresholdSet()))
+      params.insert(nx.ArrayThresholdsParameter('data_thresholds_key', 'Data Thresholds', 'DataArray thresholds to mask', nx.ArrayThresholdSet()))
  
 .. _ArrayThresholdSet:
 .. py:class:: ArrayThresholdSet
@@ -200,22 +200,22 @@ General Parameters
 
   .. code:: python
 
-   threshold_1 = cx.ArrayThreshold()
-   threshold_1.array_path = cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
-   threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
+   threshold_1 = nx.ArrayThreshold()
+   threshold_1.array_path = nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
+   threshold_1.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_1.value = 0.1
 
-   threshold_2 = cx.ArrayThreshold()
-   threshold_2.array_path = cx.DataPath(["Small IN100", "Scan Data", "Image Quality"])
-   threshold_2.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
+   threshold_2 = nx.ArrayThreshold()
+   threshold_2.array_path = nx.DataPath(["Small IN100", "Scan Data", "Image Quality"])
+   threshold_2.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_2.value = 120
 
-   threshold_set = cx.ArrayThresholdSet()
+   threshold_set = nx.ArrayThresholdSet()
    threshold_set.thresholds = [threshold_1, threshold_2]
-   result = cx.MultiThresholdObjects.execute(data_structure=data_structure,
+   result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
                                        array_thresholds=threshold_set, 
                                        created_data_path="Mask",
-                                       created_mask_type=cx.DataType.boolean)
+                                       created_mask_type=nx.DataType.boolean)
 
 .. _AttributeMatrixSelectionParameter:
 .. py:class:: AttributeMatrixSelectionParameter
@@ -224,7 +224,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      AttributeMatrixSelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath)
+      AttributeMatrixSelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath) -> None
 
    Description
    ~~~~~~~~~~~
@@ -253,9 +253,9 @@ General Parameters
 
    .. code:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.AttributeMatrixSelectionParameter('cell_attr_matrix_key', "Cell Attribute Matrix", "Example attribute matrix selection help text", sx.DataPath(["Image Geometry", "Cell Data"])))
+      params.insert(nx.AttributeMatrixSelectionParameter('cell_attr_matrix_key', "Cell Attribute Matrix", "Example attribute matrix selection help text", nx.DataPath(["Image Geometry", "Cell Data"])))
 
 .. _BoolParameter:
 .. py:class:: BoolParameter
@@ -264,7 +264,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      BoolParameter(name: str, human_name: str, help_text: str, default_value: bool)
+      BoolParameter(name: str, human_name: str, help_text: str, default_value: bool) -> None
 
    Description
    ~~~~~~~~~~~
@@ -295,9 +295,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.BoolParameter('example_bool_key', 'Bool Parameter', 'Example bool help text', False))
+      params.insert(nx.BoolParameter('example_bool_key', 'Bool Parameter', 'Example bool help text', False))
    
    Linked Usage
    ~~~~~~~~~~~~~
@@ -305,10 +305,10 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert_linkable_parameter(sx.BoolParameter('example_bool_key', 'Bool Parameter', 'Example bool help text', True))
-      params.insert(sx.DataGroupSelectionParameter('example_data_group_selection_key', 'DataGroupSelectionParameter', 'Example data group selection help text', sx.DataPath([]), set([sx.BaseGroup.GroupType.DataGroup])))
+      params.insert_linkable_parameter(nx.BoolParameter('example_bool_key', 'Bool Parameter', 'Example bool help text', True))
+      params.insert(nx.DataGroupSelectionParameter('example_data_group_selection_key', 'DataGroupSelectionParameter', 'Example data group selection help text', nx.DataPath([]), set([nx.BaseGroup.GroupType.DataGroup])))
 
       params.link_parameters('example_bool_key', 'example_data_group_selection_key', True)
 
@@ -319,7 +319,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      CalculatorParameter(name: str, human_name: str, help_text: str, default_value: CalculatorParameter.ValueType)
+      CalculatorParameter(name: str, human_name: str, help_text: str, default_value: CalculatorParameter.ValueType) -> None
 
    Description
    ~~~~~~~~~~~
@@ -331,7 +331,7 @@ General Parameters
 
    :ivar selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray <DataArray>` that will be used in the equations
    :ivar equation: String. The equation that will be evaluated
-   :ivar units: cx.CalculatorParameter.AngleUnits.Radians or cx.CalculatorParameter.AngleUnits.Degrees
+   :ivar units: nx.CalculatorParameter.AngleUnits.Radians or nx.CalculatorParameter.AngleUnits.Degrees
 
    Inputs
    ~~~~~~
@@ -353,17 +353,17 @@ General Parameters
       - **Internal Data**: The values that are contained within the CalculatorParameter.ValueType.
          - selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray <DataArray>` that will be used in the equations.
          - equation: String. The equation that will be evaluated.
-         - units: sx.CalculatorParameter.AngleUnits.Radians or sx.CalculatorParameter.AngleUnits.Degrees
+         - units: nx.CalculatorParameter.AngleUnits.Radians or nx.CalculatorParameter.AngleUnits.Degrees
 
    Usage
    ~~~~~~
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      calc_param = sx.CalculatorParameter.ValueType( sx.DataPath(["Small IN100","Scan Data"]), "Confidence Index * 10", sx.CalculatorParameter.AngleUnits.Radians)
-      params.insert(sx.CalculatorParameter(ExampleFilter2.PARAM18_KEY, "CalculatorParameter", "Example help text for calculator parameter", calc_param))
+      calc_param = nx.CalculatorParameter.ValueType( nx.DataPath(["Small IN100","Scan Data"]), "Confidence Index * 10", nx.CalculatorParameter.AngleUnits.Radians)
+      params.insert(nx.CalculatorParameter(ExampleFilter2.PARAM18_KEY, "CalculatorParameter", "Example help text for calculator parameter", calc_param))
 
 .. _ChoicesParameter:
 .. py:class:: ChoicesParameter
@@ -372,7 +372,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      ChoicesParameter(name: str, human_name: str, help_text: str, default_value: int, choices: List[str])
+      ChoicesParameter(name: str, human_name: str, help_text: str, default_value: int, choices: List[str]) -> None
 
    Description
    ~~~~~~~~~~~
@@ -405,9 +405,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.ChoicesParameter('example_choices_key', 'Choices Parameter', 'Example choices help text', 0, ["foo", "bar", "baz"]))
+      params.insert(nx.ChoicesParameter('example_choices_key', 'Choices Parameter', 'Example choices help text', 0, ["foo", "bar", "baz"]))
    
    Linked Usage
    ~~~~~~~~~~~~~
@@ -415,10 +415,10 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert_linkable_parameter(sx.ChoicesParameter('example_choices_key', 'Choices Parameter', 'Example choices help text', 0, ["foo", "bar", "baz"]))
-      params.insert(sx.DataPathSelectionParameter('example_data_path_selection_key', 'DataPathSelectionParameter', 'Example data path selection help text', sx.DataPath([])))
+      params.insert_linkable_parameter(nx.ChoicesParameter('example_choices_key', 'Choices Parameter', 'Example choices help text', 0, ["foo", "bar", "baz"]))
+      params.insert(nx.DataPathSelectionParameter('example_data_path_selection_key', 'DataPathSelectionParameter', 'Example data path selection help text', nx.DataPath([])))
 
       params.link_parameters('example_choices_key', 'example_data_path_selection_key', 1)
 
@@ -429,7 +429,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      DataGroupCreationParameter(name: str, human_name: str, help_text: str, default_value: DataPath)
+      DataGroupCreationParameter(name: str, human_name: str, help_text: str, default_value: DataPath) -> None
 
    Description
    ~~~~~~~~~~~
@@ -458,9 +458,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.DataGroupCreationParameter('example_data_group_creation_key', 'DataGroupCreationParameter', 'Example data group creation help text', sx.DataPath([])))
+      params.insert(nx.DataGroupCreationParameter('example_data_group_creation_key', 'DataGroupCreationParameter', 'Example data group creation help text', nx.DataPath([])))
 
 .. _DataGroupSelectionParameter:
 .. py:class:: DataGroupSelectionParameter
@@ -469,7 +469,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      DataGroupSelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[BaseGroup.GroupType])
+      DataGroupSelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[BaseGroup.GroupType]) -> None
 
    Description
    ~~~~~~~~~~~
@@ -502,9 +502,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.DataGroupSelectionParameter('example_data_group_selection_key', 'DataGroupSelectionParameter', 'Example data group selection help text', sx.DataPath([]), set([sx.BaseGroup.GroupType.DataGroup])))
+      params.insert(nx.DataGroupSelectionParameter('example_data_group_selection_key', 'DataGroupSelectionParameter', 'Example data group selection help text', nx.DataPath([]), set([nx.BaseGroup.GroupType.DataGroup])))
 
 .. _DataObjectNameParameter:
 .. py:class:: DataObjectNameParameter
@@ -513,7 +513,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      DataObjectNameParameter(name: str, human_name: str, help_text: str, default_value: str)
+      DataObjectNameParameter(name: str, human_name: str, help_text: str, default_value: str) -> None
 
    Description
    ~~~~~~~~~~~
@@ -542,9 +542,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.DataObjectNameParameter('data_object_name_key', "DataObjectNameParameter", "Example help text for DataObjectNameParameter", "Data Group"))
+      params.insert(nx.DataObjectNameParameter('data_object_name_key', "DataObjectNameParameter", "Example help text for DataObjectNameParameter", "Data Group"))
 
 .. _DataPathSelectionParameter:
 .. py:class:: DataPathSelectionParameter
@@ -553,7 +553,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      DataPathSelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath)
+      DataPathSelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath) -> None
 
    Description
    ~~~~~~~~~~~
@@ -582,9 +582,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.DataPathSelectionParameter('example_data_path_key', 'DataPathSelectionParameter', 'Example data path selection help text', sx.DataPath([])))
+      params.insert(nx.DataPathSelectionParameter('example_data_path_key', 'DataPathSelectionParameter', 'Example data path selection help text', nx.DataPath([])))
 
 .. _DataStoreFormatParameter:
 .. py:class:: DataStoreFormatParameter
@@ -593,7 +593,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      DataStoreFormatParameter(name: str, human_name: str, help_text: str, default_value: str)
+      DataStoreFormatParameter(name: str, human_name: str, help_text: str, default_value: str) -> None
 
    Description
    ~~~~~~~~~~~
@@ -624,9 +624,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.DataStoreFormatParameter('data_store_format_key', 'Data Store Format', 'This value will specify which data format is used by the array\'s data store. An empty string results in in-memory data store.', ""))
+      params.insert(nx.DataStoreFormatParameter('data_store_format_key', 'Data Store Format', 'This value will specify which data format is used by the array\'s data store. An empty string results in in-memory data store.', ""))
 
 .. _DataTypeParameter:
 .. py:class:: DataTypeParameter
@@ -635,7 +635,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      DataTypeParameter(name: str, human_name: str, help_text: str, default_value: DataType)
+      DataTypeParameter(name: str, human_name: str, help_text: str, default_value: DataType) -> None
 
    Description
    ~~~~~~~~~~~
@@ -645,17 +645,17 @@ General Parameters
 
    .. code:: python
 
-      cx.DataType.int8
-      cx.DataType.uint8
-      cx.DataType.int16
-      cx.DataType.uint16
-      cx.DataType.int32
-      cx.DataType.uint32
-      cx.DataType.int64
-      cx.DataType.uint64
-      cx.DataType.float32
-      cx.DataType.float64
-      cx.DataType.boolean
+      nx.DataType.int8
+      nx.DataType.uint8
+      nx.DataType.int16
+      nx.DataType.uint16
+      nx.DataType.int32
+      nx.DataType.uint32
+      nx.DataType.int64
+      nx.DataType.uint64
+      nx.DataType.float32
+      nx.DataType.float64
+      nx.DataType.boolean
 
    Inputs
    ~~~~~~
@@ -680,9 +680,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.DataTypeParameter('data_type_key', "Data Type", "Example data type help text", sx.DataType.float64))
+      params.insert(nx.DataTypeParameter('data_type_key', "Data Type", "Example data type help text", nx.DataType.float64))
 
 .. _Dream3dImportParameter:
 .. py:class:: Dream3dImportParameter
@@ -691,7 +691,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      Dream3dImportParameter(name: str, human_name: str, help_text: str, default_value: Dream3dImportParameter.ImportData)
+      Dream3dImportParameter(name: str, human_name: str, help_text: str, default_value: Dream3dImportParameter.ImportData) -> None
 
    Description
    ~~~~~~~~~~~
@@ -723,12 +723,12 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      import_data = sx.Dream3dImportParameter.ImportData()
+      import_data = nx.Dream3dImportParameter.ImportData()
       import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
       import_data.data_paths = None
-      params.insert(sx.Dream3dImportParameter('import_file_path_key', "Import File Path", "The HDF5 file path the DataStructure should be imported from.", import_data))
+      params.insert(nx.Dream3dImportParameter('import_file_path_key', "Import File Path", "The HDF5 file path the DataStructure should be imported from.", import_data))
 
 .. _DynamicTableParameter:
 .. py:class:: DynamicTableParameter
@@ -803,13 +803,13 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
       default_table = [[10, 20], [30, 40]]
-      row_info = sx.DynamicTableInfo.DynamicVectorInfo(0, "Row {}")
-      col_info = sx.DynamicTableInfo.DynamicVectorInfo(2, "Col {}")
-      dynamic_table_info = sx.DynamicTableInfo(sx.DynamicTableInfo.VectorInfo(row_info), sx.DynamicTableInfo.VectorInfo(col_info))
-      params.insert(sx.DynamicTableParameter('dynamic_table', 'DynamicTableParameter', 'DynamicTableParameter Example Help Text', default_table, dynamic_table_info))
+      row_info = nx.DynamicTableInfo.DynamicVectorInfo(0, "Row {}")
+      col_info = nx.DynamicTableInfo.DynamicVectorInfo(2, "Col {}")
+      dynamic_table_info = nx.DynamicTableInfo(nx.DynamicTableInfo.VectorInfo(row_info), nx.DynamicTableInfo.VectorInfo(col_info))
+      params.insert(nx.DynamicTableParameter('dynamic_table', 'DynamicTableParameter', 'DynamicTableParameter Example Help Text', default_table, dynamic_table_info))
 
 .. _EnsembleInfoParameter:
 .. py:class:: EnsembleInfoParameter
@@ -818,7 +818,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      EnsembleInfoParameter(name: str, human_name: str, help_text: str, default_value)
+      EnsembleInfoParameter(name: str, human_name: str, help_text: str, default_value) -> None
 
    Description
    ~~~~~~~~~~~
@@ -875,12 +875,12 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
       ensemble_info = []
       ensemble_info.append(["Hexagonal-High 6/mmm","Primary","Phase 1"])
       ensemble_info.append(["Cubic-High m-3m","Primary","Phase 2"])
-      params.insert(sx.EnsembleInfoParameter('created_ensemble_info_key', "Created Ensemble Info", "The values with which to populate the crystal structures, phase types, and phase names data arrays. Each row corresponds to an ensemble phase.", ensemble_info))
+      params.insert(nx.EnsembleInfoParameter('created_ensemble_info_key', "Created Ensemble Info", "The values with which to populate the crystal structures, phase types, and phase names data arrays. Each row corresponds to an ensemble phase.", ensemble_info))
 
 .. _FileSystemPathParameter:
 .. py:class:: FileSystemPathParameter
@@ -889,7 +889,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      FileSystemPathParameter(name: str, human_name: str, help_text: str, default_value: os.PathLike, extensions_type: Set[str], path_type: FileSystemPathParameter.PathType, accept_all_extensions: bool = ...)
+      FileSystemPathParameter(name: str, human_name: str, help_text: str, default_value: os.PathLike, extensions_type: Set[str], path_type: FileSystemPathParameter.PathType, accept_all_extensions: bool = ...) -> None
 
    Description
    ~~~~~~~~~~~
@@ -930,12 +930,12 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.FileSystemPathParameter('input_dir', 'Input Directory', 'Example input directory help text', 'Data', set(), sx.FileSystemPathParameter.PathType.InputDir))
-      params.insert(sx.FileSystemPathParameter('input_file', 'Input File', 'Example input file help text', '/opt/local/bin/ninja', set(), sx.FileSystemPathParameter.PathType.InputFile, True))
-      params.insert(sx.FileSystemPathParameter('output_dir', 'Output Directory', 'Example output directory help text', 'Output Data', set(), sx.FileSystemPathParameter.PathType.OutputDir))
-      params.insert(sx.FileSystemPathParameter('output_file', 'Output File', 'Example output file help text', '', set(), sx.FileSystemPathParameter.PathType.OutputFile))
+      params.insert(nx.FileSystemPathParameter('input_dir', 'Input Directory', 'Example input directory help text', 'Data', set(), nx.FileSystemPathParameter.PathType.InputDir))
+      params.insert(nx.FileSystemPathParameter('input_file', 'Input File', 'Example input file help text', '/opt/local/bin/ninja', set(), nx.FileSystemPathParameter.PathType.InputFile, True))
+      params.insert(nx.FileSystemPathParameter('output_dir', 'Output Directory', 'Example output directory help text', 'Output Data', set(), nx.FileSystemPathParameter.PathType.OutputDir))
+      params.insert(nx.FileSystemPathParameter('output_file', 'Output File', 'Example output file help text', '', set(), nx.FileSystemPathParameter.PathType.OutputFile))
 
 .. _GenerateColorTableParameter:
 .. py:class:: GenerateColorTableParameter
@@ -944,7 +944,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      GenerateColorTableParameter(name: str, human_name: str, help_text: str, default_value: Json)
+      GenerateColorTableParameter(name: str, human_name: str, help_text: str, default_value: Json) -> None
 
    Description
    ~~~~~~~~~~~
@@ -978,17 +978,17 @@ General Parameters
 
       .. code:: python
 
-         color_control_points = cx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
+         color_control_points = nx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
 
    Usage
    ~~~~~~
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      color_control_points = sx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
-      params.insert(sx.GenerateColorTableParameter('color_table_preset_key', "Select Preset...", "Select a preset color scheme to apply to the created array", color_control_points))
+      color_control_points = nx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
+      params.insert(nx.GenerateColorTableParameter('color_table_preset_key', "Select Preset...", "Select a preset color scheme to apply to the created array", color_control_points))
 
 .. _GeneratedFileListParameter:
 .. py:class:: GeneratedFileListParameter
@@ -997,7 +997,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      GeneratedFileListParameter(name: str, human_name: str, help_text: str, default_value: GeneratedFileListParameter.ValueType)
+      GeneratedFileListParameter(name: str, human_name: str, help_text: str, default_value: GeneratedFileListParameter.ValueType) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1074,11 +1074,11 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      generated_file_list_value = sx.GeneratedFileListParameter.ValueType()
+      generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
       generated_file_list_value.input_path = "DREAM3DNXData/Data/Porosity_Image"
-      generated_file_list_value.ordering = sx.GeneratedFileListParameter.Ordering.LowToHigh
+      generated_file_list_value.ordering = nx.GeneratedFileListParameter.Ordering.LowToHigh
       generated_file_list_value.file_prefix = "slice-"
       generated_file_list_value.file_suffix = ""
       generated_file_list_value.file_extension = ".tif"
@@ -1086,7 +1086,7 @@ General Parameters
       generated_file_list_value.end_index = 174
       generated_file_list_value.increment_index = 1
       generated_file_list_value.padding_digits = 2
-      params.insert(sx.GeneratedFileListParameter('input_file_list_key', "Input File List", "The list of files to be read", generated_file_list_value))
+      params.insert(nx.GeneratedFileListParameter('input_file_list_key', "Input File List", "The list of files to be read", generated_file_list_value))
 
 .. _GeometrySelectionParameter:
 .. py:class:: GeometrySelectionParameter
@@ -1095,7 +1095,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      GeometrySelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[IGeometry.Type])
+      GeometrySelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[IGeometry.Type]) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1141,9 +1141,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.GeometrySelectionParameter('example_geometry_selection_parameter', 'GeometrySelectionParameter', 'Example geometry selection help text', sx.DataPath([]), set([sx.IGeometry.Type.Image, sx.IGeometry.Type.RectGrid])))
+      params.insert(nx.GeometrySelectionParameter('example_geometry_selection_parameter', 'GeometrySelectionParameter', 'Example geometry selection help text', nx.DataPath([]), set([nx.IGeometry.Type.Image, nx.IGeometry.Type.RectGrid])))
 
 .. _ReadCSVFileParameter:
 .. py:class:: ReadCSVFileParameter
@@ -1152,7 +1152,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      ReadCSVFileParameter(self, name: str, human_name: str, help_text: str, default_value: ReadCSVDataParameter)
+      ReadCSVFileParameter(name: str, human_name: str, help_text: str, default_value: ReadCSVDataParameter) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1189,7 +1189,7 @@ General Parameters
 
       - ``column_data_types`` : List[DataType]
          - **Description**: The data types of the columns in the CSV file. Indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray <DataArray>`.
-         - **Type**: List of :ref:`cx.DataType<DataTypeParameter>`
+         - **Type**: List of :ref:`nx.DataType<DataTypeParameter>`
 
       - ``consecutive_delimiters`` : bool
          - **Description**: Flag indicating whether consecutive delimiters should be treated as a single delimiter.
@@ -1240,20 +1240,20 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
       
       # Example File has 7 columns to import
-      read_csv_data = sx.ReadCSVDataParameter()
+      read_csv_data = nx.ReadCSVDataParameter()
       read_csv_data.input_file_path = "/tmp/test_csv_data.csv"
       read_csv_data.start_import_row = 2
       read_csv_data.delimiters = [',']
       read_csv_data.custom_headers = []
-      read_csv_data.column_data_types = [sx.DataType.float32,sx.DataType.float32,sx.DataType.float32,sx.DataType.float32,sx.DataType.float32,sx.DataType.float32,sx.DataType.int32]
+      read_csv_data.column_data_types = [nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.int32]
       read_csv_data.skipped_array_mask = [False,False,False,False,False,False,False]
       read_csv_data.tuple_dims = [37989]
       read_csv_data.headers_line = 1
-      read_csv_data.header_mode = sx.ReadCSVDataParameter.HeaderMode.Line
-      params.insert(sx.ReadCSVFileParameter('csv_importer_data_key', "CSV Importer Data", "Holds all relevant csv file data collected from the custom interface", read_csv_data))
+      read_csv_data.header_mode = nx.ReadCSVDataParameter.HeaderMode.Line
+      params.insert(nx.ReadCSVFileParameter('csv_importer_data_key', "CSV Importer Data", "Holds all relevant csv file data collected from the custom interface", read_csv_data))
 
 .. _ReadH5EbsdFileParameter:
 .. py:class:: ReadH5EbsdFileParameter
@@ -1330,8 +1330,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      class ReadHDF5DatasetParameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: ReadHDF5DatasetParameter.ValueType) -> None: ...
+      ReadHDF5DatasetParameter(name: str, human_name: str, help_text: str, default_value: ReadHDF5DatasetParameter.ValueType) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1384,23 +1383,23 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      dataset1 = sx.ReadHDF5DatasetParameter.DatasetImportInfo()
+      dataset1 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
       dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
       dataset1.tuple_dims = "117,201,189"
       dataset1.component_dims = "1"
 
-      dataset2 = sx.ReadHDF5DatasetParameter.DatasetImportInfo()
+      dataset2 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
       dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
       dataset2.tuple_dims = "117,201,189"
       dataset2.component_dims = "3"
 
-      import_hdf5_param = sx.ReadHDF5DatasetParameter.ValueType()
+      import_hdf5_param = nx.ReadHDF5DatasetParameter.ValueType()
       import_hdf5_param.input_file = "SmallIN100_Final.dream3d"
       import_hdf5_param.datasets = [dataset1, dataset2]
 
-      params.insert(sx.ReadHDF5DatasetParameter('hdf5_file_key', "Select HDF5 File", "The HDF5 file data to import", import_hdf5_param))
+      params.insert(nx.ReadHDF5DatasetParameter('hdf5_file_key', "Select HDF5 File", "The HDF5 file data to import", import_hdf5_param))
 
 .. _MultiArraySelectionParameter:
 .. py:class:: MultiArraySelectionParameter
@@ -1409,8 +1408,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      class MultiArraySelectionParameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: List[DataPath], allowed_types: Set[IArray.ArrayType], allowed_data_types: Set[DataType], required_comps: List[List[int]] = ...) -> None: ...
+      MultiArraySelectionParameter(name: str, human_name: str, help_text: str, default_value: List[DataPath], allowed_types: Set[IArray.ArrayType], allowed_data_types: Set[DataType], required_comps: List[List[int]] = ...) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1451,9 +1449,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.MultiArraySelectionParameter(ExampleFilter2.PARAM12_KEY, 'MultiArraySelectionParameter', 'Example multiarray selection help text', [], set([sx.IArray.ArrayType.Any]), sx.get_all_data_types(), [[1]]))
+      params.insert(nx.MultiArraySelectionParameter(ExampleFilter2.PARAM12_KEY, 'MultiArraySelectionParameter', 'Example multiarray selection help text', [], set([nx.IArray.ArrayType.Any]), nx.get_all_data_types(), [[1]]))
 
 
 .. _MultiPathSelectionParameter:
@@ -1463,8 +1461,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      class MultiPathSelectionParameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: List[DataPath]) -> None: ...
+      MultiPathSelectionParameter(name: str, human_name: str, help_text: str, default_value: List[DataPath]) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1493,9 +1490,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
       
-      params.insert(sx.MultiPathSelectionParameter('objects_to_copy_key', "Objects to copy", "A list of DataPaths to the DataObjects to be copied", [sx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), sx.DataPath(["Small IN100", "Scan Data", "Euler Angles"])]))
+      params.insert(nx.MultiPathSelectionParameter('objects_to_copy_key', "Objects to copy", "A list of DataPaths to the DataObjects to be copied", [nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), nx.DataPath(["Small IN100", "Scan Data", "Euler Angles"])]))
 
 .. _NeighborListSelectionParameter:
 .. py:class:: NeighborListSelectionParameter
@@ -1504,8 +1501,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      class NeighborListSelectionParameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[DataType]) -> None: ...
+      NeighborListSelectionParameter(name: str, human_name: str, help_text: str, default_value: DataPath, allowed_types: Set[DataType]) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1538,9 +1534,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
       
-      params.insert(sx.NeighborListSelectionParameter('neighbor_list_key', "Neighbor List", "List of the contiguous neighboring Features for a given Feature", sx.DataPath([]), set([sx.DataType.int32])))
+      params.insert(nx.NeighborListSelectionParameter('neighbor_list_key', "Neighbor List", "List of the contiguous neighboring Features for a given Feature", nx.DataPath([]), set([nx.DataType.int32])))
 
 .. _NumericTypeParameter:
 .. py:class:: NumericTypeParameter
@@ -1549,8 +1545,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      class NumericTypeParameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: NumericType) -> None: ...
+      NumericTypeParameter(name: str, human_name: str, help_text: str, default_value: NumericType) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1590,9 +1585,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.NumericTypeParameter('numeric_type_key', 'Numeric Type', 'Example numeric type help text', sx.NumericType.int32))
+      params.insert(nx.NumericTypeParameter('numeric_type_key', 'Numeric Type', 'Example numeric type help text', nx.NumericType.int32))
 
 .. _StringParameter:
 .. py:class:: StringParameter
@@ -1601,8 +1596,7 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      class StringParameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: str) -> None: ...
+      StringParameter(name: str, human_name: str, help_text: str, default_value: str) -> None
 
    Description
    ~~~~~~~~~~~
@@ -1631,9 +1625,9 @@ General Parameters
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.StringParameter('string_key', 'StringParameter', 'Example string help text', 'Example String'))
+      params.insert(nx.StringParameter('string_key', 'StringParameter', 'Example string help text', 'Example String'))
 
 Numerical Parameters
 --------------------
@@ -1643,35 +1637,25 @@ Declarations
 
    .. code-block:: python
 
-      class Int8Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: int) -> None: ...
-      
-      class UInt8Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: int) -> None: ...
+      Int8Parameter(name: str, human_name: str, help_text: str, default_value: int) -> None
 
-      class Int16Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: int) -> None: ...
-      
-      class UInt16Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: int) -> None: ...
-      
-      class Int32Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: int) -> None: ...
-      
-      class UInt32Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: int) -> None: ...
-      
-      class Int64Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: int) -> None: ...
-      
-      class UInt64Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: int) -> None: ...
-      
-      class Float32Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: float) -> None: ...
-      
-      class Float64Parameter(IParameter):
-         def __init__(self, name: str, human_name: str, help_text: str, default_value: float) -> None: ...
+      UInt8Parameter(name: str, human_name: str, help_text: str, default_value: int) -> None
+
+      Int16Parameter(name: str, human_name: str, help_text: str, default_value: int) -> None
+
+      UInt16Parameter(name: str, human_name: str, help_text: str, default_value: int) -> None
+
+      Int32Parameter(name: str, human_name: str, help_text: str, default_value: int) -> None
+
+      UInt32Parameter(name: str, human_name: str, help_text: str, default_value: int) -> None
+
+      Int64Parameter(name: str, human_name: str, help_text: str, default_value: int) -> None
+
+      UInt64Parameter(name: str, human_name: str, help_text: str, default_value: int) -> None
+
+      Float32Parameter(name: str, human_name: str, help_text: str, default_value: float) -> None
+
+      Float64Parameter(name: str, human_name: str, help_text: str, default_value: float) -> None
 
 Description
 ~~~~~~~~~~~
@@ -1701,10 +1685,10 @@ Usage
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.Float32Parameter('float32_key', 'Float32Parameter', 'The 1st parameter', 0.1234))
-      params.insert(sx.Int32Parameter('int32_key', 'Int32Parameter', 'The 2nd parameter', 0))
+      params.insert(nx.Float32Parameter('float32_key', 'Float32Parameter', 'The 1st parameter', 0.1234))
+      params.insert(nx.Int32Parameter('int32_key', 'Int32Parameter', 'The 2nd parameter', 0))
 
 Numerical Vector Parameters
 ---------------------------
@@ -1806,7 +1790,7 @@ Usage
 
    .. code-block:: python
 
-      import simplnx as sx
+      import simplnx as nx
 
-      params.insert(sx.VectorInt32Parameter('3d_dimensions_key', '3D Dimensions', 'Example int32 vector help text', [-19, -100, 456], ["X", "Y", "Z"]))
-      params.insert(sx.VectorFloat64Parameter('quaternion_key', 'Quaternion', 'Example float64 vector help text', [0, 84.98, 234.12, 985.98], ["U", "V", "W", "X"]))
+      params.insert(nx.VectorInt32Parameter('3d_dimensions_key', '3D Dimensions', 'Example int32 vector help text', [-19, -100, 456], ["X", "Y", "Z"]))
+      params.insert(nx.VectorFloat64Parameter('quaternion_key', 'Quaternion', 'Example float64 vector help text', [0, 84.98, 234.12, 985.98], ["U", "V", "W", "X"]))

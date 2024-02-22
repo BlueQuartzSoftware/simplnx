@@ -12,7 +12,7 @@ API Additions 1.2.0
 
   .. code:: python
   
-    cx.Pipeline().to_file(name, file_path)
+    nx.Pipeline().to_file(name, file_path)
 
 Filter Changes 1.2.0
 ^^^^^^^^^^^^^^^^^^^^

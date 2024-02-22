@@ -35,7 +35,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = cx.DataPath("Small IN100/Scan Data/Data")
+    data_path = nx.DataPath("Small IN100/Scan Data/Data")
 
 .. _ArraySelectionParameter:
 .. py:class:: ArraySelectionParameter
@@ -45,7 +45,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = cx.DataPath("Small IN100/Scan Data/Data")
+    data_path = nx.DataPath("Small IN100/Scan Data/Data")
 
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
@@ -76,22 +76,22 @@ General Parameters
 
   .. code:: python
 
-   threshold_1 = cx.ArrayThreshold()
-   threshold_1.array_path = cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
-   threshold_1.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
+   threshold_1 = nx.ArrayThreshold()
+   threshold_1.array_path = nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
+   threshold_1.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_1.value = 0.1
 
-   threshold_2 = cx.ArrayThreshold()
-   threshold_2.array_path = cx.DataPath(["Small IN100", "Scan Data", "Image Quality"])
-   threshold_2.comparison = cx.ArrayThreshold.ComparisonType.GreaterThan
+   threshold_2 = nx.ArrayThreshold()
+   threshold_2.array_path = nx.DataPath(["Small IN100", "Scan Data", "Image Quality"])
+   threshold_2.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_2.value = 120
 
-   threshold_set = cx.ArrayThresholdSet()
+   threshold_set = nx.ArrayThresholdSet()
    threshold_set.thresholds = [threshold_1, threshold_2]
-   result = cx.MultiThresholdObjects.execute(data_structure=data_structure,
+   result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
                                        array_thresholds=threshold_set, 
                                        created_data_path="Mask",
-                                       created_mask_type=cx.DataType.boolean)
+                                       created_mask_type=nx.DataType.boolean)
 
 .. _AttributeMatrixSelectionParameter:
 .. py:class:: AttributeMatrixSelectionParameter
@@ -100,7 +100,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = cx.DataPath(["Small IN100", "Scan Data"])   
+    data_path = nx.DataPath(["Small IN100", "Scan Data"])   
 
 .. _BoolParameter:
 .. py:class:: BoolParameter
@@ -120,17 +120,17 @@ General Parameters
 
    :ivar selected_group: The :ref:`DataGroup<DataGroup>` or :ref:`AttributeMatrix<AttributeMatrix>` that contains the :ref:`DataArray <DataArray>` that will be used in the equations
    :ivar equation: String. The equation that will be evaluated
-   :ivar units: cx.CalculatorParameter.AngleUnits.Radians or cx.CalculatorParameter.AngleUnits.Degrees
+   :ivar units: nx.CalculatorParameter.AngleUnits.Radians or nx.CalculatorParameter.AngleUnits.Degrees
 
 .. code:: python
 
-   selected_group = cx.DataPath(["Small IN100","Scan Data"])
+   selected_group = nx.DataPath(["Small IN100","Scan Data"])
    infix_equation = "Confidence Index * 10"
-   calc_param = cx.CalculatorParameter.ValueType( selected_group, infix_equation, cx.CalculatorParameter.AngleUnits.Radians)
-   result = cx.ArrayCalculatorFilter.execute(data_structure = data_structure,
-                                             calculated_array=cx.DataPath(["Small IN100","Scan Data","Calulated CI"]), 
+   calc_param = nx.CalculatorParameter.ValueType( selected_group, infix_equation, nx.CalculatorParameter.AngleUnits.Radians)
+   result = nx.ArrayCalculatorFilter.execute(data_structure = data_structure,
+                                             calculated_array=nx.DataPath(["Small IN100","Scan Data","Calulated CI"]), 
                                              calculator_parameter = calc_param, 
-                                             scalar_type=cx.NumericType.float32)
+                                             scalar_type=nx.NumericType.float32)
 
 
 
@@ -153,7 +153,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = cx.DataPath(["Small IN100", "Scan Data"])
+    data_path = nx.DataPath(["Small IN100", "Scan Data"])
 
 .. _DataGroupSelectionParameter:
 .. py:class:: DataGroupSelectionParameter
@@ -162,7 +162,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = cx.DataPath(["Small IN100", "Scan Data"])
+    data_path = nx.DataPath(["Small IN100", "Scan Data"])
 
 .. _DataObjectNameParameter:
 .. py:class:: DataObjectNameParameter
@@ -180,7 +180,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
+    data_path = nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
 
 .. _DataStoreFormatParameter:
 .. py:class:: DataStoreFormatParameter
@@ -197,17 +197,17 @@ General Parameters
 
    .. code:: python
 
-      cx.DataType.int8
-      cx.DataType.uint8
-      cx.DataType.int16
-      cx.DataType.uint16
-      cx.DataType.int32
-      cx.DataType.uint32
-      cx.DataType.int64
-      cx.DataType.uint64
-      cx.DataType.float32
-      cx.DataType.float64
-      cx.DataType.boolean
+      nx.DataType.int8
+      nx.DataType.uint8
+      nx.DataType.int16
+      nx.DataType.uint16
+      nx.DataType.int32
+      nx.DataType.uint32
+      nx.DataType.int64
+      nx.DataType.uint64
+      nx.DataType.float32
+      nx.DataType.float64
+      nx.DataType.boolean
 
 .. _Dream3dImportParameter:
 .. py:class:: Dream3dImportParameter
@@ -225,10 +225,10 @@ General Parameters
 
 .. code:: python
 
-   import_data = cx.Dream3dImportParameter.ImportData()
+   import_data = nx.Dream3dImportParameter.ImportData()
    import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
    import_data.data_paths = None
-   result = cx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+   result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
 
 .. _DynamicTableParameter:
 .. py:class:: DynamicTableParameter
@@ -281,7 +281,7 @@ General Parameters
     ensemble_info_parameter.append(["Hexagonal-High 6/mmm","Primary","Phase 1"])
     ensemble_info_parameter.append(["Cubic-High m-3m","Primary","Phase 2"])
     result = cxor.CreateEnsembleInfoFilter.execute(data_structure=data_structure,
-                             cell_ensemble_attribute_matrix_name=cx.DataPath(["Phase Data"]), 
+                             cell_ensemble_attribute_matrix_name=nx.DataPath(["Phase Data"]), 
                              crystal_structures_array_name="CrystalStructures", 
                              phase_names_array_name="Phase Names", 
                              phase_types_array_name="Primary", 
@@ -312,10 +312,10 @@ General Parameters
 
    .. code:: python
 
-      color_control_points = cx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
-      result = cx.GenerateColorTableFilter.execute(data_structure=data_structure,
+      color_control_points = nx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
+      result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
                                               rgb_array_path="CI Color", 
-                                              selected_data_array_path=cx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
+                                              selected_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
                                               selected_preset=color_control_points)      
 
 .. _GeneratedFileListParameter:
@@ -331,7 +331,7 @@ General Parameters
   .. py:class:: GeneratedFileListParameter.ValueType
 
   :ivar input_path: The file system path to the directory that contains the input files
-  :ivar ordering: This describes how to generate the files. One of cx.GeneratedFileListParameter.Ordering.LowToHigh or cx.GeneratedFileListParameter.Ordering.HighToLow
+  :ivar ordering: This describes how to generate the files. One of nx.GeneratedFileListParameter.Ordering.LowToHigh or nx.GeneratedFileListParameter.Ordering.HighToLow
   :ivar file_prefix: The string part of the file name that appears **before** the index digits
   :ivar file_suffix: The string part of the file anem that appears **after** the index digits
   :ivar file_extension: The file extension of the input files includeing the "." character.
@@ -355,9 +355,9 @@ General Parameters
 
   .. code:: python
 
-    generated_file_list_value = cx.GeneratedFileListParameter.ValueType()
+    generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
     generated_file_list_value.input_path = "DREAM3DNXData/Data/Porosity_Image"
-    generated_file_list_value.ordering = cx.GeneratedFileListParameter.Ordering.LowToHigh
+    generated_file_list_value.ordering = nx.GeneratedFileListParameter.Ordering.LowToHigh
 
     generated_file_list_value.file_prefix = "slice-"
     generated_file_list_value.file_suffix = ""
@@ -370,7 +370,7 @@ General Parameters
     result = cxitk.ITKImportImageStack.execute(data_structure=data_structure, 
                                       cell_data_name="Cell Data", 
                                       image_data_array_path="Image Data", 
-                                      image_geometry_path=cx.DataPath(["Image Stack"]), 
+                                      image_geometry_path=nx.DataPath(["Image Stack"]), 
                                       image_transform_choice=0,
                                       input_file_list_info=generated_file_list_value,
                                       origin=[0., 0., 0.], 
@@ -413,35 +413,35 @@ General Parameters
    :ivar delimiters: List[string]. List of delimiters that will be used to separate the lines of the file into columns.
    :ivar consecutive_delimiters: Bool. Should consecutive delimiters be counted as a single delimiter.
    :ivar custom_headers: List[string]. If the file does not have headers, this is a list of string values, 1 per column of data, that will also become the names of the created  :ref:`DataArray <DataArray>`.
-   :ivar data_types: List[:ref:`cx.DataType<DataTypeParameter>`]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray <DataArray>`.
+   :ivar data_types: List[:ref:`nx.DataType<DataTypeParameter>`]. The DataType, one per column, that indicates the kind of native numerical values (int, float... ) that will be used in the created  :ref:`DataArray <DataArray>`.
    :ivar skipped_array_mask: List[bool]. Booleans, one per column, that indicate whether or not to skip importing each created :ref:`DataArray <DataArray>`.
    :ivar tuple_dims: List[int]. The tuple dimensions for the created  :ref:`DataArrays <DataArray>`.
    :ivar headers_line: Int. The line number of the file that has the headers listed on a single line. ONE (1) based indexing.
-   :ivar header_mode: 'cx.ReadCSVDataParameter.HeaderMode.'. Can be one of 'cx.ReadCSVDataParameter.HeaderMode.Line' or 'cx.ReadCSVDataParameter.HeaderMode.Custom'.
+   :ivar header_mode: 'nx.ReadCSVDataParameter.HeaderMode.'. Can be one of 'nx.ReadCSVDataParameter.HeaderMode.Line' or 'nx.ReadCSVDataParameter.HeaderMode.Custom'.
 
 
 .. code:: python
 
-   data_structure = cx.DataStructure()
+   data_structure = nx.DataStructure()
    
    # Example File has 7 columns to import
-   read_csv_data = cx.ReadCSVDataParameter()
+   read_csv_data = nx.ReadCSVDataParameter()
    read_csv_data.input_file_path = "/tmp/test_csv_data.csv"
    read_csv_data.start_import_row = 2
    read_csv_data.delimiters = [',']
    read_csv_data.custom_headers = []
-   read_csv_data.column_data_types = [cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.float32,cx.DataType.int32 ]
+   read_csv_data.column_data_types = [nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.int32 ]
    read_csv_data.skipped_array_mask = [False,False,False,False,False,False,False ]
    read_csv_data.tuple_dims = [37989]
    read_csv_data.headers_line = 1
-   read_csv_data.header_mode = cx.ReadCSVDataParameter.HeaderMode.Line
+   read_csv_data.header_mode = nx.ReadCSVDataParameter.HeaderMode.Line
 
    # This will store the imported arrays into a newly generated DataGroup
-   result = cx.ReadCSVFileFilter.execute(data_structure=data_structure,
+   result = nx.ReadCSVFileFilter.execute(data_structure=data_structure,
                                          # This will store the imported arrays into a newly generated DataGroup
-                                         created_data_group=cx.DataPath(["Imported Data"]),
+                                         created_data_group=nx.DataPath(["Imported Data"]),
                                          # We are not using this parameter but it still needs a value
-                                         selected_data_group=cx.DataPath(),
+                                         selected_data_group=nx.DataPath(),
                                          # Use an existing DataGroup or AttributeMatrix. If an AttributemMatrix is used, the total number of tuples must match
                                          use_existing_group=False,
                                          # The ReadCSVData object with all member variables set.
@@ -470,7 +470,7 @@ General Parameters
 
    .. code:: python
 
-      data_structure = cx.DataStructure()
+      data_structure = nx.DataStructure()
       # Create the ReadH5EbsdFileParameter and assign values to it.
       h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
       h5ebsdParameter.euler_representation=0
@@ -485,7 +485,7 @@ General Parameters
          data_structure=data_structure,
          cell_attribute_matrix_name="CellData",
          cell_ensemble_attribute_matrix_name="CellEnsembleData",
-         data_container_name=cx.DataPath("DataContainer"),
+         data_container_name=nx.DataPath("DataContainer"),
          read_h5_ebsd_parameter=h5ebsdParameter
       )
 
@@ -515,21 +515,21 @@ General Parameters
 
    .. code:: python
 
-      dataset1 = cx.ReadHDF5DatasetParameter.DatasetImportInfo()
+      dataset1 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
       dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
       dataset1.tuple_dims = "117,201,189"
       dataset1.component_dims = "1"
 
-      dataset2 = cx.ReadHDF5DatasetParameter.DatasetImportInfo()
+      dataset2 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
       dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
       dataset2.tuple_dims = "117,201,189"
       dataset2.component_dims = "3"
 
-      import_hdf5_param = cx.ReadHDF5DatasetParameter.ValueType()
+      import_hdf5_param = nx.ReadHDF5DatasetParameter.ValueType()
       import_hdf5_param.input_file = "SmallIN100_Final.dream3d"
       import_hdf5_param.datasets = [dataset1, dataset2]
-      # import_hdf5_param.parent = cx.DataPath(["Imported Data"])
-      result = cx.ReadHDF5Dataset.execute(data_structure=data_structure,
+      # import_hdf5_param.parent = nx.DataPath(["Imported Data"])
+      result = nx.ReadHDF5Dataset.execute(data_structure=data_structure,
                                           import_hd_f5_file=import_hdf5_param
                                           )
 
@@ -542,7 +542,7 @@ General Parameters
 
    .. code:: python
 
-    path_list = [cx.DataPath(["Group 1", "Array"]), cx.DataPath(["Group 1", "Array 2"])]
+    path_list = [nx.DataPath(["Group 1", "Array"]), nx.DataPath(["Group 1", "Array 2"])]
 
 .. _MultiPathSelectionParameter:
 .. py:class:: MultiPathSelectionParameter
@@ -552,13 +552,13 @@ General Parameters
 
    .. code:: python
 
-    path_list = [cx.DataPath(["Group 1", "Array"]), cx.DataPath(["Group 1", "Array 2"])]   
+    path_list = [nx.DataPath(["Group 1", "Array"]), nx.DataPath(["Group 1", "Array 2"])]   
 
 
 .. _NeighborListSelectionParameter:
 .. py:class:: NeighborListSelectionParameter
 
-   This parameter represents a :ref:`DataPath <DataPath>` object that has an end point of a 'cx.NeighborList' object
+   This parameter represents a :ref:`DataPath <DataPath>` object that has an end point of a 'nx.NeighborList' object
 
 .. _NumericTypeParameter:
 .. py:class:: NumericTypeParameter
@@ -566,20 +566,20 @@ General Parameters
    This parameter represents a choice from a list of known numeric types. The programmer
    should use the predefined types instead of a plain integer value.
 
-    - cx.NumericType.int8 = 0
-    - cx.NumericType.uint8= 1
-    - cx.NumericType.int16= 2
-    - cx.NumericType.uint16= 3
-    - cx.NumericType.int32= 4
-    - cx.NumericType.uint32= 5
-    - cx.NumericType.int64= 6
-    - cx.NumericType.uint64= 7
-    - cx.NumericType.float32= 8
-    - cx.NumericType.float64= 9
+    - nx.NumericType.int8 = 0
+    - nx.NumericType.uint8= 1
+    - nx.NumericType.int16= 2
+    - nx.NumericType.uint16= 3
+    - nx.NumericType.int32= 4
+    - nx.NumericType.uint32= 5
+    - nx.NumericType.int64= 6
+    - nx.NumericType.uint64= 7
+    - nx.NumericType.float32= 8
+    - nx.NumericType.float64= 9
 
   .. code:: python
 
-    array_type = cx.NumericType.float32
+    array_type = nx.NumericType.float32
 
 .. _StringParameter:
 .. py:class:: StringParameter
