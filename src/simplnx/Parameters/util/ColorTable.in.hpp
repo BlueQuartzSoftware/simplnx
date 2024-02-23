@@ -7,5 +7,5 @@
 
 namespace nx::core::ColorTable
 {
-static const nlohmann::json k_DefaultColorTableJson = R"~(@COLOR_TABLE_JSON@)~"_json;
+static const nlohmann::json k_DefaultColorTableJson = R"~(@COLOR_TABLE_FLAT@)~"_json;
 } // namespace nx::core::ColorTable
