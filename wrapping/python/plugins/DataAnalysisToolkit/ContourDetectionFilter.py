@@ -82,41 +82,54 @@ class ContourDetectionFilter:
     :returns:
     :rtype: nx.IFilter.PreflightResult
     """
-    # warnings = []
+
     input_image_array_path: nx.DataPath = args[ContourDetectionFilter.INPUT_IMAGE_ARRAY_KEY]
-    # feature_id_array_name: str = args[ContourDetectionFilter.FEATURE_ID_ARRAY_NAME_KEY]  
-    # feature_id_array_path = str(input_image_array_path).split('/')
-    # feature_id_array_path[-1] = feature_id_array_name
+    feature_id_array_name: str = args[ContourDetectionFilter.FEATURE_ID_ARRAY_NAME_KEY]
+    # Generate the output Feature Ids Array Path. This will be stored in the same
+    # attribute matrix as the input image so we can construct the path using the
+    # input_image_array_path and then just change the "name" property of the input_image_array_path
+    # to be what the user input as the feature_id_array_name
+    feature_id_array_path = input_image_array_path.with_name(feature_id_array_name)
+       
+    # Create the Errors and Warnings Lists to commuicate back to the user if anything has gone wrong
+    errors = []
+    warnings = []
     
-
-    #warnings.append(nx.Warning(200, f"{feature_id_array_path}"))
-    #feature_id_array_path = nx.DataPath(feature_id_array_path)
-
     feature_attr_matrix_path: nx.DataPath = args[ContourDetectionFilter.FEATURE_ATTR_MATRIX_PATH_KEY]
     perimeters_array_name: str = args[ContourDetectionFilter.CONTOUR_PERIMETERS_ARRAY_NAME_KEY]
     areas_array_name: str = args[ContourDetectionFilter.CONTOUR_AREAS_ARRAY_NAME_KEY]
 
+    # We sanity check the threshold value to ensure it is between 0 and 255. If not
+    # the preflight immediately returns an error. Error messages should be clear and 
+    # if possible show the user what the valid inputs are and what they used.
     threshold_value: float = args[ContourDetectionFilter.THRESHOLD_VALUE_KEY]
     if threshold_value < 0 or threshold_value > 255: 
-      return nx.IFilter.PreflightResult(nx.OutputActions(), [nx.Error(-1000, f"Threshold value needs to be between 0 and 255")])
+      return nx.IFilter.PreflightResult(nx.OutputActions(), [nx.Error(-8700, f"Threshold value needs to be between 0 and 255. Current value is {threshold_value}")])
 
     output_actions = nx.OutputActions()
 
+    # *************************************************************************
+    # This section starts the creation of the Feature Attribute Matrix and the pair of Attribute Arrays
+    # that are going to be inserted. Since we do not know during preflight how many contours are going
+    # to be generated, we use a default value of "0" for the tuple dimensions. This will eventually get
+    # changed during the actual execute method.
+    default_feature_tuple_dims = [0]
     # We don't know how many contours there are yet, so set the attribute matrix dimensions to (0)
-    output_actions.append_action(nx.CreateAttributeMatrixAction(feature_attr_matrix_path, [10]))
+    output_actions.append_action(nx.CreateAttributeMatrixAction(feature_attr_matrix_path, default_feature_tuple_dims))
 
     # Create the perimeters feature array
     perimeters_array_path = feature_attr_matrix_path.create_child_path(perimeters_array_name)
-    output_actions.append_action(nx.CreateArrayAction(nx.DataType.float64, [10], [1], perimeters_array_path))
+    output_actions.append_action(nx.CreateArrayAction(nx.DataType.float64, default_feature_tuple_dims, [1], perimeters_array_path))
 
     # Create the areas feature array
     areas_array_path = feature_attr_matrix_path.create_child_path(areas_array_name)
-    output_actions.append_action(nx.CreateArrayAction(nx.DataType.uint64, [10], [1], areas_array_path))
+    output_actions.append_action(nx.CreateArrayAction(nx.DataType.uint64, default_feature_tuple_dims, [1], areas_array_path))
   
-    # Create teh feature ID array in cell data 
+    # *************************************************************************
+    # This section will create the Feature Ids array at the Cell Level
+    # Get the input_image_data_array so that we can copy the tuple dimensions from that array into our new array
     input_data_array = data_structure[input_image_array_path]
-    output_actions.append_action(nx.CreateArrayAction(nx.DataType.int32, input_data_array.tdims, [1], nx.DataPath(["ImageDataContainer", "Cell Data", "FeatureIDs"])))
-
+    output_actions.append_action(nx.CreateArrayAction(nx.DataType.int32, input_data_array.tdims, [1], feature_id_array_path))
 
     return nx.IFilter.PreflightResult(output_actions)
 
@@ -130,15 +143,17 @@ class ContourDetectionFilter:
     perimeters_array_name: str = args[ContourDetectionFilter.CONTOUR_PERIMETERS_ARRAY_NAME_KEY]
     areas_array_name: str = args[ContourDetectionFilter.CONTOUR_AREAS_ARRAY_NAME_KEY]
     threshold_value: float = args[ContourDetectionFilter.THRESHOLD_VALUE_KEY]
+    feature_id_array_name: str = args[ContourDetectionFilter.FEATURE_ID_ARRAY_NAME_KEY]
+    
+    
+    feature_id_array_path = input_image_array_path.with_name(feature_id_array_name)
 
     perimeters_array_path = feature_attr_matrix_path.create_child_path(perimeters_array_name)
     areas_array_path = feature_attr_matrix_path.create_child_path(areas_array_name)
 
-    # Get a reference to the input image array from the data structure
-    input_image_array: nx.IDataArray = data_structure[input_image_array_path]
 
-    # Get a numpy view of the input image array
-    input_image_data: np.array = input_image_array.npview()
+    # Get a numpy view of the input image array directly from the data_structure object
+    input_image_data: np.array = data_structure[input_image_array_path].npview()
 
     # Remove any extraneous dimensions of size 1
     input_image_data = np.squeeze(input_image_data)
@@ -162,7 +177,9 @@ class ContourDetectionFilter:
     perimeters_array: nx.IDataArray = data_structure[perimeters_array_path]
     areas_array: nx.IDataArray = data_structure[areas_array_path]
 
-    feature_id_array = data_structure[nx.DataPath(["ImageDataContainer", "Cell Data", "FeatureIDs"])].npview()
+    feature_id_array = data_structure[feature_id_array_path].npview()
+    # Remove any dimensions that are [1]. DREAM3D Image Geometry is always a 3D array, there are always
+    # 3 dimensions. For a strictly 2D image, once of those dimension values will be "1".
     feature_id_array = np.squeeze(feature_id_array)
 
     # Iterate over contours and draw each one with a unique label
@@ -172,9 +189,9 @@ class ContourDetectionFilter:
       cv2.drawContours(feature_id_array, [contour], -1, color=(i), thickness=cv2.FILLED)
 
     # Resize the feature attribute matrix and feature arrays
-    # feature_attr_matrix.resize_tuples([contour_count])
-    # perimeters_array.resize_tuples([contour_count])
-    # areas_array.resize_tuples([contour_count])
+    feature_attr_matrix.resize_tuples([contour_count])
+    perimeters_array.resize_tuples([contour_count])
+    areas_array.resize_tuples([contour_count])
 
     # Get numpy views of the feature arrays
     perimeters_data = perimeters_array.npview()
