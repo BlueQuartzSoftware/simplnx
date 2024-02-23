@@ -748,7 +748,8 @@ foreach(param ${CoreParameters})
 endforeach()
 
 # Generate Supporting Color Table File
-file(READ ${simplnx_SOURCE_DIR}/resources/ColorTablePresets/ColorTablePresets.json COLOR_TABLE_JSON)
+file(READ ${simplnx_SOURCE_DIR}/resources/ColorTablePresets/ColorTablePresets.json COLOR_TABLE_RAW)
+string(REGEX REPLACE "\s+" "" COLOR_TABLE_JSON COLOR_TABLE_RAW)
 set(SIMPLNX_GENERATED_COLOR_TABLE_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/util/ColorTable.hpp)
 cmpConfigureFileWithMD5Check(CONFIGURED_TEMPLATE_PATH ${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.in.hpp GENERATED_FILE_PATH ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER})
 list(APPEND SIMPLNX_GENERATED_HEADERS
