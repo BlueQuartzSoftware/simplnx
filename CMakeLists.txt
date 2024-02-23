@@ -750,6 +750,9 @@ endforeach()
 # Generate Supporting Color Table File
 file(READ ${simplnx_SOURCE_DIR}/resources/ColorTablePresets/ColorTablePresets.json COLOR_TABLE_JSON)
 string(REGEX REPLACE "[ \t\n\r]+" " " COLOR_TABLE_FLAT ${COLOR_TABLE_JSON})
+string(HEX ${COLOR_TABLE_FLAT}, COLOR_TABLE_HEX)
+string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," COLOR_TABLE_HEX ${COLOR_TABLE_HEX})
+
 set(SIMPLNX_GENERATED_COLOR_TABLE_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/util/ColorTable.hpp)
 cmpConfigureFileWithMD5Check(CONFIGURED_TEMPLATE_PATH ${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.in.hpp GENERATED_FILE_PATH ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER})
 list(APPEND SIMPLNX_GENERATED_HEADERS
