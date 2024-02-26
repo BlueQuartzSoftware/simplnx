@@ -81,10 +81,10 @@ Result<std::array<float32, 16>> readTransformMatrix(const std::string& filePath)
   if(nDims == 2)
   {
     arr[0] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 0));
-    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
+    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
     arr[2] = 0.0f;
     arr[3] = 0.0f;
-    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
+    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
     arr[5] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
     arr[6] = 0.0f;
     arr[7] = 0.0f;
@@ -100,15 +100,15 @@ Result<std::array<float32, 16>> readTransformMatrix(const std::string& filePath)
   else if(nDims == 3)
   {
     arr[0] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 0));
-    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
-    arr[2] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 2));
+    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
+    arr[2] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 0));
     arr[3] = 0.0f;
-    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
+    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
     arr[5] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
-    arr[6] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 2));
+    arr[6] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 1));
     arr[7] = 0.0f;
-    arr[8] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 0));
-    arr[9] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 1));
+    arr[8] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 2));
+    arr[9] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 2));
     arr[10] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 2));
     arr[11] = 0.0f;
     arr[12] = 0.0f;
