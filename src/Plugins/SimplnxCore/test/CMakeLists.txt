@@ -71,7 +71,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   GenerateVectorColorsTest.cpp
     GeneratePythonSkeletonTest.cpp
   IdentifySampleTest.cpp
-  ImageContouringTest.cpp
+  FlyingEdges3DTest.cpp
   ImageGeomTest.cpp
   InitializeDataTest.cpp
   InitializeImageGeomCellDataTest.cpp

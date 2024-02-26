@@ -1,6 +1,6 @@
-#include "ImageContouringFilter.hpp"
+#include "FlyingEdges3DFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/ImageContouring.hpp"
+#include "SimplnxCore/Filters/Algorithms/FlyingEdges3D.hpp"
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -20,37 +20,37 @@ const std::string k_VertexNormals = "VertexNormals";
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ImageContouringFilter::name() const
+std::string FlyingEdges3DFilter::name() const
 {
-  return FilterTraits<ImageContouringFilter>::name.str();
+  return FilterTraits<FlyingEdges3DFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ImageContouringFilter::className() const
+std::string FlyingEdges3DFilter::className() const
 {
-  return FilterTraits<ImageContouringFilter>::className;
+  return FilterTraits<FlyingEdges3DFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ImageContouringFilter::uuid() const
+Uuid FlyingEdges3DFilter::uuid() const
 {
-  return FilterTraits<ImageContouringFilter>::uuid;
+  return FilterTraits<FlyingEdges3DFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ImageContouringFilter::humanName() const
+std::string FlyingEdges3DFilter::humanName() const
 {
   return "Surface Contour Filter (Flying Edges 3D)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ImageContouringFilter::defaultTags() const
+std::vector<std::string> FlyingEdges3DFilter::defaultTags() const
 {
-  return {className(), "Surface Contour Filter (Flying Edges)", "Image Geometry"};
+  return {className(), "FlyingEdges3D", "Contouring", "Image Geometry", "Flying Edges 3D", "ISO Contour"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ImageContouringFilter::parameters() const
+Parameters FlyingEdges3DFilter::parameters() const
 {
   Parameters params;
 
@@ -72,14 +72,14 @@ Parameters ImageContouringFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ImageContouringFilter::clone() const
+IFilter::UniquePointer FlyingEdges3DFilter::clone() const
 {
-  return std::make_unique<ImageContouringFilter>();
+  return std::make_unique<FlyingEdges3DFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ImageContouringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   auto pTriangleGeomName = filterArgs.value<std::string>(k_NewTriangleGeometryName_Key);
@@ -103,10 +103,10 @@ IFilter::PreflightResult ImageContouringFilter::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> ImageContouringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
-  ImageContouringInputValues inputValues;
+  FlyingEdges3DInputValues inputValues;
 
   inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArray_Key);
@@ -114,6 +114,6 @@ Result<> ImageContouringFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);
   inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexDataName).createChildPath(k_VertexNormals);
 
-  return ImageContouring(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core
