@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class ImageContouringFilter
+ * @class FlyingEdges3DFilter
  * @brief This filter will draw a 3 dimensional contouring line through an Image Geometry based on an input value.
  */
-class SIMPLNXCORE_EXPORT ImageContouringFilter : public IFilter
+class SIMPLNXCORE_EXPORT FlyingEdges3DFilter : public IFilter
 {
 public:
-  ImageContouringFilter() = default;
-  ~ImageContouringFilter() noexcept override = default;
+  FlyingEdges3DFilter() = default;
+  ~FlyingEdges3DFilter() noexcept override = default;
 
-  ImageContouringFilter(const ImageContouringFilter&) = delete;
-  ImageContouringFilter(ImageContouringFilter&&) noexcept = delete;
+  FlyingEdges3DFilter(const FlyingEdges3DFilter&) = delete;
+  FlyingEdges3DFilter(FlyingEdges3DFilter&&) noexcept = delete;
 
-  ImageContouringFilter& operator=(const ImageContouringFilter&) = delete;
-  ImageContouringFilter& operator=(ImageContouringFilter&&) noexcept = delete;
+  FlyingEdges3DFilter& operator=(const FlyingEdges3DFilter&) = delete;
+  FlyingEdges3DFilter& operator=(FlyingEdges3DFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
@@ -96,4 +96,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ImageContouringFilter, "c15b1af6-c43d-44ba-b180-f0130afafc8e");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FlyingEdges3DFilter, "c15b1af6-c43d-44ba-b180-f0130afafc8e");

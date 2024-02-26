@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/ImageContouringFilter.hpp"
+#include "SimplnxCore/Filters/FlyingEdges3DFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -33,7 +33,7 @@ const DataPath k_ExemplarNormals = k_ExemplarContourPath.createChildPath(INodeGe
 const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::k_VertexDataName).createChildPath(k_VertexNormals);
 } // namespace ContourTest
 
-TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][ImageContouring]")
+TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][FlyingEdges3D]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "flying_edges_exemplar.tar.gz",
                                                               "flying_edges_exemplar.dream3d");
@@ -44,16 +44,16 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][ImageC
 
   {
     // Instantiate the filter and an Arguments Object
-    ImageContouringFilter filter;
+    FlyingEdges3DFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ImageContouringFilter::k_IsoVal_Key, std::make_any<float64>(ContourTest::k_IsoVal));
+    args.insertOrAssign(FlyingEdges3DFilter::k_IsoVal_Key, std::make_any<float64>(ContourTest::k_IsoVal));
     // Selected Data Objects
-    args.insertOrAssign(ImageContouringFilter::k_SelectedImageGeometry_Key, std::make_any<GeometrySelectionParameter::ValueType>(ContourTest::k_GeometryPath));
-    args.insertOrAssign(ImageContouringFilter::k_SelectedDataArray_Key, std::make_any<DataPath>(ContourTest::k_DataPath));
+    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometry_Key, std::make_any<GeometrySelectionParameter::ValueType>(ContourTest::k_GeometryPath));
+    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArray_Key, std::make_any<DataPath>(ContourTest::k_DataPath));
     // Output Path
-    args.insertOrAssign(ImageContouringFilter::k_NewTriangleGeometryName_Key, std::make_any<DataObjectNameParameter::ValueType>(ContourTest::k_NewTriangleContourName));
+    args.insertOrAssign(FlyingEdges3DFilter::k_NewTriangleGeometryName_Key, std::make_any<DataObjectNameParameter::ValueType>(ContourTest::k_NewTriangleContourName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

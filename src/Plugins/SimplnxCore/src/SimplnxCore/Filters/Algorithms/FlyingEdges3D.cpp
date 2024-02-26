@@ -1,4 +1,4 @@
-#include "ImageContouring.hpp"
+#include "FlyingEdges3D.hpp"
 
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/FlyingEdges.hpp"
@@ -26,7 +26,7 @@ struct ExecuteFlyingEdgesFunctor
 } // namespace
 
 // -----------------------------------------------------------------------------
-ImageContouring::ImageContouring(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImageContouringInputValues* inputValues)
+FlyingEdges3D::FlyingEdges3D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FlyingEdges3DInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -35,16 +35,16 @@ ImageContouring::ImageContouring(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-ImageContouring::~ImageContouring() noexcept = default;
+FlyingEdges3D::~FlyingEdges3D() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ImageContouring::getCancel()
+const std::atomic_bool& FlyingEdges3D::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ImageContouring::operator()()
+Result<> FlyingEdges3D::operator()()
 {
   const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
   float64 isoVal = m_InputValues->isoVal;

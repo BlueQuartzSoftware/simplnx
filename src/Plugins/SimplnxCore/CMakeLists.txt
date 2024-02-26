@@ -67,11 +67,11 @@ set(FilterList
   FindTriangleGeomSizesFilter
   FindVertexToTriangleDistancesFilter
   FindVolFractionsFilter
+  FlyingEdges3DFilter
   GenerateColorTableFilter
-  GenerateVectorColorsFilter
   GeneratePythonSkeletonFilter
+  GenerateVectorColorsFilter
   IdentifySample
-  ImageContouringFilter
   InitializeData
   InitializeImageGeomCellData
   InterpolatePointCloudToRegularGridFilter
@@ -170,10 +170,10 @@ set(AlgorithmList
   FindTriangleGeomCentroids
   FindTriangleGeomSizes
   FindVertexToTriangleDistances
+  FlyingEdges3D
   GenerateColorTable
-  GenerateVectorColors
   GeneratePythonSkeleton
-  ImageContouring
+  GenerateVectorColors
   KMeans
   KMedoids
   LabelTriangleGeometry
