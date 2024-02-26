@@ -9,6 +9,7 @@ These builds can on the order of **multiple hours** to complete on x86 systems t
 - 3.9
 - 3.10
 - 3.11
+- 3.12
 
 ## Operating System Variations
 

@@ -133,15 +133,100 @@ DataPath
 ---------
 
 A DataPath is a simplnx class that describes the path to a :ref:`DataObject` within 
-the DataStructure_ . The path is constructed as a python list of string objects.
-For example if we have a top level group called **MyGroup** and a `DataArray<DataArray>` 
-called *Euler Angles* within that group the **DataPath** object that would be constructed is the following
+the DataStructure_ . The path is constructed as a python list of string objects or a "/" delimited string. DataPath 
+also implements a few items from the 'pathlib' library.
+
+DataPath can act as a List[str] object, such as getting the length or looping on the items.
 
 .. code:: python
 
-  array_path = cx.DataPath(['MyGroup', 'Euler Angles'])
-  array_path = cx.DataPath("MyGroup/Euler Angles")
+   data_path = nx.DataPath("root")
+   print(f'length: {len(data_path)}')
+   for item in data_path:
+      print(f'  {item}')
 
+.. py:class:: DataPath
+
+   .. py:method:: (list_of_string)
+                  (delimited_string)
+
+      Constructs a DataPath object from either a List of strings or a '/' delimited string
+
+      :param List[str] list_of_string: A list of strings
+      :param str delimited_string: A "/" delimited string
+
+   .. code:: python
+
+      array_path = cx.DataPath(['MyGroup', 'Euler Angles'])
+      array_path = cx.DataPath("MyGroup/Euler Angles")
+
+   .. py:method:: [index]
+
+      Retrieves the Item at the given index. Zero based indexing. If index is out of range an exception will be thrown.
+
+      :param int index: The element of the DataPath to retrieve.
+
+   .. py:method:: to_string(delimiter)
+
+      returns the DataPath as a delimited string.
+
+      :param str delimiter: The delimiter to use
+
+   .. code:: python
+        
+      data_path = nx.DataPath("/root/foo/bar")
+      print(f'{data_path.to_string("|")}')
+      # [Output] root|foo|bar
+
+   .. py:method:: create_child_path(child_name)
+
+      Creates a new DataPath object that is the exisiting DataPath with the new child_path appended
+
+      :param str child_name: This will be appended to the existing DataPath
+
+   .. py:method:: parts
+
+      A tuple giving access to the path's various components. Conforms to the pathlib specification
+
+   .. code:: python
+
+      data_path = nx.DataPath("/root/foo/bar")
+      path_parts = data_path.parts()
+      print(f'path_parts: {path_parts}' )
+      # [Output] path_parts: ['root', 'foo', 'bar']
+
+   .. py:method:: parent
+
+      The logical parent of the path. Conforms to the pathlib specification
+
+   .. code:: python
+
+      data_path = nx.DataPath("/root/foo/bar")
+      parent_path = data_path.parent()
+      print(f'parent_path: {parent_path}' )
+      # [Output] parent_path: root/foo
+
+   .. py:method:: name
+
+      A string representing the final path component:
+
+   .. code:: python
+
+      data_path = nx.DataPath("/root/foo/bar")
+      last_path = data_path.name()
+      print(f'last_path: {last_path}' )
+      # [Output] last_path: bar
+
+   .. py:method:: with_name
+
+      Return a new DataPath with the name changed. If the original path is empty, then a DataPath with the name as the only part is returned.
+
+   .. code:: python
+
+      data_path = nx.DataPath("/root/foo/bar")
+      name_change = data_path.with_name("NEW NAME")
+      print(f'name_change: {name_change}' )
+      # [Output] name_change: name_change: root/foo/NEW NAME
 
 .. _DataGroup:
 

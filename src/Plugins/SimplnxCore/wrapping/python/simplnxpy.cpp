@@ -389,8 +389,23 @@ PYBIND11_MODULE(simplnx, mod)
   dataPath.def(py::init<>(&CreateDataPath));
   dataPath.def("__getitem__", [](const DataPath& self, usize index) { return self[index]; });
   dataPath.def("__repr__", [](const DataPath& self) { return fmt::format("DataPath('{}')", self.toString("/")); });
-  dataPath.def("__str__", [](const DataPath& self) { return fmt::format("DataPath('{}')", self.toString("/")); });
+  dataPath.def("__str__", [](const DataPath& self) { return fmt::format("{}", self.toString("/")); });
+  dataPath.def("__len__", [](const DataPath& self) { return self.getLength(); });
+  dataPath.def("to_string", [](const DataPath& self, const std::string& delimiter) { return self.toString(delimiter); });
   dataPath.def("create_child_path", [](const DataPath& self, const std::string& name) { return self.createChildPath(name); });
+  // Python "PathLib" type operations
+  dataPath.def("parts", [](const DataPath& self) { return self.getPathVector(); });
+  dataPath.def("parent", [](const DataPath& self) { return self.getParent(); });
+  dataPath.def("name", [](const DataPath& self) { return self.getTargetName(); });
+  dataPath.def("with_name", [](const DataPath& self, const std::string& name) {
+    auto pathVector = self.getPathVector();
+    if(pathVector.size() == 0)
+    {
+      return DataPath(std::vector<std::string>{name});
+    }
+    pathVector.back() = name;
+    return DataPath(pathVector);
+  });
 
   py::class_<AbstractPipelineNode, std::shared_ptr<AbstractPipelineNode>> abstractPipelineNode(mod, "AbstractPipelineNode");
   py::class_<PipelineFilter, AbstractPipelineNode, std::shared_ptr<PipelineFilter>> pipelineFilter(mod, "PipelineFilter");
