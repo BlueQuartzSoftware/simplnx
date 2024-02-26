@@ -40,13 +40,13 @@ Uuid ImageContouringFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ImageContouringFilter::humanName() const
 {
-  return "Contour";
+  return "Surface Contour Filter (Flying Edges 3D)";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ImageContouringFilter::defaultTags() const
 {
-  return {className(), "Contouring", "Image Geometry"};
+  return {className(), "Surface Contour Filter (Flying Edges)", "Image Geometry"};
 }
 
 //------------------------------------------------------------------------------

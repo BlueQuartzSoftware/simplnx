@@ -48,6 +48,55 @@ import numpy as np
 #------------------------------------------------------------------------------
 nxtest.print_all_paths()
 
+data_path = nx.DataPath("root")
+print(f'{data_path}' )
+print(f'length: {len(data_path)}')
+
+data_path = nx.DataPath("/root/foo/bar")
+print(f'{data_path}' )
+
+path_from_list = ["root", "foo", "bar"]
+data_path = nx.DataPath(path_from_list)
+print(f'{data_path}' )
+
+data_path = nx.DataPath(["root", "foo", "bar"])
+print(f'{data_path}' )
+
+path_as_string = str(data_path)
+print(f'__str__: {path_as_string}' )
+print(f'__repr__: {data_path}' )
+
+# List type access
+for item in data_path:
+    print(f'  {item}')
+
+# Access Item by Index
+print(f'access by index: {data_path[1]}')
+
+# Use a different delimiter to generate the string.
+print(f'{data_path.to_string("|")}')
+
+# Generate a child path:
+deeper_path = data_path.create_child_path("more stuff")
+print(f'deeper_path: {deeper_path}' )
+
+# pathlib operations
+# Get the parts as a list
+path_parts = data_path.parts()
+print(f'path_parts: {path_parts}' )
+# Return Parent
+parent_path = data_path.parent()
+print(f'parent_path: {parent_path}' )
+# Return Name (the last part of the path)
+last_path = data_path.name()
+print(f'last_path: {last_path}' )
+# Change the name
+name_change = data_path.with_name("NEW NAME")
+print(f'name_change: {name_change}' )
+
+
+quit()
+
 # Create a Data Structure
 data_structure = nx.DataStructure()
 
