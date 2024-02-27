@@ -41,7 +41,7 @@ Git Log 1.1.0
 - ENH: Add HumanStringToDataType Method in TypesUtilities.h (#754) - [2023-10-26]
 - ENH: Create DataModifiedAction that marks DataObjects as being modified by a filter (#735) - [2023-10-25]
 - ENH: Added 4 Major Issue Templates (#749) - [2023-10-25]
-- API: Added cx.DataPath constructor to take a "/Path/Like/This" string (#751) - [2023-10-24]
+- API: Added nx.DataPath constructor to take a "/Path/Like/This" string (#751) - [2023-10-24]
 - ENH: Standardize and Cache Random Seed values used in filters  (#745) - [2023-10-24]
 - ENH: GenerateColorTable allows use of a mask array. (#747) - [2023-10-20]
 - ENH: Convert AttributeArray DataType allows user to delete input array. (#746) - [2023-10-19]
