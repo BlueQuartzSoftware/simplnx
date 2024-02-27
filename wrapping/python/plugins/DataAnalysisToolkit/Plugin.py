@@ -2,14 +2,14 @@ from DataAnalysisToolkit.CalculateHistogramFilter import CalculateHistogramFilte
 from DataAnalysisToolkit.InterpolateGridDataFilter import InterpolateGridDataFilter
 from DataAnalysisToolkit.CliReaderFilter import CliReaderFilter
 from DataAnalysisToolkit.ContourDetectionFilter import ContourDetectionFilter
-import simplnx as sx
+import simplnx as nx
 
 class DataAnalysisToolkit:
   def __init__(self) -> None:
     pass
 
-  def id(self) -> sx.Uuid:
-    return sx.Uuid('7ce1af33-d790-4378-9f75-b81483ce7737')
+  def id(self) -> nx.Uuid:
+    return nx.Uuid('7ce1af33-d790-4378-9f75-b81483ce7737')
 
   def name(self) -> str:
     return 'DataAnalysisToolkit'

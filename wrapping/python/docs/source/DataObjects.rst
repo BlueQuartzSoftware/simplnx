@@ -63,7 +63,7 @@ a yellow box at the right side of the user interface.
 
    # this is just sample code. The developer is expected to use these on well
    # constructed DataStructure objects.
-   data_structure = cx.DataStructure()
+   data_structure = nx.DataStructure()
    num_objects = data_structure.size
    did_remove = data_structure.remove(simplnx.DataPath("/Path/to/Object"))
    hierarchy = data_structure.hierarchy_to_str()
@@ -122,7 +122,7 @@ The possible *type* values are:
    .. code:: python
 
       data_object = data_structure["Image Geometry"]
-      if data_object.type == cx.DataObject.DataObjectType.ImageGeom:
+      if data_object.type == nx.DataObject.DataObjectType.ImageGeom:
          print("Image Geometry")
       else:
          print("NOT Image Geometry")
@@ -157,8 +157,8 @@ DataPath can act as a List[str] object, such as getting the length or looping on
 
    .. code:: python
 
-      array_path = cx.DataPath(['MyGroup', 'Euler Angles'])
-      array_path = cx.DataPath("MyGroup/Euler Angles")
+      array_path = nx.DataPath(['MyGroup', 'Euler Angles'])
+      array_path = nx.DataPath("MyGroup/Euler Angles")
 
    .. py:method:: [index]
 
@@ -241,8 +241,8 @@ any needed DataGroups.
 
 .. code:: python
 
-   result = cx.CreateDataGroup.execute(data_structure=data_structure,
-                                    Data_Object_Path=cx.DataPath(['Group']))
+   result = nx.CreateDataGroup.execute(data_structure=data_structure,
+                                    Data_Object_Path=nx.DataPath(['Group']))
 
 
 .. _DataArray:
@@ -295,13 +295,13 @@ and then print the name, tuple_dimensions and component_dims of the created DatA
 
   .. code:: python
 
-   data_structure = cx.DataStructure()
-   result = cx.CreateDataArray.execute(data_structure=data_structure, 
+   data_structure = nx.DataStructure()
+   result = nx.CreateDataArray.execute(data_structure=data_structure, 
                                         component_count=3, 
                                         data_format="", 
                                         initialization_value="0", 
-                                        numeric_type=cx.NumericType.float32, 
-                                        output_data_array=cx.DataPath(["2D Array"]), 
+                                        numeric_type=nx.NumericType.float32, 
+                                        output_data_array=nx.DataPath(["2D Array"]), 
                                         tuple_dimensions=[[4, 5]])
                                         
    data_array = data_structure[output_array_path]
@@ -398,8 +398,8 @@ the dimensions are listed as slowest changing (Z) to fastest changing (X) order.
 
 .. code:: python 
 
-   result = cx.CreateAttributeMatrixFilter.execute(data_structure=data_structure, 
-                                                data_object_path=cx.DataPath(["New Attribute Matrix"]), 
+   result = nx.CreateAttributeMatrixFilter.execute(data_structure=data_structure, 
+                                                data_object_path=nx.DataPath(["New Attribute Matrix"]), 
                                                 tuple_dimensions = [[117., 201., 189.]])
 
 Geometry

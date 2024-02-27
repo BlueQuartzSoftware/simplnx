@@ -87,14 +87,14 @@ in each array is +1 from the dimension size.
     # This code snippet assumes the developer has already generated the
     # needed DataArrays and added them to the DataStructure through the proper
     # CreateDataArray filters (or any other way)
-    result = cx.CreateGeometryFilter.execute(data_structure=data_structure,
+    result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
         array_handling= 1,  # Move the arrays from their original location.
         cell_attribute_matrix_name="Cell Data",
-        geometry_name=cx.DataPath(["RectGrid Geometry"]),
+        geometry_name=nx.DataPath(["RectGrid Geometry"]),
         geometry_type=1,
-        x_bounds=cx.DataPath("RectGridCoords/X Coords"),
-        y_bounds=cx.DataPath("RectGridCoords/Y Coords"),
-        z_bounds=cx.DataPath("RectGridCoords/Z Coords")
+        x_bounds=nx.DataPath("RectGridCoords/X Coords"),
+        y_bounds=nx.DataPath("RectGridCoords/Y Coords"),
+        z_bounds=nx.DataPath("RectGridCoords/Z Coords")
       )
     if len(result.errors) != 0:
         print('Errors: {}', result.errors)
@@ -102,7 +102,7 @@ in each array is +1 from the dimension size.
     else:
         print("No errors running the CreateGeometryFilter filter")
 
-    rect_grid_geom = data_structure[cx.DataPath(["RectGrid Geometry"])]
+    rect_grid_geom = data_structure[nx.DataPath(["RectGrid Geometry"])]
     x_cell_count = rect_grid_geom.num_x_cells
     print(f'num_x_cells: {x_cell_count}')
     x_bounds = rect_grid_geom.x_bounds

@@ -10,7 +10,7 @@ You will need to first setup your python environment. We will be using an Anacon
 
     conda config --add channels conda-forge
     conda config --set channel_priority strict
-    conda create -n nxpython python=3.10
+    conda create -n nxpython python=3.12
     conda activate nxpython
     conda install -c bluequartzsoftware dream3dnx
 
