@@ -81,10 +81,10 @@ Result<std::array<float32, 16>> readTransformMatrix(const std::string& filePath)
   if(nDims == 2)
   {
     arr[0] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 0));
-    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
+    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
     arr[2] = 0.0f;
     arr[3] = 0.0f;
-    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
+    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
     arr[5] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
     arr[6] = 0.0f;
     arr[7] = 0.0f;
@@ -100,15 +100,15 @@ Result<std::array<float32, 16>> readTransformMatrix(const std::string& filePath)
   else if(nDims == 3)
   {
     arr[0] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 0));
-    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
-    arr[2] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 0));
+    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
+    arr[2] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 2));
     arr[3] = 0.0f;
-    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
+    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
     arr[5] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
-    arr[6] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 1));
+    arr[6] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 2));
     arr[7] = 0.0f;
-    arr[8] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 2));
-    arr[9] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 2));
+    arr[8] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 0));
+    arr[9] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 1));
     arr[10] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 2));
     arr[11] = 0.0f;
     arr[12] = 0.0f;
@@ -269,22 +269,35 @@ IFilter::PreflightResult ITKMhaFileReader::preflightImpl(const DataStructure& da
     }
   }
 
-  if(applyImageTransformation || saveImageTransformationAsArray)
+  // Read the Transform Matrix from the MHA file
+  Result<std::array<float32, 16>> transformMatrixResult = readTransformMatrix(fileNamePath.string());
+  if(transformMatrixResult.invalid())
   {
-    Result<std::array<float32, 16>> transformMatrixResult = readTransformMatrix(fileNamePath.string());
-    if(transformMatrixResult.invalid())
-    {
-      auto voidResult = ConvertResult(std::move(transformMatrixResult));
-      return {ConvertResultTo<OutputActions>(std::move(voidResult), {})};
-    }
+    auto voidResult = ConvertResult(std::move(transformMatrixResult));
+    preflightResult.outputActions.m_Warnings.insert(preflightResult.outputActions.m_Warnings.end(), voidResult.m_Warnings.begin(), voidResult.m_Warnings.end());
+    preflightResult.outputActions.errors().insert(preflightResult.outputActions.errors().end(), voidResult.errors().begin(), voidResult.errors().end());
+    return preflightResult;
+  }
+  std::array<float32, 16>& transformMatrix = transformMatrixResult.value();
 
-    std::array<float32, 16>& transformMatrix = transformMatrixResult.value();
+  // If the user wants to save the Transform Matrix as an Array
+  if(saveImageTransformationAsArray)
+  {
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{1}, std::vector<usize>{transformMatrix.size()}, transformationMatrixDataArrayPath);
+    preflightResult.outputActions.value().appendAction(std::move(createArrayAction));
+  }
+
+  // If the user wants to apply the transform matrix to the incoming image
+  if(applyImageTransformation)
+  {
 
     auto* filterListPtr = Application::Instance()->getFilterList();
     auto applyTransformationToGeometryFilter = filterListPtr->createFilter(k_ApplyTransformationToGeometryFilterHandle);
     if(applyTransformationToGeometryFilter == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-5001, fmt::format("Error preflighting application of transformation to geometry - Unable to instantiate filter 'Apply Transformation To Geometry'."))};
+      preflightResult.outputActions.errors().push_back(
+          {-5001, fmt::format("Error preflighting application of transformation to geometry - Unable to instantiate filter 'Apply Transformation To Geometry'.")});
+      return preflightResult;
     }
 
     Arguments args;
@@ -299,12 +312,6 @@ IFilter::PreflightResult ITKMhaFileReader::preflightImpl(const DataStructure& da
     args.insertOrAssign(k_InterpolationTypeKey, std::make_any<ChoicesParameter::ValueType>(interpolationType));
 
     preflightResult.outputValues.push_back({"Image Transformation Matrix", generateTransformMatrixString(transformMatrix)});
-
-    if(saveImageTransformationAsArray)
-    {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{1}, std::vector<usize>{transformMatrix.size()}, transformationMatrixDataArrayPath);
-      preflightResult.outputActions.value().appendAction(std::move(createArrayAction));
-    }
   }
 
   return preflightResult;
