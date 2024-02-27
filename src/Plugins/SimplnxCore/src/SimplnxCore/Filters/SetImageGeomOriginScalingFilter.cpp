@@ -82,7 +82,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
-  auto shouldChangeResolution = filterArgs.value<bool>(k_ChangeSpacing_Key);
+  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<std::vector<float64>>(k_Origin_Key);
   auto spacing = filterArgs.value<std::vector<float64>>(k_Spacing_Key);
 
@@ -102,12 +102,12 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
     optOrigin = originVec;
     centerOrigin = shouldCenterOrigin;
   }
-  if(shouldChangeResolution)
+  if(shouldChangeSpacing)
   {
-    spacingVec = spacingVec;
+    optSpacing = spacingVec;
   }
 
-  auto action = std::make_unique<UpdateImageGeomAction>(optOrigin, spacingVec, imageGeomPath, centerOrigin);
+  auto action = std::make_unique<UpdateImageGeomAction>(optOrigin, optSpacing, imageGeomPath, centerOrigin);
 
   resultOutputActions.value().appendAction(std::move(action));
 
