@@ -17,6 +17,10 @@ struct SIMPLNXCORE_EXPORT CombineStlFilesInputValues
   DataPath TriangleDataContainerName;
   DataPath FaceAttributeMatrixName;
   DataPath FaceNormalsArrayName;
+  DataPath FaceFileIndexArrayPath;
+  bool LabelFaces;
+  DataPath VertexFileIndexArrayPath;
+  bool LabelVertices;
 };
 
 /**
