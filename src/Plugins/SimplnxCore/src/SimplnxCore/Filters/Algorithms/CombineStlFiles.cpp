@@ -8,6 +8,7 @@
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <algorithm>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -116,17 +117,21 @@ Result<> CombineStlFiles::operator()()
     }
   }
 
-  // Sort the Goemetries in lexigraphical order based on the name of the geometry which should
+  // Sort the Geometries in lexicographical order based on the name of the geometry which should
   // match the file name. We do this because some file systems do not iterate through the directory
-  // contents in lexigraphical order (GitHub CI)
+  // contents in lexicographical order (GitHub CI)
   std::sort(stlGeometries.begin(), stlGeometries.end(), [](const auto& lhs, const auto& rhs) { return lhs->getName() < rhs->getName(); });
 
   auto& combinedGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainerName);
   auto* combinedFaceAM = combinedGeom.getFaceAttributeMatrix();
   auto& combinedFaceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->FaceNormalsArrayName);
+  auto* combinedVertexAM = combinedGeom.getVertexAttributeMatrix();
+
+  // Make sure all arrays and Attribute Matrix are sized correctly.
   combinedGeom.resizeFaceList(totalTriangles);
   combinedGeom.resizeVertexList(totalVertices);
   combinedFaceAM->resizeTuples(std::vector<usize>{totalTriangles});
+  combinedVertexAM->resizeTuples(std::vector<usize>{totalVertices});
 
   usize triOffset = 0;
   usize vertexOffset = 0;
@@ -135,29 +140,60 @@ Result<> CombineStlFiles::operator()()
   INodeGeometry2D::SharedFaceList& triangles = combinedGeom.getFacesRef();
   INodeGeometry0D::SharedVertexList& vertices = combinedGeom.getVerticesRef();
   ParallelTaskAlgorithm taskRunner;
-  for(auto* geom : stlGeometries)
+  int32 fileIndex = 1;
+  usize faceLabelOffset = 0;
+  usize vertexLabelOffset = 0;
+
+  // Loop over each temp geometry and copy the data into the destination geometry
+  for(auto* currentGeometry : stlGeometries)
   {
     if(getCancel())
     {
       return {};
     }
 
-    INodeGeometry2D::SharedFaceList& curTriangles = geom->getFacesRef();
-    for(usize t = 0; t < geom->getNumberOfFaces(); t++)
+    INodeGeometry2D::SharedFaceList& currentSharedFaceList = currentGeometry->getFacesRef();
+    usize currentGeomNumTriangles = currentGeometry->getNumberOfFaces();
+    usize currentGeomNumVertices = currentGeometry->getNumberOfVertices();
+    for(usize triIndex = 0; triIndex < currentGeomNumTriangles; triIndex++)
     {
-      curTriangles[3 * t + 0] += triCounter;
-      curTriangles[3 * t + 1] += triCounter;
-      curTriangles[3 * t + 2] += triCounter;
+      currentSharedFaceList[3 * triIndex + 0] += triCounter;
+      currentSharedFaceList[3 * triIndex + 1] += triCounter;
+      currentSharedFaceList[3 * triIndex + 2] += triCounter;
     }
-    triCounter += geom->getNumberOfVertices();
-    INodeGeometry0D::SharedVertexList& curVertices = geom->getVerticesRef();
-    auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64Array>(geom->getFaceAttributeMatrixDataPath().createChildPath("Face Normals"));
+    triCounter += currentGeomNumVertices;
+    INodeGeometry0D::SharedVertexList& curVertices = currentGeometry->getVerticesRef();
+    auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64Array>(currentGeometry->getFaceAttributeMatrixDataPath().createChildPath("Face Normals"));
 
-    taskRunner.execute(CombineStlImpl{triangles, vertices, combinedFaceNormals, curTriangles, curVertices, curFaceNormals, triOffset, vertexOffset, faceNormalsOffset});
+    if(m_InputValues->LabelFaces)
+    {
+      auto& faceLabels = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FaceFileIndexArrayPath);
+      //      for(usize tuple = faceLabelOffset; tuple < faceLabelOffset + currentGeomNumTriangles; tuple++)
+      //      {
+      //        faceLabels[tuple] = fileIndex;
+      //      }
+      std::fill(faceLabels.begin() + faceLabelOffset, faceLabels.begin() + faceLabelOffset + currentGeomNumTriangles, fileIndex);
+    }
 
-    triOffset += geom->getNumberOfFaces() * 3;
-    vertexOffset += geom->getNumberOfVertices() * 3;
+    faceLabelOffset += currentGeomNumTriangles;
+
+    if(m_InputValues->LabelVertices)
+    {
+      auto& vertexLabels = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->VertexFileIndexArrayPath);
+      //      for(usize tuple = vertexLabelOffset; tuple < vertexLabelOffset + currentGeomNumVertices; tuple++)
+      //      {
+      //        vertexLabels[tuple] = fileIndex;
+      //      }
+      std::fill(vertexLabels.begin() + vertexLabelOffset, vertexLabels.begin() + vertexLabelOffset + currentGeomNumVertices, fileIndex);
+    }
+    vertexLabelOffset += currentGeomNumVertices;
+
+    taskRunner.execute(CombineStlImpl{triangles, vertices, combinedFaceNormals, currentSharedFaceList, curVertices, curFaceNormals, triOffset, vertexOffset, faceNormalsOffset});
+
+    triOffset += currentGeomNumTriangles * 3;
+    vertexOffset += currentGeomNumVertices * 3;
     faceNormalsOffset += curFaceNormals.getSize();
+    fileIndex++;
   }
   taskRunner.wait(); // This will spill over if the number of geometries to processes does not divide evenly by the number of threads.
 

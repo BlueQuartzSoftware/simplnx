@@ -6,12 +6,13 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -59,6 +60,15 @@ Parameters CombineStlFilesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilesPath_Key, "Path to STL Files", "The path to the folder containing all the STL files to be combined", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputDir));
+
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_LabelFaces_Key, "Label Triangles", "When true, each triangle will get an index associated with the index of the STL file", true));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelName_Key, "Created Face Labels", "The name of the face labels data array", "FileIndex"));
+  params.linkParameters(k_LabelFaces_Key, k_FaceLabelName_Key, true);
+
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_LabelVertices_Key, "Label Vertices", "When true, each vertex will get an index associated with the index of the STL file", true));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexLabelName_Key, "Created Vertex Labels", "The name of the vertex labels data array", "FileIndex"));
+  params.linkParameters(k_LabelVertices_Key, k_VertexLabelName_Key, true);
+
   params.insertSeparator(Parameters::Separator{"Created Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_TriangleDataContainerName_Key, "Triangle Geometry", "The path to the triangle geometry to be created from the combined STL files",
                                                              DataPath({"TriangleGeometry"})));
@@ -90,6 +100,12 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
   auto pFaceNormalsArrayNameValue = filterArgs.value<std::string>(k_FaceNormalsArrayName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
 
+  auto createFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_LabelFaces_Key);
+  auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelName_Key);
+
+  auto createVertexLabels = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
+  auto vertexLabelsName = filterArgs.value<std::string>(k_VertexLabelName_Key);
+
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -107,13 +123,34 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
     return MakePreflightErrorResult(-9370, fmt::format("No STL files were found in the selected directory '{}'", pStlFilesPathValue.string()));
   }
 
-  auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleDataContainerNameValue, 1, 1, pVertexAttributeMatrixNameValue, pFaceAttributeMatrixNameValue,
-                                                                                     CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
-  auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(pFaceNormalsArrayNameValue);
-  resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
+  {
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleDataContainerNameValue, 1, 1, pVertexAttributeMatrixNameValue, pFaceAttributeMatrixNameValue,
+                                                                                       CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+    resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
+  }
+  DataPath faceAttributeMatrixDataPath = pTriangleDataContainerNameValue.createChildPath(pFaceAttributeMatrixNameValue);
+  // Create the Triangle Normals path
+  {
+    auto facePath = faceAttributeMatrixDataPath.createChildPath(pFaceNormalsArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{1}, std::vector<usize>{3}, facePath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
 
-  auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{1}, std::vector<usize>{3}, faceNormalsPath);
-  resultOutputActions.value().appendAction(std::move(createArrayAction));
+  // If the user wants to label the faces
+  if(createFaceLabels)
+  {
+    auto facePath = faceAttributeMatrixDataPath.createChildPath(faceLabelsName);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, std::vector<usize>{1}, std::vector<usize>{1}, facePath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
+
+  // If the user wants to label the vertices
+  if(createVertexLabels)
+  {
+    auto vertexPath = pTriangleDataContainerNameValue.createChildPath(pVertexAttributeMatrixNameValue).createChildPath(vertexLabelsName);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, std::vector<usize>{1}, std::vector<usize>{1}, vertexPath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -122,12 +159,20 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
 Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel) const
 {
+  auto pVertexAttributeMatrixNameValue = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
+
   CombineStlFilesInputValues inputValues;
 
   inputValues.StlFilesPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilesPath_Key);
   inputValues.TriangleDataContainerName = filterArgs.value<DataPath>(k_TriangleDataContainerName_Key);
   inputValues.FaceAttributeMatrixName = inputValues.TriangleDataContainerName.createChildPath(filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key));
   inputValues.FaceNormalsArrayName = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceNormalsArrayName_Key));
+
+  inputValues.LabelFaces = filterArgs.value<BoolParameter::ValueType>(k_LabelFaces_Key);
+  inputValues.FaceFileIndexArrayPath = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceLabelName_Key));
+
+  inputValues.LabelVertices = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
+  inputValues.VertexFileIndexArrayPath = DataPath({inputValues.TriangleDataContainerName.getTargetName(), pVertexAttributeMatrixNameValue, filterArgs.value<std::string>(k_VertexLabelName_Key)});
 
   return CombineStlFiles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

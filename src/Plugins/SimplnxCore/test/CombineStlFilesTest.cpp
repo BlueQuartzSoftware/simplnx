@@ -40,6 +40,10 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[Simpln
   args.insertOrAssign(CombineStlFilesFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(k_FaceData));
   args.insertOrAssign(CombineStlFilesFilter::k_FaceNormalsArrayName_Key, std::make_any<std::string>("Face Normals"));
   args.insertOrAssign(CombineStlFilesFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(k_VertexData));
+  args.insertOrAssign(CombineStlFilesFilter::k_LabelFaces_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CombineStlFilesFilter::k_FaceLabelName_Key, std::make_any<std::string>("File Index"));
+  args.insertOrAssign(CombineStlFilesFilter::k_LabelVertices_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CombineStlFilesFilter::k_VertexLabelName_Key, std::make_any<std::string>("File Index"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
