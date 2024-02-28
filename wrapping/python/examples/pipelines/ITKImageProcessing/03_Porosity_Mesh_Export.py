@@ -29,8 +29,8 @@ generated_file_list_value.padding_digits = 2
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_data_name="Cell Data",
-    image_data_array_path="ImageData",
+    cell_attribute_matrix_name="Cell Data",
+    image_data_array_name="ImageData",
     image_geometry_path=nx.DataPath("ImageDataContainer"),
     image_transform_choice=0,
     input_file_list_info=generated_file_list_value,

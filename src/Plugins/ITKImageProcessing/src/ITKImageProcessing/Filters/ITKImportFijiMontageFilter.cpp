@@ -174,7 +174,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
     imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageDataProxy.getParent().getParent()));
     imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
-    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataProxy));
+    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<std::string>(imageDataProxy.getTargetName()));
 
     auto result = imageImportFilter.preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
     if(result.outputActions.invalid())

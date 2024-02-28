@@ -269,25 +269,29 @@ Parameters ITKMhaFileReader::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(ITKImageReader::k_FileName_Key, "Input MHA File", "The input .mha file that will be read.", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{{".mha"}}, FileSystemPathParameter::PathType::InputFile, false));
-  params.insert(std::make_unique<BoolParameter>(k_TransposeTransformMatrix, "Transpose Stored Transformation Matrix",
-                                                "When true, the transformation matrix found in the image's header metadata will be transposed before use.", false));
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_SaveImageTransformationAsArray, "Save Image Transformation As Array",
-                                      "When true, the transformation matrix found in the image's header metadata will be saved as a data array in the created image geometry.", false));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyImageTransformation, "Apply Image Transformation To Geometry",
                                                                  "When true, the transformation matrix found in the image's header metadata will be applied to the created image geometry.", false));
   params.insert(std::make_unique<ChoicesParameter>(k_InterpolationTypeKey, "Interpolation Type", "The type of interpolation algorithm that is used. 0=NearestNeighbor, 1=Linear",
                                                    k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(ITKImageReader::k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
-  params.insert(std::make_unique<DataObjectNameParameter>(ITKImageReader::k_CellDataName_Key, "Cell Data Name", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(ITKImageReader::k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array",
-                                                         DataPath({"ImageDataContainer", ImageGeom::k_CellDataName, "ImageData"})));
+  params.insertSeparator(Parameters::Separator{"Transformation Matrix Options"});
+  params.insert(std::make_unique<BoolParameter>(k_TransposeTransformMatrix, "Transpose Stored Transformation Matrix",
+                                                "When true, the transformation matrix found in the image's header metadata will be transposed before use.", false));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_SaveImageTransformationAsArray, "Save Image Transformation As Array",
+                                      "When true, the transformation matrix found in the image's header metadata will be saved as a data array in the created image geometry.", false));
   params.insert(std::make_unique<ArrayCreationParameter>(k_TransformationMatrixDataArrayPathKey, "Transformation Matrix", "The path to the transformation matrix data array",
                                                          DataPath({"ImageDataContainer", "TransformationMatrix"})));
+
+  params.insertSeparator(Parameters::Separator{"Created Image Data Objects"});
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(ITKImageReader::k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
+
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(ITKImageReader::k_CellDataName_Key, "Created Cell Attribute Matrix", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(ITKImageReader::k_ImageDataArrayPath_Key, "Created Cell Data",
+                                                          "The name of the created image data array. Will be stored in the created Cell Attribute Matrix", "ImageData"));
 
   params.linkParameters(k_SaveImageTransformationAsArray, k_TransformationMatrixDataArrayPathKey, true);
   params.linkParameters(k_ApplyImageTransformation, k_InterpolationTypeKey, true);
@@ -308,13 +312,14 @@ IFilter::PreflightResult ITKMhaFileReader::preflightImpl(const DataStructure& da
   auto fileNamePath = filterArgs.value<FileSystemPathParameter::ValueType>(ITKImageReader::k_FileName_Key);
   auto imageGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(ITKImageReader::k_ImageGeometryPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(ITKImageReader::k_CellDataName_Key);
-  auto imageDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(ITKImageReader::k_ImageDataArrayPath_Key);
+  auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(ITKImageReader::k_ImageDataArrayPath_Key);
   auto saveImageTransformationAsArray = filterArgs.value<BoolParameter::ValueType>(k_SaveImageTransformationAsArray);
   auto transformationMatrixDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_TransformationMatrixDataArrayPathKey);
   auto applyImageTransformation = filterArgs.value<BoolParameter::ValueType>(k_ApplyImageTransformation);
   auto transposeTransform = filterArgs.value<BoolParameter::ValueType>(k_TransposeTransformMatrix);
   auto interpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationTypeKey);
 
+  DataPath imageDataArrayPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -324,7 +329,7 @@ IFilter::PreflightResult ITKMhaFileReader::preflightImpl(const DataStructure& da
     imageReaderArgs.insertOrAssign(ITKImageReader::k_FileName_Key, fileNamePath);
     imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imageGeomPath);
     imageReaderArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, cellDataName);
-    imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageDataArrayPath);
+    imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageDataArrayName);
     IFilter::PreflightResult preflightResult = imageReaderFilter.preflight(dataStructure, imageReaderArgs, messageHandler, shouldCancel);
     if(preflightResult.outputActions.invalid())
     {
@@ -400,12 +405,14 @@ Result<> ITKMhaFileReader::executeImpl(DataStructure& dataStructure, const Argum
   auto fileNamePath = filterArgs.value<FileSystemPathParameter::ValueType>(ITKImageReader::k_FileName_Key);
   auto imageGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(ITKImageReader::k_ImageGeometryPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(ITKImageReader::k_CellDataName_Key);
-  auto imageDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(ITKImageReader::k_ImageDataArrayPath_Key);
+  auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(ITKImageReader::k_ImageDataArrayPath_Key);
   auto saveImageTransformationAsArray = filterArgs.value<BoolParameter::ValueType>(k_SaveImageTransformationAsArray);
   auto transformationMatrixDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_TransformationMatrixDataArrayPathKey);
   auto applyImageTransformation = filterArgs.value<BoolParameter::ValueType>(k_ApplyImageTransformation);
   auto interpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationTypeKey);
   auto transposeTransform = filterArgs.value<BoolParameter::ValueType>(k_TransposeTransformMatrix);
+
+  DataPath imageDataArrayPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
 
   Result<> mainResult;
 
@@ -418,7 +425,7 @@ Result<> ITKMhaFileReader::executeImpl(DataStructure& dataStructure, const Argum
     args.insertOrAssign(ITKImageReader::k_FileName_Key, fileNamePath);
     args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imageGeomPath);
     args.insertOrAssign(ITKImageReader::k_CellDataName_Key, cellDataName);
-    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageDataArrayPath);
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageDataArrayName);
 
     auto executeResult = imageReaderFilter.execute(importedDataStructure, args, pipelineNode, messageHandler, shouldCancel);
     if(executeResult.result.invalid())

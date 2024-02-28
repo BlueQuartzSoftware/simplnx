@@ -81,11 +81,11 @@ Parameters ITKImageReader::parameters() const
                                                           FileSystemPathParameter::ExtensionsType{{".png"}, {".tiff"}, {".tif"}, {".bmp"}, {".jpeg"}, {".jpg"}, {".nrrd"}, {".mha"}},
                                                           FileSystemPathParameter::PathType::InputFile, false));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array",
-                                                         DataPath({"ImageDataContainer", ImageGeom::k_CellDataName, "ImageData"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Created Cell Attribute Matrix", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ImageDataArrayPath_Key, "Created Cell Data",
+                                                          "The name of the created image data array. Will be stored in the created Cell Attribute Matrix", "ImageData"));
 
   return params;
 }
@@ -102,13 +102,13 @@ IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& data
 {
   auto fileName = filterArgs.value<fs::path>(k_FileName_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto cellDataName = filterArgs.value<std::string>(k_CellDataName_Key);
-  auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
+  auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
+  auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
-  auto origin = filterArgs.value<std::vector<float64>>(k_Origin_Key);
-  auto spacing = filterArgs.value<std::vector<float64>>(k_Spacing_Key);
+  auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
+  auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
 
   std::string fileNameString = fileName.string();
 
@@ -120,7 +120,7 @@ IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& data
   imageReaderOptions.Origin = FloatVec3(static_cast<float32>(origin[0]), static_cast<float32>(origin[1]), static_cast<float32>(origin[2]));
   imageReaderOptions.Spacing = FloatVec3(static_cast<float32>(spacing[0]), static_cast<float32>(spacing[1]), static_cast<float32>(spacing[2]));
 
-  Result<OutputActions> result = cxItkImageReader::ReadImagePreflight(fileNameString, imageGeomPath, cellDataName, imageDataArrayPath, imageReaderOptions);
+  Result<OutputActions> result = cxItkImageReader::ReadImagePreflight(fileNameString, imageGeomPath, cellDataName, imageDataArrayName, imageReaderOptions);
 
   return {result};
 }
@@ -131,12 +131,15 @@ Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Argumen
 {
   auto fileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
+  auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
+  auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
   //  auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   //  auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
   //  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
-  auto origin = filterArgs.value<std::vector<float64>>(k_Origin_Key);
-  auto spacing = filterArgs.value<std::vector<float64>>(k_Spacing_Key);
+  auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
+  auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
+
+  DataPath imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
 
   const IDataArray* inputArrayPtr = dataStructure.getDataAs<IDataArray>(imageDataArrayPath);
   if(!inputArrayPtr->getDataFormat().empty())

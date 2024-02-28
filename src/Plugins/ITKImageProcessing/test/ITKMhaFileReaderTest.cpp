@@ -56,7 +56,7 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
   args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geomPath);
   args.insertOrAssign(ITKImageReader::k_CellDataName_Key, amName);
-  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
+  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrName);
   args.insertOrAssign(ITKMhaFileReader::k_ApplyImageTransformation, true);
   args.insertOrAssign(ITKMhaFileReader::k_SaveImageTransformationAsArray, true);
   args.insertOrAssign(ITKMhaFileReader::k_TransformationMatrixDataArrayPathKey, tMatrixPath);
