@@ -29,6 +29,10 @@ public:
   static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
   static inline constexpr StringLiteral k_FaceNormalsArrayName_Key = "face_normals_array_name";
   static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_LabelFaces_Key = "label_faces";
+  static inline constexpr StringLiteral k_FaceLabelName_Key = "face_label_name";
+  static inline constexpr StringLiteral k_LabelVertices_Key = "label_vertices";
+  static inline constexpr StringLiteral k_VertexLabelName_Key = "vertex_label_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
