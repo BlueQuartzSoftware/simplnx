@@ -10,7 +10,17 @@ ITKImageProcessing (ITKImageProcessing)
 
 ## Description
 
-Reads MHA images and their transformation matrices using ITK
+Reads MHA images and their transformation matrices using ITK. Some select headers from the MHA file are read. If those headers are not available then
+then default values are used.
+
+- Number of Dimensions
+- Center of Rotation (0,0,0 is the default)
+- Offset (used at the origin for the created Image Geometry)
+- Transformation Matrix
+
+### Use of the Transformation Matrix Notes
+
+There is an option to use the transpose of the Transformation Matrix. This can be useful if the stored transformation matrix is not the correct active transformation. If the determinant of the transformation matrix is NOT 1.0 (or really close) AND the user has selected to transpose the matrix a preflight error will be thrown. Using the *transpose* of the transformation matrix **only** works if the transformation matrix is purely represents a rotation: Other affine transforms are **NOT** allowed such as shear, scale and translation.
 
 % Auto generated parameter table will be inserted here
 
