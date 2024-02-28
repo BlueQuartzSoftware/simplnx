@@ -146,6 +146,7 @@ MHAHeaderInfo readMhaHeader(const std::string& filePath, bool transpose)
     headerInfo.TransformationMatrix(0, 1) = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
     headerInfo.TransformationMatrix(1, 0) = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
     headerInfo.TransformationMatrix(1, 1) = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
+    headerInfo.TransformationMatrix(2, 2) = 1.0f;
   }
   else if(nDims == 3)
   {
