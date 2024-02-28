@@ -156,11 +156,10 @@ nxtest.check_filter_result(nxitk.ITKImageWriter, result)
 #------------------------------------------------------------------------------
 # Generate a Colorized Version of the Confidence Index
 #------------------------------------------------------------------------------
-color_control_points = nx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
 result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
                                               output_rgb_array_name="CI Color", 
                                               selected_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
-                                              selected_preset=color_control_points)
+                                              selected_preset="Rainbow Desaturation")
 nxtest.check_filter_result(nx.GenerateColorTableFilter, result)
 
 
