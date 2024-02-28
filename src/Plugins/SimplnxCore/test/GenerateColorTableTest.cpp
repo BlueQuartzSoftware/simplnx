@@ -15,8 +15,7 @@ using namespace nx::core;
 
 namespace
 {
-const fs::path k_TestFilesDir = fs::path(nx::core::unit_test::k_DREAM3DDataDir.str()) / "TestFiles" / "GenerateColorTableTest";
-const fs::path k_PresetsFilePath = k_TestFilesDir / "ColorTablePresets.json";
+const fs::path k_TestFilesDir = fs::path(nx::core::unit_test::k_DREAM3DDataDir.str()) / "TestFiles" / "generate_color_table_test";
 const fs::path k_InputImageFilePath = k_TestFilesDir / "ColorTableTestFile.txt";
 
 const fs::path k_BlackBlueWhitePresetPath = k_TestFilesDir / "BlackBlueWhite.txt";
@@ -71,7 +70,7 @@ std::map<std::string, nlohmann::json> ReadPresets()
 
 TEST_CASE("SimplnxCore::GenerateColorTableFilter: Valid filter execution")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "GenerateColorTableTest.tar.gz", "GenerateColorTableTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "generate_color_table_test.tar.gz", "generate_color_table_test");
 
   DataStructure dataStructure;
 
