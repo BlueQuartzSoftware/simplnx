@@ -3,6 +3,7 @@
 #include "simplnx/simplnx_export.hpp"
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -28,5 +29,5 @@ SIMPLNX_EXPORT Result<std::vector<float32>> ExtractContolPoints(const std::strin
  * @brief GetDefaultRGBPresetName This method will look for RGB json presets from the ColorTable.hpp JSON and return the first 'name' string
  * @return The string name of the first RGB preset or empty string if none found
  */
-std::string GetDefaultRGBPresetName();
+SIMPLNX_EXPORT std::string GetDefaultRGBPresetName();
 } // namespace nx::core::ColorTableUtilities
