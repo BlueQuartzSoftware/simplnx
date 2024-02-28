@@ -175,6 +175,13 @@ MHAHeaderInfo readMhaHeader(const std::string& filePath, bool transpose)
   headerInfo.Dimensions[0] = static_cast<usize>(metaImagePtr->DimSize(static_cast<int>(0)));
   headerInfo.Dimensions[1] = static_cast<usize>(metaImagePtr->DimSize(static_cast<int>(1)));
   headerInfo.Dimensions[2] = static_cast<usize>(metaImagePtr->DimSize(static_cast<int>(2)));
+  for(auto& dim : headerInfo.Dimensions)
+  {
+    if(dim == 0)
+    {
+      dim = 1;
+    }
+  }
 
   // Generate all the PreflightUpdatedValues
   headerInfo.PreflightUpdatedValues.push_back({"Image Dimensions (voxels): ", fmt::format("{}", fmt::join(headerInfo.Dimensions, ",  "))});
