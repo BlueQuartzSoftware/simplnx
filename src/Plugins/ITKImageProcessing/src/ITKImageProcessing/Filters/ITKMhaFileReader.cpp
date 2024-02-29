@@ -188,14 +188,13 @@ MHAHeaderInfo readMhaHeader(const std::string& filePath, bool transpose)
   headerInfo.PreflightUpdatedValues.push_back({"Image Dimensions (voxels): ", fmt::format("{}", fmt::join(headerInfo.Dimensions, ",  "))});
   headerInfo.PreflightUpdatedValues.push_back({"Image Origin: ", fmt::format("{: > 8.8}", fmt::join(headerInfo.Origin, ",  "))});
   headerInfo.PreflightUpdatedValues.push_back({"Image Center of Rotation: ", fmt::format("{: > 8.8}", fmt::join(headerInfo.CenterOfRotation, ",  "))});
-  headerInfo.PreflightUpdatedValues.push_back({"Image Transformation Matrix: ", generateTransformMatrixString(headerInfo.TransformationMatrix)});
+
+  float det = headerInfo.TransformationMatrix.determinant();
 
   if(transpose)
   {
-    float det = headerInfo.TransformationMatrix.determinant();
     if(std::abs(1.0 - det) > 0.0001f)
     {
-      headerInfo.PreflightUpdatedValues.push_back({"Transform Matrix Determinant: ", fmt::format("{}", det)});
       headerInfo.Errors.push_back(
           {-5002,
            fmt::format("Transformation Matrix is NOT a pure rotation transform. A pure transpose will not work. De-select the option to transpose the matrix. Determinant of Transform matrix is {}",
@@ -203,6 +202,8 @@ MHAHeaderInfo readMhaHeader(const std::string& filePath, bool transpose)
     }
     headerInfo.TransformationMatrix.transposeInPlace();
   }
+  headerInfo.PreflightUpdatedValues.push_back({"Transformation Matrix: ", generateTransformMatrixString(headerInfo.TransformationMatrix)});
+  headerInfo.PreflightUpdatedValues.push_back({"Transform Matrix Determinant: ", fmt::format("{}", det)});
 
   return headerInfo;
 }
