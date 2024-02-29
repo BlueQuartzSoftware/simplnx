@@ -8,6 +8,26 @@ is normalized and converted to a color based on where the value falls in the spe
 The user can apply an optional data mask and then set the RGB values (0-255) that will be used if the data mask has a FALSE
 value.
 
+## Preset Values
+
+These are the valid preset strings that can be used.
+
+* "Rainbow Desaturated"
+* "Cold and Hot"
+* "Black-Body Radiation"
+* "X Ray"
+* "Grayscale"
+* "Black, Blue and White"
+* "Black, Orange and White"
+* "Rainbow Blended White"
+* "Rainbow Blended Grey"
+* "Rainbow Blended Black"
+* "Blue to Yellow"
+* "jet"
+* "rainbow"
+* "Haze"
+* "hsv"
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

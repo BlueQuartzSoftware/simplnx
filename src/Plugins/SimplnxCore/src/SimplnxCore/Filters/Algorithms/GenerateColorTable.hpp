@@ -5,16 +5,12 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/GenerateColorTableParameter.hpp"
 
 namespace nx::core
 {
-
 struct SIMPLNXCORE_EXPORT GenerateColorTableInputValues
 {
-  nlohmann::json SelectedPreset;
+  std::string PresetName;
   DataPath SelectedDataArrayPath;
   DataPath RgbArrayPath;
   bool UseMask;
@@ -43,5 +39,4 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
-
 } // namespace nx::core

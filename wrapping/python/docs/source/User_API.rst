@@ -299,24 +299,35 @@ General Parameters
     a_file_system_path = "/The/Path/To/The/File/Or/Directory"
 
 .. _GenerateColorTableParameter:
-.. py:class:: GenerateColorTableParameter
-
-   **NOTE: THIS API IS GOING TO CHANGE IN A FUTURE UPDATE**
+.. py:class:: GenerateColorTableParameter (Updated v1.2.6)
    
-   This parameter is used specifically for the  :ref:`simplnx.GenerateColorTableFilter() <GenerateColorTableFilter>` filter. The parameter has 
-   a single member variable 'default_value' that is of type 'simplnx.Json'. 
+   This parameter is used specifically for the  :ref:`simplnx.GenerateColorTableFilter() <GenerateColorTableFilter>` filter. This parameter 
+   represents a **string** value that corresponds to an RGB Preset Name and can be instantiated using a simple python string type.
 
-   .. py:class:: simplnx.Json
-   
-   This class encapsulates a string that represents well formed JSON. It can be constructed on-the-fly as follows:
+   Default RGB Preset Names are as follows:
+
+   * "Rainbow Desaturated"
+   * "Cold and Hot"
+   * "Black-Body Radiation"
+   * "X Ray"
+   * "Grayscale"
+   * "Black, Blue and White"
+   * "Black, Orange and White"
+   * "Rainbow Blended White"
+   * "Rainbow Blended Grey"
+   * "Rainbow Blended Black"
+   * "Blue to Yellow"
+   * "jet"
+   * "rainbow"
+   * "Haze"
+   * "hsv"
 
    .. code:: python
 
-      color_control_points = nx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
       result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
                                               rgb_array_path="CI Color", 
                                               selected_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
-                                              selected_preset=color_control_points)      
+                                              selected_preset="hsv")      
 
 .. _GeneratedFileListParameter:
 .. py:class:: GeneratedFileListParameter

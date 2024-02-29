@@ -78,7 +78,7 @@ endif()
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
 project(simplnx
-  VERSION 1.2.4
+  VERSION 1.2.6
   DESCRIPTION "SIMPL Redesign"
   HOMEPAGE_URL "https://github.com/bluequartzsoftware/simplnx"
   LANGUAGES CXX
@@ -209,10 +209,10 @@ endif()
 # Force HDF5 1.10 API
 target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
-target_compile_options(simplnx
-  PUBLIC
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off>
-)
+target_compile_options( simplnx PUBLIC
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>: "-ffp-contract=off">
+ )
+
 
 if(SIMPLNX_ENABLE_MULTICORE)
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_ENABLE_MULTICORE")
@@ -487,7 +487,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
@@ -704,7 +704,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
@@ -747,6 +747,20 @@ foreach(param ${CoreParameters})
   )
 endforeach()
 
+# Generate Supporting Color Table File
+file(READ ${simplnx_SOURCE_DIR}/resources/ColorTablePresets/ColorTablePresets.json COLOR_TABLE_JSON)
+string(REGEX REPLACE "[ \t\n\r]+" " " COLOR_TABLE_FLAT ${COLOR_TABLE_JSON})
+string(HEX ${COLOR_TABLE_FLAT} COLOR_TABLE_HEX)
+string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," COLOR_TABLE_HEX ${COLOR_TABLE_HEX})
+string(APPEND COLOR_TABLE_HEX "0x00")
+
+set(SIMPLNX_GENERATED_COLOR_TABLE_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/util/ColorTable.hpp)
+cmpConfigureFileWithMD5Check(CONFIGURED_TEMPLATE_PATH ${SIMPLNX_SOURCE_DIR}/Parameters/util/ColorTable.in.hpp GENERATED_FILE_PATH ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER})
+list(APPEND SIMPLNX_GENERATED_HEADERS
+  ${SIMPLNX_GENERATED_COLOR_TABLE_HEADER}
+)
+
+# Generate Python-Bindings Supporting Files
 set(SIMPLNX_GENERATED_PYTHON_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/SimplnxPython.hpp)
 set(SIMPLNX_PYTHON_MODULE "simplnx")
 configure_file(${simplnx_SOURCE_DIR}/wrapping/python/CxPybind/SimplnxPython.hpp.in ${SIMPLNX_GENERATED_PYTHON_HEADER})

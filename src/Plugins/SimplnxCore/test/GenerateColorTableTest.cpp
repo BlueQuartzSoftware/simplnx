@@ -7,7 +7,7 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/ColorPresetsUtilities.hpp"
+#include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 namespace fs = std::filesystem;
@@ -15,8 +15,7 @@ using namespace nx::core;
 
 namespace
 {
-const fs::path k_TestFilesDir = fs::path(nx::core::unit_test::k_DREAM3DDataDir.str()) / "TestFiles" / "GenerateColorTableTest";
-const fs::path k_PresetsFilePath = k_TestFilesDir / "ColorTablePresets.json";
+const fs::path k_TestFilesDir = fs::path(nx::core::unit_test::k_DREAM3DDataDir.str()) / "TestFiles" / "generate_color_table_test";
 const fs::path k_InputImageFilePath = k_TestFilesDir / "ColorTableTestFile.txt";
 
 const fs::path k_BlackBlueWhitePresetPath = k_TestFilesDir / "BlackBlueWhite.txt";
@@ -53,7 +52,7 @@ const std::string k_XRayPresetName = "X Ray";
 
 std::map<std::string, nlohmann::json> ReadPresets()
 {
-  Result<nlohmann::json> result = ReadRGBPresets(k_PresetsFilePath);
+  Result<nlohmann::json> result = ColorTableUtilities::LoadAllRGBPresets();
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   std::map<std::string, nlohmann::json> presetsMap;
@@ -71,7 +70,8 @@ std::map<std::string, nlohmann::json> ReadPresets()
 
 TEST_CASE("SimplnxCore::GenerateColorTableFilter: Valid filter execution")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "GenerateColorTableTest.tar.gz", "GenerateColorTableTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "generate_color_table_test.tar.gz",
+                                                              "generate_color_table_test");
 
   DataStructure dataStructure;
 
@@ -100,91 +100,91 @@ TEST_CASE("SimplnxCore::GenerateColorTableFilter: Valid filter execution")
   SECTION(k_BlackBlueWhitePresetName)
   {
     REQUIRE(!presetsMap[k_BlackBlueWhitePresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_BlackBlueWhitePresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_BlackBlueWhitePresetName));
     presetFilePath = k_BlackBlueWhitePresetPath;
   }
   SECTION(k_BlackOrangeWhitePresetName)
   {
     REQUIRE(!presetsMap[k_BlackOrangeWhitePresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_BlackOrangeWhitePresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_BlackOrangeWhitePresetName));
     presetFilePath = k_BlackOrangeWhitePresetPath;
   }
   SECTION(k_BlackBodyRadiationPresetName)
   {
     REQUIRE(!presetsMap[k_BlackBodyRadiationPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_BlackBodyRadiationPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_BlackBodyRadiationPresetName));
     presetFilePath = k_BlackBodyRadiationPresetPath;
   }
   SECTION(k_BlueToYellowPresetName)
   {
     REQUIRE(!presetsMap[k_BlueToYellowPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_BlueToYellowPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_BlueToYellowPresetName));
     presetFilePath = k_BlueToYellowPresetPath;
   }
   SECTION(k_ColdAndHotPresetName)
   {
     REQUIRE(!presetsMap[k_ColdAndHotPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_ColdAndHotPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_ColdAndHotPresetName));
     presetFilePath = k_ColdAndHotPresetPath;
   }
   SECTION(k_GrayscalePresetName)
   {
     REQUIRE(!presetsMap[k_GrayscalePresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_GrayscalePresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_GrayscalePresetName));
     presetFilePath = k_GrayscalePresetPath;
   }
   SECTION(k_HazePresetName)
   {
     REQUIRE(!presetsMap[k_HazePresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_HazePresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_HazePresetName));
     presetFilePath = k_HazePresetPath;
   }
   SECTION(k_HSVPresetName)
   {
     REQUIRE(!presetsMap[k_HSVPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_HSVPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_HSVPresetName));
     presetFilePath = k_HSVPresetPath;
   }
   SECTION(k_JetPresetName)
   {
     REQUIRE(!presetsMap[k_JetPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_JetPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_JetPresetName));
     presetFilePath = k_JetPresetPath;
   }
   SECTION(k_RainbowBlendedBlackPresetName)
   {
     REQUIRE(!presetsMap[k_RainbowBlendedBlackPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_RainbowBlendedBlackPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_RainbowBlendedBlackPresetName));
     presetFilePath = k_RainbowBlendedBlackPresetPath;
   }
   SECTION(k_RainbowBlendedGreyPresetName)
   {
     REQUIRE(!presetsMap[k_RainbowBlendedGreyPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_RainbowBlendedGreyPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_RainbowBlendedGreyPresetName));
     presetFilePath = k_RainbowBlendedGreyPresetPath;
   }
   SECTION(k_RainbowBlendedWhitePresetName)
   {
     REQUIRE(!presetsMap[k_RainbowBlendedWhitePresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_RainbowBlendedWhitePresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_RainbowBlendedWhitePresetName));
     presetFilePath = k_RainbowBlendedWhitePresetPath;
   }
   SECTION(k_RainbowDesaturatedPresetName)
   {
     REQUIRE(!presetsMap[k_RainbowDesaturatedPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_RainbowDesaturatedPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_RainbowDesaturatedPresetName));
     presetFilePath = k_RainbowDesaturatedPresetPath;
   }
   SECTION(k_RainbowPresetName)
   {
     REQUIRE(!presetsMap[k_RainbowPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_RainbowPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_RainbowPresetName));
     presetFilePath = k_RainbowPresetPath;
   }
   SECTION(k_XRayPresetName)
   {
     REQUIRE(!presetsMap[k_XRayPresetName].empty());
-    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(presetsMap[k_XRayPresetName]));
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<std::string>(k_XRayPresetName));
     presetFilePath = k_XRayPresetPath;
   }
 

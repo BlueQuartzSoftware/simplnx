@@ -944,15 +944,32 @@ General Parameters
    ~~~~~~~~~~~
    .. code-block:: python
 
-      GenerateColorTableParameter(name: str, human_name: str, help_text: str, default_value: Json) -> None
+      GenerateColorTableParameter(name: str, human_name: str, help_text: str, default_value: str) -> None
 
    Description
    ~~~~~~~~~~~
-   **NOTE: THIS API IS GOING TO CHANGE IN A FUTURE UPDATE**
    
    The ``GenerateColorTableParameter`` is used to specify parameters for generating color tables, typically used in visualization or data representation.
 
    This parameter is used specifically for the  :ref:`simplnx.GenerateColorTableFilter() <GenerateColorTableFilter>` filter.
+
+   These are the color table presets:
+   
+   - "Rainbow Desaturated"
+   - "Cold and Hot"
+   - "Black-Body Radiation"
+   - "X Ray"
+   - "Grayscale"
+   - "Black, Blue and White"
+   - "Black, Orange and White"
+   - "Rainbow Blended White"
+   - "Rainbow Blended Grey"
+   - "Rainbow Blended Black"
+   - "Blue to Yellow"
+   - "jet"
+   - "rainbow"
+   - "Haze"
+   - "hsv"
 
    Inputs
    ~~~~~~
@@ -968,18 +985,10 @@ General Parameters
       - **Description**: A brief description or help text for the parameter.
       - **Type**: string (str)
 
-   - ``default_value`` : Json
-      - **Description**: The default color table in JSON format.
-      - **Type**: `Json`
+   - ``default_value`` : str
+      - **Description**: The name of the color table preset to use.
+      - **Type**: string (str)
    
-   .. attribute:: simplnx.Json
-      
-      This value encapsulates a string that represents well formed JSON. It can be constructed on-the-fly as follows:
-
-      .. code:: python
-
-         color_control_points = nx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
-
    Usage
    ~~~~~~
 
@@ -987,8 +996,7 @@ General Parameters
 
       import simplnx as nx
 
-      color_control_points = nx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
-      params.insert(nx.GenerateColorTableParameter('color_table_preset_key', "Select Preset...", "Select a preset color scheme to apply to the created array", color_control_points))
+      params.insert(nx.GenerateColorTableParameter('color_table_preset_key', "Select Color Preset...", "Select a preset color name.", "Cool to Warm"))
 
 .. _GeneratedFileListParameter:
 .. py:class:: GeneratedFileListParameter

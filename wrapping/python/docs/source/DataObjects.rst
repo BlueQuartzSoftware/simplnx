@@ -23,7 +23,7 @@ a yellow box at the right side of the user interface.
 
 .. py:class:: DataStructure
 
-   .. py:method:: [data_path]
+   .. py:method:: [data_path] 
                   [string]
 
       Retrieves the DataObject at the given DataPath_
@@ -150,10 +150,10 @@ DataPath can act as a List[str] object, such as getting the length or looping on
    .. py:method:: (list_of_string)
                   (delimited_string)
 
-      Constructs a DataPath object from either a List of strings or a '/' delimited string
+      Constructs a DataPath object from either a List of strings or a '/' delimited string. 
 
       :param List[str] list_of_string: A list of strings
-      :param str delimited_string: A "/" delimited string
+      :param str delimited_string: A "/" delimited string  (First introduced: v1.2.5)
 
    .. code:: python
 
@@ -184,9 +184,9 @@ DataPath can act as a List[str] object, such as getting the length or looping on
 
       :param str child_name: This will be appended to the existing DataPath
 
-   .. py:method:: parts
+   .. py:method:: parts 
 
-      A tuple giving access to the path's various components. Conforms to the pathlib specification
+      A tuple giving access to the path's various components. Conforms to the pathlib specification. (First introduced: v1.2.5)
 
    .. code:: python
 
@@ -197,7 +197,7 @@ DataPath can act as a List[str] object, such as getting the length or looping on
 
    .. py:method:: parent
 
-      The logical parent of the path. Conforms to the pathlib specification
+      The logical parent of the path. Conforms to the pathlib specification. (First introduced: v1.2.5)
 
    .. code:: python
 
@@ -208,7 +208,7 @@ DataPath can act as a List[str] object, such as getting the length or looping on
 
    .. py:method:: name
 
-      A string representing the final path component:
+      A string representing the final path component. (First introduced: v1.2.5)
 
    .. code:: python
 
@@ -219,7 +219,7 @@ DataPath can act as a List[str] object, such as getting the length or looping on
 
    .. py:method:: with_name
 
-      Return a new DataPath with the name changed. If the original path is empty, then a DataPath with the name as the only part is returned.
+      Return a new DataPath with the name changed. If the original path is empty, then a DataPath with the name as the only part is returned. (First introduced: v1.2.5)
 
    .. code:: python
 

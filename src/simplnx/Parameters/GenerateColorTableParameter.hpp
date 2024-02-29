@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string>
-
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/Filter/ValueParameter.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <nlohmann/json.hpp>
+
+#include <string>
 
 namespace nx::core
 {
@@ -17,7 +17,7 @@ namespace nx::core
 class SIMPLNX_EXPORT GenerateColorTableParameter : public ValueParameter
 {
 public:
-  using ValueType = nlohmann::json;
+  using ValueType = std::string;
 
   GenerateColorTableParameter() = delete;
   GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
