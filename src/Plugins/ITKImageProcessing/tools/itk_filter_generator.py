@@ -864,14 +864,14 @@ def get_test_case(filter_data: FilterData, test: TestData) -> List[str]:
     lines.append('  DataStructure dataStructure;\n')
     lines.append(f'  const {filter_data.filter_name} filter;\n\n')
     lines.append('  const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});\n')
-    lines.append('  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);\n')
-    lines.append('  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);\n')
+    lines.append('  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);\n')
+    lines.append('  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);\n')
     lines.append('  const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;\n\n')
 
     for input_str in test.inputs:
         lines.append('  { // Start Image Comparison Scope\n')
         lines.append(f'    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / \"JSONFilters\" / \"{input_str}\";\n')
-        lines.append(f'    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);\n')
+        lines.append(f'    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);\n')
         lines.append('    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)\n')
         lines.append('  } // End Image Comparison Scope\n\n')
 
@@ -895,9 +895,9 @@ def get_test_case(filter_data: FilterData, test: TestData) -> List[str]:
     if not test.md5hash:
         lines.append(f'  const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / \"JSONFilters/Baseline/BasicFilters_{filter_data.name}_{test.tag}.nrrd\";\n')
         lines.append('  const DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});\n')
-        lines.append('  const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);\n')
+        lines.append('  const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);\n')
         lines.append('  const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);\n')
-        lines.append('  const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);\n')
+        lines.append('  const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);\n')
         tolerance_str = f', {test.tolerance}' if test.tolerance else ''
         lines.append(f'  Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName){tolerance_str});\n')
         lines.append('  SIMPLNX_RESULT_REQUIRE_VALID(compareResult)\n')
