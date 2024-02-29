@@ -45,9 +45,9 @@ public:
   ITKSignedMaurerDistanceMapImage& operator=(ITKSignedMaurerDistanceMapImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geom_path";
+  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
   static inline constexpr StringLiteral k_InsideIsPositive_Key = "inside_is_positive";
   static inline constexpr StringLiteral k_SquaredDistance_Key = "squared_distance";
   static inline constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";

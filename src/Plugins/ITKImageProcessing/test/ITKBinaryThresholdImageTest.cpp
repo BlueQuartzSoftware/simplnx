@@ -29,9 +29,9 @@ TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImageFilter(default)", "[ITKIma
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryThresholdImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -58,9 +58,9 @@ TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImageFilter(NarrowThreshold)", 
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryThresholdImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKBinaryThresholdImage::k_LowerThreshold_Key, std::make_any<Float64Parameter::ValueType>(10));
   args.insertOrAssign(ITKBinaryThresholdImage::k_UpperThreshold_Key, std::make_any<Float64Parameter::ValueType>(100));
   args.insertOrAssign(ITKBinaryThresholdImage::k_InsideValue_Key, std::make_any<UInt8Parameter::ValueType>(255));
