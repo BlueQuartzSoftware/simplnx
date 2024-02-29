@@ -82,6 +82,7 @@ Parameters GenerateColorTableFilter::parameters() const
                                                        VectorUInt8Parameter::ValueType{0, 0, 0}, std::vector<std::string>{"Red", "Green", "Blue"}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
+  params.linkParameters(k_UseMask_Key, k_InvalidColorValue_Key, true);
 
   params.insertSeparator({"Created Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(

@@ -299,9 +299,7 @@ General Parameters
     a_file_system_path = "/The/Path/To/The/File/Or/Directory"
 
 .. _GenerateColorTableParameter:
-.. py:class:: GenerateColorTableParameter
-
-   **NOTE: THIS API WAS RECENTLY UPDATED**
+.. py:class:: GenerateColorTableParameter (Updated v1.2.6)
    
    This parameter is used specifically for the  :ref:`simplnx.GenerateColorTableFilter() <GenerateColorTableFilter>` filter. This parameter 
    represents a **string** value that corresponds to an RGB Preset Name and can be instantiated using a simple python string type.

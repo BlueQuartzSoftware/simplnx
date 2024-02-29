@@ -159,7 +159,7 @@ nxtest.check_filter_result(nxitk.ITKImageWriter, result)
 result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
                                               output_rgb_array_name="CI Color", 
                                               selected_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
-                                              selected_preset="Rainbow Desaturation")
+                                              selected_preset="Rainbow Desaturated")
 nxtest.check_filter_result(nx.GenerateColorTableFilter, result)
 
 
