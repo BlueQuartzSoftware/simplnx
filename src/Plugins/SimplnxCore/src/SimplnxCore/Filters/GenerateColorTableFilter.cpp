@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
+#include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/GenerateColorTableParameter.hpp"
@@ -66,7 +67,8 @@ Parameters GenerateColorTableFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator({"Input Parameters"});
-  params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array", nlohmann::json{}));
+  params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array",
+                                                              ColorTableUtilities::GetDefaultRGBPresetName()));
   params.insertSeparator({"Required Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array",
                                                           "The complete path to the data array from which to create the rgb array by applying the selected preset color scheme", DataPath{},
@@ -80,6 +82,7 @@ Parameters GenerateColorTableFilter::parameters() const
                                                        VectorUInt8Parameter::ValueType{0, 0, 0}, std::vector<std::string>{"Red", "Green", "Blue"}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
+  params.linkParameters(k_UseMask_Key, k_InvalidColorValue_Key, true);
 
   params.insertSeparator({"Created Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(
@@ -98,7 +101,6 @@ IFilter::UniquePointer GenerateColorTableFilter::clone() const
 IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel) const
 {
-  auto pSelectedPresetValue = filterArgs.value<nlohmann::json>(k_SelectedPreset_Key);
   auto pSelectedDataArrayPathValue = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   auto pRgbArrayPathValue = pSelectedDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
 
@@ -121,7 +123,7 @@ IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStruc
   {
     goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
-    const nx::core::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
+    const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
     if(nullptr == goodVoxelsArray)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
@@ -150,7 +152,7 @@ Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, con
 {
   GenerateColorTableInputValues inputValues;
 
-  inputValues.SelectedPreset = filterArgs.value<nlohmann::json>(k_SelectedPreset_Key);
+  inputValues.PresetName = filterArgs.value<GenerateColorTableParameter::ValueType>(k_SelectedPreset_Key);
   inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);

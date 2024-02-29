@@ -1,10 +1,10 @@
 #include "GenerateColorTableParameter.hpp"
 
-#include <fmt/core.h>
-
-#include <nlohmann/json.hpp>
-
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/util/ColorTable.hpp"
+
+#include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 namespace nx::core
 {
@@ -26,19 +26,20 @@ IParameter::AcceptedTypes GenerateColorTableParameter::acceptedTypes() const
 
 nlohmann::json GenerateColorTableParameter::toJson(const std::any& value) const
 {
-  const auto& json = GetAnyRef<ValueType>(value);
+  const auto& nameStr = GetAnyRef<ValueType>(value);
+  nlohmann::json json = nameStr;
   return json;
 }
 
 Result<std::any> GenerateColorTableParameter::fromJson(const nlohmann::json& json) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'GenerateColorTableParameter' JSON Error: ";
-  if(!json.empty() && !json.is_object())
+  if(!json.empty() && !json.is_string())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
   }
 
-  return {{std::make_any<nlohmann::json>(json)}};
+  return {{std::make_any<ValueType>(json.get<ValueType>())}};
 }
 
 IParameter::UniquePointer GenerateColorTableParameter::clone() const
