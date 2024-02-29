@@ -48,9 +48,9 @@ public:
   ITKBinaryDilateImage& operator=(ITKBinaryDilateImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geom_path";
+  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
   static inline constexpr StringLiteral k_KernelRadius_Key = "kernel_radius";
   static inline constexpr StringLiteral k_KernelType_Key = "kernel_type";
   static inline constexpr StringLiteral k_BackgroundValue_Key = "background_value";

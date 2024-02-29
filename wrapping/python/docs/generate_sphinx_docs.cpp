@@ -765,10 +765,10 @@ void GeneratePythonRstFiles()
       for(const auto& parameter : parameters)
       {
         auto const& paramValue = parameter.second;
-        if(paramValue->helpText().empty())
-        {
-          std::cout << filter->name() << "::" << paramValue->name() << " HELP Text is empty\n";
-        }
+        //        if(paramValue->helpText().empty())
+        //        {
+        //          std::cout << filter->name() << "::" << paramValue->name() << " HELP Text is empty\n";
+        //        }
         for(const auto& letter : paramValue->name())
         {
           if(::isupper(letter) != 0)
@@ -793,6 +793,24 @@ void GeneratePythonRstFiles()
       {
         auto const& anyParameter = parameterPair.second;
         rstStream << ", ";
+        std::string pType = s_ParameterMap[anyParameter->uuid()];
+        if(!nx::core::StringUtilities::ends_with(parameterPair.first, "_path") &&
+           (pType == "simplnx.ArraySelectionParameter" || pType == "simplnx.ArrayCreationParameter" || pType == "simplnx.AttributeMatrixSelectionParameter" ||
+            pType == "simplnx.DataGroupCreationParameter" || pType == "simplnx.DataGroupSelectionParameter" || pType == "simplnx.DataPathSelectionParameter" ||
+            pType == "simplnx.GeometrySelectionParameter" || pType == "simplnx.NeighborListSelectionParameter" || pType == "simplnx.DataGroupCreationParameter"))
+        {
+          std::cout << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+        }
+
+        if(pType == "simplnx.MultiArraySelectionParameter" && !nx::core::StringUtilities::ends_with(parameterPair.first, "s"))
+        {
+          std::cout << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+        }
+
+        if(pType == "simplnx.DataObjectNameParameter" && !nx::core::StringUtilities::ends_with(parameterPair.first, "_name"))
+        {
+          std::cout << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+        }
 
         rstStream << parameterPair.first;
         memberStream << "      :param nx." << nx::core::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": "

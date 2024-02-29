@@ -32,9 +32,9 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(defaults)", 
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMorphologicalWatershedImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMorphologicalWatershedImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMorphologicalWatershedImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -63,9 +63,9 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(level_1)", "
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMorphologicalWatershedImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMorphologicalWatershedImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMorphologicalWatershedImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMorphologicalWatershedImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKMorphologicalWatershedImage::k_Level_Key, std::make_any<Float64Parameter::ValueType>(1.0));
   args.insertOrAssign(ITKMorphologicalWatershedImage::k_MarkWatershedLine_Key, std::make_any<BoolParameter::ValueType>(false));
 

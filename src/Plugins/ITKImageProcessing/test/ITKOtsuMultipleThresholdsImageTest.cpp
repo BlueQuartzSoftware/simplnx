@@ -30,9 +30,9 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(default)", "
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -59,9 +59,9 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(two_on_float
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(2));
   args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
 
@@ -90,9 +90,9 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(three_on)", 
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(3));
   args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfHistogramBins_Key, std::make_any<UInt32Parameter::ValueType>(256));
   args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
@@ -122,9 +122,9 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(valley_empha
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(3));
   args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ValleyEmphasis_Key, std::make_any<BoolParameter::ValueType>(true));
   args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
