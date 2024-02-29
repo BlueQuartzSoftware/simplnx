@@ -41,6 +41,13 @@ struct SIMPLNXCORE_EXPORT ReadPeregrineHDF5FileInputValues
   std::string anomalyDetectionArrayName;
   bool readXRayCT;
   std::string xRayCTArrayName;
+  bool readScanData;
+  DataPath scanDataEdgeGeomPath;
+  std::string scanDataVertexAttrMatName;
+  std::string scanDataEdgeAttrMatName;
+  std::string scanDataVertexListArrayName;
+  std::string scanDataEdgeListArrayName;
+  std::string scanDataTimeOfTravelArrayName;
 };
 
 /**
@@ -68,10 +75,15 @@ public:
   static inline constexpr StringLiteral k_SegmentationResultsH5ParentPath = "/slices/segmentation_results";
   static inline constexpr StringLiteral k_RegisteredAnomalyDetectionH5Path = "/slices/registered_data/anomaly_detection";
   static inline constexpr StringLiteral k_RegisteredXRayCtH5Path = "/slices/registered_data/x-ray_ct";
+  static inline constexpr StringLiteral k_ScansGroupPath = "/scans";
+  static inline constexpr StringLiteral k_ScansZThicknessPath = "material/layer_thickness";
+
+  static Result<std::vector<usize>> ReadDatasetDimensions(const nx::core::HDF5::FileReader& h5FileReader, const std::string& h5DatasetPath);
 
 protected:
   Result<> readSliceDatasets(nx::core::HDF5::FileReader& h5FileReader);
   Result<> readRegisteredDatasets(nx::core::HDF5::FileReader& h5FileReader);
+  Result<> readScanDatasets(nx::core::HDF5::FileReader& h5FileReader);
 
 private:
   DataStructure& m_DataStructure;
