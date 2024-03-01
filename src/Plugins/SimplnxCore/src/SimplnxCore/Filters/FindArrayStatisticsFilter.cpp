@@ -352,7 +352,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
     if(featureIdsPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-57205, fmt::format("Could not find feature ids array at path '{}' ", pFeatureIdsArrayPathValue.toString())), {}};
+      return {MakeErrorResult<OutputActions>(-57204, fmt::format("Could not find feature ids array at path '{}' ", pFeatureIdsArrayPathValue.toString())), {}};
     }
     inputDataArrayPaths.push_back(pFeatureIdsArrayPathValue);
 
@@ -364,11 +364,11 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     const auto* maskPtr = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
     if(maskPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-57207, fmt::format("Could not find mask array at path '{}' ", pMaskArrayPathValue.toString())), {}};
+      return {MakeErrorResult<OutputActions>(-57205, fmt::format("Could not find mask array at path '{}' ", pMaskArrayPathValue.toString())), {}};
     }
     if(maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8)
     {
-      return {MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array must be of type Boolean or UInt8")), {}};
+      return {MakeErrorResult<OutputActions>(-57206, fmt::format("Mask array must be of type Boolean or UInt8")), {}};
     }
     inputDataArrayPaths.push_back(pMaskArrayPathValue);
   }
@@ -377,25 +377,35 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
   {
     if(!pFindMeanValue || !pFindStdDeviationValue)
     {
-      return {MakeErrorResult<OutputActions>(-57208, fmt::format(R"(To standardize data, the "Find Mean" and "Find Standard Deviation" options must also be checked)")), {}};
+      return {MakeErrorResult<OutputActions>(-57207, fmt::format(R"(To standardize data, the "Find Mean" and "Find Standard Deviation" options must also be checked)")), {}};
     }
+  }
+
+  if(pFindMedianValue && !pFindLengthValue)
+  {
+    return {MakeErrorResult<OutputActions>(-57208, fmt::format(R"(To find the median of the data, the "Find Length" option must also be checked)")), {}};
+  }
+
+  if(pFindNumUniqueValuesValue && !pFindLengthValue)
+  {
+    return {MakeErrorResult<OutputActions>(-57209, fmt::format(R"(To find the number of unique values, the "Find Length" option must also be checked)")), {}};
   }
 
   if(pFindHistogramValue && pFindModalBinRanges && !pFindModeValue)
   {
-    return {MakeErrorResult<OutputActions>(-57209, fmt::format(R"(To calculate the modal histogram bin ranges, the "Find Mode" option must also be turned on.)")), {}};
+    return {MakeErrorResult<OutputActions>(-57210, fmt::format(R"(To calculate the modal histogram bin ranges, the "Find Mode" option must also be turned on.)")), {}};
   }
 
   if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
   {
     std::string msg = "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).";
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-57209, msg}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-57211, msg}})};
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(inputDataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-57210, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {MakeErrorResult<OutputActions>(-57212, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, numBins, tupleDims).actions;
