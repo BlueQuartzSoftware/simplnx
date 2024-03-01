@@ -85,8 +85,8 @@ Parameters ConvertHexGridToSquareGridFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Orientation Source Data"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_MultipleFiles_Key, "Convert Multiple Files", "True=Convert a list of files, False, just convert a single file", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "Specifies the new spacing values", std::vector<float32>{1.0f, 1.0f}, std::vector<std::string>{"X", "Y"}));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputPath_Key, "Input File", "Path to the single file to convert", fs::path(""), FileSystemPathParameter::ExtensionsType{},
-                                                          FileSystemPathParameter::PathType::InputFile, true));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputPath_Key, "Input File", "Path to the single file to convert", fs::path("input.ang"), FileSystemPathParameter::ExtensionsType{".ang"},
+                                                          FileSystemPathParameter::PathType::InputFile, false));
   params.insert(std::make_unique<GeneratedFileListParameter>(k_GeneratedFileList_Key, "Generated File List",
                                                              "The values that are used to generate the input file list. See GeneratedFileListParameter for more information.",
                                                              GeneratedFileListParameter::ValueType{}));
