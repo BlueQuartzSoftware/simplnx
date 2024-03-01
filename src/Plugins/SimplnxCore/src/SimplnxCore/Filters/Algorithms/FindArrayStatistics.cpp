@@ -447,20 +447,17 @@ public:
       featureSources[featureId - start].push_back(source[tupleIndex]);
     }
 
-    auto& medianArray = m_MedianArray->getDataStoreRef();
-    auto& numUniqueValuesArray = m_NumUniqueValuesArray->getDataStoreRef();
-
     for(usize featureSourceIndex = 0; featureSourceIndex < numFeatureSources; featureSourceIndex++)
     {
       if(m_FindMedian)
       {
         const float32 val = StatisticsCalculations::findMedian(featureSources[featureSourceIndex]);
-        medianArray.setValue(featureSourceIndex + start, val);
+        m_MedianArray->setValue(featureSourceIndex + start, val);
       }
       if(m_FindNumUniqueValues)
       {
         const auto val = StatisticsCalculations::findNumUniqueValues(featureSources[featureSourceIndex]);
-        numUniqueValuesArray.setValue(featureSourceIndex + start, val);
+        m_NumUniqueValuesArray->setValue(featureSourceIndex + start, val);
       }
     }
   }
