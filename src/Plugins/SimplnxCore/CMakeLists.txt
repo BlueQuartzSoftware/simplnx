@@ -129,6 +129,7 @@ set(FilterList
   WriteLosAlamosFFTFilter
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
+  ReadVtkStructuredPointsFilter
 )
 
 set(ActionList
@@ -207,6 +208,7 @@ set(AlgorithmList
   WriteLosAlamosFFT
   WriteStlFile
   WriteVtkRectilinearGrid
+  ReadVtkStructuredPoints
 )
 
 create_simplnx_plugin(NAME ${PLUGIN_NAME}
