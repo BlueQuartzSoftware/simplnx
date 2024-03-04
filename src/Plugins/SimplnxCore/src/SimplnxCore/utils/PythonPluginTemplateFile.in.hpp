@@ -80,10 +80,13 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
                                 "file.  This plugin file must be manually updated to include the filter import statement.",
                                 pluginFilePath.string(), k_FilterNameInsertToken)});
       }
-      filterInsertPos--; // Go back one character to insert before the newline
+      else
+      {
+        filterInsertPos--; // Go back one character to insert before the newline
 
-      std::string filterImportToken = fmt::format("from {0}.{1} import {1}\n", pluginName, filterName);
-      content.insert(filterInsertPos, filterImportToken);
+        std::string filterImportToken = fmt::format("from {0}.{1} import {1}\n", pluginName, filterName);
+        content.insert(filterInsertPos, filterImportToken);
+      }
     }
 
     // Insert filter name
@@ -96,14 +99,17 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
                                 "file.  This plugin file must be manually updated to include the filter name ('{2}').",
                                 pluginFilePath.string(), k_FilterNameInsertToken, filterName)});
       }
-      filterInsertPos -= 2; // Go back two characters to insert before the closing brace
-
-      std::string filterNameToken = filterName;
-      if(pluginFilePath.filename() == "__init__.py")
+      else
       {
-        filterNameToken = fmt::format("'{}'", filterNameToken);
+        filterInsertPos -= 2; // Go back two characters to insert before the closing brace
+
+        std::string filterNameToken = filterName;
+        if(pluginFilePath.filename() == "__init__.py")
+        {
+          filterNameToken = fmt::format("'{}'", filterNameToken);
+        }
+        content.insert(filterInsertPos, "," + filterNameToken);
       }
-      content.insert(filterInsertPos, "," + filterNameToken);
     }
 
     std::ofstream out_file(pluginFilePath.string());
@@ -151,17 +157,19 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& pluginPat
  */
 inline Result<> WritePythonFiltersToPlugin(const std::filesystem::path& pluginPath, const std::string& filterNames)
 {
+  Result<> result;
   auto filterNamesSplit = StringUtilities::split(filterNames, ',');
   for(const auto& filterName : filterNamesSplit)
   {
-    auto result = nx::core::WritePythonFilterToPlugin(pluginPath, filterName);
-    if(result.invalid())
+    auto filterWriteResult = nx::core::WritePythonFilterToPlugin(pluginPath, filterName);
+    if(filterWriteResult.invalid())
     {
-      return result;
+      return filterWriteResult;
     }
+    result = MergeResults(result, filterWriteResult);
   }
 
-  return {};
+  return result;
 }
 
 /**
