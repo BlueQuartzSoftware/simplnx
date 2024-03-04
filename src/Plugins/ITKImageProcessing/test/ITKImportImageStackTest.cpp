@@ -118,7 +118,7 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
     fs::path filePath = k_ImageFlipStackDir / (filePrefix + "flip_x.tiff");
     args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
     args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_XFlipImageGeomPath);
-    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_XFlippedImageDataPath);
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_ImageDataName);
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -133,7 +133,7 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
     fs::path filePath = k_ImageFlipStackDir / (filePrefix + "flip_y.tiff");
     args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
     args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_YFlipImageGeomPath);
-    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_YFlippedImageDataPath);
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_ImageDataName);
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

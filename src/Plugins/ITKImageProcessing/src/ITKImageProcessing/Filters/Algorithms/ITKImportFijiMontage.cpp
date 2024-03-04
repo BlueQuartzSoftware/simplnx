@@ -183,7 +183,7 @@ private:
     Result<> outputResult = {};
 
     auto* filterListPtr = Application::Instance()->getFilterList();
-    auto imageImportFilter = ITKImageReader();
+    // auto imageImportFilter = ITKImageReader();
 
     for(const auto& bound : m_Cache.bounds)
     {

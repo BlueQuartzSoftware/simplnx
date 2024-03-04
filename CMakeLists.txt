@@ -78,7 +78,7 @@ endif()
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
 project(simplnx
-  VERSION 1.2.6
+  VERSION 1.2.7
   DESCRIPTION "SIMPL Redesign"
   HOMEPAGE_URL "https://github.com/bluequartzsoftware/simplnx"
   LANGUAGES CXX
@@ -209,10 +209,10 @@ endif()
 # Force HDF5 1.10 API
 target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
-target_compile_options( simplnx PUBLIC
-  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>: "-ffp-contract=off">
- )
-
+target_compile_options(simplnx
+  PUBLIC
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off>
+)
 
 if(SIMPLNX_ENABLE_MULTICORE)
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_ENABLE_MULTICORE")

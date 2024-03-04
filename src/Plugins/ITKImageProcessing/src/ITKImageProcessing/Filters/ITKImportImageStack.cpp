@@ -134,12 +134,12 @@ void FlipAboutXAxis(DataArray<T>& dataArray, Vec3<usize>& dims)
 namespace cxITKImportImageStack
 {
 template <class T>
-Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const DataPath& imageDataPath, const std::vector<std::string>& files,
+Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const std::string& imageArrayName, const std::vector<std::string>& files,
                         ChoicesParameter::ValueType transformType, bool convertToGrayscale, VectorFloat32Parameter::ValueType luminosityValues, const IFilter::MessageHandler& messageHandler,
                         const std::atomic_bool& shouldCancel)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-
+  DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
   SizeVec3 dims = imageGeom.getDimensions();
   const usize tuplesPerSlice = dims[0] * dims[1];
 
@@ -174,7 +174,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       Arguments args;
       args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
       args.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(cellDataName));
-      args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataPath));
+      args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<std::string>(imageArrayName));
       args.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(filePath));
 
       auto executeResult = imageReader.execute(importedDataStructure, args);
@@ -377,8 +377,8 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   // list and hope the rest are correct.
   Arguments imageReaderArgs;
   imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
-  imageReaderArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(cellDataName));
-  imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataPath));
+  imageReaderArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<DataObjectNameParameter::ValueType>(cellDataName));
+  imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataObjectNameParameter::ValueType>(pImageDataArrayNameValue));
   imageReaderArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(files.at(0)));
 
   const ITKImageReader imageReader;
@@ -458,7 +458,7 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
   auto convertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto colorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
 
-  const DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataName);
+  // const DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataName);
 
   std::vector<std::string> files = inputFileListInfo.generate();
 
@@ -479,52 +479,52 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
   switch(*numericType)
   {
   case NumericType::uint8: {
-    readResult = cxITKImportImageStack::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                               messageHandler, shouldCancel);
     break;
   }
   case NumericType::int8: {
-    readResult = cxITKImportImageStack::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                              messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint16: {
-    readResult = cxITKImportImageStack::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                                messageHandler, shouldCancel);
     break;
   }
   case NumericType::int16: {
-    readResult = cxITKImportImageStack::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                               messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint32: {
-    readResult = cxITKImportImageStack::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                                messageHandler, shouldCancel);
     break;
   }
   case NumericType::int32: {
-    readResult = cxITKImportImageStack::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                               messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint64: {
-    readResult = cxITKImportImageStack::ReadImageStack<uint64>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<uint64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                                messageHandler, shouldCancel);
     break;
   }
   case NumericType::int64: {
-    readResult = cxITKImportImageStack::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                               messageHandler, shouldCancel);
     break;
   }
   case NumericType::float32: {
-    readResult = cxITKImportImageStack::ReadImageStack<float32>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<float32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                                 messageHandler, shouldCancel);
     break;
   }
   case NumericType::float64: {
-    readResult = cxITKImportImageStack::ReadImageStack<float64>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+    readResult = cxITKImportImageStack::ReadImageStack<float64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
                                                                 messageHandler, shouldCancel);
     break;
   }

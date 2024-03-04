@@ -99,15 +99,18 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 
     const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
     auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
-    m_MessageHandler(fmt::format("Applying Transform || Copying Data Array {}", srcDataObject->getName()));
 
     if(m_InputValues->InterpolationSelection == k_NearestNeighborInterpolationIdx)
     {
+      m_MessageHandler(fmt::format("Applying Transform || Nearest Neighbor Interpolation {}", srcDataObject->getName()));
+
       ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
                                                                                               m_TransformationMatrix, false, &filterProgressCallback);
     }
     else if(m_InputValues->InterpolationSelection == k_LinearInterpolationIdx)
     {
+      m_MessageHandler(fmt::format("Applying Transform || Trilinear Interpolation {}", srcDataObject->getName()));
+
       ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation, NoBooleanType>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr,
                                                                                                                     rotateArgs, m_TransformationMatrix, &filterProgressCallback);
     }

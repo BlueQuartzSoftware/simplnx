@@ -94,9 +94,6 @@ print(f'last_path: {last_path}' )
 name_change = data_path.with_name("NEW NAME")
 print(f'name_change: {name_change}' )
 
-
-quit()
-
 # Create a Data Structure
 data_structure = nx.DataStructure()
 
@@ -227,3 +224,10 @@ print(children_paths)
 
 print(f'data_structure.size: {data_structure.size}')
 
+print(f'Removing Data Array')
+result = nx.DeleteData.execute(data_structure=data_structure,
+                               removed_data_path=[nx.DataPath("Group/1D Array")])
+nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)
+# This will generate the hierarchy as an ASCI Formatted string.
+hierarchy_as_str = data_structure.hierarchy_to_str()
+print(hierarchy_as_str)

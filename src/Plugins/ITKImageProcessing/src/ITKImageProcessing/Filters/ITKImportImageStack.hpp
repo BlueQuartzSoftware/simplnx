@@ -28,8 +28,8 @@ public:
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
-  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_path";
-  static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
+  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
+  static inline constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_ImageTransformChoice_Key = "image_transform_choice";
   static inline constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
   static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";

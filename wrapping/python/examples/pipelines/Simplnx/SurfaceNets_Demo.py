@@ -28,8 +28,8 @@ nx_filter = cxitk.ITKImportImageStack()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_data_name="Optical Data",
-    image_data_array_path="Image Data",
+    cell_attribute_matrix_name="Optical Data",
+    image_data_array_name="Image Data",
     image_geometry_path=nx.DataPath("RoboMet.3D Image Stack"),
     image_transform_choice=0,
     input_file_list_info=generated_file_list_value,

@@ -1,9 +1,5 @@
 #include "ITKMhaFileReader.hpp"
 
-#include <filesystem>
-
-#include <itkMetaImageIO.h>
-
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -19,7 +15,13 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
+#include <Eigen/Dense>
+
+#include <itkMetaImageIO.h>
+
+#include <filesystem>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -35,6 +37,8 @@ inline constexpr StringLiteral k_CellAttributeMatrixPathKey = "cell_attribute_ma
 inline constexpr StringLiteral k_TransformationTypeKey = "transformation_type";
 inline constexpr StringLiteral k_ManualTransformationMatrixKey = "manual_transformation_matrix";
 inline constexpr StringLiteral k_InterpolationTypeKey = "interpolation_type";
+inline constexpr StringLiteral k_TranslateGeometryToGlobalOrigin_Key = "translate_geometry_to_global_origin";
+
 const nx::core::ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
 
 const std::string k_NearestNeighborInterpolation("Nearest Neighbor");
@@ -44,19 +48,77 @@ const nx::core::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNei
 const nx::core::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
 
-Result<std::array<float32, 16>> readTransformMatrix(const std::string& filePath)
+struct MHAHeaderInfo
 {
-  std::array<float32, 16> arr = {};
+  ImageRotationUtilities::Matrix4fR TransformationMatrix;
+  std::array<float32, 3> CenterOfRotation = {0.0f, 0.0f, 0.0f};
+  std::array<float32, 3> Origin = {0.0f, 0.0f, 0.0f};
+  std::array<usize, 3> Dimensions = {0UL, 0UL, 0UL};
+  std::vector<nx::core::Error> Errors;
+  std::vector<nx::core::Warning> Warnings;
+  std::vector<nx::core::IFilter::PreflightValue> PreflightUpdatedValues;
+};
+
+/**
+ * @brief
+ * @param transformMatrix
+ * @return
+ */
+std::string generateTransformMatrixString(const ImageRotationUtilities::Matrix4fR& transformMatrix)
+{
+  std::string result;
+
+  for(Eigen::Index r = 0; r < 4; r++)
+  {
+    result += "|  ";
+    for(Eigen::Index c = 0; c < 4; c++)
+    {
+      result += std::to_string(transformMatrix(r, c));
+      if(c < 3)
+      {
+        result += "\t  ";
+      }
+    }
+    result += "  |\n";
+  }
+
+  return result;
+}
+
+/**
+ * @brief
+ * @param transformationMatrix
+ * @return
+ */
+DynamicTableParameter::ValueType convertEigenMatrix(const ImageRotationUtilities::Matrix4fR& transformMatrix)
+{
+  return DynamicTableInfo::TableDataType{{transformMatrix(0, 0), transformMatrix(0, 1), transformMatrix(0, 2), transformMatrix(0, 3)},
+                                         {transformMatrix(1, 0), transformMatrix(1, 1), transformMatrix(1, 2), transformMatrix(1, 3)},
+                                         {transformMatrix(2, 0), transformMatrix(2, 1), transformMatrix(2, 2), transformMatrix(2, 3)},
+                                         {transformMatrix(3, 0), transformMatrix(3, 1), transformMatrix(3, 2), transformMatrix(3, 3)}};
+}
+
+/**
+ * @brief
+ * @param filePath
+ * @param transpose
+ * @return
+ */
+MHAHeaderInfo readMhaHeader(const std::string& filePath, bool transpose)
+{
+  MHAHeaderInfo headerInfo;
+  headerInfo.TransformationMatrix.fill(0.0F);
+  headerInfo.TransformationMatrix(3, 3) = 1.0f;
 
   const itk::MetaImageIO::Pointer metaImageIO = itk::MetaImageIO::New();
-
   try
   {
     metaImageIO->SetFileName(filePath);
     metaImageIO->ReadImageInformation();
   } catch(itk::ExceptionObject& e)
   {
-    return {MakeErrorResult<std::array<float32, 16>>(-5000, fmt::format("Exception caught while reading image: {}", e.what()))};
+    headerInfo.Errors.push_back({-5000, fmt::format("Exception caught while reading image: {}", e.what())});
+    return headerInfo;
   }
 
   /*
@@ -80,79 +142,75 @@ Result<std::array<float32, 16>> readTransformMatrix(const std::string& filePath)
   const int nDims = metaImagePtr->NDims();
   if(nDims == 2)
   {
-    arr[0] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 0));
-    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
-    arr[2] = 0.0f;
-    arr[3] = 0.0f;
-    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
-    arr[5] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
-    arr[6] = 0.0f;
-    arr[7] = 0.0f;
-    arr[8] = 0.0f;
-    arr[9] = 0.0f;
-    arr[10] = 1;
-    arr[11] = 0.0f;
-    arr[12] = 0.0f;
-    arr[13] = 0.0f;
-    arr[14] = 0.0f;
-    arr[15] = 1;
+    headerInfo.TransformationMatrix(0, 0) = static_cast<float32>(metaImagePtr->TransformMatrix(0, 0));
+    headerInfo.TransformationMatrix(0, 1) = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
+    headerInfo.TransformationMatrix(1, 0) = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
+    headerInfo.TransformationMatrix(1, 1) = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
+    headerInfo.TransformationMatrix(2, 2) = 1.0f;
   }
   else if(nDims == 3)
   {
-    arr[0] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 0));
-    arr[1] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
-    arr[2] = static_cast<float32>(metaImagePtr->TransformMatrix(0, 2));
-    arr[3] = 0.0f;
-    arr[4] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
-    arr[5] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
-    arr[6] = static_cast<float32>(metaImagePtr->TransformMatrix(1, 2));
-    arr[7] = 0.0f;
-    arr[8] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 0));
-    arr[9] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 1));
-    arr[10] = static_cast<float32>(metaImagePtr->TransformMatrix(2, 2));
-    arr[11] = 0.0f;
-    arr[12] = 0.0f;
-    arr[13] = 0.0f;
-    arr[14] = 0.0f;
-    arr[15] = 1;
+    headerInfo.TransformationMatrix(0, 0) = static_cast<float32>(metaImagePtr->TransformMatrix(0, 0));
+    headerInfo.TransformationMatrix(0, 1) = static_cast<float32>(metaImagePtr->TransformMatrix(0, 1));
+    headerInfo.TransformationMatrix(0, 2) = static_cast<float32>(metaImagePtr->TransformMatrix(0, 2));
+    headerInfo.TransformationMatrix(1, 0) = static_cast<float32>(metaImagePtr->TransformMatrix(1, 0));
+    headerInfo.TransformationMatrix(1, 1) = static_cast<float32>(metaImagePtr->TransformMatrix(1, 1));
+    headerInfo.TransformationMatrix(1, 2) = static_cast<float32>(metaImagePtr->TransformMatrix(1, 2));
+    headerInfo.TransformationMatrix(2, 0) = static_cast<float32>(metaImagePtr->TransformMatrix(2, 0));
+    headerInfo.TransformationMatrix(2, 1) = static_cast<float32>(metaImagePtr->TransformMatrix(2, 1));
+    headerInfo.TransformationMatrix(2, 2) = static_cast<float32>(metaImagePtr->TransformMatrix(2, 2));
   }
   else
   {
-    return {MakeErrorResult<std::array<float32, 16>>(
-        -5001, fmt::format("Image data has an unsupported number of dimensions ({}).  This filter only supports 2-dimensional and 3-dimensional image data.", nDims))};
+    headerInfo.Errors.push_back({-5001, fmt::format("Image data has an unsupported number of dimensions ({}).  This filter only supports 2-dimensional and 3-dimensional image data.", nDims)});
   }
 
-  return {arr};
-}
+  headerInfo.CenterOfRotation[0] = static_cast<float32>(metaImagePtr->CenterOfRotation(static_cast<int>(0)));
+  headerInfo.CenterOfRotation[1] = static_cast<float32>(metaImagePtr->CenterOfRotation(static_cast<int>(1)));
+  headerInfo.CenterOfRotation[2] = static_cast<float32>(metaImagePtr->CenterOfRotation(static_cast<int>(2)));
 
-std::string generateTransformMatrixString(const std::array<float32, 16> transformMatrix)
-{
-  std::string result;
+  headerInfo.Origin[0] = static_cast<float32>(metaImagePtr->Offset(static_cast<int>(0)));
+  headerInfo.Origin[1] = static_cast<float32>(metaImagePtr->Offset(static_cast<int>(1)));
+  headerInfo.Origin[2] = static_cast<float32>(metaImagePtr->Offset(static_cast<int>(2)));
 
-  for(usize i = 0; i < transformMatrix.size(); ++i)
+  headerInfo.Dimensions[0] = static_cast<usize>(metaImagePtr->DimSize(static_cast<int>(0)));
+  headerInfo.Dimensions[1] = static_cast<usize>(metaImagePtr->DimSize(static_cast<int>(1)));
+  headerInfo.Dimensions[2] = static_cast<usize>(metaImagePtr->DimSize(static_cast<int>(2)));
+  for(auto& dim : headerInfo.Dimensions)
   {
-    // Add a starting bracket at the beginning of each row
-    if(i % 4 == 0)
+    if(dim == 0)
     {
-      result += "[";
-    }
-
-    result += std::to_string(transformMatrix[i]);
-
-    // Add a closing bracket at the end of every 4 elements
-    if(i % 4 == 3)
-    {
-      result += "]\n";
-    }
-    else
-    {
-      result += ", ";
+      dim = 1;
     }
   }
 
-  return result;
+  // Generate all the PreflightUpdatedValues
+  headerInfo.PreflightUpdatedValues.push_back({"Image Dimensions (voxels): ", fmt::format("{}", fmt::join(headerInfo.Dimensions, ",  "))});
+  headerInfo.PreflightUpdatedValues.push_back({"Image Origin: ", fmt::format("{: > 8.8}", fmt::join(headerInfo.Origin, ",  "))});
+  headerInfo.PreflightUpdatedValues.push_back({"Image Center of Rotation: ", fmt::format("{: > 8.8}", fmt::join(headerInfo.CenterOfRotation, ",  "))});
+
+  float det = headerInfo.TransformationMatrix.determinant();
+
+  if(transpose)
+  {
+    if(std::abs(1.0 - det) > 0.0001f)
+    {
+      headerInfo.Errors.push_back(
+          {-5002,
+           fmt::format("Transformation Matrix is NOT a pure rotation transform. A pure transpose will not work. De-select the option to transpose the matrix. Determinant of Transform matrix is {}",
+                       det)});
+    }
+    headerInfo.TransformationMatrix.transposeInPlace();
+  }
+  headerInfo.PreflightUpdatedValues.push_back({"Transformation Matrix: ", generateTransformMatrixString(headerInfo.TransformationMatrix)});
+  headerInfo.PreflightUpdatedValues.push_back({"Transform Matrix Determinant: ", fmt::format("{}", det)});
+
+  return headerInfo;
 }
 
+/**
+ * @brief
+ */
 struct CopyImageDataFunctor
 {
   template <typename T>
@@ -201,7 +259,7 @@ std::string ITKMhaFileReader::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKMhaFileReader::defaultTags() const
 {
-  return {className(), "io", "input", "read", "import", "image"};
+  return {className(), "io", "input", "read", "import", "image", "ITK", "MHA"};
 }
 
 //------------------------------------------------------------------------------
@@ -212,22 +270,29 @@ Parameters ITKMhaFileReader::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(ITKImageReader::k_FileName_Key, "Input MHA File", "The input .mha file that will be read.", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{{".mha"}}, FileSystemPathParameter::PathType::InputFile, false));
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_SaveImageTransformationAsArray, "Save Image Transformation As Array",
-                                      "When true, the transformation matrix found in the image's header metadata will be saved as a data array in the created image geometry.", false));
+
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyImageTransformation, "Apply Image Transformation To Geometry",
                                                                  "When true, the transformation matrix found in the image's header metadata will be applied to the created image geometry.", false));
   params.insert(std::make_unique<ChoicesParameter>(k_InterpolationTypeKey, "Interpolation Type", "The type of interpolation algorithm that is used. 0=NearestNeighbor, 1=Linear",
                                                    k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(ITKImageReader::k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
-  params.insert(std::make_unique<DataObjectNameParameter>(ITKImageReader::k_CellDataName_Key, "Cell Data Name", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(ITKImageReader::k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array",
-                                                         DataPath({"ImageDataContainer", ImageGeom::k_CellDataName, "ImageData"})));
+  params.insertSeparator(Parameters::Separator{"Transformation Matrix Options"});
+  params.insert(std::make_unique<BoolParameter>(k_TransposeTransformMatrix, "Transpose Stored Transformation Matrix",
+                                                "When true, the transformation matrix found in the image's header metadata will be transposed before use.", false));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_SaveImageTransformationAsArray, "Save Image Transformation As Array",
+                                      "When true, the transformation matrix found in the image's header metadata will be saved as a data array in the created image geometry.", false));
   params.insert(std::make_unique<ArrayCreationParameter>(k_TransformationMatrixDataArrayPathKey, "Transformation Matrix", "The path to the transformation matrix data array",
                                                          DataPath({"ImageDataContainer", "TransformationMatrix"})));
+
+  params.insertSeparator(Parameters::Separator{"Created Image Data Objects"});
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(ITKImageReader::k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
+
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(ITKImageReader::k_CellDataName_Key, "Created Cell Attribute Matrix", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(ITKImageReader::k_ImageDataArrayPath_Key, "Created Cell Data",
+                                                          "The name of the created image data array. Will be stored in the created Cell Attribute Matrix", "ImageData"));
 
   params.linkParameters(k_SaveImageTransformationAsArray, k_TransformationMatrixDataArrayPathKey, true);
   params.linkParameters(k_ApplyImageTransformation, k_InterpolationTypeKey, true);
@@ -248,12 +313,16 @@ IFilter::PreflightResult ITKMhaFileReader::preflightImpl(const DataStructure& da
   auto fileNamePath = filterArgs.value<FileSystemPathParameter::ValueType>(ITKImageReader::k_FileName_Key);
   auto imageGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(ITKImageReader::k_ImageGeometryPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(ITKImageReader::k_CellDataName_Key);
-  auto imageDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(ITKImageReader::k_ImageDataArrayPath_Key);
+  auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(ITKImageReader::k_ImageDataArrayPath_Key);
   auto saveImageTransformationAsArray = filterArgs.value<BoolParameter::ValueType>(k_SaveImageTransformationAsArray);
   auto transformationMatrixDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_TransformationMatrixDataArrayPathKey);
   auto applyImageTransformation = filterArgs.value<BoolParameter::ValueType>(k_ApplyImageTransformation);
+  auto transposeTransform = filterArgs.value<BoolParameter::ValueType>(k_TransposeTransformMatrix);
   auto interpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationTypeKey);
-  IFilter::PreflightResult preflightResult;
+
+  DataPath imageDataArrayPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
+  nx::core::Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   {
     const ITKImageReader imageReaderFilter;
@@ -261,53 +330,73 @@ IFilter::PreflightResult ITKMhaFileReader::preflightImpl(const DataStructure& da
     imageReaderArgs.insertOrAssign(ITKImageReader::k_FileName_Key, fileNamePath);
     imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imageGeomPath);
     imageReaderArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, cellDataName);
-    imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageDataArrayPath);
-    preflightResult = imageReaderFilter.preflight(dataStructure, imageReaderArgs, messageHandler, shouldCancel);
+    imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageDataArrayName);
+    IFilter::PreflightResult preflightResult = imageReaderFilter.preflight(dataStructure, imageReaderArgs, messageHandler, shouldCancel);
     if(preflightResult.outputActions.invalid())
     {
-      return preflightResult;
+      resultOutputActions.m_Warnings.insert(resultOutputActions.m_Warnings.end(), preflightResult.outputActions.m_Warnings.begin(), preflightResult.outputActions.m_Warnings.end());
+      resultOutputActions.errors().insert(resultOutputActions.errors().end(), preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end());
+      return {resultOutputActions, preflightUpdatedValues};
     }
+    preflightUpdatedValues = std::move(preflightResult.outputValues);
+    resultOutputActions = std::move(preflightResult.outputActions);
   }
 
-  if(applyImageTransformation || saveImageTransformationAsArray)
+  // Read the header information from the MHA file
+  MHAHeaderInfo headerInfo = readMhaHeader(fileNamePath.string(), transposeTransform);
+  // Transfer any warnings that were produced.
+  resultOutputActions.m_Warnings.insert(resultOutputActions.m_Warnings.begin(), headerInfo.Warnings.begin(), headerInfo.Warnings.end());
+  // Append any Preflight updated values generated when reading the MHA Header
+  preflightUpdatedValues.insert(preflightUpdatedValues.end(), headerInfo.PreflightUpdatedValues.begin(), headerInfo.PreflightUpdatedValues.end());
+  // Check for errors that happened during the MHA Header reading
+  if(!headerInfo.Errors.empty())
   {
-    Result<std::array<float32, 16>> transformMatrixResult = readTransformMatrix(fileNamePath.string());
-    if(transformMatrixResult.invalid())
-    {
-      auto voidResult = ConvertResult(std::move(transformMatrixResult));
-      return {ConvertResultTo<OutputActions>(std::move(voidResult), {})};
-    }
+    // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+    return {{nonstd::make_unexpected(headerInfo.Errors), resultOutputActions.m_Warnings}, preflightUpdatedValues};
+  }
 
-    std::array<float32, 16>& transformMatrix = transformMatrixResult.value();
+  // If the user wants to save the Transform Matrix as an Array
+  if(saveImageTransformationAsArray)
+  {
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{1}, std::vector<usize>{16}, transformationMatrixDataArrayPath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
 
+  // If the user wants to apply the transform matrix to the incoming image
+  if(applyImageTransformation)
+  {
     auto* filterListPtr = Application::Instance()->getFilterList();
     auto applyTransformationToGeometryFilter = filterListPtr->createFilter(k_ApplyTransformationToGeometryFilterHandle);
     if(applyTransformationToGeometryFilter == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-5001, fmt::format("Error preflighting application of transformation to geometry - Unable to instantiate filter 'Apply Transformation To Geometry'."))};
+      resultOutputActions.errors().push_back({-5001, fmt::format("Error preflighting application of transformation to geometry - Unable to instantiate filter 'Apply Transformation To Geometry'.")});
+      return {resultOutputActions, preflightUpdatedValues};
     }
 
     Arguments args;
     args.insertOrAssign(k_SelectedImageGeometryKey, std::make_any<GeometrySelectionParameter::ValueType>(DataPath{imageGeomPath}));
     args.insertOrAssign(k_CellAttributeMatrixPathKey, std::make_any<AttributeMatrixSelectionParameter::ValueType>(DataPath{imageGeomPath.createChildPath(cellDataName)}));
     args.insertOrAssign(k_TransformationTypeKey, std::make_any<ChoicesParameter::ValueType>(k_ManualTransformationMatrixIdx));
-    args.insertOrAssign(k_ManualTransformationMatrixKey,
-                        std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{transformMatrix[0], transformMatrix[1], transformMatrix[2], transformMatrix[3]},
-                                                                                                        {transformMatrix[4], transformMatrix[5], transformMatrix[6], transformMatrix[7]},
-                                                                                                        {transformMatrix[8], transformMatrix[9], transformMatrix[10], transformMatrix[11]},
-                                                                                                        {transformMatrix[12], transformMatrix[13], transformMatrix[14], transformMatrix[15]}}));
+    args.insertOrAssign(k_ManualTransformationMatrixKey, std::make_any<DynamicTableParameter::ValueType>(convertEigenMatrix(headerInfo.TransformationMatrix)));
     args.insertOrAssign(k_InterpolationTypeKey, std::make_any<ChoicesParameter::ValueType>(interpolationType));
 
-    preflightResult.outputValues.push_back({"Image Transformation Matrix", generateTransformMatrixString(transformMatrix)});
-
-    if(saveImageTransformationAsArray)
+    if(headerInfo.CenterOfRotation == std::array<float32, 3>{0.0f, 0.0f, 0.0f})
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{1}, std::vector<usize>{transformMatrix.size()}, transformationMatrixDataArrayPath);
-      preflightResult.outputActions.value().appendAction(std::move(createArrayAction));
+      args.insertOrAssign(k_TranslateGeometryToGlobalOrigin_Key, std::make_any<BoolParameter::ValueType>(true));
     }
+
+    // Preflight the filter
+    IFilter::PreflightResult applyTransResult = applyTransformationToGeometryFilter->preflight(dataStructure, args, messageHandler, shouldCancel);
+    // Copy over any preflight updated values
+    preflightUpdatedValues.insert(preflightUpdatedValues.end(), applyTransResult.outputValues.begin(), applyTransResult.outputValues.end());
+    // Copy over any errors/warnings
+
+    // preflightResult.outputActions.errors().insert( preflightResult.outputActions.errors().begin(), applyTransResult.outputActions.errors().begin(), applyTransResult.outputActions.errors().end());
+    // preflightResult.outputActions.warnings().insert( preflightResult.outputActions.warnings().begin(), applyTransResult.outputActions.warnings().begin(),
+    // applyTransResult.outputActions.warnings().end());
   }
 
-  return preflightResult;
+  return {resultOutputActions, preflightUpdatedValues};
 }
 
 //------------------------------------------------------------------------------
@@ -317,11 +406,15 @@ Result<> ITKMhaFileReader::executeImpl(DataStructure& dataStructure, const Argum
   auto fileNamePath = filterArgs.value<FileSystemPathParameter::ValueType>(ITKImageReader::k_FileName_Key);
   auto imageGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(ITKImageReader::k_ImageGeometryPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(ITKImageReader::k_CellDataName_Key);
-  auto imageDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(ITKImageReader::k_ImageDataArrayPath_Key);
+  auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(ITKImageReader::k_ImageDataArrayPath_Key);
   auto saveImageTransformationAsArray = filterArgs.value<BoolParameter::ValueType>(k_SaveImageTransformationAsArray);
   auto transformationMatrixDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_TransformationMatrixDataArrayPathKey);
   auto applyImageTransformation = filterArgs.value<BoolParameter::ValueType>(k_ApplyImageTransformation);
   auto interpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationTypeKey);
+  auto transposeTransform = filterArgs.value<BoolParameter::ValueType>(k_TransposeTransformMatrix);
+
+  DataPath imageDataArrayPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
+
   Result<> mainResult;
 
   // Execute the ImageFileReader filter
@@ -333,7 +426,7 @@ Result<> ITKMhaFileReader::executeImpl(DataStructure& dataStructure, const Argum
     args.insertOrAssign(ITKImageReader::k_FileName_Key, fileNamePath);
     args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imageGeomPath);
     args.insertOrAssign(ITKImageReader::k_CellDataName_Key, cellDataName);
-    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageDataArrayPath);
+    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageDataArrayName);
 
     auto executeResult = imageReaderFilter.execute(importedDataStructure, args, pipelineNode, messageHandler, shouldCancel);
     if(executeResult.result.invalid())
@@ -357,18 +450,19 @@ Result<> ITKMhaFileReader::executeImpl(DataStructure& dataStructure, const Argum
   if(applyImageTransformation || saveImageTransformationAsArray)
   {
     messageHandler(fmt::format("Reading transformation matrix from image file '{}'...", fileNamePath.string()));
-    Result<std::array<float32, 16>> transformMatrixResult = readTransformMatrix(fileNamePath.string());
-    if(transformMatrixResult.invalid())
-    {
-      return ConvertResult(std::move(transformMatrixResult));
-    }
+    MHAHeaderInfo headerInfo = readMhaHeader(fileNamePath.string(), transposeTransform);
 
-    std::array<float32, 16> transformMat = transformMatrixResult.value();
+    if(!headerInfo.Errors.empty())
+
+    {
+      return {{nonstd::make_unexpected(headerInfo.Errors)}};
+    }
 
     if(saveImageTransformationAsArray)
     {
       Float32Array& transformationMatrixArray = dataStructure.getDataRefAs<Float32Array>(transformationMatrixDataArrayPath);
-      std::copy(transformMat.begin(), transformMat.end(), transformationMatrixArray.begin());
+      // Eigen 3.4 has STL iterators.
+      std::copy(headerInfo.TransformationMatrix.data(), headerInfo.TransformationMatrix.data() + 16, transformationMatrixArray.begin());
     }
 
     if(applyImageTransformation)
@@ -386,12 +480,12 @@ Result<> ITKMhaFileReader::executeImpl(DataStructure& dataStructure, const Argum
       args.insertOrAssign(k_SelectedImageGeometryKey, std::make_any<GeometrySelectionParameter::ValueType>(DataPath{imageGeomPath}));
       args.insertOrAssign(k_CellAttributeMatrixPathKey, std::make_any<AttributeMatrixSelectionParameter::ValueType>(DataPath{imageGeomPath.createChildPath(cellDataName)}));
       args.insertOrAssign(k_TransformationTypeKey, std::make_any<ChoicesParameter::ValueType>(k_ManualTransformationMatrixIdx));
-      args.insertOrAssign(k_ManualTransformationMatrixKey,
-                          std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{transformMat[0], transformMat[1], transformMat[2], transformMat[3]},
-                                                                                                          {transformMat[4], transformMat[5], transformMat[6], transformMat[7]},
-                                                                                                          {transformMat[8], transformMat[9], transformMat[10], transformMat[11]},
-                                                                                                          {transformMat[12], transformMat[13], transformMat[14], transformMat[15]}}));
+      args.insertOrAssign(k_ManualTransformationMatrixKey, std::make_any<DynamicTableParameter::ValueType>(convertEigenMatrix(headerInfo.TransformationMatrix)));
       args.insertOrAssign(k_InterpolationTypeKey, std::make_any<ChoicesParameter::ValueType>(interpolationType));
+      if(headerInfo.CenterOfRotation == std::array<float32, 3>{0.0f, 0.0f, 0.0f})
+      {
+        args.insertOrAssign(k_TranslateGeometryToGlobalOrigin_Key, std::make_any<BoolParameter::ValueType>(true));
+      }
 
       {
         const ExecuteResult result = applyTransformationToGeometryFilter->execute(dataStructure, args, pipelineNode, messageHandler, shouldCancel);
