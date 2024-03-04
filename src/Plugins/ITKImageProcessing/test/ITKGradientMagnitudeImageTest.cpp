@@ -20,12 +20,12 @@ TEST_CASE("ITKImageProcessing::ITKGradientMagnitudeImageFilter(default)", "[ITKI
   ITKGradientMagnitudeImage filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
+  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Float.nrrd";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
@@ -41,9 +41,9 @@ TEST_CASE("ITKImageProcessing::ITKGradientMagnitudeImageFilter(default)", "[ITKI
 
   fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters_GradientMagnitudeImageFilter_default.nrrd";
   DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
-  DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
-  Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
+  Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 1e-05);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
 }

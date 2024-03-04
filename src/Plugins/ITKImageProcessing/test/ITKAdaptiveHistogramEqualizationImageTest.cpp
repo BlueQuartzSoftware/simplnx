@@ -65,7 +65,7 @@ DataPath ConvertColorToGrayScale(DataStructure& dataStructure, const DataPath& i
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  return inputGeometryPath.createChildPath(fmt::format("GrayScale_{}", ITKTestBase::k_InputDataPath));
+  return inputGeometryPath.createChildPath(fmt::format("GrayScale_{}", ITKTestBase::k_InputDataName));
 }
 
 } // namespace ITKImageProcessingUnitTest
@@ -77,15 +77,15 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defau
   DataStructure dataStructure;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
+  DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   // Read Input Image
   {
     const fs::path inputFilePath = fs::path(unit_test::k_DataDir.view()) / "JSONFilters" / "Input/sf4.png";
     REQUIRE(fs::exists(inputFilePath));
-    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
     SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   }
 
@@ -112,9 +112,9 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defau
 
     const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters/ITKAdaptiveHistogramEqualizationFilterTest.png";
     const DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
-    const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+    const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
     const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
-    const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
+    const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
     const Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 2e-3);
     //  SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
   }
@@ -127,13 +127,13 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo
   DataStructure dataStructure;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
+  DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   { // Start Image Comparison Scope
     const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/sf4.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
     SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
 
@@ -160,9 +160,9 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo
 
     const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters/ITKAdaptiveHistogramEqualizationFilterTest2.png";
     const DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
-    const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+    const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
     const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
-    const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
+    const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
     const Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 1e-5);
     SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
   }

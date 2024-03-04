@@ -15,12 +15,12 @@ const std::string k_TestArrayFloatName = "TestArrayFloat";
 const std::string k_TestArrayIntName = "TestArrayInt";
 const std::string k_ThresholdArrayName = "ThresholdArray";
 
-const DataPath k_ImageCellDataPath({k_ImageGeometry, k_CellData});
-const DataPath k_TestArrayFloatPath = k_ImageCellDataPath.createChildPath(k_TestArrayFloatName);
-const DataPath k_TestArrayIntPath = k_ImageCellDataPath.createChildPath(k_TestArrayIntName);
-const DataPath k_ThresholdArrayPath = k_ImageCellDataPath.createChildPath(k_ThresholdArrayName);
+const DataPath k_ImageCellDataName({k_ImageGeometry, k_CellData});
+const DataPath k_TestArrayFloatPath = k_ImageCellDataName.createChildPath(k_TestArrayFloatName);
+const DataPath k_TestArrayIntPath = k_ImageCellDataName.createChildPath(k_TestArrayIntName);
+const DataPath k_ThresholdArrayPath = k_ImageCellDataName.createChildPath(k_ThresholdArrayName);
 
-const DataPath k_MultiComponentArrayPath = k_ImageCellDataPath.createChildPath("MultiComponentArray");
+const DataPath k_MultiComponentArrayPath = k_ImageCellDataName.createChildPath("MultiComponentArray");
 const DataPath k_MismatchingTuplesArrayPath({"MismatchingTuplesArray"});
 
 DataStructure CreateTestDataStructure()

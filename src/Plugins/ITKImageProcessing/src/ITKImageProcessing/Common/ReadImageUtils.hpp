@@ -182,9 +182,10 @@ struct ImageReaderOptions
  * @param fileName
  * @param imageGeomPath
  * @param cellDataName
- * @param arrayPath
+ * @param arrayName
  * @return
  */
-Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, std::string cellDataName, DataPath arrayPath, const ImageReaderOptions& imageReaderOptions);
+Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, const std::string& cellDataName, const std::string& arrayName,
+                                         const ImageReaderOptions& imageReaderOptions);
 
 } // namespace cxItkImageReader

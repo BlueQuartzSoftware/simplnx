@@ -101,7 +101,8 @@ Result<> ValidateParameter(std::string_view name, const AnyParameter& parameter,
       acceptedTypesStr << "  " << acceptedType.name() << std::endl;
     }
     throw std::invalid_argument(fmt::format("A mismatch between the argument types for a parameter was detected. This can happen if the improper type is specified when creating a parameter "
-                                            "argument.\n  Filter='{}'\n  Parameter Name:'{}'\n  Argument Name='{}'\n Argument Type: '{}'.\n The accepted types for this parameter are:\n",
+                                            "argument or if this filter is being called from another filter where the other filter is NOT using the correct parameter type.\n  Filter='{}'\n  "
+                                            "Parameter Name:'{}'\n  Argument Name='{}'\n Argument Type: '{}'.\n The accepted types for this parameter are:\n",
                                             filter.humanName(), parameter->humanName(), name, arg.type().name(), acceptedTypesStr.str()));
   }
 

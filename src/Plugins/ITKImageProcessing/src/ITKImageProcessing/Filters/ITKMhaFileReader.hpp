@@ -23,6 +23,7 @@ public:
   static inline constexpr StringLiteral k_ApplyImageTransformation = "apply_image_transformation";
   static inline constexpr StringLiteral k_SaveImageTransformationAsArray = "save_image_transformation";
   static inline constexpr StringLiteral k_TransformationMatrixDataArrayPathKey = "transformation_matrix_data_array_path";
+  static inline constexpr StringLiteral k_TransposeTransformMatrix = "transpose_transform_matrix";
 
   /**
    * @brief Returns the name of the filter.

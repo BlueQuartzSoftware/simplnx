@@ -21,12 +21,12 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(default)", "
   ITKOtsuMultipleThresholdsImage filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
+  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
@@ -50,12 +50,12 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(two_on_float
   ITKOtsuMultipleThresholdsImage filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
+  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/Ramp-Zero-One-Float.nrrd";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
@@ -81,12 +81,12 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(three_on)", 
   ITKOtsuMultipleThresholdsImage filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
+  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
@@ -113,12 +113,12 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(valley_empha
   ITKOtsuMultipleThresholdsImage filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
+  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;

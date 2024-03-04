@@ -4,7 +4,8 @@ namespace cxItkImageReader
 {
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, std::string cellDataName, DataPath arrayPath, const ImageReaderOptions& imageReaderOptions)
+Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, const std::string& cellDataName, const std::string& arrayName,
+                                         const ImageReaderOptions& imageReaderOptions)
 {
   OutputActions actions;
 
@@ -73,7 +74,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     actions.appendAction(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), origin.toContainer<CreateImageGeometryAction::OriginType>(),
                                                                      spacing.toContainer<CreateImageGeometryAction::SpacingType>(), cellDataName));
-    actions.appendAction(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), std::move(arrayPath)));
+    actions.appendAction(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), imageGeomPath.createChildPath(cellDataName).createChildPath(arrayName)));
 
   } catch(const itk::ExceptionObject& err)
   {

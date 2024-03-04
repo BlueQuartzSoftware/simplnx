@@ -163,7 +163,7 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
   }
   else
   {
-    // Plase errors from 'result' into outputActions
+    // Place errors from 'result' into outputActions
     convertedResult.m_Expected = nonstd::make_unexpected(std::move(fromResult.errors()));
   }
   // Always move the warnings AFTER the other check above...

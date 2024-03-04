@@ -14,23 +14,23 @@ using namespace nx::core;
 
 TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITKImageProcessing][ITKMhaFileReader]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_rev2.tar.gz", "ITKMhaFileReaderTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_v3.tar.gz", "ITKMhaFileReaderTest_v3");
 
   // Load plugins (this is needed because ITKMhaFileReader needs access to the SimplnxCore plugin)
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Test reading 2D & 3D image data
-  const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest/ExemplarySmallIN100.dream3d";
+  const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest_v3/ExemplarySmallIN100.dream3d";
   fs::path filePath;
   std::string exemplaryGeomName;
   SECTION("Test 2D Image Data")
   {
-    filePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest/SmallIN100_073.mha";
+    filePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest_v3/SmallIN100_073.mha";
     exemplaryGeomName = "ExemplarySmallIN100_073";
   }
   SECTION("Test 3D Image Data")
   {
-    filePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest/SmallIN100.mha";
+    filePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest_v3/SmallIN100.mha";
     exemplaryGeomName = "ExemplarySmallIN100";
   }
 
@@ -39,8 +39,8 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   Arguments args;
 
   const std::string geomName = "ImageGeom";
-  const std::string amName = "CellData";
-  const std::string arrName = "ImageArray";
+  const std::string amName = "Cell Data";
+  const std::string arrName = "ImageData";
   const std::string tMatrixName = "TransformationMatrix";
   const DataPath geomPath{{geomName}};
   const DataPath arrayPath{{geomName, amName, arrName}};
@@ -56,7 +56,7 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
   args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geomPath);
   args.insertOrAssign(ITKImageReader::k_CellDataName_Key, amName);
-  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
+  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrName);
   args.insertOrAssign(ITKMhaFileReader::k_ApplyImageTransformation, true);
   args.insertOrAssign(ITKMhaFileReader::k_SaveImageTransformationAsArray, true);
   args.insertOrAssign(ITKMhaFileReader::k_TransformationMatrixDataArrayPathKey, tMatrixPath);
@@ -74,6 +74,10 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   REQUIRE(exemplaryImageGeomPtr != nullptr);
 
   REQUIRE(imageGeomPtr->getDimensions() == exemplaryImageGeomPtr->getDimensions());
+
+  auto calcOrigin = imageGeomPtr->getOrigin();
+  auto exemplarOrigin = exemplaryImageGeomPtr->getOrigin();
+
   REQUIRE(imageGeomPtr->getOrigin() == exemplaryImageGeomPtr->getOrigin());
   REQUIRE(imageGeomPtr->getSpacing() == exemplaryImageGeomPtr->getSpacing());
 

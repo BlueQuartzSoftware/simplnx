@@ -92,9 +92,22 @@ ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom
   const float yResNew = DetermineSpacing(spacing, yAxisNew);
   const float zResNew = DetermineSpacing(spacing, zAxisNew);
 
-  const IGeometry::MeshIndexType xpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / xResNew));
-  const IGeometry::MeshIndexType ypNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / yResNew));
-  const IGeometry::MeshIndexType zpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / zResNew));
+  IGeometry::MeshIndexType xpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / xResNew));
+  IGeometry::MeshIndexType ypNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / yResNew));
+  IGeometry::MeshIndexType zpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / zResNew));
+
+  if(xpNew == 0)
+  {
+    xpNew = static_cast<IGeometry::MeshIndexType>(1);
+  }
+  if(ypNew == 0)
+  {
+    ypNew = static_cast<IGeometry::MeshIndexType>(1);
+  }
+  if(zpNew == 0)
+  {
+    zpNew = static_cast<IGeometry::MeshIndexType>(1);
+  }
 
   ImageRotationUtilities::RotateArgs params;
 
