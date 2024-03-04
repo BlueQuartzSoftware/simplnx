@@ -5,6 +5,8 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include "SimplnxCore/utils/PythonPluginSourceTemplate.hpp"
+
 #include <fmt/format.h>
 
 #include <filesystem>
@@ -16,9 +18,6 @@ namespace nx::core
 {
 inline const std::string k_FilterIncludeInsertToken = "# FILTER_INCLUDE_INSERT";
 inline const std::string k_FilterNameInsertToken = "# FILTER_NAME_INSERT";
-inline const std::string k_PythonFilterTemplate = R"(
-@PYTHON_FILTER_TEMPLATE@
-)";
 
 /**
  *
@@ -29,7 +28,7 @@ inline const std::string k_PythonFilterTemplate = R"(
  */
 inline std::string GeneratePythonFilter(const std::string& filterName, const std::string& humanName, const std::string& uuidString)
 {
-  std::string content = k_PythonFilterTemplate;
+  std::string content = PythonFilterTemplate();
 
   content = StringUtilities::replace(content, "#PYTHON_FILTER_NAME#", filterName);
   content = StringUtilities::replace(content, "#PYTHON_FILTER_HUMAN_NAME#", humanName);
@@ -47,7 +46,13 @@ inline std::string GeneratePythonFilter(const std::string& filterName, const std
 inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& pluginPath, const std::string& filterName)
 {
   Result<> result;
-  std::string pluginName = pluginPath.stem().string();
+  std::string pluginName = pluginPath.string();
+  if(StringUtilities::ends_with(pluginName, "/"))
+  {
+    pluginName.pop_back();
+    std::filesystem::path plugPath(pluginName);
+    pluginName = plugPath.stem().string();
+  }
 
   fs::path pluginPyPath = pluginPath / "Plugin.py";
   if(!fs::exists(pluginPyPath))
@@ -200,14 +205,6 @@ inline Result<> WritePythonFilterToFile(const std::filesystem::path& outputPath,
   return {};
 }
 
-inline const std::string k_PluginPythonFile = R"(
-@PYTHON_PLUGIN_TEMPLATE@
-)";
-
-inline const std::string k_PluginInitPythonFile = R"(
-@PYTHON_PLUGIN_INIT_TEMPLATE@
-)";
-
 /**
  *
  * @param pluginName
@@ -219,7 +216,7 @@ inline const std::string k_PluginInitPythonFile = R"(
  */
 inline std::string GeneratePythonPlugin(const std::string& pluginName, const std::string& pluginShortName, const std::string& pluginDescription, const std::string& pluginFilterList)
 {
-  std::string content = k_PluginPythonFile;
+  std::string content = PluginPythonFile();
 
   content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
   content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
@@ -288,7 +285,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       {
         return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", initTempFile.tempFilePath().string()));
       }
-      std::string content = k_PluginInitPythonFile;
+      std::string content = PluginInitPythonFile();
 
       content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
       content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());

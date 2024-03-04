@@ -318,6 +318,7 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CeilOperator.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.hpp"
 
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.h"
@@ -348,11 +349,24 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 # the template file to use the contents of those files. This should allow easier
 # updating of those template files.
 file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonFilterTemplate.py" PYTHON_FILTER_TEMPLATE)
-file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginInitTemplate.py" PYTHON_PLUGIN_INIT_TEMPLATE)
-file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplate.py" PYTHON_PLUGIN_TEMPLATE)
+string(HEX ${PYTHON_FILTER_TEMPLATE} PYTHON_FILTER_TEMPLATE)
+string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," PYTHON_FILTER_TEMPLATE ${PYTHON_FILTER_TEMPLATE})
+string(APPEND PYTHON_FILTER_TEMPLATE "0x00")
 
-configure_file("${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.in.hpp"
-                "${${PLUGIN_NAME}_BINARY_DIR}/utils/PythonPluginTemplateFile.hpp")
+
+file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginInitTemplate.py" PYTHON_PLUGIN_INIT_TEMPLATE)
+string(HEX ${PYTHON_PLUGIN_INIT_TEMPLATE} PYTHON_PLUGIN_INIT_TEMPLATE)
+string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," PYTHON_PLUGIN_INIT_TEMPLATE ${PYTHON_PLUGIN_INIT_TEMPLATE})
+string(APPEND PYTHON_PLUGIN_INIT_TEMPLATE "0x00")
+
+file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplate.py" PYTHON_PLUGIN_TEMPLATE)
+string(HEX ${PYTHON_PLUGIN_TEMPLATE} PYTHON_PLUGIN_TEMPLATE)
+string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," PYTHON_PLUGIN_TEMPLATE ${PYTHON_PLUGIN_TEMPLATE})
+string(APPEND PYTHON_PLUGIN_TEMPLATE "0x00")
+
+
+cmpConfigureFileWithMD5Check(CONFIGURED_TEMPLATE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginSourceTemplate.in.hpp"
+                              GENERATED_FILE_PATH "${${PLUGIN_NAME}_BINARY_DIR}/generated/${PLUGIN_NAME}/utils/PythonPluginSourceTemplate.hpp")
 
 #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
