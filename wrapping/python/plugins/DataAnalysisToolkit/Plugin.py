@@ -1,7 +1,16 @@
+
+"""
+Insert documentation here.
+"""
+
 from DataAnalysisToolkit.CalculateHistogramFilter import CalculateHistogramFilter
 from DataAnalysisToolkit.InterpolateGridDataFilter import InterpolateGridDataFilter
 from DataAnalysisToolkit.CliReaderFilter import CliReaderFilter
 from DataAnalysisToolkit.ContourDetectionFilter import ContourDetectionFilter
+from DataAnalysisToolkit.NPSortArray import NPSortArray
+
+# FILTER_INCLUDE_INSERT
+
 import simplnx as nx
 
 class DataAnalysisToolkit:
@@ -21,4 +30,6 @@ class DataAnalysisToolkit:
     return 'BlueQuartz Software'
 
   def get_filters(self):
-    return [CalculateHistogramFilter, InterpolateGridDataFilter, CliReaderFilter, ContourDetectionFilter]
+    return [CalculateHistogramFilter,InterpolateGridDataFilter,CliReaderFilter,NPSortArray,ContourDetectionFilter] # FILTER_NAME_INSERT
+
+
