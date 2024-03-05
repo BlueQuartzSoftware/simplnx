@@ -1,11 +1,31 @@
 #pragma once
 
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/Common/Range.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 namespace nx::core::GeometryUtilities
 {
+/**
+ * @brief The FindUniqueIdsImpl class implements a threaded algorithm that determines the set of
+ * unique vertices in a given geometry
+ */
+class FindUniqueIdsImpl
+{
+public:
+  FindUniqueIdsImpl(nx::core::IGeometry::SharedVertexList& vertex, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds);
+
+  void convert(size_t start, size_t end) const;
+  void operator()(const Range& range) const;
+
+private:
+  const IGeometry::SharedVertexList& m_Vertex;
+  const std::vector<std::vector<size_t>>& m_NodesInBin;
+  nx::core::Int64DataStore& m_UniqueIds;
+};
+
 /**
  * @brief Calculates the X,Y,Z partition length for a given geometry if the geometry were partitioned into equal numberOfPartitionsPerAxis partitions.
  * @param geometry The geometry to be partitioned
@@ -39,4 +59,164 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const I
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  */
 SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis);
+
+///**
+//   * @brief Constructs a new BoundingBox3D defined by the array of position values.
+//   * The format is min X, min Y, min Z, max X, max Y, max Z.
+//   * @param arr
+// */
+// template <class PointT = PointType, class = std::enable_if_t<std::is_same<PointT, Point3D<ValueType>>::value>>
+// explicit BoundingBox(nonstd::span<const ValueType, 6> arr)
+//: m_Lower(Point3D<ValueType>(arr[0], arr[1], arr[2]))
+//, m_Upper(Point3D<ValueType>(arr[3], arr[4], arr[5]))
+//{
+//}
+
+/**
+ * @brief Removes duplicate nodes to ensure the vertex list is unique
+ * @param geom The geometry to eliminate the duplicate nodes from.  This MUST be a node-based geometry.
+ */
+template <class GeometryType = INodeGeometry1D, class = std::enable_if_t<std::is_base_of<INodeGeometry1D, GeometryType>::value>>
+SIMPLNX_EXPORT Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scaleFactor = std::nullopt)
+{
+  using SharedFaceList = IGeometry::MeshIndexArrayType;
+  using SharedVertList = IGeometry::SharedVertexList;
+
+  SharedVertList& vertices = *(geom.getVertices());
+
+  INodeGeometry1D::MeshIndexArrayType* cells;
+  if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  {
+    cells = geom.getFaces();
+  }
+  else
+  {
+    cells = geom.getEdges();
+  }
+  INodeGeometry1D::MeshIndexArrayType& cellsRef = *(cells);
+
+  IGeometry::MeshIndexType nNodesAll = geom.getNumberOfVertices();
+  size_t nNodes = 0;
+  if(nNodesAll > 0)
+  {
+    nNodes = static_cast<size_t>(nNodesAll);
+  }
+
+  auto boundingBox = geom.getBoundingBox();
+  auto minPoint = boundingBox.getMinPoint();
+  auto maxPoint = boundingBox.getMaxPoint();
+  float32 stepX = (maxPoint.getX() - minPoint.getX()) / 100.0f;
+  float32 stepY = (maxPoint.getY() - minPoint.getY()) / 100.0f;
+  float32 stepZ = (maxPoint.getZ() - minPoint.getZ()) / 100.0f;
+
+  std::vector<std::vector<usize>> nodesInBin(100 * 100 * 100);
+
+  // determine (xyz) bin each node falls in - used to speed up node comparison
+  int32 xBin = 0, yBin = 0, zBin = 0;
+  for(size_t i = 0; i < nNodes; i++)
+  {
+    if(stepX != 0.0)
+    {
+      xBin = static_cast<int32>((vertices[i * 3] - minPoint.getX()) / stepX);
+    }
+    if(stepY != 0.0)
+    {
+      yBin = static_cast<int32>((vertices[i * 3 + 1] - minPoint.getY()) / stepY);
+    }
+    if(zBin != 0.0)
+    {
+      zBin = static_cast<int32>((vertices[i * 3 + 2] - minPoint.getZ()) / stepZ);
+    }
+    if(xBin == 100)
+    {
+      xBin = 99;
+    }
+    if(yBin == 100)
+    {
+      yBin = 99;
+    }
+    if(zBin == 100)
+    {
+      zBin = 99;
+    }
+    int32 bin = (zBin * 10000) + (yBin * 100) + xBin;
+    nodesInBin[bin].push_back(i);
+  }
+
+  // Create array to hold unique node numbers
+  Int64DataStore uniqueIds(IDataStore::ShapeType{nNodes}, IDataStore::ShapeType{1}, {});
+  for(IGeometry::MeshIndexType i = 0; i < nNodesAll; i++)
+  {
+    uniqueIds[i] = static_cast<int64>(i);
+  }
+
+  // Parallel algorithm to find duplicate nodes
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0ULL, static_cast<usize>(100 * 100 * 100));
+  dataAlg.execute(GeometryUtilities::FindUniqueIdsImpl(vertices, nodesInBin, uniqueIds));
+
+  // renumber the unique nodes
+  int64 uniqueCount = 0;
+  for(usize i = 0; i < nNodes; i++)
+  {
+    if(uniqueIds[i] == static_cast<int64>(i))
+    {
+      uniqueIds[i] = uniqueCount;
+      uniqueCount++;
+    }
+    else
+    {
+      uniqueIds[i] = uniqueIds[uniqueIds[i]];
+    }
+  }
+
+  float32 scaleFactorValue = 1.0F;
+  if(scaleFactor.has_value())
+  {
+    scaleFactorValue = scaleFactor.value();
+  }
+
+  // Move nodes to unique Id and then resize nodes array and apply optional scaling
+  for(size_t i = 0; i < nNodes; i++)
+  {
+    vertices[uniqueIds[i] * 3] = vertices[i * 3] * scaleFactorValue;
+    vertices[uniqueIds[i] * 3 + 1] = vertices[i * 3 + 1] * scaleFactorValue;
+    vertices[uniqueIds[i] * 3 + 2] = vertices[i * 3 + 2] * scaleFactorValue;
+  }
+  geom.resizeVertexList(uniqueCount);
+
+  // Update the triangle nodes to reflect the unique ids
+  IGeometry::MeshIndexType nCells;
+  usize nVerticesPerCell = 2;
+  if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  {
+    nCells = geom.getNumberOfFaces();
+    nVerticesPerCell = geom.getNumberOfVerticesPerFace();
+  }
+  else
+  {
+    nCells = geom.getNumberOfEdges();
+  }
+  for(size_t i = 0; i < static_cast<size_t>(nCells); i++)
+  {
+    for(usize j = 0; j < nVerticesPerCell; j++)
+    {
+      auto node = static_cast<int64>(cellsRef[i * nVerticesPerCell + j]);
+      cellsRef[i * nVerticesPerCell + j] = uniqueIds[node];
+    }
+  }
+
+  if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  {
+    geom.getFaceAttributeMatrix()->resizeTuples({geom.getNumberOfFaces()});
+  }
+  else
+  {
+    geom.getEdgeAttributeMatrix()->resizeTuples({geom.getNumberOfEdges()});
+  }
+
+  geom.getVertexAttributeMatrix()->resizeTuples({geom.getNumberOfVertices()});
+
+  return {};
+}
 } // namespace nx::core::GeometryUtilities

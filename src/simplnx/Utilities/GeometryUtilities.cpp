@@ -11,6 +11,42 @@ constexpr float32 k_PartitionEdgePadding = 0.000001;
 const Point3Df k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
 } // namespace
 
+GeometryUtilities::FindUniqueIdsImpl::FindUniqueIdsImpl(nx::core::IGeometry::SharedVertexList& vertex, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds)
+: m_Vertex(vertex)
+, m_NodesInBin(nodesInBin)
+, m_UniqueIds(uniqueIds)
+{
+}
+
+// -----------------------------------------------------------------------------
+void GeometryUtilities::FindUniqueIdsImpl::convert(size_t start, size_t end) const
+{
+  for(size_t i = start; i < end; i++)
+  {
+    for(size_t j = 0; j < m_NodesInBin[i].size(); j++)
+    {
+      size_t node1 = m_NodesInBin[i][j];
+      if(m_UniqueIds[node1] == static_cast<int64_t>(node1))
+      {
+        for(size_t k = j + 1; k < m_NodesInBin[i].size(); k++)
+        {
+          size_t node2 = m_NodesInBin[i][k];
+          if(m_Vertex[node1 * 3] == m_Vertex[node2 * 3] && m_Vertex[node1 * 3 + 1] == m_Vertex[node2 * 3 + 1] && m_Vertex[node1 * 3 + 2] == m_Vertex[node2 * 3 + 2])
+          {
+            m_UniqueIds[node2] = node1;
+          }
+        }
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+void GeometryUtilities::FindUniqueIdsImpl::operator()(const Range& range) const
+{
+  convert(range.min(), range.max());
+}
+
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
   BoundingBox3Df boundingBox = geometry.getBoundingBox();
