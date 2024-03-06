@@ -1,5 +1,7 @@
 #include "INodeGeometry2D.hpp"
 
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
+
 namespace nx::core
 {
 INodeGeometry2D::INodeGeometry2D(DataStructure& dataStructure, std::string name)
@@ -177,23 +179,12 @@ INodeGeometry2D::SharedEdgeList* INodeGeometry2D::createSharedEdgeList(usize num
 void INodeGeometry2D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
   INodeGeometry1D::checkUpdatedIdsImpl(updatedIds);
-
+  std::vector<bool> visited(3, false);
   for(const auto& updatedId : updatedIds)
   {
-    if(m_FaceListId == updatedId.first)
-    {
-      m_FaceListId = updatedId.second;
-    }
-
-    if(m_FaceAttributeMatrixId == updatedId.first)
-    {
-      m_FaceAttributeMatrixId = updatedId.second;
-    }
-
-    if(m_UnsharedEdgeListId == updatedId.first)
-    {
-      m_UnsharedEdgeListId = updatedId.second;
-    }
+    m_FaceListId = nx::core::VisitDataStructureId(m_FaceListId, updatedId, visited, 0);
+    m_FaceAttributeMatrixId = nx::core::VisitDataStructureId(m_FaceAttributeMatrixId, updatedId, visited, 1);
+    m_UnsharedEdgeListId = nx::core::VisitDataStructureId(m_UnsharedEdgeListId, updatedId, visited, 2);
   }
 }
 } // namespace nx::core

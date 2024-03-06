@@ -1,5 +1,7 @@
 #include "INodeGeometry0D.hpp"
 
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
+
 namespace nx::core
 {
 INodeGeometry0D::INodeGeometry0D(DataStructure& dataStructure, std::string name)
@@ -207,16 +209,12 @@ void INodeGeometry0D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
 {
   IGeometry::checkUpdatedIdsImpl(updatedIds);
 
+  std::vector<bool> visited(2, false);
+
   for(const auto& updatedId : updatedIds)
   {
-    if(m_VertexDataArrayId == updatedId.first)
-    {
-      m_VertexDataArrayId = updatedId.second;
-    }
-    if(m_VertexAttributeMatrixId == updatedId.first)
-    {
-      m_VertexAttributeMatrixId = updatedId.second;
-    }
+    m_VertexDataArrayId = nx::core::VisitDataStructureId(m_VertexDataArrayId, updatedId, visited, 0);
+    m_VertexAttributeMatrixId = nx::core::VisitDataStructureId(m_VertexAttributeMatrixId, updatedId, visited, 1);
   }
 }
 } // namespace nx::core

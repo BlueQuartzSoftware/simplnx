@@ -1,5 +1,7 @@
 #include "INodeGeometry3D.hpp"
 
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
+
 namespace nx::core
 {
 INodeGeometry3D::INodeGeometry3D(DataStructure& dataStructure, std::string name)
@@ -187,23 +189,13 @@ INodeGeometry3D::SharedTriList* INodeGeometry3D::createSharedTriList(usize numTr
 void INodeGeometry3D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
   INodeGeometry2D::checkUpdatedIdsImpl(updatedIds);
+  std::vector<bool> visited(3, false);
 
   for(const auto& updatedId : updatedIds)
   {
-    if(m_PolyhedronListId == updatedId.first)
-    {
-      m_PolyhedronListId = updatedId.second;
-    }
-
-    if(m_PolyhedronAttributeMatrixId == updatedId.first)
-    {
-      m_PolyhedronAttributeMatrixId = updatedId.second;
-    }
-
-    if(m_UnsharedFaceListId == updatedId.first)
-    {
-      m_UnsharedFaceListId = updatedId.second;
-    }
+    m_PolyhedronListId = nx::core::VisitDataStructureId(m_PolyhedronListId, updatedId, visited, 0);
+    m_PolyhedronAttributeMatrixId = nx::core::VisitDataStructureId(m_PolyhedronAttributeMatrixId, updatedId, visited, 1);
+    m_UnsharedFaceListId = nx::core::VisitDataStructureId(m_UnsharedFaceListId, updatedId, visited, 2);
   }
 }
 } // namespace nx::core

@@ -1,5 +1,7 @@
 #include "INodeGeometry1D.hpp"
 
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
+
 namespace nx::core
 {
 INodeGeometry1D::INodeGeometry1D(DataStructure& dataStructure, std::string name)
@@ -224,37 +226,16 @@ void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
 {
   INodeGeometry0D::checkUpdatedIdsImpl(updatedIds);
 
+  std::vector<bool> visited(7, false);
+
   for(const auto& updatedId : updatedIds)
   {
-    if(m_EdgeAttributeMatrixId == updatedId.first)
-    {
-      m_EdgeAttributeMatrixId = updatedId.second;
-    }
-
-    if(m_EdgeDataArrayId == updatedId.first)
-    {
-      m_EdgeDataArrayId = updatedId.second;
-    }
-
-    if(m_CellContainingVertDataArrayId == updatedId.first)
-    {
-      m_CellContainingVertDataArrayId = updatedId.second;
-    }
-
-    if(m_CellNeighborsDataArrayId == updatedId.first)
-    {
-      m_CellNeighborsDataArrayId = updatedId.second;
-    }
-
-    if(m_CellCentroidsDataArrayId == updatedId.first)
-    {
-      m_CellCentroidsDataArrayId = updatedId.second;
-    }
-
-    if(m_ElementSizesId == updatedId.first)
-    {
-      m_ElementSizesId = updatedId.second;
-    }
+    m_EdgeAttributeMatrixId = nx::core::VisitDataStructureId(m_EdgeAttributeMatrixId, updatedId, visited, 0);
+    m_EdgeDataArrayId = nx::core::VisitDataStructureId(m_EdgeDataArrayId, updatedId, visited, 1);
+    m_CellContainingVertDataArrayId = nx::core::VisitDataStructureId(m_CellContainingVertDataArrayId, updatedId, visited, 2);
+    m_CellNeighborsDataArrayId = nx::core::VisitDataStructureId(m_CellNeighborsDataArrayId, updatedId, visited, 3);
+    m_CellCentroidsDataArrayId = nx::core::VisitDataStructureId(m_CellCentroidsDataArrayId, updatedId, visited, 4);
+    m_ElementSizesId = nx::core::VisitDataStructureId(m_ElementSizesId, updatedId, visited, 5);
   }
 }
 } // namespace nx::core
