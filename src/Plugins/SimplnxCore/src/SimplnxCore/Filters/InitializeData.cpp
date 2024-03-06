@@ -246,8 +246,8 @@ void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... 
   }
   if constexpr(std::is_floating_point_v<T>)
   {
-  if constexpr (Ranged)
-  {
+    if constexpr(Ranged)
+    {
 
       std::vector<std::uniform_real_distribution<float64>> dists;
       for(usize comp = 0; comp < numComp * 2; comp += 2)
@@ -255,16 +255,16 @@ void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... 
         dists.emplace_back(range.at(comp), range.at(comp + 1));
       }
       ::RandomFill<T, Ranged, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
-  }
-  if constexpr (!Ranged)
-  {
+    }
+    if constexpr(!Ranged)
+    {
       std::vector<std::uniform_real_distribution<float64>> dists;
       for(usize comp = 0; comp < numComp * 2; comp += 2)
       {
-        dists.emplace_back(0,1);
+        dists.emplace_back(0, 1);
       }
       ::RandomFill<T, Ranged, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
-  }
+    }
   }
 }
 
