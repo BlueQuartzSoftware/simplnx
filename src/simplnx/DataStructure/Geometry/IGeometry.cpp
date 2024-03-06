@@ -1,5 +1,7 @@
 #include "IGeometry.hpp"
 
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
+
 namespace nx::core
 {
 IGeometry::IGeometry(DataStructure& dataStructure, std::string name)
@@ -205,12 +207,11 @@ void IGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>
 {
   BaseGroup::checkUpdatedIdsImpl(updatedIds);
 
+  std::vector<bool> visited(1, false);
+
   for(const auto& updatedId : updatedIds)
   {
-    if(m_ElementSizesId == updatedId.first)
-    {
-      m_ElementSizesId = updatedId.second;
-    }
+    m_ElementSizesId = nx::core::VisitDataStructureId(m_ElementSizesId, updatedId, visited, 0);
   }
 }
 } // namespace nx::core

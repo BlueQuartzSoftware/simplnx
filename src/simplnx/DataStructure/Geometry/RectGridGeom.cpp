@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 
 #include <iterator>
@@ -693,22 +694,12 @@ std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, floa
 void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
   IGridGeometry::checkUpdatedIdsImpl(updatedIds);
+  std::vector<bool> visited(3, false);
 
   for(const auto& updatedId : updatedIds)
   {
-    if(m_xBoundsId == updatedId.first)
-    {
-      m_xBoundsId = updatedId.second;
-    }
-
-    if(m_yBoundsId == updatedId.first)
-    {
-      m_yBoundsId = updatedId.second;
-    }
-
-    if(m_zBoundsId == updatedId.first)
-    {
-      m_zBoundsId = updatedId.second;
-    }
+    m_xBoundsId = nx::core::VisitDataStructureId(m_xBoundsId, updatedId, visited, 0);
+    m_yBoundsId = nx::core::VisitDataStructureId(m_yBoundsId, updatedId, visited, 1);
+    m_zBoundsId = nx::core::VisitDataStructureId(m_zBoundsId, updatedId, visited, 2);
   }
 }

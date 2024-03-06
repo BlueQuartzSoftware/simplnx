@@ -29,12 +29,32 @@
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 
+#include <map>
 #include <optional>
 #include <stdexcept>
 #include <vector>
 
 namespace nx::core
 {
+/**
+ * @brief This method will assign a new 'id' to a value only if the boolean referenced by the visitedIndex is false.
+ * @param originalId The original 'id'
+ * @param updatedId The updated 'id'
+ * @param visited The vector of visited values
+ * @param visitedIndex The index into the visited array
+ * @return Either the original 'id' if this was already visited or the new 'id' if it was not visited already.
+ */
+inline constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::optional<DataObject::IdType>& originalId, const std::pair<DataObject::IdType, DataObject::IdType>& updatedId,
+                                                                        std::vector<bool>& visited, usize visitedIndex)
+{
+  if(originalId == updatedId.first && !visited[visitedIndex])
+  {
+    visited[visitedIndex] = true;
+    return updatedId.second;
+  }
+  return originalId;
+}
+
 /**
  * @brief Returns a string representation of the passed in IGeometry::Type
  * @param dataType
