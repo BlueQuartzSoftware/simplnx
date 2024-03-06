@@ -1,5 +1,7 @@
 #include "IGridGeometry.hpp"
 
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
+
 namespace nx::core
 {
 IGridGeometry::IGridGeometry(DataStructure& dataStructure, std::string name)
@@ -56,11 +58,14 @@ void IGridGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdTy
 {
   IGeometry::checkUpdatedIdsImpl(updatedIds);
 
+  std::vector<bool> visited(1, false);
+
   for(const auto& updatedId : updatedIds)
   {
-    if(m_CellDataId == updatedId.first)
+    m_CellDataId = nx::core::VisitDataStructureId(m_CellDataId, updatedId, visited, 0);
+    if(visited[0])
     {
-      m_CellDataId = updatedId.second;
+      break;
     }
   }
 }
