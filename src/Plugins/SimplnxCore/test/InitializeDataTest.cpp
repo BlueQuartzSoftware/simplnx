@@ -665,8 +665,8 @@ TEST_CASE("SimplnxCore::InitializeData 20: Multi Component Non-Standardized-Rand
   }
 
   ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath),
-                                {std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max(),
-                                 std::numeric_limits<float32>::min(), std::numeric_limits<float32>::max()});
+                                {(-1*(std::numeric_limits<float32>::max()-1)), std::numeric_limits<float32>::max(), (-1*(std::numeric_limits<float32>::max()-1)), std::numeric_limits<float32>::max(),
+                                 (-1*(std::numeric_limits<float32>::max()-1)), std::numeric_limits<float32>::max()});
 }
 
 TEST_CASE("SimplnxCore::InitializeData 21: Boolean Single Component Fill Initialization", "[SimplnxCore][InitializeData]")

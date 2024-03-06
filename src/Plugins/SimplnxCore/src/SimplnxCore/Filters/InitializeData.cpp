@@ -180,7 +180,7 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
   {
     for(usize comp = 0; comp < numComp; comp++)
     {
-      if constexpr(!std::is_same_v<T, bool>)
+      if constexpr(std::is_floating_point_v<T>)
       {
         if constexpr(Ranged)
         {
@@ -198,7 +198,7 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
           }
         }
       }
-      if constexpr(std::is_same_v<T, bool>)
+      if constexpr(!std::is_floating_point_v<T>)
       {
         dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
       }
@@ -235,47 +235,36 @@ void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... 
     ::RandomFill<T, Ranged, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
     return;
   }
+  if constexpr(!std::is_floating_point_v<T>)
+  {
+    std::vector<std::uniform_int_distribution<int64>> dists;
+    for(usize comp = 0; comp < numComp * 2; comp += 2)
+    {
+      dists.emplace_back(range.at(comp), range.at(comp + 1));
+    }
+    ::RandomFill<T, Ranged, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
+  }
+  if constexpr(std::is_floating_point_v<T>)
+  {
   if constexpr (Ranged)
   {
-    if constexpr(std::is_floating_point_v<T>)
-    {
+
       std::vector<std::uniform_real_distribution<float64>> dists;
-      for(usize comp = 0; comp < numComp * 2; comp += 2)
-      {
-        dists.emplace_back(0, 1);
-      }
-      ::RandomFill<T, Ranged, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
-    }
-    if constexpr(!std::is_floating_point_v<T> && !std::is_same_v<T, bool>)
-    {
-      std::vector<std::normal_distribution<float64>> dists;
       for(usize comp = 0; comp < numComp * 2; comp += 2)
       {
         dists.emplace_back(range.at(comp), range.at(comp + 1));
       }
-      ::RandomFill<T, Ranged, std::normal_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
-    }
+      ::RandomFill<T, Ranged, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
   }
   if constexpr (!Ranged)
   {
-    if constexpr(std::is_floating_point_v<T>)
-    {
       std::vector<std::uniform_real_distribution<float64>> dists;
       for(usize comp = 0; comp < numComp * 2; comp += 2)
       {
-        dists.emplace_back(range.at(comp), range.at(comp + 1));
+        dists.emplace_back(0,1);
       }
       ::RandomFill<T, Ranged, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
-    }
-    if constexpr(!std::is_floating_point_v<T> && !std::is_same_v<T, bool>)
-    {
-      std::vector<std::uniform_int_distribution<int64>> dists;
-      for(usize comp = 0; comp < numComp * 2; comp += 2)
-      {
-        dists.emplace_back(range.at(comp), range.at(comp + 1));
-      }
-      ::RandomFill<T, Ranged, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
-    }
+  }
   }
 }
 
