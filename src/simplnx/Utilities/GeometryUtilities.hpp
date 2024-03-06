@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 namespace nx::core::GeometryUtilities
@@ -77,8 +78,12 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const Bo
  * @param geom The geometry to eliminate the duplicate nodes from.  This MUST be a node-based geometry.
  */
 template <class GeometryType = INodeGeometry1D, class = std::enable_if_t<std::is_base_of<INodeGeometry1D, GeometryType>::value>>
-SIMPLNX_EXPORT Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scaleFactor = std::nullopt)
+Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scaleFactor = std::nullopt)
 {
+  usize numXBins = 100;
+  usize numYBins = 100;
+  usize numZBins = 100;
+
   using SharedFaceList = IGeometry::MeshIndexArrayType;
   using SharedVertList = IGeometry::SharedVertexList;
 
@@ -105,41 +110,41 @@ SIMPLNX_EXPORT Result<> EliminateDuplicateNodes(GeometryType& geom, std::optiona
   auto boundingBox = geom.getBoundingBox();
   auto minPoint = boundingBox.getMinPoint();
   auto maxPoint = boundingBox.getMaxPoint();
-  float32 stepX = (maxPoint.getX() - minPoint.getX()) / 100.0f;
-  float32 stepY = (maxPoint.getY() - minPoint.getY()) / 100.0f;
-  float32 stepZ = (maxPoint.getZ() - minPoint.getZ()) / 100.0f;
+  float32 stepX = (maxPoint.getX() - minPoint.getX()) / numXBins;
+  float32 stepY = (maxPoint.getY() - minPoint.getY()) / numYBins;
+  float32 stepZ = (maxPoint.getZ() - minPoint.getZ()) / numZBins;
 
-  std::vector<std::vector<usize>> nodesInBin(100 * 100 * 100);
+  std::vector<std::vector<usize>> nodesInBin(numXBins * numYBins * numZBins);
 
   // determine (xyz) bin each node falls in - used to speed up node comparison
-  int32 xBin = 0, yBin = 0, zBin = 0;
+  usize xBin = 0, yBin = 0, zBin = 0;
   for(size_t i = 0; i < nNodes; i++)
   {
     if(stepX != 0.0)
     {
-      xBin = static_cast<int32>((vertices[i * 3] - minPoint.getX()) / stepX);
+      xBin = static_cast<usize>((vertices[i * 3] - minPoint.getX()) / stepX);
     }
     if(stepY != 0.0)
     {
-      yBin = static_cast<int32>((vertices[i * 3 + 1] - minPoint.getY()) / stepY);
+      yBin = static_cast<usize>((vertices[i * 3 + 1] - minPoint.getY()) / stepY);
     }
-    if(zBin != 0.0)
+    if(zBin != 0)
     {
-      zBin = static_cast<int32>((vertices[i * 3 + 2] - minPoint.getZ()) / stepZ);
+      zBin = static_cast<usize>((vertices[i * 3 + 2] - minPoint.getZ()) / stepZ);
     }
-    if(xBin == 100)
+    if(xBin == numXBins)
     {
-      xBin = 99;
+      xBin = numXBins - 1;
     }
-    if(yBin == 100)
+    if(yBin == numYBins)
     {
-      yBin = 99;
+      yBin = numYBins - 1;
     }
-    if(zBin == 100)
+    if(zBin == numZBins)
     {
-      zBin = 99;
+      zBin = numZBins - 1;
     }
-    int32 bin = (zBin * 10000) + (yBin * 100) + xBin;
+    usize bin = (zBin * numYBins * numXBins) + (yBin * numXBins) + xBin;
     nodesInBin[bin].push_back(i);
   }
 
@@ -152,7 +157,8 @@ SIMPLNX_EXPORT Result<> EliminateDuplicateNodes(GeometryType& geom, std::optiona
 
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<usize>(100 * 100 * 100));
+  dataAlg.setParallelizationEnabled(true);
+  dataAlg.setRange(0ULL, static_cast<usize>(numXBins * numYBins * numZBins));
   dataAlg.execute(GeometryUtilities::FindUniqueIdsImpl(vertices, nodesInBin, uniqueIds));
 
   // renumber the unique nodes

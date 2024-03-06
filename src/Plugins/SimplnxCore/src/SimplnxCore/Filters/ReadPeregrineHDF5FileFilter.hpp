@@ -52,7 +52,8 @@ public:
   static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxX_Key = "registered_data_subvolume_minmax_x";
   static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxY_Key = "registered_data_subvolume_minmax_y";
   static inline constexpr StringLiteral k_RegisteredDataSubvolumeMinMaxZ_Key = "registered_data_subvolume_minmax_z";
-  static inline constexpr StringLiteral k_ReadScanData_Key = "read_scan_data";
+  static inline constexpr StringLiteral k_ReadScanDataSubvolume_Key = "read_scan_data_subvolume";
+  static inline constexpr StringLiteral k_ScanDataSubvolumeMinMax_Key = "scan_data_subvolume_minmax";
   static inline constexpr StringLiteral k_ScanData_Key = "scan_data";
   static inline constexpr StringLiteral k_ScanDataCellAttrMat_Key = "scan_data_cell_attr_mat";
   static inline constexpr StringLiteral k_ScanDataVertexAttrMat_Key = "scan_data_vertex_attr_mat";

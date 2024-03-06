@@ -41,7 +41,8 @@ struct SIMPLNXCORE_EXPORT ReadPeregrineHDF5FileInputValues
   std::string anomalyDetectionArrayName;
   bool readXRayCT;
   std::string xRayCTArrayName;
-  bool readScanData;
+  bool readScanDataSubvolume;
+  std::vector<uint64> scanDataSubvolumeMinMax;
   DataPath scanDataEdgeGeomPath;
   std::string scanDataVertexAttrMatName;
   std::string scanDataEdgeAttrMatName;

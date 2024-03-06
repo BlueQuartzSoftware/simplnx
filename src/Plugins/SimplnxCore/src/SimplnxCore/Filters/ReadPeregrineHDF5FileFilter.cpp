@@ -246,7 +246,10 @@ Parameters ReadPeregrineHDF5FileFilter::parameters() const
   params.insert(std::make_unique<VectorUInt64Parameter>(k_RegisteredDataSubvolumeMinMaxZ_Key, "Registered Data Subvolume Min/Max Z Dimension",
                                                         "The min/max indices of the Z dimension for the Registered Data subvolume.", std::vector<uint64>{0ULL, 99ULL},
                                                         std::vector<std::string>{"Z Min", "Z Max"}));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadScanData_Key, "Read Scan Data", "Specifies whether or not to read the scan data from the input file.", true));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_ReadScanDataSubvolume_Key, "Read Scan Data Subvolume", "Specifies whether or not to read a subvolume of the scan data from the input file.", false));
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_ScanDataSubvolumeMinMax_Key, "Scan Data Subvolume Min/Max", "The min/max scan indices for the Scan Data subvolume.",
+                                                        std::vector<uint64>{0ULL, 1ULL}, std::vector<std::string>{"Min", "Max"}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_SliceData_Key, "Slice Data Geometry", "The path to the newly created Slice Data image geometry", DataPath({"Slice Data"})));
@@ -283,12 +286,7 @@ Parameters ReadPeregrineHDF5FileFilter::parameters() const
   params.linkParameters(k_ReadSampleIds_Key, k_SampleIdsArrayName_Key, true);
   params.linkParameters(k_ReadAnomalyDetection_Key, k_AnomalyDetectionArrayName_Key, true);
   params.linkParameters(k_ReadXRayCT_Key, k_XRayCTArrayName_Key, true);
-  params.linkParameters(k_ReadScanData_Key, k_ScanData_Key, true);
-  params.linkParameters(k_ReadScanData_Key, k_ScanDataCellAttrMat_Key, true);
-  params.linkParameters(k_ReadScanData_Key, k_ScanDataVertexAttrMat_Key, true);
-  params.linkParameters(k_ReadScanData_Key, k_ScanDataVertexListName_Key, true);
-  params.linkParameters(k_ReadScanData_Key, k_ScanDataEdgeListName_Key, true);
-  params.linkParameters(k_ReadScanData_Key, k_TimeOfTravelArrayName_Key, true);
+  params.linkParameters(k_ReadScanDataSubvolume_Key, k_ScanDataSubvolumeMinMax_Key, true);
 
   return params;
 }
@@ -500,6 +498,8 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightScanDatasets(cons
   auto vertexListArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ScanDataVertexListName_Key);
   auto edgeListArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ScanDataEdgeListName_Key);
   auto timeOfTravelArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_TimeOfTravelArrayName_Key);
+  auto readScanDataSubvolume = filterArgs.value<BoolParameter::ValueType>(k_ReadScanDataSubvolume_Key);
+  auto scanDataSubvolumeMinMax = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ScanDataSubvolumeMinMax_Key);
 
   OutputActions actions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -510,9 +510,29 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightScanDatasets(cons
     return {MakeErrorResult<OutputActions>(-4032, fmt::format("Error opening group at path '{}' in HDF5 file '{}'", ReadPeregrineHDF5File::k_ScansGroupPath, h5FileReader.getName()))};
   }
 
-  usize zCount = groupReader.getNumChildren();
+  usize numScans = groupReader.getNumChildren();
+  if(scanDataSubvolumeMinMax[1] > numScans - 1)
+  {
+    return {
+        MakeErrorResult<OutputActions>(-4033, fmt::format("The scan data subvolume maximum value ({}) cannot be larger than the largest scan number ({}).", scanDataSubvolumeMinMax[1], numScans - 1))};
+  }
+
+  if(scanDataSubvolumeMinMax[0] > scanDataSubvolumeMinMax[1])
+  {
+    return {MakeErrorResult<OutputActions>(
+        -4034, fmt::format("The scan data subvolume minimum value ({}) cannot be larger than the maximum value ({}).", scanDataSubvolumeMinMax[0], scanDataSubvolumeMinMax[1]))};
+  }
+
+  usize zStart = 0;
+  usize zEnd = numScans;
+  if(readScanDataSubvolume)
+  {
+    zStart = scanDataSubvolumeMinMax[0];
+    zEnd = scanDataSubvolumeMinMax[1] + 1; // Must add 1 since this max value is inclusive
+  }
+
   usize numEdges = 0;
-  for(usize i = 0; i < zCount; i++)
+  for(usize i = zStart; i < zEnd; i++)
   {
     fs::path scanPath = fs::path(ReadPeregrineHDF5File::k_ScansGroupPath) / std::to_string(i);
     Result<std::vector<usize>> scanDimsResult = ReadPeregrineHDF5File::ReadDatasetDimensions(h5FileReader, scanPath.string());
@@ -523,7 +543,7 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightScanDatasets(cons
     std::vector<usize> scanDims = scanDimsResult.value();
     if(scanDims.size() != 2)
     {
-      return {MakeErrorResult<OutputActions>(-4033, fmt::format("Scan dataset at path '{}' in HDF5 file '{}' MUST have 2 dimensions, but instead it has {} dimensions.",
+      return {MakeErrorResult<OutputActions>(-4035, fmt::format("Scan dataset at path '{}' in HDF5 file '{}' MUST have 2 dimensions, but instead it has {} dimensions.",
                                                                 ReadPeregrineHDF5File::k_ScansGroupPath, h5FileReader.getName(), scanDims.size()))};
     }
     numEdges += scanDims[0];
@@ -545,7 +565,6 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto inputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
-  auto readScanData = filterArgs.value<BoolParameter::ValueType>(k_ReadScanData_Key);
 
   OutputActions actions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -584,17 +603,14 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightImpl(const DataSt
   actions = MergeOutputActions(actions, result.outputActions.value());
   preflightUpdatedValues.insert(preflightUpdatedValues.end(), result.outputValues.begin(), result.outputValues.end());
 
-  if(readScanData)
+  result = preflightScanDatasets(h5FileReader, filterArgs);
+  if(result.outputActions.invalid())
   {
-    result = preflightScanDatasets(h5FileReader, filterArgs);
-    if(result.outputActions.invalid())
-    {
-      return result;
-    }
-
-    actions = MergeOutputActions(actions, result.outputActions.value());
-    preflightUpdatedValues.insert(preflightUpdatedValues.end(), result.outputValues.begin(), result.outputValues.end());
+    return result;
   }
+
+  actions = MergeOutputActions(actions, result.outputActions.value());
+  preflightUpdatedValues.insert(preflightUpdatedValues.end(), result.outputValues.begin(), result.outputValues.end());
 
   return {{actions}, std::move(preflightUpdatedValues)};
 }
@@ -630,7 +646,8 @@ Result<> ReadPeregrineHDF5FileFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.anomalyDetectionArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AnomalyDetectionArrayName_Key);
   inputValues.readXRayCT = filterArgs.value<BoolParameter::ValueType>(k_ReadXRayCT_Key);
   inputValues.xRayCTArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_XRayCTArrayName_Key);
-  inputValues.readScanData = filterArgs.value<BoolParameter::ValueType>(k_ReadScanData_Key);
+  inputValues.readScanDataSubvolume = filterArgs.value<BoolParameter::ValueType>(k_ReadScanDataSubvolume_Key);
+  inputValues.scanDataSubvolumeMinMax = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ScanDataSubvolumeMinMax_Key);
   inputValues.scanDataEdgeGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_ScanData_Key);
   inputValues.scanDataVertexAttrMatName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ScanDataVertexAttrMat_Key);
   inputValues.scanDataEdgeAttrMatName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ScanDataCellAttrMat_Key);

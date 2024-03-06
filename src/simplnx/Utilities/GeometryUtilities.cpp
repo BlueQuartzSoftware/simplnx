@@ -21,19 +21,22 @@ GeometryUtilities::FindUniqueIdsImpl::FindUniqueIdsImpl(nx::core::IGeometry::Sha
 // -----------------------------------------------------------------------------
 void GeometryUtilities::FindUniqueIdsImpl::convert(size_t start, size_t end) const
 {
+  auto& vertexDataStore = m_Vertex.getIDataStoreRefAs<DataStore<float32>>();
+  const float32* verticesPtr = vertexDataStore.data();
+  int64* uniqueIdsPtr = m_UniqueIds.data();
   for(size_t i = start; i < end; i++)
   {
     for(size_t j = 0; j < m_NodesInBin[i].size(); j++)
     {
       size_t node1 = m_NodesInBin[i][j];
-      if(m_UniqueIds[node1] == static_cast<int64_t>(node1))
+      if(uniqueIdsPtr[node1] == static_cast<int64_t>(node1))
       {
         for(size_t k = j + 1; k < m_NodesInBin[i].size(); k++)
         {
           size_t node2 = m_NodesInBin[i][k];
-          if(m_Vertex[node1 * 3] == m_Vertex[node2 * 3] && m_Vertex[node1 * 3 + 1] == m_Vertex[node2 * 3 + 1] && m_Vertex[node1 * 3 + 2] == m_Vertex[node2 * 3 + 2])
+          if(verticesPtr[node1 * 3] == verticesPtr[node2 * 3] && verticesPtr[node1 * 3 + 1] == verticesPtr[node2 * 3 + 1] && verticesPtr[node1 * 3 + 2] == verticesPtr[node2 * 3 + 2])
           {
-            m_UniqueIds[node2] = node1;
+            uniqueIdsPtr[node2] = node1;
           }
         }
       }
