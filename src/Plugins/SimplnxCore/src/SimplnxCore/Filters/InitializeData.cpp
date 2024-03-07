@@ -162,7 +162,7 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
   }
 }
 
-template <typename T, class DistributionT>
+template <typename T, bool Ranged, class DistributionT>
 void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const uint64 seed, const bool standardizeSeed)
 {
   usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
@@ -180,11 +180,25 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
   {
     for(usize comp = 0; comp < numComp; comp++)
     {
-      if constexpr(!std::is_same_v<T, bool>)
+      if constexpr(std::is_floating_point_v<T>)
       {
-        dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
+        if constexpr(Ranged)
+        {
+          dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
+        }
+        if constexpr(!Ranged)
+        {
+          if constexpr(std::is_signed_v<T>)
+          {
+            dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]) * (std::numeric_limits<T>::max() - 1) * (((rand() & 1) == 0) ? 1 : -1));
+          }
+          if constexpr(!std::is_signed_v<T>)
+          {
+            dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]) * std::numeric_limits<T>::max());
+          }
+        }
       }
-      if constexpr(std::is_same_v<T, bool>)
+      if constexpr(!std::is_floating_point_v<T>)
       {
         dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
       }
@@ -208,7 +222,7 @@ void FillIncForwarder(const StepType& stepType, ArgsT&&... args)
   }
 }
 
-template <typename T, class... ArgsT>
+template <typename T, bool Ranged, class... ArgsT>
 void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... args)
 {
   if constexpr(std::is_same_v<T, bool>)
@@ -218,25 +232,39 @@ void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... 
     {
       dists.emplace_back((range.at(comp) ? 1 : 0), (range.at(comp + 1) ? 1 : 0));
     }
-    ::RandomFill<T, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
+    ::RandomFill<T, Ranged, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
+    return;
   }
-  if constexpr(std::is_floating_point_v<T>)
-  {
-    std::vector<std::uniform_real_distribution<float64>> dists;
-    for(usize comp = 0; comp < numComp * 2; comp += 2)
-    {
-      dists.emplace_back(range.at(comp), range.at(comp + 1));
-    }
-    ::RandomFill<T, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
-  }
-  if constexpr(!std::is_floating_point_v<T> && !std::is_same_v<T, bool>)
+  if constexpr(!std::is_floating_point_v<T>)
   {
     std::vector<std::uniform_int_distribution<int64>> dists;
     for(usize comp = 0; comp < numComp * 2; comp += 2)
     {
       dists.emplace_back(range.at(comp), range.at(comp + 1));
     }
-    ::RandomFill<T, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
+    ::RandomFill<T, Ranged, std::uniform_int_distribution<int64>>(dists, std::forward<ArgsT>(args)...);
+  }
+  if constexpr(std::is_floating_point_v<T>)
+  {
+    if constexpr(Ranged)
+    {
+
+      std::vector<std::uniform_real_distribution<float64>> dists;
+      for(usize comp = 0; comp < numComp * 2; comp += 2)
+      {
+        dists.emplace_back(range.at(comp), range.at(comp + 1));
+      }
+      ::RandomFill<T, Ranged, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
+    }
+    if constexpr(!Ranged)
+    {
+      std::vector<std::uniform_real_distribution<float64>> dists;
+      for(usize comp = 0; comp < numComp * 2; comp += 2)
+      {
+        dists.emplace_back(0, 1);
+      }
+      ::RandomFill<T, Ranged, std::uniform_real_distribution<float64>>(dists, std::forward<ArgsT>(args)...);
+    }
   }
 }
 
@@ -291,7 +319,7 @@ struct FillArrayFunctor
           range.push_back(true);
         }
       }
-      return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed, inputValues.standardizeSeed);
+      return ::FillRandomForwarder<T, false>(range, numComp, dataArray, inputValues.seed, inputValues.standardizeSeed);
     }
     case InitializeType::RangedRandom: {
       auto randBegin = standardizeMultiComponent(numComp, inputValues.randBegin);
@@ -305,7 +333,7 @@ struct FillArrayFunctor
         result = ConvertTo<T>::convert(randEnd[comp]);
         range.push_back(result.value());
       }
-      return ::FillRandomForwarder<T>(range, numComp, dataArray, inputValues.seed, inputValues.standardizeSeed);
+      return ::FillRandomForwarder<T, true>(range, numComp, dataArray, inputValues.seed, inputValues.standardizeSeed);
     }
     }
   }
