@@ -196,18 +196,43 @@ inline std::vector<std::string> split(std::string_view str, char delim)
   return split(str, delims, false);
 }
 
-inline std::vector<std::string> split_2(const std::string& line, char delimiter)
+/**
+ *
+ * @param input
+ * @param delimiter
+ * @param consecutiveDelimiters
+ * @return
+ */
+inline std::vector<std::string> split_2(std::string_view input, nonstd::span<const char> delimiter, bool consecutiveDelimiters)
 {
-  std::stringstream ss(line);
-
-  std::vector<std::string> tokens;
-  std::string tempStr;
-
-  while(std::getline(ss, tempStr, delimiter))
+  std::vector<std::string> result;
+  std::string current;
+  for(char ch : input)
   {
-    tokens.push_back(tempStr);
+    if(ch == delimiter[0])
+    {
+      // If consecutive delimiters should lead to empty strings, or if the current string is not empty,
+      // we add the current string (which could be empty) to the result.
+      if(consecutiveDelimiters || !current.empty())
+      {
+        result.push_back(current);
+        current.clear(); // Reset current for the next word.
+      }
+      // If consecutiveDelimiters is false, we simply skip this part,
+      // which avoids adding an empty string for consecutive delimiters.
+    }
+    else
+    {
+      current += ch;
+    }
   }
-  return tokens;
+  // Add the last word to the result if it's not empty, or if the last character was a delimiter
+  // and consecutiveDelimiters is true.
+  if(!current.empty() || (consecutiveDelimiters && !input.empty() && input.back() == delimiter[0]))
+  {
+    result.push_back(current);
+  }
+  return result;
 }
 
 inline std::string join(nonstd::span<std::string_view> vec, std::string_view delim)

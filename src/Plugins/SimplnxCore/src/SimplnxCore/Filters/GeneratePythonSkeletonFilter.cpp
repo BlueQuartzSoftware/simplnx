@@ -105,7 +105,16 @@ IFilter::PreflightResult GeneratePythonSkeletonFilter::preflightImpl(const DataS
 
   for(const auto& filterName : filterList)
   {
-    preflightUpdatedValue << fmt::format("{}{}{}.py\n", pluginPath, std::string{fs::path::preferred_separator}, filterName);
+    std::string fullPath = fmt::format("{}{}{}.py", pluginPath, std::string{fs::path::preferred_separator}, filterName);
+    if(std::filesystem::exists({fullPath}))
+    {
+      fullPath = "[EXISTS]: " + fullPath;
+    }
+    else
+    {
+      fullPath = "[New]: " + fullPath;
+    }
+    preflightUpdatedValue << fullPath << '\n';
   }
 
   preflightUpdatedValues.push_back({"Generated Plugin File(s):", preflightUpdatedValue.str()});

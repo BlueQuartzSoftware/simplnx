@@ -66,60 +66,93 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     return MakeErrorResult(-2001, fmt::format("Non-existent plugin file at path: {}", initPyPath.string()));
   }
 
-  std::vector<fs::path> pluginFilePaths = {pluginPyPath, initPyPath};
-  for(const auto& pluginFilePath : pluginFilePaths)
+  // Update the __init__.py file
   {
-    std::ifstream file(pluginFilePath.string());
+    std::ifstream file(initPyPath.string());
     std::stringstream buffer;
     buffer << file.rdbuf();
     std::string content = buffer.str();
     file.close();
-
-    // Insert filter import statement
+    std::vector<std::string> lines = nx::core::StringUtilities::split_2(content, "\n", true);
+    if(lines.back().empty())
     {
-      std::size_t filterInsertPos = content.find(k_FilterIncludeInsertToken);
-      if(filterInsertPos == std::string::npos)
-      {
-        result.warnings().push_back(
-            {-2002, fmt::format("Plugin file ('{0}') does not contain the filter insert token ('{1}'), so the filter import statement could not be automatically inserted into the plugin "
-                                "file.  This plugin file must be manually updated to include the filter import statement.",
-                                pluginFilePath.string(), k_FilterNameInsertToken)});
-      }
-      else
-      {
-        filterInsertPos--; // Go back one character to insert before the newline
-
-        std::string filterImportToken = fmt::format("from {0}.{1} import {1}\n", pluginName, filterName);
-        content.insert(filterInsertPos, filterImportToken);
-      }
+      lines.pop_back();
     }
+    // Create the output file by opening the same file for OVER WRITE.
+    std::ofstream outFile = std::ofstream(initPyPath.string(), std::ios_base::binary | std::ios_base::trunc);
 
-    // Insert filter name
+    std::string filterImportToken = fmt::format("from {0}.{1} import {1}", pluginName, filterName);
+    bool insertToken = true;
+    for(auto& line : lines)
     {
-      std::size_t filterInsertPos = content.find(k_FilterNameInsertToken);
-      if(filterInsertPos == std::string::npos)
-      {
-        result.warnings().push_back(
-            {-2002, fmt::format("Plugin file ('{0}') does not contain the filter insert token ('{1}'), so the filter name ('{2}') could not be automatically inserted into the plugin "
-                                "file.  This plugin file must be manually updated to include the filter name ('{2}').",
-                                pluginFilePath.string(), k_FilterNameInsertToken, filterName)});
-      }
-      else
-      {
-        filterInsertPos -= 2; // Go back two characters to insert before the closing brace
 
-        std::string filterNameToken = filterName;
-        if(pluginFilePath.filename() == "__init__.py")
+      // If the line is the exact same as the generated import statement mark false
+      if(line == filterImportToken)
+      {
+        insertToken = false;
+      }
+      // If we hit the include marker comment, then possibly write the newly generated token
+      if(nx::core::StringUtilities::starts_with(line, k_FilterIncludeInsertToken))
+      {
+        if(insertToken)
         {
-          filterNameToken = fmt::format("'{}'", filterNameToken);
+          outFile << filterImportToken << '\n';
         }
-        content.insert(filterInsertPos, "," + filterNameToken);
       }
-    }
+      // Do we need to append the filter to the list of filters
+      if(nx::core::StringUtilities::contains(line, k_FilterNameInsertToken) && insertToken)
+      {
+        line = nx::core::StringUtilities::replace(line, "__all__ = [", fmt::format("__all__ = ['{}', ", filterName));
+      }
 
-    std::ofstream out_file(pluginFilePath.string());
-    out_file << content;
-    out_file.close();
+      outFile << line << '\n'; // Write the line out to the file
+    }
+    outFile.close();
+  }
+
+  // Update the Plugin.py file
+  {
+    std::ifstream file(pluginPyPath.string());
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string content = buffer.str();
+    file.close();
+    std::vector<std::string> lines = nx::core::StringUtilities::split_2(content, "\n", true);
+    if(lines.back().empty())
+    {
+      lines.pop_back();
+    }
+    // Create the output file by opening the same file for OVER WRITE.
+    std::ofstream outFile = std::ofstream(pluginPyPath.string(), std::ios_base::binary | std::ios_base::trunc);
+
+    std::string filterImportToken = fmt::format("from {0}.{1} import {1}", pluginName, filterName);
+    std::string filterInsertToken = fmt::format("'{}'", filterName);
+
+    bool insertToken = true;
+    for(auto& line : lines)
+    {
+      // If the line is the exact same as the generated import statement mark false
+      if(line == filterImportToken)
+      {
+        insertToken = false;
+      }
+      // If we hit the include marker comment, then possibly write the newly generated token
+      if(nx::core::StringUtilities::starts_with(line, k_FilterIncludeInsertToken))
+      {
+        if(insertToken)
+        {
+          outFile << filterImportToken << '\n';
+        }
+      }
+      // Do we need to append the filter to the list of filters
+      if(nx::core::StringUtilities::contains(line, k_FilterNameInsertToken) && insertToken)
+      {
+        line = nx::core::StringUtilities::replace(line, "return [", fmt::format("return [{}, ", filterName));
+      }
+
+      outFile << line << '\n'; // Write the line out to the file
+    }
+    outFile.close();
   }
 
   return result;
@@ -224,7 +257,7 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
   content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
 
   auto filterList = StringUtilities::split(pluginFilterList, ',');
-  content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", fmt::format("{}", fmt::join(filterList, ",")));
+  content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", fmt::format("{}", fmt::join(filterList, ", ")));
 
   std::string importStatements;
   for(const auto& name : filterList)
@@ -294,7 +327,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
 
       auto filterList = StringUtilities::split(pluginFilterList, ',');
 
-      std::string aList(fmt::format("'{}',", pluginName));
+      std::string aList(fmt::format("'{}', ", pluginName));
       for(const auto& name : filterList)
       {
         aList.append(fmt::format("'{}', ", name));
