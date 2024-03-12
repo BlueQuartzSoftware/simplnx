@@ -109,6 +109,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKAbsImage
     ITKAcosImage
     ITKAdaptiveHistogramEqualizationImage
+    ITKApproximateSignedDistanceMapImage
     ITKAsinImage
     ITKAtanImage
     ITKBinaryDilateImage
@@ -119,33 +120,48 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKBinaryThinningImage
     ITKBinaryThresholdImage
     ITKBlackTopHatImage
+    ITKConnectedComponentImage
     ITKCosImage
+    ITKCurvatureAnisotropicDiffusionImage
+    ITKCurvatureFlowImage
+    ITKDanielssonDistanceMapImage
     ITKDilateObjectMorphologyImage
+    ITKDoubleThresholdImage
     ITKErodeObjectMorphologyImage
     ITKExpImage
     ITKExpNegativeImage
+    ITKGradientAnisotropicDiffusionImage
     ITKGradientMagnitudeImage
+    ITKGradientMagnitudeRecursiveGaussianImage
     ITKGrayscaleDilateImage
     ITKGrayscaleErodeImage
     ITKGrayscaleMorphologicalClosingImage
     ITKGrayscaleMorphologicalOpeningImage
+    ITKImportFijiMontageFilter
     ITKIntensityWindowingImage
     ITKInvertIntensityImage
-    ITKImportFijiMontageFilter
+    ITKIsoContourDistanceImage
+    ITKLaplacianRecursiveGaussianImage
     ITKLog10Image
     ITKLogImage
     ITKMaskImage
+    ITKMinMaxCurvatureFlowImage
     ITKNormalizeImage
     ITKNotImage
     ITKOtsuMultipleThresholdsImage
+    ITKRegionalMaximaImage
+    ITKRegionalMinimaImage
     ITKRelabelComponentImage
     ITKSigmoidImage
+    ITKSignedDanielssonDistanceMapImage
     ITKSinImage
     ITKSqrtImage
     ITKSquareImage
     ITKTanImage
     ITKThresholdImage
+    ITKThresholdMaximumConnectedComponentsImage
     ITKWhiteTopHatImage
+    ITKZeroCrossingImage
 
     # -----------------------------------------------------------------------------
     # These filters only work on Scalar inputs
@@ -166,30 +182,14 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     # ITKBoxMeanImage
 
     # -----------------------------------------------------------------------------
-    # These filters have a fixed output type
+    # These filters need to have their type or dimension fixed
     # -----------------------------------------------------------------------------
-    # ITKApproximateSignedDistanceMapImage
-    # ITKMinMaxCurvatureFlowImage
-    # ITKGradientAnisotropicDiffusionImage
-    # ITKCurvatureAnisotropicDiffusionImage
     # ITKBoundedReciprocalImage
-    # ITKConnectedComponentImage
-    # ITKCurvatureFlowImage
-    # ITKDanielssonDistanceMapImage
-    # ITKDoubleThresholdImage
-    # ITKGradientMagnitudeRecursiveGaussianImage
-    # ITKIsoContourDistanceImage
-    # ITKLaplacianRecursiveGaussianImage
-    # ITKMeanProjectionImage
     # ITKNormalizeToConstantImage
-    # ITKRegionalMaximaImage
-    # ITKRegionalMinimaImage
+    # ITKMeanProjectionImage
     # ITKStandardDeviationProjectionImage
     # ITKSumProjectionImage
-    # ITKThresholdMaximumConnectedComponentsImage
-    # ITKZeroCrossingImage
     # ITKMorphologicalWatershedFromMarkersImage
-    # ITKSignedDanielssonDistanceMapImage
     # ITKSmoothingRecursiveGaussianImage
 
     # -----------------------------------------------------------------------------

@@ -8,25 +8,25 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKLaplacianRecursiveGaussianImage
+ * @brief Computes the Laplacian of Gaussian (LoG) of an image.
  *
- * This filter is implemented using the recursive gaussian filters
+ * Computes the Laplacian of Gaussian (LoG) of an image by convolution with the second derivative of a Gaussian. This filter is implemented using the recursive gaussian filters.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * ITK Module: ITKImageFeature
+ * ITK Group: ImageFeature
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKLaplacianRecursiveGaussianImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKLaplacianRecursiveGaussianImage() = default;
+  ~ITKLaplacianRecursiveGaussianImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKLaplacianRecursiveGaussianImage(const ITKLaplacianRecursiveGaussianImage&) = delete;
+  ITKLaplacianRecursiveGaussianImage(ITKLaplacianRecursiveGaussianImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKLaplacianRecursiveGaussianImage& operator=(const ITKLaplacianRecursiveGaussianImage&) = delete;
+  ITKLaplacianRecursiveGaussianImage& operator=(ITKLaplacianRecursiveGaussianImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
@@ -104,4 +104,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKLaplacianRecursiveGaussianImage, "782d76a4-e3f6-4c2a-a1b0-7456a3e77f24");

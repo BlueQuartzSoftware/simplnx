@@ -8,32 +8,49 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKDoubleThresholdImage
+ * @brief Binarize an input image using double thresholding.
  *
- * This filter is implemented using the recursive gaussian filters
+ * Double threshold addresses the difficulty in selecting a threshold that will select the objects of interest without selecting extraneous objects. Double threshold considers two threshold ranges: a
+ * narrow range and a wide range (where the wide range encompasses the narrow range). If the wide range was used for a traditional threshold (where values inside the range map to the foreground and
+ * values outside the range map to the background), many extraneous pixels may survive the threshold operation. If the narrow range was used for a traditional threshold, then too few pixels may
+ * survive the threshold.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * Double threshold uses the narrow threshold image as a marker image and the wide threshold image as a mask image in the geodesic dilation. Essentially, the marker image (narrow threshold) is dilated
+ * but constrained to lie within the mask image (wide threshold). Thus, only the objects of interest (those pixels that survived the narrow threshold) are extracted but the those objects appear in the
+ * final image as they would have if the wide threshold was used.
+ *
+ * @see GrayscaleGeodesicDilateImageFilter
+ *
+ *
+ * @see MorphologyImageFilter , GrayscaleDilateImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKDoubleThresholdImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKDoubleThresholdImage() = default;
+  ~ITKDoubleThresholdImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKDoubleThresholdImage(const ITKDoubleThresholdImage&) = delete;
+  ITKDoubleThresholdImage(ITKDoubleThresholdImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKDoubleThresholdImage& operator=(const ITKDoubleThresholdImage&) = delete;
+  ITKDoubleThresholdImage& operator=(ITKDoubleThresholdImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_Threshold1_Key = "threshold1";
+  static inline constexpr StringLiteral k_Threshold2_Key = "threshold2";
+  static inline constexpr StringLiteral k_Threshold3_Key = "threshold3";
+  static inline constexpr StringLiteral k_Threshold4_Key = "threshold4";
+  static inline constexpr StringLiteral k_InsideValue_Key = "inside_value";
+  static inline constexpr StringLiteral k_OutsideValue_Key = "outside_value";
+  static inline constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +121,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKDoubleThresholdImage, "e268a65f-33f1-493f-a6c7-4635e57df3c4");

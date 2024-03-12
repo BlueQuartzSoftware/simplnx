@@ -8,25 +8,27 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKSmoothingRecursiveGaussianImage
+ * @brief Computes the smoothing of an image by convolution with the Gaussian kernels implemented as IIR filters.
  *
- * This filter is implemented using the recursive gaussian filters
+ * This filter is implemented using the recursive gaussian filters. For multi-component images, the filter works on each component independently.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * For this filter to be able to run in-place the input and output image types need to be the same and/or the same type as the RealImageType.
+ *
+ * ITK Module: ITKSmoothing
+ * ITK Group: Smoothing
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKSmoothingRecursiveGaussianImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKSmoothingRecursiveGaussianImage() = default;
+  ~ITKSmoothingRecursiveGaussianImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKSmoothingRecursiveGaussianImage(const ITKSmoothingRecursiveGaussianImage&) = delete;
+  ITKSmoothingRecursiveGaussianImage(ITKSmoothingRecursiveGaussianImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKSmoothingRecursiveGaussianImage& operator=(const ITKSmoothingRecursiveGaussianImage&) = delete;
+  ITKSmoothingRecursiveGaussianImage& operator=(ITKSmoothingRecursiveGaussianImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
@@ -104,4 +106,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKSmoothingRecursiveGaussianImage, "74859077-69ba-40ad-965f-8699dde1c22d");

@@ -8,32 +8,50 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKGradientAnisotropicDiffusionImage
+ * @brief This filter performs anisotropic diffusion on a scalar itk::Image using the classic Perona-Malik, gradient magnitude based equation.
  *
- * This filter is implemented using the recursive gaussian filters
+ * For detailed information on anisotropic diffusion, see itkAnisotropicDiffusionFunction and itkGradientNDAnisotropicDiffusionFunction.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * \par Inputs and Outputs
+ * The input to this filter should be a scalar itk::Image of any dimensionality. The output image will be a diffused copy of the input.
+ *
+ *
+ * \par Parameters
+ * Please see the description of parameters given in itkAnisotropicDiffusionImageFilter.
+ *
+ *
+ * @see AnisotropicDiffusionImageFilter
+ *
+ *
+ * @see AnisotropicDiffusionFunction
+ *
+ *
+ * @see GradientAnisotropicDiffusionFunction
+ *
+ * ITK Module: ITKAnisotropicSmoothing
+ * ITK Group: AnisotropicSmoothing
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKGradientAnisotropicDiffusionImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKGradientAnisotropicDiffusionImage() = default;
+  ~ITKGradientAnisotropicDiffusionImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKGradientAnisotropicDiffusionImage(const ITKGradientAnisotropicDiffusionImage&) = delete;
+  ITKGradientAnisotropicDiffusionImage(ITKGradientAnisotropicDiffusionImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKGradientAnisotropicDiffusionImage& operator=(const ITKGradientAnisotropicDiffusionImage&) = delete;
+  ITKGradientAnisotropicDiffusionImage& operator=(ITKGradientAnisotropicDiffusionImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_TimeStep_Key = "time_step";
+  static inline constexpr StringLiteral k_ConductanceParameter_Key = "conductance_parameter";
+  static inline constexpr StringLiteral k_ConductanceScalingUpdateInterval_Key = "conductance_scaling_update_interval";
+  static inline constexpr StringLiteral k_NumberOfIterations_Key = "number_of_iterations";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +122,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientAnisotropicDiffusionImage, "9dcef77b-e7d2-4a2a-b310-bfa80e8ea7c5");

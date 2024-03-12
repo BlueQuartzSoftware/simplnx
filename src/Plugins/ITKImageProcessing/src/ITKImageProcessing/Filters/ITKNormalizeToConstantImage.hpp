@@ -8,32 +8,47 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKNormalizeToConstantImage
+ * @brief Scales image pixel intensities to make the sum of all pixels equal a user-defined constant.
  *
- * This filter is implemented using the recursive gaussian filters
+ * The default value of the constant is 1. It can be changed with SetConstant() .
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * This transform is especially useful for normalizing a convolution kernel.
+ *
+ * This code was contributed in the Insight Journal paper: "FFT based
+ * convolution" by Lehmann G. https://insight-journal.org/browse/publication/717
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see NormalizeImageFilter
+ *
+ *
+ * @see StatisticsImageFilter
+ *
+ *
+ * @see DivideImageFilter
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKNormalizeToConstantImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKNormalizeToConstantImage() = default;
+  ~ITKNormalizeToConstantImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKNormalizeToConstantImage(const ITKNormalizeToConstantImage&) = delete;
+  ITKNormalizeToConstantImage(ITKNormalizeToConstantImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKNormalizeToConstantImage& operator=(const ITKNormalizeToConstantImage&) = delete;
+  ITKNormalizeToConstantImage& operator=(ITKNormalizeToConstantImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_Constant_Key = "constant";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +119,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKNormalizeToConstantImage, "eb2ab30f-698c-44b2-a70a-e8a0961bca1c");

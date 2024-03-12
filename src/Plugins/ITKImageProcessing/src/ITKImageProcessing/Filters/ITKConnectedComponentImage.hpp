@@ -8,32 +8,41 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKConnectedComponentImage
+ * @brief Label the objects in a binary image.
  *
- * This filter is implemented using the recursive gaussian filters
+ * ConnectedComponentImageFilter labels the objects in a binary image (non-zero pixels are considered to be objects, zero-valued pixels are considered to be background). Each distinct object is
+ * assigned a unique label. The filter experiments with some improvements to the existing implementation, and is based on run length encoding along raster lines. If the output background value is set
+ * to zero (the default), the final object labels start with 1 and are consecutive. If the output background is set to a non-zero value (by calling the SetBackgroundValue() routine of the filter), the
+ * final labels start at 0, and remain consecutive except for skipping the background value as needed. Objects that are reached earlier by a raster order scan have a lower label. This is different to
+ * the behaviour of the original connected component image filter which did not produce consecutive labels or impose any particular ordering.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * After the filter is executed, ObjectCount holds the number of connected components.
+ *
+ * @see ImageToImageFilter
+ *
+ * ITK Module: ITKConnectedComponents
+ * ITK Group: ConnectedComponents
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKConnectedComponentImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKConnectedComponentImage() = default;
+  ~ITKConnectedComponentImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKConnectedComponentImage(const ITKConnectedComponentImage&) = delete;
+  ITKConnectedComponentImage(ITKConnectedComponentImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKConnectedComponentImage& operator=(const ITKConnectedComponentImage&) = delete;
+  ITKConnectedComponentImage& operator=(ITKConnectedComponentImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
+  static inline constexpr StringLiteral k_ImageDataPath_Key = "image_data_path";
+  static inline constexpr StringLiteral k_MaskImage_Key = "mask_image";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +113,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKConnectedComponentImage, "905354c1-d55b-4436-b9f7-f4a6e80e5c0f");

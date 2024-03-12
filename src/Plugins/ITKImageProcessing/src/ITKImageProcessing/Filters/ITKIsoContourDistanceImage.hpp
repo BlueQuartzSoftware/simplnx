@@ -8,32 +8,38 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKIsoContourDistanceImage
+ * @brief Compute an approximate distance from an interpolated isocontour to the close grid points.
  *
- * This filter is implemented using the recursive gaussian filters
+ * For standard level set algorithms, it is useful to periodically reinitialize the evolving image to prevent numerical accuracy problems in computing derivatives. This reinitialization is done by
+ * computing a signed distance map to the current level set. This class provides the first step in this reinitialization by computing an estimate of the distance from the interpolated isocontour to
+ * the pixels (or voxels) that are close to it, i.e. for which the isocontour crosses a segment between them and one of their direct neighbors. This class supports narrowbanding. If the input
+ * narrowband is provided, the algorithm will only locate the level set within the input narrowband.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * Implementation of this class is based on Fast and Accurate Redistancing for Level Set Methods Krissian K. and Westin C.F., EUROCAST NeuroImaging Workshop Las Palmas Spain, Ninth International
+ * Conference on Computer Aided Systems Theory , pages 48-51, Feb 2003.
+ *
+ * ITK Module: ITKDistanceMap
+ * ITK Group: DistanceMap
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKIsoContourDistanceImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKIsoContourDistanceImage() = default;
+  ~ITKIsoContourDistanceImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKIsoContourDistanceImage(const ITKIsoContourDistanceImage&) = delete;
+  ITKIsoContourDistanceImage(ITKIsoContourDistanceImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKIsoContourDistanceImage& operator=(const ITKIsoContourDistanceImage&) = delete;
+  ITKIsoContourDistanceImage& operator=(ITKIsoContourDistanceImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_LevelSetValue_Key = "level_set_value";
+  static inline constexpr StringLiteral k_FarValue_Key = "far_value";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +110,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKIsoContourDistanceImage, "e82fa143-7ac2-4c09-a88c-9ea71d47d594");

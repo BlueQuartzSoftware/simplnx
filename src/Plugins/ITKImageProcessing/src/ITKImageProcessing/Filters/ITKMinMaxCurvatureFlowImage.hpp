@@ -8,32 +8,61 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKMinMaxCurvatureFlowImage
+ * @brief Denoise an image using min/max curvature flow.
  *
- * This filter is implemented using the recursive gaussian filters
+ * MinMaxCurvatureFlowImageFilter implements a curvature driven image denoising algorithm. Iso-brightness contours in the grayscale input image are viewed as a level set. The level set is then evolved
+ * using a curvature-based speed function:
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ *  \f[ I_t = F_{\mbox{minmax}} |\nabla I| \f]
+ *
+ * where \f$ F_{\mbox{minmax}} = \max(\kappa,0) \f$ if \f$ \mbox{Avg}_{\mbox{stencil}}(x) \f$ is less than or equal to \f$ T_{threshold} \f$ and \f$ \min(\kappa,0) \f$ , otherwise. \f$ \kappa \f$ is
+ * the mean curvature of the iso-brightness contour at point \f$ x \f$ .
+ *
+ * In min/max curvature flow, movement is turned on or off depending on the scale of the noise one wants to remove. Switching depends on the average image value of a region of radius \f$ R \f$ around
+ * each point. The choice of \f$ R \f$ , the stencil radius, governs the scale of the noise to be removed.
+ *
+ * The threshold value \f$ T_{threshold} \f$ is the average intensity obtained in the direction perpendicular to the gradient at point \f$ x \f$ at the extrema of the local neighborhood.
+ *
+ * This filter make use of the multi-threaded finite difference solver hierarchy. Updates are computed using a MinMaxCurvatureFlowFunction object. A zero flux Neumann boundary condition is used when
+ * computing derivatives near the data boundary.
+ *
+ * \warning This filter assumes that the input and output types have the same dimensions. This filter also requires that the output image pixels are of a real type. This filter works for any
+ * dimensional images, however for dimensions greater than 3D, an expensive brute-force search is used to compute the local threshold.
+ *
+ *
+ * Reference: "Level Set Methods and Fast Marching Methods", J.A. Sethian, Cambridge Press, Chapter 16, Second edition, 1999.
+ *
+ * @see MinMaxCurvatureFlowFunction
+ *
+ *
+ * @see CurvatureFlowImageFilter
+ *
+ *
+ * @see BinaryMinMaxCurvatureFlowImageFilter
+ *
+ * ITK Module: ITKCurvatureFlow
+ * ITK Group: CurvatureFlow
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKMinMaxCurvatureFlowImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKMinMaxCurvatureFlowImage() = default;
+  ~ITKMinMaxCurvatureFlowImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKMinMaxCurvatureFlowImage(const ITKMinMaxCurvatureFlowImage&) = delete;
+  ITKMinMaxCurvatureFlowImage(ITKMinMaxCurvatureFlowImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKMinMaxCurvatureFlowImage& operator=(const ITKMinMaxCurvatureFlowImage&) = delete;
+  ITKMinMaxCurvatureFlowImage& operator=(ITKMinMaxCurvatureFlowImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_TimeStep_Key = "time_step";
+  static inline constexpr StringLiteral k_NumberOfIterations_Key = "number_of_iterations";
+  static inline constexpr StringLiteral k_StencilRadius_Key = "stencil_radius";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +133,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKMinMaxCurvatureFlowImage, "b836c081-6692-411d-81d0-a50afce6b288");

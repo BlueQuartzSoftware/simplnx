@@ -8,32 +8,50 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKRegionalMaximaImage
+ * @brief Produce a binary image where foreground is the regional maxima of the input image.
  *
- * This filter is implemented using the recursive gaussian filters
+ * Regional maxima are flat zones surrounded by pixels of lower value.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * If the input image is constant, the entire image can be considered as a maxima or not. The desired behavior can be selected with the SetFlatIsMaxima() method.
+ *
+ * @author Gaetan Lehmann
+ *
+ *
+ * This class was contributed to the Insight Journal by author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. The paper can be found at
+ * https://www.insight-journal.org/browse/publication/65
+ *
+ * @see ValuedRegionalMaximaImageFilter
+ *
+ *
+ * @see HConvexImageFilter
+ *
+ *
+ * @see RegionalMinimaImageFilter
+ *
+ * ITK Module: ITKMathematicalMorphology
+ * ITK Group: MathematicalMorphology
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKRegionalMaximaImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKRegionalMaximaImage() = default;
+  ~ITKRegionalMaximaImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKRegionalMaximaImage(const ITKRegionalMaximaImage&) = delete;
+  ITKRegionalMaximaImage(ITKRegionalMaximaImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKRegionalMaximaImage& operator=(const ITKRegionalMaximaImage&) = delete;
+  ITKRegionalMaximaImage& operator=(ITKRegionalMaximaImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_BackgroundValue_Key = "background_value";
+  static inline constexpr StringLiteral k_ForegroundValue_Key = "foreground_value";
+  static inline constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
+  static inline constexpr StringLiteral k_FlatIsMaxima_Key = "flat_is_maxima";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +122,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKRegionalMaximaImage, "a2b8a295-5730-477a-b97b-8a0b0400397c");

@@ -8,32 +8,30 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKBoundedReciprocalImage
+ * @brief Computes 1/(1+x) for each pixel in the image.
  *
- * This filter is implemented using the recursive gaussian filters
+ * The filter expects both the input and output images to have the same number of dimensions, and both of a scalar image type.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKBoundedReciprocalImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKBoundedReciprocalImage() = default;
+  ~ITKBoundedReciprocalImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKBoundedReciprocalImage(const ITKBoundedReciprocalImage&) = delete;
+  ITKBoundedReciprocalImage(ITKBoundedReciprocalImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKBoundedReciprocalImage& operator=(const ITKBoundedReciprocalImage&) = delete;
+  ITKBoundedReciprocalImage& operator=(ITKBoundedReciprocalImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +102,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKBoundedReciprocalImage, "da72b2ae-74ef-4198-820f-6a381b3fff05");

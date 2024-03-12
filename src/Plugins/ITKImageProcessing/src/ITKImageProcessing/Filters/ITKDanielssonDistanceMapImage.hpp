@@ -8,32 +8,70 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKDanielssonDistanceMapImage
+ * @brief This filter computes the distance map of the input image as an approximation with pixel accuracy to the Euclidean distance.
  *
- * This filter is implemented using the recursive gaussian filters
+ * TInputImage
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * Input Image Type
+ *
+ *
+ *
+ *
+ * TOutputImage
+ *
+ * Output Image Type
+ *
+ *
+ *
+ *
+ * TVoronoiImage
+ *
+ * Voronoi Image Type. Note the default value is TInputImage.
+ *
+ *
+ *
+ * The input is assumed to contain numeric codes defining objects. The filter will produce as output the following images:
+ *
+ *
+ *
+ * @li A Voronoi partition using the same numeric codes as the input.
+ *
+ *
+ * @li A distance map with the approximation to the euclidean distance. from a particular pixel to the nearest object to this pixel in the input image.
+ *
+ *
+ * @li A vector map containing the component of the vector relating the current pixel with the closest point of the closest object to this pixel. Given that the components of the distance are computed
+ * in "pixels", the vector is represented by an itk::Offset . That is, physical coordinates are not used.
+ *
+ *
+ *
+ * This filter is N-dimensional and known to be efficient in computational time. The algorithm is the N-dimensional version of the 4SED algorithm given for two dimensions in:
+ *
+ * Danielsson, Per-Erik. Euclidean Distance Mapping. Computer Graphics and Image Processing 14, 227-248 (1980).
+ *
+ * ITK Module: ITKDistanceMap
+ * ITK Group: DistanceMap
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKDanielssonDistanceMapImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKDanielssonDistanceMapImage() = default;
+  ~ITKDanielssonDistanceMapImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKDanielssonDistanceMapImage(const ITKDanielssonDistanceMapImage&) = delete;
+  ITKDanielssonDistanceMapImage(ITKDanielssonDistanceMapImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKDanielssonDistanceMapImage& operator=(const ITKDanielssonDistanceMapImage&) = delete;
+  ITKDanielssonDistanceMapImage& operator=(ITKDanielssonDistanceMapImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_InputIsBinary_Key = "input_is_binary";
+  static inline constexpr StringLiteral k_SquaredDistance_Key = "squared_distance";
+  static inline constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +142,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKDanielssonDistanceMapImage, "f0cd4faf-a676-41ed-9ea5-859035f94836");

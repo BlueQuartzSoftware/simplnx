@@ -8,32 +8,57 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKStandardDeviationProjectionImage
+ * @brief Mean projection.
  *
- * This filter is implemented using the recursive gaussian filters
+ * This class was contributed to the Insight Journal by Gaetan Lehmann. The original paper can be found at https://www.insight-journal.org/browse/publication/71
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see ProjectionImageFilter
+ *
+ *
+ * @see MedianProjectionImageFilter
+ *
+ *
+ * @see MeanProjectionImageFilter
+ *
+ *
+ * @see SumProjectionImageFilter
+ *
+ *
+ * @see MeanProjectionImageFilter
+ *
+ *
+ * @see MaximumProjectionImageFilter
+ *
+ *
+ * @see MinimumProjectionImageFilter
+ *
+ *
+ * @see BinaryProjectionImageFilter
+ *
+ * ITK Module: ITKImageStatistics
+ * ITK Group: ImageStatistics
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKStandardDeviationProjectionImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKStandardDeviationProjectionImage() = default;
+  ~ITKStandardDeviationProjectionImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKStandardDeviationProjectionImage(const ITKStandardDeviationProjectionImage&) = delete;
+  ITKStandardDeviationProjectionImage(ITKStandardDeviationProjectionImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKStandardDeviationProjectionImage& operator=(const ITKStandardDeviationProjectionImage&) = delete;
+  ITKStandardDeviationProjectionImage& operator=(ITKStandardDeviationProjectionImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_ProjectionDimension_Key = "projection_dimension";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +129,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKStandardDeviationProjectionImage, "8e022ad4-cbbe-4b08-a89f-8f529d799db1");

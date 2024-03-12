@@ -8,32 +8,54 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKCurvatureAnisotropicDiffusionImage
+ * @brief This filter performs anisotropic diffusion on a scalar itk::Image using the modified curvature diffusion equation (MCDE).
  *
- * This filter is implemented using the recursive gaussian filters
+ * For detailed information on anisotropic diffusion and the MCDE see itkAnisotropicDiffusionFunction and itkCurvatureNDAnisotropicDiffusionFunction.
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * \par Inputs and Outputs
+ * The input and output to this filter must be a scalar itk::Image with numerical pixel types (float or double). A user defined type which correctly defines arithmetic operations with floating point
+ * accuracy should also give correct results.
+ *
+ *
+ * \par Parameters
+ * Please first read all the documentation found in AnisotropicDiffusionImageFilter and AnisotropicDiffusionFunction . Also see CurvatureNDAnisotropicDiffusionFunction .
+ *
+ *
+ * The default time step for this filter is set to the maximum theoretically stable value: 0.5 / 2^N, where N is the dimensionality of the image. For a 2D image, this means valid time steps are below
+ * 0.1250. For a 3D image, valid time steps are below 0.0625.
+ *
+ * @see AnisotropicDiffusionImageFilter
+ *
+ *
+ * @see AnisotropicDiffusionFunction
+ *
+ *
+ * @see CurvatureNDAnisotropicDiffusionFunction
+ *
+ * ITK Module: ITKAnisotropicSmoothing
+ * ITK Group: AnisotropicSmoothing
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKCurvatureAnisotropicDiffusionImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKCurvatureAnisotropicDiffusionImage() = default;
+  ~ITKCurvatureAnisotropicDiffusionImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKCurvatureAnisotropicDiffusionImage(const ITKCurvatureAnisotropicDiffusionImage&) = delete;
+  ITKCurvatureAnisotropicDiffusionImage(ITKCurvatureAnisotropicDiffusionImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKCurvatureAnisotropicDiffusionImage& operator=(const ITKCurvatureAnisotropicDiffusionImage&) = delete;
+  ITKCurvatureAnisotropicDiffusionImage& operator=(ITKCurvatureAnisotropicDiffusionImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_TimeStep_Key = "time_step";
+  static inline constexpr StringLiteral k_ConductanceParameter_Key = "conductance_parameter";
+  static inline constexpr StringLiteral k_ConductanceScalingUpdateInterval_Key = "conductance_scaling_update_interval";
+  static inline constexpr StringLiteral k_NumberOfIterations_Key = "number_of_iterations";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +126,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKCurvatureAnisotropicDiffusionImage, "ada68f29-b1f2-44a2-86dc-f0cd28f54633");

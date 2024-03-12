@@ -8,32 +8,59 @@
 namespace nx::core
 {
 /**
- * @class ITKGradientMagnitudeRecursiveGaussianImage
- * @brief Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
+ * @class ITKZeroCrossingImage
+ * @brief This filter finds the closest pixel to the zero-crossings (sign changes) in a signed itk::Image .
  *
- * This filter is implemented using the recursive gaussian filters
+ * Pixels closest to zero-crossings are labeled with a foreground value. All other pixels are marked with a background value. The algorithm works by detecting differences in sign among neighbors using
+ * city-block style connectivity (4-neighbors in 2d, 6-neighbors in 3d, etc.).
  *
- * ITK Module: ITKImageGradient
- * ITK Group: ImageGradient
+ * \par Inputs and Outputs
+ * The input to this filter is an itk::Image of arbitrary dimension. The algorithm assumes a signed data type (zero-crossings are not defined for unsigned int data types), and requires that operator>,
+ * operator<, operator==, and operator!= are defined.
+ *
+ *
+ * \par
+ * The output of the filter is a binary, labeled image of user-specified type. By default, zero-crossing pixels are labeled with a default "foreground" value of
+ * itk::NumericTraits<OutputDataType>::OneValue() , where OutputDataType is the data type of the output image. All other pixels are labeled with a default "background" value of
+ * itk::NumericTraits<OutputDataType>::ZeroValue() .
+ *
+ *
+ * \par Parameters
+ * There are two parameters for this filter. ForegroundValue is the value that marks zero-crossing pixels. The BackgroundValue is the value given to all other pixels.
+ *
+ *
+ * @see Image
+ *
+ *
+ * @see Neighborhood
+ *
+ *
+ * @see NeighborhoodOperator
+ *
+ *
+ * @see NeighborhoodIterator
+ *
+ * ITK Module: ITKImageFeature
+ * ITK Group: ImageFeature
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKZeroCrossingImage : public IFilter
 {
 public:
-  ITKGradientMagnitudeRecursiveGaussianImage() = default;
-  ~ITKGradientMagnitudeRecursiveGaussianImage() noexcept override = default;
+  ITKZeroCrossingImage() = default;
+  ~ITKZeroCrossingImage() noexcept override = default;
 
-  ITKGradientMagnitudeRecursiveGaussianImage(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKZeroCrossingImage(const ITKZeroCrossingImage&) = delete;
+  ITKZeroCrossingImage(ITKZeroCrossingImage&&) noexcept = delete;
 
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(const ITKGradientMagnitudeRecursiveGaussianImage&) = delete;
-  ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
+  ITKZeroCrossingImage& operator=(const ITKZeroCrossingImage&) = delete;
+  ITKZeroCrossingImage& operator=(ITKZeroCrossingImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
+  static inline constexpr StringLiteral k_ForegroundValue_Key = "foreground_value";
+  static inline constexpr StringLiteral k_BackgroundValue_Key = "background_value";
 
   /**
    * @brief Returns the name of the filter.
@@ -104,4 +131,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKZeroCrossingImage, "89a14057-776a-4e35-80b6-69361e078394");
