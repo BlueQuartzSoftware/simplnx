@@ -21,14 +21,15 @@ Principles and Applications", Second Edition, Springer, 2003.
 
 This code was contributed in the Insight Journal paper: "The watershed transform in ITK - discussion and new developments" by Beare R., Lehmann G. https://www.insight-journal.org/browse/publication/92 
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. 
+## Author
+
+- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. 
+- Richard Beare. Department of Medicine, Monash University, Melbourne, Australia.
 
 
-\author Richard Beare. Department of Medicine, Monash University, Melbourne, Australia.
+## See Also
 
-
-\see WatershedImageFilter , MorphologicalWatershedImageFilter
-
+- [WatershedImageFilter ,](https://itk.org/Doxygen/html/classitk_1_1WatershedImageFilter ,.html)MorphologicalWatershedImageFilter
 
 % Auto generated parameter table will be inserted here
 

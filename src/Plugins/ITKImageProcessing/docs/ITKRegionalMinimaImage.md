@@ -12,17 +12,19 @@ Regional minima are flat zones surrounded by pixels of greater value.
 
 If the input image is constant, the entire image can be considered as a minima or not. The SetFlatIsMinima() method let the user choose which behavior to use.
 
-This class was contributed to the Insight Journal by \author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. https://www.insight-journal.org/browse/publication/65 
+## Author
 
+- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. 
 
-\see RegionalMaximaImageFilter 
+This class was contributed to the Insight Journal by author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. https://www.insight-journal.org/browse/publication/65 
 
+## See Also
 
-\see ValuedRegionalMinimaImageFilter 
+- [RegionalMaximaImageFilter](https://itk.org/Doxygen/html/classitk_1_1RegionalMaximaImageFilter.html)
 
+- [ValuedRegionalMinimaImageFilter](https://itk.org/Doxygen/html/classitk_1_1ValuedRegionalMinimaImageFilter.html)
 
-\see HConcaveImageFilter
-
+- [HConcaveImageFilter](https://itk.org/Doxygen/html/classitk_1_1HConcaveImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 

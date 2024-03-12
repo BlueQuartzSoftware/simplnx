@@ -10,51 +10,27 @@ ITKImageStatistics (ImageStatistics)
 
 This class was contributed to the Insight Journal by Gaetan Lehmann. The original paper can be found at https://www.insight-journal.org/browse/publication/71 
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+## Author
 
+- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see ProjectionImageFilter 
+## See Also
 
+- [ProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1ProjectionImageFilter.html)
 
-\see MedianProjectionImageFilter 
+- [MedianProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MedianProjectionImageFilter.html)
 
+- [MinimumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MinimumProjectionImageFilter.html)
 
-\see MinimumProjectionImageFilter 
+- [StandardDeviationProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1StandardDeviationProjectionImageFilter.html)
 
+- [SumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1SumProjectionImageFilter.html)
 
-\see StandardDeviationProjectionImageFilter 
+- [BinaryProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1BinaryProjectionImageFilter.html)
 
+- [MaximumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MaximumProjectionImageFilter.html)
 
-\see SumProjectionImageFilter 
-
-
-\see BinaryProjectionImageFilter 
-
-
-\see MaximumProjectionImageFilter
-
-## Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| ProjectionDimension | uint32 |  |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching BasicPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching BasicPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 

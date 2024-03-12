@@ -10,31 +10,27 @@ ITKImageStatistics (ImageStatistics)
 
 This class was contributed to the Insight Journal by Gaetan Lehmann. The original paper can be found at https://www.insight-journal.org/browse/publication/71 
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+## Author
 
+- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see ProjectionImageFilter 
+## See Also
 
+- [ProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1ProjectionImageFilter.html)
 
-\see MedianProjectionImageFilter 
+- [MedianProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MedianProjectionImageFilter.html)
 
+- [MeanProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MeanProjectionImageFilter.html)
 
-\see MeanProjectionImageFilter 
+- [MeanProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MeanProjectionImageFilter.html)
 
+- [MaximumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MaximumProjectionImageFilter.html)
 
-\see MeanProjectionImageFilter 
+- [MinimumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MinimumProjectionImageFilter.html)
 
+- [BinaryProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1BinaryProjectionImageFilter.html)
 
-\see MaximumProjectionImageFilter 
-
-
-\see MinimumProjectionImageFilter 
-
-
-\see BinaryProjectionImageFilter 
-
-
-\see StandardDeviationProjectionImageFilter
+- [StandardDeviationProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1StandardDeviationProjectionImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 

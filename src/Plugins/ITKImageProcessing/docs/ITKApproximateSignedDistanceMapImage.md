@@ -20,22 +20,21 @@ This filter requires that an "inside value" and "outside value" be set as parame
 
 This filter uses the FastChamferDistanceImageFilter and the IsoContourDistanceImageFilter internally to perform the distance calculations.
 
-\see DanielssonDistanceMapImageFilter 
+## See Also
 
+- [DanielssonDistanceMapImageFilter](https://itk.org/Doxygen/html/classitk_1_1DanielssonDistanceMapImageFilter.html)
 
-\see SignedDanielssonDistanceMapImageFilter 
+- [SignedDanielssonDistanceMapImageFilter](https://itk.org/Doxygen/html/classitk_1_1SignedDanielssonDistanceMapImageFilter.html)
 
+- [SignedMaurerDistanceMapImageFilter](https://itk.org/Doxygen/html/classitk_1_1SignedMaurerDistanceMapImageFilter.html)
 
-\see SignedMaurerDistanceMapImageFilter 
+- [FastChamferDistanceImageFilter](https://itk.org/Doxygen/html/classitk_1_1FastChamferDistanceImageFilter.html)
 
+- [IsoContourDistanceImageFilter](https://itk.org/Doxygen/html/classitk_1_1IsoContourDistanceImageFilter.html)
 
-\see FastChamferDistanceImageFilter 
+## Author
 
-
-\see IsoContourDistanceImageFilter 
-
-
-\author Zach Pincus
+- Zach Pincus
 
 % Auto generated parameter table will be inserted here
 

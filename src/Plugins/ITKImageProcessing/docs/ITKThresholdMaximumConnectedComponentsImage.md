@@ -19,41 +19,17 @@ The MinimumObjectSizeInPixels parameter is controlled through the class Get/SetM
 \par Automatic Thresholding in ITK
 There are multiple methods to automatically calculate the threshold intensity value of an image. As of version 4.0, ITK has a Thresholding ( ITKThresholding ) module which contains numerous automatic thresholding methods.implements two of these. Topological Stable State Thresholding works well on images with a large number of objects to be counted.
 
+## References
 
-\par References:
 1) Urish KL, August J, Huard J. "Unsupervised segmentation for myofiber
 counting in immunofluorescent microscopy images". Insight Journal. ISC/NA-MIC/MICCAI Workshop on Open-Source Software (2005) https://insight-journal.org/browse/publication/40 2) Pikaz A, Averbuch, A. "Digital image thresholding based on topological
 stable-state". Pattern Recognition, 29(5): 829-843, 1996.
 
+## Questions
 
-\par 
-Questions: email Ken Urish at ken.urish(at)gmail.com Please cc the itk list serve for archival purposes.
+email Ken Urish at ken.urish(at)gmail.com Please cc the itk list serve for archival purposes.
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| MinimumObjectSizeInPixels | uint32 | The pixel type must support comparison operators. Set the minimum pixel area used to count objects on the image. Thus, only objects that have a pixel area greater than the minimum pixel area will be counted as an object in the optimization portion of this filter. Essentially, it eliminates noise from being counted as an object. The default value is zero. |
-| UpperBoundary | float64 | The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity. |
-| InsideValue | uint8 | The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity. |
-| OutsideValue | uint8 | The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity. |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching ScalarPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching ScalarPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 

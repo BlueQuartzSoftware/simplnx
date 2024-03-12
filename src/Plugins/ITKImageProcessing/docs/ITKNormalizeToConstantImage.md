@@ -12,20 +12,20 @@ The default value of the constant is 1. It can be changed with SetConstant() .
 
 This transform is especially useful for normalizing a convolution kernel.
 
-This code was contributed in the Insight Journal paper: "FFT based
-convolution" by Lehmann G. https://insight-journal.org/browse/publication/717 
+This code was contributed in the Insight Journal paper: ["FFT based
+convolution" by Lehmann G. https://insight-journal.org/browse/publication/717](https://insight-journal.org/browse/publication/717)
 
-\author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+## Author
 
+- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see NormalizeImageFilter 
+## See Also
 
+- [NormalizeImageFilter](https://itk.org/Doxygen/html/classitk_1_1NormalizeImageFilter.html)
 
-\see StatisticsImageFilter 
+- [StatisticsImageFilter](https://itk.org/Doxygen/html/classitk_1_1StatisticsImageFilter.html)
 
-
-\see DivideImageFilter
-
+- [DivideImageFilter](https://itk.org/Doxygen/html/classitk_1_1DivideImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 

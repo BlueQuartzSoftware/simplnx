@@ -10,7 +10,7 @@ ITKCurvatureFlow (CurvatureFlow)
 
 MinMaxCurvatureFlowImageFilter implements a curvature driven image denoising algorithm. Iso-brightness contours in the grayscale input image are viewed as a level set. The level set is then evolved using a curvature-based speed function:
 
- \f[ I_t = F_{\mbox{minmax}} |\nabla I| \f] 
+ \f[ I_t = F_{\mbox{minmax}} |\nabla I| \f]
 
 where \f$ F_{\mbox{minmax}} = \max(\kappa,0) \f$ if \f$ \mbox{Avg}_{\mbox{stencil}}(x) \f$ is less than or equal to \f$ T_{threshold} \f$ and \f$ \min(\kappa,0) \f$ , otherwise. \f$ \kappa \f$ is the mean curvature of the iso-brightness contour at point \f$ x \f$ .
 
@@ -20,19 +20,19 @@ The threshold value \f$ T_{threshold} \f$ is the average intensity obtained in t
 
 This filter make use of the multi-threaded finite difference solver hierarchy. Updates are computed using a MinMaxCurvatureFlowFunction object. A zero flux Neumann boundary condition is used when computing derivatives near the data boundary.
 
-\warning This filter assumes that the input and output types have the same dimensions. This filter also requires that the output image pixels are of a real type. This filter works for any dimensional images, however for dimensions greater than 3D, an expensive brute-force search is used to compute the local threshold.
+## Warning
 
+This filter assumes that the input and output types have the same dimensions. This filter also requires that the output image pixels are of a real type. This filter works for any dimensional images, however for dimensions greater than 3D, an expensive brute-force search is used to compute the local threshold.
 
 Reference: "Level Set Methods and Fast Marching Methods", J.A. Sethian, Cambridge Press, Chapter 16, Second edition, 1999.
 
-\see MinMaxCurvatureFlowFunction 
+## See Also
 
+- [MinMaxCurvatureFlowFunction](https://itk.org/Doxygen/html/classitk_1_1MinMaxCurvatureFlowFunction.html)
 
-\see CurvatureFlowImageFilter 
+- [CurvatureFlowImageFilter](https://itk.org/Doxygen/html/classitk_1_1CurvatureFlowImageFilter.html)
 
-
-\see BinaryMinMaxCurvatureFlowImageFilter
-
+- [BinaryMinMaxCurvatureFlowImageFilter](https://itk.org/Doxygen/html/classitk_1_1BinaryMinMaxCurvatureFlowImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 

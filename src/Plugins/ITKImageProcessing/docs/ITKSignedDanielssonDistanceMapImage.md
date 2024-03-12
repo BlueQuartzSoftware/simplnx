@@ -24,13 +24,13 @@ The filter returns
 
 \li A vector map containing the component of the vector relating the current pixel with the closest point of the closest object to this pixel. Given that the components of the distance are computed in "pixels", the vector is represented by an itk::Offset . That is, physical coordinates are not used. (See itkDanielssonDistanceMapImageFilter)
 
-
-
+## Warning
 
 This filter internally uses the DanielssonDistanceMap filter. This filter is N-dimensional.
 
-\see itkDanielssonDistanceMapImageFilter
+## See Also
 
+- [itkDanielssonDistanceMapImageFilter](https://itk.org/Doxygen/html/classitk_1_1itkDanielssonDistanceMapImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 

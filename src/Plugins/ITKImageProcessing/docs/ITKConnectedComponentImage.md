@@ -12,8 +12,9 @@ ConnectedComponentImageFilter labels the objects in a binary image (non-zero pix
 
 After the filter is executed, ObjectCount holds the number of connected components.
 
-\see ImageToImageFilter
+## See Also
 
+- [ImageToImageFilter](https://itk.org/Doxygen/html/classitk_1_1ImageToImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 

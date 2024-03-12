@@ -12,19 +12,17 @@ Regional maxima are flat zones surrounded by pixels of lower value.
 
 If the input image is constant, the entire image can be considered as a maxima or not. The desired behavior can be selected with the SetFlatIsMaxima() method.
 
-\author Gaetan Lehmann
+## Author
 
+This class was contributed to the Insight Journal by author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. The paper can be found at https://www.insight-journal.org/browse/publication/65
 
-This class was contributed to the Insight Journal by author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France. The paper can be found at https://www.insight-journal.org/browse/publication/65 
+## See Also
 
-\see ValuedRegionalMaximaImageFilter 
+- [ValuedRegionalMaximaImageFilter](https://itk.org/Doxygen/html/classitk_1_1ValuedRegionalMaximaImageFilter.html)
 
+- [HConvexImageFilter](https://itk.org/Doxygen/html/classitk_1_1HConvexImageFilter.html)
 
-\see HConvexImageFilter 
-
-
-\see RegionalMinimaImageFilter
-
+- [RegionalMinimaImageFilter](https://itk.org/Doxygen/html/classitk_1_1RegionalMinimaImageFilter.html)
 
 % Auto generated parameter table will be inserted here
 

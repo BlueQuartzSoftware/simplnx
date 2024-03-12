@@ -12,14 +12,9 @@ This filter is implemented using the recursive gaussian filters. For multi-compo
 
 For this filter to be able to run in-place the input and output image types need to be the same and/or the same type as the RealImageType.
 
-## Parameters
+## See Also
 
-| Name | Type | Description |
-|------|------|-------------|
-| Sigma | float64 | Set the standard deviation of the Gaussian used for smoothing. Sigma is measured in the units of image spacing. You may use the method SetSigma to set the same value across each axis or use the method SetSigmaArray if you need different values along each axis. |
-| NormalizeAcrossScale | bool | Set/Get the flag for normalizing the Gaussian over scale-space. This method does not effect the output of this filter.
-
-\see RecursiveGaussianImageFilter::SetNormalizeAcrossScale |
+- [RecursiveGaussianImageFilter::SetNormalizeAcrossScale](https://itk.org/Doxygen/html/classitk_1_1RecursiveGaussianImageFilter::SetNormalizeAcrossScale.html)|
 
 % Auto generated parameter table will be inserted here
 
