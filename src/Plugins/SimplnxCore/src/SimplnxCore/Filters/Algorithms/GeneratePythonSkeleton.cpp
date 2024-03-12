@@ -1,12 +1,9 @@
 #include "GeneratePythonSkeleton.hpp"
 
-#include "simplnx/Common/Constants.hpp"
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-
-#include <Eigen/Dense>
 
 using namespace nx::core;
 

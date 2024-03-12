@@ -2,8 +2,7 @@
 Insert documentation here.
 """
 
-#PLUGIN_IMPORT_CODE#
-# FILTER_INCLUDE_INSERT
+#PLUGIN_IMPORT_CODE## FILTER_INCLUDE_INSERT
 
 import simplnx as nx
 
