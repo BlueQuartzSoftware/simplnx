@@ -87,14 +87,38 @@ IFilter::PreflightResult GeneratePythonSkeletonFilter::preflightImpl(const DataS
   auto useExistingPlugin = filterArgs.value<BoolParameter::ValueType>(k_UseExistingPlugin_Key);
   auto pluginOutputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_PluginOutputDirectory_Key);
   auto pluginName = filterArgs.value<StringParameter::ValueType>(k_PluginName_Key);
+  auto pluginInputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_PluginInputDirectory_Key);
+  auto filterNames = filterArgs.value<StringParameter::ValueType>(k_PluginFilterNames);
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(!useExistingPlugin)
+  auto filterList = StringUtilities::split(filterNames, ',');
+
+  std::string pluginPath = fmt::format("{}{}{}", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName);
+  if(useExistingPlugin)
   {
-    preflightUpdatedValues.push_back({"Generated Plugin Directory", fmt::format("", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName)});
+    pluginPath = pluginInputDir.string();
   }
+
+  std::stringstream preflightUpdatedValue;
+
+  for(const auto& filterName : filterList)
+  {
+    std::string fullPath = fmt::format("{}{}{}.py", pluginPath, std::string{fs::path::preferred_separator}, filterName);
+    if(std::filesystem::exists({fullPath}))
+    {
+      fullPath = "[EXISTS]: " + fullPath;
+    }
+    else
+    {
+      fullPath = "[New]: " + fullPath;
+    }
+    preflightUpdatedValue << fullPath << '\n';
+  }
+
+  preflightUpdatedValues.push_back({"Generated Plugin File(s):", preflightUpdatedValue.str()});
+  preflightUpdatedValues.push_back({"Warning:", "Any Existing Files Will Be Overwritten"});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
