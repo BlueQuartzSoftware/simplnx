@@ -80,7 +80,7 @@ Parameters ITKSmoothingRecursiveGaussianImage::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(
-      k_NormalizeAcrossScale_Key, "NormalizeAcrossScale",
+      k_NormalizeAcrossScale_Key, "Normalize Across Scale",
       "Set/Get the flag for normalizing the Gaussian over scale-space. This method does not effect the output of this filter.  \see RecursiveGaussianImageFilter::SetNormalizeAcrossScale", false));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});

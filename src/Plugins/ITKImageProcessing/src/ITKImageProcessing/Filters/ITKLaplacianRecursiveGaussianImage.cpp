@@ -74,7 +74,7 @@ Parameters ITKLaplacianRecursiveGaussianImage::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<Float64Parameter>(k_Sigma_Key, "Sigma", "Set/Get Sigma value. Sigma is measured in the units of image spacing.", 1.0));
-  params.insert(std::make_unique<BoolParameter>(k_NormalizeAcrossScale_Key, "NormalizeAcrossScale",
+  params.insert(std::make_unique<BoolParameter>(k_NormalizeAcrossScale_Key, "Normalize Across Scale",
                                                 "Define which normalization factor will be used for the Gaussian. See RecursiveGaussianImageFilter::SetNormalizeAcrossScale", false));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});

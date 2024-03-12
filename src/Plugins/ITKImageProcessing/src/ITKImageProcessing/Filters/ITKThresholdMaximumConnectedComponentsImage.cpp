@@ -82,19 +82,19 @@ Parameters ITKThresholdMaximumConnectedComponentsImage::parameters() const
       "will be counted as an object in the optimization portion of this filter. Essentially, it eliminates noise from being counted as an object. The default value is zero.",
       0u));
   params.insert(std::make_unique<Float64Parameter>(
-      k_UpperBoundary_Key, "UpperBoundary",
+      k_UpperBoundary_Key, "Upper Boundary",
       "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
       "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
       "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",
       std::numeric_limits<double>::max()));
   params.insert(std::make_unique<UInt8Parameter>(
-      k_InsideValue_Key, "InsideValue",
+      k_InsideValue_Key, "Inside Value",
       "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
       "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
       "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",
       1u));
   params.insert(std::make_unique<UInt8Parameter>(
-      k_OutsideValue_Key, "OutsideValue",
+      k_OutsideValue_Key, "Outside Value",
       "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
       "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
       "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",

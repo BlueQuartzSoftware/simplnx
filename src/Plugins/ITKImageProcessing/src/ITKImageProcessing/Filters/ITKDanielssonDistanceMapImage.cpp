@@ -75,12 +75,12 @@ Parameters ITKDanielssonDistanceMapImage::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(
-      std::make_unique<BoolParameter>(k_InputIsBinary_Key, "InputIsBinary",
+      std::make_unique<BoolParameter>(k_InputIsBinary_Key, "Input Is Binary",
                                       "Set/Get if the input is binary. If this variable is set, each nonzero pixel in the input image will be given a unique numeric code to be used by the Voronoi "
                                       "partition. If the image is binary but you are not interested in the Voronoi regions of the different nonzero pixels, then you need not set this.",
                                       false));
-  params.insert(std::make_unique<BoolParameter>(k_SquaredDistance_Key, "SquaredDistance", "Set/Get if the distance should be squared.", false));
-  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing", "Set/Get if image spacing should be used in computing distances.", false));
+  params.insert(std::make_unique<BoolParameter>(k_SquaredDistance_Key, "Squared Distance", "Set/Get if the distance should be squared.", false));
+  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "Use Image Spacing", "Set/Get if image spacing should be used in computing distances.", false));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

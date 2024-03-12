@@ -72,8 +72,8 @@ Parameters ITKIsoContourDistanceImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_LevelSetValue_Key, "LevelSetValue", "Set/Get the value of the level set to be located. The default value is 0.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_FarValue_Key, "FarValue", "Set/Get the value of the level set to be located. The default value is 0.", 10));
+  params.insert(std::make_unique<Float64Parameter>(k_LevelSetValue_Key, "Level Set Value", "Set/Get the value of the level set to be located. The default value is 0.", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_FarValue_Key, "Far Value", "Set/Get the value of the level set to be located. The default value is 0.", 10));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

@@ -72,8 +72,8 @@ Parameters ITKCurvatureFlowImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_TimeStep_Key, "TimeStep", "Set the timestep parameter.", 0.05));
-  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfIterations_Key, "NumberOfIterations", "", 5u));
+  params.insert(std::make_unique<Float64Parameter>(k_TimeStep_Key, "Time Step", "The timestep between iteration updates", 0.05));
+  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfIterations_Key, "Number Of Iterations", "The number of update iterations ", 5u));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

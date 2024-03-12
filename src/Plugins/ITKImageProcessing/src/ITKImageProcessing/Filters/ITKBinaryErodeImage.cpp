@@ -81,12 +81,12 @@ Parameters ITKBinaryErodeImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<VectorParameter<uint32>>(k_KernelRadius_Key, "KernelRadius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
+  params.insert(std::make_unique<VectorParameter<uint32>>(k_KernelRadius_Key, "Kernel Radius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
                                                           std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "The shape of the kernel to use. 0=Annulas, 1=Ball, 2=Box, 3=Cross", static_cast<uint64>(itk::simple::sitkBall),
+  params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "Kernel Type", "The shape of the kernel to use. 0=Annulas, 1=Ball, 2=Box, 3=Cross", static_cast<uint64>(itk::simple::sitkBall),
                                                    ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "The eroded pixels will receive the BackgroundValue. Default = non positive minimum", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "The pixel value considered 'Foreground' that will be eroded ", 1.0));
+  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value", "The eroded pixels will receive the BackgroundValue. Default = non positive minimum", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "Foreground Value", "The pixel value considered 'Foreground' that will be eroded ", 1.0));
   params.insert(std::make_unique<BoolParameter>(k_BoundaryToForeground_Key, "BoundaryToForeground", "Mark the boundary between foreground and background.", true));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});

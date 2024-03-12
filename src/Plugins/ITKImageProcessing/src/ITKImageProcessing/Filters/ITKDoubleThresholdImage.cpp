@@ -101,7 +101,7 @@ Parameters ITKDoubleThresholdImage::parameters() const
                                                    255.0));
   params.insert(std::make_unique<UInt8Parameter>(k_InsideValue_Key, "InsideValue", "Set the 'inside' pixel value. The default value NumericTraits<OutputPixelType>::max()", 1u));
   params.insert(std::make_unique<UInt8Parameter>(k_OutsideValue_Key, "OutsideValue", "Set the 'outside' pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() .", 0u));
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected",
+  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));

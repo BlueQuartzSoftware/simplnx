@@ -72,8 +72,8 @@ Parameters ITKZeroCrossingImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<UInt8Parameter>(k_ForegroundValue_Key, "ForegroundValue", "Set/Get the label value for zero-crossing pixels.", 1u));
-  params.insert(std::make_unique<UInt8Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set/Get the label value for non-zero-crossing pixels.", 0u));
+  params.insert(std::make_unique<UInt8Parameter>(k_ForegroundValue_Key, "Foreground Value", "Set/Get the label value for zero-crossing pixels.", 1u));
+  params.insert(std::make_unique<UInt8Parameter>(k_BackgroundValue_Key, "Background Value", "Set/Get the label value for non-zero-crossing pixels.", 0u));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

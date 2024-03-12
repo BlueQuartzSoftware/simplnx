@@ -145,7 +145,7 @@ Parameters ITKMaskImage::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "OutsideValue", "Method to explicitly set the outside value of the mask.", 0));
+  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "Outside Value", "Method to explicitly set the outside value of the mask.", 0));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
