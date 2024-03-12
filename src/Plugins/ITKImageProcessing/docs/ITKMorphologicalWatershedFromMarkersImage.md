@@ -29,41 +29,15 @@ This code was contributed in the Insight Journal paper: "The watershed transform
 
 \see WatershedImageFilter , MorphologicalWatershedImageFilter
 
-## Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
-| MarkWatershedLine | bool | Set/Get whether the watershed pixel must be marked or not. Default is true. Set it to false do not only avoid writing watershed pixels, it also decrease algorithm complexity. |
-| FullyConnected | bool | Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. For objects that are 1 pixel wide, use FullyConnectedOn. |
-
-## Required Geometry
-
-Image Geometry
-
-## Required Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Input Image Geometry | DataPath | DataPath to the Input Image Geometry |
-| Input Image Data Array | DataPath | Path to input image with pixel type matching ScalarPixelIDTypeList |
-
-## Created Objects
-
-| Name |Type | Description |
-|-----|------|-------------|
-| Output Image Data Array | DataPath | Path to output image with pixel type matching ScalarPixelIDTypeList |
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
-
 
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-
 ## DREAM3D Mailing Lists
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-https://groups.google.com/forum/?hl=en#!forum/dream3d-users
-
-
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GItHub site where the community of DREAM3D-NX users can help answer your questions.
