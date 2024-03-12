@@ -50,9 +50,9 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
   if(StringUtilities::ends_with(pluginName, "/"))
   {
     pluginName.pop_back();
-    std::filesystem::path plugPath(pluginName);
-    pluginName = plugPath.stem().string();
   }
+  std::filesystem::path plugPath(pluginName);
+  pluginName = plugPath.stem().string();
 
   fs::path pluginPyPath = pluginPath / "Plugin.py";
   if(!fs::exists(pluginPyPath))
