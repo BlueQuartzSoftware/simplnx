@@ -202,7 +202,7 @@ public:
       Result result = CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
-        return MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString()));
+        return MergeResults(result, MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString())));
       }
       SharedCellList* polyhedronList = ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
       geometry3d->setPolyhedraList(*polyhedronList);
@@ -213,7 +213,7 @@ public:
       result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
-        return MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
+        return MergeResults(result, MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
       }
       Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry3d->setVertices(*vertexArray);
