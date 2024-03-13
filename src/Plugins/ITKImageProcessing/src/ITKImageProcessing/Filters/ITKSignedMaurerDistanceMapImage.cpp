@@ -79,11 +79,11 @@ Parameters ITKSignedMaurerDistanceMapImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<BoolParameter>(k_InsideIsPositive_Key, "InsideIsPositive",
+  params.insert(std::make_unique<BoolParameter>(k_InsideIsPositive_Key, "Inside Is Positive",
                                                 "Set if the inside represents positive values in the signed distance map. By convention ON pixels are treated as inside pixels.", false));
-  params.insert(std::make_unique<BoolParameter>(k_SquaredDistance_Key, "SquaredDistance", "Set if the distance should be squared.", true));
-  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing", "Set if image spacing should be used in computing distances.", false));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set the background value which defines the object. Usually this value is = 0.", 0.0));
+  params.insert(std::make_unique<BoolParameter>(k_SquaredDistance_Key, "Squared Distance", "Set if the distance should be squared.", true));
+  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "Use Image Spacing", "Set if image spacing should be used in computing distances.", false));
+  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value", "Set the background value which defines the object. Usually this value is = 0.", 0.0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

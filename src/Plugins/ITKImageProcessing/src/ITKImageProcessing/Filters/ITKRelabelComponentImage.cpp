@@ -74,11 +74,12 @@ Parameters ITKRelabelComponentImage::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<UInt64Parameter>(
-      k_MinimumObjectSize_Key, "MinimumObjectSize",
+      k_MinimumObjectSize_Key, "Minimum Object Size",
       "Set the minimum size in pixels for an object. All objects smaller than this size will be discarded and will not appear in the output label map. NumberOfObjects will count only the objects "
       "whose pixel counts are greater than or equal to the minimum size. Call GetOriginalNumberOfObjects to find out how many objects were present in the original label map.",
       0u));
-  params.insert(std::make_unique<BoolParameter>(k_SortByObjectSize_Key, "SortByObjectSize", "Controls whether the object labels are sorted by size. If false, initial order of labels is kept.", true));
+  params.insert(
+      std::make_unique<BoolParameter>(k_SortByObjectSize_Key, "Sort By Object Size", "Controls whether the object labels are sorted by size. If false, initial order of labels is kept.", true));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

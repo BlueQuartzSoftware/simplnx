@@ -77,7 +77,7 @@ Parameters ITKLabelContourImage::parameters() const
                                                 "Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False"
                                                 "note For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue",
+  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
                                                    "Set/Get the background value used to identify the objects and mark the pixels not on the border of the objects.", 0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
