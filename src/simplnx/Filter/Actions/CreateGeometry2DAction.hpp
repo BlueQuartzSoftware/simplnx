@@ -203,7 +203,7 @@ public:
       Result result = CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
-        return MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString()));
+        return MergeResults(result, MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString())));
       }
       SharedTriList* triangles = ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
       geometry2d->setFaceList(*triangles);
@@ -214,7 +214,7 @@ public:
       result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
-        return MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
+        return MergeResults(result, MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
       }
       Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry2d->setVertices(*vertexArray);
