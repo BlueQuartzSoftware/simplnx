@@ -203,7 +203,7 @@ public:
       Result result = CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
-        return MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", prefix, edgesPath.toString()));
+        return MergeResults(result, MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", prefix, edgesPath.toString())));
       }
       SharedEdgeList* createdEdges = ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
       geometry1d->setEdgeList(*createdEdges);
@@ -214,7 +214,7 @@ public:
       result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
-        return MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
+        return MergeResults(result, MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
       }
       Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
       geometry1d->setVertices(*vertexArray);
