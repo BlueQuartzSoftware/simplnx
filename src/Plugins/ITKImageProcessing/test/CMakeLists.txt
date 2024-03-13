@@ -34,6 +34,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKAbsImageTest.cpp
     ITKAcosImageTest.cpp
     ITKAdaptiveHistogramEqualizationImageTest.cpp
+    ITKApproximateSignedDistanceMapImageTest.cpp
     ITKAsinImageTest.cpp
     ITKAtanImageTest.cpp
     ITKBinaryDilateImageTest.cpp
@@ -44,12 +45,19 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKBinaryThinningImageTest.cpp
     ITKBinaryThresholdImageTest.cpp
     ITKBlackTopHatImageTest.cpp
+    ITKConnectedComponentImageTest.cpp
     ITKCosImageTest.cpp
+    ITKCurvatureAnisotropicDiffusionImageTest.cpp
+    ITKCurvatureFlowImageTest.cpp
+    ITKDanielssonDistanceMapImageTest.cpp
     ITKDilateObjectMorphologyImageTest.cpp
+    ITKDoubleThresholdImageTest.cpp
     ITKErodeObjectMorphologyImageTest.cpp
     ITKExpImageTest.cpp
     ITKExpNegativeImageTest.cpp
+    ITKGradientAnisotropicDiffusionImageTest.cpp
     ITKGradientMagnitudeImageTest.cpp
+    ITKGradientMagnitudeRecursiveGaussianImageTest.cpp
     ITKGrayscaleDilateImageTest.cpp
     ITKGrayscaleErodeImageTest.cpp
     ITKGrayscaleMorphologicalClosingImageTest.cpp
@@ -57,20 +65,28 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKImportFijiMontageTest.cpp
     ITKIntensityWindowingImageTest.cpp
     ITKInvertIntensityImageTest.cpp
+    ITKIsoContourDistanceImageTest.cpp
+    ITKLaplacianRecursiveGaussianImageTest.cpp
     ITKLog10ImageTest.cpp
     ITKLogImageTest.cpp
     ITKMaskImageTest.cpp
+    ITKMinMaxCurvatureFlowImageTest.cpp
     ITKNormalizeImageTest.cpp
     ITKNotImageTest.cpp
     ITKOtsuMultipleThresholdsImageTest.cpp
+    ITKRegionalMaximaImageTest.cpp
+    ITKRegionalMinimaImageTest.cpp
     ITKRelabelComponentImageTest.cpp
     ITKSigmoidImageTest.cpp
+    ITKSignedDanielssonDistanceMapImageTest.cpp
     ITKSinImageTest.cpp
     ITKSqrtImageTest.cpp
     ITKSquareImageTest.cpp
     ITKTanImageTest.cpp
     ITKThresholdImageTest.cpp
+    ITKThresholdMaximumConnectedComponentsImageTest.cpp
     ITKWhiteTopHatImageTest.cpp
+    ITKZeroCrossingImageTest.cpp
   )
 endif()
 

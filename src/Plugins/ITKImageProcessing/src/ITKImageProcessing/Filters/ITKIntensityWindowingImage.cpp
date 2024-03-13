@@ -78,8 +78,8 @@ Parameters ITKIntensityWindowingImage::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<Float64Parameter>(k_WindowMinimum_Key, "WindowMinimum", "Set/Get the values of the maximum and minimum intensities of the input intensity window.", 0.0));
   params.insert(std::make_unique<Float64Parameter>(k_WindowMaximum_Key, "WindowMaximum", "Set/Get the values of the maximum and minimum intensities of the input intensity window.", 255.0));
-  params.insert(std::make_unique<Float64Parameter>(k_OutputMinimum_Key, "OutputMinimum", "Set/Get the values of the maximum and minimum intensities of the output image.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_OutputMaximum_Key, "OutputMaximum", "Set/Get the values of the maximum and minimum intensities of the output image.", 255.0));
+  params.insert(std::make_unique<Float64Parameter>(k_OutputMinimum_Key, "Output Minimum", "Set/Get the values of the maximum and minimum intensities of the output image.", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_OutputMaximum_Key, "Output Maximum", "Set/Get the values of the maximum and minimum intensities of the output image.", 255.0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

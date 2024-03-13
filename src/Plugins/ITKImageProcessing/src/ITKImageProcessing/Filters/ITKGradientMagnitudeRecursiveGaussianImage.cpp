@@ -1,22 +1,8 @@
 #include "ITKGradientMagnitudeRecursiveGaussianImage.hpp"
 
-/**
- * This filter only works with certain kinds of data. We
- * enable the types that the filter will compile against. The
- * Allowed PixelTypes as defined in SimpleITK are:
- *   BasicPixelIDTypeList
- * The filter defines the following output pixel types:
- *   float
- */
-#define ITK_BASIC_PIXEL_ID_TYPE_LIST 1
-#define SIMPLNX_ITK_ARRAY_HELPER_USE_Scalar 1
-#define ITK_ARRAY_HELPER_NAMESPACE GradientMagnitudeRecursiveGaussianImage
-
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-#include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -27,36 +13,35 @@
 
 using namespace nx::core;
 
-namespace
+namespace cxITKGradientMagnitudeRecursiveGaussianImage
 {
-/**
- * This filter uses a fixed output type.
- */
+using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
+template <class PixelT>
 using FilterOutputType = float32;
 
-struct ITKGradientMagnitudeRecursiveGaussianImageCreationFunctor
+struct ITKGradientMagnitudeRecursiveGaussianImageFunctor
 {
-  float64 pSigma = 1.0;
-  bool pNormalizeAcrossScale = false;
+  float64 sigma = 1.0;
+  bool normalizeAcrossScale = false;
 
-  template <class InputImageType, class OutputImageType, uint32 Dimension>
+  template <class InputImageT, class OutputImageT, uint32 Dimension>
   auto createFilter() const
   {
-    using FilterType = itk::GradientMagnitudeRecursiveGaussianImageFilter<InputImageType, OutputImageType>;
-    typename FilterType::Pointer filter = FilterType::New();
-    filter->SetSigma(pSigma);
-    filter->SetNormalizeAcrossScale(pNormalizeAcrossScale);
+    using FilterType = itk::GradientMagnitudeRecursiveGaussianImageFilter<InputImageT, OutputImageT>;
+    auto filter = FilterType::New();
+    filter->SetSigma(sigma);
+    filter->SetNormalizeAcrossScale(normalizeAcrossScale);
     return filter;
   }
 };
-} // namespace
+} // namespace cxITKGradientMagnitudeRecursiveGaussianImage
 
 namespace nx::core
 {
 //------------------------------------------------------------------------------
 std::string ITKGradientMagnitudeRecursiveGaussianImage::name() const
 {
-  return FilterTraits<ITKGradientMagnitudeRecursiveGaussianImage>::name.str();
+  return FilterTraits<ITKGradientMagnitudeRecursiveGaussianImage>::name;
 }
 
 //------------------------------------------------------------------------------
@@ -74,7 +59,7 @@ Uuid ITKGradientMagnitudeRecursiveGaussianImage::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKGradientMagnitudeRecursiveGaussianImage::humanName() const
 {
-  return "ITK Gradient MagnitudeRecursiveGaussian Image Filter";
+  return "ITK Gradient Magnitude Recursive Gaussian Image Filter";
 }
 
 //------------------------------------------------------------------------------
@@ -87,15 +72,20 @@ std::vector<std::string> ITKGradientMagnitudeRecursiveGaussianImage::defaultTags
 Parameters ITKGradientMagnitudeRecursiveGaussianImage::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<Float64Parameter>(k_Sigma_Key, "Sigma", "Set/Get Sigma value. Sigma is measured in the units of image spacing.", 1.0));
+  params.insert(std::make_unique<BoolParameter>(k_NormalizeAcrossScale_Key, "Normalize Across Scale",
+                                                "Set/Get the normalization factor that will be used for the Gaussian. RecursiveGaussianImageFilter::SetNormalizeAcrossScale", false));
+
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{}));
+                                                          nx::core::ITK::GetScalarPixelAllowedTypes()));
+
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
-  params.insert(std::make_unique<Float64Parameter>(k_Sigma_Key, "Sigma", "", 1.0));
-  params.insert(std::make_unique<BoolParameter>(k_NormalizeAcrossScale_Key, "NormalizeAcrossScale", "", false));
 
   return params;
 }
@@ -110,76 +100,37 @@ IFilter::UniquePointer ITKGradientMagnitudeRecursiveGaussianImage::clone() const
 IFilter::PreflightResult ITKGradientMagnitudeRecursiveGaussianImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                    const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Write any preflight sanity checking codes in this function
-   ***************************************************************************/
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto sigma = filterArgs.value<float64>(k_Sigma_Key);
+  auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
-  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  auto pSigma = filterArgs.value<float64>(k_Sigma_Key);
-  auto pNormalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKGradientMagnitudeRecursiveGaussianImage::ArrayOptionsType, cxITKGradientMagnitudeRecursiveGaussianImage::FilterOutputType>(
+      dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
-  PreflightResult preflightResult;
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  nx::core::Result<OutputActions> resultOutputActions = ITK::DataCheck<FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath);
-
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in simplnx/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
-
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKGradientMagnitudeRecursiveGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
-                                                                 const MessageHandler& messageHandler) const
+Result<> ITKGradientMagnitudeRecursiveGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
-  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto pSelectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
-  auto pSigma = filterArgs.value<float64>(k_Sigma_Key);
-  auto pNormalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  /****************************************************************************
-   * Create the functor object that will instantiate the correct itk filter
-   ***************************************************************************/
-  ::ITKGradientMagnitudeRecursiveGaussianImageCreationFunctor itkFunctor = {pSigma, pNormalizeAcrossScale};
+  auto sigma = filterArgs.value<float64>(k_Sigma_Key);
+  auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
 
-  /****************************************************************************
-   * Associate the output image with the Image Geometry for Visualization
-   ***************************************************************************/
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
+  const cxITKGradientMagnitudeRecursiveGaussianImage::ITKGradientMagnitudeRecursiveGaussianImageFunctor itkFunctor = {sigma, normalizeAcrossScale};
 
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
-  return ITK::Execute<ITKGradientMagnitudeRecursiveGaussianImageCreationFunctor, FilterOutputType>(dataStructure, pSelectedInputArray, pImageGeomPath, pOutputArrayPath, itkFunctor);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+
+  return ITK::Execute<cxITKGradientMagnitudeRecursiveGaussianImage::ArrayOptionsType, cxITKGradientMagnitudeRecursiveGaussianImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath,
+                                                                                                                                                      outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace nx::core

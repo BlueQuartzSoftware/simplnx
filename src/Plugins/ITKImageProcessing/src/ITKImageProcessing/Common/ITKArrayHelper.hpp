@@ -13,6 +13,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Output.hpp"
 
+#include <itkCastImageFilter.h>
 #include <itkImage.h>
 #include <itkImageFileWriter.h>
 #include <itkImportImageFilter.h>
@@ -97,6 +98,14 @@ inline const std::set<DataType>& GetSignedIntegerScalarPixelAllowedTypes()
       nx::core::DataType::int16,
       nx::core::DataType::int32,
       nx::core::DataType::int64,
+  };
+  return dataTypes;
+}
+
+inline const std::set<DataType>& GetSignedScalarPixelAllowedTypes()
+{
+  static const std::set<DataType> dataTypes = {
+      nx::core::DataType::int8, nx::core::DataType::int16, nx::core::DataType::int32, nx::core::DataType::int64, nx::core::DataType::float32, nx::core::DataType::float64,
   };
   return dataTypes;
 }
@@ -398,6 +407,8 @@ using FloatingVectorPixelIdTypeList = ArrayOptions<ArrayUseVectorOnly, ArrayUseF
 
 using SignedIntegerScalarPixelIdTypeList = ArrayOptions<ArrayUseScalarOnly, ArrayUseSignedTypes>;
 
+using SignedScalarPixelIdTypeList = ArrayOptions<ArrayUseScalarOnly, ArrayUseSignedTypes>;
+
 namespace detail
 {
 template <class InputT, class OutputT, usize Dimensions, class ComponentOptionsT, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
@@ -560,12 +571,34 @@ using ITKFilterFunctorResult_t = typename ITKFilterFunctorResult<T>::type;
 template <class T>
 inline constexpr bool HasMeasurements_v = !std::is_same_v<ITKFilterFunctorResult_t<T>, void>;
 
+template <class T, class = void>
+struct HasIntermediateTypeHelper
+{
+  using type = void;
+};
+
+template <class T>
+using IntermediateType_t = typename T::IntermediateType;
+
+template <class T>
+struct HasIntermediateTypeHelper<T, std::void_t<IntermediateType_t<T>>>
+{
+  static_assert(!std::is_same_v<IntermediateType_t<T>, void>);
+  using type = IntermediateType_t<T>;
+};
+
+template <class T>
+using HasInterMediateTypeHelper_t = typename HasIntermediateTypeHelper<T>::type;
+
+template <class T>
+inline constexpr bool HasIntermediateType_v = !std::is_same_v<HasInterMediateTypeHelper_t<T>, void>;
+
 template <class InputT, class OutputT, uint32 Dimension>
 struct ITKFilterFunctor
 {
   template <class FilterCreationFunctorT>
-  Result<ITKFilterFunctorResult_t<FilterCreationFunctorT>> operator()(IDataStore& inputDataStore, const ImageGeom& imageGeom, IDataStore& outputDataStore, const std::atomic_bool& shouldCancel,
-                                                                      const itk::ProgressObserver::Pointer progressObserver, const FilterCreationFunctorT& filterCreationFunctor) const
+  Result<ITKFilterFunctorResult_t<FilterCreationFunctorT>> execute(IDataStore& inputDataStore, const ImageGeom& imageGeom, IDataStore& outputDataStore, const std::atomic_bool& shouldCancel,
+                                                                   const itk::ProgressObserver::Pointer progressObserver, const FilterCreationFunctorT& filterCreationFunctor) const
   {
     using InputImageType = itk::Image<InputT, Dimension>;
     using OutputImageType = itk::Image<OutputT, Dimension>;
@@ -596,6 +629,68 @@ struct ITKFilterFunctor
     else
     {
       return {};
+    }
+  }
+
+  template <class FilterCreationFunctorT>
+  Result<ITKFilterFunctorResult_t<FilterCreationFunctorT>> executeWithCast(IDataStore& inputDataStore, const ImageGeom& imageGeom, IDataStore& outputDataStore, const std::atomic_bool& shouldCancel,
+                                                                           const itk::ProgressObserver::Pointer progressObserver, const FilterCreationFunctorT& filterCreationFunctor) const
+  {
+    using InputImageType = itk::Image<InputT, Dimension>;
+    using OutputImageType = itk::Image<OutputT, Dimension>;
+
+    using IntermediatePixelType = IntermediateType_t<FilterCreationFunctorT>;
+    using IntermediateImageType = itk::Image<IntermediatePixelType, Dimension>;
+
+    auto& typedInputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
+    typename InputImageType::Pointer inputImage = ITK::WrapDataStoreInImage<InputT, Dimension>(typedInputDataStore, imageGeom);
+
+    using CastImageToIntermediateFilterType = itk::CastImageFilter<InputImageType, IntermediateImageType>;
+    auto castImageToIntermediateFilter = CastImageToIntermediateFilterType::New();
+    castImageToIntermediateFilter->SetInput(inputImage);
+
+    auto filter = filterCreationFunctor.template createFilter<IntermediateImageType, IntermediateImageType, Dimension>();
+    if(progressObserver != nullptr)
+    {
+      filter->AddObserver(itk::ProgressEvent(), progressObserver);
+    }
+    itk::Dream3DFilterInterruption::Pointer interruption = itk::Dream3DFilterInterruption::New(shouldCancel);
+    filter->AddObserver(itk::ProgressEvent(), interruption);
+    filter->SetInput(castImageToIntermediateFilter->GetOutput());
+
+    using CastImageFromIntermediateFilterType = itk::CastImageFilter<IntermediateImageType, OutputImageType>;
+    auto castImageFromIntermediateFilter = CastImageFromIntermediateFilterType::New();
+    castImageFromIntermediateFilter->SetInput(filter->GetOutput());
+    castImageFromIntermediateFilter->Update();
+
+    typename OutputImageType::Pointer outputImage = castImageFromIntermediateFilter->GetOutput();
+    outputImage->DisconnectPipeline();
+
+    auto& typedOutputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<OutputT>>&>(outputDataStore);
+    auto imageDataStore = ITK::ConvertImageToDataStore(*outputImage);
+    typedOutputDataStore = std::move(imageDataStore);
+
+    if constexpr(HasMeasurements_v<FilterCreationFunctorT>)
+    {
+      return {filterCreationFunctor.template getMeasurements<InputImageType, OutputImageType, Dimension>(*filter)};
+    }
+    else
+    {
+      return {};
+    }
+  }
+
+  template <class FilterCreationFunctorT>
+  Result<ITKFilterFunctorResult_t<FilterCreationFunctorT>> operator()(IDataStore& inputDataStore, const ImageGeom& imageGeom, IDataStore& outputDataStore, const std::atomic_bool& shouldCancel,
+                                                                      const itk::ProgressObserver::Pointer progressObserver, const FilterCreationFunctorT& filterCreationFunctor) const
+  {
+    if constexpr(HasIntermediateType_v<FilterCreationFunctorT>)
+    {
+      return executeWithCast<FilterCreationFunctorT>(inputDataStore, imageGeom, outputDataStore, shouldCancel, progressObserver, filterCreationFunctor);
+    }
+    else
+    {
+      return execute<FilterCreationFunctorT>(inputDataStore, imageGeom, outputDataStore, shouldCancel, progressObserver, filterCreationFunctor);
     }
   }
 };

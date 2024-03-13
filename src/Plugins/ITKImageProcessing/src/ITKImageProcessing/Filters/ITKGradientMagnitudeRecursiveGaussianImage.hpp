@@ -99,8 +99,9 @@ protected:
    * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "0ac5ed47-963e-4c54-b33d-967e0aa6a621");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGradientMagnitudeRecursiveGaussianImage, "32db4ae4-4087-4688-874a-b1d725188f18");
