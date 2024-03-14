@@ -22,7 +22,7 @@ constexpr int32 k_MissingMovingVertex = -4500;
 constexpr int32 k_MissingTargetVertex = -4501;
 constexpr int32 k_BadNumIterations = -4502;
 constexpr int32 k_MissingVertices = -4503;
-constexpr int32 k_EmpyVertices = -4506;
+constexpr int32 k_EmptyVertices = -4505;
 
 template <typename Derived>
 struct VertexGeomAdaptor
@@ -192,13 +192,13 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
   if(movingVerticesRef.empty())
   {
     auto ss = fmt::format("Moving Vertex Geometry does not contain any vertices");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmpyVertices, ss}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyVertices, ss}})};
   }
   Float32Array& targetVerticesRef = *(targetVertexGeom->getVertices());
   if(targetVerticesRef.empty())
   {
     auto ss = fmt::format("Target Vertex Geometry does not contain any vertices");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmpyVertices, ss}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyVertices, ss}})};
   }
   auto* movingStore = movingVerticesRef.getDataStore();
   std::vector<float32> movingVector(movingStore->begin(), movingStore->end());
