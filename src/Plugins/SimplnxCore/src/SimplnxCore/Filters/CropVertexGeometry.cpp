@@ -83,8 +83,8 @@ Parameters CropVertexGeometry::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CroppedGeom_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexDataName));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Vertex Data Arrays to crop", "The complete path to all the vertex data arrays to crop", std::vector<DataPath>(),
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
   return params;
@@ -119,23 +119,49 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
 
   {
     std::vector<Error> errors;
+    bool xDimError = (xMax == xMin);
+    bool yDimError = (yMax == yMin);
+    bool zDimError = (zMax == zMin);
+    if(xDimError)
+    {
+      std::string ss = fmt::format("X Max ({}) is equal to X Min ({}). There would be no points remaining in the geometry.", xMax, xMin);
+      errors.push_back(Error{-58550, std::move(ss)});
+    }
+    if(yDimError)
+    {
+      std::string ss = fmt::format("Y Max ({}) is equal to Y Min ({}). There would be no points remaining in the geometry.", yMax, yMin);
+      errors.push_back(Error{-58551, std::move(ss)});
+    }
+    if(zDimError)
+    {
+      std::string ss = fmt::format("Z Max ({}) is equal to Z Min ({}). There would be no points remaining in the geometry.", zMax, zMin);
+      errors.push_back(Error{-58552, std::move(ss)});
+    }
+    if(xDimError || yDimError || zDimError)
+    {
+      return PreflightResult{{nonstd::make_unexpected(errors)}};
+    }
+  }
+
+  {
+    std::vector<Error> errors;
     bool xDimError = (xMax < xMin);
     bool yDimError = (yMax < yMin);
     bool zDimError = (zMax < zMin);
     if(xDimError)
     {
       std::string ss = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-      errors.push_back(Error{-5550, std::move(ss)});
+      errors.push_back(Error{-58553, std::move(ss)});
     }
     if(yDimError)
     {
       std::string ss = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-      errors.push_back(Error{-5550, std::move(ss)});
+      errors.push_back(Error{-58554, std::move(ss)});
     }
     if(zDimError)
     {
       std::string ss = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-      errors.push_back(Error{-5550, std::move(ss)});
+      errors.push_back(Error{-58555, std::move(ss)});
     }
     if(xDimError || yDimError || zDimError)
     {
@@ -146,7 +172,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
   auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
   if(vertexAM == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-5551, "Could not find vertex data AttributeMatrix in selected Vertex Geometry"), {}};
+    return {MakeErrorResult<OutputActions>(-58556, "Could not find vertex data AttributeMatrix in selected Vertex Geometry"), {}};
   }
   auto tupleShape = vertexAM->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
@@ -187,7 +213,7 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
   auto zMax = posMax[2];
 
   auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-  int64 numVerts = vertices.getNumberOfVertices();
+  int64 numVerts = static_cast<int64>(vertices.getNumberOfVertices());
   auto* verticesPtr = vertices.getVertices();
   auto& allVerts = verticesPtr->getDataStoreRef();
   std::vector<int64> croppedPoints;

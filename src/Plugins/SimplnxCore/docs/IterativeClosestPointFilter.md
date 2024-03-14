@@ -1,4 +1,4 @@
-# IterativeClosestPoint
+# Iterative Closest Point
 
 ## Group (Subgroup)
 
@@ -6,16 +6,38 @@ Reconstruction (Alignment)
 
 ## Description
 
-This **Filter** estimates the rigid body transformation (i.e., rotation and translation) between two sets of points represted by **Vertex Geometries** using the *iterative closest point* (ICP) algorithm.  The two **Vertex Geometries** are not required to have the same number of points.  The **Filter** first initializes temporary storage for each set of points and a global transformation.  Then, the alignment algorithm iterates through the following steps:
+This **Filter** estimates the rigid body transformation (i.e., rotation and translation) between two sets of points represented
+by **Vertex Geometries** using the *iterative closest point* (ICP) algorithm.  The two **Vertex Geometries** are not required
+to have the same number of points.
 
-1. The closest point in the target geometry is determined for each point in the moving geoemetry; these are called the correspondence points.  "Closeness" is measured based on Euclidean distance.
-2. The rigid body transformation between the moving and target correspondences is solved for analytically using least squares.
-3. The above transformation is applied to the moving points.
-4. The global transformation is updated with the transformation computed for the current iteration.
+The Iterative Closest Point (ICP) algorithm is a method used to minimize the difference between two clouds of points,
+which we can describe in terms of "moving geometry" and "target geometry." The basic flow of the algorithm is:
 
-Iterations proceed for a fixed number of user-defined steps.  The final rigid body transformation is stored as a 4x4 transformation matrix in row-major order.  The user has the option to apply this transformation to the moving **Vertex Geometry**.  Note that this transformation is applied to the moving geometry *in place* if the option is selected.
+1. Initial State: We start with two sets of points or geometries. The "moving geometry" is the one we aim to align with
+the "target geometry." Initially, the moving geometry may be in any orientation or position relative to the target geometry.
 
-ICP has a number of advantages, such as robustness to noise and no requirement that the two sets of points to be the same size.  However, peformance may suffer if the two sets of points are of siginficantly different size.
+1. Identify Correspondences: For each point in the moving geometry, we find the closest point in the target geometry. These
+pairs of points are considered correspondences, based on the assumption that they represent the same point in space
+after the moving geometry is properly aligned.
+
+1. Estimate Transformation: With the correspondences identified, the algorithm calculates the optimal rigid body
+transformation (which includes translation and rotation) that best aligns the moving geometry to the target
+geometry. This step often involves minimizing a metric, such as the sum of squared distances between corresponding
+points, to find the best fit.
+
+1. Apply Transformation: The calculated transformation is applied to the moving geometry, aligning it closer to the
+target geometry.
+
+1. Iterate: Steps 2 through 4 are repeated iteratively. With each iteration, the moving geometry is brought into closer
+alignment with the target geometry. The iterations continue until a stopping criterion is met, which could be a predefined
+number of iterations, a minimum improvement threshold between iterations, or when the change in the error metric falls
+below a certain threshold.
+
+Final Alignment: Once the iterations stop, the algorithm concludes with the moving geometry optimally aligned to the target
+geometry, based on the criteria set for minimizing the differences between them.
+
+ICP has a number of advantages, such as robustness to noise and no requirement that the two sets of points to be the same
+size.  However, performance may suffer if the two sets of points are of significantly different size.
 
 % Auto generated parameter table will be inserted here
 

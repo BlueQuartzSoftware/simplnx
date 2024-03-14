@@ -22,6 +22,7 @@ constexpr int32 k_MissingMovingVertex = -4500;
 constexpr int32 k_MissingTargetVertex = -4501;
 constexpr int32 k_BadNumIterations = -4502;
 constexpr int32 k_MissingVertices = -4503;
+constexpr int32 k_EmptyVertices = -4505;
 
 template <typename Derived>
 struct VertexGeomAdaptor
@@ -31,10 +32,10 @@ struct VertexGeomAdaptor
   size_t m_NumComponents = 0;
   size_t m_NumTuples = 0;
 
-  VertexGeomAdaptor(const Derived& obj_)
+  explicit VertexGeomAdaptor(const Derived& obj_)
   : obj(obj_)
   {
-    // These values never change for the life time of this object so cache them now.
+    // These values never change for the lifetime of this object so cache them now.
     verts = derived()->getVertices();
     m_NumComponents = verts->getNumberOfComponents();
     m_NumTuples = verts->getNumberOfTuples();
@@ -187,10 +188,19 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
   }
 
-  auto* movingPtr = movingVertexGeom->getVertices();
-  Float32Array& targetPtr = *(targetVertexGeom->getVertices());
-
-  auto* movingStore = movingPtr->getDataStore();
+  Float32Array& movingVerticesRef = *(movingVertexGeom->getVertices());
+  if(movingVerticesRef.empty())
+  {
+    auto ss = fmt::format("Moving Vertex Geometry does not contain any vertices");
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyVertices, ss}})};
+  }
+  Float32Array& targetVerticesRef = *(targetVertexGeom->getVertices());
+  if(targetVerticesRef.empty())
+  {
+    auto ss = fmt::format("Target Vertex Geometry does not contain any vertices");
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyVertices, ss}})};
+  }
+  auto* movingStore = movingVerticesRef.getDataStore();
   std::vector<float32> movingVector(movingStore->begin(), movingStore->end());
   float32* movingCopyPtr = movingVector.data();
   DataStructure tmp;
@@ -236,9 +246,9 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
       nanoflann::KNNResultSet<float> results(nn);
       results.init(&identifier, &dist);
       index.findNeighbors(results, movingCopyPtr + (3 * j), nanoflann::SearchParams());
-      dynTargetPtr[3 * j + 0] = targetPtr[3 * identifier + 0];
-      dynTargetPtr[3 * j + 1] = targetPtr[3 * identifier + 1];
-      dynTargetPtr[3 * j + 2] = targetPtr[3 * identifier + 2];
+      dynTargetPtr[3 * j + 0] = targetVerticesRef[3 * identifier + 0];
+      dynTargetPtr[3 * j + 1] = targetVerticesRef[3 * identifier + 1];
+      dynTargetPtr[3 * j + 2] = targetVerticesRef[3 * identifier + 2];
     }
 
     Eigen::Map<PointCloud> moving_(movingCopyPtr, 3, numMovingVerts);
@@ -271,11 +281,11 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
   {
     for(usize j = 0; j < numMovingVerts; j++)
     {
-      Eigen::Vector4f position((*movingPtr)[3 * j + 0], (*movingPtr)[3 * j + 1], (*movingPtr)[3 * j + 2], 1);
+      Eigen::Vector4f position(movingVerticesRef[3 * j + 0], movingVerticesRef[3 * j + 1], movingVerticesRef[3 * j + 2], 1);
       Eigen::Vector4f transformedPosition = globalTransform * position;
       for(usize k = 0; k < 3; k++)
       {
-        (*movingPtr)[3 * j + k] = transformedPosition.data()[k];
+        movingVerticesRef[3 * j + k] = transformedPosition.data()[k];
       }
     }
   }
