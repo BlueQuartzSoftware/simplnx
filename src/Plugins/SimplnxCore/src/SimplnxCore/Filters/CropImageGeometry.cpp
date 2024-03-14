@@ -262,36 +262,20 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   if(!pUsePhysicalBounds)
   {
-    if(xMax == xMin)
-    {
-      const std::string errMsg = fmt::format("X Max {} is equal to X Min {}. The geometry would not contain any voxels.", xMax, xMin);
-      return {MakeErrorResult<OutputActions>(-57550, errMsg)};
-    }
-    if(yMax == yMin)
-    {
-      const std::string errMsg = fmt::format("Y Max ({}) is equal to Y Min ({}) The geometry would not contain any voxels.", yMax, yMin);
-      return {MakeErrorResult<OutputActions>(-57551, errMsg)};
-    }
-    if(zMax == zMin)
-    {
-      const std::string errMsg = fmt::format("Z Max ({}) is equal to Z Min ({}) The geometry would not contain any voxels.", zMax, zMin);
-      return {MakeErrorResult<OutputActions>(-57552, errMsg)};
-    }
-
     if(xMax < xMin)
     {
-      const std::string errMsg = fmt::format("X Max (%1) less than X Min {}", xMax, xMin);
-      return {MakeErrorResult<OutputActions>(-57553, errMsg)};
+      const std::string errMsg = fmt::format("X Max (%1) less than X Min (%2)", xMax, xMin);
+      return {MakeErrorResult<OutputActions>(-5550, errMsg)};
     }
     if(yMax < yMin)
     {
       const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-      return {MakeErrorResult<OutputActions>(-57554, errMsg)};
+      return {MakeErrorResult<OutputActions>(-5551, errMsg)};
     }
     if(zMax < zMin)
     {
       const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-      return {MakeErrorResult<OutputActions>(-57555, errMsg)};
+      return {MakeErrorResult<OutputActions>(-5552, errMsg)};
     }
   }
 
@@ -307,16 +291,10 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     auto min = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MinCoord_Key);
 
     // Validate basic information about the coordinates
-    std::vector<std::string> labels = {"X", "Y", "Z"};
-    for(usize idx = 0; idx < 3; idx++)
+    if(max == min)
     {
-      if(min[idx] == max[idx])
-      {
-        const std::string errMsg =
-            fmt::format("The Min and Max cropping values are equal for the {} axis. The cropped region would be a ZERO volume. Please change the maximum values to be larger than the minimum values.",
-                        labels[idx]);
-        return {MakeErrorResult<OutputActions>(-57556, errMsg)};
-      }
+      const std::string errMsg = "All minimum and maximum values are equal. The cropped region would be a ZERO volume. Please change the maximum values to be larger than the minimum values.";
+      return {MakeErrorResult<OutputActions>(-50556, errMsg)};
     }
 
     auto bounds = srcImageGeomPtr->getBoundingBoxf();
