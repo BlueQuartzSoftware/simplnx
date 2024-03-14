@@ -62,9 +62,11 @@ Result<> fillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, c
 template <typename T>
 Result<> fillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetReader& datasetReader)
 {
-  if(Memory::GetTotalMemory() <= dataArray.getSize() * sizeof(T))
+  uint64 installedMemory = Memory::GetTotalMemory();
+  if(installedMemory <= dataArray.getSize() * sizeof(T))
   {
-    return MakeErrorResult(-21004, fmt::format("Error reading dataset '{}' with '{}' total elements. Not enough memory to import data.", dataArray.getName(), datasetReader.getNumElements()));
+    return MakeErrorResult(-21004, fmt::format("Error reading dataset '{}' with '{}' total elements. Not enough memory to import data. Installed memory is {} bytes", dataArray.getName(),
+                                               datasetReader.getNumElements(), installedMemory));
   }
 
   auto& absDataStore = dataArray.getDataStoreRef();
