@@ -1331,21 +1331,39 @@ Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const std::filesystem
 
 Result<Pipeline> DREAM3D::ImportPipelineFromFile(const nx::core::HDF5::FileReader& fileReader)
 {
-  if(GetPipelineVersion(fileReader) != k_CurrentPipelineVersion)
+  Result<nlohmann::json> pipelineJson = ImportPipelineJsonFromFile(fileReader);
+  if(pipelineJson.invalid())
   {
-    return MakeErrorResult<Pipeline>(k_InvalidPipelineVersion, fmt::format("Could not parse Pipeline version '{}'. Expected version: '{}'", GetPipelineVersion(fileReader), k_CurrentFileVersion));
+    return ConvertInvalidResult<Pipeline, nlohmann::json>(std::move(pipelineJson));
   }
+  const auto fileVersion = GetFileVersion(fileReader);
+  if(fileVersion == k_CurrentFileVersion)
+  {
+    if(GetPipelineVersion(fileReader) != k_CurrentPipelineVersion)
+    {
+      return MakeErrorResult<Pipeline>(k_InvalidPipelineVersion, fmt::format("Could not parse Pipeline version '{}'. Expected version: '{}'", GetPipelineVersion(fileReader), k_CurrentFileVersion));
+    }
+    return Pipeline::FromJson(pipelineJson.value());
+  }
+  if(fileVersion == Legacy::FileVersion)
+  {
+    return Pipeline::FromSIMPLJson(pipelineJson.value());
+  }
+  return MakeErrorResult<Pipeline>(k_InvalidPipelineVersion, fmt::format("Could not parse file version '{}'", k_CurrentFileVersion));
+}
 
+Result<nlohmann::json> DREAM3D::ImportPipelineJsonFromFile(const nx::core::HDF5::FileReader& fileReader)
+{
   auto pipelineGroupReader = fileReader.openGroup(k_PipelineJsonTag);
   auto pipelineDatasetReader = pipelineGroupReader.openDataset(k_PipelineJsonTag);
   if(!pipelineDatasetReader.isValid())
   {
-    return MakeErrorResult<Pipeline>(k_PipelineGroupUnavailable, "Could not open '/Pipeline' HDF5 Group.");
+    return MakeErrorResult<nlohmann::json>(k_PipelineGroupUnavailable, "Could not open '/Pipeline' HDF5 Group.");
   }
 
   auto pipelineJsonString = pipelineDatasetReader.readAsString();
   auto pipelineJson = nlohmann::json::parse(pipelineJsonString);
-  return Pipeline::FromJson(pipelineJson);
+  return {pipelineJson};
 }
 
 Result<Pipeline> DREAM3D::ImportPipelineFromFile(const std::filesystem::path& filePath)
@@ -1361,6 +1379,21 @@ Result<Pipeline> DREAM3D::ImportPipelineFromFile(const std::filesystem::path& fi
   }
 
   return ImportPipelineFromFile(fileReader);
+}
+
+Result<nlohmann::json> DREAM3D::ImportPipelineJsonFromFile(const std::filesystem::path& filePath)
+{
+  if(!std::filesystem::exists(filePath))
+  {
+    return MakeErrorResult<nlohmann::json>(-1, fmt::format("DREAM3D::ImportPipelineFromFile: File does not exist. '{}'", filePath.string()));
+  }
+  nx::core::HDF5::FileReader fileReader(filePath);
+  if(!fileReader.isValid())
+  {
+    return MakeErrorResult<nlohmann::json>(-1, fmt::format("DREAM3D::ImportPipelineFromFile: Unable to open '{}' for reading", filePath.string()));
+  }
+
+  return ImportPipelineJsonFromFile(fileReader);
 }
 
 Result<DREAM3D::FileData> DREAM3D::ReadFile(const nx::core::HDF5::FileReader& fileReader, bool preflight)

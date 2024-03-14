@@ -120,6 +120,23 @@ SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const nx::core::HDF5::Fil
 
 /**
  * @brief Imports and returns a Pipeline from the target .dream3d file.
+ *
+ * This method does not import legacy Pipelines.
+ * @param fileReader
+ * @return Pipeline
+ */
+SIMPLNX_EXPORT Result<nlohmann::json> ImportPipelineJsonFromFile(const nx::core::HDF5::FileReader& fileReader);
+
+/**
+ * @brief Imports and returns a Pipeline from the target .dream3d file.
+ * This method does not import legacy Pipelines.
+ * @param fileReader
+ * @return Pipeline
+ */
+SIMPLNX_EXPORT Result<nlohmann::json> ImportPipelineJsonFromFile(const std::filesystem::path& filePath);
+
+/**
+ * @brief Imports and returns a Pipeline from the target .dream3d file.
  * This method does not import legacy Pipelines.
  * @param fileReader
  * @return Pipeline
