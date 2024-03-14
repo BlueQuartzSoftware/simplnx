@@ -1318,4 +1318,5 @@ PYBIND11_MODULE(simplnx, mod)
   });
 
   mod.def("reload_python_plugins", [internals]() { internals->reloadPythonPlugins(); });
+  mod.def("unload_python_plugins", [internals]() { internals->unloadPythonPlugins(); });
 }
