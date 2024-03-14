@@ -267,6 +267,8 @@ public:
 
   void reloadPythonPlugins();
 
+  void unloadPythonPlugins();
+
   std::vector<std::shared_ptr<PythonPlugin>> getPythonPlugins()
   {
     std::vector<std::shared_ptr<PythonPlugin>> plugins;
@@ -716,6 +718,16 @@ inline void Internals::reloadPythonPlugins()
     auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
     filterList->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
   }
+}
+
+inline void Internals::unloadPythonPlugins()
+{
+  FilterList* filterList = m_App->getFilterList();
+  for(auto&& [id, plugin] : m_PythonPlugins)
+  {
+    filterList->removePlugin(id);
+  }
+  m_PythonPlugins.clear();
 }
 
 /**
