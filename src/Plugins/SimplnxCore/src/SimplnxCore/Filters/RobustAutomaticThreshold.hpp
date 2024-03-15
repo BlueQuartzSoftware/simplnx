@@ -19,9 +19,9 @@ public:
   RobustAutomaticThreshold& operator=(const RobustAutomaticThreshold&) = delete;
   RobustAutomaticThreshold& operator=(RobustAutomaticThreshold&&) noexcept = delete;
 
-  static inline constexpr StringLiteral k_InputArrayPath = "array_to_threshold";
-  static inline constexpr StringLiteral k_GradientMagnitudePath = "gradient_array";
-  static inline constexpr StringLiteral k_ArrayCreationPath = "created_mask_path";
+  static inline constexpr StringLiteral k_InputArrayPath_Key = "input_array_path";
+  static inline constexpr StringLiteral k_GradientMagnitudePath_Key = "gradient_array_path";
+  static inline constexpr StringLiteral k_ArrayCreationName_Key = "created_mask_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

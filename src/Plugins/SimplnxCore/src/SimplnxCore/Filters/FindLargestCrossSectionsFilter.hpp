@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_Plane_Key = "plane";
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_LargestCrossSectionsArrayPath_Key = "largest_cross_sections_array_path";
+  static inline constexpr StringLiteral k_LargestCrossSectionsArrayName_Key = "largest_cross_sections_array_name";
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 

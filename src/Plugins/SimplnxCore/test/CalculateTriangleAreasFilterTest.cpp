@@ -60,7 +60,7 @@ TEST_CASE("SimplnxCore::CalculateTriangleAreasFilter", "[SimplnxCore][CalculateT
 
     // Create default Parameters for the filter.
     args.insertOrAssign(CalculateTriangleAreasFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
-    args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataPath_Key, std::make_any<std::string>(triangleAreasName));
+    args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataName_Key, std::make_any<std::string>(triangleAreasName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

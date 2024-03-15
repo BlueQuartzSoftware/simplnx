@@ -114,7 +114,7 @@ Parameters ITKDoubleThresholdImage::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+      std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -131,7 +131,7 @@ IFilter::PreflightResult ITKDoubleThresholdImage::preflightImpl(const DataStruct
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto threshold1 = filterArgs.value<float64>(k_Threshold1_Key);
   auto threshold2 = filterArgs.value<float64>(k_Threshold2_Key);
   auto threshold3 = filterArgs.value<float64>(k_Threshold3_Key);
@@ -153,7 +153,7 @@ Result<> ITKDoubleThresholdImage::executeImpl(DataStructure& dataStructure, cons
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   auto threshold1 = filterArgs.value<float64>(k_Threshold1_Key);

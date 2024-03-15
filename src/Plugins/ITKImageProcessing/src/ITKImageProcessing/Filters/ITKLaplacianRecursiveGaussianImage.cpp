@@ -85,7 +85,7 @@ Parameters ITKLaplacianRecursiveGaussianImage::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+      std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -102,7 +102,7 @@ IFilter::PreflightResult ITKLaplacianRecursiveGaussianImage::preflightImpl(const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto sigma = filterArgs.value<float64>(k_Sigma_Key);
   auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
@@ -119,7 +119,7 @@ Result<> ITKLaplacianRecursiveGaussianImage::executeImpl(DataStructure& dataStru
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   auto sigma = filterArgs.value<float64>(k_Sigma_Key);

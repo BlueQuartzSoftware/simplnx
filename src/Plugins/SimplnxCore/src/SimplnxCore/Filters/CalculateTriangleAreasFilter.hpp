@@ -25,7 +25,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "triangle_geometry_data_path";
-  static inline constexpr StringLiteral k_CalculatedAreasDataPath_Key = "triangle_areas_array_path";
+  static inline constexpr StringLiteral k_CalculatedAreasDataName_Key = "triangle_areas_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

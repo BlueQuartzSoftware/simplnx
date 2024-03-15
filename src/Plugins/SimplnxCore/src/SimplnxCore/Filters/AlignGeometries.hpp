@@ -21,8 +21,8 @@ public:
   AlignGeometries& operator=(AlignGeometries&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MovingGeometry_Key = "moving_geometry";
-  static inline constexpr StringLiteral k_TargetGeometry_Key = "target_geometry";
+  static inline constexpr StringLiteral k_MovingGeometry_Key = "input_moving_geometry_path";
+  static inline constexpr StringLiteral k_TargetGeometry_Key = "output_target_geometry_path";
   static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 
   /**

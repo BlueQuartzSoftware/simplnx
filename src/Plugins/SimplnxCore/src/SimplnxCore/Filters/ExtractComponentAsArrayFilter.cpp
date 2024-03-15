@@ -66,9 +66,9 @@ Parameters ExtractComponentAsArrayFilter::parameters() const
       std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multicomponent Attribute Array", "The array to extract componenets from", DataPath{}, nx::core::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created DataArray"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NewArrayPath_Key, "Scalar Attribute Array", "The DataArray to store the extracted components", "Extracted Component"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NewArrayName_Key, "Scalar Attribute Array", "The DataArray to store the extracted components", "Extracted Component"));
 
-  params.linkParameters(k_MoveComponentsToNewArray_Key, k_NewArrayPath_Key, true);
+  params.linkParameters(k_MoveComponentsToNewArray_Key, k_NewArrayName_Key, true);
   params.linkParameters(k_MoveComponentsToNewArray_Key, k_RemoveComponentsFromArray_Key, true);
 
   return params;
@@ -88,7 +88,7 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   auto pRemoveComponentsFromArrayValue = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
   auto pCompNumberValue = filterArgs.value<int32>(k_CompNumber_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  auto pNewArrayPathValue = pSelectedArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_NewArrayPath_Key));
+  auto pNewArrayPathValue = pSelectedArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_NewArrayName_Key));
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -154,7 +154,7 @@ Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure
   // This is the array on the original array path whether its removed or not
   inputValues.BaseArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   // If move components to new array is true this is a valid path
-  inputValues.NewArrayPath = inputValues.BaseArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewArrayPath_Key));
+  inputValues.NewArrayPath = inputValues.BaseArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewArrayName_Key));
 
   return ExtractComponentAsArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -179,7 +179,7 @@ Result<Arguments> ExtractComponentAsArrayFilter::FromSIMPLJson(const nlohmann::j
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_CompNumberKey, k_CompNumber_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayArrayNameKey, k_NewArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayArrayNameKey, k_NewArrayName_Key));
 
   if(json.contains(SIMPL::k_ReducedArrayArrayNameKey.str()))
   {

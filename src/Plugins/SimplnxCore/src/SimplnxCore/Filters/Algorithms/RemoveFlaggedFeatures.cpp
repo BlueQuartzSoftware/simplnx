@@ -319,7 +319,7 @@ Result<> RemoveFlaggedFeatures::operator()()
 
       args.insert(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(m_InputValues->FeatureIdsArrayPath));
       args.insert(ComputeFeatureRectFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(m_InputValues->TempBoundsPath.getParent()));
-      args.insert(ComputeFeatureRectFilter::k_FeatureRectArrayPath_Key, std::make_any<std::string>(m_InputValues->TempBoundsPath.getTargetName()));
+      args.insert(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(m_InputValues->TempBoundsPath.getTargetName()));
 
       auto preflightResult = filter.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())

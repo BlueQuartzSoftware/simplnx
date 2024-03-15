@@ -27,7 +27,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_FeatureRectArrayPath_Key = "feature_rect_array_path";
+  static inline constexpr StringLiteral k_FeatureRectArrayName_Key = "feature_rect_array_name";
   static inline constexpr StringLiteral k_FeatureDataAttributeMatrixPath_Key = "feature_data_attribute_matrix_path";
 
   /**

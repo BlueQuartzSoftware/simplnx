@@ -52,7 +52,7 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter", "[OrientationAnalysis
 
     // Create default Parameters for the filter.
     args.insertOrAssign(RodriguesConvertorFilter::k_RodriguesDataArrayPath_Key, std::make_any<DataPath>(DataPath({k_InputArrayName})));
-    args.insertOrAssign(RodriguesConvertorFilter::k_OutputDataArrayPath_Key, std::make_any<std::string>(k_ConvertedName));
+    args.insertOrAssign(RodriguesConvertorFilter::k_OutputDataArrayName_Key, std::make_any<std::string>(k_ConvertedName));
     args.insertOrAssign(RodriguesConvertorFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result

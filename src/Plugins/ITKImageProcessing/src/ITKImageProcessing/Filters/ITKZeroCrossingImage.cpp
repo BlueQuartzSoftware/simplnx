@@ -83,7 +83,7 @@ Parameters ITKZeroCrossingImage::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+      std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -100,7 +100,7 @@ IFilter::PreflightResult ITKZeroCrossingImage::preflightImpl(const DataStructure
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto foregroundValue = filterArgs.value<uint8>(k_ForegroundValue_Key);
   auto backgroundValue = filterArgs.value<uint8>(k_BackgroundValue_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
@@ -117,7 +117,7 @@ Result<> ITKZeroCrossingImage::executeImpl(DataStructure& dataStructure, const A
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   auto foregroundValue = filterArgs.value<uint8>(k_ForegroundValue_Key);

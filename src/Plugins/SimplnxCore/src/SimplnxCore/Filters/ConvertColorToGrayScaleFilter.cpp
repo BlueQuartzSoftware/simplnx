@@ -66,7 +66,7 @@ Parameters ConvertColorToGrayScaleFilter::parameters() const
   params.linkParameters(k_ConversionAlgorithm_Key, k_ColorWeights_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_ConversionAlgorithm_Key, k_ColorChannel_Key, std::make_any<ChoicesParameter::ValueType>(3));
 
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputDataArrayVector_Key, "Input Data Arrays", "Select all DataArrays that need to be converted to GrayScale",
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputDataArrayPath_Key, "Input Data Arrays", "Select all DataArrays that need to be converted to GrayScale",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{DataType::uint8}));
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
@@ -89,7 +89,7 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
   auto pConversionAlgorithmValue = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionAlgorithm_Key);
   auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   auto pColorChannelValue = filterArgs.value<int32>(k_ColorChannel_Key);
-  auto inputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputDataArrayVector_Key);
+  auto inputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputDataArrayPath_Key);
   auto outputArrayPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputArrayPrefix_Key);
 
   PreflightResult preflightResult;
@@ -158,7 +158,7 @@ Result<> ConvertColorToGrayScaleFilter::executeImpl(DataStructure& dataStructure
   inputValues.ConversionAlgorithm = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionAlgorithm_Key);
   inputValues.ColorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   inputValues.ColorChannel = filterArgs.value<int32>(k_ColorChannel_Key);
-  inputValues.InputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputDataArrayVector_Key);
+  inputValues.InputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputDataArrayPath_Key);
   inputValues.OutputArrayPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputArrayPrefix_Key);
 
   for(const auto& inputDataArrayPath : inputValues.InputDataArrayPaths)
@@ -199,7 +199,7 @@ Result<Arguments> ConvertColorToGrayScaleFilter::FromSIMPLJson(const nlohmann::j
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_ConversionAlgorithmKey, k_ConversionAlgorithm_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ColorWeightsKey, k_ColorWeights_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_ColorChannelKey, k_ColorChannel_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputDataArrayVectorKey, k_InputDataArrayVector_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputDataArrayVectorKey, k_InputDataArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputArrayPrefixKey, k_OutputArrayPrefix_Key));
 
   // Create new attribute matrix and output attribute matrix name parameters are not applicable to NX

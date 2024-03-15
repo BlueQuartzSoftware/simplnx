@@ -109,7 +109,7 @@ Parameters CalculateTriangleAreasFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the face areas", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CalculatedAreasDataPath_Key, "Created Face Areas", "The complete path to the array storing the calculated face areas", "Face Areas"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CalculatedAreasDataName_Key, "Created Face Areas", "The complete path to the array storing the calculated face areas", "Face Areas"));
 
   return params;
 }
@@ -125,7 +125,7 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
                                                                      const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
-  auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataPath_Key);
+  auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -157,7 +157,7 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
 Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel) const
 {
-  auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataPath_Key);
+  auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
   const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
@@ -191,7 +191,7 @@ Result<Arguments> CalculateTriangleAreasFilter::FromSIMPLJson(const nlohmann::js
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_TriangleGeometryDataPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_CalculatedAreasDataPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_CalculatedAreasDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

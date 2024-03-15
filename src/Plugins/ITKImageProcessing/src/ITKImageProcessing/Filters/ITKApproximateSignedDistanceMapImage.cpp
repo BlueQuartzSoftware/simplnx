@@ -83,7 +83,7 @@ Parameters ITKApproximateSignedDistanceMapImage::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+      std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -100,7 +100,7 @@ IFilter::PreflightResult ITKApproximateSignedDistanceMapImage::preflightImpl(con
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto insideValue = filterArgs.value<float64>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
@@ -117,7 +117,7 @@ Result<> ITKApproximateSignedDistanceMapImage::executeImpl(DataStructure& dataSt
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   auto insideValue = filterArgs.value<float64>(k_InsideValue_Key);

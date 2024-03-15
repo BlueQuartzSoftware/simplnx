@@ -59,11 +59,11 @@ Parameters FindFeatureCentroidsFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "The cell feature attribute matrix",
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "The cell feature attribute matrix",
                                                                     DataPath({"Data Container", "Feature Data"})));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CentroidsArrayPath_Key, "Centroids", "DataPath to create the 'Centroids' output array", "Centroids"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CentroidsArrayName_Key, "Centroids", "DataPath to create the 'Centroids' output array", "Centroids"));
 
   return params;
 }
@@ -79,9 +79,9 @@ IFilter::PreflightResult FindFeatureCentroidsFilter::preflightImpl(const DataStr
                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+  auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
 
-  auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayPath_Key);
+  auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayName_Key);
   DataPath pCentroidsArrayPath = featureAttrMatrixPath.createChildPath(pCentroidsArrayName);
 
   PreflightResult preflightResult;
@@ -116,9 +116,9 @@ Result<> FindFeatureCentroidsFilter::executeImpl(DataStructure& dataStructure, c
 {
   FindFeatureCentroidsInputValues inputValues;
 
-  auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayPath_Key);
+  auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayName_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+  inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
   inputValues.CentroidsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pCentroidsArrayName);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
@@ -143,9 +143,9 @@ Result<Arguments> FindFeatureCentroidsFilter::FromSIMPLJson(const nlohmann::json
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometry_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToAMFilterParameterConverter>(args, json, SIMPL::k_CentroidsArrayPathKey, k_FeatureAttributeMatrix_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToAMFilterParameterConverter>(args, json, SIMPL::k_CentroidsArrayPathKey, k_FeatureAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_CentroidsArrayPathKey, k_CentroidsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

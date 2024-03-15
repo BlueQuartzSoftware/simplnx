@@ -35,7 +35,7 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImageFilter(defau
   Arguments args;
   args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -72,7 +72,7 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImageFilter(longe
   Arguments args;
   args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
   args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));
 

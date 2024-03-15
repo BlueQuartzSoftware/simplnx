@@ -43,7 +43,7 @@ TEST_CASE("SimplnxCore::FindFeatureClusteringFilter: Valid Filter Execution", "[
   args.insertOrAssign(FindFeatureClusteringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_Phases)));
   args.insertOrAssign(FindFeatureClusteringFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_Centroids)));
   args.insertOrAssign(FindFeatureClusteringFilter::k_BiasedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellEnsembleAttributeMatrixPath));
   args.insertOrAssign(FindFeatureClusteringFilter::k_ClusteringListArrayName_Key, std::make_any<std::string>(k_GeneratedClusteringList));
   args.insertOrAssign(FindFeatureClusteringFilter::k_RDFArrayName_Key, std::make_any<std::string>(k_GeneratedRDF));
   args.insertOrAssign(FindFeatureClusteringFilter::k_MaxMinArrayName_Key, std::make_any<std::string>(k_GeneratedMinMaxDistances));
@@ -85,7 +85,7 @@ TEST_CASE("SimplnxCore::FindFeatureClusteringFilter: InValid Filter Execution", 
   args.insertOrAssign(FindFeatureClusteringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_DataContainerPath.createChildPath(k_Cell_Data).createChildPath(k_Phases)));
   args.insertOrAssign(FindFeatureClusteringFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_Centroids)));
   args.insertOrAssign(FindFeatureClusteringFilter::k_BiasedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellEnsembleAttributeMatrixPath));
   args.insertOrAssign(FindFeatureClusteringFilter::k_ClusteringListArrayName_Key, std::make_any<std::string>(k_GeneratedClusteringList));
   args.insertOrAssign(FindFeatureClusteringFilter::k_RDFArrayName_Key, std::make_any<std::string>(k_GeneratedRDF));
   args.insertOrAssign(FindFeatureClusteringFilter::k_MaxMinArrayName_Key, std::make_any<std::string>(k_GeneratedMinMaxDistances));

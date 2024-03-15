@@ -64,16 +64,16 @@ Parameters CalculateArrayHistogramFilter::parameters() const
                                                                nx::core::GetAllNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Set Up"});
   params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_NewDataGroup_Key, "Create New DataGroup for Histograms", "Whether or not to store the calculated histogram(s) in a new DataGroup", true));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupName_Key, "New DataGroup Path", "The path to the new DataGroup in which to store the calculated histogram(s)", DataPath{}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataGroupName_Key, "Output DataGroup Path", "The complete path to the DataGroup in which to store the calculated histogram(s)",
+      std::make_unique<BoolParameter>(k_CreateNewDataGroup_Key, "Create New DataGroup for Histograms", "Whether or not to store the calculated histogram(s) in a new DataGroup", true));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupPath_Key, "New DataGroup Path", "The path to the new DataGroup in which to store the calculated histogram(s)", DataPath{}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataGroupPath_Key, "Output DataGroup Path", "The complete path to the DataGroup in which to store the calculated histogram(s)",
                                                               DataPath{}, DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<StringParameter>(k_HistoName_Key, "Suffix for created Histograms", "String appended to the end of the histogram array names", " Histogram"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UserDefinedRange_Key, k_MinRange_Key, true);
   params.linkParameters(k_UserDefinedRange_Key, k_MaxRange_Key, true);
-  params.linkParameters(k_NewDataGroup_Key, k_NewDataGroupName_Key, true);
-  params.linkParameters(k_NewDataGroup_Key, k_DataGroupName_Key, false);
+  params.linkParameters(k_CreateNewDataGroup_Key, k_NewDataGroupPath_Key, true);
+  params.linkParameters(k_CreateNewDataGroup_Key, k_DataGroupPath_Key, false);
 
   return params;
 }
@@ -92,10 +92,10 @@ IFilter::PreflightResult CalculateArrayHistogramFilter::preflightImpl(const Data
   auto pUserDefinedRangeValue = filterArgs.value<bool>(k_UserDefinedRange_Key); // verify and calculate range values here if false
   auto pMinRangeValue = filterArgs.value<float64>(k_MinRange_Key);
   auto pMaxRangeValue = filterArgs.value<float64>(k_MaxRange_Key);
-  auto pNewDataGroupValue = filterArgs.value<bool>(k_NewDataGroup_Key);
-  auto pDataGroupNameValue = filterArgs.value<DataPath>(k_DataGroupName_Key);
+  auto pNewDataGroupValue = filterArgs.value<bool>(k_CreateNewDataGroup_Key);
+  auto pDataGroupNameValue = filterArgs.value<DataPath>(k_DataGroupPath_Key);
   auto pSelectedArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedArrayPaths_Key);
-  auto pNewDataGroupNameValue = filterArgs.value<DataPath>(k_NewDataGroupName_Key); // sanity check if is Attribute matrix after impending simplnx update
+  auto pNewDataGroupNameValue = filterArgs.value<DataPath>(k_NewDataGroupPath_Key); // sanity check if is Attribute matrix after impending simplnx update
   auto pHistogramSuffix = filterArgs.value<std::string>(k_HistoName_Key);
 
   PreflightResult preflightResult;
@@ -143,13 +143,13 @@ Result<> CalculateArrayHistogramFilter::executeImpl(DataStructure& dataStructure
   auto histogramSuffix = filterArgs.value<std::string>(k_HistoName_Key);
 
   DataPath dataGroupPath;
-  if(filterArgs.value<bool>(k_NewDataGroup_Key))
+  if(filterArgs.value<bool>(k_CreateNewDataGroup_Key))
   {
-    dataGroupPath = filterArgs.value<DataPath>(k_NewDataGroupName_Key);
+    dataGroupPath = filterArgs.value<DataPath>(k_NewDataGroupPath_Key);
   }
   else
   {
-    dataGroupPath = filterArgs.value<DataPath>(k_DataGroupName_Key);
+    dataGroupPath = filterArgs.value<DataPath>(k_DataGroupPath_Key);
   }
   std::vector<DataPath> createdDataPaths;
   for(auto& selectedArrayPath : inputValues.SelectedArrayPaths) // regenerate based on preflight
@@ -190,11 +190,11 @@ Result<Arguments> CalculateArrayHistogramFilter::FromSIMPLJson(const nlohmann::j
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UserDefinedRangeKey, k_UserDefinedRange_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MinRangeKey, k_MinRange_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MaxRangeKey, k_MaxRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerKey, k_NewDataGroup_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerKey, k_CreateNewDataGroup_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_NewDataGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_NewDataGroupPath_Key));
   results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, SIMPL::k_NewAttributeMatrixNameKey,
-                                                                                                                k_DataGroupName_Key));
+                                                                                                                k_DataGroupPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataArrayNameKey, k_HistoName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

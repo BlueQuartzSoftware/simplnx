@@ -25,7 +25,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_VertexGeomPath_Key = "vertex_geom";
-  static inline constexpr StringLiteral k_MaskPath_Key = "mask";
+  static inline constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
   static inline constexpr StringLiteral k_ReducedVertexGeometryPath_Key = "reduced_vertex";
 
   /**

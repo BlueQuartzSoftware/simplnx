@@ -60,7 +60,7 @@ Parameters FindVolFractionsFilter::parameters() const
                                                               "The path to the cell ensemble attribute matrix where the output volume fractions array will be stored",
                                                               DataPath({"DataContainer", "CellEnsembleData"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
   params.insertSeparator(Parameters::Separator{"Created Objects: Ensemble Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_VolFractionsArrayPath_Key, "Volume Fractions", "Fraction of volume that belongs to each Ensemble", "Volume Fractions"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VolFractionsArrayName_Key, "Volume Fractions", "Fraction of volume that belongs to each Ensemble", "Volume Fractions"));
 
   return params;
 }
@@ -77,7 +77,7 @@ IFilter::PreflightResult FindVolFractionsFilter::preflightImpl(const DataStructu
 {
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellEnsembleAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
-  auto pVolFractionsArrayNameValue = filterArgs.value<std::string>(k_VolFractionsArrayPath_Key);
+  auto pVolFractionsArrayNameValue = filterArgs.value<std::string>(k_VolFractionsArrayName_Key);
 
   const DataPath volFractionsArrayPath = pCellEnsembleAttributeMatrixPathValue.createChildPath(pVolFractionsArrayNameValue);
   const auto& cellPhasesArray = dataStructure.getDataRefAs<IDataArray>(pCellPhasesArrayPathValue);
@@ -103,7 +103,7 @@ Result<> FindVolFractionsFilter::executeImpl(DataStructure& dataStructure, const
                                              const std::atomic_bool& shouldCancel) const
 {
   auto pCellEnsembleAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
-  auto pVolFractionsArrayNameValue = filterArgs.value<std::string>(k_VolFractionsArrayPath_Key);
+  auto pVolFractionsArrayNameValue = filterArgs.value<std::string>(k_VolFractionsArrayName_Key);
 
   auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key));
   auto& volFractionsArrayRef = dataStructure.getDataRefAs<Float32Array>(pCellEnsembleAttributeMatrixPathValue.createChildPath(pVolFractionsArrayNameValue));
@@ -146,7 +146,7 @@ Result<Arguments> FindVolFractionsFilter::FromSIMPLJson(const nlohmann::json& js
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_CellEnsembleAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_VolFractionsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_VolFractionsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

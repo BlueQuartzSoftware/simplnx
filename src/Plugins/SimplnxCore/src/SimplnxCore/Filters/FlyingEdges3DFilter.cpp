@@ -61,8 +61,8 @@ Parameters FlyingEdges3DFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_SelectedDataArray_Key, "Data Array to Contour", "This is the data that will be checked for the contouring iso value", DataPath{}, GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array to Contour", "This is the data that will be checked for the contouring iso value", DataPath{},
+                                                          GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(
@@ -109,7 +109,7 @@ Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   FlyingEdges3DInputValues inputValues;
 
   inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArray_Key);
+  inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.triangleGeomPath = DataPath({filterArgs.value<std::string>(k_NewTriangleGeometryName_Key)});
   inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);
   inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexDataName).createChildPath(k_VertexNormals);

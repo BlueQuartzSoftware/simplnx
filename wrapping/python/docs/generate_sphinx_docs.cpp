@@ -671,6 +671,7 @@ void GenerateMarkdownFilterParameterTable()
 void GeneratePythonRstFiles()
 {
   auto* filterListPtr = Application::Instance()->getFilterList();
+  std::ofstream logFile("/tmp/parameter_key_updates.log", std::ios_base::trunc);
 
   // Loop over each plugin and create a .rst file
   const auto pluginListPtr = Application::Instance()->getPluginList();
@@ -773,7 +774,7 @@ void GeneratePythonRstFiles()
         {
           if(::isupper(letter) != 0)
           {
-            std::cout << filter->name() << "::" << paramValue->name() << " HAS CAPS. Should be lower snake case\n";
+            logFile << filter->name() << "::" << paramValue->name() << " HAS CAPS. Should be lower snake case\n";
             break;
           }
         }
@@ -799,17 +800,17 @@ void GeneratePythonRstFiles()
             pType == "simplnx.DataGroupCreationParameter" || pType == "simplnx.DataGroupSelectionParameter" || pType == "simplnx.DataPathSelectionParameter" ||
             pType == "simplnx.GeometrySelectionParameter" || pType == "simplnx.NeighborListSelectionParameter" || pType == "simplnx.DataGroupCreationParameter"))
         {
-          std::cout << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+          logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
         }
 
         if(pType == "simplnx.MultiArraySelectionParameter" && !nx::core::StringUtilities::ends_with(parameterPair.first, "s"))
         {
-          std::cout << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+          logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
         }
 
         if(pType == "simplnx.DataObjectNameParameter" && !nx::core::StringUtilities::ends_with(parameterPair.first, "_name"))
         {
-          std::cout << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+          logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
         }
 
         rstStream << parameterPair.first;

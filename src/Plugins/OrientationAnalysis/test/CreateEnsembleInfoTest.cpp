@@ -22,7 +22,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateEnsembleInfoFilter::k_Ensemble_Key, std::make_any<EnsembleInfoParameter::ValueType>(EnsembleInfoParameter::ValueType{}));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix"})));
+    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix"})));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>("CrystalStructures"));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>("PhaseTypes"));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
@@ -36,7 +36,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateEnsembleInfoFilter::k_Ensemble_Key, std::make_any<EnsembleInfoParameter::ValueType>(EnsembleInfoParameter::ValueType{{"Cubic-High m-3m", "Primary", "Cubic"}}));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>("CrystalStructures"));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>("PhaseTypes"));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
@@ -50,7 +50,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateEnsembleInfoFilter::k_Ensemble_Key, std::make_any<EnsembleInfoParameter::ValueType>(EnsembleInfoParameter::ValueType{{"", "Primary", "Cubic"}}));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix"})));
+    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix"})));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>("CrystalStructures"));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>("PhaseTypes"));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
@@ -64,7 +64,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateEnsembleInfoFilter::k_Ensemble_Key, std::make_any<EnsembleInfoParameter::ValueType>(EnsembleInfoParameter::ValueType{{"Cubic-High m-3m", "Uknown", "Cubic"}}));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix"})));
+    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix"})));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>("CrystalStructures"));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>("PhaseTypes"));
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
@@ -98,7 +98,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Valid filter execution
 
   // Create Parameters for the filter.
   args.insertOrAssign(CreateEnsembleInfoFilter::k_Ensemble_Key, std::make_any<EnsembleInfoParameter::ValueType>(EnsembleInfoParameter::ValueType{{"Cubic-High m-3m", "Primary", "Cubic"}}));
-  args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(cellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(cellEnsembleAttributeMatrixPath));
   args.insertOrAssign(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>(crystalStructuresName));
   args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>(phaseTypesName));
   args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>(phaseNamesName));

@@ -74,7 +74,7 @@ TEST_CASE("OrientationAnalysis::GenerateFZQuaternions", "[OrientationAnalysis][G
   // Create default Parameters for the filter.
 
   args.insertOrAssign(GenerateFZQuaternions::k_QuatsArrayPath_Key, std::make_any<DataPath>(scanDataPath.createChildPath(k_Quats)));
-  args.insertOrAssign(GenerateFZQuaternions::k_FZQuatsArrayPath_Key, std::make_any<std::string>(k_FZQuats));
+  args.insertOrAssign(GenerateFZQuaternions::k_FZQuatsArrayName_Key, std::make_any<std::string>(k_FZQuats));
   args.insertOrAssign(GenerateFZQuaternions::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(scanDataPath.createChildPath(k_Phases)));
   args.insertOrAssign(GenerateFZQuaternions::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_PhaseData, k_LaueClass})));
 

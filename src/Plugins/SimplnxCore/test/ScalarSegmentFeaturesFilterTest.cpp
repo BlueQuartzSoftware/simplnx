@@ -47,9 +47,9 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentF
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(inputDataArrayPath));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(scalarTolerance));
     // Set the paths to the created arrays
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsPathKey, std::make_any<std::string>(outputFeatureIdsName));
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeaturePathKey, std::make_any<std::string>(computedCellDataName));
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayPathKey, std::make_any<std::string>(k_ActiveName));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>(outputFeatureIdsName));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>(computedCellDataName));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
     // Are we going to randomize the featureIds when completed.
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
 

@@ -27,7 +27,7 @@ public:
   static inline constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm";
   static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";
   static inline constexpr StringLiteral k_ColorChannel_Key = "color_channel";
-  static inline constexpr StringLiteral k_InputDataArrayVector_Key = "input_data_array_vector";
+  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "input_data_array_paths";
   static inline constexpr StringLiteral k_OutputArrayPrefix_Key = "output_array_prefix";
 
   /**
