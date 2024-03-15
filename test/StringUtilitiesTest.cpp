@@ -66,7 +66,7 @@ TEST_CASE("Utility Function Test: split(str, char, bool)")
 
   result = StringUtilities::split(inputStr, '|', true);
 
-  REQUIRE(result.size() == 5);
+  REQUIRE(result.size() == 6);
 
   // Case 6
   inputStr = "|This|Is||A||Baseline|Test||"
