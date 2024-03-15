@@ -65,7 +65,11 @@ Result<> ValidateCSVFile(const std::string& filePath)
 
   if(!fs::exists({absPath}))
   {
-    return MakeErrorResult(-300, fmt::format("File does not exist: {}", absPath.string()));
+    return MakeErrorResult(-300, fmt::format("CSV file does not exist: {}", absPath.string()));
+  }
+  if(fs::is_directory({absPath}))
+  {
+    return MakeErrorResult(-301, fmt::format("CSV input file is a directory: {}", absPath.string()));
   }
 
   // Obtain the file size
