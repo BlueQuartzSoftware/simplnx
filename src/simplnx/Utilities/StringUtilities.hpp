@@ -48,19 +48,25 @@
  * '\r'(0x0d)carriage return (CR)
  */
 
-namespace nx::core
+namespace
 {
-namespace StringUtilities
-{
-inline constexpr StringLiteral k_Whitespaces = " \t\f\v\n\r";
-
-template <class InputIt, class ForwardIt, class BinOp>
-void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, BinOp binary_op)
+template <bool ProcessEmptyV, class InputIt, class ForwardIt, typename TokenT>
+void tokenize(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, std::vector<TokenT>& tokens)
 {
   while(true)
   {
     const auto pos = std::find_first_of(first, last, s_first, s_last);
-    binary_op(first, pos);
+    if(first != pos)
+    {
+      tokens.emplace_back(std::string{first, pos});
+    }
+    else
+    {
+      if constexpr(ProcessEmptyV)
+      {
+        tokens.emplace_back("");
+      }
+    }
     if(pos == last)
     {
       break;
@@ -68,6 +74,98 @@ void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_
     first = std::next(pos);
   }
 }
+
+template <bool ConsecutiveAsEmptyV, bool EmptyInitialV, bool EmptyFinalV>
+struct SplitTypeOptions
+{
+  static inline constexpr bool AllowConsecutiveAsEmpty = ConsecutiveAsEmptyV;
+  static inline constexpr bool AllowEmptyInital = EmptyInitialV;
+  static inline constexpr bool AllowEmptyFinal = EmptyFinalV;
+};
+
+using SplitIgnoreEmpty = SplitTypeOptions<false, false, false>;
+using SplitAllowAll = SplitTypeOptions<true, true, true>;
+using SplitNoStripIgnoreConsecutive = SplitTypeOptions<false, true, true>;
+using SplitOnlyConsecutive = SplitTypeOptions<true, false, false>;
+using SplitAllowEmptyLeftAnalyze = SplitTypeOptions<true, true, false>;
+using SplitAllowEmptyRightAnalyze = SplitTypeOptions<true, false, true>;
+
+template <class SplitTypeOptionsV = SplitIgnoreEmpty>
+inline std::vector<std::string> optimized_split(std::string_view str, nonstd::span<const char> delimiters)
+{
+  auto endPos = str.end();
+  std::vector<std::string> tokens;
+  tokens.reserve(str.size() / 2);
+
+  //todo switch to a copy if
+
+  if constexpr(std::is_same_v<SplitTypeOptionsV, SplitAllowAll> || std::is_same_v<SplitTypeOptionsV, SplitIgnoreEmpty>)
+  {
+    if constexpr(std::is_same_v<SplitTypeOptionsV, SplitAllowAll>)
+    {
+      tokenize<true>(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), tokens);
+    }
+    if constexpr(std::is_same_v<SplitTypeOptionsV, SplitIgnoreEmpty>)
+    {
+      tokenize<false>(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), tokens);
+    }
+  }
+  else
+  {
+    std::vector<std::string_view> preProcessedTokens;
+    preProcessedTokens.reserve(str.size() / 2);
+
+    tokenize<true>(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), preProcessedTokens);
+
+    preProcessedTokens.shrink_to_fit();
+
+    auto tokenPos = std::back_inserter(tokens);
+    auto preProcessedPos = preProcessedTokens.cbegin();
+    auto preProcessedEndPos = preProcessedTokens.cend();
+
+    if constexpr(SplitTypeOptionsV::AllowEmptyInital)
+    {
+      *tokenPos++ = std::string(*preProcessedPos);
+
+      preProcessedPos++;
+    }
+    if constexpr(!SplitTypeOptionsV::AllowEmptyFinal)
+    {
+      preProcessedEndPos--;
+    }
+
+    while(preProcessedPos != preProcessedEndPos)
+    {
+      if constexpr(!SplitTypeOptionsV::AllowConsecutiveAsEmpty)
+      {
+        if(preProcessedPos->empty())
+        {
+          continue;
+        }
+      }
+      *tokenPos++ = std::string(*preProcessedPos);
+      preProcessedPos++;
+    }
+
+    if constexpr(!SplitTypeOptionsV::AllowEmptyFinal)
+    {
+      if(!preProcessedPos->empty())
+      {
+        *tokenPos.++ = std::string(*preProcessedPos);
+        preProcessedPos++;
+      }
+    }
+  }
+
+  tokens.shrink_to_fit();
+
+  return tokens;
+}
+} // namespace
+
+namespace nx::core::StringUtilities
+{
+inline constexpr StringLiteral k_Whitespaces = " \t\f\v\n\r";
 
 /**
  * @brief Replace characters in a string. If 'from' is empty, the origin string is returned.
@@ -172,46 +270,51 @@ inline bool ends_with(std::string_view value, std::string_view ending)
   }
   return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
-
-template<bool IgnoreEmpty = false>
-inline std::vector<std::string> optimized_split(std::string_view str, nonstd::span<const char> delimiters)
+enum SplitType : uint8
 {
-  std::vector<std::string> tokens;
-  auto endPos = str.end();
-  for_each_token(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), [&tokens](auto first, auto second) {
-    if(first != second)
-    {
-      std::string substr = {first, second};
-      if constexpr(!IgnoreEmpty)
-      {
-        if(substr.empty())
-        {
-          return;
-        }
-      }
+  IgnoreEmpty,
+  AllowAll,
+  NoStripIgnoreConsecutive,
+  OnlyConsecutive,
+  AllowEmptyLeftAnalyze,
+  AllowEmptyRightAnalyze
+};
 
-      tokens.push_back(substr);
-    }
-  });
-  return tokens;
+inline std::vector<std::string> specific_split(std::string_view str, nonstd::span<const char> delimiters, SplitType splitType)
+{
+  switch(splitType)
+  {
+  case IgnoreEmpty:
+    return optimized_split<::SplitIgnoreEmpty>(str,delimiters);
+  case AllowAll:
+    return optimized_split<::SplitAllowAll>(str,delimiters);
+  case NoStripIgnoreConsecutive:
+    return optimized_split<::SplitNoStripIgnoreConsecutive>(str,delimiters);
+  case OnlyConsecutive:
+    return optimized_split<::SplitOnlyConsecutive>(str,delimiters);
+  case AllowEmptyLeftAnalyze:
+    return optimized_split<::SplitAllowEmptyLeftAnalyze>(str,delimiters);
+  case AllowEmptyRightAnalyze:
+    return optimized_split<::SplitAllowEmptyRightAnalyze>(str,delimiters);
+  }
 }
 
 inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool consecutiveDelimiters)
 {
   if(consecutiveDelimiters)
   {
-    return optimized_split<true>(str, delimiters);
+    return optimized_split<::SplitOnlyConsecutive>(str, delimiters);
   }
   else
   {
-    return optimized_split<false>(str, delimiters);
+    return optimized_split<::SplitIgnoreEmpty>(str, delimiters);
   }
 }
 
 inline std::vector<std::string> split(std::string_view str, char delim)
 {
   std::array<char, 1> delims = {delim};
-  return optimized_split<false>(str, delims);
+  return optimized_split<::SplitIgnoreEmpty>(str, delims);
 }
 
 inline std::string join(nonstd::span<std::string_view> vec, std::string_view delim)
@@ -340,5 +443,4 @@ inline std::string toLower(std::string input)
   return input;
 }
 
-} // namespace StringUtilities
 } // namespace nx::core
