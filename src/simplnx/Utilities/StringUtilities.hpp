@@ -173,27 +173,45 @@ inline bool ends_with(std::string_view value, std::string_view ending)
   return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool consecutiveDelimiters)
+template<bool IgnoreEmpty = false>
+inline std::vector<std::string> optimized_split(std::string_view str, nonstd::span<const char> delimiters)
 {
   std::vector<std::string> tokens;
   auto endPos = str.end();
-  for_each_token(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), [&tokens, &consecutiveDelimiters](auto first, auto second) {
+  for_each_token(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), [&tokens](auto first, auto second) {
     if(first != second)
     {
       std::string substr = {first, second};
-      if(!substr.empty() || !consecutiveDelimiters)
+      if constexpr(!IgnoreEmpty)
       {
-        tokens.push_back(substr);
+        if(substr.empty())
+        {
+          return;
+        }
       }
+
+      tokens.push_back(substr);
     }
   });
   return tokens;
 }
 
+inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool consecutiveDelimiters)
+{
+  if(consecutiveDelimiters)
+  {
+    return optimized_split<true>(str, delimiters);
+  }
+  else
+  {
+    return optimized_split<false>(str, delimiters);
+  }
+}
+
 inline std::vector<std::string> split(std::string_view str, char delim)
 {
   std::array<char, 1> delims = {delim};
-  return split(str, delims, false);
+  return optimized_split<false>(str, delims);
 }
 
 /**
