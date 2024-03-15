@@ -16,7 +16,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Instantiate", "[SimplnxCore][Remo
   Arguments args;
 
   args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeomPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_MaskPath_Key, std::make_any<DataPath>());
+  args.insertOrAssign(RemoveFlaggedVertices::k_InputMaskPath_Key, std::make_any<DataPath>());
   args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexGeometryPath_Key, std::make_any<DataPath>());
 
   // Preflight the filter and check result
@@ -69,7 +69,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Test Algorithm", "[SimplnxCore][R
   DataPath reducedVertexAMPath = reducedVertexPath.createChildPath(Constants::k_VertexDataGroupName);
 
   args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeomPath_Key, std::make_any<DataPath>(vertexGeomPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(RemoveFlaggedVertices::k_InputMaskPath_Key, std::make_any<DataPath>(maskPath));
   args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexGeometryPath_Key, std::make_any<DataPath>(reducedVertexPath));
 
   // Preflight the filter and check result

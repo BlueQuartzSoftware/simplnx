@@ -24,14 +24,14 @@ TEST_CASE("SimplnxCore::RobustAutomaticThreshold: Missing/Empty DataPaths", "[Ro
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
-  args.insertOrAssign(RobustAutomaticThreshold::k_InputArrayPath, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(RobustAutomaticThreshold::k_InputArrayPath_Key, std::make_any<DataPath>(inputPath));
 
   // Preflight the filter and check result
   {
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
-  args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudePath, std::make_any<DataPath>(gradientMagnitudePath));
+  args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudePath_Key, std::make_any<DataPath>(gradientMagnitudePath));
 
   // Preflight the filter and check result
   {
@@ -49,9 +49,9 @@ TEST_CASE("SimplnxCore::RobustAutomaticThreshold: Test Algorithm", "[RobustAutom
   DataPath inputPath({k_SmallIN100, k_EbsdScanData, "Phases"});
   DataPath gradientMagnitudePath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
-  args.insertOrAssign(RobustAutomaticThreshold::k_InputArrayPath, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudePath, std::make_any<DataPath>(gradientMagnitudePath));
-  args.insertOrAssign(RobustAutomaticThreshold::k_ArrayCreationPath, std::make_any<std::string>("Created Array"));
+  args.insertOrAssign(RobustAutomaticThreshold::k_InputArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudePath_Key, std::make_any<DataPath>(gradientMagnitudePath));
+  args.insertOrAssign(RobustAutomaticThreshold::k_ArrayCreationName_Key, std::make_any<std::string>("Created Array"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

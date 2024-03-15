@@ -25,7 +25,7 @@ public:
   static inline constexpr StringLiteral k_UseCustomFalseValue = "use_custom_false_value";
   static inline constexpr StringLiteral k_CustomTrueValue = "custom_true_value";
   static inline constexpr StringLiteral k_CustomFalseValue = "custom_false_value";
-  static inline constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
+  static inline constexpr StringLiteral k_CreatedDataPath_Key = "created_data_array_name";
   static inline constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
 
   /**

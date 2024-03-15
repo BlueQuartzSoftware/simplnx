@@ -46,9 +46,9 @@ TEST_CASE("SimplnxCore::CalculateFeatureSizes", "[SimplnxCore][CalculateFeatureS
     args.insert(CalculateFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
     args.insert(CalculateFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
     args.insert(CalculateFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureGroup));
-    args.insert(CalculateFeatureSizesFilter::k_VolumesPath_Key, std::make_any<std::string>(volumesName));
-    args.insert(CalculateFeatureSizesFilter::k_EquivalentDiametersPath_Key, std::make_any<std::string>(EquivalentDiametersName));
-    args.insert(CalculateFeatureSizesFilter::k_NumElementsPath_Key, std::make_any<std::string>(numElementsName));
+    args.insert(CalculateFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(volumesName));
+    args.insert(CalculateFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(EquivalentDiametersName));
+    args.insert(CalculateFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(numElementsName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

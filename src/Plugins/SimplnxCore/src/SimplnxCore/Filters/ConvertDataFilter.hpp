@@ -25,8 +25,8 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type";
-  static inline constexpr StringLiteral k_ArrayToConvert_Key = "array_to_convert";
-  static inline constexpr StringLiteral k_ConvertedArray_Key = "converted_array";
+  static inline constexpr StringLiteral k_ArrayToConvertPath_Key = "array_to_convert_path";
+  static inline constexpr StringLiteral k_ConvertedArrayName_Key = "converted_array_name";
   static inline constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
 
   /**

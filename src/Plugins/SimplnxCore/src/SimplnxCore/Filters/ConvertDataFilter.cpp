@@ -56,11 +56,11 @@ Parameters ConvertDataFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<ChoicesParameter>(k_ScalarType_Key, "Scalar Type", "Convert to this data type", 0, GetAllDataTypesAsStrings()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayToConvert_Key, "Data Array to Convert", "The complete path to the Data Array to Convert", DataPath{}, GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayToConvertPath_Key, "Data Array to Convert", "The complete path to the Data Array to Convert", DataPath{}, GetAllDataTypes()));
   params.insert(std::make_unique<BoolParameter>(k_DeleteOriginal_Key, "Remove Original Array", "Whether or not to remove the original array after conversion", false));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_ConvertedArray_Key, "Converted Data Array", "The name of the converted Data Array", "Converted_"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ConvertedArrayName_Key, "Converted Data Array", "The name of the converted Data Array", "Converted_"));
 
   return params;
 }
@@ -76,8 +76,8 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
                                                           const std::atomic_bool& shouldCancel) const
 {
   auto pScalarTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ScalarType_Key);
-  auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvert_Key);
-  auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArray_Key);
+  auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
+  auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArrayName_Key);
   auto pRemoveOriginal = filterArgs.value<bool>(k_DeleteOriginal_Key);
 
   DataPath const convertedArrayPath = pInputArrayPath.getParent().createChildPath(pConvertedArrayName);
@@ -114,8 +114,8 @@ Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Argu
   ConvertDataInputValues inputValues;
   uint64 scalarTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ScalarType_Key);
   inputValues.ScalarType = StringToDataType(GetAllDataTypesAsStrings()[scalarTypeIndex]);
-  inputValues.SelectedArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvert_Key);
-  auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArray_Key);
+  inputValues.SelectedArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
+  auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArrayName_Key);
   inputValues.OutputArrayName = inputValues.SelectedArrayPath.getParent().createChildPath(pConvertedArrayName);
 
   return ConvertData(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -158,8 +158,8 @@ Result<Arguments> ConvertDataFilter::FromSIMPLJson(const nlohmann::json& json)
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_ArrayToConvert_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversionCustom::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_OutputArrayNameKey, k_ConvertedArray_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_ArrayToConvertPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversionCustom::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_OutputArrayNameKey, k_ConvertedArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -37,7 +37,7 @@ TEST_CASE("SimplnxCore::FindNumFeaturesFilter: Valid filter execution", "[Simpln
   // Create default Parameters for the filter.
   args.insertOrAssign(FindNumFeaturesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
   args.insertOrAssign(FindNumFeaturesFilter::k_EnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureCountsPathNX.getParent()));
-  args.insertOrAssign(FindNumFeaturesFilter::k_NumFeaturesArrayPath_Key, std::make_any<std::string>(k_FeatureCountsNX));
+  args.insertOrAssign(FindNumFeaturesFilter::k_NumFeaturesArrayName_Key, std::make_any<std::string>(k_FeatureCountsNX));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -70,7 +70,7 @@ TEST_CASE("SimplnxCore::FindNumFeaturesFilter: InValid filter execution", "[Simp
   // Create default Parameters for the filter.
   args.insertOrAssign(FindNumFeaturesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectFeaturePhasesPath));
   args.insertOrAssign(FindNumFeaturesFilter::k_EnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureCountsPathNX.getParent()));
-  args.insertOrAssign(FindNumFeaturesFilter::k_NumFeaturesArrayPath_Key, std::make_any<std::string>(k_FeatureCountsNX));
+  args.insertOrAssign(FindNumFeaturesFilter::k_NumFeaturesArrayName_Key, std::make_any<std::string>(k_FeatureCountsNX));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

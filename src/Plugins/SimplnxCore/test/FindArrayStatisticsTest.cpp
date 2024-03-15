@@ -93,7 +93,7 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm", "[SimplnxCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputArrayPath));
     args.insertOrAssign(FindArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>());
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(statsDataPath));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
     args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
     args.insertOrAssign(FindArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
@@ -106,7 +106,7 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm", "[SimplnxCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
     args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_NumUniqueValues_Key, std::make_any<std::string>(numUniqueValues));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -298,7 +298,7 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[S
     args.insertOrAssign(FindArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputArrayPath));
     args.insertOrAssign(FindArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "FeatureIds"})));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(statsDataPath));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
     args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
     args.insertOrAssign(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
     args.insertOrAssign(FindArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
@@ -311,7 +311,7 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[S
     args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
     args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_NumUniqueValues_Key, std::make_any<std::string>(numUniqueValues));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

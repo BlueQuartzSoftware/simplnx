@@ -92,7 +92,7 @@ Parameters RemoveFlaggedVertices::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Flagged Vertex Array", "DataPath to the conditional array that will be used to decide which vertices are removed.",
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Flagged Vertex Array", "DataPath to the conditional array that will be used to decide which vertices are removed.",
                                                           DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Newly Reduced Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ReducedVertexGeometryPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.",
@@ -109,7 +109,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
                                                               const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = filterArgs.value<DataPath>(k_VertexGeomPath_Key);
-  auto maskArrayPath = filterArgs.value<DataPath>(k_MaskPath_Key);
+  auto maskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
   auto reducedVertexPath = filterArgs.value<DataPath>(k_ReducedVertexGeometryPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -216,7 +216,7 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
                                             const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeomPath_Key);
-  auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
+  auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);
   auto reducedVertexPath = args.value<DataPath>(k_ReducedVertexGeometryPath_Key);
 
   const VertexGeom& vertexGeom = data.getDataRefAs<VertexGeom>(vertexGeomPath);
@@ -286,7 +286,7 @@ Result<Arguments> RemoveFlaggedVertices::FromSIMPLJson(const nlohmann::json& jso
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_VertexGeometryKey, k_VertexGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_InputMaskPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_ReducedVertexGeometryKey, k_ReducedVertexGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

@@ -154,11 +154,11 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
     args.insertOrAssign(FindAvgOrientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesDataPath));
     args.insertOrAssign(FindAvgOrientationsFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsDataPath));
     args.insertOrAssign(FindAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructureDataPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>({k_GrainDataStr}));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>({k_GrainDataStr}));
 
     // These are the output AvgQuats and output AvgEuler paths NOT the Exemplar AvgQuats & AvgEulers
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<std::string>(k_AvgQuats));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayPath_Key, std::make_any<std::string>(k_AvgEulers));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuats));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayName_Key, std::make_any<std::string>(k_AvgEulers));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

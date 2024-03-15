@@ -51,7 +51,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
   static inline constexpr StringLiteral k_TimeStep_Key = "time_step";
   static inline constexpr StringLiteral k_ConductanceParameter_Key = "conductance_parameter";
   static inline constexpr StringLiteral k_ConductanceScalingUpdateInterval_Key = "conductance_scaling_update_interval";

@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_CalculatorParameter_Key = "calculator_parameter";
   static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type";
-  static inline constexpr StringLiteral k_CalculatedArray_Key = "calculated_array";
+  static inline constexpr StringLiteral k_CalculatedArray_Key = "calculated_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

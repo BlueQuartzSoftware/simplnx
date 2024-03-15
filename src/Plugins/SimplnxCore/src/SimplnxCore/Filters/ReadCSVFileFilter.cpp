@@ -372,15 +372,15 @@ Parameters ReadCSVFileFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Existing Attribute Matrix"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Attribute Matrix", "Store the imported CSV data arrays in an existing attribute matrix.", false));
-  params.insert(
-      std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedDataGroup_Key, "Existing Attribute Matrix", "Store the imported CSV data arrays in this existing attribute matrix.", DataPath{}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedDataGroupPath_Key, "Existing Attribute Matrix", "Store the imported CSV data arrays in this existing attribute matrix.",
+                                                                    DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Created AttributeMatrix"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDataGroup_Key, "New Attribute Matrix", "Store the imported CSV data arrays in a newly created attribute matrix.",
                                                              DataPath{{"Imported Data"}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_UseExistingGroup_Key, k_SelectedDataGroup_Key, true);
+  params.linkParameters(k_UseExistingGroup_Key, k_SelectedDataGroupPath_Key, true);
   params.linkParameters(k_UseExistingGroup_Key, k_CreatedDataGroup_Key, false);
 
   return params;
@@ -398,7 +398,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 {
   ReadCSVData readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
   bool useExistingAM = filterArgs.value<bool>(k_UseExistingGroup_Key);
-  DataPath selectedAM = filterArgs.value<DataPath>(k_SelectedDataGroup_Key);
+  DataPath selectedAM = filterArgs.value<DataPath>(k_SelectedDataGroupPath_Key);
   DataPath createdDataAM = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = readCSVData.inputFilePath;
@@ -638,7 +638,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 {
   ReadCSVData readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
   bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
-  DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedDataGroup_Key);
+  DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedDataGroupPath_Key);
   DataPath createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = readCSVData.inputFilePath;

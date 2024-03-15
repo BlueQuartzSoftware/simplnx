@@ -52,26 +52,26 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFa
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   Arguments args;
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_TriangleGeom_Key, std::make_any<DataPath>(triangleGeomPath));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(triangleGeomPath));
   args.insertOrAssign(FeatureFaceCurvatureFilter::k_NeighborhoodRing_Key, std::make_any<int32>(3));
   args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputePrincipalDirection_Key, std::make_any<bool>(true));
   args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeGaussianCurvature_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeMeanCurvature_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeMeanCurvaturePath_Key, std::make_any<bool>(true));
   args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeWeingartenMatrix_Key, std::make_any<bool>(true));
   args.insertOrAssign(FeatureFaceCurvatureFilter::k_UseFaceNormals_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceAttribMatrix_Key, std::make_any<DataPath>(faceAttribMatrixPath));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceLabels_Key, std::make_any<DataPath>(faceAttribMatrixPath.createChildPath("FaceLabels")));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FeatureFaceIds_Key, std::make_any<DataPath>(faceAttribMatrixPath.createChildPath("FeatureFaceId")));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceNormals_Key, std::make_any<DataPath>(faceAttribMatrixPath.createChildPath("FaceNormals")));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceCentroids_Key, std::make_any<DataPath>(faceAttribMatrixPath.createChildPath("FaceCentroids")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceAttribMatrixPath_Key, std::make_any<DataPath>(faceAttribMatrixPath));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceLabelsPath_Key, std::make_any<DataPath>(faceAttribMatrixPath.createChildPath("FaceLabels")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FeatureFaceIdsPath_Key, std::make_any<DataPath>(faceAttribMatrixPath.createChildPath("FeatureFaceId")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceNormalsPath_Key, std::make_any<DataPath>(faceAttribMatrixPath.createChildPath("FaceNormals")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceCentroidsPath_Key, std::make_any<DataPath>(faceAttribMatrixPath.createChildPath("FaceCentroids")));
 
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_PrincipalCurvature1_Key, std::make_any<DataPath>(k_PrincipalCurvature1_Path));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_PrincipalCurvature2_Key, std::make_any<DataPath>(k_PrincipalCurvature2_Path));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_PrincipalDirection1_Key, std::make_any<DataPath>(k_PrincipalDirection1_Path));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_PrincipalDirection2_Key, std::make_any<DataPath>(k_PrincipalDirection2_Path));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_GaussianCurvature_Key, std::make_any<DataPath>(k_GaussianCurvature_Path));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_MeanCurvature_Key, std::make_any<DataPath>(k_MeanCurvature_Path));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_WeingartenMatrix_Key, std::make_any<DataPath>(k_WeingartenMatrix_Path));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_PrincipalCurvature1Path_Key, std::make_any<DataPath>(k_PrincipalCurvature1_Path));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_PrincipalCurvature2Path_Key, std::make_any<DataPath>(k_PrincipalCurvature2_Path));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_PrincipalDirection1Path_Key, std::make_any<DataPath>(k_PrincipalDirection1_Path));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_PrincipalDirection2Path_Key, std::make_any<DataPath>(k_PrincipalDirection2_Path));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_GaussianCurvaturePath_Key, std::make_any<DataPath>(k_GaussianCurvature_Path));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_MeanCurvaturePath_Key, std::make_any<DataPath>(k_MeanCurvature_Path));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_WeingartenMatrixPath_Key, std::make_any<DataPath>(k_WeingartenMatrix_Path));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

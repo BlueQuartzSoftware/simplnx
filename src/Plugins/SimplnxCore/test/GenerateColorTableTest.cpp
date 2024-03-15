@@ -82,11 +82,11 @@ TEST_CASE("SimplnxCore::GenerateColorTableFilter: Valid filter execution")
     const ReadTextDataArrayFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFileKey, std::make_any<fs::path>(k_InputImageFilePath));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarTypeKey, std::make_any<NumericType>(NumericType::float32));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_NCompKey, std::make_any<uint64>(1));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(37989)}}));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayKey, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(k_InputImageFilePath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::float32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(37989)}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
 
     IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);

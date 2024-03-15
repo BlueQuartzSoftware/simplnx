@@ -34,7 +34,7 @@ public:
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
   static inline constexpr StringLiteral k_VertexGeometryPath_Key = "vertex_geometry_path";
-  static inline constexpr StringLiteral k_VertexDataGroupPath_Key = "vertex_data_group_path";
+  static inline constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";

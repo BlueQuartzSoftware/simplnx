@@ -30,10 +30,10 @@ public:
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
   static inline constexpr StringLiteral k_FeatureRectArrayPath_Key = "feature_rect_array_path";
   static inline constexpr StringLiteral k_NormalizeMomentInvariants_Key = "normalize_moment_invariants";
-  static inline constexpr StringLiteral k_Omega1ArrayPath_Key = "omega1_array_path";
-  static inline constexpr StringLiteral k_Omega2ArrayPath_Key = "omega2_array_path";
+  static inline constexpr StringLiteral k_Omega1ArrayName_Key = "omega1_array_name";
+  static inline constexpr StringLiteral k_Omega2ArrayName_Key = "omega2_array_name";
   static inline constexpr StringLiteral k_SaveCentralMoments_Key = "save_central_moments";
-  static inline constexpr StringLiteral k_CentralMomentsArrayPath_Key = "central_moments_array_path";
+  static inline constexpr StringLiteral k_CentralMomentsArrayName_Key = "central_moments_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

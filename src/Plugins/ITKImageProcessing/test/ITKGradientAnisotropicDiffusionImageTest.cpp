@@ -35,7 +35,7 @@ TEST_CASE("ITKImageProcessing::ITKGradientAnisotropicDiffusionImageFilter(defaul
   Arguments args;
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -72,7 +72,7 @@ TEST_CASE("ITKImageProcessing::ITKGradientAnisotropicDiffusionImageFilter(longer
   Arguments args;
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));
 

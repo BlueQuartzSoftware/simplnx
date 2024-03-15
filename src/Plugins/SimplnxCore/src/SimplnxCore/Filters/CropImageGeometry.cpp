@@ -204,8 +204,8 @@ Parameters CropImageGeometry::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature IDs", "DataPath to Cell Feature IDs array", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(
-      std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"CellFeatureData"})));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "DataPath to the feature Attribute Matrix",
+                                                                    DataPath({"CellFeatureData"})));
 
   params.insertSeparator({"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The DataPath to store the created Image Geometry", DataPath()));
@@ -218,7 +218,7 @@ Parameters CropImageGeometry::parameters() const
   params.linkParameters(k_UsePhysicalBounds_Key, k_MaxCoord_Key, true);
 
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
-  params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrix_Key, true);
+  params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrixPath_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
 
   return params;
@@ -238,7 +238,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
-  auto cellFeatureAmPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+  auto cellFeatureAmPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   auto pUsePhysicalBounds = filterArgs.value<bool>(k_UsePhysicalBounds_Key);
 
@@ -534,7 +534,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
-  auto cellFeatureAMPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+  auto cellFeatureAMPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
   auto removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
 
   uint64 xMin = s_HeaderCache[m_InstanceId].xMin;
@@ -719,7 +719,7 @@ Result<Arguments> CropImageGeometry::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometry_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrixPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

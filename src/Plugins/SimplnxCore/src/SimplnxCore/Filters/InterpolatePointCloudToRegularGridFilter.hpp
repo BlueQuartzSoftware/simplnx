@@ -29,15 +29,15 @@ public:
   static inline constexpr StringLiteral k_StoreKernelDistances_Key = "store_kernel_distances";
   static inline constexpr StringLiteral k_InterpolationTechnique_Key = "interpolation_technique";
   static inline constexpr StringLiteral k_KernelSize_Key = "kernel_size";
-  static inline constexpr StringLiteral k_GaussianSigmas_Key = "guassian_sigmas";
+  static inline constexpr StringLiteral k_GaussianSigmas_Key = "gaussian_sigmas";
   static inline constexpr StringLiteral k_VertexGeom_Key = "vertex_geom";
   static inline constexpr StringLiteral k_ImageGeom_Key = "image_geom";
-  static inline constexpr StringLiteral k_VoxelIndices_Key = "voxel_indices";
-  static inline constexpr StringLiteral k_Mask_Key = "mask";
+  static inline constexpr StringLiteral k_VoxelIndicesPath_Key = "voxel_indices_path";
+  static inline constexpr StringLiteral k_InputMaskPath_Key = "input_mask_path";
   static inline constexpr StringLiteral k_InterpolateArrays_Key = "interpolate_arrays";
   static inline constexpr StringLiteral k_CopyArrays_Key = "copy_arrays";
-  static inline constexpr StringLiteral k_InterpolatedGroup_Key = "interpolated_group";
-  static inline constexpr StringLiteral k_KernelDistancesArray_Key = "kernel_distances_array";
+  static inline constexpr StringLiteral k_InterpolatedGroupName_Key = "interpolated_group_name";
+  static inline constexpr StringLiteral k_KernelDistancesArrayName_Key = "kernel_distances_array_name";
   static inline constexpr uint64 k_Uniform = 0;
   static inline constexpr uint64 k_Gaussian = 1;
 

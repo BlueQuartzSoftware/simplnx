@@ -36,7 +36,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data";
   static inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
-  static inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_data_group";
+  static inline constexpr StringLiteral k_SelectedDataGroupPath_Key = "selected_data_group_path";
   static inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group";
 
   /**

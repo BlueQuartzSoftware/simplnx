@@ -115,7 +115,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
     // Create default Parameters for the filter.
     args.insertOrAssign(CalculateTriangleAreasFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
-    args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataPath_Key, std::make_any<std::string>(triangleAreasName));
+    args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataName_Key, std::make_any<std::string>(triangleAreasName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -165,7 +165,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     DataPath vertGeometryDataPath({vertexGeometryName});
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(vertGeometryDataPath));
     DataPath vertexDataGroupPath = vertGeometryDataPath.createChildPath(vertexNodeDataGroup);
-    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupPath_Key, std::make_any<std::string>(vertexNodeDataGroup));
+    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(vertexNodeDataGroup));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

@@ -65,7 +65,7 @@ Parameters FindLargestCrossSectionsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "The path to the cell feature attribute matrix", DataPath{}));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_LargestCrossSectionsArrayPath_Key, "Largest Cross Sections",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_LargestCrossSectionsArrayName_Key, "Largest Cross Sections",
                                                           "Area of largest cross-section for Feature perpendicular to the user specified direction", "LargestCrossSections"));
 
   return params;
@@ -85,7 +85,7 @@ IFilter::PreflightResult FindLargestCrossSectionsFilter::preflightImpl(const Dat
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pCellFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-  auto pLargestCrossSectionsArrayNameValue = filterArgs.value<std::string>(k_LargestCrossSectionsArrayPath_Key);
+  auto pLargestCrossSectionsArrayNameValue = filterArgs.value<std::string>(k_LargestCrossSectionsArrayName_Key);
 
   DataPath largestCrossSectionPath = pCellFeatureAttributeMatrixPath.createChildPath(pLargestCrossSectionsArrayNameValue);
 
@@ -118,7 +118,7 @@ Result<> FindLargestCrossSectionsFilter::executeImpl(DataStructure& dataStructur
   inputValues.Plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.LargestCrossSectionsArrayPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key).createChildPath(filterArgs.value<std::string>(k_LargestCrossSectionsArrayPath_Key));
+  inputValues.LargestCrossSectionsArrayPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key).createChildPath(filterArgs.value<std::string>(k_LargestCrossSectionsArrayName_Key));
 
   return FindLargestCrossSections(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -146,7 +146,7 @@ Result<Arguments> FindLargestCrossSectionsFilter::FromSIMPLJson(const nlohmann::
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_LargestCrossSectionsArrayPathKey,
                                                                                                                          k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_LargestCrossSectionsArrayPathKey, k_LargestCrossSectionsArrayPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_LargestCrossSectionsArrayPathKey, k_LargestCrossSectionsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

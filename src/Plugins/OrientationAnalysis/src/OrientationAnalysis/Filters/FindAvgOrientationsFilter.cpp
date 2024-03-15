@@ -75,12 +75,12 @@ Parameters FindAvgOrientationsFilter::parameters() const
                                                           DataPath({"CellEnsembleData", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "The path to the cell feature attribute matrix",
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "The path to the cell feature attribute matrix",
                                                                     DataPath({"CellFeatureData"})));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgQuatsArrayName_Key, "Average Quaternions",
                                                           "The name of the array specifying the average orientation of the Feature in quaternion representation", "AvgQuats"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgEulerAnglesArrayPath_Key, "Average Euler Angles",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgEulerAnglesArrayName_Key, "Average Euler Angles",
                                                           "The name of the array specifying the orientation of each Feature in Bunge convention (Z-X-Z)", "AvgEulerAngles"));
 
   return params;
@@ -100,9 +100,9 @@ IFilter::PreflightResult FindAvgOrientationsFilter::preflightImpl(const DataStru
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellQuatsArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
-  auto pAvgQuatsArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgQuatsArrayPath_Key));
-  auto pAvgEulerAnglesArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgEulerAnglesArrayPath_Key));
+  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  auto pAvgQuatsArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgQuatsArrayName_Key));
+  auto pAvgEulerAnglesArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgEulerAnglesArrayName_Key));
 
   // Validate the Crystal Structures array
   const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
@@ -174,9 +174,9 @@ Result<> FindAvgOrientationsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.cellQuatsArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
-  inputValues.avgQuatsArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgQuatsArrayPath_Key));
-  inputValues.avgEulerAnglesArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgEulerAnglesArrayPath_Key));
+  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  inputValues.avgQuatsArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgQuatsArrayName_Key));
+  inputValues.avgEulerAnglesArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgEulerAnglesArrayName_Key));
 
   // Let the Algorithm instance do the work
   return FindAvgOrientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -203,13 +203,13 @@ Result<Arguments> FindAvgOrientationsFilter::FromSIMPLJson(const nlohmann::json&
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureAttributeMatrix_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_QuatsArrayPathKey, k_CellQuatsArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_AvgEulerAnglesArrayPathKey, k_AvgEulerAnglesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_AvgEulerAnglesArrayPathKey, k_AvgEulerAnglesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

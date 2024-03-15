@@ -31,8 +31,8 @@ public:
   static inline constexpr StringLiteral k_NewImageGeometry_Key = "new_image_geometry";
   static inline constexpr StringLiteral k_ExistingImageGeometry_Key = "existing_image_geometry";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_MaskPath_Key = "mask";
-  static inline constexpr StringLiteral k_VoxelIndices_Key = "voxel_indices";
+  static inline constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
+  static inline constexpr StringLiteral k_VoxelIndicesName_Key = "voxel_indices_name";
   static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
 
   /**

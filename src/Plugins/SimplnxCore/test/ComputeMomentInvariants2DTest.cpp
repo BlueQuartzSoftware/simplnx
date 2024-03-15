@@ -211,10 +211,10 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_FeatureRectArrayPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_FeatureData, k_RectCoords})));
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_NormalizeMomentInvariants_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_FeatureData})));
-  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_Omega1ArrayPath_Key, std::make_any<std::string>(k_Omega1));
-  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_Omega2ArrayPath_Key, std::make_any<std::string>(k_Omega2));
+  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_Omega1ArrayName_Key, std::make_any<std::string>(k_Omega1));
+  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_Omega2ArrayName_Key, std::make_any<std::string>(k_Omega2));
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_SaveCentralMoments_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayPath_Key, std::make_any<std::string>(k_CentralMoments));
+  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayName_Key, std::make_any<std::string>(k_CentralMoments));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -247,10 +247,10 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Executio
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_FeatureRectArrayPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_FeatureData, k_RectCoords})));
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_NormalizeMomentInvariants_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_FeatureData})));
-  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_Omega1ArrayPath_Key, std::make_any<std::string>(k_Omega1));
-  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_Omega2ArrayPath_Key, std::make_any<std::string>(k_Omega2));
+  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_Omega1ArrayName_Key, std::make_any<std::string>(k_Omega1));
+  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_Omega2ArrayName_Key, std::make_any<std::string>(k_Omega2));
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_SaveCentralMoments_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayPath_Key, std::make_any<std::string>(k_CentralMoments));
+  args.insertOrAssign(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayName_Key, std::make_any<std::string>(k_CentralMoments));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

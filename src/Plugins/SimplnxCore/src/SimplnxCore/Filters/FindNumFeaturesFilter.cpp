@@ -60,7 +60,7 @@ Parameters FindNumFeaturesFilter::parameters() const
                                                               DataPath({"DataContainer", "EnsembleData"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
 
   params.insertSeparator(Parameters::Separator{"Created Objects: Ensemble Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NumFeaturesArrayPath_Key, "Number of Features", "The number of Features that belong to each Ensemble", "Number of Features"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NumFeaturesArrayName_Key, "Number of Features", "The number of Features that belong to each Ensemble", "Number of Features"));
 
   return params;
 }
@@ -77,7 +77,7 @@ IFilter::PreflightResult FindNumFeaturesFilter::preflightImpl(const DataStructur
 {
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);
-  auto pNumFeaturesArrayPathValue = pEnsembleDataPathValue.createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayPath_Key));
+  auto pNumFeaturesArrayPathValue = pEnsembleDataPathValue.createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key));
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -101,7 +101,7 @@ Result<> FindNumFeaturesFilter::executeImpl(DataStructure& dataStructure, const 
 {
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);
-  auto pNumFeaturesArrayPathValue = pEnsembleDataPathValue.createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayPath_Key));
+  auto pNumFeaturesArrayPathValue = pEnsembleDataPathValue.createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key));
 
   const auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
   auto& numFeaturesArrayRef = dataStructure.getDataRefAs<Int32Array>(pNumFeaturesArrayPathValue);
@@ -131,7 +131,7 @@ Result<Arguments> FindNumFeaturesFilter::FromSIMPLJson(const nlohmann::json& jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_EnsembleAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_NumFeaturesArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_NumFeaturesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

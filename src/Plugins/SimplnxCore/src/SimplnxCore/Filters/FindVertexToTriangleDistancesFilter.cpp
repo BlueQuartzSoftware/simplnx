@@ -68,8 +68,8 @@ Parameters FindVertexToTriangleDistancesFilter::parameters() const
       std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "The triangle geometry's normals array", DataPath{}, std::set<DataType>{DataType::float64}));
 
   params.insertSeparator(Parameters::Separator{"Created Output Arrays"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_DistancesArrayPath_Key, "Distances Array", "The array to store distance between vertex and triangle", ""));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_ClosestTriangleIdArrayPath_Key, "Closest Triangle Ids Array", "The array to store the ID of the closest triangle", ""));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_DistancesArrayName_Key, "Distances Array", "The array to store distance between vertex and triangle", ""));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ClosestTriangleIdArrayName_Key, "Closest Triangle Ids Array", "The array to store the ID of the closest triangle", ""));
 
   return params;
 }
@@ -87,8 +87,8 @@ IFilter::PreflightResult FindVertexToTriangleDistancesFilter::preflightImpl(cons
   auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_VertexDataContainer_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleDataContainer_Key);
   auto pTriangleNormalsArrayDataPath = filterArgs.value<DataPath>(k_TriangleNormalsArrayPath_Key);
-  auto pDistancesDataName = filterArgs.value<std::string>(k_DistancesArrayPath_Key);
-  auto pClosestTriangleIdDataName = filterArgs.value<std::string>(k_ClosestTriangleIdArrayPath_Key);
+  auto pDistancesDataName = filterArgs.value<std::string>(k_DistancesArrayName_Key);
+  auto pClosestTriangleIdDataName = filterArgs.value<std::string>(k_ClosestTriangleIdArrayName_Key);
 
   PreflightResult preflightResult;
 
@@ -143,8 +143,8 @@ Result<> FindVertexToTriangleDistancesFilter::executeImpl(DataStructure& dataStr
 
   auto vertexGeom = dataStructure.getDataRefAs<VertexGeom>(inputValues.VertexDataContainer);
   const DataPath vertexDataPath = inputValues.VertexDataContainer.createChildPath(vertexGeom.getVertexAttributeMatrix()->getName());
-  inputValues.DistancesArrayPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_DistancesArrayPath_Key));
-  inputValues.ClosestTriangleIdArrayPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_ClosestTriangleIdArrayPath_Key));
+  inputValues.DistancesArrayPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_DistancesArrayName_Key));
+  inputValues.ClosestTriangleIdArrayPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_ClosestTriangleIdArrayName_Key));
 
   inputValues.TriBoundsDataPath = DataPath({::k_TriangleBounds});
 
@@ -172,8 +172,8 @@ Result<Arguments> FindVertexToTriangleDistancesFilter::FromSIMPLJson(const nlohm
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_VertexDataContainerKey, k_VertexDataContainer_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerKey, k_TriangleDataContainer_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleNormalsArrayPathKey, k_TriangleNormalsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_DistancesArrayPathKey, k_DistancesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_ClosestTriangleIdArrayPathKey, k_ClosestTriangleIdArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_DistancesArrayPathKey, k_DistancesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_ClosestTriangleIdArrayPathKey, k_ClosestTriangleIdArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

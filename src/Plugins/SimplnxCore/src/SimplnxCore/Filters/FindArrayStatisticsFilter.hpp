@@ -47,7 +47,7 @@ public:
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_FeatureHasDataArrayName_Key = "feature_has_data_array_name";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_DestinationAttributeMatrix_Key = "destination_attribute_matrix";
+  static inline constexpr StringLiteral k_DestinationAttributeMatrixPath_Key = "destination_attribute_matrix_path";
   static inline constexpr StringLiteral k_HistogramArrayName_Key = "histogram_array_name";
   static inline constexpr StringLiteral k_MostPopulatedBinArrayName_Key = "most_populated_bin_array_name";
   static inline constexpr StringLiteral k_ModalBinArrayName_Key = "modal_bin_array_name";
@@ -60,7 +60,7 @@ public:
   static inline constexpr StringLiteral k_StdDeviationArrayName_Key = "std_deviation_array_name";
   static inline constexpr StringLiteral k_SummationArrayName_Key = "summation_array_name";
   static inline constexpr StringLiteral k_StandardizedArrayName_Key = "standardized_array_name";
-  static inline constexpr StringLiteral k_NumUniqueValues_Key = "number_unique_values";
+  static inline constexpr StringLiteral k_NumUniqueValuesName_Key = "number_unique_values_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

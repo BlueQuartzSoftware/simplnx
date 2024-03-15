@@ -33,13 +33,13 @@ public:
   static inline constexpr StringLiteral k_FindStandardDeviation_Key = "find_standard_deviation";
   static inline constexpr StringLiteral k_FindSummation_Key = "find_summation";
   static inline constexpr StringLiteral k_InputArray_Key = "input_array";
-  static inline constexpr StringLiteral k_Length_Key = "length";
-  static inline constexpr StringLiteral k_Minimum_Key = "minimum";
-  static inline constexpr StringLiteral k_Maximum_Key = "maximum";
-  static inline constexpr StringLiteral k_Mean_Key = "mean";
-  static inline constexpr StringLiteral k_Median_Key = "median";
-  static inline constexpr StringLiteral k_StandardDeviation_Key = "standard_deviation";
-  static inline constexpr StringLiteral k_Summation_Key = "summation";
+  static inline constexpr StringLiteral k_LengthName_Key = "length_array_name";
+  static inline constexpr StringLiteral k_MinimumName_Key = "minimum_array_name";
+  static inline constexpr StringLiteral k_MaximumName_Key = "maximum_array_name";
+  static inline constexpr StringLiteral k_MeanName_Key = "mean_array_name";
+  static inline constexpr StringLiteral k_MedianName_Key = "median_array_name";
+  static inline constexpr StringLiteral k_StandardDeviationName_Key = "standard_deviation_array_name";
+  static inline constexpr StringLiteral k_SummationName_Key = "summation_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

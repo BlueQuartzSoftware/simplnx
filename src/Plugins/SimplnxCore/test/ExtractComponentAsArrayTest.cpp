@@ -40,7 +40,7 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: Valid filter execution", 
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_RemoveComponentsFromArray_Key, std::make_any<bool>(true));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(removeCompIndex));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<std::string>(k_ExtractedComponents));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayName_Key, std::make_any<std::string>(k_ExtractedComponents));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(alteredDs, args);
@@ -110,7 +110,7 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: InValid filter execution"
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_RemoveComponentsFromArray_Key, std::make_any<bool>(true));
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(5)); // Invalid
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<std::string>(k_ExtractedComponents));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayName_Key, std::make_any<std::string>(k_ExtractedComponents));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

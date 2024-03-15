@@ -25,25 +25,25 @@ public:
   FeatureFaceCurvatureFilter& operator=(FeatureFaceCurvatureFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeom_Key = "triangle_geom";
+  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
   static inline constexpr StringLiteral k_NeighborhoodRing_Key = "neighborhood_ring";
   static inline constexpr StringLiteral k_ComputePrincipalDirection_Key = "compute_principal_direction";
   static inline constexpr StringLiteral k_ComputeGaussianCurvature_Key = "compute_gaussian_curvature";
-  static inline constexpr StringLiteral k_ComputeMeanCurvature_Key = "compute_mean_curvature";
+  static inline constexpr StringLiteral k_ComputeMeanCurvaturePath_Key = "compute_mean_curvature_path";
   static inline constexpr StringLiteral k_ComputeWeingartenMatrix_Key = "compute_weingarten_matrix";
   static inline constexpr StringLiteral k_UseFaceNormals_Key = "use_normals";
-  static inline constexpr StringLiteral k_FaceAttribMatrix_Key = "face_attribute_matrix";
-  static inline constexpr StringLiteral k_FaceLabels_Key = "face_labels";
-  static inline constexpr StringLiteral k_FeatureFaceIds_Key = "feature_face_ids";
-  static inline constexpr StringLiteral k_FaceNormals_Key = "face_normals";
-  static inline constexpr StringLiteral k_FaceCentroids_Key = "face_centroids";
-  static inline constexpr StringLiteral k_PrincipalCurvature1_Key = "principal_curvature_1";
-  static inline constexpr StringLiteral k_PrincipalCurvature2_Key = "principal_curvature_2";
-  static inline constexpr StringLiteral k_PrincipalDirection1_Key = "principal_direction_1";
-  static inline constexpr StringLiteral k_PrincipalDirection2_Key = "principal_direction_2";
-  static inline constexpr StringLiteral k_GaussianCurvature_Key = "gaussian_curvature";
-  static inline constexpr StringLiteral k_MeanCurvature_Key = "mean_curvature";
-  static inline constexpr StringLiteral k_WeingartenMatrix_Key = "weingarten_matrix";
+  static inline constexpr StringLiteral k_FaceAttribMatrixPath_Key = "face_attribute_matrix_path";
+  static inline constexpr StringLiteral k_FaceLabelsPath_Key = "face_labels_path";
+  static inline constexpr StringLiteral k_FeatureFaceIdsPath_Key = "feature_face_ids_path";
+  static inline constexpr StringLiteral k_FaceNormalsPath_Key = "face_normals_path";
+  static inline constexpr StringLiteral k_FaceCentroidsPath_Key = "face_centroids_path";
+  static inline constexpr StringLiteral k_PrincipalCurvature1Path_Key = "principal_curvature_1_path";
+  static inline constexpr StringLiteral k_PrincipalCurvature2Path_Key = "principal_curvature_2_path";
+  static inline constexpr StringLiteral k_PrincipalDirection1Path_Key = "principal_direction_1_path";
+  static inline constexpr StringLiteral k_PrincipalDirection2Path_Key = "principal_direction_2_path";
+  static inline constexpr StringLiteral k_GaussianCurvaturePath_Key = "gaussian_curvature_path";
+  static inline constexpr StringLiteral k_MeanCurvaturePath_Key = "mean_curvature_path";
+  static inline constexpr StringLiteral k_WeingartenMatrixPath_Key = "weingarten_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

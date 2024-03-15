@@ -166,7 +166,7 @@ Parameters GenerateFZQuaternions::parameters() const
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Element Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FZQuatsArrayPath_Key, "Created FZ Quaternions",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FZQuatsArrayName_Key, "Created FZ Quaternions",
                                                           "The name of the array containing the Quaternion that represents an orientation within the fundamental zone for each Element", ""));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
@@ -189,7 +189,7 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pFZQuatsArrayPathValue = pQuatsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_FZQuatsArrayPath_Key));
+  auto pFZQuatsArrayPathValue = pQuatsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_FZQuatsArrayName_Key));
 
   const Int32Array& phaseData = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
 
@@ -256,7 +256,7 @@ Result<> GenerateFZQuaternions::executeImpl(DataStructure& dataStructure, const 
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pFZQuatsArrayPathValue = pQuatsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_FZQuatsArrayPath_Key));
+  auto pFZQuatsArrayPathValue = pQuatsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_FZQuatsArrayName_Key));
 
   Int32Array& phaseArray = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
   Float32Array& quatArray = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
@@ -342,7 +342,7 @@ Result<Arguments> GenerateFZQuaternions::FromSIMPLJson(const nlohmann::json& jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_FZQuatsArrayPathKey, k_FZQuatsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_FZQuatsArrayPathKey, k_FZQuatsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

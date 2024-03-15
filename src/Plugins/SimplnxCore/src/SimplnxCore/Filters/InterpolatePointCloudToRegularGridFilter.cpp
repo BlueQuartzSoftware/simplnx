@@ -193,9 +193,9 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "DataPath to voxel indices", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndicesPath_Key, "Voxel Indices", "DataPath to voxel indices", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_Mask_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InterpolateArrays_Key, "Attribute Arrays to Interpolate", "DataPaths to interpolate", std::vector<DataPath>(),
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
@@ -205,11 +205,11 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_InterpolatedGroup_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", "InterpolatedData"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_KernelDistancesArray_Key, "Kernel Distances Group", "DataPath to created DataGroup for kernel distances data", "KernelDistances"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_InterpolatedGroupName_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", "InterpolatedData"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_KernelDistancesArrayName_Key, "Kernel Distances Group", "DataPath to created DataGroup for kernel distances data", "KernelDistances"));
 
-  params.linkParameters(k_UseMask_Key, k_Mask_Key, std::make_any<bool>(true));
-  params.linkParameters(k_StoreKernelDistances_Key, k_KernelDistancesArray_Key, std::make_any<bool>(true));
+  params.linkParameters(k_UseMask_Key, k_InputMaskPath_Key, std::make_any<bool>(true));
+  params.linkParameters(k_StoreKernelDistances_Key, k_KernelDistancesArrayName_Key, std::make_any<bool>(true));
   params.linkParameters(k_InterpolationTechnique_Key, k_GaussianSigmas_Key, std::make_any<uint64>(k_Gaussian));
 
   return params;
@@ -230,8 +230,8 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   auto interpolationTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
-  auto interpolatedGroupName = args.value<std::string>(k_InterpolatedGroup_Key);
-  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
+  auto interpolatedGroupName = args.value<std::string>(k_InterpolatedGroupName_Key);
+  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndicesPath_Key);
   auto interpolatedDataPaths = args.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
   auto copyDataPaths = args.value<std::vector<DataPath>>(k_CopyArrays_Key);
   auto kernelSize = args.value<std::vector<float32>>(k_KernelSize_Key);
@@ -316,7 +316,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   // validate the input arrays have matching tuples (i.e. it should all come from the input vertex geometry's vertex data)
   if(useMask)
   {
-    dataArrays.push_back(args.value<DataPath>(k_Mask_Key));
+    dataArrays.push_back(args.value<DataPath>(k_InputMaskPath_Key));
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
@@ -328,7 +328,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   // Create the neighbor list array for storing the kernel distances
   if(storeKernelDistances)
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, numTuples, interpolatedGroupPath.createChildPath(args.value<std::string>(k_KernelDistancesArray_Key)));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, numTuples, interpolatedGroupPath.createChildPath(args.value<std::string>(k_KernelDistancesArrayName_Key)));
     actions.appendAction(std::move(action));
   }
 
@@ -344,10 +344,10 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   auto interpolationTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
-  auto interpolatedGroupName = args.value<std::string>(k_InterpolatedGroup_Key);
+  auto interpolatedGroupName = args.value<std::string>(k_InterpolatedGroupName_Key);
   auto interpolatedDataPaths = args.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
   auto copyDataPaths = args.value<std::vector<DataPath>>(k_CopyArrays_Key);
-  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
+  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndicesPath_Key);
   auto kernelSize = args.value<std::vector<float32>>(k_KernelSize_Key);
 
   const DataPath interpolatedGroupPath = imageGeomPath.createChildPath(interpolatedGroupName);
@@ -370,7 +370,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   BoolArray::store_type* mask = nullptr;
   if(useMask)
   {
-    mask = data.getDataAs<BoolArray>(args.value<DataPath>(k_Mask_Key))->getDataStore();
+    mask = data.getDataAs<BoolArray>(args.value<DataPath>(k_InputMaskPath_Key))->getDataStore();
   }
 
   auto& voxelIndices = data.getDataRefAs<UInt64Array>(voxelIndicesPath);
@@ -486,7 +486,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
 
     if(storeKernelDistances)
     {
-      const DataPath kernelDistPath = interpolatedGroupPath.createChildPath(args.value<std::string>(k_KernelDistancesArray_Key));
+      const DataPath kernelDistPath = interpolatedGroupPath.createChildPath(args.value<std::string>(k_KernelDistancesArrayName_Key));
       InitializeNeighborList(data, kernelDistPath);
       auto* kernelDistances = data.getDataAs<Float32NeighborList>(kernelDistPath);
       mapKernelDistances(kernelDistances, kernelValDistances, kernel, kernelNumVoxels, dims.data(), x, y, z);
@@ -537,13 +537,15 @@ Result<Arguments> InterpolatePointCloudToRegularGridFilter::FromSIMPLJson(const 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_KernelSizeKey, k_KernelSize_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SigmasKey, k_GaussianSigmas_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, "@SIMPLNX_PARAMETER_KEY@"));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_InterpolatedDataContainerNameKey, k_InterpolatedGroup_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_VoxelIndicesArrayPathKey, k_VoxelIndices_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_Mask_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_InterpolatedDataContainerNameKey, k_InterpolatedGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_VoxelIndicesArrayPathKey, k_VoxelIndicesPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_InputMaskPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ArraysToInterpolateKey, k_InterpolateArrays_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ArraysToCopyKey, k_CopyArrays_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_InterpolatedAttributeMatrixNameKey, k_InterpolatedGroup_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_KernelDistancesArrayNameKey, k_KernelDistancesArray_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_InterpolatedAttributeMatrixNameKey, k_InterpolatedGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_KernelDistancesArrayNameKey, k_KernelDistancesArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InterpolatedSuffixKey, "@SIMPLNX_PARAMETER_KEY@"));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_CopySuffixKey, "@SIMPLNX_PARAMETER_KEY@"));
 

@@ -35,7 +35,7 @@ TEST_CASE("ITKImageProcessing::ITKApproximateSignedDistanceMapImageFilter(defaul
   Arguments args;
   args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -71,7 +71,7 @@ TEST_CASE("ITKImageProcessing::ITKApproximateSignedDistanceMapImageFilter(modifi
   Arguments args;
   args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_InsideValue_Key, std::make_any<Float64Parameter::ValueType>(100));
   args.insertOrAssign(ITKApproximateSignedDistanceMapImage::k_OutsideValue_Key, std::make_any<Float64Parameter::ValueType>(0));
 
