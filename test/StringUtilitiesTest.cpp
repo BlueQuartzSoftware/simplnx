@@ -3,7 +3,7 @@
 
 #include <catch2/catch.hpp>
 
-#include string
+#include <string>
 
 using namespace nx::core;
 
@@ -17,14 +17,14 @@ TEST_CASE("Utility Function Test: split(str, char)")
   REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
 
   // Case 2
-  inputStr = "|This|Is|A|Baseline|Test|"
+  inputStr = "|This|Is|A|Baseline|Test|";
 
   result = StringUtilities::split(inputStr, '|');
 
   REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
 
   // Case 3
-  inputStr = "|This|Is||A||Baseline|Test||"
+  inputStr = "|This|Is||A||Baseline|Test||";
 
   result = StringUtilities::split(inputStr, '|');
 
@@ -33,45 +33,46 @@ TEST_CASE("Utility Function Test: split(str, char)")
 
 TEST_CASE("Utility Function Test: split(str, char, bool)")
 {
+  std::array<char, 1> k_Delimiter = {'|'};
   // Case 1
   std::string inputStr = "This|Is|A|Baseline|Test";
 
-  std::vector<std::string> result = StringUtilities::split(inputStr, '|', false);
+  std::vector<std::string> result = StringUtilities::split(inputStr, k_Delimiter, false);
 
   REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
 
   // Case 2
-  inputStr = "|This|Is|A|Baseline|Test|"
+  inputStr = "|This|Is|A|Baseline|Test|";
 
-  result = StringUtilities::split(inputStr, '|', false);
+  result = StringUtilities::split(inputStr, k_Delimiter, false);
 
   REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
 
   // Case 3
-  inputStr = "|This|Is||A||Baseline|Test||"
+  inputStr = "|This|Is||A||Baseline|Test||";
 
-  result = StringUtilities::split(inputStr, '|', false);
+  result = StringUtilities::split(inputStr, k_Delimiter, false);
 
   REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
 
   // Case 4
-  std::string inputStr = "This|Is|A|Baseline|Test";
+  inputStr = "This|Is|A|Baseline|Test";
 
-  std::vector<std::string> result = StringUtilities::split(inputStr, '|', true);
+  result = StringUtilities::split(inputStr, k_Delimiter, true);
 
   REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
 
   // Case 5
-  inputStr = "|This|Is|A|Baseline|Test|"
+  inputStr = "|This|Is|A|Baseline|Test|";
 
-  result = StringUtilities::split(inputStr, '|', true);
+  result = StringUtilities::split(inputStr, k_Delimiter, true);
 
   REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test",""});
 
   // Case 6
-  inputStr = "|This|Is||A||Baseline|Test||"
+  inputStr = "|This|Is||A||Baseline|Test||";
 
-  result = StringUtilities::split(inputStr, '|', true);
+  result = StringUtilities::split(inputStr, k_Delimiter, true);
 
   REQUIRE(result == std::vector<std::string>{"This","Is","","A","","Baseline","Test","",""});
 }
