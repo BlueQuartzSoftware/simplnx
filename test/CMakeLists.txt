@@ -37,6 +37,7 @@ add_executable(simplnx_test
   ParametersTest.cpp
   PipelineSaveTest.cpp
   UuidTest.cpp
+  StringUtilitiesTest.cpp
 )
 
 target_link_libraries(simplnx_test
