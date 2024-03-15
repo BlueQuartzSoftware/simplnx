@@ -45,7 +45,7 @@ DataPath ConvertColorToGrayScale(DataStructure& dataStructure, const DataPath& i
   constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm";
   constexpr StringLiteral k_ColorWeights_Key = "color_weights";
   constexpr StringLiteral k_ColorChannel_Key = "color_channel";
-  constexpr StringLiteral k_InputDataArrayVector_Key = "input_data_array_vector";
+  constexpr StringLiteral k_InputDataArrayVector_Key = "input_data_array_paths";
   constexpr StringLiteral k_OutputArrayPrefix_Key = "output_array_prefix";
 
   auto filter = s_FilterList->createFilter(k_ColorToGrayScaleFilterHandle);
