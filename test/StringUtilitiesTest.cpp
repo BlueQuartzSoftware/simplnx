@@ -15,6 +15,7 @@ TEST_CASE("Utility Function Test: split(str, char)")
   std::vector<std::string> result = StringUtilities::split(inputStr, '|');
 
   REQUIRE(result.size() == 5);
+  // Expected: {"This","Is","A","Baseline","Test"}
 
   // Case 2
   inputStr = "|This|Is|A|Baseline|Test|"
@@ -22,6 +23,7 @@ TEST_CASE("Utility Function Test: split(str, char)")
   result = StringUtilities::split(inputStr, '|');
 
   REQUIRE(result.size() == 5);
+  // Expected: {"This","Is","A","Baseline","Test"}
 
   // Case 3
   inputStr = "|This|Is||A||Baseline|Test||"
@@ -29,6 +31,7 @@ TEST_CASE("Utility Function Test: split(str, char)")
   result = StringUtilities::split(inputStr, '|');
 
   REQUIRE(result.size() == 5);
+  // Expected: {"This","Is","A","Baseline","Test"}
 }
 
 TEST_CASE("Utility Function Test: split(str, char, bool)")
@@ -39,6 +42,7 @@ TEST_CASE("Utility Function Test: split(str, char, bool)")
   std::vector<std::string> result = StringUtilities::split(inputStr, '|', false);
 
   REQUIRE(result.size() == 5);
+  // Expected: {"This","Is","A","Baseline","Test"}
 
   // Case 2
   inputStr = "|This|Is|A|Baseline|Test|"
@@ -46,6 +50,7 @@ TEST_CASE("Utility Function Test: split(str, char, bool)")
   result = StringUtilities::split(inputStr, '|', false);
 
   REQUIRE(result.size() == 5);
+  // Expected: {"This","Is","A","Baseline","Test"}
 
   // Case 3
   inputStr = "|This|Is||A||Baseline|Test||"
@@ -53,6 +58,7 @@ TEST_CASE("Utility Function Test: split(str, char, bool)")
   result = StringUtilities::split(inputStr, '|', false);
 
   REQUIRE(result.size() == 5);
+  // Expected: {"This","Is","A","Baseline","Test"}
 
   // Case 4
   std::string inputStr = "This|Is|A|Baseline|Test";
@@ -60,6 +66,7 @@ TEST_CASE("Utility Function Test: split(str, char, bool)")
   std::vector<std::string> result = StringUtilities::split(inputStr, '|', true);
 
   REQUIRE(result.size() == 5);
+  // Expected: {"This","Is","A","Baseline","Test"}
 
   // Case 5
   inputStr = "|This|Is|A|Baseline|Test|"
@@ -67,11 +74,13 @@ TEST_CASE("Utility Function Test: split(str, char, bool)")
   result = StringUtilities::split(inputStr, '|', true);
 
   REQUIRE(result.size() == 6);
+  // Expected: {"This","Is","A","Baseline","Test",""}
 
   // Case 6
   inputStr = "|This|Is||A||Baseline|Test||"
 
   result = StringUtilities::split(inputStr, '|', true);
 
-  REQUIRE(result.size() == 8);
+  REQUIRE(result.size() == 9);
+  // Expected: {"This","Is","","A","","Baseline","Test","",""}
 }
