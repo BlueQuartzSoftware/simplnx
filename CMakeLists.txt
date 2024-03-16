@@ -512,7 +512,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/KUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
-    ${SIMPLNX_SOURCE_DIR}/Utilities/VtkUtilities.hpp
+    ${SIMPLNX_SOURCE_DIR}/Utilities/VtkLegacyFileReader.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
