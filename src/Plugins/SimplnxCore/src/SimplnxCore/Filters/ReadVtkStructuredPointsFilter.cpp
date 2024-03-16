@@ -9,6 +9,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Utilities/VtkLegacyFileReader.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -54,8 +55,8 @@ Parameters ReadVtkStructuredPointsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input VTK File", "The path to the input file", fs::path("DefaultInputFileName"), FileSystemPathParameter::ExtensionsType{"*.vtk"},
-                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input VTK File", "The path to the input file", fs::path("DefaultInputFileName"),
+                                                          FileSystemPathParameter::ExtensionsType{".vtk"}, FileSystemPathParameter::PathType::InputFile));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadPointData_Key, "Read Point Data", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadCellData_Key, "Read Cell Data", "", false));
 
@@ -94,12 +95,12 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   auto pVertexAttributeMatrixNameValue = filterArgs.value<DataPath>(k_VertexAttributeMatrixName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
 
-
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-
-
+  VtkLegacyFileReader legacyReader(pInputFileValue);
+  legacyReader.setPreflight(true);
+  int32 err = legacyReader.readFile();
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
