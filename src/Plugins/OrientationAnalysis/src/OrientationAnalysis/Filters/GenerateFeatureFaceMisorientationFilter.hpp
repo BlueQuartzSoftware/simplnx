@@ -8,21 +8,21 @@
 namespace nx::core
 {
 /**
- * @class GenerateFaceMisorientationColoringFilter
+ * @class GenerateFeatureFaceMisorientationFilter
  * @brief This filter will generate a 3 component vector for each Triangle in a Triangle Geometry that is the axis-angle of the misorientation associated with the Features that lie on either side of
  * the Triangle. The axis is normalized, so if the magnitude of the vector is viewed, it will be the misorientation angle in degrees.
  */
-class ORIENTATIONANALYSIS_EXPORT GenerateFaceMisorientationColoringFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT GenerateFeatureFaceMisorientationFilter : public IFilter
 {
 public:
-  GenerateFaceMisorientationColoringFilter() = default;
-  ~GenerateFaceMisorientationColoringFilter() noexcept override = default;
+  GenerateFeatureFaceMisorientationFilter() = default;
+  ~GenerateFeatureFaceMisorientationFilter() noexcept override = default;
 
-  GenerateFaceMisorientationColoringFilter(const GenerateFaceMisorientationColoringFilter&) = delete;
-  GenerateFaceMisorientationColoringFilter(GenerateFaceMisorientationColoringFilter&&) noexcept = delete;
+  GenerateFeatureFaceMisorientationFilter(const GenerateFeatureFaceMisorientationFilter&) = delete;
+  GenerateFeatureFaceMisorientationFilter(GenerateFeatureFaceMisorientationFilter&&) noexcept = delete;
 
-  GenerateFaceMisorientationColoringFilter& operator=(const GenerateFaceMisorientationColoringFilter&) = delete;
-  GenerateFaceMisorientationColoringFilter& operator=(GenerateFaceMisorientationColoringFilter&&) noexcept = delete;
+  GenerateFeatureFaceMisorientationFilter& operator=(const GenerateFeatureFaceMisorientationFilter&) = delete;
+  GenerateFeatureFaceMisorientationFilter& operator=(GenerateFeatureFaceMisorientationFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
@@ -104,5 +104,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, GenerateFaceMisorientationColoringFilter, "f3473af9-db77-43db-bd25-60df7230ea73");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, GenerateFeatureFaceMisorientationFilter, "f3473af9-db77-43db-bd25-60df7230ea73");
 /* LEGACY UUID FOR THIS FILTER 7cd30864-7bcf-5c10-aea7-d107373e2d40 */

@@ -51,7 +51,7 @@
 #include "OrientationAnalysis/Filters/FindSchmidsFilter.hpp"
 #include "OrientationAnalysis/Filters/FindShapesFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateFaceIPFColoringFilter.hpp"
-#include "OrientationAnalysis/Filters/GenerateFaceMisorientationColoringFilter.hpp"
+#include "OrientationAnalysis/Filters/GenerateFeatureFaceMisorientationFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateFZQuaternions.hpp"
 #include "OrientationAnalysis/Filters/GenerateGBCDPoleFigureFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
@@ -100,7 +100,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("6427cd5e-0ad2-5a24-8847-29f8e0720f4f").value(), {nx::core::FilterTraits<NeighborOrientationCorrelationFilter>::uuid, &NeighborOrientationCorrelationFilter::FromSIMPLJson}}, // NeighborOrientationCorrelation
     {nx::core::Uuid::FromString("6e97ff50-48bf-5403-a049-1d271bd72df9").value(), {nx::core::FilterTraits<FindGBCDFilter>::uuid, &FindGBCDFilter::FromSIMPLJson}}, // FindGBCDFilter
     {nx::core::Uuid::FromString("7861c691-b821-537b-bd25-dc195578e0ea").value(), {nx::core::FilterTraits<EBSDSegmentFeaturesFilter>::uuid, &EBSDSegmentFeaturesFilter::FromSIMPLJson}}, // EBSDSegmentFeatures
-    {nx::core::Uuid::FromString("7cd30864-7bcf-5c10-aea7-d107373e2d40").value(), {nx::core::FilterTraits<GenerateFaceMisorientationColoringFilter>::uuid, &GenerateFaceMisorientationColoringFilter::FromSIMPLJson}}, // GenerateFaceMisorientationColoring
+    {nx::core::Uuid::FromString("7cd30864-7bcf-5c10-aea7-d107373e2d40").value(), {nx::core::FilterTraits<GenerateFeatureFaceMisorientationFilter>::uuid, &GenerateFeatureFaceMisorientationFilter::FromSIMPLJson}}, // GenerateFaceMisorientationColoring
     {nx::core::Uuid::FromString("85900eba-3da9-5985-ac71-1d9d290a5d31").value(), {nx::core::FilterTraits<GenerateGBCDPoleFigureFilter>::uuid, &GenerateGBCDPoleFigureFilter::FromSIMPLJson}}, // VisualizeGBCDPoleFigureFilter
     {nx::core::Uuid::FromString("88d332c1-cf6c-52d3-a38d-22f6eae19fa6").value(), {nx::core::FilterTraits<FindKernelAvgMisorientationsFilter>::uuid, &FindKernelAvgMisorientationsFilter::FromSIMPLJson}}, // FindKernelAvgMisorientations
     {nx::core::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), {nx::core::FilterTraits<ReadH5EspritDataFilter>::uuid, &ReadH5EspritDataFilter::FromSIMPLJson}}, // ImportH5EspritData

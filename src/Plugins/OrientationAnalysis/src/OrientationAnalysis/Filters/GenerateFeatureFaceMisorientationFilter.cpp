@@ -1,6 +1,6 @@
-#include "GenerateFaceMisorientationColoringFilter.hpp"
+#include "GenerateFeatureFaceMisorientationFilter.hpp"
 
-#include "OrientationAnalysis/Filters/Algorithms/GenerateFaceMisorientationColoring.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/GenerateFeatureFaceMisorientation.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -16,37 +16,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string GenerateFaceMisorientationColoringFilter::name() const
+std::string GenerateFeatureFaceMisorientationFilter::name() const
 {
-  return FilterTraits<GenerateFaceMisorientationColoringFilter>::name.str();
+  return FilterTraits<GenerateFeatureFaceMisorientationFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateFaceMisorientationColoringFilter::className() const
+std::string GenerateFeatureFaceMisorientationFilter::className() const
 {
-  return FilterTraits<GenerateFaceMisorientationColoringFilter>::className;
+  return FilterTraits<GenerateFeatureFaceMisorientationFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid GenerateFaceMisorientationColoringFilter::uuid() const
+Uuid GenerateFeatureFaceMisorientationFilter::uuid() const
 {
-  return FilterTraits<GenerateFaceMisorientationColoringFilter>::uuid;
+  return FilterTraits<GenerateFeatureFaceMisorientationFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateFaceMisorientationColoringFilter::humanName() const
+std::string GenerateFeatureFaceMisorientationFilter::humanName() const
 {
-  return "Generate Misorientation Colors (Face)";
+  return "Generate Feature Face Misorientation (Face)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> GenerateFaceMisorientationColoringFilter::defaultTags() const
+std::vector<std::string> GenerateFeatureFaceMisorientationFilter::defaultTags() const
 {
   return {className(), "Processing", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------
-Parameters GenerateFaceMisorientationColoringFilter::parameters() const
+Parameters GenerateFeatureFaceMisorientationFilter::parameters() const
 {
   Parameters params;
 
@@ -70,14 +70,14 @@ Parameters GenerateFaceMisorientationColoringFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer GenerateFaceMisorientationColoringFilter::clone() const
+IFilter::UniquePointer GenerateFeatureFaceMisorientationFilter::clone() const
 {
-  return std::make_unique<GenerateFaceMisorientationColoringFilter>();
+  return std::make_unique<GenerateFeatureFaceMisorientationFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateFaceMisorientationColoringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                 const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult GenerateFeatureFaceMisorientationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                                const std::atomic_bool& shouldCancel) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
@@ -111,10 +111,10 @@ IFilter::PreflightResult GenerateFaceMisorientationColoringFilter::preflightImpl
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateFaceMisorientationColoringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel) const
+Result<> GenerateFeatureFaceMisorientationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
-  GenerateFaceMisorientationColoringInputValues inputValues;
+  GenerateFeatureFaceMisorientationInputValues inputValues;
 
   inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
@@ -122,7 +122,7 @@ Result<> GenerateFaceMisorientationColoringFilter::executeImpl(DataStructure& da
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   inputValues.SurfaceMeshFaceMisorientationColorsArrayName = filterArgs.value<std::string>(k_SurfaceMeshFaceMisorientationColorsArrayName_Key);
 
-  return GenerateFaceMisorientationColoring(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return GenerateFeatureFaceMisorientation(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -137,9 +137,9 @@ constexpr StringLiteral k_SurfaceMeshFaceMisorientationColorsArrayNameKey = "Sur
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> GenerateFaceMisorientationColoringFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> GenerateFeatureFaceMisorientationFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = GenerateFaceMisorientationColoringFilter().getDefaultArguments();
+  Arguments args = GenerateFeatureFaceMisorientationFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

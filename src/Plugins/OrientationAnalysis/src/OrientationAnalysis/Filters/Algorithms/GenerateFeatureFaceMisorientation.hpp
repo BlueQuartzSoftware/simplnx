@@ -11,7 +11,7 @@
 namespace nx::core
 {
 
-struct ORIENTATIONANALYSIS_EXPORT GenerateFaceMisorientationColoringInputValues
+struct ORIENTATIONANALYSIS_EXPORT GenerateFeatureFaceMisorientationInputValues
 {
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath AvgQuatsArrayPath;
@@ -26,17 +26,17 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateFaceMisorientationColoringInputValues
  * where a bool mask array specifies.
  */
 
-class ORIENTATIONANALYSIS_EXPORT GenerateFaceMisorientationColoring
+class ORIENTATIONANALYSIS_EXPORT GenerateFeatureFaceMisorientation
 {
 public:
-  GenerateFaceMisorientationColoring(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                     GenerateFaceMisorientationColoringInputValues* inputValues);
-  ~GenerateFaceMisorientationColoring() noexcept;
+  GenerateFeatureFaceMisorientation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                    GenerateFeatureFaceMisorientationInputValues* inputValues);
+  ~GenerateFeatureFaceMisorientation() noexcept;
 
-  GenerateFaceMisorientationColoring(const GenerateFaceMisorientationColoring&) = delete;
-  GenerateFaceMisorientationColoring(GenerateFaceMisorientationColoring&&) noexcept = delete;
-  GenerateFaceMisorientationColoring& operator=(const GenerateFaceMisorientationColoring&) = delete;
-  GenerateFaceMisorientationColoring& operator=(GenerateFaceMisorientationColoring&&) noexcept = delete;
+  GenerateFeatureFaceMisorientation(const GenerateFeatureFaceMisorientation&) = delete;
+  GenerateFeatureFaceMisorientation(GenerateFeatureFaceMisorientation&&) noexcept = delete;
+  GenerateFeatureFaceMisorientation& operator=(const GenerateFeatureFaceMisorientation&) = delete;
+  GenerateFeatureFaceMisorientation& operator=(GenerateFeatureFaceMisorientation&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -44,7 +44,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const GenerateFaceMisorientationColoringInputValues* m_InputValues = nullptr;
+  const GenerateFeatureFaceMisorientationInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
