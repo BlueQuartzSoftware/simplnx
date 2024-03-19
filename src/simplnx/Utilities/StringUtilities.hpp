@@ -94,67 +94,49 @@ template <class SplitTypeOptionsV = SplitIgnoreEmpty>
 inline std::vector<std::string> optimized_split(std::string_view str, nonstd::span<const char> delimiters)
 {
   auto endPos = str.end();
+  auto startPos = str.begin();
+
   std::vector<std::string> tokens;
   tokens.reserve(str.size() / 2);
 
-  //todo switch to a copy if
-
-  if constexpr(std::is_same_v<SplitTypeOptionsV, SplitAllowAll> || std::is_same_v<SplitTypeOptionsV, SplitIgnoreEmpty>)
+  if constexpr(SplitTypeOptionsV::AllowEmptyInital)
   {
-    if constexpr(std::is_same_v<SplitTypeOptionsV, SplitAllowAll>)
+    if(std::find(delimiters.cbegin(), delimiters.cend(), str[0]) != delimiters.cend())
     {
-      tokenize<true>(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), tokens);
+      tokens.emplace_back("");
+      startPos++;
     }
-    if constexpr(std::is_same_v<SplitTypeOptionsV, SplitIgnoreEmpty>)
+  }
+
+  if constexpr(!SplitTypeOptionsV::AllowEmptyFinal)
+  {
+    if(std::find(delimiters.cbegin(), delimiters.cend(), str[str.size() - 1]) != delimiters.cend())
     {
-      tokenize<false>(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), tokens);
+      endPos--;
+    }
+  }
+
+  if constexpr(!SplitTypeOptionsV::AllowConsecutiveAsEmpty)
+  {
+    tokenize<false>(startPos, endPos, delimiters.cbegin(), delimiters.cend(), tokens);
+    if constexpr(SplitTypeOptionsV::AllowEmptyFinal)
+    {
+      if(std::find(delimiters.cbegin(), delimiters.cend(), str[str.size() - 1]) != delimiters.cend())
+      {
+        tokens.emplace_back("");
+      }
     }
   }
   else
   {
-    std::vector<std::string_view> preProcessedTokens;
-    preProcessedTokens.reserve(str.size() / 2);
-
-    tokenize<true>(str.begin(), endPos, delimiters.cbegin(), delimiters.cend(), preProcessedTokens);
-
-    preProcessedTokens.shrink_to_fit();
-
-    auto tokenPos = std::back_inserter(tokens);
-    auto preProcessedPos = preProcessedTokens.cbegin();
-    auto preProcessedEndPos = preProcessedTokens.cend();
-
-    if constexpr(SplitTypeOptionsV::AllowEmptyInital)
+    if constexpr(!SplitTypeOptionsV::AllowEmptyInital)
     {
-      *tokenPos++ = std::string(*preProcessedPos);
-
-      preProcessedPos++;
-    }
-    if constexpr(!SplitTypeOptionsV::AllowEmptyFinal)
-    {
-      preProcessedEndPos--;
-    }
-
-    while(preProcessedPos != preProcessedEndPos)
-    {
-      if constexpr(!SplitTypeOptionsV::AllowConsecutiveAsEmpty)
+      if(std::find(delimiters.cbegin(), delimiters.cend(), str[0]) != delimiters.cend())
       {
-        if(preProcessedPos->empty())
-        {
-          continue;
-        }
-      }
-      *tokenPos++ = std::string(*preProcessedPos);
-      preProcessedPos++;
-    }
-
-    if constexpr(!SplitTypeOptionsV::AllowEmptyFinal)
-    {
-      if(!preProcessedPos->empty())
-      {
-        *tokenPos.++ = std::string(*preProcessedPos);
-        preProcessedPos++;
+        startPos++;
       }
     }
+    tokenize<true>(startPos, endPos, delimiters.cbegin(), delimiters.cend(), tokens);
   }
 
   tokens.shrink_to_fit();
@@ -270,6 +252,7 @@ inline bool ends_with(std::string_view value, std::string_view ending)
   }
   return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
+
 enum SplitType : uint8
 {
   IgnoreEmpty,
@@ -285,25 +268,28 @@ inline std::vector<std::string> specific_split(std::string_view str, nonstd::spa
   switch(splitType)
   {
   case IgnoreEmpty:
-    return optimized_split<::SplitIgnoreEmpty>(str,delimiters);
+    return optimized_split<::SplitIgnoreEmpty>(str, delimiters);
   case AllowAll:
-    return optimized_split<::SplitAllowAll>(str,delimiters);
+    return optimized_split<::SplitAllowAll>(str, delimiters);
   case NoStripIgnoreConsecutive:
-    return optimized_split<::SplitNoStripIgnoreConsecutive>(str,delimiters);
+    return optimized_split<::SplitNoStripIgnoreConsecutive>(str, delimiters);
   case OnlyConsecutive:
-    return optimized_split<::SplitOnlyConsecutive>(str,delimiters);
+    return optimized_split<::SplitOnlyConsecutive>(str, delimiters);
   case AllowEmptyLeftAnalyze:
-    return optimized_split<::SplitAllowEmptyLeftAnalyze>(str,delimiters);
+    return optimized_split<::SplitAllowEmptyLeftAnalyze>(str, delimiters);
   case AllowEmptyRightAnalyze:
-    return optimized_split<::SplitAllowEmptyRightAnalyze>(str,delimiters);
+    return optimized_split<::SplitAllowEmptyRightAnalyze>(str, delimiters);
   }
+
+  return {};
 }
 
 inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool consecutiveDelimiters)
 {
   if(consecutiveDelimiters)
   {
-    return optimized_split<::SplitOnlyConsecutive>(str, delimiters);
+    // Split Allow All was selected to match QString's base split functionality
+    return optimized_split<::SplitAllowAll>(str, delimiters);
   }
   else
   {
@@ -313,8 +299,8 @@ inline std::vector<std::string> split(std::string_view str, nonstd::span<const c
 
 inline std::vector<std::string> split(std::string_view str, char delim)
 {
-  std::array<char, 1> delims = {delim};
-  return optimized_split<::SplitIgnoreEmpty>(str, delims);
+  std::array<char, 1> delimiters = {delim};
+  return optimized_split<::SplitIgnoreEmpty>(str, delimiters);
 }
 
 inline std::string join(nonstd::span<std::string_view> vec, std::string_view delim)
@@ -443,4 +429,4 @@ inline std::string toLower(std::string input)
   return input;
 }
 
-} // namespace nx::core
+} // namespace nx::core::StringUtilities
