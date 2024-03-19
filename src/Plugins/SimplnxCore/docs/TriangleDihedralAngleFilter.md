@@ -1,4 +1,4 @@
-# TriangleDihedralAngleFilter
+# Generate Triangle Dihedral Angle Filter
 
 ## Group (Subgroup)
 

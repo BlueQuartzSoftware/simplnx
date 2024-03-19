@@ -1,4 +1,4 @@
-# Import Volume Graphics Files (.vgi, .vol)
+# Read Volume Graphics Files (.vgi, .vol)
 
 ## Group (Subgroup)
 

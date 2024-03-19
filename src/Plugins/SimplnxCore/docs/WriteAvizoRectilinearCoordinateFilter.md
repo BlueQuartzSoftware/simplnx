@@ -1,4 +1,4 @@
-# Avizo Rectilinear Coordinate Writer  
+# Write Avizo Rectilinear Coordinate
 
 ## Group (Subgroup)
 

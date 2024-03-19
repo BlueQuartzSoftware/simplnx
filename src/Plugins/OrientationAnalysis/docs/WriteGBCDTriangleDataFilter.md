@@ -8,7 +8,7 @@ IO (Output)
 
 This **Filter** writes relevant information about the Grain Boundary Character Distribution (GBCD) on an existing set of triangles.  The information written includes the inward and outward Euler angles, normals, and areas for each triangle.  The file format was originally defined by Prof. Greg Rohrer (CMU).
 
-## Example Output ##
+## Example Output
 
     # Triangles Produced from DREAM3D version 5.2
     # Column 1-3:    right hand average orientation (phi1, PHI, phi2 in RADIANS)

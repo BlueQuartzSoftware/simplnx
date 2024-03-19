@@ -1,4 +1,4 @@
-# Abaqus Hexahedron Exporter
+# Write Abaqus Hexahedron File
 
 ## Group (Subgroup)
 
