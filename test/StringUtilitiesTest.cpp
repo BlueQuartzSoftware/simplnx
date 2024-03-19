@@ -14,21 +14,21 @@ TEST_CASE("Utility Function Test: split(str, char)")
 
   std::vector<std::string> result = StringUtilities::split(inputStr, '|');
 
-  REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
+  REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 2
   inputStr = "|This|Is|A|Baseline|Test|";
 
   result = StringUtilities::split(inputStr, '|');
 
-  REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
+  REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 3
   inputStr = "||This|Is||A||Baseline|Test||";
 
   result = StringUtilities::split(inputStr, '|');
 
-  REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
+  REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 }
 
 TEST_CASE("Utility Function Test: split(str, char, bool)")
@@ -39,42 +39,42 @@ TEST_CASE("Utility Function Test: split(str, char, bool)")
 
   std::vector<std::string> result = StringUtilities::split(inputStr, k_Delimiter, false);
 
-  REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
+  REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 2
   inputStr = "|This|Is|A|Baseline|Test|";
 
   result = StringUtilities::split(inputStr, k_Delimiter, false);
 
-  REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
+  REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 3
   inputStr = "||This|Is||A||Baseline|Test||";
 
   result = StringUtilities::split(inputStr, k_Delimiter, false);
 
-  REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
+  REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 4
   inputStr = "This|Is|A|Baseline|Test";
 
   result = StringUtilities::split(inputStr, k_Delimiter, true);
 
-  REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
+  REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 5
   inputStr = "|This|Is|A|Baseline|Test|";
 
   result = StringUtilities::split(inputStr, k_Delimiter, true);
 
-  REQUIRE(result == std::vector<std::string>{"","This","Is","A","Baseline","Test",""});
+  REQUIRE(result == std::vector<std::string>{"", "This", "Is", "A", "Baseline", "Test", ""});
 
   // Case 6
   inputStr = "||This|Is||A||Baseline|Test||";
 
   result = StringUtilities::split(inputStr, k_Delimiter, true);
 
-  REQUIRE(result == std::vector<std::string>{"","","This","Is","","A","","Baseline","Test","",""});
+  REQUIRE(result == std::vector<std::string>{"", "", "This", "Is", "", "A", "", "Baseline", "Test", "", ""});
 }
 
 TEST_CASE("Utility Function Test: specific_split(str, char, StringUtilities::SplitType)")
@@ -86,30 +86,30 @@ TEST_CASE("Utility Function Test: specific_split(str, char, StringUtilities::Spl
   // Case 1
   result = StringUtilities::specific_split(inputStr, k_Delimiter, StringUtilities::SplitType::AllowAll);
 
-  REQUIRE(result == std::vector<std::string>{"","","This","Is","","A","","Baseline","Test","",""});
+  REQUIRE(result == std::vector<std::string>{"", "", "This", "Is", "", "A", "", "Baseline", "Test", "", ""});
 
   // Case 2
   result = StringUtilities::specific_split(inputStr, k_Delimiter, StringUtilities::SplitType::IgnoreEmpty);
 
-  REQUIRE(result == std::vector<std::string>{"This","Is","A","Baseline","Test"});
+  REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 3
   result = StringUtilities::specific_split(inputStr, k_Delimiter, StringUtilities::SplitType::NoStripIgnoreConsecutive);
 
-  REQUIRE(result == std::vector<std::string>{"","This","Is","A","Baseline","Test",""});
+  REQUIRE(result == std::vector<std::string>{"", "This", "Is", "A", "Baseline", "Test", ""});
 
   // Case 4
   result = StringUtilities::specific_split(inputStr, k_Delimiter, StringUtilities::SplitType::OnlyConsecutive);
 
-  REQUIRE(result == std::vector<std::string>{"","This","Is","","A","","Baseline","Test",""});
+  REQUIRE(result == std::vector<std::string>{"", "This", "Is", "", "A", "", "Baseline", "Test", ""});
 
   // Case 5
   result = StringUtilities::specific_split(inputStr, k_Delimiter, StringUtilities::SplitType::AllowEmptyLeftAnalyze);
 
-  REQUIRE(result == std::vector<std::string>{"","","This","Is","","A","","Baseline","Test",""});
+  REQUIRE(result == std::vector<std::string>{"", "", "This", "Is", "", "A", "", "Baseline", "Test", ""});
 
   // Case 5
   result = StringUtilities::specific_split(inputStr, k_Delimiter, StringUtilities::SplitType::AllowEmptyRightAnalyze);
 
-  REQUIRE(result == std::vector<std::string>{"","This","Is","","A","","Baseline","Test","", ""});
+  REQUIRE(result == std::vector<std::string>{"", "This", "Is", "", "A", "", "Baseline", "Test", "", ""});
 }
