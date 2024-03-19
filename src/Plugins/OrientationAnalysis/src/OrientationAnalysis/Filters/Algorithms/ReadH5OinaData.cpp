@@ -15,8 +15,7 @@ void copyRawData(const ReadH5DataInputValues* m_InputValues, size_t totalPoints,
   auto& dataRef = m_DataStructure.getDataRefAs<ArrayType>(m_InputValues->CellAttributeMatrixPath.createChildPath(name));
   auto* dataStorePtr = dataRef.getDataStore();
 
-  usize numElements = m_Reader.getNumberOfElements();
-  const nonstd::span<T> rawDataPtr(reinterpret_cast<T*>(m_Reader.getPointerByName(name)), numElements);
+  const nonstd::span<T> rawDataPtr(reinterpret_cast<T*>(m_Reader.getPointerByName(name)), totalPoints);
   std::copy(rawDataPtr.begin(), rawDataPtr.end(), dataStorePtr->begin() + offset);
 }
 
