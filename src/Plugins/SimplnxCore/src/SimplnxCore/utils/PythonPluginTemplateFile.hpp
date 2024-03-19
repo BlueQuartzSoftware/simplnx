@@ -73,7 +73,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     buffer << file.rdbuf();
     std::string content = buffer.str();
     file.close();
-    std::vector<std::string> lines = nx::core::StringUtilities::split_2(content, "\n", true);
+    std::vector<std::string> lines = nx::core::StringUtilities::split(content, "\n", true);
     if(lines.back().empty())
     {
       lines.pop_back();
@@ -117,7 +117,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     buffer << file.rdbuf();
     std::string content = buffer.str();
     file.close();
-    std::vector<std::string> lines = nx::core::StringUtilities::split_2(content, "\n", true);
+    std::vector<std::string> lines = nx::core::StringUtilities::split(content, "\n", true);
     if(lines.back().empty())
     {
       lines.pop_back();
