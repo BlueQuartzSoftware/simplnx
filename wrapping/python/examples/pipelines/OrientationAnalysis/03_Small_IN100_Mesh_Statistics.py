@@ -70,7 +70,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxor.GenerateFaceMisorientationColoringFilter()
+nx_filter = cxor.GenerateFeatureFaceMisorientationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
