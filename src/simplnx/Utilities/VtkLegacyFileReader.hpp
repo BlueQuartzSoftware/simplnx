@@ -3,9 +3,13 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/Output.hpp"
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace nx::core
 {
@@ -24,18 +28,46 @@ public:
   void setPreflight(bool value);
 
   /**
-   * @brief readHeader Reads the .vtk file header ; CURRENTLY NOT IMPLEMENTED
-   * @return Integer error value
+   *
+   * @param readPointData
+   * @param readCellData
+   * @param pointGeometryPath
+   * @param imageGeometryPath
+   * @param vertAMName
+   * @param cellAMName
+   * @return
    */
-  int32_t readHeader();
+  nx::core::Result<OutputActions> preflightFile(bool readPointData, bool readCellData, DataPath pointGeometryPath, DataPath imageGeometryPath, const std::string& vertAMName,
+                                                const std::string& cellAMName);
 
+  /**
+   *
+   * @param dataStructure
+   * @param readPointData
+   * @param readCellData
+   * @param pointGeometryPath
+   * @param imageGeometryPath
+   * @param vertAMName
+   * @param cellAMName
+   * @return
+   */
+  int32_t readFile(DataStructure& dataStructure, bool readPointData, bool readCellData, const DataPath& pointGeometryPath, const DataPath& imageGeometryPath, const std::string& vertAMName,
+                   const std::string& cellAMName);
+
+  enum class CurrentSectionType : uint32
+  {
+    NotSet = 0,
+    Point = 1,
+    Cell = 2,
+  };
+
+protected:
   /**
    * @brief readFile Handles the main reading of the .vtk file
    * @return Integer error value
    */
-  virtual int32_t readFile();
+  int32_t readFile();
 
-protected:
   /**
    * @brief readData Reads a section of data from the .vtk file
    * @param instream Incoming file stream
@@ -125,13 +157,17 @@ protected:
 
   void setDatasetType(const std::string& dataSetType);
 
+  int32_t preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, size_t totalSize);
+
 private:
-  bool m_ReadCellData = {true};
-  DataPath m_VolumeDataContainerName;
-  std::string m_CellAttributeMatrixName;
   bool m_ReadPointData = {true};
-  DataPath m_VertexDataContainerName;
-  std::string m_VertexAttributeMatrixName;
+  DataPath m_PointGeomPath;
+  std::string m_PointAMName;
+
+  bool m_ReadCellData = {true};
+  DataPath m_ImageGeomPath;
+  std::string m_CellAMName;
+
   std::string m_InputFile = {""};
   std::string m_Comment = {""};
   std::string m_DatasetType = {""};
@@ -141,7 +177,12 @@ private:
   int m_ErrorCode = 0;
   std::string m_ErrorMessage;
 
-  // AttributeMatrix::Pointer m_CurrentAttrMat;
+  CurrentSectionType m_CurrentSectionType = CurrentSectionType::NotSet;
+  CreateImageGeometryAction::DimensionType m_CurrentGeomDims;
+
+  nx::core::Result<OutputActions> m_OutputActions;
+
+  DataStructure* m_DataStructurePtr;
 };
 
 } // namespace nx::core

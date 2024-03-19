@@ -10,11 +10,6 @@ using namespace nx::core;
 namespace
 {
 
-// -----------------------------------------------------------------------------
-int32_t readHeader()
-{
-  return 0;
-}
 
 } // namespace
 
@@ -42,7 +37,8 @@ Result<> ReadVtkStructuredPoints::operator()()
 {
 
   VtkLegacyFileReader legacyReader(m_InputValues->InputFile);
-  legacyReader.setPreflight(false);
-  int32 err = legacyReader.readFile();
+  int32 err = legacyReader.readFile(m_DataStructure, m_InputValues->ReadPointData, m_InputValues->ReadCellData,
+                                    m_InputValues->PointGeometryPath, m_InputValues->CellGeometryPath,
+                                    m_InputValues->PointAttributeMatrixName, m_InputValues->CellAttributeMatrixName);
   return {};
 }
