@@ -437,8 +437,8 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   {
     uint64 totalMemory = requiredMemory + dataStructure.memoryUsage();
     uint64 availableMemory = Memory::GetTotalMemory();
-    return MakeErrorResult(
-        -267, fmt::format("CreateArray: Cannot create DataArray '{}'.\n\tTotal memory required for DataStructure: '{}' Bytes.\n\tTotal memory: '{}' Bytes", name, totalMemory, availableMemory));
+    return MakeErrorResult(-267, fmt::format("CreateArray: Cannot create DataArray '{}'.\n\tTotal memory required for DataStructure: '{}' Bytes.\n\tTotal reported memory: '{}' Bytes", name,
+                                             totalMemory, availableMemory));
   }
 
   auto store = CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
