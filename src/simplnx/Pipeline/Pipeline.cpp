@@ -24,7 +24,6 @@ constexpr StringLiteral k_PipelineItemsKey = "pipeline";
 constexpr StringLiteral k_PipelineVersionKey = "version";
 constexpr uint64 k_PipelineVersion = 1;
 
-constexpr StringLiteral k_SIMPLPipelineBuilderKey = "PipelineBuilder";
 constexpr StringLiteral k_SIMPLPipelineNameKey = "Name";
 constexpr StringLiteral k_SIMPLNumFilterseKey = "Number_Filters";
 
