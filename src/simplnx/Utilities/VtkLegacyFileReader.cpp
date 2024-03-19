@@ -4,6 +4,7 @@
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 
 #include <iostream>
 #include <string>
@@ -126,6 +127,24 @@ size_t VtkLegacyFileReader::parseByteSize(const std::string& text)
   return 0;
 }
 
+inline usize count_tokens(char* str, char delim, bool consecutiveDelimiters, usize endPos)
+{
+  usize count = 0;
+  for(usize i = 0; i < endPos; i++)
+  {
+    if(str[i] == delim && str[i+1] != delim && str[i+1] != '\0')
+    {
+      count++;
+    }
+    //Stop on null termination
+    if(str[i] == 0)
+    {
+      break;
+    }
+  }
+  return ++count;
+}
+
 // -----------------------------------------------------------------------------
 template <typename T>
 int32_t skipVolume(std::istream& in, bool binary, size_t totalSize)
@@ -145,10 +164,14 @@ int32_t skipVolume(std::istream& in, bool binary, size_t totalSize)
   }
   else
   {
-    T tmp;
-    for(size_t z = 0; z < totalSize; ++z)
+    const usize BUFFER_SIZE = 16384;
+    usize foundItems = 0;
+    std::vector<char> buffer(BUFFER_SIZE, 0);
+    while(foundItems < totalSize)
     {
-      in >> tmp;
+      memset(buffer.data(), 0, BUFFER_SIZE + 1);
+      err = CsvParser::ReadLine(in, buffer.data(), buffer.size());
+      foundItems += count_tokens(buffer.data(), ' ', false, BUFFER_SIZE);
     }
   }
   return err;
@@ -252,12 +275,24 @@ int32_t readDataChunk(DataStructure* dataStructurePtr, std::istream& in, bool bi
   }
   else
   {
-    T value = static_cast<T>(0.0);
-    size_t totalSize = dataArrayRef.getSize();
-    for(size_t i = 0; i < totalSize; ++i)
+    usize totalSize = dataArrayRef.size();
+    const usize BUFFER_SIZE = 16384;
+
+    std::vector<char> buffer(BUFFER_SIZE, 0);
+    usize index = 0;
+    while(index < totalSize)
     {
-      in >> value;
-      dataArrayRef[i] = value;
+      memset(buffer.data(), 0, BUFFER_SIZE + 1);
+      int32 err = CsvParser::ReadLine(in, buffer.data(), buffer.size());
+      auto tokens = StringUtilities::split({buffer.data()}, ' ');
+      for(const auto& token : tokens)
+      {
+        auto result = nx::core::ConvertTo<T>::convert(token);
+        if(result.valid())
+        {
+          dataArrayRef[index++] = result.value();
+        }
+      }
     }
   }
 

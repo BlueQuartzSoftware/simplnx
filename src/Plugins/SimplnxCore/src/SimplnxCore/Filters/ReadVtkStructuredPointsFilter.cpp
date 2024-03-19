@@ -12,10 +12,56 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Utilities/VtkLegacyFileReader.hpp"
 
+#include <chrono>
+#include <iostream>
+#include <iomanip> // For std::setw and std::setfill
 #include <filesystem>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
+
+namespace {
+
+
+class StopWatch {
+public:
+  void start() {
+    start_time = std::chrono::steady_clock::now();
+  }
+
+  void stop() {
+    end_time = std::chrono::steady_clock::now();
+  }
+
+  void print(std::ostream& os) const {
+    auto elapsed = end_time - start_time;
+    auto hours = std::chrono::duration_cast<std::chrono::hours>(elapsed);
+    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(elapsed % std::chrono::hours(1));
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed % std::chrono::minutes(1));
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed % std::chrono::seconds(1));
+
+    os << std::setw(2) << std::setfill('0') << hours.count() << ":"
+       << std::setw(2) << std::setfill('0') << minutes.count() << ":"
+       << std::setw(2) << std::setfill('0') << seconds.count() << "."
+       << std::setw(3) << std::setfill('0') << milliseconds.count();
+  }
+
+private:
+  std::chrono::steady_clock::time_point start_time;
+  std::chrono::steady_clock::time_point end_time;
+};
+
+//int main() {
+//  StopWatch sw;
+//  sw.start();
+//  // Simulate some work by sleeping for a specific duration
+//  std::this_thread::sleep_for(std::chrono::seconds(1));
+//  sw.stop();
+//  sw.print(std::cout); // This will print the elapsed time in the specified format
+//  return 0;
+//}
+
+}
 
 namespace nx::core
 {
@@ -99,9 +145,15 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  StopWatch sw;
+  sw.start();
   VtkLegacyFileReader legacyReader(pInputFileValue);
   legacyReader.setPreflight(true);
   resultOutputActions = legacyReader.preflightFile(pReadPointDataValue, pReadCellDataValue, pVertexGeometryPath, pImageGeometryPath, pVertexAttributeMatrixNameValue, pCellAttributeMatrixNameValue);
+  sw.stop();
+  sw.print(std::cout);
+  std::cout << "\n";
+
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
