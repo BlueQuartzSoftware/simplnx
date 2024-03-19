@@ -1,5 +1,7 @@
 #include "VtkLegacyFileReader.hpp"
 
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -30,6 +32,52 @@ VtkLegacyFileReader::~VtkLegacyFileReader()
 void VtkLegacyFileReader::setPreflight(bool value)
 {
   m_Preflight = value;
+}
+
+nx::core::DataType ConvertVtkDataType(const std::string& text)
+{
+  if(text == "unsigned_char")
+  {
+    return nx::core::DataType::uint8;
+  }
+  if(text == "char")
+  {
+    return nx::core::DataType::int8;
+  }
+  if(text == "unsigned_short")
+  {
+    return nx::core::DataType::uint16;
+  }
+  if(text == "short")
+  {
+    return nx::core::DataType::int16;
+  }
+  if(text == "unsigned_int")
+  {
+    return nx::core::DataType::uint32;
+  }
+  if(text == "int")
+  {
+    return nx::core::DataType::int32;
+  }
+  if(text == "unsigned_long")
+  {
+    return nx::core::DataType::uint64;
+  }
+  if(text == "long")
+  {
+    return nx::core::DataType::int64;
+  }
+  if(text == "float")
+  {
+    return nx::core::DataType::float32;
+  }
+  if(text == "double")
+  {
+    return nx::core::DataType::float64;
+  }
+  // IT CANNOT BE THIS VALUE SO USE THIS AS AN "I HAVE NO IDEA WHAT THIS IS RETURN TYPE"
+  return nx::core::DataType::boolean;
 }
 
 // -----------------------------------------------------------------------------
@@ -179,54 +227,41 @@ int32_t vtkReadBinaryData(std::istream& in, T* data, int32_t numTuples, int32_t 
 //
 // -----------------------------------------------------------------------------
 template <typename T>
-int32_t readDataChunk(AttributeMatrix& attrMat, std::istream& in, bool inPreflight, bool binary, const std::string& scalarName, int32_t scalarNumComp)
+int32_t readDataChunk(DataStructure* dataStructurePtr, std::istream& in, bool binary, const DataPath& dataArrayPath)
 {
-  size_t numTuples = attrMat.getNumTuples();
+  using DataArrayType = DataArray<T>;
 
-  std::vector<size_t> tDims = attrMat.getShape();
-  std::vector<size_t> cDims(1, scalarNumComp);
+  DataArrayType& dataArrayRef = dataStructurePtr->getDataRefAs<DataArrayType>(dataArrayPath);
+//  size_t numTuples = dataArrayRef.getNumberOfTuples();
+  std::vector<size_t> tDims = dataArrayRef.getTupleShape();
+  std::vector<size_t> cDims = dataArrayRef.getComponentShape();
 
-  typename DataArray<T>::Pointer data = DataArray<T>::CreateArray(tDims, cDims, scalarName, !inPreflight);
-  data->initializeWithZeros();
-  // TODO: FIX THIS ==> attrMat->insertOrAssign(data);
-  if(inPreflight)
-  {
-    return skipVolume<T>(in, binary, numTuples * scalarNumComp);
-  }
-
+  dataArrayRef.fill(static_cast<T>(0));
   if(binary)
   {
-    int32_t err = vtkReadBinaryData<T>(in, data->getPointer(0), numTuples, scalarNumComp);
-    if(err < 0)
-    {
-      std::cout << "Error Reading Binary Data '" << scalarName << "' " << attrMat.getName() << " numTuples = " << numTuples << std::endl;
-      return err;
-    }
-    if(nx::core::checkEndian() == nx::core::endian::big)
-    {
-      data->byteSwapElements();
-    }
+//    int32_t err = vtkReadBinaryData<T>(in, dataArrayRef.getPointer(0), dataArrayRef.getNumberOfTuples(), dataArrayRef.getNumberOfComponents());
+//    if(err < 0)
+//    {
+//      std::cout << "Error Reading Binary Data '" << dataArrayPath.toString() << " numTuples = " << dataArrayRef.getNumberOfTuples() << std::endl;
+//      return err;
+//    }
+//    if(nx::core::checkEndian() == nx::core::endian::big)
+//    {
+//      dataArrayRef.byteSwapElements();
+//    }
   }
   else
   {
     T value = static_cast<T>(0.0);
-    size_t totalSize = numTuples * scalarNumComp;
+    size_t totalSize = dataArrayRef.getSize();
     for(size_t i = 0; i < totalSize; ++i)
     {
       in >> value;
-      data->setValue(i, value);
+      dataArrayRef[i] = value;
     }
   }
 
-  return 0;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-int32_t VtkLegacyFileReader::readHeader()
-{
-  return 0;
+  return 1;
 }
 
 // -----------------------------------------------------------------------------
@@ -306,16 +341,44 @@ void VtkLegacyFileReader::setDatasetType(const std::string& dataSetType)
   m_DatasetType = dataSetType;
 }
 
+nx::core::Result<OutputActions> VtkLegacyFileReader::preflightFile(bool readPointData, bool readCellData, DataPath pointGeometryPath, DataPath imageGeometryPath, const std::string& vertAMName,
+                                                                   const std::string& cellAMName)
+{
+  m_Preflight = true;
+  m_ReadPointData = readPointData;
+  m_PointGeomPath = pointGeometryPath;
+  m_PointAMName = vertAMName;
+
+  m_ReadCellData = readCellData;
+  m_ImageGeomPath = imageGeometryPath;
+  m_CellAMName = cellAMName;
+
+  readFile();
+  return m_OutputActions;
+}
+
+// -----------------------------------------------------------------------------
+int32_t VtkLegacyFileReader::readFile(DataStructure& dataStructure, bool readPointData, bool readCellData, const DataPath& pointGeometryPath, const DataPath& imageGeometryPath,
+                                      const std::string& vertAMName, const std::string& cellAMName)
+{
+  m_DataStructurePtr = &dataStructure;
+
+  m_Preflight = false;
+  m_ReadPointData = readPointData;
+  m_PointGeomPath = pointGeometryPath;
+  m_PointAMName = vertAMName;
+
+  m_ReadCellData = readCellData;
+  m_ImageGeomPath = imageGeometryPath;
+  m_CellAMName = cellAMName;
+
+  return readFile();
+}
+
 // -----------------------------------------------------------------------------
 int32_t VtkLegacyFileReader::readFile()
 {
   int32_t err = 0;
-
-  // TODO: Implement This ===>  DataContainer::Pointer volDc = getDataContainerArray()->getDataContainer(getVolumeDataContainerName());
-  // TODO: Implement This ===> AttributeMatrix::Pointer volAm = volDc->getAttributeMatrix(getCellAttributeMatrixName());
-  //
-  // TODO: Implement This ===> DataContainer::Pointer vertDc = getDataContainerArray()->getDataContainer(getVertexDataContainerName());
-  // TODO: Implement This ===> AttributeMatrix::Pointer vertAm = vertDc->getAttributeMatrix(getVertexAttributeMatrixName());
 
   std::ifstream in(m_InputFile, std::ios_base::in | std::ios_base::binary);
 
@@ -375,51 +438,40 @@ int32_t VtkLegacyFileReader::readFile()
   std::fill(buf.begin(), buf.end(), '\0');     // Splat nulls across the vector
   err = readLine(in, buf.data(), kBufferSize); // Read Line 5 which is the Dimension values
   // But we need the 'extents' which is one less in all directions (unless dim=1)
-  std::vector<size_t> dims(3, 0);
   line = std::string(buf.data());
   auto tokens = StringUtilities::split(line, ' ');
 
-  auto convertResultI32 = nx::core::ConvertTo<int32>::convert(tokens[1]);
-  dims[0] = convertResultI32.value();
-  convertResultI32 = nx::core::ConvertTo<int32>::convert(tokens[2]);
-  dims[1] = convertResultI32.value();
-  convertResultI32 = nx::core::ConvertTo<int32>::convert(tokens[3]);
-  dims[2] = convertResultI32.value();
+  CreateImageGeometryAction::DimensionType pointDims(3, 0);
+  auto convertResultSizeT = nx::core::ConvertTo<usize>::convert(tokens[1]);
+  pointDims[0] = convertResultSizeT.value();
+  convertResultSizeT = nx::core::ConvertTo<usize>::convert(tokens[2]);
+  pointDims[1] = convertResultSizeT.value();
+  convertResultSizeT = nx::core::ConvertTo<usize>::convert(tokens[3]);
+  pointDims[2] = convertResultSizeT.value();
 
-  std::vector<size_t> tDims(3, 0);
-  tDims[0] = dims[0];
-  tDims[1] = dims[1];
-  tDims[2] = dims[2];
-  // TODO: Implement This ===>  vertAm->setTupleDimensions(tDims);
-  // TODO: Implement This ===>  vertDc->getGeometryAs<ImageGeom>()->setDimensions(dims.data());
-
-  tDims[0] = dims[0] - 1;
-  tDims[1] = dims[1] - 1;
-  tDims[2] = dims[2] - 1;
-  // TODO: Implement This ===>  volAm->setTupleDimensions(tDims);
-  // TODO: Implement This ===>  volDc->getGeometryAs<ImageGeom>()->setDimensions(tDims.data());
+  CreateImageGeometryAction::DimensionType cellDims(3, 0);
+  cellDims[0] = pointDims[0] - 1;
+  cellDims[1] = pointDims[1] - 1;
+  cellDims[2] = pointDims[2] - 1;
 
   std::fill(buf.begin(), buf.end(), '\0');     // Splat nulls across the vector
   err = readLine(in, buf.data(), kBufferSize); // Read Line 7 which is the Scaling values
   line = std::string(buf.data());
   tokens = StringUtilities::split(line, ' ');
-  float resolution[3];
+  CreateImageGeometryAction::SpacingType spacing(3, 0.0f);
 
   auto convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[1]);
-  resolution[0] = convertResultF32.value();
+  spacing[0] = convertResultF32.value();
   convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[2]);
-  resolution[1] = convertResultF32.value();
+  spacing[1] = convertResultF32.value();
   convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[3]);
-  resolution[2] = convertResultF32.value();
-
-  // TODO: Implement This ===>  volDc->getGeometryAs<ImageGeom>()->setSpacing(resolution);
-  // TODO: Implement This ===>  vertDc->getGeometryAs<ImageGeom>()->setSpacing(resolution);
+  spacing[2] = convertResultF32.value();
 
   std::fill(buf.begin(), buf.end(), '\0');     // Splat nulls across the vector
   err = readLine(in, buf.data(), kBufferSize); // Read Line 6 which is the Origin values
   line = std::string(buf.data());
   tokens = StringUtilities::split(line, ' ');
-  float origin[3];
+  CreateImageGeometryAction::OriginType origin(3, 0.0f);
   convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[1]);
   origin[0] = convertResultF32.value();
   convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[2]);
@@ -427,46 +479,54 @@ int32_t VtkLegacyFileReader::readFile()
   convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[3]);
   origin[2] = convertResultF32.value();
 
-  // TODO: Implement This ===>  volDc->getGeometryAs<ImageGeom>()->setOrigin(origin);
-  // TODO: Implement This ===>  vertDc->getGeometryAs<ImageGeom>()->setOrigin(origin);
+  // Create the Image Geometry
+  // Define a custom class that generates the changes to the DataStructure.
+  if(m_ReadPointData)
+  {
+    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_PointGeomPath, pointDims, origin, spacing, m_PointAMName);
+    m_OutputActions.value().appendAction(std::move(createImageGeometryAction));
+  }
+  if(m_ReadCellData)
+  {
+    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_ImageGeomPath, cellDims, origin, spacing, m_CellAMName);
+    m_OutputActions.value().appendAction(std::move(createImageGeometryAction));
+  }
 
   // Read the first key word which should be POINT_DATA or CELL_DATA
   std::fill(buf.begin(), buf.end(), '\0');     // Splat nulls across the vector
-  err = readLine(in, buf.data(), kBufferSize); // Read Line 6 which is the first type of data we are going to read
+  err = readLine(in, buf.data(), kBufferSize); // Read Line 8 which is the first type of data we are going to read
   line = std::string(buf.data());
   tokens = StringUtilities::split(line, ' ');
-  std::string word = std::string(tokens[0]);
-  int32_t npts = 0, ncells = 0;
-  int32_t numPts = 0;
+  std::string sectionType = std::string(tokens[0]);
+  auto convertResultI32 = nx::core::ConvertTo<int32>::convert(tokens[1]);
+  int32_t numValues = convertResultI32.value();
 
-  if(StringUtilities::starts_with(word, "CELL_DATA"))
+  for(int i = 0; i < 2; i++)
   {
-    // TODO: Implement This ===>   DataContainer::Pointer m = getDataContainerArray()->getDataContainer(getVolumeDataContainerName());
-    // TODO: Implement This ===>    m_CurrentAttrMat = m->getAttributeMatrix(getCellAttributeMatrixName());
-
-    convertResultI32 = nx::core::ConvertTo<int32>::convert(tokens[1]);
-    ncells = convertResultI32.value();
-
-    // TODO: Implement This ===>    if(m_CurrentAttrMat->getNumberOfTuples() != ncells)
-    // TODO: Implement This ===>    {
-    // TODO: Implement This ===>      setErrorCondition(-61006, std::string("Number of cells does not match number of tuples in the Attribute Matrix"));
-    // TODO: Implement This ===>      return getErrorCode();
-    // TODO: Implement This ===>    }
-    this->readDataTypeSection(in, ncells, "point_data");
-  }
-  else if(StringUtilities::starts_with(word, "POINT_DATA"))
-  {
-    // TODO: Implement This ===>   DataContainer::Pointer m = getDataContainerArray()->getDataContainer(getVertexDataContainerName());
-    // TODO: Implement This ===>   m_CurrentAttrMat = m->getAttributeMatrix(getVertexAttributeMatrixName());
-    convertResultI32 = nx::core::ConvertTo<int32>::convert(tokens[1]);
-    npts = convertResultI32.value();
-
-    // TODO: Implement This ===>    if(m_CurrentAttrMat->getNumberOfTuples() != npts)
-    // TODO: Implement This ===>    {
-    // TODO: Implement This ===>      setErrorCondition(-61007, std::string("Number of points does not match number of tuples in the Attribute Matrix"));
-    // TODO: Implement This ===>      return getErrorCode();
-    // TODO: Implement This ===>    }
-    this->readDataTypeSection(in, numPts, "cell_data");
+    if(sectionType == "CELL_DATA" && m_ReadCellData)
+    {
+      if(cellDims[0] * cellDims[1] * cellDims[2] != numValues)
+      {
+        setErrorCondition(-61007, std::string("Number of cells does not match number of tuples in the Attribute Matrix"));
+        return getErrorCode();
+      }
+      m_CurrentSectionType = CurrentSectionType::Cell;
+      m_CurrentGeomDims = cellDims;
+      numValues = this->readDataTypeSection(in, numValues, "point_data");
+      sectionType = numValues > 0 ? "POINT_DATA" : "";
+    }
+    else if(sectionType == "POINT_DATA" && m_ReadPointData)
+    {
+      if(pointDims[0] * pointDims[1] * pointDims[2] != numValues)
+      {
+        setErrorCondition(-61007, std::string("Number of points does not match number of tuples in the Attribute Matrix"));
+        return getErrorCode();
+      }
+      m_CurrentSectionType = CurrentSectionType::Point;
+      m_CurrentGeomDims = pointDims;
+      numValues = this->readDataTypeSection(in, numValues, "cell_data");
+      sectionType = numValues > 0 ? "CELL_DATA" : "";
+    }
   }
 
   // Close the file since we are done with it.
@@ -481,13 +541,12 @@ int32_t VtkLegacyFileReader::readFile()
 int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numValues, const std::string& nextKeyWord)
 {
   std::vector<char> buf(kBufferSize, '\0');
-  char* line = buf.data();
 
   // Read keywords until end-of-file
-  while(this->readString(in, line, kBufferSize) != 0)
+  while(this->readString(in, buf.data(), kBufferSize) != 0)
   {
     // read scalar data
-    if(strncmp(lowerCase(line, kBufferSize), "scalars", 7) == 0)
+    if(strncmp(lowerCase(buf.data(), kBufferSize), "scalars", 7) == 0)
     {
       if(this->readScalarData(in, numValues) <= 0)
       {
@@ -495,7 +554,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
       }
     }
     // read vector data
-    else if(strncmp(line, "vectors", 7) == 0)
+    else if(strncmp(buf.data(), "vectors", 7) == 0)
     {
       if(this->readVectorData(in, numValues) <= 0)
       {
@@ -506,7 +565,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
     //
     // read 3x3 tensor data
     //
-    else if ( ! strncmp(line, "tensors", 7) )
+    else if ( ! strncmp(buf.data(), "tensors", 7) )
     {
       if ( ! this->ReadTensorData(a, numPts) )
       {
@@ -516,7 +575,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
     //
     // read normals data
     //
-    else if ( ! strncmp(line, "normals", 7) )
+    else if ( ! strncmp(buf.data(), "normals", 7) )
     {
 
       if ( ! this->ReadNormalData(a, numPts) )
@@ -527,7 +586,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
     //
     // read texture coordinates data
     //
-    else if ( ! strncmp(line, "texture_coordinates", 19) )
+    else if ( ! strncmp(buf.data(), "texture_coordinates", 19) )
     {
       if ( ! this->ReadTCoordsData(a, numPts) )
       {
@@ -537,7 +596,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
     //
     // read the global id data
     //
-    else if ( ! strncmp(line, "global_ids", 10) )
+    else if ( ! strncmp(buf.data(), "global_ids", 10) )
     {
       if ( ! this->ReadGlobalIds(a, numPts) )
       {
@@ -547,7 +606,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
     //
     // read the pedigree id data
     //
-    else if ( ! strncmp(line, "pedigree_ids", 10) )
+    else if ( ! strncmp(buf.data(), "pedigree_ids", 10) )
     {
       if ( ! this->ReadPedigreeIds(a, numPts) )
       {
@@ -557,7 +616,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
     //
     // read color scalars data
     //
-    else if ( ! strncmp(line, "color_scalars", 13) )
+    else if ( ! strncmp(buf.data(), "color_scalars", 13) )
     {
       if ( ! this->ReadCoScalarData(a, numPts) )
       {
@@ -567,7 +626,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
     //
     // read lookup table. Associate with scalar data.
     //
-    else if ( ! strncmp(line, "lookup_table", 12) )
+    else if ( ! strncmp(buf.data(), "lookup_table", 12) )
     {
       if ( ! this->ReadLutData(a) )
       {
@@ -577,7 +636,7 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
     //
     // read field of data
     //
-    else if ( ! strncmp(line, "field", 5) )
+    else if ( ! strncmp(buf.data(), "field", 5) )
     {
       vtkFieldData* f;
       if ( ! (f = this->ReadFieldData()) )
@@ -593,28 +652,16 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
 #endif
 
     // maybe bumped into cell data
-    else if(strncmp(line, nextKeyWord.c_str(), 9) == 0)
+    else if(strncmp(buf.data(), nextKeyWord.c_str(), 9) == 0)
     {
-      bool ok = false;
-      if(readString(in, line, 256) != 0)
-      {
-        if(nextKeyWord == "cell_data")
-        {
-          // TODO: Implement This ===>     DataContainer::Pointer m = getDataContainerArray()->getDataContainer(getVolumeDataContainerName());
-          // TODO: Implement This ===>     m_CurrentAttrMat = m->getAttributeMatrix(getCellAttributeMatrixName());
-          auto convertResultI32 = nx::core::ConvertTo<int32>::convert(line);
-          int32_t ncells = convertResultI32.value();
-          this->readDataTypeSection(in, ncells, "point_data");
-        }
-        else if(nextKeyWord == "point_data")
-        {
-          // TODO: Implement This ===>      DataContainer::Pointer m = getDataContainerArray()->getDataContainer(getVertexDataContainerName());
-          // TODO: Implement This ===>      m_CurrentAttrMat = m->getAttributeMatrix(getVertexAttributeMatrixName());
-          auto convertResultI32 = nx::core::ConvertTo<int32>::convert(line);
-          int32_t npts = convertResultI32.value();
-          this->readDataTypeSection(in, npts, "cell_data");
-        }
-      }
+      std::string line(buf.data());
+      std::vector<std::string> tokens = StringUtilities::split(line, ' ');
+      std::string sectionType = std::string(tokens[0]);
+      // Read the number of values
+      std::fill(buf.begin(), buf.end(), '\0'); // Splat nulls across the vector
+      this->readString(in, buf.data(), kBufferSize);
+      auto convertResultI32 = nx::core::ConvertTo<int32>::convert({buf.data()});
+      return convertResultI32.value();
     }
     else
     {
@@ -622,8 +669,10 @@ int32_t VtkLegacyFileReader::readDataTypeSection(std::istream& in, int32_t numVa
       //<< " for file: " << (this->FileName?this->FileName:"(Null FileName)"));
       return 0;
     }
+
+    std::fill(buf.begin(), buf.end(), '\0'); // Splat nulls across the vector
   }
-  return 1;
+  return 0;
 }
 
 // ------------------------------------------------------------------------
@@ -721,49 +770,72 @@ int32_t VtkLegacyFileReader::readScalarData(std::istream& in, int32_t numPts)
   this->readLine(in, line, 1024);
 
   int32_t err = 1;
-#if IMPLEMENT_THIS
+
+  DataPath arrayDataPath = m_PointGeomPath.createChildPath(m_PointAMName).createChildPath(name);
+  if(m_CurrentSectionType == CurrentSectionType::Cell)
+  {
+    arrayDataPath = m_ImageGeomPath.createChildPath(m_CellAMName).createChildPath(name);
+  }
+
+  if(m_Preflight)
+  {
+    nx::core::DataType nxDType = ConvertVtkDataType(scalarType);
+    if(nxDType == nx::core::DataType::boolean)
+    {
+    }
+    else
+    {
+      std::vector<usize> tupleShape = {m_CurrentGeomDims[2], m_CurrentGeomDims[1], m_CurrentGeomDims[0]};
+      auto createArrayAction = std::make_unique<CreateArrayAction>(nxDType, tupleShape, std::vector<usize>{1ULL}, arrayDataPath);
+      m_OutputActions.value().appendAction(std::move(createArrayAction));
+      preflightSkipVolume(nxDType, in, m_FileIsBinary, numPts);
+    }
+
+    return err;
+  }
+
   // Read the data
   if(scalarType == "unsigned_char")
   {
-    err = readDataChunk<uint8_t>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<uint8_t>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "char")
   {
-    err = readDataChunk<int8_t>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<int8_t>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "unsigned_short")
   {
-    err = readDataChunk<uint16_t>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<uint16_t>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "short")
   {
-    err = readDataChunk<int16_t>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<int16_t>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "unsigned_int")
   {
-    err = readDataChunk<uint32_t>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<uint32_t>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "int")
   {
-    err = readDataChunk<int32_t>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<int32_t>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "unsigned_long")
   {
-    err = readDataChunk<int64_t>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<uint64_t>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "long")
   {
-    err = readDataChunk<uint64_t>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<int64_t>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "float")
   {
-    err = readDataChunk<float>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<float>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "double")
   {
-    err = readDataChunk<double>(m_CurrentAttrMat, in, getInPreflight(), getFileIsBinary(), name, numComp);
+    err = readDataChunk<double>(m_DataStructurePtr, in, m_FileIsBinary, arrayDataPath);
   }
-#endif
+
   return err;
 }
 
@@ -1008,4 +1080,58 @@ void VtkLegacyFileReader::readData(std::istream& instream)
   }
 
 #endif
+}
+
+// ------------------------------------------------------------------------
+int32_t VtkLegacyFileReader::preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, size_t totalSize)
+{
+  switch(nxDType)
+  {
+  case nx::core::DataType::int8: {
+    skipVolume<int8>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::uint8: {
+    skipVolume<uint8>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::int16: {
+    skipVolume<int16>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::uint16: {
+    skipVolume<uint16>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::int32: {
+    skipVolume<int32>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::uint32: {
+    skipVolume<uint32>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::int64: {
+    skipVolume<int64>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::uint64: {
+    skipVolume<uint64>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::float32: {
+    skipVolume<float32>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::float64: {
+    skipVolume<float64>(in, binary, totalSize);
+    break;
+  }
+  case nx::core::DataType::boolean: {
+    break;
+  }
+  default:
+    break;
+  }
+  return 0;
 }
