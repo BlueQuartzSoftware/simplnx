@@ -93,6 +93,10 @@ using SplitAllowEmptyRightAnalyze = SplitTypeOptions<true, false, true>;
 template <class SplitTypeOptionsV = SplitIgnoreEmpty>
 inline std::vector<std::string> optimized_split(std::string_view str, nonstd::span<const char> delimiters)
 {
+  if(str.empty())
+  {
+    return {};
+  }
   auto endPos = str.end();
   auto startPos = str.begin();
 
@@ -140,6 +144,12 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
   }
 
   tokens.shrink_to_fit();
+
+  // No Delimiters found
+  if(tokens.empty())
+  {
+    tokens.emplace_back(str);
+  }
 
   return tokens;
 }
