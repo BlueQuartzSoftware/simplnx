@@ -1,5 +1,4 @@
-Find Vertex to Triangle Distances
-=============
+# Find Vertex to Triangle Distances
 
 ## Group (Subgroup)
 

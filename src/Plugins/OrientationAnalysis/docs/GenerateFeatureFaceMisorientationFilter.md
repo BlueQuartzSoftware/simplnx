@@ -1,4 +1,4 @@
-# Generate Misorientation Colors (Face)
+# Generate Feature Face Misorientations
 
 ## Group (Subgroup)
 

@@ -1,4 +1,4 @@
-# ImportDeformKeyFilev12
+# Read Deform Key File v12
 
 ## Group (Subgroup)
 

@@ -1,4 +1,4 @@
-# Threshold Objects 2
+# Threshold Objects
 
 ## Group (Subgroup)
 

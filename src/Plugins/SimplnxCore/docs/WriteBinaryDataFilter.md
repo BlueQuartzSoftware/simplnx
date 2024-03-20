@@ -1,4 +1,4 @@
-# WriteBinaryData
+# Write Binary Data
 
 ## Group (Subgroup)
 

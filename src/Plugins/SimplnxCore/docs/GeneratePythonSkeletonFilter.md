@@ -1,11 +1,13 @@
 # Generate Python Plugin and/or Filters
 
 ## Description
+
 The **Generate Python Plugin and/or Filters** is a powerful tool in the DREAM3D-NX environment that allows users to generate or update Python plugins and filter codes. This filter provides an interface for setting up and configuring Python filters within DREAM3D-NX pipelines, either by creating new plugins or by adding to existing ones.
 
 ## Usage
 
 ### Configuration
+
 The filter requires several parameters to be set, which dictate whether a new plugin is created or an existing one is modified. Key parameters include:
 
 - `Use Existing Plugin`: A flag indicating whether to modify an existing plugin.
@@ -16,12 +18,14 @@ The filter requires several parameters to be set, which dictate whether a new pl
 - `Filter Names`: A list of filter names to be included in the plugin, separated by commas.
 
 ### Generating a New Plugin
+
 To generate a new Python plugin:
 1. Set `Use Existing Plugin` to `Off`.
 2. Provide a `Name of Plugin`, `Human Name of Plugin`, `Plugin Output Directory`, and a list of `Filter Names`.
 3. Execute the filter. It will generate the necessary plugin structure and files in the specified output directory.
 
 ### Updating an Existing Plugin
+
 To add filters to an existing Python plugin:
 1. Set `Use Existing Plugin` to `On`.
 2. Provide the `Existing Plugin Location` where the existing plugin is located.
@@ -41,6 +45,7 @@ If your plugin was not generated using the provided filter but was instead creat
        - In the `Plugin.py` file, add to the `get_filters` method. 
 
 ## Example Pipelines
+
 None
 
 ## License & Copyright

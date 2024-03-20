@@ -1,4 +1,4 @@
-# Raw Binary Reader
+# Read Raw Binary File
 
 ## Group (Subgroup)
 

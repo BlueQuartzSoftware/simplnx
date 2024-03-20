@@ -33,7 +33,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindSlipTransmissionMetricsTest.cpp
   FindTriangleGeomShapesTest.cpp
   GenerateFaceIPFColoringTest.cpp
-  GenerateFaceMisorientationColoringTest.cpp
+  GenerateFeatureFaceMisorientationTest.cpp
   GenerateFZQuaternionsTest.cpp
   GenerateGBCDPoleFigureTest.cpp
   GenerateIPFColorsTest.cpp

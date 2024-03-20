@@ -1,5 +1,4 @@
-Interpolate Point Cloud to Regular Grid
-=============
+# Interpolate Point Cloud to Regular Grid
 
 ## Group (Subgroup)
 
