@@ -7,6 +7,69 @@
 
 using namespace nx::core;
 
+TEST_CASE("Empty Input Utility Function Test: split(str, char), split(str, char, bool), specific_split(str, char, StringUtilities::SplitType)")
+{
+  std::string emptyInput = "";
+  std::string noDelimiterInput = "ThisIsABaselineTest";
+
+  std::vector<std::string> result;
+  std::array<char, 1> k_Delimiter = {'|'};
+
+  // Case 1
+  result = StringUtilities::split(emptyInput, k_Delimiter[0]);
+
+  REQUIRE(result.empty());
+
+  result = StringUtilities::split(noDelimiterInput, k_Delimiter[0]);
+
+  REQUIRE(result == std::vector<std::string>{noDelimiterInput});
+
+  // Case 2
+  result = StringUtilities::split(emptyInput, k_Delimiter, true);
+
+  REQUIRE(result.empty());
+
+  result = StringUtilities::split(noDelimiterInput, k_Delimiter, true);
+
+  REQUIRE(result == std::vector<std::string>{noDelimiterInput});
+
+  // Case 4
+  result = StringUtilities::specific_split(emptyInput, k_Delimiter, StringUtilities::SplitType::OnlyConsecutive);
+
+  REQUIRE(result.empty());
+
+  result = StringUtilities::specific_split(noDelimiterInput, k_Delimiter, StringUtilities::SplitType::OnlyConsecutive);
+
+  REQUIRE(result == std::vector<std::string>{noDelimiterInput});
+
+  // Case 5
+  result = StringUtilities::specific_split(emptyInput, k_Delimiter, StringUtilities::SplitType::NoStripIgnoreConsecutive);
+
+  REQUIRE(result.empty());
+
+  result = StringUtilities::specific_split(noDelimiterInput, k_Delimiter, StringUtilities::SplitType::NoStripIgnoreConsecutive);
+
+  REQUIRE(result == std::vector<std::string>{noDelimiterInput});
+
+  // Case 6
+  result = StringUtilities::specific_split(emptyInput, k_Delimiter, StringUtilities::SplitType::AllowEmptyLeftAnalyze);
+
+  REQUIRE(result.empty());
+
+  result = StringUtilities::specific_split(noDelimiterInput, k_Delimiter, StringUtilities::SplitType::AllowEmptyLeftAnalyze);
+
+  REQUIRE(result == std::vector<std::string>{noDelimiterInput});
+
+  // Case 7
+  result = StringUtilities::specific_split(emptyInput, k_Delimiter, StringUtilities::SplitType::AllowEmptyRightAnalyze);
+
+  REQUIRE(result.empty());
+
+  result = StringUtilities::specific_split(noDelimiterInput, k_Delimiter, StringUtilities::SplitType::AllowEmptyRightAnalyze);
+
+  REQUIRE(result == std::vector<std::string>{noDelimiterInput});
+}
+
 TEST_CASE("Utility Function Test: split(str, char)")
 {
   // Case 1
