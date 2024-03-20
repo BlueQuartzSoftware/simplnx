@@ -1,4 +1,4 @@
-# Minimum Size
+# Remove Minimum Size Features
 
 ## Group (Subgroup)
 

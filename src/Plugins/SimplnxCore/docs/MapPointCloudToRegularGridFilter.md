@@ -1,5 +1,4 @@
-Map Point Cloud to Regular Grid
-=============
+# Map Point Cloud to Regular Grid
 
 ## Group (Subgroup)
 

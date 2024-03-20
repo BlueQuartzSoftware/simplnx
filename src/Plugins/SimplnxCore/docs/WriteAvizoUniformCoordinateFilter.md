@@ -1,4 +1,4 @@
-# Avizo Uniform Coordinate Writer  
+# Write Avizo Uniform Coordinate
 
 ## Group (Subgroup)
 

@@ -54,7 +54,7 @@ set(FilterList
   FindSlipTransmissionMetricsFilter
   FindTriangleGeomShapesFilter
   GenerateFaceIPFColoringFilter
-  GenerateFaceMisorientationColoringFilter
+  GenerateFeatureFaceMisorientationFilter
   GenerateFZQuaternions
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
@@ -87,7 +87,7 @@ set(STUB_FILTERS
   FindTwinBoundaries
   FindTwinBoundarySchmidFactors
   GenerateFaceIPFColoring
-  GenerateFaceMisorientationColoring
+  GenerateFeatureFaceMisorientation
   GenerateOrientationMatrixTranspose
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
 )
@@ -184,7 +184,7 @@ set(filter_algorithms
   FindSlipTransmissionMetrics
   FindTriangleGeomShapes
   GenerateFaceIPFColoring
-  GenerateFaceMisorientationColoring
+  GenerateFeatureFaceMisorientation
   GenerateGBCDPoleFigure
   GenerateIPFColors
   GenerateQuaternionConjugate

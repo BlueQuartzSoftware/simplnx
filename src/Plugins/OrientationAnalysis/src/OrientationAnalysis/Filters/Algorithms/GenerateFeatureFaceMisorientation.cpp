@@ -1,4 +1,4 @@
-#include "GenerateFaceMisorientationColoring.hpp"
+#include "GenerateFeatureFaceMisorientation.hpp"
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -103,8 +103,8 @@ public:
 };
 
 // -----------------------------------------------------------------------------
-GenerateFaceMisorientationColoring::GenerateFaceMisorientationColoring(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                                       GenerateFaceMisorientationColoringInputValues* inputValues)
+GenerateFeatureFaceMisorientation::GenerateFeatureFaceMisorientation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                                     GenerateFeatureFaceMisorientationInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -113,16 +113,16 @@ GenerateFaceMisorientationColoring::GenerateFaceMisorientationColoring(DataStruc
 }
 
 // -----------------------------------------------------------------------------
-GenerateFaceMisorientationColoring::~GenerateFaceMisorientationColoring() noexcept = default;
+GenerateFeatureFaceMisorientation::~GenerateFeatureFaceMisorientation() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& GenerateFaceMisorientationColoring::getCancel()
+const std::atomic_bool& GenerateFeatureFaceMisorientation::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> GenerateFaceMisorientationColoring::operator()()
+Result<> GenerateFeatureFaceMisorientation::operator()()
 {
   auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
   auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);

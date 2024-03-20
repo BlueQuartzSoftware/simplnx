@@ -1,4 +1,4 @@
-# WriteDREAM3DFilter
+# Write DREAM3D Filter
 
 ## Description
 

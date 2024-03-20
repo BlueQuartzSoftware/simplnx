@@ -1,5 +1,4 @@
-Approximate Point Cloud Hull
-=============
+# Approximate Point Cloud Hull
 
 ## Group (Subgroup)
 
