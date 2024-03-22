@@ -46,7 +46,7 @@ std::string WriteVtkRectilinearGridFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> WriteVtkRectilinearGridFilter::defaultTags() const
 {
-  return {className(), "IO", "Output", "Write", "Export"};
+  return {className(), "IO", "Output", "Write", "Export", "Vtk", "Rectilinear Grid"};
 }
 
 //------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ Parameters WriteVtkRectilinearGridFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "The output vtk file in which the geometry data is written", fs::path("Data/Output/RectilinearGrid.vtk"),
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "The output vtk file in which the geometry data is written", fs::path("data.vtk"),
                                                           FileSystemPathParameter::ExtensionsType{".vtk"}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<BoolParameter>(k_WriteBinaryFile_Key, "Write Binary File", "Whether or not to write the vtk file in binary", false));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The path to the image geometry in which to write out to the vtk file", DataPath{},
