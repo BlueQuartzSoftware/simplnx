@@ -146,6 +146,7 @@ void FeatureFaceCurvature::sendThreadSafeProgressMessage(usize counter)
 
   m_ProgressCounter += counter;
   auto now = std::chrono::steady_clock::now();
+  // We DO NOT Want to print at more than once a second. Hey. Don't copy/paste this line.
   if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
   {
     return;

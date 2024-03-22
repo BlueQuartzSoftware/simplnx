@@ -68,7 +68,7 @@ public:
       if(counter > increment)
       {
         auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() < 1000)
+        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
           m_Filter->sendThreadSafeProgressMessage(counter);
           counter = 0;
@@ -186,7 +186,7 @@ void FindKernelAvgMisorientations::sendThreadSafeProgressMessage(usize counter)
 
   m_ProgressCounter += counter;
   auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() > 1000)
   {
     return;
   }
