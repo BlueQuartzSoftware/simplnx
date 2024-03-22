@@ -130,6 +130,7 @@ set(FilterList
   WriteLosAlamosFFTFilter
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
+  WriteVtkStructuredPointsFilter
   ReadVtkStructuredPointsFilter
 )
 
@@ -209,6 +210,7 @@ set(AlgorithmList
   WriteLosAlamosFFT
   WriteStlFile
   WriteVtkRectilinearGrid
+  WriteVtkStructuredPoints
   ReadVtkStructuredPoints
 )
 
@@ -322,7 +324,7 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.hpp"
-
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/VtkUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.h"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellMap.cpp"

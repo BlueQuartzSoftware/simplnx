@@ -109,6 +109,7 @@
 #include "SimplnxCore/Filters/WriteAvizoUniformCoordinateFilter.hpp"
 #include "SimplnxCore/Filters/WriteAvizoRectilinearCoordinateFilter.hpp"
 #include "SimplnxCore/Filters/WriteVtkRectilinearGridFilter.hpp"
+#include "SimplnxCore/Filters/WriteVtkStructuredPointsFilter.hpp"
 #include "SimplnxCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/FindBoundaryElementFractionsFilter.hpp"
@@ -120,10 +121,6 @@
 #include "SimplnxCore/Filters/SilhouetteFilter.hpp"
 #include "SimplnxCore/Filters/LabelTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/RemoveFlaggedTrianglesFilter.hpp"
-#include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
-#include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
-#include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
-#include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
 #include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
@@ -251,10 +248,8 @@ namespace nx::core
     {nx::core::Uuid::FromString("a250a228-3b6b-5b37-a6e4-8687484f04c4").value(), {nx::core::FilterTraits<LabelTriangleGeometryFilter>::uuid, &LabelTriangleGeometryFilter::FromSIMPLJson}}, // LabelTriangleGeometry
     {nx::core::Uuid::FromString("379ccc67-16dd-530a-984f-177db9351bac").value(), {nx::core::FilterTraits<RemoveFlaggedTrianglesFilter>::uuid, &RemoveFlaggedTrianglesFilter::FromSIMPLJson}}, // RemoveFlaggedTriangles
     {nx::core::Uuid::FromString("f2fecbf9-636b-5ef9-89db-5cb57e4c5676").value(), {nx::core::FilterTraits<ReadVtkStructuredPointsFilter>::uuid, &ReadVtkStructuredPointsFilter::FromSIMPLJson}}, // ReadVtkStructuredPoints
-    {nx::core::Uuid::FromString("f2fecbf9-636b-5ef9-89db-5cb57e4c5676").value(), {nx::core::FilterTraits<ReadVtkStructuredPointsFilter>::uuid, &ReadVtkStructuredPointsFilter::FromSIMPLJson}}, // ReadVtkStructuredPoints
-    {nx::core::Uuid::FromString("f2fecbf9-636b-5ef9-89db-5cb57e4c5676").value(), {nx::core::FilterTraits<ReadVtkStructuredPointsFilter>::uuid, &ReadVtkStructuredPointsFilter::FromSIMPLJson}}, // ReadVtkStructuredPoints
-    {nx::core::Uuid::FromString("f2fecbf9-636b-5ef9-89db-5cb57e4c5676").value(), {nx::core::FilterTraits<ReadVtkStructuredPointsFilter>::uuid, &ReadVtkStructuredPointsFilter::FromSIMPLJson}}, // ReadVtkStructuredPoints
-    {nx::core::Uuid::FromString("f2fecbf9-636b-5ef9-89db-5cb57e4c5676").value(), {nx::core::FilterTraits<ReadVtkStructuredPointsFilter>::uuid, &ReadVtkStructuredPointsFilter::FromSIMPLJson}}, // ReadVtkStructuredPoints
+    {nx::core::Uuid::FromString("a043bd66-2681-5126-82e1-5fdc46694bf4").value(), {nx::core::FilterTraits<WriteVtkStructuredPointsFilter>::uuid, &WriteVtkStructuredPointsFilter::FromSIMPLJson}}, // WriteVtkStructuredPointsFilter
+
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

@@ -118,7 +118,19 @@ public:
    */
   virtual std::unique_ptr<IDataStore> createNewInstance() const = 0;
 
+  /**
+   *
+   * @param absoluteFilePath
+   * @return
+   */
   virtual std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const = 0;
+
+  /**
+   *
+   * @param outputStream
+   * @return
+   */
+  virtual std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const = 0;
 
 protected:
   /**

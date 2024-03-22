@@ -512,7 +512,6 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/KUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
-    ${SIMPLNX_SOURCE_DIR}/Utilities/VtkLegacyFileReader.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
@@ -710,7 +709,6 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/VtkUtilities.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 
