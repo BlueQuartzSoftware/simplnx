@@ -21,17 +21,38 @@ by creating a new virtual environment
 
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
+   :caption: Conceptual
 
    Installation
    Overview
    DataObjects
    Geometry
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Using SIMPLNX
+
    Python_Introduction
    User_API
+   Reference_Frame_Notes
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Filter Writers
+
    Writing_A_New_Python_Filter
    Developer_API
-   Reference_Frame_Notes
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Filter API/Docs
+
+@PLUGIN_LIST@
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Release Notes
+
    ReleaseNotes_110
    ReleaseNotes_120
    ReleaseNotes_121
@@ -39,7 +60,6 @@ by creating a new virtual environment
    ReleaseNotes_124
    ReleaseNotes_126
    ReleaseNotes_127
-@PLUGIN_LIST@
 
 Indices and tables
 ==================
