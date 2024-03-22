@@ -1,4 +1,4 @@
-# Vtk Rectilinear Grid Exporter
+# Write Vtk Rectilinear Grid
 
 ## Group (Subgroup)
 
@@ -6,7 +6,7 @@ I/O Filters
 
 ## Description
 
-This Filter reads the **Feature** and phase ids together with image parameters required by Vtk to an output file named by the user. The file is used to generate the image of the **Features** and phases of the **Features**.
+This Filter writes a VTK legacy file with a Dataset type of `RECTILINEAR_GRID`. The user can select which arrays from the Image Geometry will be written to the file.
 
 % Auto generated parameter table will be inserted here
 
