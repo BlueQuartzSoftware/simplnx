@@ -281,7 +281,7 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
  * @return
  */
 inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirectory, const std::string& pluginName, const std::string& pluginShortName, const std::string& pluginDescription,
-                                       const std::string& pluginFilterList)
+                                       const std::string& pluginFilterList, bool createBatchShellScript, const std::string& anacondaEnvName)
 {
 
   auto pluginRootPath = outputDirectory / pluginName;
@@ -302,6 +302,31 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       }
 
       std::string content = GeneratePythonPlugin(pluginName, pluginShortName, pluginDescription, pluginFilterList);
+
+      fout << content;
+    }
+  }
+
+  if(createBatchShellScript)
+  {
+#ifdef __WIN32__
+    outputPath = pluginRootPath / "init_evn.bat";
+#else
+    outputPath = pluginRootPath / "init_evn.sh";
+#endif
+    AtomicFile initTempFile(outputPath.string(), true);
+    {
+      // Scope this so that the file closes first before we then 'commit' with the atomic file
+      std::ofstream fout(initTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
+      if(!fout.is_open())
+      {
+        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", initTempFile.tempFilePath().string()));
+      }
+      std::string content = PluginBatchFile();
+
+      content = StringUtilities::replace(content, "@PYTHONPATH@", outputDirectory.string());
+      content = StringUtilities::replace(content, "@SIMPLNX_PYTHON_PLUGINS@", pluginName);
+      content = StringUtilities::replace(content, "@ANACONDA_ENV_NAME@", anacondaEnvName);
 
       fout << content;
     }

@@ -35,6 +35,7 @@ Result<> GeneratePythonSkeleton::operator()()
   }
   else
   {
-    return nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginName, "Description", m_InputValues->filterNames);
+    return nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginName, "Description", m_InputValues->filterNames,
+                                            m_InputValues->createBatchShellScript, m_InputValues->anacondaEnvName);
   }
 }
