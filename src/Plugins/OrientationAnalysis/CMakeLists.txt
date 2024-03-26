@@ -67,6 +67,7 @@ set(FilterList
   ReadH5EbsdFilter
   ReadH5EspritDataFilter
   ReadH5OimDataFilter
+  ReadH5OinaDataFilter
   RodriguesConvertorFilter
   RotateEulerRefFrameFilter
   WriteGBCDGMTFileFilter
@@ -197,6 +198,7 @@ set(filter_algorithms
   ReadH5Ebsd
   ReadH5EspritData
   ReadH5OimData
+  ReadH5OinaData
   RodriguesConvertor
   RotateEulerRefFrame
   WriteGBCDGMTFile
