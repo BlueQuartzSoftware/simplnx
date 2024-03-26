@@ -303,7 +303,20 @@ Interoperating with Numpy
     This will hopefully be addressed in a future update.
 
 
-This code example shows how to create a simplnx DataArray and then use that array 
+SIMPLNX DataArray objects are exposed to python through the use of a numpy view into the Data Array. This means that any modifications
+to the numpy view are immediately reflected in the DataArray itself. This kind of interaction opens up many 3rd party libraries that
+operate on numpy arrays and views such as numpy itself, pillow (for image processing), scipy and others.
+
+Once the DataStructure has a DataArray allocated into it through the use of a filter, the user can get a view of that
+DataArray through the following:
+
+.. code:: python
+
+    output_array_path = nx.DataPath(["Image Geometry/Cell Data/RGB"])
+    rgb_np_view = data_structure[output_array_path].npview()
+
+
+The following code examples show how to create a simplnx DataArray and then use that array 
 as a numpy view.
 
 The next code section was take from `basic_arrays.py <https://github.com/bluequartzsoftware/simplnx/tree/develop/wrapping/python/examples/basic_arrays.py>`__
@@ -345,7 +358,8 @@ The next code section was take from `basic_arrays.py <https://github.com/bluequa
                                     tuple_dimensions=[[99]],
                                     output_data_array=array_path,
                                     initialization_value='0')
-    npdata = data_structure[array_path].store.npview()
+    # Get the new numpy view
+    npdata = data_structure[array_path].npview()
     # Read the CSV file into the DataArray using the numpy view
     file_path = 'angles.csv'
     npdata[:] = np.loadtxt(file_path, delimiter=',')
@@ -356,6 +370,7 @@ The next code section was take from `basic_arrays.py <https://github.com/bluequa
                                             input_type=0,
                                             output_orientation_array_name='Quaternions',
                                             output_type=2)
+    
     # Get the new numpy view and then print the data
-    npdata = data_structure['Quaternions'].store.npview()
+    npdata = data_structure['Quaternions'].npview()
     print(npdata)
