@@ -43,6 +43,7 @@ set(FilterList
   ExecuteProcessFilter
   ExtractComponentAsArrayFilter
   ExtractInternalSurfacesFromTriangleGeometry
+  ExtractPipelineToFileFilter
   ExtractVertexGeometryFilter
   FeatureFaceCurvatureFilter
   FillBadDataFilter
