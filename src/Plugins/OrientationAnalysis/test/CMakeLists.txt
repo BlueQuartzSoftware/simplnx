@@ -46,6 +46,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadH5EbsdTest.cpp
   ReadH5EspritDataTest.cpp
   ReadH5OimDataTest.cpp
+  ReadH5OinaDataTest.cpp
   RodriguesConvertorTest.cpp
   RotateEulerRefFrameTest.cpp
   WriteGBCDGMTFileTest.cpp
@@ -137,6 +138,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stats_gen_odf_angle_file.tar.gz SHA512 be3f663aae1f78e5b789200421534ed9fe293187ec3514796ac8177128b34ded18bb9a98b8e838bb283f9818ac30dc4b19ec379bdd581b1a98eb36d967cdd319)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME INL_writer.tar.gz SHA512 7d723351e51e84540abfbc38e69a6014852ba34808f9d216a27063a616bcfbd5eb708405305fd83334e48c9ca133d3d0be797c05040e4a115cc612e385d9ada6)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME convert_hex_grid_to_square_grid_test.tar.gz SHA512 bb672ebbe2540ba493ad95bea95dac1f85b5634ac3311b5aa774ce3d2177103d1b45a13225221993dd40f0cbe02daf20ccd209d4ae0cab0bf034d97c5b234ba4)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME H5Oina_Test_Data.tar.gz SHA512 346573ac6b96983680078e8b0a401aa25bd9302dff382ca86ae4e503ded6db3947c4c5611ee603db519d8a8dc6ed35b044a7bfea9880fade5ab54479d140ea03 )
 
 endif()
 
