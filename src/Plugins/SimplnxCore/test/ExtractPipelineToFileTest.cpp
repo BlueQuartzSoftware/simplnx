@@ -45,6 +45,8 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Valid Execution", "[Simpln
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   REQUIRE(fs::exists(k_JsonOutputFile));
+
+  fs::remove(k_JsonOutputFile);
 }
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Valid Execution - incorrect output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
@@ -71,6 +73,8 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Valid Execution - incorrec
 
   REQUIRE(preflightResult.outputActions.warnings().front().code == -2581);
   REQUIRE(fs::exists(k_JsonOutputFile));
+
+  fs::remove(k_JsonOutputFile);
 }
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missing output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
@@ -106,12 +110,14 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
   ExtractPipelineToFileFilter filter;
 
   auto testInvalidInputFile = fs::path(fmt::format("{}/TestDataStructureNoPipeline.dream3d", unit_test::k_BinaryTestOutputDir));
-  DataStructure testDataStructure = UnitTest::CreateDataStructure();
-  auto fileWriterResult = nx::core::HDF5::FileWriter::CreateFile(testInvalidInputFile);
-  REQUIRE(fileWriterResult.valid());
-  nx::core::HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
-  auto writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-  REQUIRE(writeResult.valid());
+  {
+    DataStructure testDataStructure = UnitTest::CreateDataStructure();
+    auto fileWriterResult = nx::core::HDF5::FileWriter::CreateFile(testInvalidInputFile);
+    REQUIRE(fileWriterResult.valid());
+    nx::core::HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
+    auto writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    REQUIRE(writeResult.valid());
+  }
 
   fs::path outputFilePath(fmt::format("{}/TestDataStructureNoPipeline{}", unit_test::k_BinaryTestOutputDir, Pipeline::k_SIMPLExtension.str()));
 
@@ -128,4 +134,6 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
   REQUIRE(!fs::exists(k_JsonOutputFile));
+
+  fs::remove(testInvalidInputFile);
 }
