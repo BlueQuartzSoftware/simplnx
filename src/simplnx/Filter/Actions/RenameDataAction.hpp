@@ -13,7 +13,7 @@ class SIMPLNX_EXPORT RenameDataAction : public IDataAction
 public:
   RenameDataAction() = delete;
 
-  RenameDataAction(const DataPath& path, const std::string& newName);
+  RenameDataAction(const DataPath& path, const std::string& newName, bool overwrite = false);
 
   ~RenameDataAction() noexcept override;
 
@@ -48,8 +48,15 @@ public:
    */
   const DataPath& path() const;
 
+  /**
+   * @brief Returns the overwrite value
+   * @return
+   */
+   bool overwrite() const;
+
 private:
   std::string m_NewName;
   DataPath m_Path;
+  bool m_Overwrite;
 };
 } // namespace nx::core

@@ -162,38 +162,38 @@ std::string DataObject::getName() const
   return m_Name;
 }
 
-bool DataObject::canRename(const std::string& name) const
+int DataObject::canRename(const std::string& name) const
 {
 
   if(name == getName())
   {
-    return true;
+    return 1;
   }
 
   if(!IsValidName(name))
   {
-    return false;
+    return 0;
   }
 
   const auto* dataStructPtr = getDataStructure();
   if(dataStructPtr == nullptr)
   {
-    return false;
+    return 0;
   }
 
-  return !std::any_of(m_ParentList.cbegin(), m_ParentList.cend(), [dataStructPtr, name](IdType parentId) {
+  return (std::any_of(m_ParentList.cbegin(), m_ParentList.cend(), [dataStructPtr, name](IdType parentId) {
     const auto* baseGroupPtr = dataStructPtr->getDataAs<BaseGroup>(parentId);
     if(baseGroupPtr == nullptr)
     {
       std::cout << "DataObject::canRename(name=" << name << ") cannot get baseGroup from parentId = " << parentId << std::endl;
     }
     return baseGroupPtr != nullptr && baseGroupPtr->contains(name);
-  });
+  })) ? 2 : 0;
 }
 
 bool DataObject::rename(const std::string& name)
 {
-  if(!canRename(name))
+  if(canRename(name) != 1)
   {
     return false;
   }

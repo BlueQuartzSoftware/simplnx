@@ -9,9 +9,10 @@ using namespace nx::core;
 
 namespace nx::core
 {
-RenameDataAction::RenameDataAction(const DataPath& path, const std::string& newName)
+RenameDataAction::RenameDataAction(const DataPath& path, const std::string& newName, bool overwrite)
 : m_NewName(newName)
 , m_Path(path)
+, m_Overwrite(overwrite)
 {
 }
 
@@ -27,10 +28,27 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
     return MakeErrorResult(-6601, ss);
   }
 
-  if(!dataObject->canRename(m_NewName))
+  int validRename = dataObject->canRename(m_NewName);
+  if(validRename == 0)
   {
     std::string ss = fmt::format("{}Could not rename DataObject at '{}' to '{}'", prefix, m_Path.toString(), m_NewName);
     return MakeErrorResult(-6602, ss);
+  }
+  if(validRename == 2)
+  {
+    if(m_Overwrite)
+    {
+      if(mode == Mode::Preflight)
+      {
+        std::string ss = fmt::format("{}Another object exists with that name, will overwrite destroying other DataObject at '{}' and replacing it with '{}'", prefix, m_NewName, m_Path.toString());
+        Result<>{}.warnings().emplace_back(Warning{-6603,ss});
+      }
+    }
+    else
+    {
+      std::string ss = fmt::format("{}Another object exists with that name, will not rename DataObject at '{}' to '{}'", prefix, m_Path.toString(), m_NewName);
+      return MakeErrorResult(-6604, ss);
+    }
   }
 
   dataObject->rename(m_NewName);
@@ -51,4 +69,10 @@ const DataPath& RenameDataAction::path() const
 {
   return m_Path;
 }
+
+bool RenameDataAction::overwrite() const
+{
+  return m_Overwrite;
+}
+
 } // namespace nx::core
