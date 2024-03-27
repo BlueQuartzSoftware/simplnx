@@ -56,9 +56,8 @@ Parameters ExtractPipelineToFileFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_ImportFileData, "Import File Path", "The DREAM.3D file path the pipeline should be taken from", FileSystemPathParameter::ValueType{},
                                                           FileSystemPathParameter::ExtensionsType{".dream3d"}, FileSystemPathParameter::PathType::InputFile));
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir, "Output Directory", "The directory in which to save the extracted pipeline file", FileSystemPathParameter::ValueType{},
-                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir));
-  params.insert(std::make_unique<StringParameter>(k_OutputFileName, "Output File Name", "The directory in which to save the extracted pipeline file", ""));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile, "Output File Path", "The file path in which to save the extracted pipeline file", FileSystemPathParameter::ValueType{},
+                                                          FileSystemPathParameter::ExtensionsType{Pipeline::k_Extension, Pipeline::k_SIMPLExtension}, FileSystemPathParameter::PathType::OutputFile));
   return params;
 }
 
@@ -72,12 +71,38 @@ IFilter::UniquePointer ExtractPipelineToFileFilter::clone() const
 IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel) const
 {
-  if(args.value<StringParameter::ValueType>(k_OutputFileName).empty())
+  const auto importFile = args.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
+  auto outputFile = args.value<FileSystemPathParameter::ValueType>(k_OutputFile);
+
+  Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
+  if(pipelineResult.invalid())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-2580, "Output file name cannot be empty."}})};
+    return {ConvertInvalidResult<OutputActions, nlohmann::json>(std::move(pipelineResult))};
   }
-  OutputActions actions;
-  return {std::move(actions)};
+
+  Result<OutputActions> results;
+
+  const nlohmann::json pipelineJson = pipelineResult.value();
+  const bool isLegacy = pipelineJson.contains(nx::core::Pipeline::k_SIMPLPipelineBuilderKey);
+
+  fs::path finalOutputPath = outputFile;
+  std::string extension = isLegacy ? Pipeline::k_SIMPLExtension : Pipeline::k_Extension;
+  if(!finalOutputPath.has_extension())
+  {
+    finalOutputPath.concat(extension);
+    results.warnings().push_back(Warning{
+        -2580, fmt::format("Output file '{}' is missing an extension. A {} extension will be added to the provided output file so that the extracted pipeline will be written to the file at path '{}'",
+                           outputFile.string(), extension, finalOutputPath.string())});
+  }
+  if(finalOutputPath.extension().string() != extension)
+  {
+    finalOutputPath.replace_extension(extension);
+    results.warnings().push_back(
+        Warning{-2581, fmt::format("Output file '{}' has the incorrect extension. A {} extension will be used instead so that the extracted pipeline will be written to the file at path '{}'",
+                                   outputFile.string(), extension, finalOutputPath.string())});
+  }
+
+  return {results};
 }
 
 //------------------------------------------------------------------------------
@@ -85,8 +110,7 @@ Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel) const
 {
   const auto importFile = args.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
-  auto outputDir = args.value<FileSystemPathParameter::ValueType>(k_OutputDir);
-  auto outputFileName = args.value<StringParameter::ValueType>(k_OutputFileName);
+  auto outputFile = args.value<FileSystemPathParameter::ValueType>(k_OutputFile);
 
   Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())
@@ -97,14 +121,21 @@ Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, 
   const bool isLegacy = pipelineJson.contains(nx::core::Pipeline::k_SIMPLPipelineBuilderKey);
 
   std::string extension = isLegacy ? Pipeline::k_SIMPLExtension : Pipeline::k_Extension;
-  std::string outputPath = outputDir.string() + "/" + outputFileName + extension;
-  AtomicFile atomicFile(outputPath, false);
+  if(!outputFile.has_extension())
+  {
+    outputFile.concat(extension);
+  }
+  if(outputFile.extension().string() != extension)
+  {
+    outputFile.replace_extension(extension);
+  }
+  AtomicFile atomicFile(outputFile.string(), false);
   {
     const fs::path exportFilePath = atomicFile.tempFilePath();
     std::ofstream fOut(exportFilePath.string(), std::ofstream::out); // test name resolution and create file
     if(!fOut.is_open())
     {
-      return MakeErrorResult(-2581, fmt::format("Error opening output path {}", exportFilePath.string()));
+      return MakeErrorResult(-2582, fmt::format("Error opening output path {}", exportFilePath.string()));
     }
 
     fOut << pipelineJson.dump(2);
