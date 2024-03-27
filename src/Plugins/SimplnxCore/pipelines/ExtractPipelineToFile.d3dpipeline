@@ -5,8 +5,8 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": "Data/Output/Reconstruction/SmallIN100_Final.dream3d",
-        "output_file": "Data/Output/Reconstruction/SmallIN100_Final_Pipeline.d3dpipeline"
+        "input_file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d",
+        "output_file_path": "Data/Output/Reconstruction/SmallIN100_Final_Pipeline.d3dpipeline"
       },
       "comments": "",
       "filter": {

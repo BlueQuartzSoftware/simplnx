@@ -45,7 +45,7 @@ std::string ExtractPipelineToFileFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExtractPipelineToFileFilter::defaultTags() const
 {
-  return {className(), "IO", "Input", "Read", "Import", "Output", "Write", "Export"};
+  return {className(), "IO", "Input", "Read", "Import", "Output", "Write", "Export", "Pipeline", "JSON"};
 }
 
 //------------------------------------------------------------------------------
@@ -53,10 +53,10 @@ Parameters ExtractPipelineToFileFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_ImportFileData, "Import File Path", "The DREAM.3D file path the pipeline should be taken from", FileSystemPathParameter::ValueType{},
-                                                          FileSystemPathParameter::ExtensionsType{".dream3d"}, FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_ImportFileData, "Input DREAM3D File Path", "The file path to the .dream3d that holds the pipeline to be extracted.",
+                                                          FileSystemPathParameter::ValueType{}, FileSystemPathParameter::ExtensionsType{".dream3d"}, FileSystemPathParameter::PathType::InputFile));
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile, "Output File Path", "The file path in which to save the extracted pipeline file", FileSystemPathParameter::ValueType{},
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile, "Output File Path", "The file path in which to save the extracted pipeline", FileSystemPathParameter::ValueType{},
                                                           FileSystemPathParameter::ExtensionsType{Pipeline::k_Extension, Pipeline::k_SIMPLExtension}, FileSystemPathParameter::PathType::OutputFile));
   return params;
 }

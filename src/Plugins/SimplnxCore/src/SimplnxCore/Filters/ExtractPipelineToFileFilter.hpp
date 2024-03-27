@@ -27,8 +27,8 @@ public:
   ExtractPipelineToFileFilter& operator=(ExtractPipelineToFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImportFileData = "import_file_data";
-  static inline constexpr StringLiteral k_OutputFile = "output_file";
+  static inline constexpr StringLiteral k_ImportFileData = "input_file_path";
+  static inline constexpr StringLiteral k_OutputFile = "output_file_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
