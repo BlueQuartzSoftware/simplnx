@@ -33,6 +33,7 @@ public:
   using const_iterator = collection_type::const_iterator;
 
   static constexpr StringLiteral k_Extension = ".d3dpipeline";
+  static constexpr StringLiteral k_SIMPLExtension = ".json";
   static constexpr StringLiteral k_SIMPLPipelineBuilderKey = "PipelineBuilder";
 
   /**

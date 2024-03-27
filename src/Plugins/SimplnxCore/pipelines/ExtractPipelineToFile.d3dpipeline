@@ -1,0 +1,21 @@
+{
+  "isDisabled": false,
+  "name": "ExtractPipelineToFile.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "input_file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d",
+        "output_file_path": "Data/Output/Reconstruction/SmallIN100_Final_Pipeline.d3dpipeline"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ExtractPipelineToFileFilter",
+        "uuid": "27203c99-9975-4528-88cc-42b270165d79"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

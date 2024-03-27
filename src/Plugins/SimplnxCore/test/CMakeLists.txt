@@ -43,6 +43,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExecuteProcessTest.cpp
   ExtractComponentAsArrayTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
+  ExtractPipelineToFileTest.cpp
   ExtractVertexGeometryTest.cpp
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
@@ -69,7 +70,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindVolFractionsTest.cpp
   GenerateColorTableTest.cpp
   GenerateVectorColorsTest.cpp
-    GeneratePythonSkeletonTest.cpp
+  GeneratePythonSkeletonTest.cpp
   IdentifySampleTest.cpp
   FlyingEdges3DTest.cpp
   ImageGeomTest.cpp
