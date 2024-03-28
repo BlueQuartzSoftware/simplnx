@@ -8,19 +8,15 @@ class #PYTHON_FILTER_NAME#:
   """
   TEST_KEY = 'test'
 
+# -----------------------------------------------------------------------------
+# These methods should not be edited
+# -----------------------------------------------------------------------------
   def uuid(self) -> nx.Uuid:
     """This returns the UUID of the filter. Each filter has a unique UUID value
     :return: The Filter's Uuid value
     :rtype: string
     """
     return nx.Uuid('#PYTHON_FILTER_UUID#')
-
-  def human_name(self) -> str:
-    """This returns the name of the filter as a user of DREAM3DNX would see it
-    :return: The filter's human name
-    :rtype: string
-    """
-    return '#PYTHON_FILTER_HUMAN_NAME#'
 
   def class_name(self) -> str:
     """The returns the name of the class that implements the filter
@@ -36,13 +32,6 @@ class #PYTHON_FILTER_NAME#:
     """
     return '#PYTHON_FILTER_NAME#'
 
-  def default_tags(self) -> List[str]:
-    """This returns the default tags for this filter
-    :return: The default tags for the filter
-    :rtype: list
-    """
-    return ['python']
-
   def clone(self):
     """Clones the filter
     :return: A new instance of the filter
@@ -50,6 +39,27 @@ class #PYTHON_FILTER_NAME#:
     """
     return #PYTHON_FILTER_NAME#()
 
+# -----------------------------------------------------------------------------
+# These methods CAN (and probably should) be updated. For instance, the 
+# human_name() is what users of the filter will see in the DREAM3D-NX GUI. You
+# might want to consider putting spaces between workd, using proper capitalization
+# and putting "(Python)" at the end of the name (or beginning if you want the 
+# filter list to group your filters togther)
+# -----------------------------------------------------------------------------
+  def human_name(self) -> str:
+    """This returns the name of the filter as a user of DREAM3DNX would see it
+    :return: The filter's human name
+    :rtype: string
+    """
+    return '#PYTHON_FILTER_HUMAN_NAME# (Python)'
+ 
+  def default_tags(self) -> List[str]:
+    """This returns the default tags for this filter
+    :return: The default tags for the filter
+    :rtype: list
+    """
+    return ['python', '#PYTHON_FILTER_HUMAN_NAME#']
+   
   def parameters(self) -> nx.Parameters:
     """This function defines the parameters that are needed by the filter. Parameters collect the values from the user
        or through a pipeline file.

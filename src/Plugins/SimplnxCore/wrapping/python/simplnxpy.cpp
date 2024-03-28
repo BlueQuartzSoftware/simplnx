@@ -286,10 +286,10 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::set_shared_data(Internals::k_Key, internals);
 
-  // This is required until the pybind11_json library is added which adds the appropriate typecasters
-  auto json = py::class_<nlohmann::json>(mod, "Json");
-  json.def(py::init<>([](std::string_view text) { return nlohmann::json::parse(text); }), "text"_a);
-  json.def("__str__", [](nlohmann::json& self) { return self.dump(); });
+  // This is required until the pybind11_json library is added which adds the appropriate type casters
+  //  auto json = py::class_<nlohmann::json>(mod, "Json");
+  //  json.def(py::init<>([](std::string_view text) { return nlohmann::json::parse(text); }), "text"_a);
+  //  json.def("__str__", [](nlohmann::json& self) { return self.dump(); });
 
   py::class_<Error> error(mod, "Error");
   error.def(py::init<>());
