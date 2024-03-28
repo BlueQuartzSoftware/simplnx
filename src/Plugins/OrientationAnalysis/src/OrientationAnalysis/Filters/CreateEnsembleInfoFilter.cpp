@@ -57,7 +57,7 @@ Parameters CreateEnsembleInfoFilter::parameters() const
       k_Ensemble_Key, "Created Ensemble Info", "The values with which to populate the crystal structures, phase types, and phase names data arrays. Each row corresponds to an ensemble phase.",
       EnsembleInfoParameter::ValueType{}));
   params.insertSeparator(Parameters::Separator{"Created Cell Ensemble Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix",
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
                                                              "The complete path to the attribute matrix in which to store the ensemble phase data arrays", DataPath({"EnsembleAttributeMatrix"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CrystalStructuresArrayName_Key, "Crystal Structures", "The name of the data array representing the crystal structure for each Ensemble",
                                                           "CrystalStructures"));
@@ -78,7 +78,7 @@ IFilter::PreflightResult CreateEnsembleInfoFilter::preflightImpl(const DataStruc
                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pEnsembleValue = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);
-  auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixName_Key);
+  auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
   auto pCrystalStructuresArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_CrystalStructuresArrayName_Key);
   auto pPhaseTypesArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseTypesArrayName_Key);
   auto pPhaseNamesArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseNamesArrayName_Key);
@@ -110,7 +110,7 @@ Result<> CreateEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, con
 {
   CreateEnsembleInfoInputValues inputValues;
   inputValues.Ensemble = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);
-  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixName_Key);
+  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
   inputValues.CrystalStructuresArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CrystalStructuresArrayName_Key);
   inputValues.PhaseTypesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseTypesArrayName_Key);
   inputValues.PhaseNamesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseNamesArrayName_Key);
@@ -141,7 +141,7 @@ Result<Arguments> CreateEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& 
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::EnsembleInfoFilterParameterConverter>(args, json, SIMPL::k_EnsembleKey, k_Ensemble_Key));
   results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, SIMPL::k_CellEnsembleAttributeMatrixNameKey,
-                                                                                                                k_CellEnsembleAttributeMatrixName_Key));
+                                                                                                                k_CellEnsembleAttributeMatrixPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));

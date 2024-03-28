@@ -24,8 +24,8 @@ public:
   GenerateQuaternionConjugateFilter& operator=(GenerateQuaternionConjugateFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "quaternion_data_array_path";
-  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "output_data_array_path";
+  static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "input_quats_data_path";
+  static inline constexpr StringLiteral k_OutputDataArrayName_Key = "output_data_array_name";
   static inline constexpr StringLiteral k_DeleteOriginalData_Key = "delete_original_data";
 
   /**

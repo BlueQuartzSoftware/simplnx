@@ -175,43 +175,43 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   OutputActions actions;
   if(findLength)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Length_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_LengthName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMin)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Minimum_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_MinimumName_Key));
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMax)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Maximum_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_MaximumName_Key));
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMean)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Mean_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_MeanName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMedian)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Median_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_MedianName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findStdDeviation)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviation_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviationName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findSummation)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Summation_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_SummationName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
@@ -269,13 +269,13 @@ Parameters FindNeighborListStatistics::parameters() const
       std::make_unique<NeighborListSelectionParameter>(k_InputArray_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(), nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_Length_Key, "Length", "Path to create the Length array during calculations", "Length"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_Minimum_Key, "Minimum", "Path to create the Minimum array during calculations", "Minimum"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_Maximum_Key, "Maximum", "Path to create the Maximum array during calculations", "Maximum"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_Mean_Key, "Mean", "Path to create the Mean array during calculations", "Mean"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_Median_Key, "Median", "Path to create the Median array during calculations", "Median"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_StandardDeviation_Key, "Standard Deviation", "Path to create the Standard Deviation array during calculations", "StandardDeviation"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_Summation_Key, "Summation", "Path to create the Summation array during calculations", "Summation"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_LengthName_Key, "Length", "Path to create the Length array during calculations", "Length"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MinimumName_Key, "Minimum", "Path to create the Minimum array during calculations", "Minimum"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MaximumName_Key, "Maximum", "Path to create the Maximum array during calculations", "Maximum"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MeanName_Key, "Mean", "Path to create the Mean array during calculations", "Mean"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MedianName_Key, "Median", "Path to create the Median array during calculations", "Median"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_StandardDeviationName_Key, "Standard Deviation", "Path to create the Standard Deviation array during calculations", "StandardDeviation"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SummationName_Key, "Summation", "Path to create the Summation array during calculations", "Summation"));
   return params;
 }
 
@@ -344,37 +344,37 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
 
   if(findLength)
   {
-    auto lengthPath = outputGroupPath.createChildPath(args.value<std::string>(k_Length_Key));
+    auto lengthPath = outputGroupPath.createChildPath(args.value<std::string>(k_LengthName_Key));
     arrays[0] = data.getDataAs<IDataArray>(lengthPath);
   }
   if(findMin)
   {
-    auto minPath = outputGroupPath.createChildPath(args.value<std::string>(k_Minimum_Key));
+    auto minPath = outputGroupPath.createChildPath(args.value<std::string>(k_MinimumName_Key));
     arrays[1] = data.getDataAs<IDataArray>(minPath);
   }
   if(findMax)
   {
-    auto maxPath = outputGroupPath.createChildPath(args.value<std::string>(k_Maximum_Key));
+    auto maxPath = outputGroupPath.createChildPath(args.value<std::string>(k_MaximumName_Key));
     arrays[2] = data.getDataAs<IDataArray>(maxPath);
   }
   if(findMean)
   {
-    auto meanPath = outputGroupPath.createChildPath(args.value<std::string>(k_Mean_Key));
+    auto meanPath = outputGroupPath.createChildPath(args.value<std::string>(k_MeanName_Key));
     arrays[3] = data.getDataAs<IDataArray>(meanPath);
   }
   if(findMedian)
   {
-    auto medianPath = outputGroupPath.createChildPath(args.value<std::string>(k_Median_Key));
+    auto medianPath = outputGroupPath.createChildPath(args.value<std::string>(k_MedianName_Key));
     arrays[4] = data.getDataAs<IDataArray>(medianPath);
   }
   if(findStdDeviation)
   {
-    auto stdDeviationPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviation_Key));
+    auto stdDeviationPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviationName_Key));
     arrays[5] = data.getDataAs<IDataArray>(stdDeviationPath);
   }
   if(findSummation)
   {
-    auto summationPath = outputGroupPath.createChildPath(args.value<std::string>(k_Summation_Key));
+    auto summationPath = outputGroupPath.createChildPath(args.value<std::string>(k_SummationName_Key));
     arrays[6] = data.getDataAs<IDataArray>(summationPath);
   }
 
@@ -438,13 +438,13 @@ Result<Arguments> FindNeighborListStatistics::FromSIMPLJson(const nlohmann::json
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindSummationKey, k_FindSummation_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_InputArray_Key));
   // No destination attribute matrix parameter in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LengthArrayNameKey, k_Length_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MinimumArrayNameKey, k_Minimum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MaximumArrayNameKey, k_Maximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MeanArrayNameKey, k_Mean_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MedianArrayNameKey, k_Median_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_StdDeviationArrayNameKey, k_StandardDeviation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SummationArrayNameKey, k_Summation_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LengthArrayNameKey, k_LengthName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MinimumArrayNameKey, k_MinimumName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MaximumArrayNameKey, k_MaximumName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MeanArrayNameKey, k_MeanName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MedianArrayNameKey, k_MedianName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_StdDeviationArrayNameKey, k_StandardDeviationName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SummationArrayNameKey, k_SummationName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

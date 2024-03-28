@@ -57,7 +57,7 @@ Parameters ComputeFeatureRectFilter::parameters() const
                                                               "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureRectArrayPath_Key, "Feature Rect", "The feature rect calculated from the feature ids", "FeatureRect"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureRectArrayName_Key, "Feature Rect", "The feature rect calculated from the feature ids", "FeatureRect"));
 
   return params;
 }
@@ -74,7 +74,7 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pFeatureDataAttributeMatrixPathValue = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
-  auto pFeatureRectArrayNameValue = filterArgs.value<std::string>(k_FeatureRectArrayPath_Key);
+  auto pFeatureRectArrayNameValue = filterArgs.value<std::string>(k_FeatureRectArrayName_Key);
 
   DataPath featureRectArrayPath = pFeatureDataAttributeMatrixPathValue.createChildPath(pFeatureRectArrayNameValue);
 
@@ -113,7 +113,7 @@ Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, con
 
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.FeatureDataAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
-  inputValues.FeatureRectArrayPath = inputValues.FeatureDataAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_FeatureRectArrayPath_Key));
+  inputValues.FeatureRectArrayPath = inputValues.FeatureDataAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_FeatureRectArrayName_Key));
 
   return ComputeFeatureRect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -136,7 +136,7 @@ Result<Arguments> ComputeFeatureRectFilter::FromSIMPLJson(const nlohmann::json& 
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureRectArrayPathKey, k_FeatureDataAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_FeatureRectArrayPathKey, k_FeatureRectArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_FeatureRectArrayPathKey, k_FeatureRectArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

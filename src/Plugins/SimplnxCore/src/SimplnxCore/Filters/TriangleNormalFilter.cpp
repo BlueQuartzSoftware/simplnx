@@ -113,7 +113,7 @@ Parameters TriangleNormalFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_SurfaceMeshTriangleNormalsArrayPath_Key, "Created Face Normals", "The complete path to the array storing the calculated normals", "Face Normals"));
+      std::make_unique<DataObjectNameParameter>(k_SurfaceMeshTriangleNormalsArrayName_Key, "Created Face Normals", "The complete path to the array storing the calculated normals", "Face Normals"));
 
   return params;
 }
@@ -129,7 +129,7 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  auto pNormalsArrayName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayPath_Key);
+  auto pNormalsArrayName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayName_Key);
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -160,7 +160,7 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
                                            const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  auto pNormalsName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayPath_Key);
+  auto pNormalsName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayName_Key);
 
   const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
@@ -193,7 +193,7 @@ Result<Arguments> TriangleNormalFilter::FromSIMPLJson(const nlohmann::json& json
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleNormalsArrayPathKey, k_TriGeometryDataPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleNormalsArrayPathKey,
-                                                                                                              k_SurfaceMeshTriangleNormalsArrayPath_Key));
+                                                                                                              k_SurfaceMeshTriangleNormalsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

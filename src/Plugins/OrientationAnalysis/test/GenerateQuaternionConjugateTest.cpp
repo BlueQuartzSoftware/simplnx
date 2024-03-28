@@ -60,7 +60,7 @@ TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugateFilter", "[Orientatio
 
     // Create default Parameters for the filter.
     args.insertOrAssign(GenerateQuaternionConjugateFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({k_QuatName})));
-    args.insertOrAssign(GenerateQuaternionConjugateFilter::k_OutputDataArrayPath_Key, std::make_any<std::string>(k_ConvertedName));
+    args.insertOrAssign(GenerateQuaternionConjugateFilter::k_OutputDataArrayName_Key, std::make_any<std::string>(k_ConvertedName));
     args.insertOrAssign(GenerateQuaternionConjugateFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result

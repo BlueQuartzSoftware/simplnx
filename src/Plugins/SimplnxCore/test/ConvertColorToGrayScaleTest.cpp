@@ -299,7 +299,7 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ConversionAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(algorithm)));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(colorWeights));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorChannel_Key, std::make_any<int32>(colorChannel));
-  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_InputDataArrayVector_Key, std::make_any<MultiArraySelectionParameter::ValueType>(daps));
+  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_InputDataArrayPath_Key, std::make_any<MultiArraySelectionParameter::ValueType>(daps));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>(m_outputArrayPrefix));
 
   // Preflight the filter and check result

@@ -75,7 +75,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(k_FeatureGeometryPath));
   args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
   args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
-  args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<std::string>(k_SurfaceFeaturesArrayPath.getTargetName()));
+  args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayName_Key, std::make_any<std::string>(k_SurfaceFeaturesArrayPath.getTargetName()));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -124,7 +124,7 @@ TEST_CASE("SimplnxCore::FindSurfaceFeatures: Valid filter execution in 3D", "[Si
     args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
     args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Constants::k_FeatureIdsArrayPath));
     args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellFeatureDataPath));
-    args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<std::string>(k_SurfaceFeatures));
+    args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayName_Key, std::make_any<std::string>(k_SurfaceFeatures));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

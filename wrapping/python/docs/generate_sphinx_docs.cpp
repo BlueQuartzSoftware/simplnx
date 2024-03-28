@@ -671,6 +671,7 @@ void GenerateMarkdownFilterParameterTable()
 void GeneratePythonRstFiles()
 {
   auto* filterListPtr = Application::Instance()->getFilterList();
+  std::ofstream logFile("/tmp/parameter_key_updates.log", std::ios_base::trunc);
 
   // Loop over each plugin and create a .rst file
   const auto pluginListPtr = Application::Instance()->getPluginList();
@@ -765,15 +766,15 @@ void GeneratePythonRstFiles()
       for(const auto& parameter : parameters)
       {
         auto const& paramValue = parameter.second;
-        if(paramValue->helpText().empty())
-        {
-          std::cout << filter->name() << "::" << paramValue->name() << " HELP Text is empty\n";
-        }
+        //        if(paramValue->helpText().empty())
+        //        {
+        //          std::cout << filter->name() << "::" << paramValue->name() << " HELP Text is empty\n";
+        //        }
         for(const auto& letter : paramValue->name())
         {
           if(::isupper(letter) != 0)
           {
-            std::cout << filter->name() << "::" << paramValue->name() << " HAS CAPS. Should be lower snake case\n";
+            logFile << filter->name() << "::" << paramValue->name() << " HAS CAPS. Should be lower snake case\n";
             break;
           }
         }
@@ -793,6 +794,24 @@ void GeneratePythonRstFiles()
       {
         auto const& anyParameter = parameterPair.second;
         rstStream << ", ";
+        std::string pType = s_ParameterMap[anyParameter->uuid()];
+        if(!nx::core::StringUtilities::ends_with(parameterPair.first, "_path") &&
+           (pType == "simplnx.ArraySelectionParameter" || pType == "simplnx.ArrayCreationParameter" || pType == "simplnx.AttributeMatrixSelectionParameter" ||
+            pType == "simplnx.DataGroupCreationParameter" || pType == "simplnx.DataGroupSelectionParameter" || pType == "simplnx.DataPathSelectionParameter" ||
+            pType == "simplnx.GeometrySelectionParameter" || pType == "simplnx.NeighborListSelectionParameter" || pType == "simplnx.DataGroupCreationParameter"))
+        {
+          logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+        }
+
+        if(pType == "simplnx.MultiArraySelectionParameter" && !nx::core::StringUtilities::ends_with(parameterPair.first, "s"))
+        {
+          logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+        }
+
+        if(pType == "simplnx.DataObjectNameParameter" && !nx::core::StringUtilities::ends_with(parameterPair.first, "_name"))
+        {
+          logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+        }
 
         rstStream << parameterPair.first;
         memberStream << "      :param " << nx::core::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": " << anyParameter->helpText()

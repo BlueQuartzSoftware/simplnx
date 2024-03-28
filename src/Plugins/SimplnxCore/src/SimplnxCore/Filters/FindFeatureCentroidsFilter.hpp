@@ -25,8 +25,9 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static inline constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -34,8 +35,6 @@ public:
    * @return Result<Arguments>
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
-
-  static inline constexpr StringLiteral k_FeatureAttributeMatrix_Key = "feature_attribute_matrix";
 
   /**
    * @brief Returns the name of the filter.

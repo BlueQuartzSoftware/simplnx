@@ -89,13 +89,13 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
     Arguments args;
     DataPath dataPath({"foo"});
 
-    args.insert("input_file", std::make_any<fs::path>(k_FileName));
-    args.insert("scalar_type", std::make_any<NumericType>(NumericType::int32));
-    args.insert("n_tuples", std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert("n_comp", std::make_any<uint64>(k_NComp));
-    args.insert("n_skip_lines", std::make_any<uint64>(k_NSkipLines));
-    args.insert("delimiter_choice", std::make_any<uint64>(0));
-    args.insert("output_data_array", std::make_any<DataPath>(dataPath));
+    args.insert(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(k_FileName));
+    args.insert(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int32));
+    args.insert(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+    args.insert(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NComp));
+    args.insert(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(k_NSkipLines));
+    args.insert(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(0));
+    args.insert(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(dataPath));
 
     // auto callback = [](const IFilter::Message& message) { fmt::print("{}: {}\n", message.type, message.message); };
     // Result<> result = filter.execute(dataStructure, args, IFilter::MessageHandler{callback});

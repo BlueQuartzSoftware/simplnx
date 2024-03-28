@@ -43,7 +43,7 @@ public:
   static inline constexpr StringLiteral k_FeatureGeometryPath_Key = "feature_geometry_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
-  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "surface_features_array_path";
+  static inline constexpr StringLiteral k_SurfaceFeaturesArrayName_Key = "surface_features_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

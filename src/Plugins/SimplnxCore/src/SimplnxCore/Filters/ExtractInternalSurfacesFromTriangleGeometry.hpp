@@ -23,7 +23,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_TriangleGeom_Key = "triangle_geom";
   static inline constexpr StringLiteral k_InternalTriangleGeom_Key = "internal_triangle_geom";
-  static inline constexpr StringLiteral k_NodeTypesPath_Key = "node_types";
+  static inline constexpr StringLiteral k_NodeTypesPath_Key = "node_types_path";
   static inline constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
   static inline constexpr StringLiteral k_CopyTrianglePaths_Key = "copy_triangle_array_paths";
   static inline constexpr StringLiteral k_VertexDataName_Key = "vertex_data_name";

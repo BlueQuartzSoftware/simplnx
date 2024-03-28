@@ -24,7 +24,7 @@ public:
   SplitAttributeArrayFilter& operator=(SplitAttributeArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MultiCompArray_Key = "multicomponent_array";
+  static inline constexpr StringLiteral k_MultiCompArrayPath_Key = "multicomponent_array_path";
   static inline constexpr StringLiteral k_Postfix_Key = "postfix";
   static inline constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
   static inline constexpr StringLiteral k_SelectComponents_Key = "select_components_to_extract";

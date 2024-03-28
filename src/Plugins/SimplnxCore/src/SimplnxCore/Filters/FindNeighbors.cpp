@@ -62,28 +62,28 @@ Parameters FindNeighbors::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "The geometry in which to identify feature neighbors", DataPath({"DataContainer"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "Feature Attribute Matrix of the selected Feature Ids",
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesPath_Key, "Cell Feature AttributeMatrix", "Feature Attribute Matrix of the selected Feature Ids",
                                                                     DataPath({"DataContainer", "CellFeatureData"})));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(
-      k_BoundaryCells_Key, "Boundary Cells",
+      k_BoundaryCellsName_Key, "Boundary Cells",
       "The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6. Only created if Store Boundary Cells Array is checked",
       "BoundaryCells"));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NumNeighbors_Key, "Number of Neighbors", "Number of contiguous neighboring Features for a given Feature", "NumNeighbors"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborList_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", "NeighborList"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NumNeighborsName_Key, "Number of Neighbors", "Number of contiguous neighboring Features for a given Feature", "NumNeighbors"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborListName_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", "NeighborList"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SharedSurfaceAreaName_Key, "Shared Surface Area List",
                                                           "List of the shared surface area for each of the contiguous neighboring Features for a given Feature", "SharedSurfaceAreaList"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceFeatures_Key, "Surface Features",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceFeaturesName_Key, "Surface Features",
                                                           "The name of the surface features data array. Flag equal to 1 if the Feature touches an outer surface of the sample and equal to 0 if it "
                                                           "does not. Only created if Store Surface Features Array is checked",
                                                           "SurfaceFeatures"));
 
-  params.linkParameters(k_StoreBoundary_Key, k_BoundaryCells_Key, std::make_any<bool>(true));
-  params.linkParameters(k_StoreSurface_Key, k_SurfaceFeatures_Key, std::make_any<bool>(true));
+  params.linkParameters(k_StoreBoundary_Key, k_BoundaryCellsName_Key, std::make_any<bool>(true));
+  params.linkParameters(k_StoreSurface_Key, k_SurfaceFeaturesName_Key, std::make_any<bool>(true));
   return params;
 }
 
@@ -99,13 +99,13 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIds_Key);
-  auto boundaryCellsName = args.value<std::string>(k_BoundaryCells_Key);
-  auto numNeighborsName = args.value<std::string>(k_NumNeighbors_Key);
-  auto neighborListName = args.value<std::string>(k_NeighborList_Key);
-  auto sharedSurfaceAreaName = args.value<std::string>(k_SharedSurfaceArea_Key);
-  auto surfaceFeaturesName = args.value<std::string>(k_SurfaceFeatures_Key);
-  auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeatures_Key);
+  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
+  auto boundaryCellsName = args.value<std::string>(k_BoundaryCellsName_Key);
+  auto numNeighborsName = args.value<std::string>(k_NumNeighborsName_Key);
+  auto neighborListName = args.value<std::string>(k_NeighborListName_Key);
+  auto sharedSurfaceAreaName = args.value<std::string>(k_SharedSurfaceAreaName_Key);
+  auto surfaceFeaturesName = args.value<std::string>(k_SurfaceFeaturesName_Key);
+  auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeaturesPath_Key);
 
   DataPath boundaryCellsPath = featureIdsPath.getParent().createChildPath(boundaryCellsName);
   DataPath numNeighborsPath = featureAttrMatrixPath.createChildPath(numNeighborsName);
@@ -169,13 +169,13 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIds_Key);
-  auto boundaryCellsName = args.value<std::string>(k_BoundaryCells_Key);
-  auto numNeighborsName = args.value<std::string>(k_NumNeighbors_Key);
-  auto neighborListName = args.value<std::string>(k_NeighborList_Key);
-  auto sharedSurfaceAreaName = args.value<std::string>(k_SharedSurfaceArea_Key);
-  auto surfaceFeaturesName = args.value<std::string>(k_SurfaceFeatures_Key);
-  auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeatures_Key);
+  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
+  auto boundaryCellsName = args.value<std::string>(k_BoundaryCellsName_Key);
+  auto numNeighborsName = args.value<std::string>(k_NumNeighborsName_Key);
+  auto neighborListName = args.value<std::string>(k_NeighborListName_Key);
+  auto sharedSurfaceAreaName = args.value<std::string>(k_SharedSurfaceAreaName_Key);
+  auto surfaceFeaturesName = args.value<std::string>(k_SurfaceFeaturesName_Key);
+  auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeaturesPath_Key);
 
   DataPath boundaryCellsPath = featureIdsPath.getParent().createChildPath(boundaryCellsName);
   DataPath numNeighborsPath = featureAttrMatrixPath.createChildPath(numNeighborsName);
@@ -442,13 +442,15 @@ Result<Arguments> FindNeighbors::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_StoreBoundaryCellsKey, k_StoreBoundary_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_StoreSurfaceFeaturesKey, k_StoreSurface_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeom_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIds_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_CellFeatures_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellsArrayNameKey, k_BoundaryCells_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NumNeighborsArrayNameKey, k_NumNeighbors_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NeighborListArrayNameKey, k_NeighborList_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SharedSurfaceAreaListArrayNameKey, k_SharedSurfaceArea_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayNameKey, k_SurfaceFeatures_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_CellFeaturesPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellsArrayNameKey, k_BoundaryCellsName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NumNeighborsArrayNameKey, k_NumNeighborsName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NeighborListArrayNameKey, k_NeighborListName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SharedSurfaceAreaListArrayNameKey, k_SharedSurfaceAreaName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayNameKey, k_SurfaceFeaturesName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

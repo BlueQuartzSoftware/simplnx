@@ -35,7 +35,7 @@ TEST_CASE("ITKImageProcessing::ITKDanielssonDistanceMapImageFilter(default)", "[
   Arguments args;
   args.insertOrAssign(ITKDanielssonDistanceMapImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKDanielssonDistanceMapImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

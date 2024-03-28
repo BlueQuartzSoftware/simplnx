@@ -193,7 +193,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry(Execute_Filter)", "[SimplnxCore][CropI
   args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_NewImageGeomPath));
   args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insert(CropImageGeometry::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
+  args.insert(CropImageGeometry::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
   args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
@@ -271,7 +271,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry: Crop Physical Bounds", "[SimplnxCore]
   args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_NewImageGeomPath));
   args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insert(CropImageGeometry::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
+  args.insert(CropImageGeometry::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
   args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
 
   //    const auto oldDimensions = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions();
