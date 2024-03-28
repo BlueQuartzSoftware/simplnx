@@ -215,6 +215,11 @@ std::vector<Uuid> Application::getSimplUuid(const Uuid& simplnxUuid)
 
 void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbose)
 {
+  if(!std::filesystem::exists(pluginDir) && verbose)
+  {
+    fmt::print("Plugin Directory {} does not exist. Skipping", pluginDir.string());
+    return;
+  }
   if(verbose)
   {
     fmt::print("Loading Plugins from {}\n", pluginDir.string());

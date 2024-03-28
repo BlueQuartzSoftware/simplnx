@@ -5,7 +5,7 @@
 DREAM3D-NX Python Docs
 =======================
 
-Latest Version: 1.2.6
+Latest Version: 1.2.7
 ---------------------
 
 The *simplnx* library can be installed through an Anaconda packages from the *BlueQuartzSoftware* channel. This can be achieved
@@ -21,24 +21,45 @@ by creating a new virtual environment
 
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
+   :caption: Conceptual
 
    Installation
    Overview
    DataObjects
    Geometry
-   User_API
-   Developer_API
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Using SIMPLNX
+
    Python_Introduction
-   Writing_A_New_Python_Filter
+   User_API
    Reference_Frame_Notes
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Filter Writers
+
+   Writing_A_New_Python_Filter
+   Developer_API
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Filter API/Docs
+
+@PLUGIN_LIST@
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Release Notes
+
    ReleaseNotes_110
    ReleaseNotes_120
    ReleaseNotes_121
    ReleaseNotes_123
    ReleaseNotes_124
    ReleaseNotes_126
-@PLUGIN_LIST@
+   ReleaseNotes_127
 
 Indices and tables
 ==================

@@ -28,7 +28,7 @@ namespace
 std::map<nx::core::Uuid, std::string> s_ParameterMap;
 
 const std::string k_WebServerAddress = "http://www.dream3d.io/nx_reference_manual";
-const std::string k_WebServerFilterFolder = "Filters";
+const std::string k_WebServerFilterFolder = "html";
 } // namespace
 
 #define ADD_PARAMETER_TRAIT(thing1, thing2)                                                                                                                                                            \
@@ -748,7 +748,7 @@ void GeneratePythonRstFiles()
       rstStream << "   " << rstDescription << "\n\n";
 
       // Tack on the link to the web address for the full documentation
-      const std::string webAddress = fmt::format("{}/{}/{}", k_WebServerAddress, k_WebServerFilterFolder, filterClassName);
+      const std::string webAddress = fmt::format("{}/{}/{}/{}.html", k_WebServerAddress, k_WebServerFilterFolder, plugName, filterClassName);
       rstStream << "   `Link to the full online documentation for " << filterClassName << " <" << webAddress << ">`_ \n\n";
 
       const auto& parameters = filter->parameters();

@@ -4,6 +4,10 @@ API for Users
 Error & Warning Reporting
 --------------------------
 
+.. _UserAPI:
+.. py:module:: nx
+
+
 .. _Result:
 .. py:class:: Result
 
