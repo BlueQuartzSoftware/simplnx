@@ -130,6 +130,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteLosAlamosFFTTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
+  ReadVtkStructuredPointsTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

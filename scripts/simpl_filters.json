@@ -10333,7 +10333,7 @@
                     "uuid": "{a043bd66-2681-5126-82e1-5fdc46694bf4}"
                 },
                 {
-                    "name": "VtkStructuredPointsReader",
+                    "name": "ReadVtkStructuredPoints",
                     "parameters": [
                         {
                             "name": "InputFile",

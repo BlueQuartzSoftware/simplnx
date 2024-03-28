@@ -1,6 +1,6 @@
-#include "WriteVtkRectilinearGridFilter.hpp"
+#include "WriteVtkStructuredPointsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/WriteVtkRectilinearGrid.hpp"
+#include "SimplnxCore/Filters/Algorithms/WriteVtkStructuredPoints.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -20,37 +20,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string WriteVtkRectilinearGridFilter::name() const
+std::string WriteVtkStructuredPointsFilter::name() const
 {
-  return FilterTraits<WriteVtkRectilinearGridFilter>::name.str();
+  return FilterTraits<WriteVtkStructuredPointsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string WriteVtkRectilinearGridFilter::className() const
+std::string WriteVtkStructuredPointsFilter::className() const
 {
-  return FilterTraits<WriteVtkRectilinearGridFilter>::className;
+  return FilterTraits<WriteVtkStructuredPointsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid WriteVtkRectilinearGridFilter::uuid() const
+Uuid WriteVtkStructuredPointsFilter::uuid() const
 {
-  return FilterTraits<WriteVtkRectilinearGridFilter>::uuid;
+  return FilterTraits<WriteVtkStructuredPointsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string WriteVtkRectilinearGridFilter::humanName() const
+std::string WriteVtkStructuredPointsFilter::humanName() const
 {
-  return "Write Vtk Rectilinear Grid";
+  return "Write Vtk Structured Points";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> WriteVtkRectilinearGridFilter::defaultTags() const
+std::vector<std::string> WriteVtkStructuredPointsFilter::defaultTags() const
 {
-  return {className(), "IO", "Output", "Write", "Export", "Vtk", "Rectilinear Grid"};
+  return {className(), "IO", "Output", "Write", "Export", "Vtk", "Structured Points"};
 }
 
 //------------------------------------------------------------------------------
-Parameters WriteVtkRectilinearGridFilter::parameters() const
+Parameters WriteVtkStructuredPointsFilter::parameters() const
 {
   Parameters params;
 
@@ -67,14 +67,14 @@ Parameters WriteVtkRectilinearGridFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteVtkRectilinearGridFilter::clone() const
+IFilter::UniquePointer WriteVtkStructuredPointsFilter::clone() const
 {
-  return std::make_unique<WriteVtkRectilinearGridFilter>();
+  return std::make_unique<WriteVtkStructuredPointsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWriteBinaryFileValue = filterArgs.value<bool>(k_WriteBinaryFile_Key);
@@ -110,8 +110,8 @@ IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+Result<> WriteVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel) const
 {
   AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), false);
 
@@ -121,14 +121,14 @@ Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure
     return dirResult;
   }
 
-  WriteVtkRectilinearGridInputValues inputValues;
+  WriteVtkStructuredPointsInputValues inputValues;
 
   inputValues.OutputFile = atomicFile.tempFilePath();
   inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  auto result = WriteVtkRectilinearGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto result = WriteVtkStructuredPoints(dataStructure, messageHandler, shouldCancel, &inputValues)();
   atomicFile.setAutoCommit(result.valid());
   return result;
 }
@@ -143,20 +143,9 @@ constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> WriteVtkRectilinearGridFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> WriteVtkStructuredPointsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = WriteVtkRectilinearGridFilter().getDefaultArguments();
-
-  std::vector<Result<>> results;
-
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputFileKey, k_OutputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_WriteBinaryFileKey, k_WriteBinaryFile_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerFromMultiSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
-
-  Result<> conversionResult = MergeResults(std::move(results));
-
-  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+  Arguments args = WriteVtkStructuredPointsFilter().getDefaultArguments();
+  return ConvertResultTo<Arguments>({}, std::move(args));
 }
 } // namespace nx::core

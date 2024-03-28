@@ -335,18 +335,24 @@ public:
 
   std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
   {
-    FILE* file = fopen(absoluteFilePath.c_str(), "wb");
-    if(nullptr == file)
+    std::ofstream outStrm(absoluteFilePath, std::ios_base::out | std::ios_base::binary);
+    if(!outStrm.is_open())
     {
       return {-10170, fmt::format("File could not be opened for writing:\n  '{}'", absoluteFilePath)};
     }
 
+    return writeBinaryFile(outStrm);
+  }
+
+  std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const override
+  {
     usize totalElements = getNumberOfComponents() * getNumberOfTuples();
-    usize elementsWritten = fwrite(m_Data.get(), sizeof(T), totalElements, file);
-    fclose(file);
-    if(totalElements != elementsWritten)
+
+    outputStream.write(reinterpret_cast<char*>(m_Data.get()), sizeof(T) * totalElements);
+
+    if(outputStream.bad())
     {
-      return {-10175, fmt::format("Error writing binary file:\n  Total Elements:'{}'\n  Elements Written:'{}'", absoluteFilePath, totalElements, elementsWritten)};
+      return {-10175, fmt::format("Error writing binary file:\n  Total Elements:'{}'\n", totalElements)};
     }
 
     return {0, ""};
