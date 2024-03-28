@@ -1,5 +1,5 @@
-API for Developers
-===================
+SIMPLNX Filter Writing API
+==========================
 
 General Parameters 
 ------------------

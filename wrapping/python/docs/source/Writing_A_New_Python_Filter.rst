@@ -23,13 +23,22 @@ Or, if you are installing from a local conda-bld directory, it will be something
 
 Wait until the environment is fully installed.
 
+.. attention::
+
+    For those with older Anaconda installations that cannot update, you can install the 'mamba' package
+    which is a drop in replacement for 'conda'. Mamba is built as a native applicaiton with native application
+    speeds. Mamba can dramatically improve the 'solving the environment' waiting game.
+    Conda versions starting at 23.11.x use the underlying 'libmamba' and are therefor just as fast at
+    solving an environment.
+    
+
 - Next you will want to launch **DREAM3D-NX** from the same Anaconda command prompt.
 
     **MacOS**
 
         .. code:: shell
 
-            $(conda info --envs | grep '*' | awk '{print $3}')/bin/DREAM3DNX.app/Contents/MacOS/DREAM3DNX
+            $CONDA_PREFIX/bin/DREAM3DNX.app/Contents/MacOS/DREAM3DNX
     
     **Linux**
 
@@ -78,9 +87,10 @@ This filter can generate skeleton code for the new filters in an existing Python
 
 2. Loading The New Plugin
 -------------------------
+
 After you have generated your Python plugin/filters, close the current instance of DREAM3D-NX.  Now, from the same Anaconda command prompt as before:
 
-- Export the `PYTHONPATH` environment variable and have that point to a folder that you will be saving your new plugin into or a folder that holds your currently in-development plugin.  Set the `SIMPLNX_PYTHON_PLUGINS` environment variable to the name of your plugin.  Multiple plugin names should be separated by commas.
+- Export/Set the `PYTHONPATH` environment variable and have that point to a folder that you will be saving your new plugin into or a folder that holds your currently in-development plugin.  Set the `SIMPLNX_PYTHON_PLUGINS` environment variable to the name of your plugin.  Multiple plugin names should be separated by commas.
 
     **MacOS/Linux**
 
@@ -102,7 +112,7 @@ After you have generated your Python plugin/filters, close the current instance 
 
         .. code:: shell
 
-            $(conda info --envs | grep '*' | awk '{print $3}')/bin/DREAM3DNX.app/Contents/MacOS/DREAM3DNX
+            $CONDA_PREFIX/bin/DREAM3DNX.app/Contents/MacOS/DREAM3DNX
     
     **Linux**
 
@@ -117,6 +127,32 @@ After you have generated your Python plugin/filters, close the current instance 
             dream3dnx.exe
 
 You should now see your new filters loaded in the DREAM3D-NX user interface.  Search for your filter's name in the Filter List to verify.
+
+Worked Example
+^^^^^^^^^^^^^^
+
+    When you launch DREAM3D-NX and you create the skeleton plugin folder of code, let us use the file path of /Workspace/DREAM3D_Plugins for the 'Plugin Output Directory.' If
+    this is the case, then you would do the following based on your operating system.
+
+    **macOS and Linux**
+
+        export PYTHONPATH=/Workspace/DREAM3D_Plugins
+    
+    **Windows**
+
+        set PYTHONPATH=C:/Workspace/DREAM3D_Plugins
+
+    And then you would set/export the 'SIMPLNX_PYTHON_PLUGINS' environment variable to the name of the plugin that you just created. Let use use 'MyFirstPlugin' for the "Name of Plugin"
+    in the filter. Then you would do the following based on your operating system:
+
+    **macOS and Linux**
+
+        export SIMPLNX_PYTHON_PLUGINS=MyFirstPlugin
+    
+    **Windows**
+
+        set SIMPLNX_PYTHON_PLUGINS=MyFirstPlugin  
+
 
 3. Understanding the Plugin Structure
 -------------------------------------
@@ -144,13 +180,16 @@ The skeleton provides a basic structure with placeholders and conventions that a
             # Filter class definition
   
 - **Parameter Keys:** Use descriptive constants to define keys for your parameters. These keys will be used to access parameter values from the `args` dictionary in `preflight_impl` and `execute_impl`.
-  
+
+   - The variable name should be in ALL_CAPS and end with '_KEY'
+   - The value of the variable should be in 'all_lower_snake_case'
+    
     .. code-block:: python
 
         """
         This section should contain the 'keys' that store each parameter. The value of the key should be snake_case. The name of the value should be ALL_CAPITOL_KEY
         """
-        TEST_KEY = 'test'
+        TEST_PATH_KEY = 'test_path'
 
 - **UUID Method:** This method returns the unique identifier for the new filter.  This unique identifier is automatically generated and should typically not be modified.
 
@@ -167,16 +206,20 @@ The skeleton provides a basic structure with placeholders and conventions that a
 
 - **Human Name Method:** This method returns the human-readable name for the filter.  This name is typically used in the DREAM3D-NX GUI.  It is set, by default, to the programmatic name of the filter and should probably be modified to something more human-readable.
 
-    .. code-block:: python
+   - The value should be properly capitalized and spaced
+  
+   .. code-block:: python
 
         def human_name(self) -> str:
             """This returns the name of the filter as a user of DREAM3DNX would see it
             :return: The filter's human name
             :rtype: string
             """
-            return 'FirstFilter'    # This could be updated to return 'First Filter' or '1st Filter', or any other human-readable name.
+            return 'My First Filter'    # This could be updated to return 'First Filter' or '1st Filter', or any other human-readable name.
 
 - **Class Name Method:** This method returns the programmatic name for the filter.
+
+   - The value should use the 'CamelCase' style with **NO SPACES**
 
     .. code-block:: python
 
@@ -188,6 +231,8 @@ The skeleton provides a basic structure with placeholders and conventions that a
             return 'FirstFilter'
 
 - **Name Method:** This method returns a generic name for the filter.
+
+   - The value should use the 'CamelCase' style with **NO SPACES**
 
     .. code-block:: python
 
@@ -207,7 +252,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
             :return: The default tags for the filter
             :rtype: list
             """
-            return ['python']
+            return ['python', 'IO', 'Some Algorithm']
 
 - **Clone Method:** This method returns a new instance of the filter.  This method should not be modified.
 
@@ -220,7 +265,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
             """
             return FirstFilter()
 
-- **Parameters Method:** Add *simplnx* filter parameters to this method to configure what inputs are available to users of the filter.
+- **Parameters Method:** This method defines the parameters that a user of your filter would see in the user interface or have access to if using your filter from another instance of python.
 
     .. code-block:: python
 
@@ -231,7 +276,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
 
             return params
   
-- **Preflight and Execute Methods:** These are crucial methods where your filter's logic will reside.
+- **Preflight and Execute Methods:** These are crucial methods where your filter's logic will reside. The preflight_impl() is called every time an input parameter is modified in the user interface therefor the preflight_impl should run as fast as possible. The execute_impl() method is where the actual work that your filter performs is kept.
 
     .. code-block:: python
 
@@ -241,7 +286,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
         def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
             # Execution logic
 
-5. Defining Parameters
+1. Defining Parameters
 ----------------------
 Parameters determine what inputs are available to users; they make your filter configurable and adaptable to different datasets and scenarios.
 
@@ -278,7 +323,7 @@ Parameters determine what inputs are available to users; they make your filter c
 
                 return params
     
-    For the full list of parameters and their arguments, please see `Developer_API <Developer_API.html>`__.
+    For the full list of parameters and their arguments, please see `SIMPLNX Filter Writer API Section <Developer_API.html>`__.
 
     To see examples of how to instantiate each parameter, check out `ExampleFilter1 <https://github.com/BlueQuartzSoftware/simplnx/tree/develop/wrapping/python/plugins/ExamplePlugin/ExampleFilter1.py>`__ and `ExampleFilter2 <https://github.com/BlueQuartzSoftware/simplnx/tree/develop/wrapping/python/plugins/ExamplePlugin/ExampleFilter2.py>`__.
 
@@ -377,7 +422,7 @@ performed.
             init_value: float = args[FirstFilter.INIT_VALUE_KEY]
             output_array_path: nx.DataPath = args[FirstFilter.OUTPUT_ARRAY_PATH]
 
-- **Access Data Arrays/Objects From The Data Structure:**
+- **Access Data Arrays/Objects from the Data Structure:**
     - Use DataPaths to get a reference to data arrays and other data objects from the data structure.
 
         .. code-block:: python
@@ -386,7 +431,7 @@ performed.
             output_data_array: nx.IDataArray = data_structure[output_array_path]
     
 - **Manipulating Data Arrays With Numpy:**
-    - Get a numpy view into data arrays and then set values into the arrays using numpy.
+    - Get a numpy view into data arrays and then set values into the arrays using numpy. This gives a view of the data, **NOT A COPY**. Anything you have numpy do that is done "in place" will directly write those values into the stored DataArray.
   
         .. code-block:: python
 
@@ -396,8 +441,15 @@ performed.
             # Set the init value into every index of the array
             data[:] = init_value
 
-Conclusion
-----------
-By following this guide, you can create a custom Python filter for *simplnx* that is configurable, follows best practices, and integrates smoothly into data processing pipelines. Remember to thoroughly test your filter with different parameter configurations and datasets to ensure its robustness and correctness.
+9. Providing Feedback to the user during execution.
+---------------------------------------------------
+
+    Both the preflight_impl and execute_impl have a 'message_handler' variable that is available for use to send back progress or other information to the user interface. The use of the message_handler should be tempered to only send back useful information. Sending ever iteration inside a tight loop will slow down your filter.
+
+    .. code-block:: python
+
+        # use the 'message_handler' to send back progress or information updates
+        message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Calculating Histogram Counts and Bin Bounds...'))
+
 
 For more Python filter examples, check out the `ExamplePlugin <https://github.com/BlueQuartzSoftware/simplnx/tree/develop/wrapping/python/plugins/ExamplePlugin>`_.
