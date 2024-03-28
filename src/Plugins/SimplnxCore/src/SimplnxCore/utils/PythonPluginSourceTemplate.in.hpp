@@ -37,4 +37,13 @@ inline const std::string PluginInitPythonFile()
   return {k_PluginInitPythonFileCharArray};
 }
 
+// clang-format off
+static const char k_PluginBatchFileCharArray[] = {@PYTHON_PLUGIN_TEMPLATE_BAT@};
+// clang-format on
+
+inline const std::string PluginBatchFile()
+{
+  return {k_PluginBatchFileCharArray};
+}
+
 }; // namespace nx::core

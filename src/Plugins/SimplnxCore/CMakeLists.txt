@@ -354,7 +354,6 @@ string(HEX ${PYTHON_FILTER_TEMPLATE} PYTHON_FILTER_TEMPLATE)
 string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," PYTHON_FILTER_TEMPLATE ${PYTHON_FILTER_TEMPLATE})
 string(APPEND PYTHON_FILTER_TEMPLATE "0x00")
 
-
 file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginInitTemplate.py" PYTHON_PLUGIN_INIT_TEMPLATE)
 string(HEX ${PYTHON_PLUGIN_INIT_TEMPLATE} PYTHON_PLUGIN_INIT_TEMPLATE)
 string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," PYTHON_PLUGIN_INIT_TEMPLATE ${PYTHON_PLUGIN_INIT_TEMPLATE})
@@ -365,11 +364,22 @@ string(HEX ${PYTHON_PLUGIN_TEMPLATE} PYTHON_PLUGIN_TEMPLATE)
 string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," PYTHON_PLUGIN_TEMPLATE ${PYTHON_PLUGIN_TEMPLATE})
 string(APPEND PYTHON_PLUGIN_TEMPLATE "0x00")
 
+if(WINDOWS)
+  file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplate.bat" PYTHON_PLUGIN_TEMPLATE_BAT)
+  string(HEX ${PYTHON_PLUGIN_TEMPLATE_BAT} PYTHON_PLUGIN_TEMPLATE_BAT)
+  string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," PYTHON_PLUGIN_TEMPLATE_BAT ${PYTHON_PLUGIN_TEMPLATE_BAT})
+  string(APPEND PYTHON_PLUGIN_TEMPLATE_BAT "0x00")
+else()
+  file(READ "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplate.sh" PYTHON_PLUGIN_TEMPLATE_BAT)
+  string(HEX ${PYTHON_PLUGIN_TEMPLATE_BAT} PYTHON_PLUGIN_TEMPLATE_BAT)
+  string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\0," PYTHON_PLUGIN_TEMPLATE_BAT ${PYTHON_PLUGIN_TEMPLATE_BAT})
+  string(APPEND PYTHON_PLUGIN_TEMPLATE_BAT "0x00")
+endif()
 
 cmpConfigureFileWithMD5Check(CONFIGURED_TEMPLATE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginSourceTemplate.in.hpp"
-                              GENERATED_FILE_PATH "${${PLUGIN_NAME}_BINARY_DIR}/generated/${PLUGIN_NAME}/utils/PythonPluginSourceTemplate.hpp")
+                               GENERATED_FILE_PATH "${${PLUGIN_NAME}_BINARY_DIR}/generated/${PLUGIN_NAME}/utils/PythonPluginSourceTemplate.hpp")
 
-#------------------------------------------------------------------------------
+                               #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
 # you can use the target_include_directories(.....) cmake call
 # target_include_directories(${PLUGIN_NAME}

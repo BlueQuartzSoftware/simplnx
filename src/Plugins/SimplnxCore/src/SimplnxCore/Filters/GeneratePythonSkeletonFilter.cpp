@@ -66,11 +66,15 @@ Parameters GeneratePythonSkeletonFilter::parameters() const
   params.insert(
       std::make_unique<StringParameter>(k_PluginFilterNames, "Filter Names (comma-separated)", "The names of filters that will be created, separated by commas (,).", "FirstFilter,SecondFilter"));
 
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_CreateBatchFile_Key, "Create Anaconda Init Batch/Shell Script", "Generates a script file that can be used to export needed environment variables", false));
+  params.insert(std::make_unique<StringParameter>(k_AnacondaEnvName_Key, "Anaconda Environment Name", "The name of the Anaconda environment.", "nxpython"));
+
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginName_Key, false);
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginHumanName_Key, false);
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginOutputDirectory_Key, false);
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginInputDirectory_Key, true);
-
+  params.linkParameters(k_CreateBatchFile_Key, k_AnacondaEnvName_Key, true);
   return params;
 }
 
@@ -135,6 +139,8 @@ Result<> GeneratePythonSkeletonFilter::executeImpl(DataStructure& dataStructure,
   inputValues.pluginName = filterArgs.value<StringParameter::ValueType>(k_PluginName_Key);
   inputValues.pluginHumanName = filterArgs.value<StringParameter::ValueType>(k_PluginHumanName_Key);
   inputValues.filterNames = filterArgs.value<StringParameter::ValueType>(k_PluginFilterNames);
+  inputValues.createBatchShellScript = filterArgs.value<BoolParameter::ValueType>(k_CreateBatchFile_Key);
+  inputValues.anacondaEnvName = filterArgs.value<StringParameter::ValueType>(k_AnacondaEnvName_Key);
 
   return GeneratePythonSkeleton(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
