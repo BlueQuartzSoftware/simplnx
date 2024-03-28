@@ -28,6 +28,7 @@ public:
   static inline constexpr StringLiteral k_CopyTrianglePaths_Key = "copy_triangle_array_paths";
   static inline constexpr StringLiteral k_VertexDataName_Key = "vertex_data_name";
   static inline constexpr StringLiteral k_FaceDataName_Key = "face_data_name";
+  static inline constexpr StringLiteral k_NodeTypeRange_Key = "node_type_range";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

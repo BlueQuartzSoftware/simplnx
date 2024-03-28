@@ -87,7 +87,7 @@ Parameters ITKClosingByReconstructionImage::parameters() const
                                                 "For objects that are 1 pixel wide, use True.",
                                                 false));
   params.insert(std::make_unique<BoolParameter>(
-      k_PreserveIntensities_Key, "PreserveIntensities",
+      k_PreserveIntensities_Key, "Preserve Intensities",
       "Set/Get whether the original intensities of the image retained for those pixels unaffected by the opening by reconstruction. If Off, the output pixel contrast will be reduced.", false));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});

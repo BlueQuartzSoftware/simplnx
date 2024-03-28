@@ -135,8 +135,11 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int8},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<VectorInt8Parameter>(k_NodeTypeRange_Key, "Internal Surface Node Type Min & Max",
+                                                      "The min and max (inclusive) Node Type values that distinguish an internal surface from an external surface", std::vector<int8>{0, 8},
+                                                      std::vector<std::string>{"Min", "Max"}));
 
-  params.insertSeparator(Parameters::Separator{"Create Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name", INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceDataName));
@@ -263,6 +266,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   auto vertexDataName = args.value<std::string>(k_VertexDataName_Key);
   auto faceDataName = args.value<std::string>(k_FaceDataName_Key);
 
+  auto minMaxNodeValues = args.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
+
   auto& triangleGeom = data.getDataRefAs<TriangleGeom>(triangleGeomPath);
   auto& internalTriangleGeom = data.getDataRefAs<TriangleGeom>(internalTrianglesPath);
   auto& vertices = *triangleGeom.getVertices();
@@ -298,7 +303,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
     MeshIndexType v1Index = triangles[3 * triIndex + 1];
     MeshIndexType v2Index = triangles[3 * triIndex + 2];
     // Check if the NodeType is either 2, 3, 4
-    if((nodeTypes[v0Index] >= 2 && nodeTypes[v0Index] <= 4) && (nodeTypes[v1Index] >= 2 && nodeTypes[v1Index] <= 4) && (nodeTypes[v2Index] >= 2 && nodeTypes[v2Index] <= 4))
+    if((nodeTypes[v0Index] >= minMaxNodeValues[0] && nodeTypes[v0Index] <= minMaxNodeValues[1]) && (nodeTypes[v1Index] >= minMaxNodeValues[0] && nodeTypes[v1Index] <= minMaxNodeValues[1]) &&
+       (nodeTypes[v2Index] >= minMaxNodeValues[0] && nodeTypes[v2Index] <= minMaxNodeValues[1]))
     {
       // All Nodes are the correct type
       triNewIndex[triIndex] = currentNewTriIndex;

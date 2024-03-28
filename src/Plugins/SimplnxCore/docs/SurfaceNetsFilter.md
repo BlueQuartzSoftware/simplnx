@@ -35,6 +35,29 @@ SurfaceNets output **with** the built-in smoothing operation applied.
 
 ---------------
 
+## Node Types
+
+During the meshing process, each vertex, or node, will get a "Node Type" value assigned to it. These will range from 0 to 6. The value is an internal representation from the SurfaceNets algorithm. They are roughly equivelent to the Node Types from the Quick Surface Mesh algorithm but not strictly the same.
+
+- Node Type = 0: This is a node that ONLY has 2 features connected to the node.
+- Node Type = 2: This is a node that has 3 features connected to the node, such as a triple line
+- Node Type = 3-6: These nodes have 4 or more features connected to the node.
+
+
+| Node Type | Example Image                                |
+|-----------|----------------------------------------------|
+| 0 | ![Node Type 0](Images/SurfaceNets_NodeType_0.png)|
+| 2 |  ![Node Type 2](Images/SurfaceNets_NodeType_2.png)|
+| 3 |  ![Node Type 3](Images/SurfaceNets_NodeType_3.png)|
+| 4 | ![Node Type 4](Images/SurfaceNets_NodeType_4.png)|
+| 6 |  ![Node Type 6](Images/SurfaceNets_NodeType_6.png)|
+
+### Exterior or Boundary Nodes
+
+Nodes that appear on the exterior of a volume have Node Type values starting at 10 and going up from there. For instance, a triple line that is also on the exterior of the volume should have a value of 12.
+
+![Exterior Node Types](Images/SurfaceNets_NodeType_Exterior.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
