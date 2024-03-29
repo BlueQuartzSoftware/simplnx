@@ -376,7 +376,15 @@ std::string MakePythonSignature(std::string_view funcName, const Internals& inte
 inline void PyPrintMessage(const IFilter::Message& message)
 {
   py::gil_scoped_acquire acquireGIL{};
-  py::print(fmt::format("{}", message.message));
+  try
+  {
+    py::print(fmt::format("{}", message.message));
+  } catch(const py::error_already_set& pyException)
+  {
+    // Can fail when called in a program without stdout (i.e. GUI on Windows)
+    // Catch the exception to prevent the filter execution from failing
+    // Should be replaced with the ability to pass in a message handler to the python execute
+  }
 }
 
 inline IFilter::MessageHandler CreatePyMessageHandler()
