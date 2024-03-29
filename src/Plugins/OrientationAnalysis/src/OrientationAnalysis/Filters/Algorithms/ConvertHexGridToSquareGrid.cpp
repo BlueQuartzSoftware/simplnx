@@ -31,16 +31,7 @@ public:
   , m_SqrYStep(spacingXY.at(1))
   {
   }
-  ~Converter() noexcept
-  {
-    if(m_Valid)
-    {
-      for(const auto& atomicFile : m_AtomicFiles)
-      {
-        atomicFile->commit();
-      }
-    }
-  }
+  ~Converter() noexcept = default;
 
   Converter(const Converter&) = delete;            // Copy Constructor Default Implemented
   Converter(Converter&&) = delete;                 // Move Constructor Not Implemented
@@ -81,7 +72,12 @@ public:
       }
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
-      m_AtomicFiles.emplace_back(std::make_unique<AtomicFile>((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())), false));
+      m_AtomicFiles.emplace_back(std::make_unique<AtomicFile>((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string()))));
+      auto creationResult = m_AtomicFiles[m_Index]->getResult();
+      if(creationResult.invalid())
+      {
+        return creationResult;
+      }
       fs::path outPath = m_AtomicFiles[m_Index]->tempFilePath();
 
       // Ensure the output path exists by creating it if necessary
@@ -221,6 +217,26 @@ public:
       m_Index++;
     }
 
+    return {};
+  }
+
+  Result<> commitAllFiles()
+  {
+    if(m_Valid)
+    {
+      for(const auto& atomicFile : m_AtomicFiles)
+      {
+        if(!atomicFile->commit())
+        {
+          return atomicFile->getResult();
+        }
+      }
+    }
+    else
+    {
+      return MakeErrorResult(-77751, "The files were invalidated during execution, and this point should not be reached without an error result. If this is the sole error please make a bug report by "
+                                     "checking the repository at the bottom of this filters documentation!");
+    }
     return {};
   }
 

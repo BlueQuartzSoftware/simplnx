@@ -174,7 +174,13 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
 
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
-    AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key), false);
+    AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key));
+    auto creationResult = atomicFile.getResult();
+    if(creationResult.invalid())
+    {
+      return creationResult;
+    }
+
     auto outputPath = atomicFile.tempFilePath();
     // Make sure any directory path is also available as the user may have just typed
     // in a path without actually creating the full path
@@ -195,7 +201,11 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
 
       OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
     }
-    atomicFile.setAutoCommit(true);
+
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
   }
 
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::MultipleFiles)
@@ -211,9 +221,10 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
         return MakeErrorResult(-11022, fmt::format("Unable to create output directory {}", directoryPath.string()));
       }
     }
-    OStreamUtilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, dataStructure, directoryPath.string(), messageHandler, shouldCancel, fileExtension, false, delimiter, includeIndex,
-                                                   includeHeaders, maxValPerLine);
+    return OStreamUtilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, dataStructure, directoryPath.string(), messageHandler, shouldCancel, fileExtension, false, delimiter, includeIndex,
+                                                          includeHeaders, maxValPerLine);
   }
+
   return {};
 }
 

@@ -129,7 +129,12 @@ Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, 
   {
     outputFile.replace_extension(extension);
   }
-  AtomicFile atomicFile(outputFile.string(), false);
+  AtomicFile atomicFile(outputFile.string());
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
   {
     const fs::path exportFilePath = atomicFile.tempFilePath();
     std::ofstream fOut(exportFilePath.string(), std::ofstream::out); // test name resolution and create file
@@ -140,7 +145,11 @@ Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, 
 
     fOut << pipelineJson.dump(2);
   }
-  atomicFile.commit();
+  if(!atomicFile.commit())
+  {
+    return atomicFile.getResult();
+  }
+
   return {};
 }
 

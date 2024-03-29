@@ -124,7 +124,12 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
 Result<> WriteGBCDGMTFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                              const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
 
   WriteGBCDGMTFileInputValues inputValues;
 
@@ -135,7 +140,13 @@ Result<> WriteGBCDGMTFileFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   auto result = WriteGBCDGMTFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  atomicFile.setAutoCommit(result.valid());
+  if(result.valid())
+  {
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
+  }
   return result;
 }
 
