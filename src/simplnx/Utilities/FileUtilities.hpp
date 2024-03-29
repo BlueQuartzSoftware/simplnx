@@ -31,13 +31,14 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #pragma once
 
-#include <string>
-
 #include "simplnx/Common/Result.hpp"
 
-namespace nx::core
-{
-namespace FileUtilities
+#include <filesystem>
+#include <string>
+
+namespace fs = std::filesystem;
+
+namespace nx::core::FileUtilities
 {
 
 /**
@@ -53,5 +54,18 @@ SIMPLNX_EXPORT int64 LinesInFile(const std::string& filepath);
  * @return
  */
 SIMPLNX_EXPORT Result<> ValidateCSVFile(const std::string& filePath);
-} // namespace FileUtilities
-} // namespace nx::core
+
+/**
+ * @brief
+ * @param filePath
+ * @return
+ */
+SIMPLNX_EXPORT bool HasWriteAccess(const std::string& path);
+
+/**
+ * @brief
+ * @param filePath
+ * @return
+ */
+SIMPLNX_EXPORT Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile);
+} // namespace nx::core::FileUtilities
