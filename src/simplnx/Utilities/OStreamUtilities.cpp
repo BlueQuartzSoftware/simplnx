@@ -375,9 +375,9 @@ std::string DelimiterToString(uint64 delim)
  * @param includeHeaders The boolean that determines if headers are printed | leave blank if binary is end output
  * @param componentsPerLine The amount of elements to be inserted before newline character | leave blank if binary is end output
  */
-void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& directoryPath, const IFilter::MessageHandler& mesgHandler,
-                                  const std::atomic_bool& shouldCancel, const std::string& fileExtension, bool exportToBinary, const std::string& delimiter, bool includeIndex, bool includeHeaders,
-                                  size_t componentsPerLine)
+Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& directoryPath, const IFilter::MessageHandler& mesgHandler,
+                                      const std::atomic_bool& shouldCancel, const std::string& fileExtension, bool exportToBinary, const std::string& delimiter, bool includeIndex, bool includeHeaders,
+                                      size_t componentsPerLine)
 {
   fs::path dirPath(directoryPath);
   if(!fs::is_directory(dirPath))
@@ -387,7 +387,12 @@ void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
 
   for(const auto& dataPath : objectPaths)
   {
-    AtomicFile atomicFile(fmt::format("{}/{}{}", directoryPath, dataPath.getTargetName(), fileExtension), false);
+    AtomicFile atomicFile(fmt::format("{}/{}{}", directoryPath, dataPath.getTargetName(), fileExtension));
+    auto creationResult = atomicFile.getResult();
+    if(creationResult.invalid())
+    {
+      return creationResult;
+    }
 
     auto outputFilePath = atomicFile.tempFilePath().string();
     mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
@@ -431,11 +436,16 @@ void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
     }
     if(shouldCancel)
     {
-      return;
+      return {};
     }
-    atomicFile.commit();
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
   }
-};
+
+  return {};
+}
 
 /**
  * @brief [Single Output][Custom OStream] | Writes one IArray child to some OStream

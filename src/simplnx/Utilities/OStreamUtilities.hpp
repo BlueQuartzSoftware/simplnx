@@ -10,9 +10,7 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-namespace nx::core
-{
-namespace OStreamUtilities
+namespace nx::core::OStreamUtilities
 {
 /**
  * @brief enum for accepted output delimiters in DREAM3D
@@ -47,9 +45,10 @@ SIMPLNX_EXPORT std::string DelimiterToString(uint64 delim);
  * @param includeHeaders The boolean that determines if headers are printed | leave blank if binary is end output
  * @param componentsPerLine The amount of elements to be inserted before newline character | leave blank if binary is end output
  */
-SIMPLNX_EXPORT void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& directoryPath, const IFilter::MessageHandler& mesgHandler,
-                                                 const std::atomic_bool& shouldCancel, const std::string& fileExtension = ".txt", bool exportToBinary = false, const std::string& delimiter = "",
-                                                 bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0);
+SIMPLNX_EXPORT Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& directoryPath,
+                                                     const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& fileExtension = ".txt",
+                                                     bool exportToBinary = false, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,
+                                                     size_t componentsPerLine = 0);
 
 /**
  * @brief [Single Output][Custom OStream] | Writes one IArray child to some OStream
@@ -85,6 +84,4 @@ SIMPLNX_EXPORT void PrintSingleDataObject(std::ostream& outputStrm, const DataPa
 SIMPLNX_EXPORT void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
                                               const std::atomic_bool& shouldCancel, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,
                                               bool writeFirstIndex = true, const std::string& indexName = "Index", const std::vector<DataPath>& neighborLists = {}, bool writeNumOfFeatures = false);
-} // namespace OStreamUtilities
-
-} // namespace nx::core
+} // namespace nx::core::OStreamUtilities
