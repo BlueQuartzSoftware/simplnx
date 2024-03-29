@@ -27,76 +27,22 @@ std::string randomDirName()
 }
 } // namespace
 
-AtomicFile::AtomicFile(const std::string& filename, bool autoCommit)
+AtomicFile::AtomicFile(const std::string& filename)
 : m_FilePath(fs::path(filename))
-, m_AutoCommit(autoCommit)
 , m_Result({})
 {
-  // If the path is relative, then make it absolute
-  if(!m_FilePath.is_absolute())
-  {
-    try
-    {
-      m_FilePath = fs::absolute(m_FilePath);
-    } catch(const std::filesystem::filesystem_error& error)
-    {
-      m_Result = MergeResults(m_Result, MakeErrorResult(-15780, fmt::format("When attempting to create an absolute path, AtomicFile encountered the following error: '{}'", error.what())));
-    }
-  }
-
-  // Validate write permissions
-  auto result = FileUtilities::ValidateDirectoryWritePermission(m_FilePath, true);
-  if(result.invalid())
-  {
-    m_Result = MergeResults(m_Result, result);
-  }
-
-  m_TempFilePath = fs::path(fmt::format("{}/{}/{}", m_FilePath.parent_path().string(), ::randomDirName(), m_FilePath.filename().string()));
-  result = createOutputDirectories();
-  if(result.invalid())
-  {
-    m_Result = MergeResults(m_Result, result);
-  }
+  initialize();
 }
 
-AtomicFile::AtomicFile(fs::path&& filepath, bool autoCommit)
+AtomicFile::AtomicFile(fs::path&& filepath)
 : m_FilePath(std::move(filepath))
-, m_AutoCommit(autoCommit)
 , m_Result({})
 {
-  // If the path is relative, then make it absolute
-  if(!m_FilePath.is_absolute())
-  {
-    try
-    {
-      m_FilePath = fs::absolute(m_FilePath);
-    } catch(const std::filesystem::filesystem_error& error)
-    {
-      m_Result = MergeResults(m_Result, MakeErrorResult(-15780, fmt::format("When attempting to create an absolute path, AtomicFile encountered the following error: '{}'", error.what())));
-    }
-  }
-
-  // Validate write permissions
-  auto result = FileUtilities::ValidateDirectoryWritePermission(m_FilePath, true);
-  if(result.invalid())
-  {
-    m_Result = MergeResults(m_Result, result);
-  }
-
-  m_TempFilePath = fs::path(fmt::format("{}/{}/{}", m_FilePath.parent_path().string(), ::randomDirName(), m_FilePath.filename().string()));
-  result = createOutputDirectories();
-  if(result.invalid())
-  {
-    m_Result = MergeResults(m_Result, result);
-  }
+  initialize();
 }
 
 AtomicFile::~AtomicFile()
 {
-  if(m_AutoCommit)
-  {
-    commit();
-  }
   if(fs::exists(m_TempFilePath) || fs::exists(m_TempFilePath.parent_path()))
   {
     removeTempFile();
@@ -108,24 +54,24 @@ fs::path AtomicFile::tempFilePath() const
   return m_TempFilePath;
 }
 
-void AtomicFile::commit() const
+bool AtomicFile::commit()
 {
   if(!fs::exists(m_TempFilePath))
   {
-    throw std::runtime_error(m_TempFilePath.string() + " does not exist");
+    updateResult(MakeErrorResult(-15780, m_TempFilePath.string() + " does not exist"));
+    return false;
   }
 
-  fs::rename(m_TempFilePath, m_FilePath);
-}
+  try
+  {
+    fs::rename(m_TempFilePath, m_FilePath);
+  } catch(const std::filesystem::filesystem_error& error)
+  {
+    updateResult(MakeErrorResult(-15780, fmt::format("When attempting to move the temp file to the end absolute path, AtomicFile encountered the following error on rename(): '{}'", error.what())));
+    return false;
+  }
 
-void AtomicFile::setAutoCommit(bool value)
-{
-  m_AutoCommit = value;
-}
-
-bool AtomicFile::getAutoCommit() const
-{
-  return m_AutoCommit;
+  return true;
 }
 
 void AtomicFile::removeTempFile() const
@@ -143,4 +89,47 @@ Result<> AtomicFile::createOutputDirectories()
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
   return CreateOutputDirectories(m_TempFilePath.parent_path());
+}
+
+void AtomicFile::clearResult()
+{
+  m_Result = {};
+}
+
+void AtomicFile::updateResult(Result<>&& result)
+{
+  m_Result = MergeResults(m_Result, result);
+}
+
+void AtomicFile::initialize()
+{
+  // If the path is relative, then make it absolute
+  if(!m_FilePath.is_absolute())
+  {
+    try
+    {
+      m_FilePath = fs::absolute(m_FilePath);
+    } catch(const std::filesystem::filesystem_error& error)
+    {
+      updateResult(MakeErrorResult(-15780, fmt::format("When attempting to create an absolute path, AtomicFile encountered the following error: '{}'", error.what())));
+    }
+  }
+
+  // Validate write permissions
+  { // Scope to avoid accessing result after it's no longer guaranteed by the move
+    auto result = FileUtilities::ValidateDirectoryWritePermission(m_FilePath, true);
+    if(result.invalid())
+    {
+      updateResult(std::move(result));
+    }
+  }
+
+  m_TempFilePath = fs::path(fmt::format("{}/{}/{}", m_FilePath.parent_path().string(), ::randomDirName(), m_FilePath.filename().string()));
+  { // Scope to avoid accessing result after it's no longer guaranteed by the move
+    auto result = createOutputDirectories();
+    if(result.invalid())
+    {
+      updateResult(std::move(result));
+    }
+  }
 }
