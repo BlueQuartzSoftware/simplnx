@@ -31,7 +31,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   auto datasetReader = parentGroup.openDataset(objectName);
   std::string dataArrayName = datasetReader.getName();
 
-  // Check importablility
+  // Check ability to import the data
   auto importableAttribute = datasetReader.getAttribute(Constants::k_ImportableTag);
   if(importableAttribute.isValid() && importableAttribute.readAsValue<int32>() == 0)
   {
@@ -46,8 +46,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
 
   if(data == nullptr)
   {
-    std::string ss = "Error importing DataArray";
-    return MakeErrorResult(-404, ss);
+    return MakeErrorResult(-404, fmt::format("Error importing DataArray with name '{}' that is a child of group '{}'", dataArrayName, parentGroup.getName()));
   }
 
   return {};
@@ -71,7 +70,8 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
     result = tupleDimsAttribWriter.writeValue<uint64>(dataArray.size());
     if(result.invalid())
     {
-      std::string ss = fmt::format("Error writing DataObject attribute: {}", k_TupleDimsAttrName);
+      std::string ss =
+          fmt::format("Error writing DataObject attribute: {} for DataArray with name '{}' which has a parent named '{}'", k_TupleDimsAttrName, dataArray.getName(), parentGroup.getName());
       return MakeErrorResult(result.errors()[0].code, ss);
     }
   }
