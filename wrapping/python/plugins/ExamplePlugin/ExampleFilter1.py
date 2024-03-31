@@ -79,7 +79,7 @@ class ExampleFilter1:
     """
     return ExampleFilter1()
 
-  def parameters(self) -> nx.Parameters:
+  def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
     """This function defines the parameters that are needed by the filter. Parameters collect the values from the user
        or through a pipeline file.
     """
@@ -120,8 +120,8 @@ class ExampleFilter1:
     ensemble_info.append(["Cubic-High m-3m","Primary","Phase 2"])
     params.insert(nx.EnsembleInfoParameter(ExampleFilter1.PARAM15_KEY, "Created Ensemble Info", "The values with which to populate the crystal structures, phase types, and phase names data arrays. Each row corresponds to an ensemble phase.", ensemble_info))
 
-    color_control_points = nx.Json('{"RGBPoints": [0,0,0,0,0.4,0.901960784314,0,0,0.8,0.901960784314,0.901960784314,0,1,1,1,1]}')
-    params.insert(nx.GenerateColorTableParameter(ExampleFilter1.PARAM16_KEY, "Select Preset...", "Select a preset color scheme to apply to the created array", color_control_points))
+    # See https://www.dream3d.io/python_docs/User_API.html#nx.GenerateColorTableParameter for the full list of preset names
+    params.insert(nx.GenerateColorTableParameter(ExampleFilter1.PARAM16_KEY, "Select Preset...", "Select a preset color scheme to apply to the created array", "Rainbow Desaturated"))
 
     dataset1 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
     dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
@@ -213,6 +213,8 @@ class ExampleFilter1:
     vec4f: list = [ExampleFilter1.VEC4F_KEY]
     vec6f: list = [ExampleFilter1.VEC6F_KEY]
 
+    file_list: nx.GeneratedFileListParameter.ValueType = [ExampleFilter1.PARAM17_KEY].generate()
+    
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Preflight: {input_dir_path}'))
     return nx.IFilter.PreflightResult()
 

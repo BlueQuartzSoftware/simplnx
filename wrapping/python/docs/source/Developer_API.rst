@@ -1084,17 +1084,25 @@ General Parameters
 
       import simplnx as nx
 
-      generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
-      generated_file_list_value.input_path = "DREAM3DNXData/Data/Porosity_Image"
-      generated_file_list_value.ordering = nx.GeneratedFileListParameter.Ordering.LowToHigh
-      generated_file_list_value.file_prefix = "slice-"
-      generated_file_list_value.file_suffix = ""
-      generated_file_list_value.file_extension = ".tif"
-      generated_file_list_value.start_index = 11
-      generated_file_list_value.end_index = 174
-      generated_file_list_value.increment_index = 1
-      generated_file_list_value.padding_digits = 2
-      params.insert(nx.GeneratedFileListParameter('input_file_list_key', "Input File List", "The list of files to be read", generated_file_list_value))
+      def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
+         params = nx.Parameters()
+         generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
+         generated_file_list_value.input_path = "DREAM3DNXData/Data/Porosity_Image"
+         generated_file_list_value.ordering = nx.GeneratedFileListParameter.Ordering.LowToHigh
+         generated_file_list_value.file_prefix = "slice-"
+         generated_file_list_value.file_suffix = ""
+         generated_file_list_value.file_extension = ".tif"
+         generated_file_list_value.start_index = 11
+         generated_file_list_value.end_index = 174
+         generated_file_list_value.increment_index = 1
+         generated_file_list_value.padding_digits = 2
+         params.insert(nx.GeneratedFileListParameter(FilterClassName.INPUT_FILE_LIST_KEY, "Input File List", "The list of files to be read", generated_file_list_value))
+
+      def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
+
+         file_list: nx.GeneratedFileListParameter.ValueType = [FilterClassName.INPUT_FILE_LIST_KEY].generate()
+         for file in file_list:
+            print(f'{file}')
 
 .. _GeometrySelectionParameter:
 .. py:class:: GeometrySelectionParameter
