@@ -17,7 +17,7 @@ public:
   using data_type = StringArray;
 
   StringArrayIO();
-  virtual ~StringArrayIO() noexcept;
+  ~StringArrayIO() noexcept override;
 
   StringArrayIO(const StringArrayIO& other) = delete;
   StringArrayIO(StringArrayIO&& other) = delete;
@@ -36,7 +36,7 @@ public:
    * @return Result<>
    */
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& arrayName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
+                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const override;
 
   /**
    * @brief Attempts to write an StringArray to HDF5.

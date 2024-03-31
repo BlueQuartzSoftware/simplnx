@@ -64,21 +64,21 @@ public:
     auto datasetReader = parentGroup.openDataset(dataArrayName);
     if(!datasetReader.isValid())
     {
-      std::string ss = "Could not open Dataset";
+      std::string ss = fmt::format("Could not open data set '{}' which is a child of '{}'", dataArrayName, parentGroup.getName());
       return MakeErrorResult(-900, ss);
     }
 
     nx::core::HDF5::Type type = datasetReader.getType();
     if(type == nx::core::HDF5::Type::unknown)
     {
-      std::string ss = "Invalid Dataset data type";
+      std::string ss = fmt::format("Invalid Dataset data type for DataArray '{}' which is a child of '{}'", dataArrayName, parentGroup.getName());
       return MakeErrorResult(-901, ss);
     }
 
     auto dataTypeAttribute = datasetReader.getAttribute(Constants::k_ObjectTypeTag);
     const bool isBoolArray = (dataTypeAttribute.isValid() && dataTypeAttribute.readAsString().compare("DataArray<bool>") == 0);
 
-    // Check importablility
+    // Check ability to import the data
     auto importableAttribute = datasetReader.getAttribute(Constants::k_ImportableTag);
     if(importableAttribute.isValid() && importableAttribute.readAsValue<int32>() == 0)
     {
@@ -133,8 +133,7 @@ public:
 
     if(err < 0)
     {
-      std::string ss = "Error importing DataArray";
-      return MakeErrorResult(err, ss);
+      return MakeErrorResult(err, fmt::format("Error importing dataset from HDF5 file. DataArray name '{}' that is a child of '{}'", dataArrayName, parentGroup.getName()));
     }
 
     return {};
