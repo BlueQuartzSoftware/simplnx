@@ -41,6 +41,39 @@ public:
   ReadVtkStructuredPoints& operator=(const ReadVtkStructuredPoints&) = delete;
   ReadVtkStructuredPoints& operator=(ReadVtkStructuredPoints&&) noexcept = delete;
 
+  enum class ErrorCodes : int32
+  {
+    ConvertVtkDataTypeErr = -240,
+    VtkReadBinaryDataErr = -241,
+    ReadLineErr = -242,
+    ReadStringEofErr = -243,
+    ReadStringReadErr = -244,
+    ReadStringLogicalIOErr = -245,
+    ReadStringUnknownErr = -246,
+    FileOpenErr = -247,
+    FileTypeErr = -248,
+    DatasetWordCountErr = -249,
+    DatasetKeywordErr = -250,
+    DatasetStructuredPtsErr = -251,
+    DimsWordCountErr = -252,
+    DimsKeywordErr = -253,
+    SpacingWordCountErr = -254,
+    SpacingKeywordErr = -255,
+    OriginWordCountErr = -256,
+    OriginKeywordErr = -257,
+    DatasetTypeWordCountErr = -258,
+    DatasetTypeKeywordErr = -259,
+    MismatchedCellsAndTuplesErr = -260,
+    MismatchedPointsAndTuplesErr = -261,
+    UnknownSectionKeywordErr = -262,
+    ReadScalarHeaderLineErr = -263,
+    ReadScalarHeaderWordCountErr = -264,
+    ReadLookupTableLineErr = -265,
+    ReadLookupTableWordCountErr = -266,
+    ReadLookupTableKeywordErr = -267,
+    NumberConvertErr = -10351 // From DataArrayUtilities.hpp
+  };
+
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
@@ -76,7 +109,7 @@ protected:
    * @brief readFile Handles the main reading of the .vtk file
    * @return Integer error value
    */
-  int32_t readFile();
+  Result<> readFile();
 
   /**
    * @brief readData Reads a section of data from the .vtk file
@@ -90,14 +123,14 @@ protected:
    * @param value Coordinate value
    * @return Integer error value
    */
-  int32_t parseCoordinateLine(const char* input, size_t& value);
+  //  Result<> parseCoordinateLine(const char* input, size_t& value);
 
   /**
    * @brief parseByteSize Parses the byte size from a data set declaration line
    * @param text Line to parse
-   * @return Integer error value
+   * @return Byte size result
    */
-  size_t parseByteSize(const std::string& text);
+  //  Result<usize> parseByteSize(const std::string& text);
 
   /**
    * @brief readLine Reads a line from the .vtk file
@@ -106,7 +139,7 @@ protected:
    * @param length Length of line
    * @return Integer error value
    */
-  int32_t readLine(std::istream& in, char* result, size_t length);
+  Result<> readLine(std::istream& in, char* result, size_t length);
 
   /**
    * @brief readString Reas a string from the .vtk file
@@ -115,7 +148,7 @@ protected:
    * @param length Length of string
    * @return Integer error value
    */
-  int32_t readString(std::istream& in, char* result, size_t length);
+  Result<> readString(std::istream& in, char* result, size_t length);
 
   /**
    * @brief lowerCase Converts a string to lower case
@@ -130,44 +163,40 @@ protected:
    * @param in Incoming file stream
    * @param numPts Number of points to read
    * @param nextKeyWord Keyword for data type
-   * @return Integer error value
+   * @return Result object
    */
-  int32_t readDataTypeSection(std::istream& in, int numPts, const std::string& nextKeyWord);
+  Result<int32> readDataTypeSection(std::istream& in, int numPts, const std::string& nextKeyWord);
 
   /**
    * @brief readScalarData Reads scalar data attribute types
    * @param in Incoming file stream
-   * @return Integer error value
+   * @return Result object
    */
-  int32_t readScalarData(std::istream& in, int numPts);
+  Result<> readScalarData(std::istream& in, int numPts);
 
   /**
    * @brief readVectorData Reads vector data attribute types
    * @param in Incoming file stream
    * @param numPts Number of points
-   * @return Integer error value
+   * @return Result object
    */
-  int32_t readVectorData(std::istream& in, int numPts);
+  Result<> readVectorData(std::istream& in, int numPts);
 
   /**
    * @brief DecodeString Decodes a binary string from the .vtk file
    * @param resname Resulting decoded string
    * @param name Binary string to decode
-   * @return Integer error value
+   * @return Result object
    */
-  int32_t DecodeString(char* resname, const char* name);
-
-  void setErrorCondition(int error, const std::string& message);
+  //  Result<int32> DecodeString(char* resname, const char* name);
 
   void setComment(const std::string& comment);
 
   void setFileIsBinary(bool value);
 
-  int32 getErrorCode() const;
-
   void setDatasetType(const std::string& dataSetType);
 
-  int32_t preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, size_t numElements);
+  Result<> preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, size_t numElements);
 
 private:
   DataStructure& m_DataStructure;
@@ -181,8 +210,6 @@ private:
   bool m_FileIsBinary = {true};
 
   bool m_Preflight = false;
-  int m_ErrorCode = 0;
-  std::string m_ErrorMessage;
 
   CurrentSectionType m_CurrentSectionType = CurrentSectionType::NotSet;
   CreateImageGeometryAction::DimensionType m_CurrentGeomDims;
