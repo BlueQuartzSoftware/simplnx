@@ -235,10 +235,10 @@ void INodeGeometry3D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
   }
 }
 
-Result<> INodeGeometry3D::validateGeometry() const
+Result<> INodeGeometry3D::validate() const
 {
   // Validate the next lower dimension geometry
-  Result<> result = INodeGeometry2D::validateGeometry();
+  Result<> result = INodeGeometry2D::validate();
 
   usize numTuples = getNumberOfPolyhedra();
   const AttributeMatrix* amPtr = getPolyhedraAttributeMatrix();

@@ -183,7 +183,7 @@ public:
    * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.
    * @return A Result<> object possibly with error code and message.
    */
-  virtual Result<> validateGeometry() const = 0;
+  virtual Result<> validate() const = 0;
 
 protected:
   IGeometry(DataStructure& dataStructure, std::string name);

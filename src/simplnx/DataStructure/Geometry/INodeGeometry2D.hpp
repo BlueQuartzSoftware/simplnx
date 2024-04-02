@@ -195,7 +195,7 @@ public:
    * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.
    * @return A Result<> object possibly with error code and message.
    */
-  Result<> validateGeometry() const override;
+  Result<> validate() const override;
 
 protected:
   INodeGeometry2D(DataStructure& dataStructure, std::string name);

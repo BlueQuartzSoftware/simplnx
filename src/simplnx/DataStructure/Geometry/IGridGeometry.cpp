@@ -90,7 +90,7 @@ void IGridGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdTy
   }
 }
 
-Result<> IGridGeometry::validateGeometry() const
+Result<> IGridGeometry::validate() const
 {
   // Validate the next lower dimension geometry
   Result<> result;

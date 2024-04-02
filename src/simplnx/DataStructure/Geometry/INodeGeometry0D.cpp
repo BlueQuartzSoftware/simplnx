@@ -253,7 +253,7 @@ void INodeGeometry0D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
   }
 }
 
-Result<> INodeGeometry0D::validateGeometry() const
+Result<> INodeGeometry0D::validate() const
 {
   Result<> result;
   usize numVerts = getNumberOfVertices();

@@ -1029,7 +1029,7 @@ Result<> DataStructure::validateGeometries() const
     if(dataObjectType >= DataObject::Type::IGeometry && dataObjectType <= DataObject::Type::TetrahedralGeom)
     {
       auto* geomPtr = dynamic_cast<IGeometry*>(dataObject.second.get());
-      result = MergeResults(geomPtr->validateGeometry(), result);
+      result = MergeResults(geomPtr->validate(), result);
     }
   }
   return result;

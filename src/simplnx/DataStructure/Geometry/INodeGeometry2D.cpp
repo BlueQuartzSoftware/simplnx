@@ -224,10 +224,10 @@ void INodeGeometry2D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
   }
 }
 
-Result<> INodeGeometry2D::validateGeometry() const
+Result<> INodeGeometry2D::validate() const
 {
   // Validate the next lower dimension geometry
-  Result<> result = INodeGeometry1D::validateGeometry();
+  Result<> result = INodeGeometry1D::validate();
 
   usize numTuples = getNumberOfFaces();
   const AttributeMatrix* amPtr = getFaceAttributeMatrix();
