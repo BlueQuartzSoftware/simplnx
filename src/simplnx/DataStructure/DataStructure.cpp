@@ -1040,13 +1040,17 @@ Result<> DataStructure::validateAttributeMatrices() const
   Result<> result;
   for(const auto& dataObject : m_DataObjects)
   {
-    auto dataObjectType = dataObject.second.lock()->getDataObjectType();
-    if(dataObjectType == DataObject::Type::AttributeMatrix)
+    auto dataObjectSharedPtr = dataObject.second.lock();
+    if(dataObjectSharedPtr.get() != nullptr)
     {
-      auto* attrMatPtr = dynamic_cast<AttributeMatrix*>(dataObject.second.lock().get());
-      if(nullptr != attrMatPtr)
+      auto dataObjectType = dataObjectSharedPtr->getDataObjectType();
+      if(dataObjectType == DataObject::Type::AttributeMatrix)
       {
-        result = MergeResults(attrMatPtr->validate(), result);
+        auto* attrMatPtr = dynamic_cast<AttributeMatrix*>(dataObject.second.lock().get());
+        if(nullptr != attrMatPtr)
+        {
+          result = MergeResults(attrMatPtr->validate(), result);
+        }
       }
     }
   }

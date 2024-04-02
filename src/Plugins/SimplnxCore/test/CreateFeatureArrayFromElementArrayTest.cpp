@@ -26,8 +26,9 @@ void testElementArray(const DataPath& cellDataPath)
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
 
+  // This section creates the needed AttributeMatrix of size 1. The filter should be resizing as needed.
   {
-    auto* computedFeatureData = AttributeMatrix::Create(dataStructure, k_Computed_CellData, std::vector<usize>{81}, dataStructure.getId(smallIn100Group));
+    AttributeMatrix::Create(dataStructure, k_Computed_CellData, std::vector<usize>{1}, dataStructure.getId(smallIn100Group));
   }
 
   DataPath featureIdsDataPath = smallIn100Group.createChildPath(nx::core::Constants::k_CellData).createChildPath(k_FeatureIDs);

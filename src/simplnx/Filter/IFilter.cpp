@@ -225,15 +225,9 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
     return {MakeErrorResult(-1, "Filter cancelled")};
   }
 
-  Result<> validGeometries = MergeResults(dataStructure.validateGeometries(), executeImplResult);
-
-  Result<> validAttributeMatrices = dataStructure.validateAttributeMatrices();
-  if(validAttributeMatrices.invalid())
-  {
-    return ExecuteResult{std::move(validAttributeMatrices), std::move(preflightResult.outputValues) };
-  }
-
-  Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(validGeometries));
+  Result<> validGeometryAndAttributeMatrices = MergeResults(dataStructure.validateGeometries(), dataStructure.validateAttributeMatrices());
+  validGeometryAndAttributeMatrices = MergeResults(validGeometryAndAttributeMatrices, executeImplResult);
+  Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(validGeometryAndAttributeMatrices));
 
   if(preflightActionsExecuteResult.invalid())
   {
