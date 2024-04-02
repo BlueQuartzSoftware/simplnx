@@ -41,8 +41,8 @@ Result<> WriteVtkStructuredPoints::operator()()
   FloatVec3 spacing = imageGeom.getSpacing();
   FloatVec3 origin = imageGeom.getOrigin();
 
-  std::string vtkOutPath = m_InputValues->OutputFile;
-  std::ofstream outStrm(vtkOutPath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+  fs::path vtkOutPath = m_InputValues->OutputFile;
+  std::ofstream outStrm(vtkOutPath.string(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
   if(!outStrm.is_open())
   {
     return MakeErrorResult(-66667, fmt::format("Output file could not be opened for writing: '{}'", m_InputValues->OutputFile.string()));
