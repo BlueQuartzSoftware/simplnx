@@ -53,7 +53,7 @@ Result<> ReadVtkStructuredPoints::operator()()
 namespace
 {
 constexpr usize kBufferSize = 1024ULL;
-inline constexpr size_t DEFAULT_BLOCKSIZE = 1048576; // This is evenly divisible by 2,4, & 8.
+inline constexpr usize DEFAULT_BLOCKSIZE = 1048576; // This is evenly divisible by 2,4, & 8.
 
 } // namespace
 
@@ -174,9 +174,9 @@ inline usize count_tokens(char* str, char delim, bool consecutiveDelimiters, usi
 
 // -----------------------------------------------------------------------------
 template <typename T>
-int32_t skipVolume(std::istream& in, bool binary, size_t numElements)
+int32 skipVolume(std::istream& in, bool binary, usize numElements)
 {
-  int32_t err = 0;
+  int32 err = 0;
   if(binary)
   {
     std::istream::pos_type pos = in.tellg();
@@ -206,7 +206,7 @@ int32_t skipVolume(std::istream& in, bool binary, size_t numElements)
 
 // -------------------------------------------------------------------------
 template <typename T>
-int32_t vtkReadBinaryData(std::istream& in, DataArray<T>& data)
+int32 vtkReadBinaryData(std::istream& in, DataArray<T>& data)
 {
   if(data.getNumberOfComponents() == 0 || data.getNumberOfTuples() == 0)
   {
@@ -220,13 +220,13 @@ int32_t vtkReadBinaryData(std::istream& in, DataArray<T>& data)
 
   DataStoreType& dataStore = data.getDataStoreRef();
 
-  size_t numBytesToRead = static_cast<size_t>(numTuples) * static_cast<size_t>(numComp) * sizeof(T);
-  size_t numRead = 0;
+  usize numBytesToRead = static_cast<usize>(numTuples) * static_cast<usize>(numComp) * sizeof(T);
+  usize numRead = 0;
   // Cast our pointer to a pointer that std::istream will take
 
   numRead = 0;
   // Now start reading the data in chunks if needed.
-  size_t chunkSize = DEFAULT_BLOCKSIZE;
+  usize chunkSize = DEFAULT_BLOCKSIZE;
 
   // Sanity check the chunk size to make sure it is not any larger than the chunk of data we are about to read
   if(numBytesToRead < DEFAULT_BLOCKSIZE)
@@ -238,10 +238,10 @@ int32_t vtkReadBinaryData(std::istream& in, DataArray<T>& data)
   char* chunkPtr = chunk.data();
   nonstd::span<T> typedArray(reinterpret_cast<T*>(chunk.data()), chunkSize);
 
-  size_t masterByteCounter = 0;
-  size_t bytes_read = 0;
-  size_t typeSize = sizeof(T);
-  size_t totalElementsRead = 0;
+  usize masterByteCounter = 0;
+  usize bytes_read = 0;
+  usize typeSize = sizeof(T);
+  usize totalElementsRead = 0;
 
   // Now chunk through the file reading up chunks of data that can actually be
   // read in a single read. DEFAULT_BLOCKSIZE will control this.
@@ -305,14 +305,14 @@ Result<> readDataChunk(DataStructure* dataStructurePtr, std::istream& in, bool b
   using DataArrayType = DataArray<T>;
 
   DataArrayType& dataArrayRef = dataStructurePtr->getDataRefAs<DataArrayType>(dataArrayPath);
-  //  size_t numTuples = dataArrayRef.getNumberOfTuples();
-  std::vector<size_t> tDims = dataArrayRef.getTupleShape();
-  std::vector<size_t> cDims = dataArrayRef.getComponentShape();
+  //  usize numTuples = dataArrayRef.getNumberOfTuples();
+  std::vector<usize> tDims = dataArrayRef.getTupleShape();
+  std::vector<usize> cDims = dataArrayRef.getComponentShape();
 
   dataArrayRef.fill(static_cast<T>(0));
   if(binary)
   {
-    int32_t err = vtkReadBinaryData<T>(in, dataArrayRef);
+    int32 err = vtkReadBinaryData<T>(in, dataArrayRef);
     if(err < 0)
     {
       return MakeErrorResult(to_underlying(ReadVtkStructuredPoints::ErrorCodes::VtkReadBinaryDataErr),
@@ -380,7 +380,7 @@ Result<> ReadVtkStructuredPoints::readLine(std::istream& in, char* result, usize
 }
 
 // --------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::readString(std::istream& in, char* result, size_t length)
+Result<> ReadVtkStructuredPoints::readString(std::istream& in, char* result, usize length)
 {
   in.width(length);
   in >> result;
@@ -407,9 +407,9 @@ Result<> ReadVtkStructuredPoints::readString(std::istream& in, char* result, siz
 }
 
 // -----------------------------------------------------------------------------
-char* ReadVtkStructuredPoints::lowerCase(char* str, const size_t len)
+char* ReadVtkStructuredPoints::lowerCase(char* str, const usize len)
 {
-  size_t i;
+  usize i;
   char* s;
 
   for(i = 0, s = str; *s != '\0' && i < len; s++, i++)
@@ -693,7 +693,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   {
     return ConvertResult(std::move(convertResultI32));
   }
-  int32_t numValues = convertResultI32.value();
+  int32 numValues = convertResultI32.value();
 
   for(int i = 0; i < 2; i++)
   {
@@ -740,7 +740,7 @@ Result<> ReadVtkStructuredPoints::readFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int32_t numValues, const std::string& nextKeyWord)
+Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int32 numValues, const std::string& nextKeyWord)
 {
   std::vector<char> buf(kBufferSize, '\0');
 
@@ -891,10 +891,10 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
 //     return MakeErrorResult<int32>(-18201, "name is NULL");
 //   }
 //   std::ostringstream str;
-//   size_t cc = 0;
+//   usize cc = 0;
 //   unsigned int ch;
-//   size_t len = strlen(name);
-//   size_t reslen = 0;
+//   usize len = strlen(name);
+//   usize reslen = 0;
 //   char buffer[10] = "0x";
 //   while(name[cc] != 0)
 //   {
@@ -924,7 +924,7 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
 // }
 
 // ------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32_t numPts)
+Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
 {
   // char line[256], name[256], key[256], tableName[256];
 
@@ -998,50 +998,50 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32_t numPt
   // Read the data
   if(scalarType == "unsigned_char")
   {
-    return readDataChunk<uint8_t>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<uint8>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "char")
   {
-    return readDataChunk<int8_t>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<int8>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "unsigned_short")
   {
-    return readDataChunk<uint16_t>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<uint16>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "short")
   {
-    return readDataChunk<int16_t>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<int16>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "unsigned_int")
   {
-    return readDataChunk<uint32_t>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<uint32>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "int")
   {
-    return readDataChunk<int32_t>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<int32>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "unsigned_long")
   {
-    return readDataChunk<uint64_t>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<uint64>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "long")
   {
-    return readDataChunk<int64_t>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<int64>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "float")
   {
-    return readDataChunk<float>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<float32>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
   else if(scalarType == "double")
   {
-    return readDataChunk<double>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
+    return readDataChunk<float64>(&m_DataStructure, in, m_FileIsBinary, arrayDataPath);
   }
 
   return {};
 }
 
 // ------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::readVectorData(std::istream& in, int32_t numPts)
+Result<> ReadVtkStructuredPoints::readVectorData(std::istream& in, int32 numPts)
 {
 #if 0
   int skipVector = 0;
@@ -1085,19 +1085,19 @@ Result<> ReadVtkStructuredPoints::readVectorData(std::istream& in, int32_t numPt
     return 0;
   }
 
-  float progress = this->GetProgress();
+  float32 progress = this->GetProgress();
   this->UpdateProgress(progress + 0.5 * (1.0 - progress));
 #endif
   return {};
 }
 
 //// -----------------------------------------------------------------------------
-// int32_t ReadVtkStructuredPoints::parseCoordinateLine(const char* input, size_t& value)
+// int32 ReadVtkStructuredPoints::parseCoordinateLine(const char* input, usize& value)
 //{
 //   char text[256];
 //   char text1[256];
-//   int32_t i = 0;
-//   int32_t n = sscanf(input, "%s %d %s", text, &i, text1);
+//   int32 i = 0;
+//   int32 n = sscanf(input, "%s %d %s", text, &i, text1);
 //   if(n != 3)
 //   {
 //     value = -1;
@@ -1230,27 +1230,27 @@ void ReadVtkStructuredPoints::readData(std::istream& instream)
 
       if (scalarType == "unsigned_char")
       {
-        err = readDataChunk<uint8_t>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
+        err = readDataChunk<uint8>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
       }
       else if (scalarType == "char")
       {
-        err = readDataChunk<int8_t>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
+        err = readDataChunk<int8>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
       }
       else if (scalarType == "unsigned_short")
       {
-        err = readDataChunk<uint16_t>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
+        err = readDataChunk<uint16>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
       }
       else if (scalarType == "short")
       {
-        err = readDataChunk<int16_t>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
+        err = readDataChunk<int16>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
       }
       else if (scalarType == "unsigned_int")
       {
-        err = readDataChunk<uint32_t>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
+        err = readDataChunk<uint32>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
       }
       else if (scalarType == "int")
       {
-        err = readDataChunk<int32_t>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
+        err = readDataChunk<int32>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
       }
       else if (scalarType == "unsigned_long")
       {
@@ -1262,11 +1262,11 @@ void ReadVtkStructuredPoints::readData(std::istream& instream)
       }
       else if (scalarType == "float")
       {
-        err = readDataChunk<float>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
+        err = readDataChunk<float32>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
       }
       else if (scalarType == "double")
       {
-        err = readDataChunk<double>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
+        err = readDataChunk<float64>(attrMat, instream, getInPreflight(), getFileIsBinary(), scalarName, scalarType, scalarNumComps, skipChunk);
       }
 
       if(err < 0)
@@ -1284,7 +1284,7 @@ void ReadVtkStructuredPoints::readData(std::istream& instream)
 }
 
 // ------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, size_t numElements)
+Result<> ReadVtkStructuredPoints::preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, usize numElements)
 {
   switch(nxDType)
   {
