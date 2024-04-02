@@ -134,7 +134,6 @@ Result<> ITKDilateObjectMorphologyImage::executeImpl(DataStructure& dataStructur
   const cxITKDilateObjectMorphologyImage::ITKDilateObjectMorphologyImageFunctor itkFunctor = {kernelRadius, kernelType, objectValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKDilateObjectMorphologyImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

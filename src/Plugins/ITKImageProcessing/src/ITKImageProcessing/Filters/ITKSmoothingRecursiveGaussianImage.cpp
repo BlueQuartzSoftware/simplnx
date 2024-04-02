@@ -134,7 +134,6 @@ Result<> ITKSmoothingRecursiveGaussianImage::executeImpl(DataStructure& dataStru
   const cxITKSmoothingRecursiveGaussianImage::ITKSmoothingRecursiveGaussianImageFunctor itkFunctor = {sigma, normalizeAcrossScale};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKSmoothingRecursiveGaussianImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

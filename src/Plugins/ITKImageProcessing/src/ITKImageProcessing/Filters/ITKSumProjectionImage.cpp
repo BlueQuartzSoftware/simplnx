@@ -122,7 +122,6 @@ Result<> ITKSumProjectionImage::executeImpl(DataStructure& dataStructure, const 
   const cxITKSumProjectionImage::ITKSumProjectionImageFunctor itkFunctor = {projectionDimension};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKSumProjectionImage::ArrayOptionsType, cxITKSumProjectionImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                             shouldCancel);

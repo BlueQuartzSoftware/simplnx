@@ -131,7 +131,6 @@ Result<> ITKThresholdImage::executeImpl(DataStructure& dataStructure, const Argu
   const cxITKThresholdImage::ITKThresholdImageFunctor itkFunctor = {lower, upper, outsideValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKThresholdImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

@@ -381,7 +381,6 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.hpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.hpp
@@ -615,7 +614,6 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.cpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.cpp

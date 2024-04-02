@@ -144,7 +144,6 @@ Result<> ITKAdaptiveHistogramEqualizationImage::executeImpl(DataStructure& dataS
   const cxITKAdaptiveHistogramEqualizationImage::ITKAdaptiveHistogramEqualizationImageFunctor itkFunctor = {radius, alpha, beta};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKAdaptiveHistogramEqualizationImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

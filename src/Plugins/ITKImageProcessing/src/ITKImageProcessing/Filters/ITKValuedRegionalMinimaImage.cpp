@@ -123,7 +123,6 @@ Result<> ITKValuedRegionalMinimaImage::executeImpl(DataStructure& dataStructure,
   const cxITKValuedRegionalMinimaImage::ITKValuedRegionalMinimaImageFunctor itkFunctor = {fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKValuedRegionalMinimaImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

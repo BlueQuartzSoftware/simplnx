@@ -145,7 +145,6 @@ Result<> ITKOtsuMultipleThresholdsImage::executeImpl(DataStructure& dataStructur
   const cxITKOtsuMultipleThresholdsImage::ITKOtsuMultipleThresholdsImageFunctor itkFunctor = {numberOfThresholds, labelOffset, numberOfHistogramBins, valleyEmphasis, returnBinMidpoint};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKOtsuMultipleThresholdsImage::ArrayOptionsType, cxITKOtsuMultipleThresholdsImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                               itkFunctor, shouldCancel);

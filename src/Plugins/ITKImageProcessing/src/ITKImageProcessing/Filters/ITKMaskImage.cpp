@@ -207,8 +207,6 @@ Result<> ITKMaskImage::executeImpl(DataStructure& dataStructure, const Arguments
 
   cxITKMaskImage::ITKMaskImageFunctor itkFunctor = {outsideValue, imageGeom, maskStore};
 
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
-
   return ITK::Execute<cxITKMaskImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace nx::core

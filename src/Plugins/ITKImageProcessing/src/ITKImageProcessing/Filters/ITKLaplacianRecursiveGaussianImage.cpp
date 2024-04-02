@@ -128,7 +128,6 @@ Result<> ITKLaplacianRecursiveGaussianImage::executeImpl(DataStructure& dataStru
   const cxITKLaplacianRecursiveGaussianImage::ITKLaplacianRecursiveGaussianImageFunctor itkFunctor = {sigma, normalizeAcrossScale};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKLaplacianRecursiveGaussianImage::ArrayOptionsType, cxITKLaplacianRecursiveGaussianImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                                       itkFunctor, shouldCancel);

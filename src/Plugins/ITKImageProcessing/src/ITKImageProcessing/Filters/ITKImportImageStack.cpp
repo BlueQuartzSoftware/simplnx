@@ -146,8 +146,6 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
   auto& outputData = dataStructure.getDataRefAs<DataArray<T>>(imageDataPath);
   auto& outputDataStore = outputData.getDataStoreRef();
 
-  imageGeom.getLinkedGeometryData().addCellData(imageDataPath);
-
   // Variables for the progress Reporting
   usize slice = 0;
 

@@ -200,7 +200,6 @@ Result<> IlluminationCorrection::executeImpl(DataStructure& dataStructure, const
    ***************************************************************************/
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(pOutputArrayPath);
 
   return ITK::Execute(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath, IlluminationCorrectionFilterCreationFunctor{});
 }

@@ -134,7 +134,6 @@ Result<> ITKBlackTopHatImage::executeImpl(DataStructure& dataStructure, const Ar
   const cxITKBlackTopHatImage::ITKBlackTopHatImageFunctor itkFunctor = {kernelRadius, kernelType, safeBorder};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKBlackTopHatImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

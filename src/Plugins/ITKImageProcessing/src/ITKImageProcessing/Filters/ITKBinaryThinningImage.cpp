@@ -111,7 +111,6 @@ Result<> ITKBinaryThinningImage::executeImpl(DataStructure& dataStructure, const
   const cxITKBinaryThinningImage::ITKBinaryThinningImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKBinaryThinningImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

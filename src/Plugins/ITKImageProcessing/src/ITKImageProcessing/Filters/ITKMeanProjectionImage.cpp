@@ -122,7 +122,6 @@ Result<> ITKMeanProjectionImage::executeImpl(DataStructure& dataStructure, const
   const cxITKMeanProjectionImage::ITKMeanProjectionImageFunctor itkFunctor = {projectionDimension};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKMeanProjectionImage::ArrayOptionsType, cxITKMeanProjectionImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                               shouldCancel);

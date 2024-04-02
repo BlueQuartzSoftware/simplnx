@@ -121,7 +121,6 @@ Result<> ITKInvertIntensityImage::executeImpl(DataStructure& dataStructure, cons
   const cxITKInvertIntensityImage::ITKInvertIntensityImageFunctor itkFunctor = {maximum};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKInvertIntensityImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

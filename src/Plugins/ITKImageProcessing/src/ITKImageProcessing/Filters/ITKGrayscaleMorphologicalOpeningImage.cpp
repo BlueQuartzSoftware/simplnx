@@ -134,7 +134,6 @@ Result<> ITKGrayscaleMorphologicalOpeningImage::executeImpl(DataStructure& dataS
   const cxITKGrayscaleMorphologicalOpeningImage::ITKGrayscaleMorphologicalOpeningImageFunctor itkFunctor = {kernelRadius, kernelType, safeBorder};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKGrayscaleMorphologicalOpeningImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

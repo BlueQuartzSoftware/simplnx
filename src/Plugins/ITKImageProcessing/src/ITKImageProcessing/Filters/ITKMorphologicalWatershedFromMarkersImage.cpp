@@ -128,7 +128,6 @@ Result<> ITKMorphologicalWatershedFromMarkersImage::executeImpl(DataStructure& d
   const cxITKMorphologicalWatershedFromMarkersImage::ITKMorphologicalWatershedFromMarkersImageFunctor itkFunctor = {markWatershedLine, fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKMorphologicalWatershedFromMarkersImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

@@ -113,7 +113,6 @@ Result<> ITKBoundedReciprocalImage::executeImpl(DataStructure& dataStructure, co
   const cxITKBoundedReciprocalImage::ITKBoundedReciprocalImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKBoundedReciprocalImage::ArrayOptionsType, cxITKBoundedReciprocalImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                     shouldCancel);

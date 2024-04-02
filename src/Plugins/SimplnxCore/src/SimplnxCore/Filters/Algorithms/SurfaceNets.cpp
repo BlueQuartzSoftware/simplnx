@@ -204,12 +204,9 @@ Result<> SurfaceNets::operator()()
   triangleGeom.resizeVertexList(nodeCount);
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nodeCount)});
 
-  LinkedGeometryData& linkedGeometryData = triangleGeom.getLinkedGeometryData();
-
   // Remove and then insert a properly sized int8 for the NodeTypes
   Int8Array& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath);
   nodeTypes.resizeTuples({static_cast<usize>(nodeCount)});
-  linkedGeometryData.addVertexData(m_InputValues->NodeTypesDataPath);
 
   Point3Df position = {0.0f, 0.0f, 0.0f};
 
@@ -292,14 +289,12 @@ Result<> SurfaceNets::operator()()
   // Resize the face labels Int32Array
   Int32Array& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath);
   faceLabels.resizeTuples({triangleCount});
-  linkedGeometryData.addFaceData(m_InputValues->FaceLabelsDataPath);
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
   for(size_t i = 0; i < m_InputValues->SelectedDataArrayPaths.size(); i++)
   {
     // Associate these arrays with the Triangle Face Data.
-    linkedGeometryData.addFaceData(m_InputValues->SelectedDataArrayPaths[i]);
     ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
   }
 

@@ -126,7 +126,6 @@ Result<> ITKZeroCrossingImage::executeImpl(DataStructure& dataStructure, const A
   const cxITKZeroCrossingImage::ITKZeroCrossingImageFunctor itkFunctor = {foregroundValue, backgroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKZeroCrossingImage::ArrayOptionsType, cxITKZeroCrossingImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

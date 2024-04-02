@@ -128,7 +128,6 @@ Result<> ITKMorphologicalGradientImage::executeImpl(DataStructure& dataStructure
   const cxITKMorphologicalGradientImage::ITKMorphologicalGradientImageFunctor itkFunctor = {kernelRadius, kernelType};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKMorphologicalGradientImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
