@@ -1,4 +1,4 @@
-# VTK STRUCTURED_POINTS Importer
+# Read VTK Structured Points File
 
 ## Group (Subgroup)
 

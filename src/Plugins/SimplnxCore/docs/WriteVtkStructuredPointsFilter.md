@@ -8,6 +8,8 @@ I/O Filters
 
 This Filter writes a VTK legacy file with a Dataset type of `STRUCTURED_POINTS`. The user can select which arrays from the Image Geometry will be written to the file.
 
+Note: This filter only writes cell data to the VTK file.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -119,16 +119,16 @@ public:
   virtual std::unique_ptr<IDataStore> createNewInstance() const = 0;
 
   /**
-   *
+   * @brief Writes a binary file to the specified file path.
    * @param absoluteFilePath
-   * @return
+   * @return std::pair<int32, std::string>
    */
   virtual std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const = 0;
 
   /**
-   *
+   * @brief Writes a binary file using the specified output stream.
    * @param outputStream
-   * @return
+   * @return std::pair<int32, std::string>
    */
   virtual std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const = 0;
 
