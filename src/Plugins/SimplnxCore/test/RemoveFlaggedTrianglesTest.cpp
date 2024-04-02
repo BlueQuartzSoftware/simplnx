@@ -2,6 +2,7 @@
 
 #include "SimplnxCore/Filters/RemoveFlaggedTrianglesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
@@ -44,11 +45,17 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // This is in here because the exemplar face attribute matrix is not sized correctly. This will
+    // correct that value allowing the test to proceed normally.
+    auto& exemplarContourTriGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
+    exemplarContourTriGeom.getVertexAttributeMatrix()->resizeTuples({144});
+    exemplarContourTriGeom.getFaceAttributeMatrix()->resizeTuples({276});
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(k_ExemplarDataFilePath);

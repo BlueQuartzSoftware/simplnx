@@ -21,21 +21,41 @@ const std::optional<IGridGeometry::IdType>& IGridGeometry::getCellDataId() const
 
 AttributeMatrix* IGridGeometry::getCellData()
 {
+  if(!m_CellDataId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_CellDataId);
 }
 
 const AttributeMatrix* IGridGeometry::getCellData() const
 {
+  if(!m_CellDataId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_CellDataId);
 }
 
 AttributeMatrix& IGridGeometry::getCellDataRef()
 {
+  if(!m_CellDataId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("AttributeMatrix& IGridGeometry::getCellDataRef()::{} threw runtime exception. The geometry with name '{}' does not have a cell attribute matrix assigned.\n  {}:{}", __func__,
+                    getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_CellDataId.value());
 }
 
 const AttributeMatrix& IGridGeometry::getCellDataRef() const
 {
+  if(!m_CellDataId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("AttributeMatrix& IGridGeometry::getCellDataRef()::{} threw runtime exception. The geometry with name '{}' does not have a cell attribute matrix assigned.\n  {}:{}", __func__,
+                    getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_CellDataId.value());
 }
 
@@ -69,4 +89,26 @@ void IGridGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdTy
     }
   }
 }
+
+Result<> IGridGeometry::validateGeometry() const
+{
+  // Validate the next lower dimension geometry
+  Result<> result;
+
+  usize numTuples = getNumberOfCells();
+  const AttributeMatrix* amPtr = getCellData();
+  if(nullptr == amPtr)
+  {
+    return result;
+  }
+  usize amNumTuples = amPtr->getNumTuples();
+
+  if(numTuples != amNumTuples)
+  {
+    return MergeResults(
+        result, MakeErrorResult(-4501, fmt::format("Grid Geometry '{}' has {} cells but the cell Attribute Matrix '{}' has {} total tuples.", getName(), numTuples, amPtr->getName(), amNumTuples)));
+  }
+  return result;
+}
+
 } // namespace nx::core

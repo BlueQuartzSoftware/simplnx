@@ -43,6 +43,24 @@ constexpr StringLiteral k_SharedPolyhedrons = "SharedPolyhedronList";
 constexpr StringLiteral k_HexGeo = "Hex Geometry";
 } // namespace
 
+TEST_CASE("SimplnxCore::DataObjectType Check")
+{
+  static_assert(DataObject::Type::IGeometry == static_cast<DataObject::Type>(8));
+  static_assert(DataObject::Type::IGridGeometry == static_cast<DataObject::Type>(9));
+  static_assert(DataObject::Type::RectGridGeom == static_cast<DataObject::Type>(10));
+  static_assert(DataObject::Type::ImageGeom == static_cast<DataObject::Type>(11));
+  static_assert(DataObject::Type::INodeGeometry0D == static_cast<DataObject::Type>(12));
+  static_assert(DataObject::Type::VertexGeom == static_cast<DataObject::Type>(13));
+  static_assert(DataObject::Type::INodeGeometry1D == static_cast<DataObject::Type>(14));
+  static_assert(DataObject::Type::EdgeGeom == static_cast<DataObject::Type>(15));
+  static_assert(DataObject::Type::INodeGeometry2D == static_cast<DataObject::Type>(16));
+  static_assert(DataObject::Type::QuadGeom == static_cast<DataObject::Type>(17));
+  static_assert(DataObject::Type::TriangleGeom == static_cast<DataObject::Type>(18));
+  static_assert(DataObject::Type::INodeGeometry3D == static_cast<DataObject::Type>(19));
+  static_assert(DataObject::Type::HexahedralGeom == static_cast<DataObject::Type>(20));
+  static_assert(DataObject::Type::TetrahedralGeom == static_cast<DataObject::Type>(21));
+}
+
 // This test will ensure we don't run into runtime exceptions trying to run the functions
 TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
 {

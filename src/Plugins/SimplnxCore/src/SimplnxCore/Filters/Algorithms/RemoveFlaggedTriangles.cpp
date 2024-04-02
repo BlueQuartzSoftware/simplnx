@@ -136,6 +136,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   // define new sizing
   size = VertexListIndices.size();
   reducedTriangle.resizeVertexList(size); // resize accordingly
+  reducedTriangle.getVertexAttributeMatrix()->resizeTuples({size});
 
   // load reduced Geometry Vertex list according to used vertices
   Point3Df coords = {0.0f, 0.0f, 0.0f};
@@ -153,6 +154,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   // Set up preprocessing conditions (allocation for parallelization)
   size = newTrianglesIndexList.size();
   reducedTriangle.resizeFaceList(size); // resize accordingly
+  reducedTriangle.getFaceAttributeMatrix()->resizeTuples({size});
 
   // parse triangles and reassign indexes to match new vertex list
   ParallelDataAlgorithm dataAlg;

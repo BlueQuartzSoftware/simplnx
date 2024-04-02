@@ -3,6 +3,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/LinkedPath.hpp"
@@ -1014,4 +1015,24 @@ Result<> DataStructure::transferDataArraysOoc()
 
   return result;
 }
+
+Result<> DataStructure::validateGeometries() const
+{
+  /** There is an assumption about the range of the DataObject::Type enumeration. That assumption
+   * is backed up by a static_assert test case for the unit tests. If the enumeration is changed
+   * the compile will fail if the unit tests are enabled. Which they are on all the CI machines.
+   */
+  Result<> result;
+  for(const auto& dataObject : m_RootGroup)
+  {
+    auto dataObjectType = dataObject.second->getDataObjectType();
+    if(dataObjectType >= DataObject::Type::IGeometry && dataObjectType <= DataObject::Type::TetrahedralGeom)
+    {
+      auto* geomPtr = dynamic_cast<IGeometry*>(dataObject.second.get());
+      result = MergeResults(geomPtr->validateGeometry(), result);
+    }
+  }
+  return result;
+}
+
 } // namespace nx::core

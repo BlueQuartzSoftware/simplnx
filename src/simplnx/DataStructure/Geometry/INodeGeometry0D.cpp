@@ -21,21 +21,39 @@ const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getSharedVertexDa
 
 INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices()
 {
+  if(!m_VertexDataArrayId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<SharedVertexList>(m_VertexDataArrayId);
 }
 
 const INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices() const
 {
+  if(!m_VertexDataArrayId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<SharedVertexList>(m_VertexDataArrayId);
 }
 
 INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef()
 {
+  if(!m_VertexDataArrayId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a shared vertex list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
 }
 
 const INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef() const
 {
+  if(!m_VertexDataArrayId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a shared vertex list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
 }
 
@@ -61,14 +79,13 @@ void INodeGeometry0D::resizeVertexList(usize size)
 
 usize INodeGeometry0D::getNumberOfVertices() const
 {
-  const auto& vertices = getVerticesRef();
-  return vertices.getNumberOfTuples();
+  const auto* verticesPtr = getVertices();
+  return verticesPtr == nullptr ? 0 : verticesPtr->getNumberOfTuples();
 }
 
 usize INodeGeometry0D::getNumberOfCells() const
 {
-  const auto& vertices = getVerticesRef();
-  return vertices.getNumberOfTuples();
+  return getNumberOfVertices();
 }
 
 BoundingBox3Df INodeGeometry0D::getBoundingBox() const
@@ -177,21 +194,39 @@ void INodeGeometry0D::setVertexDataId(const OptionalId& vertexDataId)
 
 AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix()
 {
+  if(!m_VertexAttributeMatrixId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix() const
 {
+  if(!m_VertexAttributeMatrixId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry0D::getVertexAttributeMatrixRef()
 {
+  if(!m_VertexAttributeMatrixId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a vertex attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry0D::getVertexAttributeMatrixRef() const
 {
+  if(!m_VertexAttributeMatrixId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a vertex attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexAttributeMatrixId.value());
 }
 
@@ -217,4 +252,23 @@ void INodeGeometry0D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
     m_VertexAttributeMatrixId = nx::core::VisitDataStructureId(m_VertexAttributeMatrixId, updatedId, visited, 1);
   }
 }
+
+Result<> INodeGeometry0D::validateGeometry() const
+{
+  Result<> result;
+  usize numVerts = getNumberOfVertices();
+  const AttributeMatrix* amPtr = getVertexAttributeMatrix();
+  if(nullptr == amPtr)
+  {
+    return result;
+  }
+  usize amNumTuples = amPtr->getNumTuples();
+  if(numVerts != amNumTuples)
+  {
+    return MakeErrorResult(
+        -4500, fmt::format("Vertex Geometry '{}' has {} vertices but the vertex Attribute Matrix '{}' has {} total tuples.", getName(), numVerts, getVertexAttributeMatrix()->getName(), amNumTuples));
+  }
+  return result;
+}
+
 } // namespace nx::core

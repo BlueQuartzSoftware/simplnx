@@ -164,14 +164,14 @@ public:
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param data
+   * @param dataStructure
    * @param args
    * @param pipelineNode = nullptr
    * @param messageHandler = {}
    * @param shouldCancel
    * @return ExecuteResult
    */
-  ExecuteResult execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {},
+  ExecuteResult execute(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {},
                         const std::atomic_bool& shouldCancel = false) const;
 
   /**

@@ -21,21 +21,39 @@ const std::optional<INodeGeometry1D::IdType>& INodeGeometry1D::getEdgeListDataAr
 
 INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges()
 {
+  if(!m_EdgeDataArrayId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
 }
 
 const INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges() const
 {
+  if(!m_EdgeDataArrayId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
 }
 
 INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef()
 {
+  if(!m_EdgeDataArrayId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared edge list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
 }
 
 const INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef() const
 {
+  if(!m_EdgeDataArrayId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared edge list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
 }
 
@@ -149,21 +167,39 @@ const std::optional<INodeGeometry1D::IdType>& INodeGeometry1D::getEdgeAttributeM
 
 AttributeMatrix* INodeGeometry1D::getEdgeAttributeMatrix()
 {
+  if(!m_EdgeAttributeMatrixId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry1D::getEdgeAttributeMatrix() const
 {
+  if(!m_EdgeAttributeMatrixId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry1D::getEdgeAttributeMatrixRef()
 {
+  if(!m_EdgeAttributeMatrixId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have an edge attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry1D::getEdgeAttributeMatrixRef() const
 {
+  if(!m_EdgeAttributeMatrixId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have an edge attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeAttributeMatrixId.value());
 }
 
@@ -238,4 +274,26 @@ void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
     m_ElementSizesId = nx::core::VisitDataStructureId(m_ElementSizesId, updatedId, visited, 5);
   }
 }
+
+Result<> INodeGeometry1D::validateGeometry() const
+{
+  // Validate the next lower dimension geometry
+  Result<> result = INodeGeometry0D::validateGeometry();
+
+  usize numTuples = getNumberOfEdges();
+  const AttributeMatrix* amPtr = getEdgeAttributeMatrix();
+  if(nullptr == amPtr)
+  {
+    return result;
+  }
+  usize amNumTuples = amPtr->getNumTuples();
+
+  if(numTuples != amNumTuples)
+  {
+    return MergeResults(
+        result, MakeErrorResult(-4501, fmt::format("Edge Geometry '{}' has {} edges but the edge Attribute Matrix '{}' has {} total tuples.", getName(), numTuples, amPtr->getName(), amNumTuples)));
+  }
+  return result;
+}
+
 } // namespace nx::core

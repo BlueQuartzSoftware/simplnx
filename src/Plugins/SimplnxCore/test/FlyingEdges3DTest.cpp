@@ -59,6 +59,11 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
+    // This is in here because the exemplar face attribute matrix is not sized correctly. This will
+    // correct that value allowing the test to proceed normally.
+    auto& exemplarContourTriGeom = dataStructure.getDataRefAs<TriangleGeom>(ContourTest::k_ExemplarContourPath);
+    exemplarContourTriGeom.getFaceAttributeMatrixRef().resizeTuples({70});
+
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);

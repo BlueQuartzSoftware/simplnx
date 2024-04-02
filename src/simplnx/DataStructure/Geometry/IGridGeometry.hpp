@@ -212,6 +212,12 @@ public:
    */
   void setCellData(OptionalId id);
 
+  /**
+   * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.
+   * @return A Result<> object possibly with error code and message.
+   */
+  Result<> validateGeometry() const override;
+
 protected:
   IGridGeometry(DataStructure& dataStructure, std::string name);
 
