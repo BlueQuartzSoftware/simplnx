@@ -227,6 +227,12 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 
   Result<> validGeometries = MergeResults(dataStructure.validateGeometries(), executeImplResult);
 
+  Result<> validAttributeMatrices = dataStructure.validateAttributeMatrices();
+  if(validAttributeMatrices.invalid())
+  {
+    return ExecuteResult{std::move(validAttributeMatrices), std::move(preflightResult.outputValues) };
+  }
+
   Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(validGeometries));
 
   if(preflightActionsExecuteResult.invalid())

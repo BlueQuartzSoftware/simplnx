@@ -137,6 +137,13 @@ public:
    */
   void resizeTuples(ShapeType tupleShape);
 
+  /**
+   * @brief Validates that every IArray held by this attribute matrix have the same number
+   * of tuples that the attribute matrix requires.
+   * @return Result<> object.
+   */
+  Result<> validate() const;
+
 protected:
   /**
    * @brief Creates the AttributeMatrix for the target DataStructure and with the

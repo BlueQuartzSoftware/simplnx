@@ -1035,4 +1035,22 @@ Result<> DataStructure::validateGeometries() const
   return result;
 }
 
+Result<> DataStructure::validateAttributeMatrices() const
+{
+  Result<> result;
+  for(const auto& dataObject : m_DataObjects)
+  {
+    auto dataObjectType = dataObject.second.lock()->getDataObjectType();
+    if(dataObjectType == DataObject::Type::AttributeMatrix)
+    {
+      auto* attrMatPtr = dynamic_cast<AttributeMatrix*>(dataObject.second.lock().get());
+      if(nullptr != attrMatPtr)
+      {
+        result = MergeResults(attrMatPtr->validate(), result);
+      }
+    }
+  }
+  return result;
+}
+
 } // namespace nx::core
