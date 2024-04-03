@@ -140,7 +140,6 @@ Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& dataStructu
   const cxITKSignedMaurerDistanceMapImage::ITKSignedMaurerDistanceMapImageFunctor itkFunctor = {insideIsPositive, squaredDistance, useImageSpacing, backgroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKSignedMaurerDistanceMapImage::ArrayOptionsType, cxITKSignedMaurerDistanceMapImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                                 itkFunctor, shouldCancel);

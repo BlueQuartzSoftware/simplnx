@@ -132,7 +132,6 @@ Result<> ITKSignedDanielssonDistanceMapImage::executeImpl(DataStructure& dataStr
   const cxITKSignedDanielssonDistanceMapImage::ITKSignedDanielssonDistanceMapImageFunctor itkFunctor = {insideIsPositive, squaredDistance, useImageSpacing};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKSignedDanielssonDistanceMapImage::ArrayOptionsType, cxITKSignedDanielssonDistanceMapImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath,
                                                                                                                                         outputArrayPath, itkFunctor, shouldCancel);

@@ -111,7 +111,6 @@ Result<> ITKSqrtImage::executeImpl(DataStructure& dataStructure, const Arguments
   const cxITKSqrtImage::ITKSqrtImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKSqrtImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

@@ -134,7 +134,6 @@ Result<> ITKBinaryContourImage::executeImpl(DataStructure& dataStructure, const 
   const cxITKBinaryContourImage::ITKBinaryContourImageFunctor itkFunctor = {fullyConnected, backgroundValue, foregroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKBinaryContourImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

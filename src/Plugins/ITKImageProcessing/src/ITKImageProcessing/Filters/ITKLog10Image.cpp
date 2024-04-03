@@ -111,7 +111,6 @@ Result<> ITKLog10Image::executeImpl(DataStructure& dataStructure, const Argument
   const cxITKLog10Image::ITKLog10ImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKLog10Image::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

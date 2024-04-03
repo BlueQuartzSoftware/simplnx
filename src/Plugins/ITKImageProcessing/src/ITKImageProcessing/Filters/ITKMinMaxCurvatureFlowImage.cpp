@@ -131,7 +131,6 @@ Result<> ITKMinMaxCurvatureFlowImage::executeImpl(DataStructure& dataStructure, 
   const cxITKMinMaxCurvatureFlowImage::ITKMinMaxCurvatureFlowImageFunctor itkFunctor = {timeStep, numberOfIterations, stencilRadius};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKMinMaxCurvatureFlowImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

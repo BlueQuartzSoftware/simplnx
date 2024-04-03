@@ -139,7 +139,6 @@ Result<> ITKMorphologicalWatershedImage::executeImpl(DataStructure& dataStructur
   const cxITKMorphologicalWatershedImage::ITKMorphologicalWatershedImageFunctor itkFunctor = {level, markWatershedLine, fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKMorphologicalWatershedImage::ArrayOptionsType, cxITKMorphologicalWatershedImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                               itkFunctor, shouldCancel);

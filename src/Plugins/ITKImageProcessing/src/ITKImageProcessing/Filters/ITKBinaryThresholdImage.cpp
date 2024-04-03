@@ -138,7 +138,6 @@ Result<> ITKBinaryThresholdImage::executeImpl(DataStructure& dataStructure, cons
   const cxITKBinaryThresholdImage::ITKBinaryThresholdImageFunctor itkFunctor = {lowerThreshold, upperThreshold, insideValue, outsideValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKBinaryThresholdImage::ArrayOptionsType, cxITKBinaryThresholdImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                 shouldCancel);

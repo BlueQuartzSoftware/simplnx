@@ -132,7 +132,6 @@ Result<> ITKHConvexImage::executeImpl(DataStructure& dataStructure, const Argume
   const cxITKHConvexImage::ITKHConvexImageFunctor itkFunctor = {height, fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKHConvexImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

@@ -167,7 +167,6 @@ Result<> ITKDoubleThresholdImage::executeImpl(DataStructure& dataStructure, cons
   const cxITKDoubleThresholdImage::ITKDoubleThresholdImageFunctor itkFunctor = {threshold1, threshold2, threshold3, threshold4, insideValue, outsideValue, fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKDoubleThresholdImage::ArrayOptionsType, cxITKDoubleThresholdImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                 shouldCancel);

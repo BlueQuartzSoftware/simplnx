@@ -135,7 +135,6 @@ Result<> ITKCurvatureAnisotropicDiffusionImage::executeImpl(DataStructure& dataS
   const cxITKCurvatureAnisotropicDiffusionImage::ITKCurvatureAnisotropicDiffusionImageFunctor itkFunctor = {timeStep, conductanceParameter, conductanceScalingUpdateInterval, numberOfIterations};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKCurvatureAnisotropicDiffusionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

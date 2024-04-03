@@ -155,7 +155,6 @@ Result<> ITKThresholdMaximumConnectedComponentsImage::executeImpl(DataStructure&
   const cxITKThresholdMaximumConnectedComponentsImage::ITKThresholdMaximumConnectedComponentsImageFunctor itkFunctor = {minimumObjectSizeInPixels, upperBoundary, insideValue, outsideValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKThresholdMaximumConnectedComponentsImage::ArrayOptionsType, cxITKThresholdMaximumConnectedComponentsImage::FilterOutputType>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);

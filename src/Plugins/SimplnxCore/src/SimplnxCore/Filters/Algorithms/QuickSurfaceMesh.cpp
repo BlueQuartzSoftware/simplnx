@@ -959,7 +959,6 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   MeshIndexType nodeId4 = 0;
 
   auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  LinkedGeometryData& linkedGeometryData = triangleGeom->getLinkedGeometryData();
 
   std::vector<size_t> tDims = {nodeCount};
   triangleGeom->resizeVertexList(nodeCount);
@@ -968,12 +967,10 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   triangleGeom->getVertexAttributeMatrix()->resizeTuples(tDims);
 
   auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath);
-  linkedGeometryData.addFaceData(m_InputValues->FaceLabelsDataPath);
 
   // Resize the NodeTypes array
   auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath);
   nodeTypes.resizeTuples({nodeCount});
-  linkedGeometryData.addVertexData(m_InputValues->NodeTypesDataPath);
 
   IGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());
   IGeometry::SharedTriList& triangle = *(triangleGeom->getFaces());
@@ -985,7 +982,6 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   for(size_t i = 0; i < m_InputValues->SelectedDataArrayPaths.size(); i++)
   {
     // Associate these arrays with the Triangle Face Data.
-    linkedGeometryData.addFaceData(m_InputValues->SelectedDataArrayPaths[i]);
     ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
   }
 

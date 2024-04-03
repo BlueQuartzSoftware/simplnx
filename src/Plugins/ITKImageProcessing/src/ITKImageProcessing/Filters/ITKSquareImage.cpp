@@ -112,7 +112,6 @@ Result<> ITKSquareImage::executeImpl(DataStructure& dataStructure, const Argumen
   const cxITKSquareImage::ITKSquareImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKSquareImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

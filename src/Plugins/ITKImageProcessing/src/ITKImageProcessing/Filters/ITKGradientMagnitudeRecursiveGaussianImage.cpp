@@ -128,7 +128,6 @@ Result<> ITKGradientMagnitudeRecursiveGaussianImage::executeImpl(DataStructure& 
   const cxITKGradientMagnitudeRecursiveGaussianImage::ITKGradientMagnitudeRecursiveGaussianImageFunctor itkFunctor = {sigma, normalizeAcrossScale};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKGradientMagnitudeRecursiveGaussianImage::ArrayOptionsType, cxITKGradientMagnitudeRecursiveGaussianImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath,
                                                                                                                                                       outputArrayPath, itkFunctor, shouldCancel);

@@ -148,7 +148,6 @@ Result<> ITKBinaryOpeningByReconstructionImage::executeImpl(DataStructure& dataS
   const cxITKBinaryOpeningByReconstructionImage::ITKBinaryOpeningByReconstructionImageFunctor itkFunctor = {kernelRadius, kernelType, foregroundValue, backgroundValue, fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKBinaryOpeningByReconstructionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

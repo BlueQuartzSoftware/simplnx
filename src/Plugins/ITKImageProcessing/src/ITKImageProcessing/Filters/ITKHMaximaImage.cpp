@@ -123,7 +123,6 @@ Result<> ITKHMaximaImage::executeImpl(DataStructure& dataStructure, const Argume
   const cxITKHMaximaImage::ITKHMaximaImageFunctor itkFunctor = {height};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKHMaximaImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

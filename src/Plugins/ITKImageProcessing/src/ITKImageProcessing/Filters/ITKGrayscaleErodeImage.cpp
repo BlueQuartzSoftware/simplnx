@@ -128,7 +128,6 @@ Result<> ITKGrayscaleErodeImage::executeImpl(DataStructure& dataStructure, const
   const cxITKGrayscaleErodeImage::ITKGrayscaleErodeImageFunctor itkFunctor = {kernelRadius, kernelType};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKGrayscaleErodeImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

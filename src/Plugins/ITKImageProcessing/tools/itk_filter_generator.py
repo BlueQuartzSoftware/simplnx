@@ -775,7 +775,7 @@ def get_input_array_types(filter_data: FilterData) -> str:
 def get_link_ouput_array(filter_data: FilterData) -> str:
     if not filter_data.is_projection:
         return '''  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);'''
+  '''
     return ''
 
 def get_data_check_decl(filter_data: FilterData) -> str:

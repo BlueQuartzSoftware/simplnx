@@ -111,7 +111,6 @@ Result<> ITKCosImage::executeImpl(DataStructure& dataStructure, const Arguments&
   const cxITKCosImage::ITKCosImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKCosImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

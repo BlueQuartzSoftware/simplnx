@@ -145,7 +145,6 @@ Result<> ITKBinaryDilateImage::executeImpl(DataStructure& dataStructure, const A
   const cxITKBinaryDilateImage::ITKBinaryDilateImageFunctor itkFunctor = {kernelRadius, kernelType, backgroundValue, foregroundValue, boundaryToForeground};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKBinaryDilateImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

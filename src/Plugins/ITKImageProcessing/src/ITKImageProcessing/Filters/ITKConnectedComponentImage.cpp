@@ -124,7 +124,6 @@ Result<> ITKConnectedComponentImage::executeImpl(DataStructure& dataStructure, c
   const cxITKConnectedComponentImage::ITKConnectedComponentImageFunctor itkFunctor = {fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKConnectedComponentImage::ArrayOptionsType, cxITKConnectedComponentImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                       shouldCancel);

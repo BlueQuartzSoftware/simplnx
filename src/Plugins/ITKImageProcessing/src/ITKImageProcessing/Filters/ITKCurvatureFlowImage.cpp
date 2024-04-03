@@ -125,7 +125,6 @@ Result<> ITKCurvatureFlowImage::executeImpl(DataStructure& dataStructure, const 
   const cxITKCurvatureFlowImage::ITKCurvatureFlowImageFunctor itkFunctor = {timeStep, numberOfIterations};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKCurvatureFlowImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

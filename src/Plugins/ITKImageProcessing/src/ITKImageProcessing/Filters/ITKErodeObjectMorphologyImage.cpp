@@ -139,7 +139,6 @@ Result<> ITKErodeObjectMorphologyImage::executeImpl(DataStructure& dataStructure
   const cxITKErodeObjectMorphologyImage::ITKErodeObjectMorphologyImageFunctor itkFunctor = {kernelRadius, kernelType, objectValue, backgroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKErodeObjectMorphologyImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

@@ -123,7 +123,6 @@ Result<> ITKGrayscaleGrindPeakImage::executeImpl(DataStructure& dataStructure, c
   const cxITKGrayscaleGrindPeakImage::ITKGrayscaleGrindPeakImageFunctor itkFunctor = {fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKGrayscaleGrindPeakImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

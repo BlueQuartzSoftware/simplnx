@@ -132,7 +132,6 @@ Result<> ITKHMinimaImage::executeImpl(DataStructure& dataStructure, const Argume
   const cxITKHMinimaImage::ITKHMinimaImageFunctor itkFunctor = {height, fullyConnected};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKHMinimaImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
