@@ -122,7 +122,6 @@ Result<> ITKNormalizeToConstantImage::executeImpl(DataStructure& dataStructure, 
   const cxITKNormalizeToConstantImage::ITKNormalizeToConstantImageFunctor itkFunctor = {constant};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKNormalizeToConstantImage::ArrayOptionsType, cxITKNormalizeToConstantImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                         shouldCancel);

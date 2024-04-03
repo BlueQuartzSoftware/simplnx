@@ -130,7 +130,6 @@ Result<> ITKLabelContourImage::executeImpl(DataStructure& dataStructure, const A
   const cxITKLabelContourImage::ITKLabelContourImageFunctor itkFunctor = {fullyConnected, backgroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKLabelContourImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

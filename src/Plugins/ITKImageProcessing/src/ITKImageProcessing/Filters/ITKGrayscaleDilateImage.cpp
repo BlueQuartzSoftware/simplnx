@@ -128,7 +128,6 @@ Result<> ITKGrayscaleDilateImage::executeImpl(DataStructure& dataStructure, cons
   const cxITKGrayscaleDilateImage::ITKGrayscaleDilateImageFunctor itkFunctor = {kernelRadius, kernelType};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKGrayscaleDilateImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

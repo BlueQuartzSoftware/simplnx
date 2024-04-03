@@ -126,7 +126,6 @@ Result<> ITKApproximateSignedDistanceMapImage::executeImpl(DataStructure& dataSt
   const cxITKApproximateSignedDistanceMapImage::ITKApproximateSignedDistanceMapImageFunctor itkFunctor = {insideValue, outsideValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKApproximateSignedDistanceMapImage::ArrayOptionsType, cxITKApproximateSignedDistanceMapImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath,
                                                                                                                                           outputArrayPath, itkFunctor, shouldCancel);

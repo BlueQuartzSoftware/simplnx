@@ -150,7 +150,6 @@ Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Argumen
   std::string fileNameString = fileName.string();
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
-  imageGeom.getLinkedGeometryData().addCellData(imageDataArrayPath);
 
   auto result = cxItkImageReader::ReadImageExecute<cxItkImageReader::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString);
 

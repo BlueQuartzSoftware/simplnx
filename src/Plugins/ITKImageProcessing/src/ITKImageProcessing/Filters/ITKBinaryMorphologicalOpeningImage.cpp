@@ -139,7 +139,6 @@ Result<> ITKBinaryMorphologicalOpeningImage::executeImpl(DataStructure& dataStru
   const cxITKBinaryMorphologicalOpeningImage::ITKBinaryMorphologicalOpeningImageFunctor itkFunctor = {kernelRadius, kernelType, backgroundValue, foregroundValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKBinaryMorphologicalOpeningImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

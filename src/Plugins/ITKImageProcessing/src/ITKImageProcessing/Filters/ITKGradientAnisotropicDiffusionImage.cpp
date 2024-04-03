@@ -137,7 +137,6 @@ Result<> ITKGradientAnisotropicDiffusionImage::executeImpl(DataStructure& dataSt
   const cxITKGradientAnisotropicDiffusionImage::ITKGradientAnisotropicDiffusionImageFunctor itkFunctor = {timeStep, conductanceParameter, conductanceScalingUpdateInterval, numberOfIterations};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKGradientAnisotropicDiffusionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

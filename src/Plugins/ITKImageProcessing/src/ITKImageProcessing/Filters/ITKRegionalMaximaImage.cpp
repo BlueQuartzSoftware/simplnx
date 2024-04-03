@@ -142,7 +142,6 @@ Result<> ITKRegionalMaximaImage::executeImpl(DataStructure& dataStructure, const
   const cxITKRegionalMaximaImage::ITKRegionalMaximaImageFunctor itkFunctor = {backgroundValue, foregroundValue, fullyConnected, flatIsMaxima};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKRegionalMaximaImage::ArrayOptionsType, cxITKRegionalMaximaImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                               shouldCancel);

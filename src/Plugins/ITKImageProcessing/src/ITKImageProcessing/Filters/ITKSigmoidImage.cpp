@@ -135,7 +135,6 @@ Result<> ITKSigmoidImage::executeImpl(DataStructure& dataStructure, const Argume
   const cxITKSigmoidImage::ITKSigmoidImageFunctor itkFunctor = {alpha, beta, outputMaximum, outputMinimum};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKSigmoidImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

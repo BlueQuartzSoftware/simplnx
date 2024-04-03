@@ -5,7 +5,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/DynamicListArray.hpp"
-#include "simplnx/DataStructure/Geometry/LinkedGeometryData.hpp"
 
 namespace nx::core
 {
@@ -162,20 +161,6 @@ public:
   static const std::vector<std::string>& GetAllLengthUnitStrings();
 
   /**
-   * @brief Returns the DataPaths of DataArrays that are associated or "Linked" to
-   * a specific part of the geometry. @see the docs for LinkedGeometryPath.
-   * @return
-   */
-  const LinkedGeometryData& getLinkedGeometryData() const;
-
-  /**
-   * @brief Returns the DataPaths of DataArrays that are associated or "Linked" to
-   * a specific part of the geometry. @see the docs for LinkedGeometryPath. Non-const version
-   * @return
-   */
-  LinkedGeometryData& getLinkedGeometryData();
-
-  /**
    * @brief Returns the length units used by the geometry.
    * @return LengthUnit
    */
@@ -210,7 +195,5 @@ protected:
   LengthUnit m_Units = LengthUnit::Meter;
   uint32 m_UnitDimensionality = 3;
   uint32 m_SpacialDimensionality = 3;
-
-  LinkedGeometryData m_LinkedGeometryData;
 };
 } // namespace nx::core

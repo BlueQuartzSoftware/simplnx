@@ -112,7 +112,6 @@ Result<> ITKExpNegativeImage::executeImpl(DataStructure& dataStructure, const Ar
   const cxITKExpNegativeImage::ITKExpNegativeImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKExpNegativeImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

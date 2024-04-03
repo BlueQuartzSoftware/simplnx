@@ -129,7 +129,6 @@ Result<> ITKMedianImage::executeImpl(DataStructure& dataStructure, const Argumen
   const cxITKMedianImage::ITKMedianImageFunctor itkFunctor = {radius};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKMedianImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

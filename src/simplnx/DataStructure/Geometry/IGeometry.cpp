@@ -88,16 +88,6 @@ const std::vector<std::string>& IGeometry::GetAllLengthUnitStrings()
   return lengthUnitStrs;
 }
 
-const LinkedGeometryData& IGeometry::getLinkedGeometryData() const
-{
-  return m_LinkedGeometryData;
-}
-
-LinkedGeometryData& IGeometry::getLinkedGeometryData()
-{
-  return m_LinkedGeometryData;
-}
-
 IGeometry::LengthUnit IGeometry::getUnits() const
 {
   return m_Units;

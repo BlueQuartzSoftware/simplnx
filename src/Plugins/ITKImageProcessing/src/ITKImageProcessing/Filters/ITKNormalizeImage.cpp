@@ -115,7 +115,6 @@ Result<> ITKNormalizeImage::executeImpl(DataStructure& dataStructure, const Argu
   const cxITKNormalizeImage::ITKNormalizeImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKNormalizeImage::ArrayOptionsType, cxITKNormalizeImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

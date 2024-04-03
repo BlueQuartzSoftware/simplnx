@@ -121,7 +121,6 @@ Result<> ITKStandardDeviationProjectionImage::executeImpl(DataStructure& dataStr
   const cxITKStandardDeviationProjectionImage::ITKStandardDeviationProjectionImageFunctor itkFunctor = {projectionDimension};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKStandardDeviationProjectionImage::ArrayOptionsType, cxITKStandardDeviationProjectionImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath,
                                                                                                                                         outputArrayPath, itkFunctor, shouldCancel);

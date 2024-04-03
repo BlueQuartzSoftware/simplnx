@@ -111,7 +111,6 @@ Result<> ITKAsinImage::executeImpl(DataStructure& dataStructure, const Arguments
   const cxITKAsinImage::ITKAsinImageFunctor itkFunctor = {};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKAsinImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }

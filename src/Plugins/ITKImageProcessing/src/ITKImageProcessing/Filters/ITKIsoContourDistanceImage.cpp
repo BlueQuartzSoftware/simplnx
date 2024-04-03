@@ -126,7 +126,6 @@ Result<> ITKIsoContourDistanceImage::executeImpl(DataStructure& dataStructure, c
   const cxITKIsoContourDistanceImage::ITKIsoContourDistanceImageFunctor itkFunctor = {levelSetValue, farValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
   return ITK::Execute<cxITKIsoContourDistanceImage::ArrayOptionsType, cxITKIsoContourDistanceImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                       shouldCancel);
