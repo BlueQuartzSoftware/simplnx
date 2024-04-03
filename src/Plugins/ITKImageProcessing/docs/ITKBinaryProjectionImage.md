@@ -13,6 +13,11 @@ filter is provided with some specialized filters which implement different proje
 
 This class was contributed to the Insight Journal by Gaetan Lehmann. The original paper can be found at <https://www.insight-journal.org/browse/publication/71>
 
+## IMPORTANT NOTE
+
+This filter will change the dimensionality of the Image Geometry that the data is tied to. This has the side effect of also
+changing **every** Data Array that is store in the same AttributeMatrix as the input and output data array.
+
 ### Author
 
  Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.

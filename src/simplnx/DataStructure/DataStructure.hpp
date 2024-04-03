@@ -717,6 +717,29 @@ public:
    */
   Result<> transferDataArraysOoc();
 
+  /**
+   * @brief This method will validate that each Geometry is valid based on a specific set of criteria
+   *
+   * The criteria used for validation is that for Node based geometries, for each of the "Shared-List" type of arrays,
+   * the matching Attribute Matrix must also have the same number of tuples. For example if there is
+   * an Edge Geometry that has 10 edges and the EdgeData AttributeMatrix does **NOT** have 10 tuples total,
+   * then a Result<> with errors will be returned.
+   *
+   * @return Result<> object
+   */
+  Result<> validateGeometries() const;
+
+  /**
+   * @brief This method will validate that each AttributeMatrix is valid.
+   *
+   * The validation criteria is that for the Attribute Matrix itself: Every contained IArray
+   * object must have the same number of Tuples as every other IArray object and the
+   * AttributeMatrix itself must also have the same total number of tuples.
+   *
+   * @return Result<> object
+   */
+  Result<> validateAttributeMatrices() const;
+
 protected:
   /**
    * @brief Returns a new ID for use constructing a DataObject.

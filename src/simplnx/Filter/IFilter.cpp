@@ -193,10 +193,10 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
   return implResult;
 }
 
-IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
+IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel) const
 {
-  PreflightResult preflightResult = preflight(data, args, messageHandler, shouldCancel);
+  PreflightResult preflightResult = preflight(dataStructure, args, messageHandler, shouldCancel);
   if(preflightResult.outputActions.invalid())
   {
     return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
@@ -206,7 +206,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
 
   Result<> outputActionsResult = ConvertResult(std::move(preflightResult.outputActions));
 
-  Result<> actionsResult = outputActions.applyRegular(data, IDataAction::Mode::Execute);
+  Result<> actionsResult = outputActions.applyRegular(dataStructure, IDataAction::Mode::Execute);
 
   Result<> preflightActionsResult = MergeResults(std::move(outputActionsResult), std::move(actionsResult));
 
@@ -219,20 +219,22 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
   // We can discard the warnings since they're already reported in preflight
   auto [resolvedArgs, warnings] = GetResolvedArgs(args, params, *this);
 
-  Result<> executeImplResult = executeImpl(data, resolvedArgs, pipelineFilter, messageHandler, shouldCancel);
+  Result<> executeImplResult = executeImpl(dataStructure, resolvedArgs, pipelineFilter, messageHandler, shouldCancel);
   if(shouldCancel)
   {
     return {MakeErrorResult(-1, "Filter cancelled")};
   }
 
-  Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
+  Result<> validGeometryAndAttributeMatrices = MergeResults(dataStructure.validateGeometries(), dataStructure.validateAttributeMatrices());
+  validGeometryAndAttributeMatrices = MergeResults(validGeometryAndAttributeMatrices, executeImplResult);
+  Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(validGeometryAndAttributeMatrices));
 
   if(preflightActionsExecuteResult.invalid())
   {
     return ExecuteResult{std::move(preflightActionsExecuteResult), std::move(preflightResult.outputValues)};
   }
 
-  Result<> deferredActionsResult = outputActions.applyDeferred(data, IDataAction::Mode::Execute);
+  Result<> deferredActionsResult = outputActions.applyDeferred(dataStructure, IDataAction::Mode::Execute);
 
   Result<> finalResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
 

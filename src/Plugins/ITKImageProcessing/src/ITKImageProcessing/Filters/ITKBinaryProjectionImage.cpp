@@ -76,7 +76,7 @@ Parameters ITKBinaryProjectionImage::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<UInt32Parameter>(k_ProjectionDimension_Key, "Projection Dimension", "The dimension index to project. 0=Slowest moving dimension.", 0u));
   params.insert(std::make_unique<Float64Parameter>(
-      k_ForegroundValue_Key, "ForegroundValue",
+      k_ForegroundValue_Key, "Foreground Value",
       "Set the value in the image to consider as 'foreground'. Defaults to maximum value of PixelType. Subclasses may alias this to DilateValue or ErodeValue.", 1.0));
   params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
                                                    "Set the value used as 'background'. Any pixel value which is not DilateValue is considered background. BackgroundValue is used for defining "
@@ -136,7 +136,24 @@ Result<> ITKBinaryProjectionImage::executeImpl(DataStructure& dataStructure, con
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBinaryProjectionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  auto result = ITK::Execute<cxITKBinaryProjectionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+
+  IArray& iArrayRef = dataStructure.getDataRefAs<IArray>(outputArrayPath);
+  auto iArrayTupleShape = iArrayRef.getTupleShape();
+  std::cout << fmt::format("{}", fmt::join(iArrayRef.getTupleShape(), ",")) << std::endl;
+
+  // Update the Image Geometry with the new dimensions
+  imageGeom.setDimensions({iArrayTupleShape[2], iArrayTupleShape[1], iArrayTupleShape[0]});
+
+  // Update the AttributeMatrix with the new tuple shape. THIS WILL ALSO CHANGE ANY OTHER DATA ARRAY THAT IS ALSO
+  // STORED IN THAT ATTRIBUTE MATRIX
+  auto amPathVector = outputArrayPath.getPathVector();
+  amPathVector.pop_back();
+  DataPath amPath(amPathVector);
+  AttributeMatrix& attributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
+  attributeMatrix.resizeTuples(iArrayTupleShape);
+
+  return result;
 }
 
 namespace

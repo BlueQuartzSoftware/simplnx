@@ -189,9 +189,11 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
   // Resize the created array to the proper size
   usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
   usize maxValue = featureIds[featureIdsMaxIdx];
+  auto& cellFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
 
   auto& createdArrayStore = createdArray.getIDataStoreRefAs<IDataStore>();
   createdArrayStore.resizeTuples(std::vector<usize>{maxValue + 1});
+  cellFeatureAttrMat.resizeTuples(std::vector<usize>{maxValue + 1});
 
   return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
 }

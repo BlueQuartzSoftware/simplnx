@@ -26,21 +26,39 @@ void INodeGeometry3D::setPolyhedronListId(const OptionalId& polyListId)
 
 INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra()
 {
+  if(!m_PolyhedronListId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
 }
 
 const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra() const
 {
+  if(!m_PolyhedronListId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
 }
 
 INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef()
 {
+  if(!m_PolyhedronListId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared polyhedra list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
 }
 
 const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
 {
+  if(!m_PolyhedronListId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a shared polyhedra list assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
 }
 
@@ -61,8 +79,8 @@ void INodeGeometry3D::resizePolyhedraList(usize size)
 
 usize INodeGeometry3D::getNumberOfPolyhedra() const
 {
-  const auto& polyhedra = getPolyhedraRef();
-  return polyhedra.getNumberOfTuples();
+  const auto* polyhedraPtr = getPolyhedra();
+  return polyhedraPtr == nullptr ? 0 : polyhedraPtr->getNumberOfTuples();
 }
 
 void INodeGeometry3D::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)
@@ -145,21 +163,39 @@ void INodeGeometry3D::setPolyhedraDataId(const OptionalId& polyDataId)
 
 AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix()
 {
+  if(!m_PolyhedronAttributeMatrixId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix() const
 {
+  if(!m_PolyhedronAttributeMatrixId.has_value())
+  {
+    return nullptr;
+  }
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef()
 {
+  if(!m_PolyhedronAttributeMatrixId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a polyhedra attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef() const
 {
+  if(!m_PolyhedronAttributeMatrixId.has_value())
+  {
+    throw std::runtime_error(
+        fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a polyhedra attribute matrix assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
+  }
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId.value());
 }
 
@@ -197,5 +233,26 @@ void INodeGeometry3D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
     m_PolyhedronAttributeMatrixId = nx::core::VisitDataStructureId(m_PolyhedronAttributeMatrixId, updatedId, visited, 1);
     m_UnsharedFaceListId = nx::core::VisitDataStructureId(m_UnsharedFaceListId, updatedId, visited, 2);
   }
+}
+
+Result<> INodeGeometry3D::validate() const
+{
+  // Validate the next lower dimension geometry
+  Result<> result = INodeGeometry2D::validate();
+
+  usize numTuples = getNumberOfPolyhedra();
+  const AttributeMatrix* amPtr = getPolyhedraAttributeMatrix();
+  if(nullptr == amPtr)
+  {
+    return result;
+  }
+  usize amNumTuples = amPtr->getNumTuples();
+
+  if(numTuples != amNumTuples)
+  {
+    return MergeResults(
+        result, MakeErrorResult(-4501, fmt::format("Hex/Tet Geometry '{}' has {} cells but the cell Attribute Matrix '{}' has {} total tuples.", getName(), numTuples, amPtr->getName(), amNumTuples)));
+  }
+  return result;
 }
 } // namespace nx::core

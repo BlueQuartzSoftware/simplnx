@@ -234,8 +234,13 @@ public:
   , m_InputArchiveName(std::move(inputArchiveName))
   , m_ExpectedTopLevelOutput(std::move(expectedTopLevelOutput))
   {
-    const auto result = decompress();
-    REQUIRE(result);
+    const auto errorCode = decompress();
+    if(errorCode)
+    {
+      std::cout << "std::error_code.value(): " << errorCode.value() << std::endl;
+      std::cout << "std::error_code.message(): " << errorCode.message() << std::endl;
+      REQUIRE(errorCode.value() == 0);
+    }
   }
 
   ~TestFileSentinel()
@@ -257,18 +262,18 @@ public:
    * @brief Does the actual decompression of the archive.
    * @return
    */
-  bool decompress()
+  std::error_code decompress()
   {
     reproc::options options;
     options.redirect.parent = true;
     options.deadline = reproc::milliseconds(600000);
     options.working_directory = m_TestFilesDir.c_str();
+    options.nonblocking = false;
 
     std::vector<std::string> args = {m_CMakeExecutable, "-E", "tar", "xvzf", fmt::format("{}/{}", m_TestFilesDir, m_InputArchiveName)};
 
-    auto&& [status, ec] = reproc::run(args, options);
-
-    return !ec;
+    auto resultPair = reproc::run(args, options);
+    return resultPair.second;
   }
 
 private:
