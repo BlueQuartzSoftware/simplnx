@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/IteratorUtility.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
@@ -794,11 +795,13 @@ public:
    * @param totalSrcTuples
    * @return
    */
-  bool copyFrom(usize destTupleOffset, const AbstractDataStore& source, usize srcTupleOffset, usize totalSrcTuples)
+  Result<> copyFrom(usize destTupleOffset, const AbstractDataStore& source, usize srcTupleOffset, usize totalSrcTuples)
   {
     if(destTupleOffset >= getNumberOfTuples())
     {
-      return false;
+      return MakeErrorResult(-14600, fmt::format("The destination tuple offset ({}) is out of range of the number of available tuples in the data store ({}). Please ensure the destination tuple "
+                                                 "offset is less than the number of available tuples.",
+                                                 destTupleOffset, getNumberOfTuples()));
     }
 
     usize sourceNumComponents = source.getNumberOfComponents();
@@ -806,19 +809,23 @@ public:
 
     if(sourceNumComponents != numComponents)
     {
-      return false;
+      return MakeErrorResult(-14601, fmt::format("The number of components in the source data store ({}) does not match the number of components in the destination data store ({}). Please verify "
+                                                 "that source and destination data stores have the same number of components.",
+                                                 sourceNumComponents, numComponents));
     }
 
     if((totalSrcTuples * sourceNumComponents + destTupleOffset * numComponents) > getSize())
     {
-      return false;
+      return MakeErrorResult(-14602,
+                             fmt::format("The total size of tuples to be copied ({}) plus the offset in the destination data store ({}) exceeds the available size of the destination data store ({}).",
+                                         totalSrcTuples * sourceNumComponents, destTupleOffset * numComponents, getSize()));
     }
 
     auto srcBegin = source.begin() + (srcTupleOffset * sourceNumComponents);
     auto srcEnd = srcBegin + (totalSrcTuples * sourceNumComponents);
     auto dstBegin = begin() + (destTupleOffset * numComponents);
     std::copy(srcBegin, srcEnd, dstBegin);
-    return true;
+    return {};
   }
 
   /**
