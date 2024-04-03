@@ -79,7 +79,7 @@ class ExampleFilter1:
     """
     return ExampleFilter1()
 
-  def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
+  def parameters(self) -> nx.Parameters:
     """This function defines the parameters that are needed by the filter. Parameters collect the values from the user
        or through a pipeline file.
     """

@@ -689,16 +689,44 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<RectGridGeom, IGridGeometry, std::shared_ptr<RectGridGeom>> rectGridGeom(mod, "RectGridGeom");
 
   py::class_<INodeGeometry0D, IGeometry, std::shared_ptr<INodeGeometry0D>> iNodeGeometry0D(mod, "INodeGeometry0D");
+  iNodeGeometry0D.def(
+      "resize_vertices",
+      [](INodeGeometry0D& nodeGeometry0D, usize size) {
+        nodeGeometry0D.resizeVertexList(size);
+        nodeGeometry0D.getVertexAttributeMatrix()->resizeTuples({size});
+      },
+      "This will resize the shared vertex list and also resize the associated attribute matrix");
   py::class_<VertexGeom, INodeGeometry0D, std::shared_ptr<VertexGeom>> vertexGeom(mod, "VertexGeom");
 
   py::class_<INodeGeometry1D, INodeGeometry0D, std::shared_ptr<INodeGeometry1D>> iNodeGeometry1D(mod, "INodeGeometry1D");
+  iNodeGeometry1D.def(
+      "resize_edges",
+      [](INodeGeometry1D& nodeGeometry1D, usize size) {
+        nodeGeometry1D.resizeEdgeList(size);
+        nodeGeometry1D.getEdgeAttributeMatrix()->resizeTuples({size});
+      },
+      "This will resize the shared edge list and also resize the associated attribute matrix");
   py::class_<EdgeGeom, INodeGeometry1D, std::shared_ptr<EdgeGeom>> edgeGeom(mod, "EdgeGeom");
 
   py::class_<INodeGeometry2D, INodeGeometry1D, std::shared_ptr<INodeGeometry2D>> iNodeGeometry2D(mod, "INodeGeometry2D");
+  iNodeGeometry2D.def(
+      "resize_faces",
+      [](INodeGeometry2D& nodeGeometry2D, usize size) {
+        nodeGeometry2D.resizeFaceList(size);
+        nodeGeometry2D.getEdgeAttributeMatrix()->resizeTuples({size});
+      },
+      "This will resize the shared triangle list and also resize the associated attribute matrix");
   py::class_<TriangleGeom, INodeGeometry2D, std::shared_ptr<TriangleGeom>> triangleGeom(mod, "TriangleGeom");
   py::class_<QuadGeom, INodeGeometry2D, std::shared_ptr<QuadGeom>> quadGeom(mod, "QuadGeom");
 
   py::class_<INodeGeometry3D, INodeGeometry2D, std::shared_ptr<INodeGeometry3D>> iNodeGeometry3D(mod, "INodeGeometry3D");
+  iNodeGeometry3D.def(
+      "resize_polyhedra",
+      [](INodeGeometry3D& nodeGeometry3D, usize size) {
+        nodeGeometry3D.resizePolyhedraList(size);
+        nodeGeometry3D.getPolyhedraAttributeMatrix()->resizeTuples({size});
+      },
+      "This will resize the shared polyhedra list and also resize the associated attribute matrix");
   py::class_<TetrahedralGeom, INodeGeometry3D, std::shared_ptr<TetrahedralGeom>> tetrahedralGeom(mod, "TetrahedralGeom");
   py::class_<HexahedralGeom, INodeGeometry3D, std::shared_ptr<HexahedralGeom>> hexahedralGeom(mod, "HexahedralGeom");
 
