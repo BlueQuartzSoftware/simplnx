@@ -8,11 +8,12 @@ namespace CsvParser
 int32_t ReadLine(std::istream& in, char* result, size_t length)
 {
   in.getline(result, static_cast<std::streamsize>(length));
+
   if(in.fail())
   {
     if(in.eof())
     {
-      return 0;
+      return -1;
     }
     if(in.gcount() == static_cast<std::streamsize>(length))
     {
@@ -21,7 +22,7 @@ int32_t ReadLine(std::istream& in, char* result, size_t length)
       in.ignore(std::numeric_limits<int>::max(), '\n');
     }
   }
-  return 1;
+  return static_cast<int32>(in.gcount());
 }
 
 uint64 LineCount(const fs::path& inputPath)
