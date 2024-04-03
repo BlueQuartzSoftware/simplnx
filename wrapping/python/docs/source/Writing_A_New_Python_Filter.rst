@@ -453,3 +453,37 @@ performed.
 
 
 For more Python filter examples, check out the `ExamplePlugin <https://github.com/BlueQuartzSoftware/simplnx/tree/develop/wrapping/python/plugins/ExamplePlugin>`_.
+
+10. Debugging the Python Filter.
+--------------------------------
+
+    Running the python filter through the DREAM3D-NX user interface will not allow you any opportunity to use a debugger to inspect troublesome code. For this
+    you will need to implement a separate python file that dynamically loads the python based plugin and then executes your filter with the proper arguments.
+    The below code is the bare minimum that you will need to implement.
+
+    .. code-block:: python
+
+        from typing import List
+        import simplnx as nx
+
+        # ------------------------------------------------------------------------------
+        # Replace NAME_OF_YOUR_PLUGIN with the actual name of your plugin
+        # Replace FILTER_NAME with the name of your filter that you would like to debug
+
+        import NAME_OF_YOUR_PLUGIN
+        nx.load_python_plugin(NAME_OF_YOUR_PLUGIN)
+        import NAME_OF_YOUR_PLUGIN.FILTER_NAME
+
+        # Create a Data Structure
+        data_structure = nx.DataStructure()
+        # Wrap the python filter in this "proxy" class from the target plugin so we can use it.
+        pynx_filter = nx.PyFilter(NAME_OF_YOUR_PLUGIN.FILTER_NAME())
+        # Execute the filter and check the result. We use the `execute2()` method to run the filter.
+        # Make sure to use all appropriate arguments to your filter. The named arguments are the values
+        # of each of the parameter keys that are defined at the top of the filter. For instance if you
+        # have this line:
+        #   INPUT_IMAGE_ARRAY_KEY = 'input_image_array'
+        # then you would use 'input_image_array' as the named argument in the call to `execute2()` method
+        result = pynx_filter.execute2(data_structure=data_structure, 
+                                       ..... )
+

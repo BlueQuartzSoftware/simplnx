@@ -481,8 +481,11 @@ std::vector<std::string> GetPythonPluginList()
   {
     return {};
   }
-
-  return StringUtilities::split(var, ';');
+#if defined(Q_OS_WIN)
+  return nx::core::StringUtilities::split(var, ';');
+#else
+  return nx::core::StringUtilities::split(var, ':');
+#endif
 }
 #endif
 } // namespace

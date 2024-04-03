@@ -225,18 +225,21 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
     return {MakeErrorResult(-1, "Filter cancelled")};
   }
 
-  Result<> validGeometryAndAttributeMatrices = MergeResults(dataStructure.validateGeometries(), dataStructure.validateAttributeMatrices());
-  validGeometryAndAttributeMatrices = MergeResults(validGeometryAndAttributeMatrices, executeImplResult);
-  Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(validGeometryAndAttributeMatrices));
+  Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
 
   if(preflightActionsExecuteResult.invalid())
   {
     return ExecuteResult{std::move(preflightActionsExecuteResult), std::move(preflightResult.outputValues)};
   }
-
+  // Apply any deferred actions
   Result<> deferredActionsResult = outputActions.applyDeferred(dataStructure, IDataAction::Mode::Execute);
 
-  Result<> finalResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
+  // Validate the Geometry and Attribute Matrix objects
+  Result<> validGeometryAndAttributeMatrices = MergeResults(dataStructure.validateGeometries(), dataStructure.validateAttributeMatrices());
+  validGeometryAndAttributeMatrices = MergeResults(validGeometryAndAttributeMatrices, deferredActionsResult);
+
+  // Merge all the results together.
+  Result<> finalResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(validGeometryAndAttributeMatrices));
 
   return ExecuteResult{std::move(finalResult), std::move(preflightResult.outputValues)};
 }
