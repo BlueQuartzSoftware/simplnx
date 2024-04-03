@@ -215,6 +215,10 @@ public:
   {
     return {-10175, fmt::format("EmptyDataStore cannot read or write files", absoluteFilePath)};
   }
+  std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const override
+  {
+    return {-10175, fmt::format("EmptyDataStore cannot read or write files")};
+  }
 
 private:
   ShapeType m_ComponentShape;
