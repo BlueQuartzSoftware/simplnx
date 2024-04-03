@@ -38,7 +38,7 @@ Wait until the environment is fully installed.
 
         .. code:: shell
 
-            $CONDA_PREFIX/bin/DREAM3DNX.app/Contents/MacOS/DREAM3DNX
+            dream3dnx
     
     **Linux**
 
@@ -112,7 +112,7 @@ After you have generated your Python plugin/filters, close the current instance 
 
         .. code:: shell
 
-            $CONDA_PREFIX/bin/DREAM3DNX.app/Contents/MacOS/DREAM3DNX
+            dream3dnx
     
     **Linux**
 

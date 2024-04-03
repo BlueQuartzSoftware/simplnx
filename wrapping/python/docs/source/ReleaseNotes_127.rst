@@ -16,12 +16,16 @@ API Changes & Additions 1.2.7
 
 - The ColorTableParameter API has changed. Please see either the developer or user documentation for more details.
 - A few filters have changed their name
-- DataPath has had more API take from parts of PathLib. See the documentation for the new API additions
+- DataPath has had more API taken from parts of PathLib. See the documentation for the new API additions.[https://www.dream3d.io/python_docs/DataObjects.html#datapath](https://www.dream3d.io/python_docs/DataObjects.html#datapath)
 - Node based geometries allow the resizing of their internal data structures using the `resize_*` methods.
 
 Change Log 1.2.7
 ^^^^^^^^^^^^^^^^^^^^
 
+- PY: Add python bindings to allow Node based geometries to resize correctly (#906) [8b1f2373]
+- Filter: Read VTK Structured Points (#905) [75122bbf]
+- ENH/BUG: Add DataStructure::validateGeometries() and ::validateAttributeMatrices() method (#903) [cab149c6]
+- ENH: Remove the LinkedGeometryData class since it is no longer used. (#908) [888ba21d]
 - ENH: Update error messages from DataArrayIO and StringArrayIO (#901) [d769fce3]
 - DOC: Add example for GeneratedFileListParameter in Python (#902) [7021f182]
 - BUG: Fixed issue with failing print causing filter to fail (#899) [5da9e786]
@@ -36,7 +40,7 @@ Change Log 1.2.7
 - BUG: Return invalid Result<> if size of directory is requested. (#891) [219471be]
 - BUG/ENH: StringUtilities Split Function Updates (#892) [381aecc4]
 - ENH: Report total installed memory on some memory allocation errors (#887) [0343a96c]
-- ENH: Add support for getting the pipeline json object from a dream3d file (#890) [6a80a1be]
+- ENH : Add support for getting the pipeline json object from a dream3d file (#890) [6a80a1be]
 - ENH: Add checks to ensure vertex cropping bounds are not the same. (#888) [e9f0542a]
 - ENH: Forward error messages when creating Node geometries. (#885) [eed0c9b4]
 - FILT: ITKImageProcessing - Add new batch of filters (#884) [daea37d6]
@@ -44,7 +48,7 @@ Change Log 1.2.7
 - ENH: Initialize Data - Increased Variance in Random Generation for Floats (#880) [023c9896]
 - BUG: Fix resetting of the DataStructure::Id when importing from a file. (#879) [8e4e8f98]
 - ENH: GeneratePythonFilter-Crashing fixed, Generation Fixed, headers split (#877) [fa92713c]
-- BUG: Find Array Statistics (#878) [1645a22f]
+- BUG FIX: Find Array Statistics (#878) [1645a22f]
 - ENH: ReadMHAFile-Allow user to transpose stored matrix and other UI improvements (#871) [f9034641]
 - BUG: Fix accepted input file extension types for ConvertHexGridToSquarGridFilter (#875) [eb588250]
 - ENH: Update Generate Color Table Filter and Parameter (#866) [d4264ca1]
