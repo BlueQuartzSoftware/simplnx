@@ -21,6 +21,7 @@ struct ExecuteFlyingEdgesFunctor
     normAM.resizeTuples(normals.getTupleShape());
 
     flyingEdges.pass4();
+    triangleGeom.getFaceAttributeMatrix()->resizeTuples({triangleGeom.getNumberOfFaces()});
   }
 };
 } // namespace

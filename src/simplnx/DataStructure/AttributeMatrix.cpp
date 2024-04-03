@@ -119,3 +119,19 @@ void AttributeMatrix::resizeTuples(ShapeType tupleShape)
     array->resizeTuples(m_TupleShape);
   }
 }
+
+Result<> AttributeMatrix::validate() const
+{
+  Result<> result;
+  auto childArrays = findAllChildrenOfType<IArray>();
+  usize numTuples = getNumTuples();
+  for(const auto& array : childArrays)
+  {
+    if(array->getNumberOfTuples() != numTuples)
+    {
+      result = MergeResults(result, MakeErrorResult(-4701, fmt::format("AttributeMatrix '{}' has {} tuples but the contained IArray objet '{}' has {} total tuples.", getName(), numTuples,
+                                                                       array->getName(), array->getNumberOfTuples())));
+    }
+  }
+  return result;
+}
