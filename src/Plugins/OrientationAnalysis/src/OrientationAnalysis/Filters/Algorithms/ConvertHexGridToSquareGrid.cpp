@@ -31,7 +31,6 @@ public:
   , m_SqrYStep(spacingXY.at(1))
   {
   }
-  ~Converter() noexcept = default;
 
   Converter(const Converter&) = delete;            // Copy Constructor Default Implemented
   Converter(Converter&&) = delete;                 // Move Constructor Not Implemented
@@ -354,7 +353,9 @@ Result<> ConvertHexGridToSquareGrid::operator()()
 {
   if(!m_InputValues->MultiFile)
   {
-    return ::Converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing)(m_InputValues->InputPath);
+    auto converter = ::Converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
+    converter(m_InputValues->InputPath);
+    return converter.commitAllFiles();
   }
 
   // Now generate all the file names the user is asking for and populate the table
@@ -420,6 +421,8 @@ Result<> ConvertHexGridToSquareGrid::operator()()
       return result;
     }
   }
+
+  result = MergeResults(converter.commitAllFiles(), result);
 
   return result;
 }
