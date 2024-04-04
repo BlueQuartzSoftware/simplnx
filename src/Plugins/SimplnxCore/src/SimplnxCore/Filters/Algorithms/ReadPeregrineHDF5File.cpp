@@ -1,6 +1,5 @@
 #include "ReadPeregrineHDF5File.hpp"
 
-#include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
@@ -12,6 +11,12 @@ using namespace nx::core;
 
 namespace
 {
+struct ScanData
+{
+  std::vector<float32> data;
+  std::vector<usize> dims;
+};
+
 EdgeGeom* createScanEdgeGeometry(DataStructure& ds)
 {
   EdgeGeom* tmpEdgeGeom = EdgeGeom::Create(ds, "PerScanGeom");
@@ -24,6 +29,29 @@ EdgeGeom* createScanEdgeGeometry(DataStructure& ds)
   EdgeGeom::SharedVertexList* tmpVertexList = EdgeGeom::SharedVertexList::CreateWithStore<DataStore<float32>>(ds, "PerScanVertices", std::vector<usize>{0}, std::vector<usize>{3});
   tmpEdgeGeom->setVertices(*tmpVertexList);
   return tmpEdgeGeom;
+}
+
+Result<ScanData> readScan(const fs::path& scanPath, HDF5::FileReader& h5FileReader)
+{
+  nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(scanPath.string());
+  Result<std::vector<usize>> scanDimsResult = ReadPeregrineHDF5File::ReadDatasetDimensions(h5FileReader, scanPath.string());
+  if(scanDimsResult.invalid())
+  {
+    return {nonstd::make_unexpected(scanDimsResult.errors())};
+  }
+  std::vector<usize> scanDims = scanDimsResult.value();
+  usize totalElements = std::accumulate(scanDims.begin(), scanDims.end(), 1, std::multiplies<>());
+  std::vector<float32> inputData(totalElements);
+  nonstd::span<float32> span{inputData.data(), inputData.size()};
+
+  // Read the scan into memory
+  Result<> result = datasetReader.readIntoSpan<float32>(span);
+  if(result.invalid())
+  {
+    return MakeErrorResult<ScanData>(-4033, fmt::format("Error reading scan dataset at path '{}' in HDF5 file '{}'", scanPath.string(), h5FileReader.getName()));
+  }
+
+  return {ScanData{inputData, scanDims}};
 }
 } // namespace
 
@@ -176,7 +204,7 @@ Result<> ReadPeregrineHDF5File::readRegisteredDatasets(HDF5::FileReader& h5FileR
 
 Result<> ReadPeregrineHDF5File::readScanDatasets(HDF5::FileReader& h5FileReader)
 {
-  EdgeGeom& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->scanDataEdgeGeomPath);
+  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->scanDataEdgeGeomPath);
   DataPath vertexListPath = m_InputValues->scanDataEdgeGeomPath.createChildPath(m_InputValues->scanDataVertexListArrayName);
   auto& vertexList = m_DataStructure.getDataRefAs<Float32Array>(vertexListPath);
   auto& vertexListStore = vertexList.getIDataStoreRefAs<DataStore<float32>>();
@@ -200,6 +228,7 @@ Result<> ReadPeregrineHDF5File::readScanDatasets(HDF5::FileReader& h5FileReader)
     return MakeErrorResult(-4032, fmt::format("Error opening group at path '{}' in HDF5 file '{}'", k_ScansGroupPath, h5FileReader.getName()));
   }
 
+  // Read the Z thickness value
   auto zThicknessReader = h5FileReader.getAttribute(k_ScansZThicknessPath);
   if(!zThicknessReader.isValid())
   {
@@ -207,6 +236,7 @@ Result<> ReadPeregrineHDF5File::readScanDatasets(HDF5::FileReader& h5FileReader)
   }
   const auto zThickness = zThicknessReader.readAsValue<float64>();
 
+  // Calculate the start and end values for the scans
   usize zStart = 0;
   usize zEnd = groupReader.getNumChildren();
   if(m_InputValues->readScanDataSubvolume)
@@ -215,6 +245,7 @@ Result<> ReadPeregrineHDF5File::readScanDatasets(HDF5::FileReader& h5FileReader)
     zEnd = m_InputValues->scanDataSubvolumeMinMax[1] + 1; // Must add 1 since this max value is inclusive
   }
 
+  // This section loops over each scan, reads the scan data into a temporary edge geometry, eliminates any duplicate vertices, and then copies the data into the actual edge geometry.
   DataStructure tmpDataStructure;
   EdgeGeom* tmpEdgeGeom = createScanEdgeGeometry(tmpDataStructure);
   auto& tmpEdgeList = tmpEdgeGeom->getEdgesRef();
@@ -230,52 +261,43 @@ Result<> ReadPeregrineHDF5File::readScanDatasets(HDF5::FileReader& h5FileReader)
       return {};
     }
 
-    m_MessageHandler(fmt::format("Reading Scan Dataset {}/{}...", z - zStart + 1, zEnd - zStart));
+    // Read the scan data into memory
     fs::path scanPath = fs::path(ReadPeregrineHDF5File::k_ScansGroupPath) / std::to_string(z);
-    nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(scanPath.string());
-    Result<std::vector<usize>> scanDimsResult = ReadDatasetDimensions(h5FileReader, scanPath.string());
-    if(scanDimsResult.invalid())
+    m_MessageHandler(fmt::format("Reading Scan Dataset '{}' ({}/{})...", scanPath.string(), z - zStart + 1, zEnd - zStart));
+    Result<ScanData> scanDataResult = readScan(scanPath, h5FileReader);
+    if(scanDataResult.invalid())
     {
-      return {nonstd::make_unexpected(scanDimsResult.errors())};
+      return ConvertResult(std::move(scanDataResult));
     }
-    std::vector<usize> scanDims = scanDimsResult.value();
-    usize totalElements = std::accumulate(scanDims.begin(), scanDims.end(), 1, std::multiplies<>());
-    std::vector<float32> inputData(totalElements);
-    nonstd::span<float32> span{inputData.data(), inputData.size()};
+    ScanData scanData = scanDataResult.value();
 
-    // Read the scan into memory
-    Result<> result = datasetReader.readIntoSpan<float32>(span);
-    if(result.invalid())
-    {
-      return MakeErrorResult(-4033, fmt::format("Error reading scan dataset at path '{}' in HDF5 file '{}'", scanPath.string(), h5FileReader.getName()));
-    }
+    // Resize the temporary edge geometry's edge list and vertex list
+    tmpEdgeGeom->resizeEdgeList(scanData.dims[0]);
+    tmpEdgeGeom->resizeVertexList(scanData.dims[0] * 2);
 
-    tmpEdgeGeom->resizeEdgeList(scanDims[0]);
-    tmpEdgeGeom->resizeVertexList(scanDims[0] * 2);
-
-    // Iterate through each row
-    auto currentZOffset = static_cast<float32>(z * zThickness);
+    // Iterate through each row of the scan data, setting the temporary edge geometry's vertices and edges
+    auto currentZOffset = static_cast<float32>(static_cast<float64>(z) * zThickness);
     usize tmpVertexTuple = 0;
     usize tmpEdgeTuple = 0;
-    for(usize i = 0; i < totalElements; i += scanDims[1])
+    for(usize i = 0; i < scanData.data.size(); i += scanData.dims[1])
     {
-      timeOfTravelArray[overallEdgeTuple + tmpEdgeTuple] = inputData[i + 4];
-      tmpEdgeGeom->setVertexCoordinate(tmpVertexTuple, {inputData[i], inputData[i + 2], currentZOffset});
-      tmpEdgeGeom->setVertexCoordinate(tmpVertexTuple + 1, {inputData[i + 1], inputData[i + 3], currentZOffset});
+      timeOfTravelArray[overallEdgeTuple + tmpEdgeTuple] = scanData.data[i + 4];
+      tmpEdgeGeom->setVertexCoordinate(tmpVertexTuple, {scanData.data[i], scanData.data[i + 2], currentZOffset});
+      tmpEdgeGeom->setVertexCoordinate(tmpVertexTuple + 1, {scanData.data[i + 1], scanData.data[i + 3], currentZOffset});
       std::array<usize, 2> verts = {tmpVertexTuple, tmpVertexTuple + 1};
       tmpEdgeGeom->setEdgePointIds(tmpEdgeTuple, verts);
       tmpEdgeTuple++;
       tmpVertexTuple += 2;
     }
 
-    //    m_MessageHandler(fmt::format("Scan Dataset '{}' - Eliminating Duplicate Vertices ({}/{})...", z - zStart, z - zStart + 1, zEnd - zStart + 1));
-    result = GeometryUtilities::EliminateDuplicateNodes(*tmpEdgeGeom);
+    // Eliminate any duplicate vertices from the temporary edge geometry
+    Result<> result = GeometryUtilities::EliminateDuplicateNodes(*tmpEdgeGeom);
     if(result.invalid())
     {
       return result;
     }
 
-    //    m_MessageHandler(fmt::format("Scan Dataset '{}' - Finalizing ({}/{})...", z - zStart, z - zStart + 1, zEnd - zStart + 1));
+    // Copy the edges from the temporary edge geometry into the actual edge geometry
     Result<> copyResult = edgeListStore.copyFrom(overallEdgeTuple, tmpEdgeListStore, 0, tmpEdgeGeom->getNumberOfEdges());
     if(copyResult.invalid())
     {
@@ -286,6 +308,8 @@ Result<> ReadPeregrineHDF5File::readScanDatasets(HDF5::FileReader& h5FileReader)
       }
       return MakeErrorResult(-4034, ss);
     }
+
+    // Copy the vertices from the temporary edge geometry into the actual edge geometry
     copyResult = vertexListStore.copyFrom(overallVertexTuple, tmpVertexListStore, 0, tmpEdgeGeom->getNumberOfVertices());
     if(copyResult.invalid())
     {
@@ -297,11 +321,13 @@ Result<> ReadPeregrineHDF5File::readScanDatasets(HDF5::FileReader& h5FileReader)
       return MakeErrorResult(-4034, ss);
     }
 
+    // Set the overall edge and vertex tuples to be used on the next run through the loop
     overallEdgeTuple += tmpEdgeGeom->getNumberOfEdges();
     overallVertexTuple += tmpEdgeGeom->getNumberOfVertices();
   }
 
-  // Resize the vertex attribute matrix and vertex list to the actual size
+  // Resize the vertex attribute matrix and vertex list to the actual size.
+  // This needs to be done because duplicate vertices may have been removed.
   vertexAttrMatrix.resizeTuples(std::vector<usize>{overallVertexTuple});
   vertexListStore.resizeTuples(std::vector<usize>{overallVertexTuple});
 
