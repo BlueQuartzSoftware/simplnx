@@ -97,7 +97,12 @@ Result<> WriteAvizoRectilinearCoordinateFilter::executeImpl(DataStructure& dataS
 {
   AvizoWriterInputValues inputValues;
 
-  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
 
   inputValues.OutputFile = atomicFile.tempFilePath();
   inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
@@ -106,7 +111,14 @@ Result<> WriteAvizoRectilinearCoordinateFilter::executeImpl(DataStructure& dataS
   inputValues.Units = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
 
   auto result = WriteAvizoRectilinearCoordinate(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  atomicFile.setAutoCommit(result.valid());
+  if(result.valid())
+  {
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
+  }
+
   return result;
 }
 

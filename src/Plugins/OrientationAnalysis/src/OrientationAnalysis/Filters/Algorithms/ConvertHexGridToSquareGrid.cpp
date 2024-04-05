@@ -31,16 +31,6 @@ public:
   , m_SqrYStep(spacingXY.at(1))
   {
   }
-  ~Converter() noexcept
-  {
-    if(m_Valid)
-    {
-      for(const auto& atomicFile : m_AtomicFiles)
-      {
-        atomicFile->commit();
-      }
-    }
-  }
 
   Converter(const Converter&) = delete;            // Copy Constructor Default Implemented
   Converter(Converter&&) = delete;                 // Move Constructor Not Implemented
@@ -81,7 +71,12 @@ public:
       }
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
-      m_AtomicFiles.emplace_back(std::make_unique<AtomicFile>((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())), false));
+      m_AtomicFiles.emplace_back(std::make_unique<AtomicFile>((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string()))));
+      auto creationResult = m_AtomicFiles[m_Index]->getResult();
+      if(creationResult.invalid())
+      {
+        return creationResult;
+      }
       fs::path outPath = m_AtomicFiles[m_Index]->tempFilePath();
 
       // Ensure the output path exists by creating it if necessary
@@ -224,6 +219,26 @@ public:
     return {};
   }
 
+  Result<> commitAllFiles()
+  {
+    if(m_Valid)
+    {
+      for(const auto& atomicFile : m_AtomicFiles)
+      {
+        if(!atomicFile->commit())
+        {
+          return atomicFile->getResult();
+        }
+      }
+    }
+    else
+    {
+      return MakeErrorResult(-77751, "The files were invalidated during execution, and this point should not be reached without an error result. If this is the sole error please make a bug report by "
+                                     "checking the repository at the bottom of this filters documentation!");
+    }
+    return {};
+  }
+
 private:
   const std::atomic_bool& m_ShouldCancel;
   const fs::path& m_OutputPath;
@@ -338,7 +353,9 @@ Result<> ConvertHexGridToSquareGrid::operator()()
 {
   if(!m_InputValues->MultiFile)
   {
-    return ::Converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing)(m_InputValues->InputPath);
+    auto converter = ::Converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
+    converter(m_InputValues->InputPath);
+    return converter.commitAllFiles();
   }
 
   // Now generate all the file names the user is asking for and populate the table
@@ -404,6 +421,8 @@ Result<> ConvertHexGridToSquareGrid::operator()()
       return result;
     }
   }
+
+  result = MergeResults(converter.commitAllFiles(), result);
 
   return result;
 }

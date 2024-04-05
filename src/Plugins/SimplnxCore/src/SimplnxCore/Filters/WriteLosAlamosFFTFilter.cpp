@@ -108,7 +108,12 @@ IFilter::PreflightResult WriteLosAlamosFFTFilter::preflightImpl(const DataStruct
 Result<> WriteLosAlamosFFTFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
 
   WriteLosAlamosFFTInputValues inputValues;
 
@@ -119,7 +124,13 @@ Result<> WriteLosAlamosFFTFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath);
 
   auto result = WriteLosAlamosFFT(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  atomicFile.setAutoCommit(result.valid());
+  if(result.valid())
+  {
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
+  }
   return result;
 }
 

@@ -51,12 +51,11 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
-  AtomicFile atomicFile(absPath.string(), false);
-
-  auto dirResult = atomicFile.getResult();
-  if(dirResult.invalid())
+  AtomicFile atomicFile(absPath.string());
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
   {
-    return dirResult;
+    return creationResult;
   }
 
   // Scope file writer in code block to get around file lock on windows (enforce destructor order)
@@ -323,6 +322,9 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
-  atomicFile.commit();
+  if(!atomicFile.commit())
+  {
+    return atomicFile.getResult();
+  }
   return {};
 }

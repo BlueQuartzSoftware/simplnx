@@ -113,12 +113,12 @@ IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const Data
 Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                     const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), false);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
 
-  auto dirResult = atomicFile.getResult();
-  if(dirResult.invalid())
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
   {
-    return dirResult;
+    return creationResult;
   }
 
   WriteVtkRectilinearGridInputValues inputValues;
@@ -129,7 +129,13 @@ Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
   auto result = WriteVtkRectilinearGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  atomicFile.setAutoCommit(result.valid());
+  if(result.valid())
+  {
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
+  }
   return result;
 }
 
