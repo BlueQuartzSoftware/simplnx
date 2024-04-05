@@ -1,5 +1,7 @@
-API for Users
-==============
+.. _UserAPIDocs:
+
+SIMPLNX Python API
+===================
 
 Error & Warning Reporting
 --------------------------

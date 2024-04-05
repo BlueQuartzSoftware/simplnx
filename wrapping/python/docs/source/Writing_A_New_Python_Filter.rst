@@ -1,4 +1,6 @@
-Writing a New Python Filter
+.. _WritingPythonFilters:
+
+Writing a Python Filter
 ===========================
 
 0. Environment Setup
