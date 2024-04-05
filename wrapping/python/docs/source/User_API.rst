@@ -81,17 +81,18 @@ General Parameters
   .. code:: python
 
    threshold_1 = nx.ArrayThreshold()
-   threshold_1.array_path = nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
+   threshold_1.array_path = nx.DataPath("Small IN100/Scan Data/Confidence Index")
    threshold_1.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_1.value = 0.1
 
    threshold_2 = nx.ArrayThreshold()
-   threshold_2.array_path = nx.DataPath(["Small IN100", "Scan Data", "Image Quality"])
+   threshold_2.array_path = nx.DataPath("Small IN100/Scan Data/Image Quality")
    threshold_2.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_2.value = 120
 
    threshold_set = nx.ArrayThresholdSet()
    threshold_set.thresholds = [threshold_1, threshold_2]
+   threshold_set.union_op = nx.IArrayThreshold.UnionOperator.And
    result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
                                        array_thresholds=threshold_set, 
                                        created_data_path="Mask",
@@ -104,7 +105,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = nx.DataPath(["Small IN100", "Scan Data"])   
+    data_path = nx.DataPath("Small IN100/Scan Data")
 
 .. _BoolParameter:
 .. py:class:: BoolParameter
@@ -128,11 +129,11 @@ General Parameters
 
 .. code:: python
 
-   selected_group = nx.DataPath(["Small IN100","Scan Data"])
+   selected_group = nx.DataPath("Small IN100/Scan Data")
    infix_equation = "Confidence Index * 10"
    calc_param = nx.CalculatorParameter.ValueType( selected_group, infix_equation, nx.CalculatorParameter.AngleUnits.Radians)
    result = nx.ArrayCalculatorFilter.execute(data_structure = data_structure,
-                                             calculated_array=nx.DataPath(["Small IN100","Scan Data","Calulated CI"]), 
+                                             calculated_array=nx.DataPath("Small IN100/Scan Data/Calulated CI"),
                                              calculator_parameter = calc_param, 
                                              scalar_type=nx.NumericType.float32)
 
@@ -157,7 +158,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = nx.DataPath(["Small IN100", "Scan Data"])
+    data_path = nx.DataPath("Small IN100/Scan Data")
 
 .. _DataGroupSelectionParameter:
 .. py:class:: DataGroupSelectionParameter
@@ -166,7 +167,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = nx.DataPath(["Small IN100", "Scan Data"])
+    data_path = nx.DataPath("Small IN100/Scan Data")
 
 .. _DataObjectNameParameter:
 .. py:class:: DataObjectNameParameter
@@ -184,7 +185,7 @@ General Parameters
 
   .. code:: python
 
-    data_path = nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
+    data_path = nx.DataPath("Small IN100/Scan Data/Confidence Index")
 
 .. _DataStoreFormatParameter:
 .. py:class:: DataStoreFormatParameter
@@ -330,7 +331,7 @@ General Parameters
 
       result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
                                               rgb_array_path="CI Color", 
-                                              selected_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
+                                              selected_data_array_path=nx.DataPath("Small IN100/Scan Data/Confidence Index"), 
                                               selected_preset="hsv")      
 
 .. _GeneratedFileListParameter:
