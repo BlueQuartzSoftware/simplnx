@@ -370,6 +370,15 @@ Result<> WriteAbaqusHexahedron::operator()()
   fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_elset.inp"));
   fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + ".inp"));
 
+  for(auto& file : fileList)
+  {
+    auto creationResult = file->getResult();
+    if(creationResult.invalid())
+    {
+      return creationResult;
+    }
+  }
+
   int32 err = writeNodes(this, fileList[0]->tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel()); // Nodes file
   if(err < 0)
   {
@@ -432,7 +441,10 @@ Result<> WriteAbaqusHexahedron::operator()()
 
   for(auto& file : fileList)
   {
-    file->commit();
+    if(!file->commit())
+    {
+      return file->getResult();
+    }
   }
 
   return {};

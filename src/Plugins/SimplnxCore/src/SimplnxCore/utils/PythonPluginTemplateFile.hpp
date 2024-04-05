@@ -170,7 +170,12 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& pluginPat
 {
   std::string content = GeneratePythonFilter(filterName, filterName, Uuid::GenerateV4().str());
   fs::path outputPath = pluginPath / fmt::format("{}.py", filterName);
-  AtomicFile tempFile(outputPath.string(), true);
+  AtomicFile tempFile(outputPath.string());
+  auto creationResult = tempFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
   {
     // Scope this so that the file closes first before we then 'commit' with the atomic file
     std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -180,6 +185,11 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& pluginPat
     }
 
     fout << content;
+  }
+
+  if(!tempFile.commit())
+  {
+    return tempFile.getResult();
   }
 
   return InsertFilterNameInPluginFiles(pluginPath, filterName);
@@ -223,7 +233,12 @@ inline Result<> WritePythonFilterToFile(const std::filesystem::path& outputPath,
 
   std::string content = GeneratePythonFilter(filterName, humanName, uuidString);
   auto outputFilePath = fmt::format("{}{}{}.py", outputPath.string(), std::string{std::filesystem::path::preferred_separator}, filterName);
-  AtomicFile tempFile(outputFilePath, true);
+  AtomicFile tempFile(outputFilePath);
+  auto creationResult = tempFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
   {
     // Scope this so that the file closes first before we then 'commit' with the atomic file
     std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -233,6 +248,11 @@ inline Result<> WritePythonFilterToFile(const std::filesystem::path& outputPath,
     }
 
     fout << content;
+  }
+
+  if(!tempFile.commit())
+  {
+    return tempFile.getResult();
   }
 
   return {};
@@ -292,7 +312,12 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
   }
   auto outputPath = pluginRootPath / "Plugin.py";
   {
-    AtomicFile tempFile(outputPath.string(), true);
+    AtomicFile tempFile(outputPath.string());
+    auto creationResult = tempFile.getResult();
+    if(creationResult.invalid())
+    {
+      return creationResult;
+    }
     {
       // Scope this so that the file closes first before we then 'commit' with the atomic file
       std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -305,6 +330,10 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
 
       fout << content;
     }
+    if(!tempFile.commit())
+    {
+      return tempFile.getResult();
+    }
   }
 
   if(createBatchShellScript)
@@ -314,7 +343,12 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
 #else
     outputPath = pluginRootPath / "init_evn.sh";
 #endif
-    AtomicFile initTempFile(outputPath.string(), true);
+    AtomicFile initTempFile(outputPath.string());
+    auto creationResult = initTempFile.getResult();
+    if(creationResult.invalid())
+    {
+      return creationResult;
+    }
     {
       // Scope this so that the file closes first before we then 'commit' with the atomic file
       std::ofstream fout(initTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -330,12 +364,21 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
 
       fout << content;
     }
+    if(!initTempFile.commit())
+    {
+      return initTempFile.getResult();
+    }
   }
 
   // Write the __init__.py file
   outputPath = pluginRootPath / "__init__.py";
   {
-    AtomicFile initTempFile(outputPath.string(), true);
+    AtomicFile initTempFile(outputPath.string());
+    auto creationResult = initTempFile.getResult();
+    if(creationResult.invalid())
+    {
+      return creationResult;
+    }
     {
       // Scope this so that the file closes first before we then 'commit' with the atomic file
       std::ofstream fout(initTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -369,6 +412,10 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", importStatements);
 
       fout << content;
+    }
+    if(!initTempFile.commit())
+    {
+      return initTempFile.getResult();
     }
   }
   // Now loop over each Filter and generate the skeleton files

@@ -111,7 +111,12 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
 Result<> WriteINLFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), true);
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
 
   WriteINLFileInputValues inputValues;
 
@@ -125,7 +130,13 @@ Result<> WriteINLFileFilter::executeImpl(DataStructure& dataStructure, const Arg
   inputValues.NumFeaturesArrayPath = filterArgs.value<DataPath>(k_NumFeaturesArrayPath_Key);
 
   auto result = WriteINLFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  atomicFile.setAutoCommit(result.valid());
+  if(result.valid())
+  {
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
+  }
   return result;
 }
 

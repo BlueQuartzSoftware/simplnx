@@ -96,6 +96,11 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
                                                 const std::atomic_bool& shouldCancel) const
 {
   AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key));
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
 
   auto pOutputFilePath = atomicFile.tempFilePath();
   auto pWriteNeighborListDataValue = filterArgs.value<bool>(k_WriteNeighborListData_Key);
@@ -155,7 +160,10 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
     OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
   }
 
-  atomicFile.commit();
+  if(!atomicFile.commit())
+  {
+    return atomicFile.getResult();
+  }
   return {};
 }
 

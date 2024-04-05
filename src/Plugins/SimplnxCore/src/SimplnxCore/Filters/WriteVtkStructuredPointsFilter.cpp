@@ -113,12 +113,11 @@ IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const Dat
 Result<> WriteVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                      const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key), false);
-
-  auto dirResult = atomicFile.getResult();
-  if(dirResult.invalid())
+  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
   {
-    return dirResult;
+    return creationResult;
   }
 
   WriteVtkStructuredPointsInputValues inputValues;
@@ -129,7 +128,13 @@ Result<> WriteVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructur
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
   auto result = WriteVtkStructuredPoints(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  atomicFile.setAutoCommit(result.valid());
+  if(result.valid())
+  {
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
+  }
   return result;
 }
 

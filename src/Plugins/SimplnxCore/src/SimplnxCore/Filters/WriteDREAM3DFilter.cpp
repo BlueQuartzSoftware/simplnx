@@ -84,7 +84,12 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
 Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(args.value<std::filesystem::path>(k_ExportFilePath), false);
+  AtomicFile atomicFile(args.value<std::filesystem::path>(k_ExportFilePath));
+  auto creationResult = atomicFile.getResult();
+  if(creationResult.invalid())
+  {
+    return creationResult;
+  }
 
   auto exportFilePath = atomicFile.tempFilePath();
   auto writeXdmf = args.value<bool>(k_WriteXdmf);
@@ -105,7 +110,10 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
   auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
   if(results.valid())
   {
-    atomicFile.commit();
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
     if(writeXdmf)
     {
       fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");

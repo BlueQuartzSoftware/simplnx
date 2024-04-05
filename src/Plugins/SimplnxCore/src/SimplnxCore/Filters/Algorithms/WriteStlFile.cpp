@@ -264,11 +264,11 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::None)
   {
-    AtomicFile atomicFile(m_InputValues->OutputStlFile.string(), false);
-
-    if(atomicFile.getResult().invalid())
+    AtomicFile atomicFile(m_InputValues->OutputStlFile.string());
+    auto creationResult = atomicFile.getResult();
+    if(creationResult.invalid())
     {
-      return atomicFile.getResult();
+      return creationResult;
     }
 
     {                                                             // Scoped to ensure file lock is released and header string is untouched since it is invalid after move
@@ -287,7 +287,10 @@ Result<> WriteStlFile::operator()()
       }
     }
 
-    atomicFile.commit();
+    if(!atomicFile.commit())
+    {
+      return atomicFile.getResult();
+    }
     return {};
   }
 
@@ -319,12 +322,12 @@ Result<> WriteStlFile::operator()()
       for(const auto featureId : uniqueGrainIds)
       {
         // Generate the output file
-        fileList.push_back(
-            std::make_unique<AtomicFile>(m_InputValues->OutputStlDirectory.string() + "/" + m_InputValues->OutputStlPrefix + "Feature_" + StringUtilities::number(featureId) + ".stl", false));
+        fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputStlDirectory.string() + "/" + m_InputValues->OutputStlPrefix + "Feature_" + StringUtilities::number(featureId) + ".stl"));
 
-        if(fileList[fileIndex]->getResult().invalid())
+        auto creationResult = fileList[fileIndex]->getResult();
+        if(creationResult.invalid())
         {
-          return fileList[fileIndex]->getResult();
+          return creationResult;
         }
 
         m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
@@ -357,12 +360,12 @@ Result<> WriteStlFile::operator()()
       {
         // Generate the output file
         fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputStlDirectory.string() + "/" + m_InputValues->OutputStlPrefix + "Ensemble_" + StringUtilities::number(value) + "_" +
-                                                            "Feature_" + StringUtilities::number(featureId) + ".stl",
-                                                        false));
+                                                        "Feature_" + StringUtilities::number(featureId) + ".stl"));
 
-        if(fileList[fileIndex]->getResult().invalid())
+        auto creationResult = fileList[fileIndex]->getResult();
+        if(creationResult.invalid())
         {
-          return fileList[fileIndex]->getResult();
+          return creationResult;
         }
 
         m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
@@ -383,7 +386,10 @@ Result<> WriteStlFile::operator()()
 
   for(const auto& atomicFile : fileList)
   {
-    atomicFile->commit();
+    if(!atomicFile->commit())
+    {
+      return atomicFile->getResult();
+    }
   }
 
   return {};

@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Utilities/FileUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
@@ -13,35 +14,12 @@
 #include <iostream>
 #include <stdexcept>
 
-#ifdef _WIN32
-#include <io.h>
-#define FSPP_ACCESS_FUNC_NAME _access
-#else
-#include <unistd.h>
-#define FSPP_ACCESS_FUNC_NAME access
-#endif
-
 namespace fs = std::filesystem;
 
 using namespace nx::core;
 
 namespace
 {
-#ifdef _WIN32
-constexpr int k_CheckWritable = 2;
-#else
-constexpr int k_CheckWritable = W_OK;
-#endif
-
-constexpr StringLiteral k_PathKey = "path";
-constexpr int k_HasAccess = 0;
-
-//-----------------------------------------------------------------------------
-bool HasWriteAccess(const std::string& path)
-{
-  return FSPP_ACCESS_FUNC_NAME(path.c_str(), k_CheckWritable) == k_HasAccess;
-}
-
 //-----------------------------------------------------------------------------
 Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
 {
@@ -70,70 +48,11 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
   }
   return {};
 }
-//-----------------------------------------------------------------------------
-Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueType& path, bool isFile)
-{
-  if(path.empty())
-  {
-    return MakeErrorResult(-16, "ValidateDirectoryWritePermission() error: given path was empty.");
-  }
-
-  auto checkedPath = path;
-  if(isFile)
-  {
-    checkedPath = checkedPath.parent_path();
-  }
-  // We now have the parent directory. Let us see if *any* part of the path exists
-
-  // If the path is relative, then make it absolute
-  if(!checkedPath.is_absolute())
-  {
-    try
-    {
-      checkedPath = fs::absolute(checkedPath);
-    } catch(const std::filesystem::filesystem_error& error)
-    {
-      return MakeErrorResult(-15, fmt::format("ValidateDirectoryWritePermission() threw an error: '{}'", error.what()));
-    }
-  }
-
-  auto rootPath = checkedPath.root_path();
-
-  // The idea here is to start walking up from the deepest directory and hopefully
-  // find an existing directory. If we get to the top if the path and we are still
-  // empty then:
-  //  On unix based systems not sure if it would happen. Even if the user set a path
-  // to another drive that didn't exist, at some point you hit the '/' and then you
-  // can try to create the directories.
-  //  On Windows the user put in a bogus drive letter which is just a hard failure
-  // because we can't make up a new drive letter.
-  while(!fs::exists(checkedPath) && checkedPath != rootPath)
-  {
-    checkedPath = checkedPath.parent_path();
-  }
-
-  if(checkedPath.empty())
-  {
-    return MakeErrorResult(-19, "ValidateDirectoryWritePermission() resolved path was empty");
-  }
-
-  if(!fs::exists(checkedPath))
-  {
-    return MakeErrorResult(-11, fmt::format("ValidateDirectoryWritePermission() error: The drive does not exist on this system: '{}'", checkedPath.string()));
-  }
-
-  // We should be at the top of the tree with an existing directory.
-  if(HasWriteAccess(checkedPath.string()))
-  {
-    return {};
-  }
-  return MakeErrorResult(-8, fmt::format("User does not have write permissions to path '{}'", path.string()));
-}
 
 //-----------------------------------------------------------------------------
 Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 {
-  auto result = ValidateDirectoryWritePermission(path, true);
+  auto result = FileUtilities::ValidateDirectoryWritePermission(path, true);
   if(result.invalid())
   {
     return result;
@@ -148,7 +67,7 @@ Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 //-----------------------------------------------------------------------------
 Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 {
-  auto result = ValidateDirectoryWritePermission(path, false);
+  auto result = FileUtilities::ValidateDirectoryWritePermission(path, false);
   if(result.invalid())
   {
     return result;
