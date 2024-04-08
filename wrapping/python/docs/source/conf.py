@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'DREAM3D-NX'
+project = 'SIMPLNX Python Docs'
 copyright = '2024, BlueQuartz Software, LLC'
 author = 'BlueQuartz Software, LLC'
 release = '1.2.7'

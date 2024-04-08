@@ -1,3 +1,5 @@
+.. _SIMPLNXPythonIntroduction:
+
 Python Example Usage
 ====================
 

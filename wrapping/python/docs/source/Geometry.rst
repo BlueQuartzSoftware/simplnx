@@ -131,7 +131,20 @@ Node Based Geometries (Unstructured Grid)
 These are geometries that consist of an array of vertices (points) where each vertex is
 defined by a vector of 3 x 32 bit floating point values representing the X, Y, and Z value for that point. Each vertex could be shared by 0 or more higher order elements.
 The higher dimensional node geometries will also include a second array that defines the topology or connectivity of
-each element (edge, triangle, ...) for that geometry.
+each element (edge, triangle, ...) for that geometry. There are specific API functions that you can use to resize the Nodes/Edges/Faces/Cells of each
+node based geometry.
+
+.. code:: python
+
+   # Example, this will get a reference to the Edge Geometry
+   edge_geom: nx.EdgeGeom = data_structure[output_edge_geom_path]
+   # Now resize the edge geometry to have 30 Edges
+   edge_geom.resize_edges(30)
+   # Now resize the vertices to have 31 vertices
+   edge_geom.resize_vertices(31)
+   # Both of the resize operations will also resize any attribute matrix that is associated with the vertices and edges.
+
+
 
 VertexGeometry
 ^^^^^^^^^^^^^^^^

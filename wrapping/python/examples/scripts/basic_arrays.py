@@ -106,7 +106,7 @@ nxtest.check_filter_result(nx.CreateDataGroup, result)
 
 
 result = nx.CreateDataGroup.execute(data_structure=data_structure, 
-                                    data_object_path=nx.DataPath("/Some/Path/To/Group"));
+                                    data_object_path=nx.DataPath("/Some/Path/To/Group"))
 nxtest.check_filter_result(nx.CreateDataGroup, result)
 
 
