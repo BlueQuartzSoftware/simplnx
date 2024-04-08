@@ -57,7 +57,6 @@ which is the smallest building block of the geometry. **Elements** can have 4 di
 Data attributes can be associated with any of these element types, as long as that association makes sense for the given element topology. For example, a triangulated surface mesh can have **Vertex**, **Edge**, and **Face** data associated with it, but not **Cell** data, since a triangle has a 2-dimensional topology. To help the user keep track of the **Geometry** type associated with a particular **Data Container**, DREAM3D-NX sets default names of **Data Containers** to be prefixed with the **Geometry** type when applicable. For example, a **Data Container** containing an **Image Geometry** would have a default name **ImageDataContainer**. Of course, you can rename **Data Containers** if you prefer a different data scheme.
 
 Currently Implemented Geometries
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +-------------+----------+------------------+---------------------------------------------------------------------------------------------------------------------------------------+
@@ -155,6 +154,15 @@ at one level lower in the hierarchy. The same concept applies to *Ensemble Ids* 
 These *map* associations enable DREAM3D-NX to efficiently *link* between the various hierarchy
 scales, allowing for connections and correlations to be assessed.
 
+--------------
+
+.. figure:: Images/AttributeMatrix_Relationship.png
+   :scale: 50%
+   :alt: AttributeMatrix_Relationship
+   :align: left
+   :target: path
+
+   Mapping between AttributeMatrix using **Cell Data** "FeatureIds" to link to the feature data and **Cell Data** "Phases" to link to the Ensemble Data
 --------------
 
 .. figure:: Images/Elements_Features_Ensembles.png
