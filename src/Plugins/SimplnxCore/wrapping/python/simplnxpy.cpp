@@ -278,6 +278,92 @@ nx::core::DataPath CreateDataPath(std::string_view path)
   return result.value();
 }
 
+class ManualImportFinder
+{
+public:
+  bool insert(const fs::path& path)
+  {
+    if(containsPath(path))
+    {
+      return false;
+    }
+    std::string modName = GetModuleNameFromPath(path);
+    if(containsModule(modName))
+    {
+      return false;
+    }
+    m_ModuleToPathMap.insert({modName, path});
+    m_PathToModuleMap.insert({path, modName});
+    return true;
+  }
+
+  void removePath(const fs::path& path)
+  {
+    if(!containsPath(path))
+    {
+      return;
+    }
+    std::string modName = GetModuleNameFromPath(path);
+    m_ModuleToPathMap.erase(modName);
+    m_PathToModuleMap.erase(path);
+  }
+
+  void removeModule(const std::string& modName)
+  {
+    if(!containsModule(modName))
+    {
+      return;
+    }
+    fs::path modPath = m_ModuleToPathMap.at(modName);
+    m_ModuleToPathMap.erase(modName);
+    m_PathToModuleMap.erase(modPath);
+  }
+
+  void clear()
+  {
+    m_ModuleToPathMap.clear();
+    m_PathToModuleMap.clear();
+  }
+
+  bool containsPath(const fs::path& path) const
+  {
+    return m_PathToModuleMap.count(path) > 0;
+  }
+
+  bool containsModule(const std::string& modName) const
+  {
+    return m_ModuleToPathMap.count(modName) > 0;
+  }
+
+  py::object findSpec(const std::string& fullname, py::object path, py::object target) const
+  {
+    if(!containsModule(fullname))
+    {
+      return py::none();
+    }
+
+    fs::path modPath = m_ModuleToPathMap.at(fullname);
+
+    bool isPackage = modPath.extension() != ".py";
+
+    auto importLibUtil = py::module_::import("importlib.util");
+    std::string modName = modPath.stem().string();
+    fs::path initPyPath = isPackage ? modPath / "__init__.py" : modPath;
+    py::object submoduleSearchLocations = isPackage ? py::list() : py::object(py::none());
+    auto spec = importLibUtil.attr("spec_from_file_location")(modName, initPyPath, py::arg("submodule_search_locations") = submoduleSearchLocations);
+    return spec;
+  }
+
+private:
+  static std::string GetModuleNameFromPath(const fs::path& path)
+  {
+    return path.stem().string();
+  }
+
+  std::map<std::string, fs::path> m_ModuleToPathMap;
+  std::map<fs::path, std::string> m_PathToModuleMap;
+};
+
 PYBIND11_MODULE(simplnx, mod)
 {
   auto* internals = new Internals();
@@ -1347,4 +1433,14 @@ PYBIND11_MODULE(simplnx, mod)
 
   mod.def("reload_python_plugins", [internals]() { internals->reloadPythonPlugins(); });
   mod.def("unload_python_plugins", [internals]() { internals->unloadPythonPlugins(); });
+
+  py::class_<ManualImportFinder> manualImportFinder(mod, "ManualImportFinder");
+  manualImportFinder.def(py::init<>());
+  manualImportFinder.def("find_spec", &ManualImportFinder::findSpec, "fullname"_a, "path"_a = py::none(), "target"_a = py::none());
+  manualImportFinder.def("insert", &ManualImportFinder::insert, "path"_a);
+  manualImportFinder.def("remove_path", &ManualImportFinder::removePath, "path"_a);
+  manualImportFinder.def("remove_module", &ManualImportFinder::removeModule, "mod_name"_a);
+  manualImportFinder.def("clear", &ManualImportFinder::clear);
+  manualImportFinder.def("contains_path", &ManualImportFinder::containsPath, "path"_a);
+  manualImportFinder.def("contains_module", &ManualImportFinder::containsModule, "mod_name"_a);
 }
