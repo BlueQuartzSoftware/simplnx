@@ -134,12 +134,12 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
-  constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
+  constexpr StringLiteral k_GridGeomPath_Key = "selected_image_geometry_path";
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   constexpr StringLiteral k_UseMask_Key = "use_mask";
-  constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  constexpr StringLiteral k_QuatsArrayPath_Key = "cell_quats_array_path";
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  constexpr StringLiteral k_MaskArrayPath_Key = "cell_mask_array_path";
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
   constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";

@@ -7,6 +7,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataStoreFormatParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -77,7 +78,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
     constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
     constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "advanced_options";
+    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
 
     // Compare the output of the shifts file with the exemplar file
 
@@ -93,6 +94,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(0));
     args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(4));
     args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarShiftsPath));
+    args.insertOrAssign(k_DataFormat_Key, std::make_any<DataStoreFormatParameter::ValueType>(""));
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
@@ -150,7 +152,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
     constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
     constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "advanced_options";
+    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
 
     // Compare the output of the shifts file with the exemplar file
 
@@ -164,7 +166,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(6));
     args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(0));
     args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(4));
-    args.insertOrAssign(k_DataFormat_Key, std::make_any<DataPath>(k_CalculatedShiftsPath));
+    args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_CalculatedShiftsPath));
+    args.insertOrAssign(k_DataFormat_Key, std::make_any<DataStoreFormatParameter::ValueType>(""));
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);

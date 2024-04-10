@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "EBSD Scan Data",
         "cell_ensemble_attribute_matrix_name": "Phase Data",
-        "data_container_name": "Cugrid_after 2nd_15kv_2kx_2",
+        "created_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2",
         "degrees_to_radians": true,
         "edax_hexagonal_alignment": true,
         "input_file": "Data/Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf"
@@ -21,7 +21,7 @@
     },
     {
       "args": {
-        "created_image_geometry": "Cugrid_after 2nd_15kv_2kx_2 [ROTATED]",
+        "created_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2 [ROTATED]",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
         "rotation_axis": [
@@ -48,7 +48,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry": "Cugrid_after 2nd_15kv_2kx_2"
+        "selected_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2"
       },
       "comments": "",
       "filter": {
@@ -60,7 +60,7 @@
     {
       "args": {
         "cell_feature_attribute_matrix": "CellFeatureData",
-        "created_image_geometry": "Cugrid_after 2nd_15kv_2kx_2",
+        "created_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2",
         "feature_ids": "",
         "max_voxel": [
           549,
@@ -74,7 +74,7 @@
         ],
         "remove_original_geometry": true,
         "renumber_features": false,
-        "selected_image_geometry": "Cugrid_after 2nd_15kv_2kx_2",
+        "selected_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2",
         "update_origin": true
       },
       "comments": "",
@@ -86,7 +86,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -101,7 +101,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "created_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {

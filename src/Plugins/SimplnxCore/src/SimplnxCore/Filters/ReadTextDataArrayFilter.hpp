@@ -27,7 +27,7 @@ public:
   static inline constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
   static inline constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
   static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
-  static inline constexpr StringLiteral k_AdvancedOptions_Key = "advanced_options";
+  static inline constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -30,7 +30,7 @@ public:
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_TriangleGeometry_Key = "triangle_geometry_path";
   // static inline constexpr StringLiteral k_ParentGeometry_Key = "parent_geometry";
-  static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "triangle_areas_array_path";
+  static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "triangle_areas_array_name";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
   static inline constexpr StringLiteral k_VertexGeometryPath_Key = "vertex_geometry_path";

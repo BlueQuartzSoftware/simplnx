@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "data_container_name": "DataContainer",
+        "created_image_geometry_path": "DataContainer",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -36,7 +36,7 @@
     },
     {
       "args": {
-        "created_image_geometry": "DataContainer",
+        "created_image_geometry_path": "DataContainer",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
         "rotation_axis": [
@@ -63,7 +63,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry": "DataContainer"
+        "selected_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
@@ -74,7 +74,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -89,7 +89,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "created_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -116,7 +116,7 @@
     },
     {
       "args": {
-        "data_group_name": "",
+        "new_data_group_path": "",
         "histogram_suffix": " Histogram",
         "max_range": 1.0,
         "min_range": 0.0,

@@ -12,9 +12,9 @@ def _convert_str_to_num(init_value: str, numeric_type: nx.NumericType) -> Union[
 
 class CreateArrayFilter:
   NUMERIC_TYPE_KEY = "numeric_type"
-  INITILIZATION_VALUE_KEY = "initialization_value"
+  INITILIZATION_VALUE_KEY = "initialization_value_str"
   NUM_COMPS_KEY = "component_count"
-  DATA_PATH_KEY = "output_data_array"
+  DATA_PATH_KEY = "output_array_path"
   TUPLE_DIMS_KEY = "tuple_dimensions"
 
   def uuid(self) -> nx.Uuid:

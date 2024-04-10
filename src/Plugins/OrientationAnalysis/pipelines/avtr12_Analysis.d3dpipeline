@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "data_container_name": "fw-ar-IF1-avtr12-corr",
+        "created_image_geometry_path": "fw-ar-IF1-avtr12-corr",
         "degrees_to_radians": true,
         "edax_hexagonal_alignment": true,
         "input_file": "Data/T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf"
@@ -21,7 +21,7 @@
     },
     {
       "args": {
-        "created_image_geometry": "",
+        "created_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
         "rotation_axis": [
@@ -57,7 +57,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry": "fw-ar-IF1-avtr12-corr"
+        "selected_image_geometry_path": "fw-ar-IF1-avtr12-corr"
       },
       "comments": "",
       "filter": {
@@ -68,7 +68,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -83,7 +83,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "ThresholdArray"
+        "created_data_array_name": "ThresholdArray"
       },
       "comments": "",
       "filter": {
@@ -112,7 +112,7 @@
         "loop": true,
         "min_confidence": 0.0,
         "selected_comparison": 0,
-        "selected_image_geometry": "fw-ar-IF1-avtr12-corr"
+        "selected_image_geometry_path": "fw-ar-IF1-avtr12-corr"
       },
       "comments": "",
       "filter": {
@@ -236,10 +236,10 @@
         "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
         "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
-        "mask_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray",
-        "grid_geometry_path": "fw-ar-IF1-avtr12-corr",
+        "cell_mask_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray",
+        "selected_image_geometry_path": "fw-ar-IF1-avtr12-corr",
         "misorientation_tolerance": 5.0,
-        "quats_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
+        "cell_quats_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
         "randomize_features": false,
         "use_mask": true
       },
@@ -256,7 +256,7 @@
         "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
         "ignored_data_array_paths": [],
         "min_allowed_defect_size": 10,
-        "selected_image_geometry": "fw-ar-IF1-avtr12-corr",
+        "selected_image_geometry_path": "fw-ar-IF1-avtr12-corr",
         "store_as_new_phase": false
       },
       "comments": "",
@@ -268,13 +268,13 @@
     },
     {
       "args": {
-        "equivalent_diameters_path": "EquivalentDiameters",
-        "feature_attribute_matrix": "fw-ar-IF1-avtr12-corr/CellFeatureData",
+        "equivalent_diameters_name": "EquivalentDiameters",
+        "feature_attribute_matrix_path": "fw-ar-IF1-avtr12-corr/CellFeatureData",
         "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
-        "geometry_path": "fw-ar-IF1-avtr12-corr",
-        "num_elements_path": "NumElements",
+        "input_geometry_path": "fw-ar-IF1-avtr12-corr",
+        "num_elements_name": "NumElements",
         "save_element_sizes": false,
-        "volumes_path": "Volumes"
+        "volumes_name": "Volumes"
       },
       "comments": "",
       "filter": {
@@ -302,9 +302,9 @@
     },
     {
       "args": {
-        "avg_euler_angles_array_path": "AvgEulerAngles",
-        "avg_quats_array_path": "AvgQuats",
-        "cell_feature_attribute_matrix": "fw-ar-IF1-avtr12-corr/CellFeatureData",
+        "avg_euler_angles_array_name": "AvgEulerAngles",
+        "avg_quats_array_name": "AvgQuats",
+        "cell_feature_attribute_matrix_path": "fw-ar-IF1-avtr12-corr/CellFeatureData",
         "cell_feature_ids_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
         "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
         "cell_quats_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
@@ -340,10 +340,10 @@
     },
     {
       "args": {
-        "centroids_array_path": "Centroids",
-        "feature_attribute_matrix": "fw-ar-IF1-avtr12-corr/CellFeatureData",
+        "centroids_array_name": "Centroids",
+        "feature_attribute_matrix_path": "fw-ar-IF1-avtr12-corr/CellFeatureData",
         "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
-        "selected_image_geometry": "fw-ar-IF1-avtr12-corr"
+        "selected_image_geometry_path": "fw-ar-IF1-avtr12-corr"
       },
       "comments": "",
       "filter": {
@@ -363,7 +363,7 @@
         "nearest_neighbors_array_name": "NearestNeighbors",
         "q_pdistances_array_name": "QPManhattanDistances",
         "save_nearest_neighbors": false,
-        "selected_image_geometry": "fw-ar-IF1-avtr12-corr",
+        "selected_image_geometry_path": "fw-ar-IF1-avtr12-corr",
         "t_jdistances_array_name": "TJManhattanDistances"
       },
       "comments": "",
@@ -410,12 +410,11 @@
     },
     {
       "args": {
-        "data_group_name": "",
         "histogram_suffix": "Histogram",
         "max_range": 1.0,
         "min_range": 0.0,
-        "new_data_group": true,
-        "new_data_group_name": "fw-ar-IF1-avtr12-corr/Histograms",
+        "create_new_data_group": true,
+        "new_data_group_path": "fw-ar-IF1-avtr12-corr/Histograms",
         "number_of_bins": 256,
         "selected_array_paths": [
           "fw-ar-IF1-avtr12-corr/CellFeatureData/EquivalentDiameters"
@@ -434,7 +433,8 @@
         "output_path": "Data/Output/fw-ar-IF1-avtr12-corr/EqDiamHistogram.csv",
         "delimiter": 2,
         "file_extension": ".csv",
-        "file_name": "EqDiamHistogram",
+        "output_path": "EqDiamHistogram",
+        "output_dir": "",
         "includes": 1,
         "max_val_per_line": 0,
         "output_style": 1,

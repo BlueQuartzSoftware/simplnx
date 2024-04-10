@@ -56,7 +56,7 @@
     },
     {
       "args": {
-        "created_image_geometry": "",
+        "created_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": true,
         "rotation_axis": [
@@ -92,7 +92,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry": "ImageGeom"
+        "selected_image_geometry_path": "ImageGeom"
       },
       "comments": "",
       "filter": {

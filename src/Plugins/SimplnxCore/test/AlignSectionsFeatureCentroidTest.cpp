@@ -92,7 +92,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
     constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
     constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
     constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "advanced_options";
+    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
 
     // Compare the output of the shifts file with the exemplar file
 
@@ -128,7 +128,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
     constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
     constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
     constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "advanced_options";
+    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
 
     // Compare the output of the shifts file with the exemplar file
 

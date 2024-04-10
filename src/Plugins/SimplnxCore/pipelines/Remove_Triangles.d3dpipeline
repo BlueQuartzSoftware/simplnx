@@ -4,13 +4,13 @@
   "pipeline": [
     {
       "args": {
-        "face_attribute_matrix": "Face Data",
-        "face_normals_data_path": "Face Normals",
+        "face_attribute_matrix_name": "Face Data",
+        "face_normals_name": "Face Normals",
         "scale_factor": 1.0,
         "scale_output": false,
         "stl_file_path": "Data/STL_Models/Example_Triangle_Geometry.stl",
-        "triangle_geometry_name": "TriangleDataContainer",
-        "vertex_attribute_matrix": "Vertex Data"
+        "created_triangle_geometry_path": "TriangleDataContainer",
+        "vertex_attribute_matrix_name": "Vertex Data"
       },
       "comments": "",
       "filter": {
@@ -35,7 +35,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -50,7 +50,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask",
+        "created_data_array_name": "Mask",
         "created_mask_type": 1,
         "custom_false_value": 0.0,
         "custom_true_value": 1.0,
@@ -66,7 +66,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -81,7 +81,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask2",
+        "created_data_array_name": "Mask2",
         "created_mask_type": 10,
         "custom_false_value": 0.0,
         "custom_true_value": 1.0,
@@ -97,9 +97,9 @@
     },
     {
       "args": {
-        "input_geometry": "TriangleDataContainer",
+        "selected_triangle_geometry_path": "TriangleDataContainer",
         "mask_array_path": "TriangleDataContainer/Face Data/Mask2",
-        "output_geometry": "Part 10"
+        "created_triangle_geometry_path": "Part 10"
       },
       "comments": "",
       "filter": {

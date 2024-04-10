@@ -49,13 +49,15 @@ namespace FindAvgOrientationsTest
 {
 // These are the argument keys for the Import Text filter. We cannot use the ones from the
 // header file as that would bring in a dependency on the SimplnxCorePlugin
-static constexpr StringLiteral k_InputFileKey = "input_file";
-static constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
-static constexpr StringLiteral k_NTuplesKey = "n_tuples";
-static constexpr StringLiteral k_NCompKey = "n_comp";
-static constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
-static constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
-static constexpr StringLiteral k_DataArrayKey = "output_data_array";
+static constexpr StringLiteral k_InputFile_Key = "input_file";
+static constexpr StringLiteral k_ScalarType_Key = "scalar_type";
+static constexpr StringLiteral k_NTuples_Key = "number_tuples";
+static constexpr StringLiteral k_NComp_Key = "number_comp";
+static constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
+static constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
+static constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
+static constexpr StringLiteral k_DataFormat_Key = "data_format";
+static constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
 } // namespace FindAvgOrientationsTest
 
 void runReadTextDataArrayFilter(const std::string k_InputFileName, nx::core::NumericType k_NumericType, const uint64 k_NumTuples, const uint64 k_NumComponents, const DataPath k_InputFileDataPath,
@@ -64,14 +66,14 @@ void runReadTextDataArrayFilter(const std::string k_InputFileName, nx::core::Num
   auto* filterList = Application::Instance()->getFilterList();
 
   Arguments args;
-  args.insertOrAssign(FindAvgOrientationsTest::k_InputFileKey,
+  args.insertOrAssign(FindAvgOrientationsTest::k_InputFile_Key,
                       std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/ASCIIData/{}.csv", unit_test::k_TestFilesDir, k_InputFileName))));
-  args.insertOrAssign(FindAvgOrientationsTest::k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-  args.insertOrAssign(FindAvgOrientationsTest::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NumTuples)}}));
-  args.insertOrAssign(FindAvgOrientationsTest::k_NCompKey, std::make_any<uint64>(k_NumComponents));
-  args.insertOrAssign(FindAvgOrientationsTest::k_NSkipLinesKey, std::make_any<uint64>(0));
-  args.insertOrAssign(FindAvgOrientationsTest::k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(FindAvgOrientationsTest::k_DataArrayKey, std::make_any<DataPath>(k_InputFileDataPath));
+  args.insertOrAssign(FindAvgOrientationsTest::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
+  args.insertOrAssign(FindAvgOrientationsTest::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NumTuples)}}));
+  args.insertOrAssign(FindAvgOrientationsTest::k_NComp_Key, std::make_any<uint64>(k_NumComponents));
+  args.insertOrAssign(FindAvgOrientationsTest::k_NSkipLines_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(FindAvgOrientationsTest::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(FindAvgOrientationsTest::k_DataArrayPath_Key, std::make_any<DataPath>(k_InputFileDataPath));
 
   auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
   REQUIRE(nullptr != filter);

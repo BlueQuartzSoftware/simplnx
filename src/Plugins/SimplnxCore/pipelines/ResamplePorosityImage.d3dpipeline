@@ -56,7 +56,7 @@
           50.7400016784668,
           68.12000274658203
         ],
-        "selected_image_geometry": "Porosity_Image",
+        "selected_image_geometry_path": "Porosity_Image",
         "spacing": [
           2.0,
           2.0,
@@ -88,7 +88,7 @@
           50.0,
           50.0
         ],
-        "selected_image_geometry": "Porosity_Image",
+        "selected_image_geometry_path": "Porosity_Image",
         "spacing": [
           0.25,
           0.699999988079071,
@@ -120,7 +120,7 @@
           50.7400016784668,
           68.12000274658203
         ],
-        "selected_image_geometry": "Porosity_Image",
+        "selected_image_geometry_path": "Porosity_Image",
         "spacing": [
           0.25,
           0.699999988079071,

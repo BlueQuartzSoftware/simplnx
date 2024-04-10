@@ -40,7 +40,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -55,7 +55,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "created_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -69,7 +69,7 @@
         "active_array_path": "Active",
         "cell_feature_group_path": "CellFeatureData",
         "feature_ids_path": "FeatureIds",
-        "grid_geometry_path": "ImageDataContainer",
+        "selected_image_geometry_path": "ImageDataContainer",
         "input_array_path": "ImageDataContainer/Cell Data/ImageData",
         "mask_path": "ImageDataContainer/Cell Data/Mask",
         "randomize_features": true,
@@ -94,7 +94,7 @@
         "grid_geometry_data_path": "ImageDataContainer",
         "node_types_array_name": "NodeTypes",
         "selected_data_array_paths": [],
-        "triangle_geometry_name": "TriangleDataContainer",
+        "created_triangle_geometry_path": "TriangleDataContainer",
         "vertex_data_group_name": "Vertex Data"
       },
       "comments": "",
@@ -146,7 +146,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -161,7 +161,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "FaceLabels-0 Mask"
+        "created_data_array_name": "FaceLabels-0 Mask"
       },
       "comments": "",
       "filter": {
@@ -172,7 +172,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -187,7 +187,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "FaceLabels-1 Mask"
+        "created_data_array_name": "FaceLabels-1 Mask"
       },
       "comments": "",
       "filter": {

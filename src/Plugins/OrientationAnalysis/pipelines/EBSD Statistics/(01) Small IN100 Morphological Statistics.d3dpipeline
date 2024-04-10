@@ -50,9 +50,9 @@
     {
       "args": {
         "centroids_array_path": "Centroids",
-        "feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "selected_image_geometry": "DataContainer"
+        "selected_image_geometry_path": "DataContainer"
       },
       "filter": {
         "name": "simplnx::FindFeatureCentroidsFilter",
@@ -62,13 +62,13 @@
     },
     {
       "args": {
-        "equivalent_diameters_path": "EquivalentDiameters",
-        "feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "equivalent_diameters_name": "EquivalentDiameters",
+        "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "geometry_path": "DataContainer",
-        "num_elements_path": "NumElements",
+        "input_geometry_path": "DataContainer",
+        "num_elements_name": "NumElements",
         "save_element_sizes": false,
-        "volumes_path": "Size Volumes"
+        "volumes_name": "Size Volumes"
       },
       "filter": {
         "name": "simplnx::CalculateFeatureSizesFilter",
@@ -84,7 +84,7 @@
         "centroids_array_path": "DataContainer/CellFeatureData/Centroids",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "omega3s_array_name": "Omega3s",
-        "selected_image_geometry": "DataContainer",
+        "selected_image_geometry_path": "DataContainer",
         "volumes_array_name": "Shape Volumes"
       },
       "filter": {
@@ -139,7 +139,7 @@
         "nearest_neighbors_array_name": "NearestNeighbors",
         "q_pdistances_array_name": "QPManhattanDistances",
         "save_nearest_neighbors": false,
-        "selected_image_geometry": "DataContainer",
+        "selected_image_geometry_path": "DataContainer",
         "t_jdistances_array_name": "TJManhattanDistances"
       },
       "filter": {
@@ -153,7 +153,7 @@
         "calculate_sphericity": true,
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "num_cells_array_path": "DataContainer/CellFeatureData/NumElements",
-        "selected_image_geometry": "DataContainer",
+        "selected_image_geometry_path": "DataContainer",
         "sphericity_array_name": "Sphericity",
         "surface_area_volume_ratio_array_name": "SurfaceAreaVolumeRatio"
       },

@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "data_container_name": "DataContainer",
+        "created_image_geometry_path": "DataContainer",
         "input_file": "Data/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
       },
       "comments": "",
@@ -19,7 +19,7 @@
     },
     {
       "args": {
-        "created_image_geometry": "",
+        "created_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
         "rotation_axis": [
@@ -55,7 +55,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry": "DataContainer"
+        "selected_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
@@ -83,7 +83,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -98,7 +98,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "created_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -243,7 +243,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -258,7 +258,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask Inverse"
+        "created_data_array_name": "Mask Inverse"
       },
       "comments": "",
       "filter": {
@@ -314,8 +314,8 @@
     },
     {
       "args": {
-        "avg_euler_angles_array_path": "AvgEulerAngles",
-        "avg_quats_array_path": "AvgQuats",
+        "avg_euler_angles_array_name": "AvgEulerAngles",
+        "avg_quats_array_name": "AvgQuats",
         "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
         "cell_feature_ids_array_path": "DataContainer/CellData/FeatureIds",
         "cell_phases_array_path": "DataContainer/CellData/Phases",
@@ -352,7 +352,7 @@
     {
       "args": {
         "avg_c_axis_misalignments_array_name": "AvgCAxisMisalignments",
-        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "avg_quats_array_name": "DataContainer/CellFeatureData/AvgQuats",
         "c_axis_misalignment_list_array_name": "CAxisMisalignmentList",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",

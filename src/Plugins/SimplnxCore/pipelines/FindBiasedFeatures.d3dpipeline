@@ -78,9 +78,9 @@
     {
       "args": {
         "centroids_array_path": "Centroids",
-        "feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "selected_image_geometry": "DataContainer"
+        "selected_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {

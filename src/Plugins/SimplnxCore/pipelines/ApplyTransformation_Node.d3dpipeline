@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "triangle_geometry_name": "Blade",
+        "created_triangle_geometry_path": "Blade",
         "scale_factor": 1.0,
         "scale_output": false,
         "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
@@ -19,7 +19,7 @@
     },
     {
       "args": {
-        "triangle_geometry_name": "Blade [Rotation]",
+        "created_triangle_geometry_path": "Blade [Rotation]",
         "scale_factor": 1.0,
         "scale_output": false,
         "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
@@ -73,7 +73,7 @@
           1.0,
           1.0
         ],
-        "selected_image_geometry": "Blade [Rotation]",
+        "selected_image_geometry_path": "Blade [Rotation]",
         "transformation_type": 3,
         "translation": [
           0.0,
@@ -90,7 +90,7 @@
     },
     {
       "args": {
-        "triangle_geometry_name": "Blade [Translation]",
+        "created_triangle_geometry_path": "Blade [Translation]",
         "scale_factor": 1.0,
         "scale_output": false,
         "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
@@ -144,7 +144,7 @@
           1.0,
           1.0
         ],
-        "selected_image_geometry": "Blade [Translation]",
+        "selected_image_geometry_path": "Blade [Translation]",
         "transformation_type": 4,
         "translation": [
           10.0,
@@ -161,7 +161,7 @@
     },
     {
       "args": {
-        "triangle_geometry_name": "Blade [Scale]",
+        "created_triangle_geometry_path": "Blade [Scale]",
         "scale_factor": 1.0,
         "scale_output": false,
         "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
@@ -215,7 +215,7 @@
           0.5,
           1.0
         ],
-        "selected_image_geometry": "Blade [Scale]",
+        "selected_image_geometry_path": "Blade [Scale]",
         "transformation_type": 5,
         "translation": [
           10.0,

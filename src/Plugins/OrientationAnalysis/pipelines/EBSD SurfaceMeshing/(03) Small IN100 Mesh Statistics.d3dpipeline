@@ -78,7 +78,7 @@
     },
     {
       "args": {
-        "triangle_areas_array_path": "FaceAreas",
+        "triangle_areas_array_name": "FaceAreas",
         "triangle_geometry_data_path": "TriangleDataContainer"
       },
       "comments": "",
@@ -90,7 +90,7 @@
     },
     {
       "args": {
-        "surface_mesh_triangle_normals_array_path": "FaceNormals",
+        "output_normals_array_name": "FaceNormals",
         "tri_geometry_data_path": "TriangleDataContainer"
       },
       "comments": "",
@@ -130,7 +130,7 @@
     },
     {
       "args": {
-        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "avg_quats_array_name": "DataContainer/CellFeatureData/AvgQuats",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
         "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",

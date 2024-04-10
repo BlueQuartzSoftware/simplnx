@@ -52,7 +52,7 @@
     {
       "args": {
         "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
-        "geometry_path": "DataContainer",
+        "input_geometry_path": "DataContainer",
         "output_file": "Data/Output/Examples/SmallIN100_AvizoUniform.am",
         "units": "meters",
         "write_binary_file": false
@@ -67,7 +67,7 @@
     {
       "args": {
         "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
-        "geometry_path": "DataContainer",
+        "input_geometry_path": "DataContainer",
         "output_file": "Data/Output/Examples/SmallIN100_AvizoRectilinear.am",
         "units": "meters",
         "write_binary_file": false

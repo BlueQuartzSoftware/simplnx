@@ -6,7 +6,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "data_container_name": "DataContainer",
+        "created_image_geometry_path": "DataContainer",
         "degrees_to_radians": true,
         "edax_hexagonal_alignment": false,
         "input_file": "Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
@@ -20,7 +20,7 @@
     },
     {
       "args": {
-        "created_image_geometry": "",
+        "created_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
         "rotation_axis": [
@@ -56,7 +56,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry": "DataContainer"
+        "selected_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
@@ -67,7 +67,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -82,7 +82,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask",
+        "created_data_array_name": "Mask",
         "created_mask_type": 10,
         "custom_false_value": 0.0,
         "custom_true_value": 1.0,

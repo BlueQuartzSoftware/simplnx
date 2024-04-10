@@ -22,11 +22,11 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_NumericType_Key = "numeric_type";
-  static inline constexpr StringLiteral k_AdvancedOptions_Key = "advanced_options";
+  static inline constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
   static inline constexpr StringLiteral k_NumComps_Key = "component_count";
   static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
   static inline constexpr StringLiteral k_DataPath_Key = "output_array_path";
-  static inline constexpr StringLiteral k_InitilizationValue_Key = "initialization_value";
+  static inline constexpr StringLiteral k_InitializationValue_Key = "initialization_value_str";
   static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
 
   /**

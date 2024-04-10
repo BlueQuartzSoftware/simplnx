@@ -28,7 +28,7 @@ public:
   ScalarSegmentFeaturesFilter& operator=(ScalarSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
+  static inline constexpr StringLiteral k_GridGeomPath_Key = "selected_image_geometry_path";
   static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar_tolerance";
   static inline constexpr StringLiteral k_InputArrayPathKey = "input_array_path";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";

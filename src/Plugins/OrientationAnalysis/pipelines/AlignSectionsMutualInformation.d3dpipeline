@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "data_container_name": "DataContainer",
+        "created_image_geometry_path": "DataContainer",
         "read_h5_ebsd_parameter": {
           "end_slice": 117,
           "euler_representation": 0,
@@ -35,7 +35,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -58,7 +58,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "created_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
