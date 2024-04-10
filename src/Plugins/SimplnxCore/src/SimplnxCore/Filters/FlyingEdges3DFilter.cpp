@@ -59,7 +59,7 @@ Parameters FlyingEdges3DFilter::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_IsoVal_Key, "Contour Value", "The value to contour on", 1.0));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array to Contour", "This is the data that will be checked for the contouring iso value", DataPath{},
                                                           GetAllDataTypes()));
@@ -81,7 +81,7 @@ IFilter::UniquePointer FlyingEdges3DFilter::clone() const
 IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
-  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pTriangleGeomName = filterArgs.value<std::string>(k_NewTriangleGeometryName_Key);
 
   PreflightResult preflightResult;
@@ -108,7 +108,7 @@ Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Ar
 {
   FlyingEdges3DInputValues inputValues;
 
-  inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.triangleGeomPath = DataPath({filterArgs.value<std::string>(k_NewTriangleGeometryName_Key)});
   inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);

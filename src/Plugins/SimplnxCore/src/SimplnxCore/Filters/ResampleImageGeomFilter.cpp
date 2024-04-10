@@ -100,7 +100,7 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
   params.insertSeparator({"Input Image Geometry"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry to resample", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry to resample", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Renumber Features (Optional)"});
@@ -142,7 +142,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
   auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto cellFeatureAmPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
-  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -348,7 +348,7 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
 {
   ResampleImageGeomInputValues inputValues;
 
-  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   if(filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key) == k_ScalingModeIndex)

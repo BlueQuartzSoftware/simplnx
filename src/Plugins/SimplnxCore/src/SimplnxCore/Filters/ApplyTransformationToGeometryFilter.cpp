@@ -103,7 +103,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
                                                 false));
 
   params.insertSeparator({"Input Geometry"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Geometry", "The target geometry on which to perform the transformation", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Geometry", "The target geometry on which to perform the transformation", DataPath{},
                                                              IGeometry::GetAllGeomTypes()));
 
   params.insertSeparator(Parameters::Separator{"Image Geometry Resampling/Interpolation"});
@@ -140,7 +140,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   auto pTransformationMatrixTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationType_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key);
   auto pComputedTransformationMatrixPath = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
-  auto pSelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  auto pSelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pCellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
   auto pTranslateGeometryToGlobalOrigin = filterArgs.value<BoolParameter::ValueType>(k_TranslateGeometryToGlobalOrigin_Key);
 
@@ -318,7 +318,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(*imageGeomPtr, transformationMatrix);
 
-      auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+      auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
       DataPath destImagePath = srcImagePath;         // filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
       auto pRemoveOriginalGeometry = true;           // filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
       const auto& selectedImageGeom = *imageGeomPtr; // dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
@@ -453,7 +453,7 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputValues.Rotation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
   inputValues.Translation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
   inputValues.Scale = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
-  inputValues.SelectedGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.SelectedGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
   inputValues.TranslateGeometryToGlobalOrigin = filterArgs.value<BoolParameter::ValueType>(k_TranslateGeometryToGlobalOrigin_Key);
   inputValues.RemoveOriginalGeometry = true;
@@ -495,7 +495,7 @@ Result<Arguments> ApplyTransformationToGeometryFilter::FromSIMPLJson(const nlohm
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ScaleKey, k_Scale_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ComputedTransformationMatrixKey, k_ComputedTransformationMatrix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_GeometryToTransformnKey, k_SelectedImageGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_GeometryToTransformnKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_CellAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_DataArraySelectionKey, "@SIMPLNX_PARAMETER_KEY@"));

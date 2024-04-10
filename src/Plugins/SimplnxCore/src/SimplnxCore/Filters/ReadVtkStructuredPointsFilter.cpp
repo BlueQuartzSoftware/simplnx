@@ -67,17 +67,17 @@ Parameters ReadVtkStructuredPointsFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadCellData_Key, "Read Cell Data", "Determines whether or not the Cell Data will be read.", false));
 
   params.insertSeparator(Parameters::Separator{"Created Point Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexDataContainerName_Key, "Data Container [Point Data]", "The data container for the Point Data.", DataPath({"VTK Point Data"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Data Container [Point Data]", "The data container for the Point Data.", DataPath({"VTK Point Data"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Attribute Matrix Name [Point Data]", "The attribute matrix for the Point Data.", "Vertex Data"));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_VolumeDataContainerName_Key, "Data Container [Cell Data]", "The data container for the Cell Data.", DataPath({"VTK Cell Data"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Data Container [Cell Data]", "The data container for the Cell Data.", DataPath({"VTK Cell Data"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Attribute Matrix Name [Cell Data]", "The attribute matrix for the Cell Data.", "Cell Data"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_ReadPointData_Key, k_VertexDataContainerName_Key, true);
+  params.linkParameters(k_ReadPointData_Key, k_CreatedVertexGeometryPath_Key, true);
   params.linkParameters(k_ReadPointData_Key, k_VertexAttributeMatrixName_Key, true);
-  params.linkParameters(k_ReadCellData_Key, k_VolumeDataContainerName_Key, true);
+  params.linkParameters(k_ReadCellData_Key, k_CreatedImageGeometryPath_Key, true);
   params.linkParameters(k_ReadCellData_Key, k_CellAttributeMatrixName_Key, true);
 
   return params;
@@ -96,8 +96,8 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pReadPointDataValue = filterArgs.value<bool>(k_ReadPointData_Key);
   auto pReadCellDataValue = filterArgs.value<bool>(k_ReadCellData_Key);
-  auto pVertexGeometryPath = filterArgs.value<DataPath>(k_VertexDataContainerName_Key);
-  auto pImageGeometryPath = filterArgs.value<DataPath>(k_VolumeDataContainerName_Key);
+  auto pVertexGeometryPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  auto pImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
 
@@ -112,8 +112,8 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.ReadPointData = filterArgs.value<bool>(k_ReadPointData_Key);
   inputValues.ReadCellData = filterArgs.value<bool>(k_ReadCellData_Key);
-  inputValues.PointGeomPath = filterArgs.value<DataPath>(k_VertexDataContainerName_Key);
-  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_VolumeDataContainerName_Key);
+  inputValues.PointGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   inputValues.PointAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
 
@@ -136,8 +136,8 @@ Result<> ReadVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.ReadPointData = filterArgs.value<bool>(k_ReadPointData_Key);
   inputValues.ReadCellData = filterArgs.value<bool>(k_ReadCellData_Key);
-  inputValues.PointGeomPath = filterArgs.value<DataPath>(k_VertexDataContainerName_Key);
-  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_VolumeDataContainerName_Key);
+  inputValues.PointGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   inputValues.PointAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
 

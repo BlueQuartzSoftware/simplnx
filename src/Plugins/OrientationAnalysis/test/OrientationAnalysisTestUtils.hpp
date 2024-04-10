@@ -190,7 +190,7 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
-  constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+  constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
 
   Arguments args;
 
@@ -208,7 +208,7 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 
   args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
 
-  args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -232,7 +232,7 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
   constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
   constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+  constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
   constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
   Arguments args;
@@ -242,7 +242,7 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   args.insertOrAssign(k_UseReferenceSlice_Key, std::make_any<bool>(true));
   args.insertOrAssign(k_ReferenceSlice_Key, std::make_any<int32>(0));
   args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
-  args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(k_SelectedCellDataGroup_Key, std::make_any<DataPath>(Constants::k_CellAttributeMatrix));
 
   // Preflight the filter and check result

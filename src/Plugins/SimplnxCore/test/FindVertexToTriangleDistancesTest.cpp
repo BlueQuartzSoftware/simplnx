@@ -39,8 +39,8 @@ TEST_CASE("SimplnxCore::FindVertexToTriangleDistancesFilter", "[SimplnxCore][Fin
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_VertexDataContainer_Key, std::make_any<DataPath>(vertexData));
-    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_TriangleDataContainer_Key, std::make_any<DataPath>(triangleData));
+    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(vertexData));
+    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleData));
     args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_TriangleNormalsArrayPath_Key, std::make_any<DataPath>(normalsPath));
     args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_DistancesArrayName_Key, std::make_any<std::string>(k_DistancesNameNX));
     args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_ClosestTriangleIdArrayName_Key, std::make_any<std::string>(k_ClosestTriangleIdsNameNX));

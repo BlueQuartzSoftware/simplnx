@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_InputFile_Key = "input_file";
   static inline constexpr StringLiteral k_DREAM3DAlignmentFile_Key = "dream3d_alignment_file";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

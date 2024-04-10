@@ -52,7 +52,7 @@ TEST_CASE("SimplnxCore::FindNeighborListStatistics: Test Algorithm", "[FindNeigh
   args.insertOrAssign(FindNeighborListStatistics::k_FindStandardDeviation_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
 
-  args.insertOrAssign(FindNeighborListStatistics::k_InputArray_Key, std::make_any<DataPath>(inputArrayPath));
+  args.insertOrAssign(FindNeighborListStatistics::k_InputNeighborListPath_Key, std::make_any<DataPath>(inputArrayPath));
   args.insertOrAssign(FindNeighborListStatistics::k_LengthName_Key, std::make_any<std::string>(length));
   args.insertOrAssign(FindNeighborListStatistics::k_MinimumName_Key, std::make_any<std::string>(minimum));
   args.insertOrAssign(FindNeighborListStatistics::k_MaximumName_Key, std::make_any<std::string>(maximum));
@@ -178,7 +178,7 @@ TEST_CASE("SimplnxCore::FindNeighborListStatistics: Invalid Input Array", "[Find
   args.insertOrAssign(FindNeighborListStatistics::k_FindStandardDeviation_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
 
-  args.insertOrAssign(FindNeighborListStatistics::k_InputArray_Key, std::make_any<DataPath>(inputArrayPath));
+  args.insertOrAssign(FindNeighborListStatistics::k_InputNeighborListPath_Key, std::make_any<DataPath>(inputArrayPath));
   args.insertOrAssign(FindNeighborListStatistics::k_LengthName_Key, std::make_any<std::string>(length));
   args.insertOrAssign(FindNeighborListStatistics::k_MinimumName_Key, std::make_any<std::string>(minimum));
   args.insertOrAssign(FindNeighborListStatistics::k_MaximumName_Key, std::make_any<std::string>(maximum));

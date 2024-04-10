@@ -27,7 +27,7 @@ namespace RotateSampleRefFrame
 static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
 static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
 static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-static inline constexpr nx::core::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+static inline constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry";
 static inline constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
 static inline constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
 static inline constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
@@ -398,7 +398,7 @@ Result<> ReadH5Ebsd::operator()()
       }
       Arguments args;
 
-      args.insertOrAssign(RotateSampleRefFrame::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
+      args.insertOrAssign(RotateSampleRefFrame::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
       args.insertOrAssign(RotateSampleRefFrame::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
 
       args.insertOrAssign(RotateSampleRefFrame::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));

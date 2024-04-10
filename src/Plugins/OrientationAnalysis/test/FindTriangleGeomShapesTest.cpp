@@ -53,7 +53,7 @@ TEST_CASE("OrientationAnalysis::FindTriangleGeomShapes", "[OrientationAnalysis][
     args.insertOrAssign(FindTriangleGeomShapesFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
     args.insertOrAssign(FindTriangleGeomShapesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
 
-    args.insertOrAssign(FindTriangleGeomShapesFilter::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_FaceFeatureAttributeMatrixPath));
+    args.insertOrAssign(FindTriangleGeomShapesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FaceFeatureAttributeMatrixPath));
     args.insertOrAssign(FindTriangleGeomShapesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_FaceFeatureCentroidsPath));
     args.insertOrAssign(FindTriangleGeomShapesFilter::k_VolumesArrayPath_Key, std::make_any<DataPath>(k_FaceFeatureVolumesPath));
     // Output Vars

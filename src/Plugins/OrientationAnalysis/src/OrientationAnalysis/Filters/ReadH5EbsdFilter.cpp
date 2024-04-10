@@ -63,7 +63,8 @@ Parameters ReadH5EbsdFilter::parameters() const
                                                           ReadH5EbsdFileParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Created Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));
   // params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Created Cell Attribute Matrix",
                                                           "The name of the created cell attribute matrix associated with the imported geometry", "CellData"));
@@ -86,7 +87,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
 {
 
   auto pReadH5EbsdFilterValue = filterArgs.value<ReadH5EbsdFileParameter::ValueType>(k_ReadH5EbsdParameter_Key);
-  auto imageGeomPath = filterArgs.value<DataPath>(k_DataContainerName_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   DataPath cellAttributeMatrixPath = imageGeomPath.createChildPath(pCellAttributeMatrixNameValue);
   auto pCellEnsembleAttributeMatrixNameValue = imageGeomPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
@@ -246,7 +247,7 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pReadH5EbsdFilterValue = filterArgs.value<ReadH5EbsdFileParameter::ValueType>(k_ReadH5EbsdParameter_Key);
-  auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
+  auto pDataContainerNameValue = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pCellEnsembleAttributeMatrixNameValue = pDataContainerNameValue.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
 
@@ -349,7 +350,7 @@ Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, k_ReadH5EbsdParameter_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataContainerName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));

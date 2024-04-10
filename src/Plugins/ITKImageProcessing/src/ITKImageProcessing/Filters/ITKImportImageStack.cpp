@@ -33,7 +33,7 @@ namespace RotateSampleRefFrame
 static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
 static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
 static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-static inline constexpr nx::core::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+static inline constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry";
 static inline constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
 static inline constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
 static inline constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";

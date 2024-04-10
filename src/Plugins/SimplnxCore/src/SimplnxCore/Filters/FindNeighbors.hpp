@@ -23,7 +23,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_StoreBoundary_Key = "store_boundary_cells";
   static inline constexpr StringLiteral k_StoreSurface_Key = "store_surface_features";
-  static inline constexpr StringLiteral k_ImageGeom_Key = "image_geometry";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
   static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_CellFeaturesPath_Key = "cell_feature_array_path";
   static inline constexpr StringLiteral k_BoundaryCellsName_Key = "boundary_cells_name";

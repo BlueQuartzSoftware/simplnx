@@ -28,7 +28,7 @@ public:
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
 
-  static inline constexpr StringLiteral k_TriangleGeometryName_Key = "triangle_geometry_name";
+  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "created_triangle_geometry_path";
 
   static inline constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
   static inline constexpr StringLiteral k_NodeTypesArrayName_Key = "node_types_array_name";

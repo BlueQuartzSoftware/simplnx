@@ -33,7 +33,7 @@ TEST_CASE("SimplnxCore::FindFeatureClusteringFilter: Valid Filter Execution", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindFeatureClusteringFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
   args.insertOrAssign(FindFeatureClusteringFilter::k_NumberOfBins_Key, std::make_any<int32>(10));
   args.insertOrAssign(FindFeatureClusteringFilter::k_PhaseNumber_Key, std::make_any<int32>(2));
   args.insertOrAssign(FindFeatureClusteringFilter::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));
@@ -75,7 +75,7 @@ TEST_CASE("SimplnxCore::FindFeatureClusteringFilter: InValid Filter Execution", 
   Arguments args;
 
   // Mismatching cell feature data tuples case :
-  args.insertOrAssign(FindFeatureClusteringFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
   args.insertOrAssign(FindFeatureClusteringFilter::k_NumberOfBins_Key, std::make_any<int32>(10));
   args.insertOrAssign(FindFeatureClusteringFilter::k_PhaseNumber_Key, std::make_any<int32>(2));
   args.insertOrAssign(FindFeatureClusteringFilter::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));

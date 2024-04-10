@@ -60,7 +60,7 @@ Parameters FindNeighbors::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "Whether to store the surface Features array", false));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "The geometry in which to identify feature neighbors", DataPath({"DataContainer"}),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "The geometry in which to identify feature neighbors", DataPath({"DataContainer"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -98,7 +98,7 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
+  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
   auto boundaryCellsName = args.value<std::string>(k_BoundaryCellsName_Key);
   auto numNeighborsName = args.value<std::string>(k_NumNeighborsName_Key);
@@ -168,7 +168,7 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
+  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
   auto boundaryCellsName = args.value<std::string>(k_BoundaryCellsName_Key);
   auto numNeighborsName = args.value<std::string>(k_NumNeighborsName_Key);
@@ -441,7 +441,7 @@ Result<Arguments> FindNeighbors::FromSIMPLJson(const nlohmann::json& json)
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_StoreBoundaryCellsKey, k_StoreBoundary_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_StoreSurfaceFeaturesKey, k_StoreSurface_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeom_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_CellFeaturesPath_Key));

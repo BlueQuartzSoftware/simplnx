@@ -30,8 +30,8 @@ public:
   static inline constexpr StringLiteral k_InterpolationTechnique_Key = "interpolation_technique";
   static inline constexpr StringLiteral k_KernelSize_Key = "kernel_size";
   static inline constexpr StringLiteral k_GaussianSigmas_Key = "gaussian_sigmas";
-  static inline constexpr StringLiteral k_VertexGeom_Key = "vertex_geom";
-  static inline constexpr StringLiteral k_ImageGeom_Key = "image_geom";
+  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "selected_vertex_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
   static inline constexpr StringLiteral k_VoxelIndicesPath_Key = "voxel_indices_path";
   static inline constexpr StringLiteral k_InputMaskPath_Key = "input_mask_path";
   static inline constexpr StringLiteral k_InterpolateArrays_Key = "interpolate_arrays";

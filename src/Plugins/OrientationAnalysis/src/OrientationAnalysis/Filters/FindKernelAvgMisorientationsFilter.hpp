@@ -30,7 +30,7 @@ public:
   static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static inline constexpr StringLiteral k_KernelAverageMisorientationsArrayName_Key = "kernel_average_misorientations_array_name";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

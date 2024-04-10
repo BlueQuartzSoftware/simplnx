@@ -50,7 +50,7 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
     // Create default Parameters for the filter.
     args.insertOrAssign(FlyingEdges3DFilter::k_IsoVal_Key, std::make_any<float64>(ContourTest::k_IsoVal));
     // Selected Data Objects
-    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometry_Key, std::make_any<GeometrySelectionParameter::ValueType>(ContourTest::k_GeometryPath));
+    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometryPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(ContourTest::k_GeometryPath));
     args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(ContourTest::k_DataPath));
     // Output Path
     args.insertOrAssign(FlyingEdges3DFilter::k_NewTriangleGeometryName_Key, std::make_any<DataObjectNameParameter::ValueType>(ContourTest::k_NewTriangleContourName));

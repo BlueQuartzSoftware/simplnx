@@ -24,9 +24,9 @@ public:
   RemoveFlaggedTrianglesFilter& operator=(RemoveFlaggedTrianglesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputGeometry_Key = "input_geometry";
+  static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "selected_triangle_geometry_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_OutputGeometry_Key = "output_geometry";
+  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "created_triangle_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it complex Arguments.

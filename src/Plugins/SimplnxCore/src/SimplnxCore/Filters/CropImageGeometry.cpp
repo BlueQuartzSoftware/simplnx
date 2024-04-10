@@ -198,7 +198,7 @@ Parameters CropImageGeometry::parameters() const
 
   params.insertSeparator({"Input Geometry and Data"});
   params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "DataPath to the source Image Geometry", DataPath(), std::set{IGeometry::Type::Image}));
+      std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "DataPath to the source Image Geometry", DataPath(), std::set{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
@@ -208,7 +208,7 @@ Parameters CropImageGeometry::parameters() const
                                                                     DataPath({"CellFeatureData"})));
 
   params.insertSeparator({"Output Image Geometry"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The DataPath to store the created Image Geometry", DataPath()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The DataPath to store the created Image Geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UsePhysicalBounds_Key, k_MinVoxel_Key, false);
@@ -219,7 +219,7 @@ Parameters CropImageGeometry::parameters() const
 
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrixPath_Key, true);
-  params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
+  params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometryPath_Key, false);
 
   return params;
 }
@@ -232,8 +232,8 @@ IFilter::UniquePointer CropImageGeometry::clone() const
 IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                           const std::atomic_bool& shouldCancel) const
 {
-  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
@@ -528,8 +528,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel) const
 {
-  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   const auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
@@ -713,10 +713,10 @@ Result<Arguments> CropImageGeometry::FromSIMPLJson(const nlohmann::json& json)
   // k_UpdateOrigin_Key currently disabled in NX.
   // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UpdateOriginKey, k_UpdateOrigin_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InvertedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_CreatedImageGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_CreatedImageGeometryPath_Key));
   // Cell attribute matrix parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrixPath_Key));

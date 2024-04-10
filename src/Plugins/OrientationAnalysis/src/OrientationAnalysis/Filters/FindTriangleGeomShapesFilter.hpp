@@ -25,7 +25,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
   static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
   static inline constexpr StringLiteral k_VolumesArrayPath_Key = "volumes_array_path";
   static inline constexpr StringLiteral k_Omega3sArrayName_Key = "omega3s_array_name";

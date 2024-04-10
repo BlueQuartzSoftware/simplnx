@@ -30,7 +30,7 @@ public:
   static inline constexpr StringLiteral k_ScaleFactor = "scale_factor";
   static inline constexpr StringLiteral k_StlFilePath_Key = "stl_file_path";
 
-  static inline constexpr StringLiteral k_TriangleGeometryName_Key = "triangle_geometry_name";
+  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "created_triangle_geometry_path";
 
   static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
   static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";

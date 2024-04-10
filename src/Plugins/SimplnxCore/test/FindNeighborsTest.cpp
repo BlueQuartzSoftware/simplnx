@@ -31,7 +31,7 @@ TEST_CASE("SimplnxCore::FindNeighbors", "[SimplnxCore][FindNeighbors]")
     FindNeighbors filter;
     Arguments args;
 
-    args.insertOrAssign(FindNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insertOrAssign(FindNeighbors::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
     args.insertOrAssign(FindNeighbors::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
     args.insertOrAssign(FindNeighbors::k_CellFeaturesPath_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
 

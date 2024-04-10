@@ -166,7 +166,7 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   auto findStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
   auto findSummation = args.value<bool>(k_FindSummation_Key);
 
-  auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
+  auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
   auto* inputArray = data.getDataAs<INeighborList>(inputArrayPath);
   std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
   DataType dataType = inputArray->getDataType();
@@ -265,8 +265,8 @@ Parameters FindNeighborListStatistics::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "Specifies whether or not the filter creates the Summation array during calculations", true));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(
-      std::make_unique<NeighborListSelectionParameter>(k_InputArray_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(), nx::core::GetAllDataTypes()));
+  params.insert(std::make_unique<NeighborListSelectionParameter>(k_InputNeighborListPath_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(),
+                                                                 nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_LengthName_Key, "Length", "Path to create the Length array during calculations", "Length"));
@@ -296,7 +296,7 @@ IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStr
   auto findStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
   auto findSummation = args.value<bool>(k_FindSummation_Key);
 
-  auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
+  auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
 
   //
   if(!findMin && !findMax && !findMean && !findMedian && !findStdDeviation && !findSummation && !findLength)
@@ -336,7 +336,7 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
     return {};
   }
 
-  auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
+  auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
   auto& inputArray = data.getDataRefAs<INeighborList>(inputArrayPath);
   const DataPath outputGroupPath = inputArrayPath.getParent();
 
@@ -436,7 +436,7 @@ Result<Arguments> FindNeighborListStatistics::FromSIMPLJson(const nlohmann::json
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindMedianKey, k_FindMedian_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindStdDeviationKey, k_FindStandardDeviation_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindSummationKey, k_FindSummation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_InputArray_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_InputNeighborListPath_Key));
   // No destination attribute matrix parameter in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LengthArrayNameKey, k_LengthName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MinimumArrayNameKey, k_MinimumName_Key));

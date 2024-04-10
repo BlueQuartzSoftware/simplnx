@@ -189,9 +189,9 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
                                                          std::vector<std::string>{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeom_Key, "Vertex Geometry to Interpolate", "DataPath to geometry to interpolate", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry to Interpolate", "DataPath to geometry to interpolate", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndicesPath_Key, "Voxel Indices", "DataPath to voxel indices", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -228,8 +228,8 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   auto useMask = args.value<bool>(k_UseMask_Key);
   auto storeKernelDistances = args.value<bool>(k_StoreKernelDistances_Key);
   auto interpolationTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
-  auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
+  auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto interpolatedGroupName = args.value<std::string>(k_InterpolatedGroupName_Key);
   auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndicesPath_Key);
   auto interpolatedDataPaths = args.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
@@ -342,8 +342,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   auto useMask = args.value<bool>(k_UseMask_Key);
   auto storeKernelDistances = args.value<bool>(k_StoreKernelDistances_Key);
   auto interpolationTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
-  auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
+  auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto interpolatedGroupName = args.value<std::string>(k_InterpolatedGroupName_Key);
   auto interpolatedDataPaths = args.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
   auto copyDataPaths = args.value<std::vector<DataPath>>(k_CopyArrays_Key);

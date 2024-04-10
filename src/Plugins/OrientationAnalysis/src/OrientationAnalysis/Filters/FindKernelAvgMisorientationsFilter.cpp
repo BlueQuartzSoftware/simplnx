@@ -56,7 +56,7 @@ Parameters FindKernelAvgMisorientationsFilter::parameters() const
   params.insert(std::make_unique<VectorInt32Parameter>(k_KernelSize_Key, "Kernel Radius", "Size of the kernel in the X, Y and Z directions (in number of Cells)", std::vector<int32>{1, 1, 1},
                                                        std::vector<std::string>{"X", "Y", "Z"}));
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "Path to the target geometry", DataPath({"Data Container"}),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "Path to the target geometry", DataPath({"Data Container"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -92,7 +92,7 @@ IFilter::PreflightResult FindKernelAvgMisorientationsFilter::preflightImpl(const
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pKernelAverageMisorientationsArrayNameValue = pCellPhasesArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_KernelAverageMisorientationsArrayName_Key));
-  auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   PreflightResult preflightResult;
 
@@ -124,7 +124,7 @@ Result<> FindKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataStru
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   inputValues.KernelAverageMisorientationsArrayName = inputValues.CellPhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_KernelAverageMisorientationsArrayName_Key));
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return FindKernelAvgMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -153,7 +153,7 @@ Result<Arguments> FindKernelAvgMisorientationsFilter::FromSIMPLJson(const nlohma
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_SelectedImageGeometry_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_KernelAverageMisorientationsArrayNameKey,

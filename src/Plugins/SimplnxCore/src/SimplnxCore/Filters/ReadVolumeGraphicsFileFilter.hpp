@@ -30,7 +30,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_VGHeaderFile_Key = "vg_header_file";
-  static inline constexpr StringLiteral k_NewImageGeometry_Key = "new_image_geometry";
+  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "created_image_geometry_path";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
 

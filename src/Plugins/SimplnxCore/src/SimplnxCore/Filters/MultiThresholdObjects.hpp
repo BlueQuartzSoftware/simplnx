@@ -20,12 +20,12 @@ public:
   MultiThresholdObjects& operator=(const MultiThresholdObjects&) = delete;
   MultiThresholdObjects& operator=(MultiThresholdObjects&&) noexcept = delete;
 
-  static inline constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
+  static inline constexpr StringLiteral k_ArrayThresholdsObject_Key = "array_thresholds_object";
   static inline constexpr StringLiteral k_UseCustomTrueValue = "use_custom_true_value";
   static inline constexpr StringLiteral k_UseCustomFalseValue = "use_custom_false_value";
   static inline constexpr StringLiteral k_CustomTrueValue = "custom_true_value";
   static inline constexpr StringLiteral k_CustomFalseValue = "custom_false_value";
-  static inline constexpr StringLiteral k_CreatedDataPath_Key = "created_data_array_path";
+  static inline constexpr StringLiteral k_CreatedDataName_Key = "created_data_array_name";
   static inline constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
 
   /**

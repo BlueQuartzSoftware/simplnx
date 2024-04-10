@@ -75,7 +75,7 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeomPath_Key, "Input Grid Geometry", "DataPath to input Grid Geometry", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Input Grid Geometry", "DataPath to input Grid Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
@@ -128,7 +128,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   }
 
   // Validate the Grid Geometry
-  auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
+  auto gridGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
   DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
   auto featureIdsPath = inputCellDataPath.createChildPath(args.value<std::string>(k_FeatureIdsArrayName_Key));
@@ -202,7 +202,7 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.misorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key) * static_cast<float>(nx::core::numbers::pi / 180.0f);
   inputValues.useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.shouldRandomizeFeatureIds = filterArgs.value<bool>(k_RandomizeFeatures_Key);
-  inputValues.gridGeomPath = filterArgs.value<DataPath>(k_GridGeomPath_Key);
+  inputValues.gridGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.quatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);

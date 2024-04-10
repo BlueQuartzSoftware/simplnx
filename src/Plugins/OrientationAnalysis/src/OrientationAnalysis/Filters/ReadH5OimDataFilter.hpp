@@ -29,7 +29,7 @@ public:
   static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_ReadPatternData_Key = "read_pattern_data";
-  static inline constexpr StringLiteral k_ImageGeometryName_Key = "image_geometry_name";
+  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "created_image_geometry_path";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
 

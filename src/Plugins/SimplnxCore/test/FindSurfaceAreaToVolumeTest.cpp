@@ -44,7 +44,7 @@ TEST_CASE("SimplnxCore::FindSurfaceAreaToVolume", "[SimplnxCore][FindSurfaceArea
     // Create default Parameters for the filter.
     args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath2));
     args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_NumCellsArrayPath_Key, std::make_any<DataPath>(k_NumElementsArrayPath));
-    args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometryPath));
+    args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_SelectedGeometryPath));
     args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_CalculateSphericity_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SurfaceAreaVolumeRatioArrayName_Key, std::make_any<std::string>(k_SurfaceAreaVolumeRationArrayNameNX));
     args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SphericityArrayName_Key, std::make_any<std::string>(k_SphericityArrayNameNX));

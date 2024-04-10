@@ -151,7 +151,7 @@ Parameters CreateGeometryFilter::parameters() const
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{8}}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryName_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryPath_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex attribute matrix to be created with the geometry",
                                                           INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_EdgeAttributeMatrixName_Key, "Edge Attribute Matrix", "The name of the edge attribute matrix to be created with the geometry",
@@ -214,7 +214,7 @@ IFilter::UniquePointer CreateGeometryFilter::clone() const
 IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                              const std::atomic_bool& shouldCancel) const
 {
-  auto pGeometryPath = filterArgs.value<DataPath>(k_GeometryName_Key);
+  auto pGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto pGeometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
   auto pWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
   auto pArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
@@ -384,7 +384,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
-  auto geometryPath = filterArgs.value<DataPath>(k_GeometryName_Key);
+  auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto geometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
   auto treatWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
   auto moveArrays = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key) == k_MoveArray;

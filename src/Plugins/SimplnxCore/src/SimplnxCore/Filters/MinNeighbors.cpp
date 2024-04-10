@@ -24,7 +24,7 @@ constexpr int32 k_InconsistentTupleCount = -252;
 
 void assignBadPoints(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
-  auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_ImageGeom_Key);
+  auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_SelectedImageGeometryPath_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIdsPath_Key);
   auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighborsPath_Key);
   auto ignoredVoxelArrayPaths = args.value<std::vector<DataPath>>(MinNeighbors::k_IgnoredVoxelArrays_Key);
@@ -209,7 +209,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args, const std::atom
 
 nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
-  auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_ImageGeom_Key);
+  auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_SelectedImageGeometryPath_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIdsPath_Key);
   auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighborsPath_Key);
   auto minNumNeighbors = args.value<uint64>(MinNeighbors::k_MinNumNeighbors_Key);
@@ -322,7 +322,8 @@ Parameters MinNeighbors::parameters() const
   params.insert(std::make_unique<UInt64Parameter>(k_PhaseNumber_Key, "Phase Index", "Which Ensemble to apply minimum to. Only needed if Apply to Single Phase Only is checked", 0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "The target geometry", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "The target geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellDataAttributeMatrixPath_Key, "Cell Attribute Matrix",
                                                                     "The cell data attribute matrix in which to apply the minimum neighbors algorithm", DataPath({"Data Container", "CellData"})));
 
@@ -355,7 +356,7 @@ IFilter::UniquePointer MinNeighbors::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
+  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
   auto phaseNumber = args.value<uint64>(k_PhaseNumber_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
@@ -500,7 +501,7 @@ Result<Arguments> MinNeighbors::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_MinNumNeighborsKey, k_MinNumNeighbors_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ApplyToSinglePhaseKey, k_ApplyToSinglePhase_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_PhaseNumberKey, k_PhaseNumber_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeom_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellDataAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsPath_Key));

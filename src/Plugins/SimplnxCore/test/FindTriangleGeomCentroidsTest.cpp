@@ -43,7 +43,7 @@ TEST_CASE("SimplnxCore::FindTriangleGeomCentroids", "[SimplnxCore][FindTriangleG
     // Create default Parameters for the filter.
     args.insertOrAssign(FindTriangleGeomCentroidsFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
     args.insertOrAssign(FindTriangleGeomCentroidsFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
-    args.insertOrAssign(FindTriangleGeomCentroidsFilter::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
+    args.insertOrAssign(FindTriangleGeomCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
     // Output Path
     args.insertOrAssign(FindTriangleGeomCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_CentroidsArrayName));
 

@@ -24,7 +24,7 @@ public:
   ApplyTransformationToGeometryFilter& operator=(ApplyTransformationToGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
   static inline constexpr StringLiteral k_TransformationType_Key = "transformation_type";
   static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type";
   static inline constexpr StringLiteral k_ManualTransformationMatrix_Key = "manual_transformation_matrix";

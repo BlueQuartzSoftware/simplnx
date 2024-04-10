@@ -27,9 +27,9 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_SamplingGridType_Key = "sampling_grid_type";
   static inline constexpr StringLiteral k_GridDimensions_Key = "grid_dimensions";
-  static inline constexpr StringLiteral k_VertexGeometry_Key = "vertex_geometry";
-  static inline constexpr StringLiteral k_NewImageGeometry_Key = "new_image_geometry";
-  static inline constexpr StringLiteral k_ExistingImageGeometry_Key = "existing_image_geometry";
+  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "selected_vertex_geometry_path";
+  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "created_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
   static inline constexpr StringLiteral k_VoxelIndicesName_Key = "voxel_indices_name";

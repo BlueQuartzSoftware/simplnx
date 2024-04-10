@@ -68,7 +68,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_TranslationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({100.0F, 50.0F, -100.0F}));
@@ -112,7 +112,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
@@ -157,7 +157,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ScaleIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({0.5F, 1.5F, 10.0F}));
@@ -203,7 +203,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Simp
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ManualTransformationMatrixIdx));
@@ -252,7 +252,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
@@ -304,7 +304,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_Li
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_TranslationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
@@ -344,7 +344,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linea
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
@@ -383,7 +383,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear",
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ScaleIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
@@ -424,7 +424,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear"
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ManualTransformationMatrixIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
@@ -467,7 +467,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Li
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
@@ -513,7 +513,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_NN
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_TranslationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
@@ -554,7 +554,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", 
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
@@ -594,7 +594,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[S
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ScaleIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
@@ -636,7 +636,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_NN", "[
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ManualTransformationMatrixIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
@@ -692,7 +692,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,

@@ -60,11 +60,11 @@ public:
   static inline constexpr StringLiteral k_CellLength_Key = "length_per_partition";
   static inline constexpr StringLiteral k_MinGridCoord_Key = "lower_left_coord";
   static inline constexpr StringLiteral k_MaxGridCoord_Key = "upper_right_coord";
-  static inline constexpr StringLiteral k_InputGeometryCellAttributeMatrixPath_Key = "ps_attribute_matrix_path";
-  static inline constexpr StringLiteral k_PartitionGridGeometry_Key = "ps_geometry";
-  static inline constexpr StringLiteral k_PartitionGridCellAMName_Key = "ps_geometry_am_name";
-  static inline constexpr StringLiteral k_PartitionGridFeatureIDsName_Key = "ps_geometry_data_name";
-  static inline constexpr StringLiteral k_InputGeometryToPartition_Key = "geometry_to_partition";
+  static inline constexpr StringLiteral k_InputGeometryCellAttributeMatrixPath_Key = "selected_geometry_attribute_matrix_path";
+  static inline constexpr StringLiteral k_PartitionGridGeometry_Key = "created_image_geometry_path";
+  static inline constexpr StringLiteral k_PartitionGridCellAMName_Key = "created_attribute_matrix_name";
+  static inline constexpr StringLiteral k_PartitionGridFeatureIDsName_Key = "created_feature_ids_name";
+  static inline constexpr StringLiteral k_InputGeometryToPartition_Key = "selected_geometry_path";
   static inline constexpr StringLiteral k_ExistingPartitionGridPath_Key = "existing_partitioning_scheme_path";
   static inline constexpr StringLiteral k_UseVertexMask_Key = "use_vertex_mask";
   static inline constexpr StringLiteral k_VertexMaskPath_Key = "vertex_mask_path";

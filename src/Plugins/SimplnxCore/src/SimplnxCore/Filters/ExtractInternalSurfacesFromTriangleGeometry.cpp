@@ -130,7 +130,7 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int8},
@@ -140,9 +140,10 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
                                                       std::vector<std::string>{"Min", "Max"}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name", INodeGeometry0D::k_VertexDataName));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceDataName));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name", INodeGeometry0D::k_VertexDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_TriangleAttributeMatrixName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceDataName));
 
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
@@ -162,13 +163,13 @@ IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometry::clone() cons
 IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                     const std::atomic_bool& shouldCancel) const
 {
-  auto triangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeom_Key);
-  auto internalTrianglesGeomPath = filterArgs.value<DataPath>(k_InternalTriangleGeom_Key);
+  auto triangleGeomPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
+  auto internalTrianglesGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto nodeTypesArrayPath = filterArgs.value<DataPath>(k_NodeTypesPath_Key);
   auto copyVertexPaths = filterArgs.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
   auto copyTrianglePaths = filterArgs.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
-  auto vertexDataName = filterArgs.value<std::string>(k_VertexDataName_Key);
-  auto faceDataName = filterArgs.value<std::string>(k_FaceDataName_Key);
+  auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
+  auto faceDataName = filterArgs.value<std::string>(k_TriangleAttributeMatrixName_Key);
 
   std::vector<DataPath> arrays;
   OutputActions actions;
@@ -259,12 +260,12 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto nodeTypesArrayPath = args.value<DataPath>(k_NodeTypesPath_Key);
-  auto triangleGeomPath = args.value<DataPath>(k_TriangleGeom_Key);
-  auto internalTrianglesPath = args.value<DataPath>(k_InternalTriangleGeom_Key);
+  auto triangleGeomPath = args.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
+  auto internalTrianglesPath = args.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto copyVertexPaths = args.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
   auto copyTrianglePaths = args.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
-  auto vertexDataName = args.value<std::string>(k_VertexDataName_Key);
-  auto faceDataName = args.value<std::string>(k_FaceDataName_Key);
+  auto vertexDataName = args.value<std::string>(k_VertexAttributeMatrixName_Key);
+  auto faceDataName = args.value<std::string>(k_TriangleAttributeMatrixName_Key);
 
   auto minMaxNodeValues = args.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
 
@@ -419,7 +420,8 @@ Result<Arguments> ExtractInternalSurfacesFromTriangleGeometry::FromSIMPLJson(con
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_TriangleGeom_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_SelectedTriangleGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

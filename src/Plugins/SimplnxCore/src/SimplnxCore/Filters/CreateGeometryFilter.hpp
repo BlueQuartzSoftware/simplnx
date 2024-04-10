@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_GeometryType_Key = "geometry_type";
   static inline constexpr StringLiteral k_LengthUnitType_Key = "length_unit_type";
-  static inline constexpr StringLiteral k_GeometryName_Key = "geometry_name";
+  static inline constexpr StringLiteral k_GeometryPath_Key = "created_geometry_path";
   static inline constexpr StringLiteral k_WarningsAsErrors_Key = "warnings_as_errors";
   static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling";
   // Image Geometry

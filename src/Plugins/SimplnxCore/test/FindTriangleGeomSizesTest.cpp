@@ -43,7 +43,7 @@ TEST_CASE("SimplnxCore::FindTriangleGeomSizes", "[SimplnxCore][FindTriangleGeomS
     // Create default Parameters for the filter.
     args.insertOrAssign(FindTriangleGeomSizesFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
     args.insertOrAssign(FindTriangleGeomSizesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
-    args.insertOrAssign(FindTriangleGeomSizesFilter::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
+    args.insertOrAssign(FindTriangleGeomSizesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
     // Output Path
     args.insertOrAssign(FindTriangleGeomSizesFilter::k_VolumesArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_VolumesArrayName));
 

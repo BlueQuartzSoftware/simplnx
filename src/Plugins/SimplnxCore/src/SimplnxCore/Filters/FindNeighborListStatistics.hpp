@@ -32,7 +32,7 @@ public:
   static inline constexpr StringLiteral k_FindMedian_Key = "find_median";
   static inline constexpr StringLiteral k_FindStandardDeviation_Key = "find_standard_deviation";
   static inline constexpr StringLiteral k_FindSummation_Key = "find_summation";
-  static inline constexpr StringLiteral k_InputArray_Key = "input_array";
+  static inline constexpr StringLiteral k_InputNeighborListPath_Key = "input_neighbor_list_path";
   static inline constexpr StringLiteral k_LengthName_Key = "length_array_name";
   static inline constexpr StringLiteral k_MinimumName_Key = "minimum_array_name";
   static inline constexpr StringLiteral k_MaximumName_Key = "maximum_array_name";
