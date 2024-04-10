@@ -308,6 +308,15 @@ Result<> ExecutePipeline(const Argument& arg)
     cliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
+  if(!loadPipelineResult.m_Warnings.empty())
+  {
+    cliOut << "Input Pipeline Warnings"
+           << "\n";
+    for(const auto& warning : loadPipelineResult.m_Warnings)
+    {
+      cliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
+    }
+  }
 
   Pipeline pipeline = loadPipelineResult.value();
   cliOut << fmt::format("Executing pipeline at path: '{}'\n", pipelinePath);

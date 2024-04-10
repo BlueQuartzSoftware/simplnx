@@ -266,7 +266,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   {
     if(!json.contains(name))
     {
-      warnings.push_back(Warning{-1, fmt::format("JSON does not contain key '{}'. Falling back to default value.", name)});
+      warnings.push_back(Warning{-5432, fmt::format("PARAMETER_KEY_NOT_FOUND_IN_JSON | '{}' | Parameter Key '{}' missing from the JSON", className(), name)});
       args.insert(name, param->defaultValue());
       continue;
     }
@@ -279,6 +279,16 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     }
     args.insert(name, std::move(jsonResult.value()));
   }
+
+  for(auto& [key, val] : json.items())
+  {
+    if(!params.contains(key))
+    {
+      warnings.push_back(Warning{-5433, fmt::format("JSON_KEY_NOT_FOUND_IN_PARAMETER | '{}' | JSON Key '{}' missing from the JSON", className(), key)});
+      continue;
+    }
+  }
+
   if(!errors.empty())
   {
     return {nonstd::make_unexpected(std::move(errors))};

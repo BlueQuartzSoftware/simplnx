@@ -24,7 +24,7 @@ public:
   ITKImportImageStack& operator=(ITKImportImageStack&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_info";
+  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
