@@ -673,6 +673,8 @@ void GeneratePythonRstFiles()
   auto* filterListPtr = Application::Instance()->getFilterList();
   std::ofstream logFile("/tmp/parameter_key_updates.log", std::ios_base::trunc);
 
+  std::set<std::string> thingsWithGeomInName;
+
   // Loop over each plugin and create a .rst file
   const auto pluginListPtr = Application::Instance()->getPluginList();
   for(const auto& plugin : pluginListPtr)
@@ -812,6 +814,10 @@ void GeneratePythonRstFiles()
         {
           logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
         }
+        if(nx::core::StringUtilities::contains(parameterPair.first, "data_array"))
+        {
+          thingsWithGeomInName.insert(parameterPair.first);
+        }
 
         rstStream << parameterPair.first;
         memberStream << "      :param nx." << nx::core::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": "
@@ -825,6 +831,11 @@ void GeneratePythonRstFiles()
       rstStream << "      :rtype: :ref:`simplnx.Result <result>`\n\n";
       rstStream << '\n';
     }
+  }
+
+  for(const auto& name : thingsWithGeomInName)
+  {
+    logFile << name << "\n";
   }
 }
 

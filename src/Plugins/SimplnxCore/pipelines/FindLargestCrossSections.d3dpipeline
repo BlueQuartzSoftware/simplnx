@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "DataContainer",
+        "output_image_geometry_path": "DataContainer",
         "read_h5_ebsd_object": {
           "end_slice": 117,
           "euler_representation": 0,
@@ -58,7 +58,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_array_name": "Mask"
+        "output_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -89,7 +89,7 @@
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
         "mask_array_path": "DataContainer/CellData/Mask",
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "misorientation_tolerance": 5.0,
         "quats_array_path": "DataContainer/CellData/Quats",
         "randomize_features": true,
@@ -106,7 +106,7 @@
       "args": {
         "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "largest_cross_sections_array_path": "LargestCrossSections",
         "plane": 0
       },

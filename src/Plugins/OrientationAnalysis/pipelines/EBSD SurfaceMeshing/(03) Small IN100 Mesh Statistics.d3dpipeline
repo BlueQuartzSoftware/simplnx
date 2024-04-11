@@ -79,7 +79,7 @@
     {
       "args": {
         "triangle_areas_array_name": "FaceAreas",
-        "triangle_geometry_data_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
@@ -91,7 +91,7 @@
     {
       "args": {
         "output_normals_array_name": "FaceNormals",
-        "selected_triangle_geometry_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
@@ -103,7 +103,7 @@
     {
       "args": {
         "surface_mesh_triangle_dihedral_angles_array_name": "FaceDihedralAngles",
-        "selected_triangle_geometry_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
@@ -151,7 +151,7 @@
         "feature_num_triangles_array_name": "NumTriangles",
         "grain_boundary_attribute_matrix_name": "SharedFeatureFace",
         "randomize_features": false,
-        "triangle_geometry_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {

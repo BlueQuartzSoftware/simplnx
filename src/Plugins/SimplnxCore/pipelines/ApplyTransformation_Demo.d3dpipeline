@@ -130,7 +130,7 @@
           2.0,
           2.0
         ],
-        "selected_image_geometry_path": "Group 1/Group 2/[Geometry]",
+        "input_image_geometry_path": "Group 1/Group 2/[Geometry]",
         "transformation_type": 5,
         "translation": [
           0.0,

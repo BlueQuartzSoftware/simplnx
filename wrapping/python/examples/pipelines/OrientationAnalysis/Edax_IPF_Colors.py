@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
-    created_image_geometry_path =nx.DataPath("DataContainer"),
+    output_image_geometry_path =nx.DataPath("DataContainer"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -43,7 +43,7 @@ result = nx_filter.execute(
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
     rotation_representation=0,
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -65,7 +65,7 @@ nx_filter = nx.MultiThresholdObjects()
 result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds_object=threshold_set,
-    created_data_array_name="Mask",
+    output_data_array_name="Mask",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -96,7 +96,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     file_name=output_file_path,
     image_array_path=nx.DataPath("DataContainer/Cell Data/IPFColors"),
-    image_geom_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     index_offset=0,
     plane=0
 )

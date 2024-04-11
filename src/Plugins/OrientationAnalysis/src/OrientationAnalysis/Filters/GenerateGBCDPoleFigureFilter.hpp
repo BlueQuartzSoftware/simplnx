@@ -29,7 +29,7 @@ public:
   static inline constexpr StringLiteral k_OutputImageDimension_Key = "output_image_dimension";
   static inline constexpr StringLiteral k_GBCDArrayPath_Key = "gbcd_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_ImageGeometryName_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryName_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_CellIntensityArrayName_Key = "cell_intensity_array_name";
 

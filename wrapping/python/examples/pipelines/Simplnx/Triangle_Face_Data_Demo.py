@@ -20,7 +20,7 @@ result = nx_filter.execute(
     scale_factor=1.0,
     scale_output=False,
     stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
-    created_triangle_geometry_path=nx.DataPath("[Triangle Geometry]"),
+    output_triangle_geometry_path=nx.DataPath("[Triangle Geometry]"),
     vertex_attribute_matrix_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -32,7 +32,7 @@ nx_filter = nx.CalculateTriangleAreasFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     triangle_areas_array_name="Face Areas",
-    triangle_geometry_data_path=nx.DataPath("[Triangle Geometry]")
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -43,7 +43,7 @@ nx_filter = nx.TriangleNormalFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     output_normals_array_name="Face Normals (Calculated)",
-    selected_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -54,7 +54,7 @@ nx_filter = nx.TriangleDihedralAngleFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_dihedral_angles_array_name="Dihedral Angles",
-    selected_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -65,7 +65,7 @@ nx_filter = nx.TriangleCentroidFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_name="Centroids",
-    triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 

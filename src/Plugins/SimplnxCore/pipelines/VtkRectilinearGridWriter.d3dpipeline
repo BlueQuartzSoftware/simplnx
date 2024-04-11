@@ -49,7 +49,7 @@
               "args": {
                 "cell_attribute_matrix_name": "CellData",
                 "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-                "created_image_geometry_path": "DataContainer",
+                "output_image_geometry_path": "DataContainer",
                 "read_h5_ebsd_object": {
                   "end_slice": 117,
                   "euler_representation": 0,
@@ -100,7 +100,7 @@
                   "type": "collection",
                   "union": 0
                 },
-                "created_data_array_name": "Mask"
+                "output_data_array_name": "Mask"
               },
               "comments": "",
               "filter": {
@@ -131,7 +131,7 @@
                 "mask_array_path": "DataContainer/CellData/Mask",
                 "misorientation_tolerance": 5.0,
                 "quats_array_path": "DataContainer/CellData/Quats",
-                "selected_image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "use_mask": true,
                 "write_alignment_shifts": false
               },
@@ -161,7 +161,7 @@
                 "mask_array_path": "DataContainer/CellData/Mask",
                 "reference_slice": 0,
                 "selected_cell_data_path": "DataContainer/CellData",
-                "selected_image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "use_reference_slice": true,
                 "write_alignment_shifts": false
               },
@@ -177,7 +177,7 @@
                 "cell_phases_array_path": "DataContainer/CellData/Phases",
                 "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
                 "mask_array_path": "DataContainer/CellData/Mask",
-                "image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "misorientation_tolerance": 5.0,
                 "number_of_neighbors": 4,
                 "quats_array_path": "DataContainer/CellData/Quats"
@@ -195,7 +195,7 @@
                 "correlation_array_path": "DataContainer/CellData/Confidence Index",
                 "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
                 "ignored_data_array_paths": [],
-                "image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "level": 2,
                 "min_confidence": 0.20000000298023224,
                 "misorientation_tolerance": 5.0,
@@ -216,7 +216,7 @@
                 "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
                 "feature_ids_array_name": "FeatureIds",
                 "mask_array_path": "DataContainer/CellData/Mask",
-                "selected_image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "misorientation_tolerance": 5.0,
                 "quats_array_path": "DataContainer/CellData/Quats",
                 "randomize_features": true,
@@ -265,7 +265,7 @@
                 "boundary_cells_name": "BoundaryCells",
                 "cell_feature_array_path": "DataContainer/CellFeatureData",
                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
-                "selected_image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "neighbor_list_name": "NeighborList2",
                 "number_of_neighbors_name": "NumNeighbors2",
                 "shared_surface_area_list_name": "SharedSurfaceAreaList2",
@@ -308,7 +308,7 @@
                 "equivalent_diameters_name": "EquivalentDiameters",
                 "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
-                "input_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "num_elements_name": "NumElements",
                 "save_element_sizes": false,
                 "volumes_name": "Volumes"
@@ -325,7 +325,7 @@
                 "apply_single_phase": false,
                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
                 "feature_phases_path": "",
-                "image_geom_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "min_allowed_features_size": 16,
                 "num_cells_path": "DataContainer/CellFeatureData/NumElements",
                 "phase_number": 0
@@ -342,7 +342,7 @@
                 "boundary_cells_name": "BoundaryCells",
                 "cell_feature_array_path": "DataContainer/CellFeatureData",
                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
-                "selected_image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "neighbor_list_name": "NeighborList",
                 "number_of_neighbors_name": "NumNeighbors",
                 "shared_surface_area_list_name": "SharedSurfaceAreaList",
@@ -382,7 +382,7 @@
                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
                 "ignored_data_array_paths": [],
                 "min_allowed_defect_size": 1000,
-                "selected_image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "store_as_new_phase": false
               },
               "comments": "",
@@ -398,7 +398,7 @@
                 "ignored_data_array_paths": [],
                 "num_iterations": 2,
                 "operation": 0,
-                "selected_image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "x_dir_on": true,
                 "y_dir_on": true,
                 "z_dir_on": true
@@ -416,7 +416,7 @@
                 "ignored_data_array_paths": [],
                 "num_iterations": 2,
                 "operation": 1,
-                "selected_image_geometry_path": "DataContainer",
+                "input_image_geometry_path": "DataContainer",
                 "x_dir_on": true,
                 "y_dir_on": true,
                 "z_dir_on": true
@@ -473,9 +473,9 @@
     },
     {
       "args": {
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "output_file": "Data/Output/Examples/SmallIN100_Final.vtk",
-        "selected_data_array_paths": [
+        "input_data_array_paths": [
           "DataContainer/CellData/Confidence Index",
           "DataContainer/CellData/EulerAngles",
           "DataContainer/CellData/FeatureIds",

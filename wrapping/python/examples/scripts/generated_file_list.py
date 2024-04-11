@@ -68,7 +68,7 @@ generated_file_list_value.padding_digits = 2
 result = nxitk.ITKImportImageStack.execute(data_structure=data_structure, 
                                    cell_attribute_matrix_name="Cell Data", 
                                    image_data_array_name="Image Data", 
-                                   image_geometry_path=nx.DataPath(["Image Stack"]), 
+                                   output_image_geometry_path=nx.DataPath(["Image Stack"]), 
                                    image_transform_choice=0,
                                    input_file_list_object=generated_file_list_value,
                                    origin=[0., 0., 0.], 

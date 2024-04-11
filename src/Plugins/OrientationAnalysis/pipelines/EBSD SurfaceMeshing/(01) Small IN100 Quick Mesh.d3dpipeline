@@ -75,7 +75,7 @@
     {
       "args": {
         "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-        "created_image_geometry_path": "DataContainer",
+        "output_image_geometry_path": "DataContainer",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "max_voxel": [
           140,
@@ -89,7 +89,7 @@
         ],
         "remove_original_geometry": true,
         "renumber_features": true,
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "update_origin": true
       },
       "comments": "",
@@ -119,10 +119,10 @@
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "fix_problem_voxels": false,
         "generate_triple_lines": false,
-        "grid_geometry_data_path": "DataContainer",
+        "input_grid_geometry_path": "DataContainer",
         "node_types_array_name": "NodeType",
-        "selected_data_array_paths": [],
-        "created_triangle_geometry_path": "TriangleDataContainer",
+        "input_data_array_paths": [],
+        "output_triangle_geometry_path": "TriangleDataContainer",
         "vertex_data_group_name": "VertexData"
       },
       "comments": "",

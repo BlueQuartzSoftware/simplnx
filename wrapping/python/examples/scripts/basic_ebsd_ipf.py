@@ -57,7 +57,7 @@ data_structure = nx.DataStructure()
 result = nxor.ReadAngDataFilter.execute(data_structure=data_structure, 
                                cell_attribute_matrix_name="Scan Data", 
                                cell_ensemble_attribute_matrix_name="Phase Data",
-                               created_image_geometry_path=nx.DataPath(["Small IN100"]), 
+                               output_image_geometry_path=nx.DataPath(["Small IN100"]), 
                                input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang")
 
 nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
@@ -74,12 +74,12 @@ nxtest.check_filter_result(nxor.RotateEulerRefFrameFilter, result)
 # Rotate the Sample Reference Frame 180@010
 #------------------------------------------------------------------------------
 result = nx.RotateSampleRefFrameFilter.execute(data_structure=data_structure,
-    # created_image_geometry_path=nx.DataPath(["Small IN100 Rotated"]),
+    # output_image_geometry_path=nx.DataPath(["Small IN100 Rotated"]),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis=[0,1,0,180],
     rotation_representation=0,
-    selected_image_geometry_path=nx.DataPath(["Small IN100"]),
+    input_image_geometry_path=nx.DataPath(["Small IN100"]),
     #rotation_matrix=[[1,0,0],[0,1,0],[0,0,1]]
     )
 nxtest.check_filter_result(nx.RotateSampleRefFrameFilter, result)
@@ -104,7 +104,7 @@ threshold_set.thresholds = [threshold_1, threshold_2]
 dt = nx.DataType.boolean
 result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
                                         array_thresholds_object=threshold_set, 
-                                        created_data_array_name="Mask",
+                                        output_data_array_name="Mask",
                                         created_mask_type=nx.DataType.boolean)
 nxtest.check_filter_result(nx.MultiThresholdObjects, result)
 
@@ -131,7 +131,7 @@ nxtest.check_filter_result(nxor.GenerateIPFColorsFilter, result)
 result = nxitk.ITKImageWriter.execute(data_structure=data_structure, 
                                       file_name=nxtest.get_test_temp_directory() / "Small_IN100_IPF_Z.png", 
                                       image_array_path=nx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
-                                      image_geom_path=nx.DataPath(["Small IN100"]),
+                                      input_image_geometry_path=nx.DataPath(["Small IN100"]),
                                       index_offset=0,
                                       plane=0)
 nxtest.check_filter_result(nxitk.ITKImageWriter, result)
@@ -158,7 +158,7 @@ nxtest.check_filter_result(nxitk.ITKImageWriter, result)
 #------------------------------------------------------------------------------
 result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
                                               output_rgb_array_name="CI Color", 
-                                              selected_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
+                                              input_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
                                               selected_preset="Rainbow Desaturated")
 nxtest.check_filter_result(nx.GenerateColorTableFilter, result)
 
@@ -173,7 +173,7 @@ result = nxor.WritePoleFigureFilter.execute(data_structure=data_structure,
                                             crystal_structures_array_path=nx.DataPath(["Small IN100", "Phase Data", "CrystalStructures"]),
                                             generation_algorithm=1, # Discrete = 1 
                                             mask_array_path=nx.DataPath(["Small IN100", "Scan Data", "Mask"]), 
-                                            image_geometry_path=nx.DataPath(["Small IN100 Pole Figure"]), 
+                                            output_image_geometry_path=nx.DataPath(["Small IN100 Pole Figure"]), 
                                             image_layout=0, # O = Horizontal Layout 
                                             image_prefix=prefix, 
                                             image_size=512, 

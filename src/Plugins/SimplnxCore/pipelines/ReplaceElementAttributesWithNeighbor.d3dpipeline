@@ -20,7 +20,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "DataContainer",
+        "output_image_geometry_path": "DataContainer",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -55,7 +55,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_array_name": "Mask"
+        "output_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -66,7 +66,7 @@
     },
     {
       "args": {
-        "created_image_geometry_path": "",
+        "output_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
         "rotation_axis": [
@@ -93,7 +93,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry_path": "DataContainer"
+        "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
@@ -145,7 +145,7 @@
     {
       "args": {
         "cell_feature_attribute_matrix": "CellFeatureData",
-        "created_image_geometry_path": "",
+        "output_image_geometry_path": "",
         "feature_ids": "",
         "max_voxel": [
           160,
@@ -159,7 +159,7 @@
         ],
         "remove_original_geometry": true,
         "renumber_features": false,
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "update_origin": false
       },
       "comments": "",
@@ -196,7 +196,7 @@
         "loop": true,
         "min_confidence": 0.10000000149011612,
         "selected_comparison": 0,
-        "selected_image_geometry_path": "DataContainer"
+        "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {

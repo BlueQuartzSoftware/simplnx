@@ -21,8 +21,8 @@ public:
   CropVertexGeometry& operator=(CropVertexGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "selected_vertex_geometry_path";
-  static inline constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "created_vertex_geometry_path";
+  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static inline constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
   static inline constexpr StringLiteral k_MinPos_Key = "min_pos";
   static inline constexpr StringLiteral k_MaxPos_Key = "max_pos";
   static inline constexpr StringLiteral k_TargetArrayPaths_Key = "target_array_paths";

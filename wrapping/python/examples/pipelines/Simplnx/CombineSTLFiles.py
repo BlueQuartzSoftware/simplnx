@@ -18,7 +18,7 @@ result = nx_filter.execute(
     face_attribute_matrix_name="Face Data",
     face_normals_array_name="Face Normals",
     stl_files_path=nxtest.get_data_directory() / "STL_Models",
-    triangle_geometry_path=nx.DataPath("TriangleGeometry"),
+    output_triangle_geometry_path=nx.DataPath("TriangleGeometry"),
     vertex_attribute_matrix_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)

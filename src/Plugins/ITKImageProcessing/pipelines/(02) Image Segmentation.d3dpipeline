@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "image_data_array_name": "ImageData",
-        "image_geometry_path": "ImageDataContainer",
+        "output_image_geometry_path": "ImageDataContainer",
         "image_transform_choice": 0,
         "input_file_list_object": {
           "end_index": 174,
@@ -55,7 +55,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_array_name": "Mask"
+        "output_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -69,7 +69,7 @@
         "active_array_name": "Active",
         "cell_feature_group_name": "CellFeatureData",
         "feature_ids_name": "FeatureIds",
-        "selected_image_geometry_path": "ImageDataContainer",
+        "input_image_geometry_path": "ImageDataContainer",
         "input_array_path": "ImageDataContainer/Cell Data/ImageData",
         "mask_path": "ImageDataContainer/Cell Data/Mask",
         "randomize_features": true,
@@ -88,7 +88,7 @@
         "equivalent_diameters_name": "EquivalentDiameters",
         "feature_attribute_matrix_path": "ImageDataContainer/CellFeatureData",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
-        "input_geometry_path": "ImageDataContainer",
+        "input_image_geometry_path": "ImageDataContainer",
         "num_elements_name": "NumElements",
         "save_element_sizes": false,
         "volumes_name": "Volumes"
@@ -170,7 +170,7 @@
         "centroids_array_name": "Centroids",
         "feature_attribute_matrix_path": "ImageDataContainer/CellFeatureData",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
-        "selected_image_geometry_path": "ImageDataContainer"
+        "input_image_geometry_path": "ImageDataContainer"
       },
       "comments": "",
       "filter": {

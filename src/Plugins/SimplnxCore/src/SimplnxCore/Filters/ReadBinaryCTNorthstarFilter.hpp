@@ -34,7 +34,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputHeaderFile_Key = "input_header_file";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
   static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";

@@ -40,7 +40,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_MarkFeature0Neighbors = "mark_feature_0_neighbors";
-  static inline constexpr StringLiteral k_FeatureGeometryPath_Key = "feature_geometry_path";
+  static inline constexpr StringLiteral k_FeatureGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
   static inline constexpr StringLiteral k_SurfaceFeaturesArrayName_Key = "surface_features_array_name";

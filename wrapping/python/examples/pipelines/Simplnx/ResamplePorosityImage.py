@@ -30,7 +30,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     image_data_array_name="ImageData",
-    image_geometry_path=nx.DataPath("Porosity_Image"),
+    output_image_geometry_path=nx.DataPath("Porosity_Image"),
     image_transform_choice=0,
     input_file_list_object =generated_file_list_value,
     origin=[0.0, 0.0, 0.0],
@@ -53,7 +53,7 @@ result = nx_filter.execute(
     renumber_features=False,
     resampling_mode=0,
     #scaling: List[float] = ...,
-    selected_image_geometry_path=nx.DataPath("Porosity_Image"),
+    input_image_geometry_path=nx.DataPath("Porosity_Image"),
     spacing=[2.0, 2.0, 2.0]
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -73,7 +73,7 @@ result = nx_filter.execute(
     renumber_features=False,
     resampling_mode=1,
     scaling=[0.5, 0.5, 0.5],
-    selected_image_geometry_path=nx.DataPath("Porosity_Image")
+    input_image_geometry_path=nx.DataPath("Porosity_Image")
     #spacing: List[float] = ...
 )
 # Error/Result Handling for Filter
@@ -94,7 +94,7 @@ result = nx_filter.execute(
     renumber_features=False,
     resampling_mode=2,
     #scaling: List[float] = ...,
-    selected_image_geometry_path=nx.DataPath("Porosity_Image")
+    input_image_geometry_path=nx.DataPath("Porosity_Image")
     #spacing: List[float] = ...
 )
 # Error/Result Handling for Filter

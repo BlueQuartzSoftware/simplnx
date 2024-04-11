@@ -117,7 +117,7 @@
     {
       "args": {
         "cell_feature_attribute_matrix": "CellFeatureData",
-        "created_image_geometry_path": "CroppedBottomHalf",
+        "output_image_geometry_path": "CroppedBottomHalf",
         "feature_ids": "",
         "max_voxel": [
           59,
@@ -131,7 +131,7 @@
         ],
         "remove_original_geometry": false,
         "renumber_features": false,
-        "selected_image_geometry_path": "[Image Geometry]",
+        "input_image_geometry_path": "[Image Geometry]",
         "update_origin": false
       },
       "comments": "",
@@ -144,7 +144,7 @@
     {
       "args": {
         "cell_feature_attribute_matrix": "CellFeatureData",
-        "created_image_geometry_path": "CroppedTopHalf",
+        "output_image_geometry_path": "CroppedTopHalf",
         "feature_ids": "",
         "max_voxel": [
           59,
@@ -158,7 +158,7 @@
         ],
         "remove_original_geometry": false,
         "renumber_features": false,
-        "selected_image_geometry_path": "[Image Geometry]",
+        "input_image_geometry_path": "[Image Geometry]",
         "update_origin": true
       },
       "comments": "",
@@ -172,7 +172,7 @@
       "args": {
         "check_resolution": true,
         "destination_geometry": "CroppedBottomHalf",
-        "selected_triangle_geometry_path": "CroppedTopHalf",
+        "input_triangle_geometry_path": "CroppedTopHalf",
         "new_geometry": "AppendedImageGeom",
         "save_as_new_geometry": true
       },

@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    created_image_geometry_path =nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    output_image_geometry_path =nx.DataPath("fw-ar-IF1-avtr12-corr"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
     input_file=nxtest.get_data_directory() / "T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf"
@@ -30,13 +30,13 @@ nx_filter = nx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    output_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
     #rotation_matrix=[]
     rotation_representation=0,
-    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -57,7 +57,7 @@ threshold_set.thresholds = [threshold_1]
 result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds_object=threshold_set,
-    created_data_array_name="ThresholdArray",
+    output_data_array_name="ThresholdArray",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -85,7 +85,7 @@ result = nx_filter.execute(
     loop=False,
     min_confidence=0.0,
     selected_comparison=0,
-    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -112,7 +112,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_001.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_001"),
-    image_geom_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
     plane=0
 )
@@ -142,7 +142,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_010.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_010"),
-    image_geom_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
     plane=0
 )
@@ -171,7 +171,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_100.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_100"),
-    image_geom_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     index_offset=0,
     plane=0
 )
@@ -188,7 +188,7 @@ result = nx_filter.execute(
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
-    selected_image_geometry_path =nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    input_image_geometry_path =nx.DataPath("fw-ar-IF1-avtr12-corr"),
     cell_mask_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray"),
     misorientation_tolerance=5.0,
     cell_quats_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Quats"),
@@ -205,7 +205,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
     min_allowed_defect_size=10,
-    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     store_as_new_phase=False
     # cell_phases_array_path and ignored_data_array_paths parameters are not used in this context
 )
@@ -220,7 +220,7 @@ result = nx_filter.execute(
     equivalent_diameters_name="EquivalentDiameters",
     feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
-    input_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     num_elements_name="NumElements",
     save_element_sizes=False,
     volumes_name="Volumes"
@@ -235,7 +235,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     apply_single_phase=False,
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
-    image_geom_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     min_allowed_features_size=5,
     num_cells_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData/NumElements")
     # feature_phases_path and phase_number parameters are not used in this context
@@ -270,7 +270,7 @@ result = nx_filter.execute(
     kernel_average_misorientations_array_name="KernelAverageMisorientations",
     kernel_size=[1, 1, 1],
     quats_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Quats"),
-    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -283,7 +283,7 @@ result = nx_filter.execute(
     centroids_array_name="Centroids",
     feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
-    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -300,7 +300,7 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
     g_bdistances_array_name="GBManhattanDistances",
     save_nearest_neighbors=False,
-    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
     # Parameters for nearest_neighbors_array_name, q_pdistances_array_name, and t_jdistances_array_name are not used
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -361,7 +361,7 @@ result = nx_filter.execute(
     delimiter=2,
     output_path=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/EqDiamHistogram.csv",
     output_style=1,
-    selected_data_array_paths=[nx.DataPath("fw-ar-IF1-avtr12-corr/Histograms/EquivalentDiameters Histogram")]
+    input_data_array_paths=[nx.DataPath("fw-ar-IF1-avtr12-corr/Histograms/EquivalentDiameters Histogram")]
 )
 nxtest.check_filter_result(nx_filter, result)
 

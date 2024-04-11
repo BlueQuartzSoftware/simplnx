@@ -56,7 +56,7 @@ public:
   ITKZeroCrossingImage& operator=(ITKZeroCrossingImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
   static inline constexpr StringLiteral k_ForegroundValue_Key = "foreground_value";

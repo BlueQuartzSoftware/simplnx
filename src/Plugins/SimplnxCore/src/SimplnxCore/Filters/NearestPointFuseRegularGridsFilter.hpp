@@ -24,8 +24,8 @@ public:
   NearestPointFuseRegularGridsFilter& operator=(NearestPointFuseRegularGridsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ReferenceGeometryPath_Key = "reference_geometry_path";
-  static inline constexpr StringLiteral k_SamplingGeometryPath_Key = "sampling_geometry_path";
+  static inline constexpr StringLiteral k_ReferenceGeometryPath_Key = "input_reference_image_geometry__path";
+  static inline constexpr StringLiteral k_SamplingGeometryPath_Key = "input_sampling_image_geometry_path";
   static inline constexpr StringLiteral k_ReferenceCellAttributeMatrixPath_Key = "reference_cell_attribute_matrix_path";
   static inline constexpr StringLiteral k_SamplingCellAttributeMatrixPath_Key = "sampling_cell_attribute_matrix_path";
   static inline constexpr StringLiteral k_UseFill_Key = "use_fill";

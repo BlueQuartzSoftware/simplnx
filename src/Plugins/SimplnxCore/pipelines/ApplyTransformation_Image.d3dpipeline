@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "Small IN100",
+        "output_image_geometry_path": "Small IN100",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -21,7 +21,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "Transform [Rotate]",
+        "output_image_geometry_path": "Transform [Rotate]",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -73,7 +73,7 @@
           1.0,
           1.0
         ],
-        "selected_image_geometry_path": "Transform [Rotate]",
+        "input_image_geometry_path": "Transform [Rotate]",
         "transformation_type": 3,
         "translation": [
           10.0,
@@ -92,7 +92,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "Transform [Scale]",
+        "output_image_geometry_path": "Transform [Scale]",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -144,7 +144,7 @@
           2.0,
           1.0
         ],
-        "selected_image_geometry_path": "Transform [Scale]",
+        "input_image_geometry_path": "Transform [Scale]",
         "transformation_type": 5,
         "translation": [
           10.0,
@@ -163,7 +163,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "Transform [Translate]",
+        "output_image_geometry_path": "Transform [Translate]",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -215,7 +215,7 @@
           1.0,
           1.0
         ],
-        "selected_image_geometry_path": "Transform [Translate]",
+        "input_image_geometry_path": "Transform [Translate]",
         "transformation_type": 4,
         "translation": [
           50.0,
@@ -234,7 +234,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "Transform [Rotation-Interpolation]",
+        "output_image_geometry_path": "Transform [Rotation-Interpolation]",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -286,7 +286,7 @@
           1.0,
           1.0
         ],
-        "selected_image_geometry_path": "Transform [Rotation-Interpolation]",
+        "input_image_geometry_path": "Transform [Rotation-Interpolation]",
         "transformation_type": 3,
         "translation": [
           10.0,
@@ -305,7 +305,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "Transform [Scale-Interpolation]",
+        "output_image_geometry_path": "Transform [Scale-Interpolation]",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -357,7 +357,7 @@
           3.0,
           1.0
         ],
-        "selected_image_geometry_path": "Transform [Scale-Interpolation]",
+        "input_image_geometry_path": "Transform [Scale-Interpolation]",
         "transformation_type": 5,
         "translation": [
           10.0,

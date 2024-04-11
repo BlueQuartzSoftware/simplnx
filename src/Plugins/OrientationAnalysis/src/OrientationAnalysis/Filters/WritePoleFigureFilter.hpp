@@ -41,7 +41,7 @@ public:
   static inline constexpr StringLiteral k_MaterialNameArrayPath_Key = "material_name_array_path";
   static inline constexpr StringLiteral k_SaveAsImageGeometry_Key = "save_as_image_geometry";
   static inline constexpr StringLiteral k_WriteImageToDisk = "write_image_to_disk";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

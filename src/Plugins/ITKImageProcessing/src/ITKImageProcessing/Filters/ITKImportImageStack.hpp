@@ -27,7 +27,7 @@ public:
   static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
   static inline constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_ImageTransformChoice_Key = "image_transform_choice";

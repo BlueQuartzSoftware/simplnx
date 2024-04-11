@@ -24,8 +24,8 @@ public:
   RemoveFlaggedFeaturesFilter& operator=(RemoveFlaggedFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPrefix_Key = "created_image_geometry_prefix";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_CreatedImageGeometryPrefix_Key = "output_image_geometry_prefix";
   static inline constexpr StringLiteral k_FillRemovedFeatures_Key = "fill_removed_features";
   static inline constexpr StringLiteral k_Functionality_Key = "functionality";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";

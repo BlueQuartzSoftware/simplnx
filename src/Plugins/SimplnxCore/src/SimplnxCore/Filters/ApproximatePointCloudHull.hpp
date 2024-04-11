@@ -28,7 +28,7 @@ public:
   static inline constexpr StringLiteral k_GridResolution_Key = "grid_resolution";
   static inline constexpr StringLiteral k_MinEmptyNeighbors_Key = "min_empty_neighbors";
   static inline constexpr StringLiteral k_VertexGeomPath_Key = "input_vertex_geometry_path";
-  static inline constexpr StringLiteral k_HullVertexGeomPath_Key = "output_hull_vertex_geometry_path";
+  static inline constexpr StringLiteral k_HullVertexGeomPath_Key = "output_vertex_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

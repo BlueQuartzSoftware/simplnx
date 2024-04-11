@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "created_triangle_geometry_path": "[Triangle Geometry]",
+        "output_triangle_geometry_path": "[Triangle Geometry]",
         "scale_factor": 1.0,
         "scale_output": false,
         "stl_file_path": "Data/STL_Models/Cylinder.stl"
@@ -20,7 +20,7 @@
     {
       "args": {
         "triangle_areas_array_name": "Areas",
-        "triangle_geometry_data_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": "[Triangle Geometry]"
       },
       "comments": "",
       "filter": {

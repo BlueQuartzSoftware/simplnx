@@ -27,7 +27,7 @@ output_file_path = nxtest.get_data_directory() / "Output/AzizoWriter/SmallIN100_
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     units="meters",
     write_binary_file=False
@@ -42,7 +42,7 @@ output_file_path = nxtest.get_data_directory() / "Output/AzizoWriter/SmallIN100_
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     units="meters",
     write_binary_file=False

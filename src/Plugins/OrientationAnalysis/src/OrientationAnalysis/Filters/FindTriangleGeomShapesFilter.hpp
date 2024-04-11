@@ -32,7 +32,7 @@ public:
   static inline constexpr StringLiteral k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
   static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
   static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
-  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

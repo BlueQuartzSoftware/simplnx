@@ -24,7 +24,7 @@ public:
   FindFeatureClusteringFilter& operator=(FindFeatureClusteringFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_NumberOfBins_Key = "number_of_bins";
   static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
   static inline constexpr StringLiteral k_RemoveBiasedFeatures_Key = "remove_biased_features";

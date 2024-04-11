@@ -30,7 +30,7 @@ public:
   static inline constexpr StringLiteral k_OutputStlPrefix_Key = "output_stl_prefix";
   static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
-  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
+  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "input_triangle_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

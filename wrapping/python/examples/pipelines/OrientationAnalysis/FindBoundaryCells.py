@@ -32,7 +32,7 @@ result = nx_filter.execute(
     boundary_cells_array_name="BoundaryCells",
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     ignore_feature_zero=True,
-    image_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     include_volume_boundary=True,
 )
 nxtest.check_filter_result(nx_filter, result)

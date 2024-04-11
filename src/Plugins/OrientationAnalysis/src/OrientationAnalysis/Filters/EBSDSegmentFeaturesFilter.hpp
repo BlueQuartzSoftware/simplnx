@@ -24,7 +24,7 @@ public:
   EBSDSegmentFeaturesFilter& operator=(EBSDSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_QuatsArrayPath_Key = "cell_quats_array_path";

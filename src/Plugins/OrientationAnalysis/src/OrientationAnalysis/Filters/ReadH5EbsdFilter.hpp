@@ -25,7 +25,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ReadH5EbsdParameter_Key = "read_h5_ebsd_object";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "created_image_geometry_path";
+  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
 

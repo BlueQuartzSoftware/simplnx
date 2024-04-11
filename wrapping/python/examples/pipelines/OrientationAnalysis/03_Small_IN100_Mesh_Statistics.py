@@ -27,7 +27,7 @@ nx_filter = nx.CalculateTriangleAreasFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     triangle_areas_array_name="FaceAreas",
-    triangle_geometry_data_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -38,7 +38,7 @@ nx_filter = nx.TriangleNormalFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     output_normals_array_name="FaceNormals",
-    selected_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -49,7 +49,7 @@ nx_filter = nx.TriangleDihedralAngleFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_dihedral_angles_array_name="FaceDihedralAngles",
-    selected_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -94,7 +94,7 @@ result = nx_filter.execute(
     feature_num_triangles_array_name="NumTriangles",
     grain_boundary_attribute_matrix_name="SharedFeatureFace",
     randomize_features=False,
-    triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 

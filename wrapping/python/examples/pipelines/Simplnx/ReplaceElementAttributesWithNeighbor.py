@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
-    created_image_geometry_path =nx.DataPath("DataContainer"),
+    output_image_geometry_path =nx.DataPath("DataContainer"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -45,7 +45,7 @@ nx_filter = nx.MultiThresholdObjects()
 result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds_object=threshold_set,
-    created_data_array_name="Mask",
+    output_data_array_name="Mask",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -61,7 +61,7 @@ result = nx_filter.execute(
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180],
     rotation_representation=0,
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -85,7 +85,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     change_origin=True,
     change_spacing=True,
-    selected_image_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
@@ -104,7 +104,7 @@ result = nx_filter.execute(
     min_voxel=[25, 25, 0],
     remove_original_geometry=True,
     renumber_features=False,
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
    # update_origin=False
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -135,7 +135,7 @@ result = nx_filter.execute(
     loop=True,
     min_confidence=0.1,
     selected_comparison=0,
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 

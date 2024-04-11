@@ -127,7 +127,7 @@ result = nx_filter.execute(
     kernel_average_misorientations_array_name="KernelAverageMisorientations",
     kernel_size=[1, 1, 1],
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 

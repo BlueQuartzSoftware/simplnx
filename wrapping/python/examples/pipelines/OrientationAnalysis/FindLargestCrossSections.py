@@ -26,7 +26,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    created_image_geometry_path =nx.DataPath("DataContainer"),
+    output_image_geometry_path =nx.DataPath("DataContainer"),
     read_h5_ebsd_object=h5ebsdParameter
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -49,7 +49,7 @@ threshold_set.thresholds = [threshold_1, threshold_2]
 # Execute Filter with Parameters
 result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
                                             array_thresholds_object=threshold_set,
-                                            created_data_array_name = "Mask",
+                                            output_data_array_name = "Mask",
                                             created_mask_type = nx.DataType.boolean,
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -78,7 +78,7 @@ result = nx_filter.execute(
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
-    selected_image_geometry_path =nx.DataPath("DataContainer"),
+    input_image_geometry_path =nx.DataPath("DataContainer"),
     cell_mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
     misorientation_tolerance=5.0,
     cell_quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
@@ -95,7 +95,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    image_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     largest_cross_sections_array_name="LargestCrossSections",
     plane=0
 )

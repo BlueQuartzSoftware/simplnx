@@ -56,7 +56,7 @@ result = nx_filter.execute(
     #boundary_cells: str = ...,
     cell_feature_array_path=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    selected_image_geometry_path =nx.DataPath("DataContainer"),
+    input_image_geometry_path =nx.DataPath("DataContainer"),
     neighbor_list_name="NeighborList",
     number_of_neighbors_name="NumNeighbors",
     shared_surface_area_list_name="SharedSurfaceAreaList",
@@ -75,7 +75,7 @@ result = nx_filter.execute(
     centroids_array_name="Centroids",
     feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -86,7 +86,7 @@ nx_filter = nx.FindSurfaceFeatures()
 result = nx_filter.execute(
     data_structure=data_structure,
     feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     mark_feature_0_neighbors=True,
     surface_features_array_name="SurfaceFeatures"
@@ -102,7 +102,7 @@ result = nx_filter.execute(
     biased_features_array_name="BiasedFeatures",
     calc_by_phase=True,
     centroids_array_path=nx.DataPath("DataContainer/CellFeatureData/Centroids"),
-    image_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
     surface_features_array_path=nx.DataPath("DataContainer/CellFeatureData/SurfaceFeatures")
 )

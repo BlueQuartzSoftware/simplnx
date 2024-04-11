@@ -45,7 +45,7 @@ public:
   static inline constexpr StringLiteral k_MaxValPerLine_Key = "max_val_per_line";
   static inline constexpr StringLiteral k_Delimiter_Key = "delimiter";
   static inline constexpr StringLiteral k_Includes_Key = "includes";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -21,8 +21,8 @@ public:
   ExtractInternalSurfacesFromTriangleGeometry& operator=(ExtractInternalSurfacesFromTriangleGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "selected_triangle_geometry_path";
-  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "created_triangle_geometry_path";
+  static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
   static inline constexpr StringLiteral k_NodeTypesPath_Key = "node_types_path";
   static inline constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
   static inline constexpr StringLiteral k_CopyTrianglePaths_Key = "copy_triangle_array_paths";

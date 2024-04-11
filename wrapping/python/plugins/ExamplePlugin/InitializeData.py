@@ -20,7 +20,7 @@ class InitializeDataPythonFilter:
     INDICES = 3
 
   CELL_ARRAY_PATHS_KEY = 'cell_arrays'
-  IMAGE_GEOMETRY_PATH_KEY = 'image_geom_path'
+  IMAGE_GEOMETRY_PATH_KEY = 'input_image_geometry_path'
   MIN_POINT_KEY = 'min_point'
   MAX_POINT_KEY = 'max_point'
   INIT_TYPE_KEY = 'init_type'
@@ -68,7 +68,7 @@ class InitializeDataPythonFilter:
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Preflighting InitializeData'))
 
     cell_array_paths: List[nx.DataPath] = args[InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY]
-    image_geom_path: nx.DataPath = args[InitializeDataPythonFilter.IMAGE_GEOMETRY_PATH_KEY]
+    input_image_geometry_path: nx.DataPath = args[InitializeDataPythonFilter.IMAGE_GEOMETRY_PATH_KEY]
     min_point: List[int] = args[InitializeDataPythonFilter.MIN_POINT_KEY]
     max_point: List[int] = args[InitializeDataPythonFilter.MAX_POINT_KEY]
     init_type: int = args[InitializeDataPythonFilter.INIT_TYPE_KEY]
@@ -98,7 +98,7 @@ class InitializeDataPythonFilter:
     if z_max < z_min:
       errors.append(nx.Error(-5553, f'Z Max ({z_max}) less than Z Min ({z_min})'))
 
-    image_geom = data_structure[image_geom_path]
+    image_geom = data_structure[input_image_geometry_path]
 
     if x_max > (image_geom.num_x_cells - 1):
       errors.append(nx.Error(-5557, f'The X Max you entered of {x_max} is greater than your Max X Point of {image_geom.num_x_cells - 1}'))
@@ -116,7 +116,7 @@ class InitializeDataPythonFilter:
     for path in cell_array_paths:
       data_array = data_structure[path]
       if len(data_array.tuple_shape) != len(reversed_image_dims):
-        errors.append(nx.Error(-5560, f'DataArray at \'{path}\' does not match dimensions of ImageGeometry at \'{image_geom_path}\''))
+        errors.append(nx.Error(-5560, f'DataArray at \'{path}\' does not match dimensions of ImageGeometry at \'{input_image_geometry_path}\''))
 
       dtype = data_array.dtype
       min_value, max_value = _get_min_max_of(dtype)

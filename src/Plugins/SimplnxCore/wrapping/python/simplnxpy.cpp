@@ -837,7 +837,7 @@ PYBIND11_MODULE(simplnx, mod)
   iDataCreationActionArrayHandlingType.value("Create", IDataCreationAction::ArrayHandlingType::Create);
 
   auto copyArrayInstanceAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CopyArrayInstanceAction, IDataCreationAction);
-  copyArrayInstanceAction.def(py::init<const DataPath&, const DataPath&>(), "selected_data_path"_a, "created_data_array_name"_a);
+  copyArrayInstanceAction.def(py::init<const DataPath&, const DataPath&>(), "input_data_array_path"_a, "output_data_array_path"_a);
 
   auto copyDataObjectAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CopyDataObjectAction, IDataCreationAction);
   copyDataObjectAction.def(py::init<const DataPath&, const DataPath&, const std::vector<DataPath>>(), "path"_a, "new_path"_a, "all_created_paths"_a);

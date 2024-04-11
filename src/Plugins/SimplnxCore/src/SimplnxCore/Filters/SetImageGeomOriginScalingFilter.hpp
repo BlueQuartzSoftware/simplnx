@@ -25,7 +25,7 @@ public:
   SetImageGeomOriginScalingFilter& operator=(SetImageGeomOriginScalingFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
   static inline constexpr StringLiteral k_CenterOrigin_Key = "center_origin";
   static inline constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";

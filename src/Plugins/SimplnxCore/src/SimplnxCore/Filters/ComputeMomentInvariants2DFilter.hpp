@@ -25,7 +25,7 @@ public:
   ComputeMomentInvariants2DFilter& operator=(ComputeMomentInvariants2DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
   static inline constexpr StringLiteral k_FeatureRectArrayPath_Key = "feature_rect_array_path";

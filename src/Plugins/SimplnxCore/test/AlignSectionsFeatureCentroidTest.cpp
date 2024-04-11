@@ -56,7 +56,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
     constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
     constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
     constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-    constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
+    constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
     constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
     Arguments args;

@@ -34,7 +34,7 @@ result = nx_filter.execute(
     min_voxel=[41, 41, 0],
     remove_original_geometry=True,
     renumber_features=True,
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -61,9 +61,9 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     fix_problem_voxels=False,
     generate_triple_lines=False,
-    grid_geometry_data_path=nx.DataPath("DataContainer"),
+    input_grid_geometry_path=nx.DataPath("DataContainer"),
     node_types_array_name=("NodeType"),
-    created_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
+    output_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
     vertex_data_group_name=("VertexData")
 )
 nxtest.check_filter_result(nx_filter, result)

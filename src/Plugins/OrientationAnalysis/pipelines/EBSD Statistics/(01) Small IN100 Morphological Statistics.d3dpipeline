@@ -52,7 +52,7 @@
         "centroids_array_name": "Centroids",
         "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "selected_image_geometry_path": "DataContainer"
+        "input_image_geometry_path": "DataContainer"
       },
       "filter": {
         "name": "simplnx::FindFeatureCentroidsFilter",
@@ -65,7 +65,7 @@
         "equivalent_diameters_name": "EquivalentDiameters",
         "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "input_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "num_elements_name": "NumElements",
         "save_element_sizes": false,
         "volumes_name": "Size Volumes"
@@ -84,7 +84,7 @@
         "centroids_array_path": "DataContainer/CellFeatureData/Centroids",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "omega3s_array_name": "Omega3s",
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "volumes_array_name": "Shape Volumes"
       },
       "filter": {
@@ -98,7 +98,7 @@
         "boundary_cells_name": "BoundaryCells",
         "cell_feature_array_path": "DataContainer/CellFeatureData",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "neighbor_list_name": "NeighborList",
         "number_of_neighbors_name": "NumNeighbors",
         "shared_surface_area_list_name": "SharedSurfaceAreaList",
@@ -120,7 +120,7 @@
         "multiples_of_average": 1.0,
         "neighborhood_list_array_name": "NeighborhoodList",
         "neighborhoods_array_name": "Neighborhoods",
-        "selected_image_geometry_path": "DataContainer"
+        "input_image_geometry_path": "DataContainer"
       },
       "filter": {
         "name": "simplnx::FindNeighborhoodsFilter",
@@ -139,7 +139,7 @@
         "nearest_neighbors_array_name": "NearestNeighbors",
         "q_pdistances_array_name": "QPManhattanDistances",
         "save_nearest_neighbors": false,
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "t_jdistances_array_name": "TJManhattanDistances"
       },
       "filter": {
@@ -153,7 +153,7 @@
         "calculate_sphericity": true,
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "num_cells_array_path": "DataContainer/CellFeatureData/NumElements",
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "sphericity_array_name": "Sphericity",
         "surface_area_volume_ratio_array_name": "SurfaceAreaVolumeRatio"
       },

@@ -28,7 +28,7 @@ public:
   static inline constexpr StringLiteral k_FileName_Key = "file_name";
   static inline constexpr StringLiteral k_IndexOffset_Key = "index_offset";
   static inline constexpr StringLiteral k_ImageArrayPath_Key = "image_array_path";
-  static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
+  static inline constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

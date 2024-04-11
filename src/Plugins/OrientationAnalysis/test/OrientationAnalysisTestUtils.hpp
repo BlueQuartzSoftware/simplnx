@@ -134,7 +134,7 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
-  constexpr StringLiteral k_GridGeomPath_Key = "selected_image_geometry_path";
+  constexpr StringLiteral k_GridGeomPath_Key = "input_image_geometry_path";
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   constexpr StringLiteral k_UseMask_Key = "use_mask";
   constexpr StringLiteral k_QuatsArrayPath_Key = "cell_quats_array_path";
@@ -190,7 +190,7 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
-  constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
+  constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   Arguments args;
 
@@ -232,7 +232,7 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
   constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
   constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
+  constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
   Arguments args;
@@ -264,7 +264,7 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
   // Parameter Keys
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   constexpr StringLiteral k_NumberOfNeighbors_Key = "number_of_neighbors";
-  constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
@@ -297,7 +297,7 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
-  constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   constexpr StringLiteral k_Level_Key = "level";

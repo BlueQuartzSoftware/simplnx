@@ -19,7 +19,7 @@ result = nx_filter.execute(
     face_normals_name="Face Normals",
     scale_output=False,
     stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
-    created_triangle_geometry_path=nx.DataPath("Blade"),
+    output_triangle_geometry_path=nx.DataPath("Blade"),
     vertex_attribute_matrix_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -35,7 +35,7 @@ result = nx_filter.execute(
     #scale_factor: float = ...,
     scale_output=False,
     stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
-    created_triangle_geometry_path=nx.DataPath("Blade [Rotation]"),
+    output_triangle_geometry_path=nx.DataPath("Blade [Rotation]"),
     vertex_attribute_matrix_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -52,7 +52,7 @@ result = nx_filter.execute(
     #manual_transformation_matrix: List[List[float]] = ...,
     rotation=[1.0, 0.0, 0.0, 180],
     #scale: List[float] = ...,
-    selected_image_geometry_path=nx.DataPath("Blade [Rotation]"),
+    input_image_geometry_path=nx.DataPath("Blade [Rotation]"),
     transformation_type=3,
     translate_geometry_to_global_origin=False
     #translation: List[float] = ...
@@ -69,7 +69,7 @@ result = nx_filter.execute(
     face_normals_name="Face Normals",
     scale_output=False,
     stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
-    created_triangle_geometry_path=nx.DataPath("Blade [Translation]"),
+    output_triangle_geometry_path=nx.DataPath("Blade [Translation]"),
     vertex_attribute_matrix_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -81,7 +81,7 @@ nx_filter = nx.ApplyTransformationToGeometryFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     interpolation_type=2,
-    selected_image_geometry_path=nx.DataPath("Blade [Translation]"),
+    input_image_geometry_path=nx.DataPath("Blade [Translation]"),
     transformation_type=4,
     translate_geometry_to_global_origin=False,
     translation=[10.0, 10.0, 10.0]
@@ -98,7 +98,7 @@ result = nx_filter.execute(
     face_normals_name="Face Normals",
     scale_output=False,
     stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
-    created_triangle_geometry_path=nx.DataPath("Blade [Scale]"),
+    output_triangle_geometry_path=nx.DataPath("Blade [Scale]"),
     vertex_attribute_matrix_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -111,7 +111,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     interpolation_type=2,
     scale=[0.5, 0.5, 1.0],
-    selected_image_geometry_path=nx.DataPath("Blade [Scale]"),
+    input_image_geometry_path=nx.DataPath("Blade [Scale]"),
     transformation_type=5,
     translate_geometry_to_global_origin=False
 )

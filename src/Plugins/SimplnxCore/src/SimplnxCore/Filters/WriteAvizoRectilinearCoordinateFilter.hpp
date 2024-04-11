@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
   static inline constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
-  static inline constexpr StringLiteral k_GeometryPath_Key = "geometry_path";
+  static inline constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
   static inline constexpr StringLiteral k_Units_Key = "units";
 

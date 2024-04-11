@@ -34,7 +34,7 @@ result = nx_filter.execute(
     surface_point_lambda=0.0,
     surface_quad_point_lambda=0.0,
     surface_triple_line_lambda=0.0,
-    triangle_geometry_data_path=nx.DataPath("TriangleDataContainer"),
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
     triple_line_lambda=0.2,
     use_taubin_smoothing=True
 )

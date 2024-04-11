@@ -75,12 +75,12 @@
       "args": {
         "move_values": true,
         "normalize_data": false,
-        "selected_data_array_paths": [
+        "input_data_array_paths": [
           "[Image Geometry]/CellData/phi1",
           "[Image Geometry]/CellData/Phi",
           "[Image Geometry]/CellData/phi2"
         ],
-        "stacked_data_array_name": "Eulers"
+        "output_data_array_name": "Eulers"
       },
       "comments": "",
       "filter": {
@@ -156,7 +156,7 @@
       "args": {
         "file_name": "Data/Output/Import_ASCII_IPF.png",
         "image_array_path": "[Image Geometry]/CellData/IPFColors",
-        "image_geom_path": "[Image Geometry]",
+        "input_image_geometry_path": "[Image Geometry]",
         "index_offset": 0,
         "plane": 0
       },

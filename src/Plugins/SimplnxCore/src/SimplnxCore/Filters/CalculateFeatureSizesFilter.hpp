@@ -27,7 +27,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SaveElementSizes_Key = "save_element_sizes";
-  static inline constexpr StringLiteral k_GeometryPath_Key = "input_geometry_path";
+  static inline constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
   static inline constexpr StringLiteral k_VolumesName_Key = "volumes_name";

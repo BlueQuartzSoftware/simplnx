@@ -27,7 +27,7 @@ public:
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
   static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
   static inline constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
-  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "selected_triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

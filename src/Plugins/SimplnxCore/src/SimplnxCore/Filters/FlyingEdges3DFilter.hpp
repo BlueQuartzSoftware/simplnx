@@ -24,10 +24,10 @@ public:
   FlyingEdges3DFilter& operator=(FlyingEdges3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
-  static inline constexpr StringLiteral k_SelectedDataArrayPath_Key = "selected_data_array_path";
-  static inline constexpr StringLiteral k_NewTriangleGeometryName_Key = "new_triangle_geometry_name";
-  static inline constexpr StringLiteral k_IsoVal_Key = "iso_val_geometry";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedDataArrayPath_Key = "input_data_array_path";
+  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
+  static inline constexpr StringLiteral k_IsoVal_Key = "contour_value";
 
   /**
    * @brief Returns the name of the filter.

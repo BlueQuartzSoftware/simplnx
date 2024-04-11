@@ -229,9 +229,9 @@
           20
         ],
         "image_geom_cell_attribute_matrix": "CellData",
-        "image_geometry_path": "Image Geometry",
+        "input_image_geometry_path": "Image Geometry",
         "rectilinear_grid_path": "RectGridGeometry",
-        "selected_data_array_paths": [
+        "input_data_array_paths": [
           "RectGridGeometry/CellData/ConfidenceIndex",
           "RectGridGeometry/CellData/EulerAngles",
           "RectGridGeometry/CellData/Fit",

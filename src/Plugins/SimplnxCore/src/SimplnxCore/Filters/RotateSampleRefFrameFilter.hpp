@@ -34,8 +34,8 @@ public:
   static inline constexpr StringLiteral k_RotationRepresentation_Key = "rotation_representation";
   static inline constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
   static inline constexpr StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "created_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
   static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 

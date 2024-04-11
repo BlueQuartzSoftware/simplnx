@@ -22,7 +22,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_CellArrayPaths_Key = "cell_arrays";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geom_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_MinPoint_Key = "min_point";
   static inline constexpr StringLiteral k_MaxPoint_Key = "max_point";
   static inline constexpr StringLiteral k_InitType_Key = "init_type";

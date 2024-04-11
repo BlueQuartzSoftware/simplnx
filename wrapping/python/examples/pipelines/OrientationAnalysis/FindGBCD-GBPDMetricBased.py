@@ -33,7 +33,7 @@ result = nx_filter.execute(
     feature_num_triangles_array_name=("NumTriangles"),
     grain_boundary_attribute_matrix_name=("FaceFeatureData"),
     randomize_features=False,
-    triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -60,7 +60,7 @@ result = nx_filter.execute(
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
     surface_mesh_feature_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceFeatureData/FaceLabels"),
-    triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -86,7 +86,7 @@ result = nx_filter.execute(
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
     surface_mesh_feature_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceFeatureData/FaceLabels"),
-    triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 

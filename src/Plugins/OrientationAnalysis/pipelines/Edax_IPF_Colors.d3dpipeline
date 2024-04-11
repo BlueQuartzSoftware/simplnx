@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "created_image_geometry_path": "DataContainer",
+        "output_image_geometry_path": "DataContainer",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "comments": "",
@@ -36,7 +36,7 @@
     },
     {
       "args": {
-        "created_image_geometry_path": "DataContainer",
+        "output_image_geometry_path": "DataContainer",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
         "rotation_axis": [
@@ -63,7 +63,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry_path": "DataContainer"
+        "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
@@ -89,7 +89,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_array_name": "Mask"
+        "output_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -123,7 +123,7 @@
       "args": {
         "file_name": "Data/Output/Edax_IPF_Colors/Small_IN100_Slice_1.png",
         "image_array_path": "DataContainer/Cell Data/IPFColors",
-        "image_geom_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "index_offset": 0,
         "plane": 0
       },

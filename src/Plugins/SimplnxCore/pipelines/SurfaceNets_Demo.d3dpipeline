@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "Optical Data",
         "image_data_array_name": "ImageData",
-        "image_geometry_path": "RoboMet.3D Image Stack",
+        "output_image_geometry_path": "RoboMet.3D Image Stack",
         "image_transform_choice": 0,
         "input_file_list_object": {
           "end_index": 174,
@@ -55,7 +55,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_array_name": "Mask",
+        "output_data_array_name": "Mask",
         "created_mask_type": 10,
         "custom_false_value": 0.0,
         "custom_true_value": 1.0,
@@ -74,7 +74,7 @@
         "active_array_name": "Active",
         "cell_feature_group_name": "Pore Data",
         "feature_ids_path": "FeatureIds",
-        "selected_image_geometry_path": "RoboMet.3D Image Stack",
+        "input_image_geometry_path": "RoboMet.3D Image Stack",
         "input_array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
         "mask_path": "RoboMet.3D Image Stack/Optical Data/Mask",
         "randomize_features": true,
@@ -95,13 +95,13 @@
         "face_feature_attribute_matrix_name": "Face Feature Data",
         "face_labels_array_name": "FaceLabels",
         "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
-        "grid_geometry_data_path": "RoboMet.3D Image Stack",
+        "input_grid_geometry_path": "RoboMet.3D Image Stack",
         "max_distance_from_voxel": 1.0,
         "node_types_array_name": "NodeTypes",
         "relaxation_factor": 0.5,
-        "selected_data_array_paths": [],
+        "input_data_array_paths": [],
         "smoothing_iterations": 20,
-        "created_triangle_geometry_path": "TriangleDataContainer",
+        "output_triangle_geometry_path": "TriangleDataContainer",
         "vertex_data_group_name": "Vertex Data"
       },
       "comments": "",

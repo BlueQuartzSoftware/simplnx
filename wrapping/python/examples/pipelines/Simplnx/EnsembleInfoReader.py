@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name=("Cell Data"),
     dimensions=[100, 100, 2],
-    geometry_data_path=nx.DataPath("[Image Geometry]"),
+    output_image_geometry_path=nx.DataPath("[Image Geometry]"),
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )

@@ -25,7 +25,7 @@ public:
   FeatureFaceCurvatureFilter& operator=(FeatureFaceCurvatureFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
+  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_NeighborhoodRing_Key = "neighborhood_ring";
   static inline constexpr StringLiteral k_ComputePrincipalDirection_Key = "compute_principal_direction";
   static inline constexpr StringLiteral k_ComputeGaussianCurvature_Key = "compute_gaussian_curvature";

@@ -21,7 +21,7 @@ public:
   MinNeighbors& operator=(MinNeighbors&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "selected_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_ApplyToSinglePhase_Key = "apply_to_single_phase";
   static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
   static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";

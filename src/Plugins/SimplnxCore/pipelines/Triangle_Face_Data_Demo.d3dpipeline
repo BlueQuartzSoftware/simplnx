@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "created_triangle_geometry_path": "[Triangle Geometry]",
+        "output_triangle_geometry_path": "[Triangle Geometry]",
         "scale_factor": 1.0,
         "scale_output": false,
         "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
@@ -20,7 +20,7 @@
     {
       "args": {
         "triangle_areas_array_name": "Face Areas",
-        "triangle_geometry_data_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": "[Triangle Geometry]"
       },
       "comments": "",
       "filter": {
@@ -32,7 +32,7 @@
     {
       "args": {
         "output_normals_array_name": "Face Normals (Calculated)",
-        "selected_triangle_geometry_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": "[Triangle Geometry]"
       },
       "comments": "",
       "filter": {
@@ -44,7 +44,7 @@
     {
       "args": {
         "surface_mesh_triangle_dihedral_angles_array_name": "Dihedral Angles",
-        "selected_triangle_geometry_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": "[Triangle Geometry]"
       },
       "comments": "",
       "filter": {
@@ -56,7 +56,7 @@
     {
       "args": {
         "centroids_array_name": "Centroids",
-        "triangle_geometry_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": "[Triangle Geometry]"
       },
       "comments": "",
       "filter": {

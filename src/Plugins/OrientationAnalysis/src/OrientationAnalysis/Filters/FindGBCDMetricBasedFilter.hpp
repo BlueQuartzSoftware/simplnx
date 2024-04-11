@@ -32,7 +32,7 @@ public:
   static inline constexpr StringLiteral k_DistOutputFile_Key = "dist_output_file";
   static inline constexpr StringLiteral k_ErrOutputFile_Key = "err_output_file";
   static inline constexpr StringLiteral k_SaveRelativeErr_Key = "save_relative_err";
-  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_NodeTypesArrayPath_Key = "node_types_array_path";
   static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
   static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";

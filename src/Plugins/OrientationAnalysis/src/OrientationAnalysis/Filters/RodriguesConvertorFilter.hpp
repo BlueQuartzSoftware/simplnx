@@ -24,7 +24,7 @@ public:
   RodriguesConvertorFilter& operator=(RodriguesConvertorFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_RodriguesDataArrayPath_Key = "rodrigues_data_array_path";
+  static inline constexpr StringLiteral k_RodriguesDataArrayPath_Key = "input_data_array_path";
   static inline constexpr StringLiteral k_OutputDataArrayName_Key = "output_data_array_name";
   static inline constexpr StringLiteral k_DeleteOriginalData_Key = "delete_original_data";
 

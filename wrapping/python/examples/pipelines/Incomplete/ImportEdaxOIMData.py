@@ -45,7 +45,7 @@ result = nx_filter.execute(
     rotate_slice_by_slice=True,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
     rotation_representation=("Axis Angle"),
-    selected_image_geometry_path=nx.DataPath("ImageGeom")
+    input_image_geometry_path=nx.DataPath("ImageGeom")
 )
 nxtest.check_filter_result(nx_filter, result)
 

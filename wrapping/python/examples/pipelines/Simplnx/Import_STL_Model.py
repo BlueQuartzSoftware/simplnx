@@ -19,7 +19,7 @@ result = nx_filter.execute(
     face_normals_name="Face Normals",
     #scale_factor: float = ...,
     stl_file_path=nxtest.get_data_directory() / "STL_Models/Cylinder.stl",
-    created_triangle_geometry_path=nx.DataPath("[Triangle Geometry]"),
+    output_triangle_geometry_path=nx.DataPath("[Triangle Geometry]"),
     vertex_attribute_matrix_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -31,7 +31,7 @@ nx_filter = nx.CalculateTriangleAreasFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     triangle_areas_array_name="Areas",
-    triangle_geometry_data_path=nx.DataPath("[Triangle Geometry]")
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 

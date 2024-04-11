@@ -333,7 +333,7 @@ General Parameters
 
       result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
                                               rgb_array_path="CI Color", 
-                                              selected_data_array_path=nx.DataPath("Small IN100/Scan Data/Confidence Index"), 
+                                              input_data_array_path=nx.DataPath("Small IN100/Scan Data/Confidence Index"), 
                                               selected_preset="hsv")      
 
 .. _GeneratedFileListParameter:
@@ -388,7 +388,7 @@ General Parameters
     result = cxitk.ITKImportImageStack.execute(data_structure=data_structure, 
                                       cell_data_name="Cell Data", 
                                       image_data_array_path="Image Data", 
-                                      image_geometry_path=nx.DataPath(["Image Stack"]), 
+                                      output_image_geometry_path=nx.DataPath(["Image Stack"]), 
                                       image_transform_choice=0,
                                       input_file_list_info=generated_file_list_value,
                                       origin=[0., 0., 0.], 

@@ -7,6 +7,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -65,8 +66,8 @@ Parameters FlyingEdges3DFilter::parameters() const
                                                           GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_NewTriangleGeometryName_Key, "Name of Output Triangle Geometry", "This is where the contouring line will be stored", "Contouring Geometry"));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Name of Output Triangle Geometry", "This is where the contouring line will be stored",
+                                                             DataPath({"Contouring Geometry"})));
 
   return params;
 }
@@ -82,7 +83,7 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
                                                             const std::atomic_bool& shouldCancel) const
 {
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto pTriangleGeomName = filterArgs.value<std::string>(k_NewTriangleGeometryName_Key);
+  auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -90,7 +91,7 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
 
   // Create the Triangle Geometry action and store it
   auto createTriangleGeometryAction =
-      std::make_unique<CreateTriangleGeometryAction>(DataPath({pTriangleGeomName}), static_cast<usize>(1), static_cast<usize>(1), INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName,
+      std::make_unique<CreateTriangleGeometryAction>(pTriangleGeomName, static_cast<usize>(1), static_cast<usize>(1), INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName,
                                                      CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
   auto vertexNormalsPath = createTriangleGeometryAction->getVertexDataPath().createChildPath(k_VertexNormals);
   resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
@@ -110,7 +111,7 @@ Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Ar
 
   inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-  inputValues.triangleGeomPath = DataPath({filterArgs.value<std::string>(k_NewTriangleGeometryName_Key)});
+  inputValues.triangleGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);
   inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexDataName).createChildPath(k_VertexNormals);
 

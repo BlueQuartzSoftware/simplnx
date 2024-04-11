@@ -24,7 +24,7 @@ public:
   CAxisSegmentFeaturesFilter& operator=(CAxisSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_RandomizeFeatureIds_Key = "randomize_feature_ids";

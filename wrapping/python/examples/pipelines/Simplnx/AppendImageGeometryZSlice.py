@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name="Cell Data",
     dimensions=[60, 80, 100],
-    geometry_data_path=nx.DataPath("[Image Geometry]"),
+    output_image_geometry_path=nx.DataPath("[Image Geometry]"),
     origin=[100.0, 100.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
@@ -100,12 +100,12 @@ nx_filter = nx.CropImageGeometry()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_image_geometry_path=nx.DataPath("CroppedBottomHalf"),
+    output_image_geometry_path=nx.DataPath("CroppedBottomHalf"),
     max_voxel=[59, 79, 50],
     min_voxel=[0, 0, 0],
     remove_original_geometry=False,
     renumber_features=False,
-    selected_image_geometry_path=nx.DataPath("[Image Geometry]")
+    input_image_geometry_path=nx.DataPath("[Image Geometry]")
     #update_origin=False
     # cell_feature_attribute_matrix: DataPath = ...,  # Not currently part of the code
     # feature_ids: DataPath = ...,  # Not currently part of the code
@@ -119,12 +119,12 @@ nx_filter = nx.CropImageGeometry()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_image_geometry_path=nx.DataPath("CroppedTopHalf"),
+    output_image_geometry_path=nx.DataPath("CroppedTopHalf"),
     max_voxel=[59, 79, 99],
     min_voxel=[0, 0, 51],
     remove_original_geometry=False,
     renumber_features=False,
-    selected_image_geometry_path=nx.DataPath("[Image Geometry]")
+    input_image_geometry_path=nx.DataPath("[Image Geometry]")
     # update_origin=True
     # cell_feature_attribute_matrix: DataPath = ...,  # Not currently part of the code
     # feature_ids: DataPath = ...,  # Not currently part of the code
@@ -138,9 +138,9 @@ nx_filter = nx.AppendImageGeometryZSliceFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     check_resolution=True,
-    destination_geometry_path=nx.DataPath("CroppedBottomHalf"),
-    input_geometry_path=nx.DataPath("CroppedTopHalf"),
-    new_geometry_path=nx.DataPath("AppendedImageGeom"),
+    destination_image_geometry_path=nx.DataPath("CroppedBottomHalf"),
+    input_image_geometry_path=nx.DataPath("CroppedTopHalf"),
+    output_image_geometry_path=nx.DataPath("AppendedImageGeom"),
     save_as_new_geometry=True
 )
 nxtest.check_filter_result(nx_filter, result)

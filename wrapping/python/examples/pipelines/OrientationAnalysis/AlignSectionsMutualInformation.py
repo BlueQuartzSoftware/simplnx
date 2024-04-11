@@ -27,7 +27,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    created_image_geometry_path =nx.DataPath("DataContainer"),
+    output_image_geometry_path =nx.DataPath("DataContainer"),
     read_h5_ebsd_object=h5ebsdParameter
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -54,7 +54,7 @@ nx_filter = nx.MultiThresholdObjects()
 result = nx_filter.execute(
     data_structure=data_structure,
     array_thresholds_object=threshold_set,
-    created_data_array_name="Mask",
+    output_data_array_name="Mask",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -84,7 +84,7 @@ result = nx_filter.execute(
     mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
     misorientation_tolerance=5.0,
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
-    selected_image_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     use_mask=True,
     write_alignment_shifts=True
 )

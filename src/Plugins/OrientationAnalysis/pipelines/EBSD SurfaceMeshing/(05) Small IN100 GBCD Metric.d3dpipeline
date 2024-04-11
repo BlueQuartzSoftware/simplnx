@@ -86,7 +86,7 @@
           "feature_face_labels_array_name": "FaceLabels",
           "feature_num_triangles_array_name": "NumTriangles",
           "grain_boundary_attribute_matrix_name": "SharedFeatureFace",
-          "triangle_geometry_path": "TriangleDataContainer"
+          "input_triangle_geometry_path": "TriangleDataContainer"
         },
         "comments": "",
         "filter": {
@@ -118,7 +118,7 @@
           "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
           "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals",
           "surface_mesh_feature_face_labels_array_path": "TriangleDataContainer/SharedFeatureFace/FaceLabels",
-          "triangle_geometry_path": "TriangleDataContainer"
+          "input_triangle_geometry_path": "TriangleDataContainer"
         },
         "comments": "",
         "filter": {

@@ -61,7 +61,7 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          array_handling=0,  # This does not matter for Image Geometry
                                          cell_attribute_matrix_name="Cell Data",
                                          dimensions=ig_dims,  # Note that the dimensions are list as  X, Y, Z
-                                         created_geometry_path=nx.DataPath("Image Geometry"),
+                                         output_geometry_path=nx.DataPath("Image Geometry"),
                                          geometry_type=0,  # 0 = Image Geometry
                                          origin=[0.0, 0.0, 0.0],
                                          spacing=[1.0, 1.0, 1.0])
@@ -158,7 +158,7 @@ z_coords[:] = np.arange(20, 30, 1)
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          array_handling=1,  # Move the arrays from their original location.
                                          cell_attribute_matrix_name="Cell Data",
-                                         created_geometry_path=nx.DataPath("RectGrid Geometry"),
+                                         output_geometry_path=nx.DataPath("RectGrid Geometry"),
                                          geometry_type=1,
                                          x_bounds_path=nx.DataPath("RectGridCoords/X Coords"),
                                          y_bounds_path=nx.DataPath("RectGridCoords/Y Coords"),
@@ -210,7 +210,7 @@ triangles[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          array_handling=1,  # Move the arrays from their original location.
-                                         created_geometry_path=nx.DataPath("Triangle Geometry"),
+                                         output_geometry_path=nx.DataPath("Triangle Geometry"),
                                          geometry_type=4,
                                          face_attribute_matrix_name="Triangle Data",
                                          edge_attribute_matrix_name="Triangle Edge Data",
@@ -257,7 +257,7 @@ edges_view[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          array_handling=1,  # Move the arrays from their original location.
-                                         created_geometry_path=nx.DataPath("Edge Geometry"),
+                                         output_geometry_path=nx.DataPath("Edge Geometry"),
                                          geometry_type=3,
                                          edge_attribute_matrix_name="Edge Data",
                                          vertex_attribute_matrix_name="Vertex Data",

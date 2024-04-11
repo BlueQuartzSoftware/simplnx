@@ -21,7 +21,7 @@ result = nx_filter.execute(
     #edge_attribute_matrix_name: str = ...,
     #edge_list_name: DataPath = ...,
     #face_attribute_matrix_name: str = ...,
-    created_geometry_path=nx.DataPath("[Image Geometry]"),
+    output_geometry_path=nx.DataPath("[Image Geometry]"),
     geometry_type=0,
     #hexahedral_list_name: DataPath = ...,
     length_unit_type=7,
@@ -89,10 +89,10 @@ result = nx_filter.execute(
     data_structure=data_structure,
     move_values=True,
     normalize_data=False,
-    selected_data_array_paths=[nx.DataPath("[Image Geometry]/Cell Data/phi1"),
+    input_data_array_paths=[nx.DataPath("[Image Geometry]/Cell Data/phi1"),
                                nx.DataPath("[Image Geometry]/Cell Data/Phi"),
                                nx.DataPath("[Image Geometry]/Cell Data/phi2")],
-    stacked_data_array_name="Eulers"
+    output_data_array_name="Eulers"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -144,7 +144,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     file_name=output_file_path,
     image_array_path=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
-    image_geom_path=nx.DataPath("[Image Geometry]"),
+    input_image_geometry_path=nx.DataPath("[Image Geometry]"),
     index_offset=0,
     plane=0
     )
