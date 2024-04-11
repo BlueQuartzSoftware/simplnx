@@ -21,8 +21,8 @@ public:
   IterativeClosestPointFilter& operator=(IterativeClosestPointFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MovingVertexPath_Key = "moving_vertex_path";
-  static inline constexpr StringLiteral k_TargetVertexPath_Key = "target_vertex_path";
+  static inline constexpr StringLiteral k_MovingVertexPath_Key = "input_moving_vertex_geometry_path";
+  static inline constexpr StringLiteral k_TargetVertexPath_Key = "input_target_vertex_geometry_path";
   static inline constexpr StringLiteral k_NumIterations_Key = "num_iterations";
   static inline constexpr StringLiteral k_ApplyTransformation_Key = "apply_transformation";
   static inline constexpr StringLiteral k_TransformArrayPath_Key = "transform_array_path";
