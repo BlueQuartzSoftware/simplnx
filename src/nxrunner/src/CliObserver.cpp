@@ -39,7 +39,7 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
       {
         std::cout << "[" << currentFilterIndex << "] Error(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
       }
-      if(state != nx::core::FaultState::Warnings)
+      if(state == nx::core::FaultState::Warnings)
       {
         std::cout << "[" << currentFilterIndex << "] Warning(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
       }

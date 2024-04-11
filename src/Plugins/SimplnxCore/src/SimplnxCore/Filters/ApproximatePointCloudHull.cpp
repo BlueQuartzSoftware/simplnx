@@ -290,6 +290,10 @@ Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Argum
 
   auto* hull = data.getDataAs<VertexGeom>(hullVertexGeomPath);
   hull->resizeVertexList(tmpVerts.size() / 3);
+  if(hull->getVertexAttributeMatrix() != nullptr)
+  {
+    hull->getVertexAttributeMatrix()->resizeTuples({tmpVerts.size() / 3});
+  }
   auto* hullVerts = hull->getVertices();
   auto tmpVertData = tmpVerts.data();
   for(usize i = 0; i < hull->getNumberOfVertices() * 3; i++)
