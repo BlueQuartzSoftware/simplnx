@@ -36,7 +36,7 @@ result = nx_filter.execute(
     number_comp=1,
     skip_line_count=0,
     number_tuples=[[480000.0]],
-    output_array_path=nx.DataPath("Confidence Index"),
+    output_data_array_path=nx.DataPath("Confidence Index"),
     scalar_type=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -54,7 +54,7 @@ result = nx_filter.execute(
     number_comp=1,
     skip_line_count=0,
     number_tuples=[[480000.0]],
-    output_array_path=nx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
     scalar_type=nx.NumericType.int32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -73,7 +73,7 @@ result = nx_filter.execute(
     number_comp=1,
     skip_line_count=0,
     number_tuples=[[480000.0]],
-    output_array_path=nx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
     scalar_type=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -90,7 +90,7 @@ result = nx_filter.execute(
     number_comp=3,
     skip_line_count=0,
     number_tuples=[[480000.0]],
-    output_array_path=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
     scalar_type=nx.NumericType.uint8
 )
 nxtest.check_filter_result(nx_filter, result)
