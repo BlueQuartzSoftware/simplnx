@@ -6,6 +6,7 @@
 #include "simplnx/SIMPLNXVersion.hpp"
 #include "simplnx/SimplnxPython.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/TimeUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -293,7 +294,7 @@ Result<> ExecutePipeline(Pipeline& pipeline)
     std::string ss = "Error executing pipeline";
     return nx::core::MakeErrorResult(k_ExecutePipelineError, ss);
   }
-  cliOut << "Finished executing pipeline";
+  cliOut << timestamp() << " Finished executing pipeline";
   cliOut.endline();
   return {};
 }

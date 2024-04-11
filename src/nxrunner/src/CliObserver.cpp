@@ -80,7 +80,7 @@ void PipelineObserver::onNotify(AbstractPipelineNode* node, const std::shared_pt
 
 void PipelineObserver::onCancelled() const
 {
-  std::cout << "Pipeline has been cancelled" << std::endl;
+  std::cout << timestamp() << "  Pipeline has been cancelled" << std::endl;
 }
 
 void PipelineObserver::onFilterProgress(AbstractPipelineNode* node, int32 progress, int32 maxProgress, const std::string& msg) const
@@ -93,13 +93,13 @@ void PipelineObserver::onRunStateChanged(AbstractPipelineNode* node, RunState st
   switch(state)
   {
   case RunState::Executing:
-    std::cout << fmt::format("{} has begun executing", node->getName()) << std::endl;
+    std::cout << timestamp() << fmt::format(" {} has begun executing", node->getName()) << std::endl;
     break;
   case RunState::Preflighting:
-    std::cout << fmt::format("{} has begun preflighting", node->getName()) << std::endl;
+    std::cout << timestamp() << fmt::format(" {} has begun preflighting", node->getName()) << std::endl;
     break;
   case RunState::Idle:
-    std::cout << fmt::format("{} has completed", node->getName()) << std::endl;
+    std::cout << timestamp() << fmt::format(" {} has completed", node->getName()) << std::endl;
     break;
   case RunState::Queued:
     break;
@@ -116,10 +116,10 @@ void PipelineObserver::onFaultStateChanged(AbstractPipelineNode* node, FaultStat
   switch(state)
   {
   case FaultState::Errors:
-    std::cout << fmt::format("{} has completed with errors", node->getName()) << std::endl;
+    std::cout << timestamp() << fmt::format(" '{}' has completed with errors", node->getName()) << std::endl;
     break;
   case FaultState::Warnings:
-    std::cout << fmt::format("{} has completed with warnings", node->getName()) << std::endl;
+    std::cout << timestamp() << fmt::format(" '{}' has completed with warnings", node->getName()) << std::endl;
     break;
   case FaultState::None:
     break;
