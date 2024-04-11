@@ -1,7 +1,9 @@
 #include "CliObserver.hpp"
 
 #include "simplnx/Pipeline/Messaging/AbstractPipelineMessage.hpp"
+#include "simplnx/Utilities/TimeUtilities.hpp"
 
+#include <chrono>
 #include <iostream>
 #include <string>
 
@@ -27,21 +29,21 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
   for(const auto cxFilter : *pipeline)
   {
     m_SignalConnections.push_back(cxFilter->getFilterUpdateSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode* node, int32_t, const std::string& message) {
-      std::cout << "[" << currentFilterIndex << "] " << node->getName() << ": " << message << std::endl;
+      std::cout << timestamp() << "  [" << currentFilterIndex << "] " << node->getName() << ": " << message << std::endl;
     }));
 
     m_SignalConnections.push_back(cxFilter->getFilterProgressSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode* node, int32_t, int32_t progress, const std::string& message) {
-      std::cout << "[" << currentFilterIndex << "] " << node->getName() << ": " << progress << "% " << message << std::endl;
+      std::cout << timestamp() << "  [" << currentFilterIndex << "] " << node->getName() << ": " << progress << "% " << message << std::endl;
     }));
 
     m_SignalConnections.push_back(cxFilter->getFilterFaultSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t filterIndex, nx::core::FaultState state) {
       if(state == nx::core::FaultState::Errors)
       {
-        std::cout << "[" << currentFilterIndex << "] Error(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
+        std::cout << timestamp() << "  [" << currentFilterIndex << "] Error(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
       }
       if(state == nx::core::FaultState::Warnings)
       {
-        std::cout << "[" << currentFilterIndex << "] Warning(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
+        std::cout << timestamp() << "  [" << currentFilterIndex << "] Warning(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
       }
     }));
 
