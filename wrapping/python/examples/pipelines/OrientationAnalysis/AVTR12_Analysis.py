@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    created_image_geometry_path =nx.DataPath("fw-ar-IF1-avtr12-corr"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
     input_file=nxtest.get_data_directory() / "T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf"
@@ -30,13 +30,13 @@ nx_filter = nx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_image_geometry=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    created_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
     #rotation_matrix=[]
     rotation_representation=0,
-    selected_image_geometry=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -56,8 +56,8 @@ threshold_set.thresholds = [threshold_1]
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="ThresholdArray",
+    array_thresholds_object=threshold_set,
+    created_data_array_name="ThresholdArray",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -85,7 +85,7 @@ result = nx_filter.execute(
     loop=False,
     min_confidence=0.0,
     selected_comparison=0,
-    selected_image_geometry=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -188,10 +188,10 @@ result = nx_filter.execute(
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
     crystal_structures_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
-    grid_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
-    mask_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray"),
+    selected_image_geometry_path =nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    cell_mask_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray"),
     misorientation_tolerance=5.0,
-    quats_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Quats"),
+    cell_quats_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Quats"),
     randomize_features=True,
     use_mask=True
 )
@@ -205,7 +205,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
     min_allowed_defect_size=10,
-    selected_image_geometry=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
     store_as_new_phase=False
     # cell_phases_array_path and ignored_data_array_paths parameters are not used in this context
 )
@@ -217,13 +217,13 @@ nx_filter = nx.CalculateFeatureSizesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    equivalent_diameters_path="EquivalentDiameters",
-    feature_attribute_matrix=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
+    equivalent_diameters_name="EquivalentDiameters",
+    feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
-    geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
-    num_elements_path="NumElements",
+    input_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
+    num_elements_name="NumElements",
     save_element_sizes=False,
-    volumes_path="Volumes"
+    volumes_name="Volumes"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -248,9 +248,9 @@ nx_filter = cxor.FindAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_euler_angles_array_path="AvgEulerAngles",
-    avg_quats_array_path="AvgQuats",
-    cell_feature_attribute_matrix=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
+    avg_euler_angles_array_name="AvgEulerAngles",
+    avg_quats_array_name="AvgQuats",
+    cell_feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
     cell_feature_ids_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Phases"),
     cell_quats_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Quats"),
@@ -280,10 +280,10 @@ nx_filter = nx.FindFeatureCentroidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    centroids_array_path="Centroids",
-    feature_attribute_matrix=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
+    centroids_array_name="Centroids",
+    feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData"),
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
-    selected_image_geometry=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -300,7 +300,7 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
     g_bdistances_array_name="GBManhattanDistances",
     save_nearest_neighbors=False,
-    selected_image_geometry=nx.DataPath("fw-ar-IF1-avtr12-corr")
+    selected_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
     # Parameters for nearest_neighbors_array_name, q_pdistances_array_name, and t_jdistances_array_name are not used
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -344,8 +344,8 @@ nx_filter = nx.CalculateArrayHistogramFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     histogram_suffix=" Histogram",
-    new_data_group=True,
-    new_data_group_name=nx.DataPath("fw-ar-IF1-avtr12-corr/Histograms"),
+    create_new_data_group=True,
+    new_data_group_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Histograms"),
     number_of_bins=256,
     selected_array_paths=[nx.DataPath("fw-ar-IF1-avtr12-corr/CellFeatureData/EquivalentDiameters")],
     user_defined_range=False

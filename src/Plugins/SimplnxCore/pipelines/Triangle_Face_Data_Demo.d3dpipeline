@@ -32,7 +32,7 @@
     {
       "args": {
         "output_normals_array_name": "Face Normals (Calculated)",
-        "tri_geometry_data_path": "[Triangle Geometry]"
+        "selected_triangle_geometry_path": "[Triangle Geometry]"
       },
       "comments": "",
       "filter": {
@@ -44,7 +44,7 @@
     {
       "args": {
         "surface_mesh_triangle_dihedral_angles_array_name": "Dihedral Angles",
-        "tri_geometry_data_path": "[Triangle Geometry]"
+        "selected_triangle_geometry_path": "[Triangle Geometry]"
       },
       "comments": "",
       "filter": {

@@ -21,7 +21,7 @@ result = nx_filter.execute(
     #edge_attribute_matrix_name: str = ...,
     #edge_list_name: DataPath = ...,
     #face_attribute_matrix_name: str = ...,
-    geometry_name=nx.DataPath("[Image Geometry]"),
+    created_geometry_path=nx.DataPath("[Image Geometry]"),
     geometry_type=0,
     #hexahedral_list_name: DataPath = ...,
     length_unit_type=7,
@@ -58,9 +58,9 @@ nx_filter = nx.ReadCSVFileFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_data_group=nx.DataPath("Imported Data"),
-    read_csv_data=read_csv_data,
-    selected_data_group=nx.DataPath("[Image Geometry]/Cell Data"),
+    created_data_group_path=nx.DataPath("Imported Data"),
+    read_csv_data_object=read_csv_data,
+    selected_attribute_matrix_path=nx.DataPath("[Image Geometry]/Cell Data"),
     use_existing_group=True,
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -71,12 +71,12 @@ nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     component_count=1,
     data_format="",
-    initialization_value="1",
+    initialization_value_str="1",
     numeric_type=nx.NumericType.int32,
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/Phase")
+    output_array_path=nx.DataPath("[Image Geometry]/Cell Data/Phase")
     #tuple_dimensions=[]
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -108,7 +108,7 @@ nx_filter = cxor.CreateEnsembleInfoFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_ensemble_attribute_matrix_name=nx.DataPath("[Image Geometry]/CellEnsembleData"),
+    cell_ensemble_attribute_matrix_path=nx.DataPath("[Image Geometry]/CellEnsembleData"),
     crystal_structures_array_name="CrystalStructures",
     phase_names_array_name="PhaseNames",
     phase_types_array_name="PhaseTypes",

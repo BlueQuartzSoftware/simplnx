@@ -17,7 +17,7 @@ import_data.data_paths = None
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+result = nx_filter.execute(data_structure=data_structure, import_data_object=import_data)
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
@@ -35,7 +35,7 @@ result = nx_filter.execute(
     surface_mesh_face_areas_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
-    triangle_geometry=nx.DataPath("TriangleDataContainer")
+    selected_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -50,7 +50,7 @@ result = nx_filter.execute(
     cell_intensity_array_name="MRD",
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     gbcd_array_path=nx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
-    image_geometry_name=nx.DataPath("GBCD Pole Figure [Sigma 3]"),
+    image_geometry_path=nx.DataPath("GBCD Pole Figure [Sigma 3]"),
     misorientation_rotation=[60.0, 1.0, 1.0, 1.0],
     output_image_dimension=100,
     phase_of_interest=1
@@ -67,7 +67,7 @@ result = nx_filter.execute(
     cell_intensity_array_name="MRD",
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     gbcd_array_path=nx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
-    image_geometry_name=nx.DataPath("GBCD Pole Figure [Sigma 9]"),
+    image_geometry_path=nx.DataPath("GBCD Pole Figure [Sigma 9]"),
     misorientation_rotation=[39.0, 1.0, 1.0, 1.0],
     output_image_dimension=100,
     phase_of_interest=1
@@ -84,7 +84,7 @@ result = nx_filter.execute(
     cell_intensity_array_name="MRD",
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     gbcd_array_path=nx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
-    image_geometry_name=nx.DataPath("GBCD Pole Figure [Sigma 11]"),
+    image_geometry_path=nx.DataPath("GBCD Pole Figure [Sigma 11]"),
     misorientation_rotation=[50.5, 1.0, 1.0, 1.0],
     output_image_dimension=100,
     phase_of_interest=1

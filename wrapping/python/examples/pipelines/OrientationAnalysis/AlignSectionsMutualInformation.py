@@ -27,7 +27,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("DataContainer"),
+    created_image_geometry_path =nx.DataPath("DataContainer"),
     read_h5_ebsd_object=h5ebsdParameter
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -53,8 +53,8 @@ nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="Mask",
+    array_thresholds_object=threshold_set,
+    created_data_array_name="Mask",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)

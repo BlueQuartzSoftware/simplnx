@@ -11,12 +11,12 @@ data_structure = nx.DataStructure()
 
 result = nx.ReadStlFileFilter.execute(data_structure=data_structure,
                                             face_attribute_matrix="Face Data" ,
-                                            face_normals_data_path="Face Normals",
+                                            face_normals_name="Face Normals",
                                             scale_factor=1,
                                             scale_output=False ,
                                             stl_file_path="Data/STL_Models/Cylinder.stl" ,
                                             triangle_geometry_name=nx.DataPath(["[Triangle Geomtry]"]) ,
-                                            vertex_attribute_matrix="Vertex Data")
+                                            vertex_attribute_matrix_name="Vertex Data")
 
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)

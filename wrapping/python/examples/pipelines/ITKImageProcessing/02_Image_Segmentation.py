@@ -32,7 +32,7 @@ result = nx_filter.execute(
     image_data_array_name="ImageData",
     image_geometry_path=nx.DataPath("ImageDataContainer"),
     image_transform_choice=0,
-    input_file_list_info=generated_file_list_value,
+    input_file_list_object =generated_file_list_value,
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
@@ -54,8 +54,8 @@ nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="Mask",
+    array_thresholds_object=threshold_set,
+    created_data_array_name="Mask",
     created_mask_type=dt,  # Use the DataType variable here
     use_custom_false_value=False,
     use_custom_true_value=False
@@ -71,10 +71,10 @@ nx_filter = nx.ScalarSegmentFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    active_array_path="Active",
-    cell_feature_group_path="CellFeatureData",
-    feature_ids_path="FeatureIds",
-    grid_geometry_path=nx.DataPath("ImageDataContainer"),
+    active_array_name="Active",
+    cell_feature_group_name="CellFeatureData",
+    feature_ids_name="FeatureIds",
+    selected_image_geometry_path=nx.DataPath("ImageDataContainer"),
     input_array_path=nx.DataPath("ImageDataContainer/Cell Data/ImageData"),
     mask_path=nx.DataPath("ImageDataContainer/Cell Data/Mask"),
     randomize_features=True,
@@ -89,13 +89,13 @@ nx_filter = nx.CalculateFeatureSizesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    equivalent_diameters_path="EquivalentDiameters",
-    feature_attribute_matrix=nx.DataPath("ImageDataContainer/CellFeatureData"),
+    equivalent_diameters_name="EquivalentDiameters",
+    feature_attribute_matrix_path =nx.DataPath("ImageDataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
-    geometry_path=nx.DataPath("ImageDataContainer"),
-    num_elements_path="NumElements",
+    input_geometry_path =nx.DataPath("ImageDataContainer"),
+    num_elements_name="NumElements",
     save_element_sizes=False,
-    volumes_path="Volumes"
+    volumes_name="Volumes"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -107,7 +107,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     created_array_suffix="Created Array Suffix",
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
-    selected_feature_array_path=[nx.DataPath("ImageDataContainer/CellFeatureData/EquivalentDiameters")]
+    selected_feature_array_paths=[nx.DataPath("ImageDataContainer/CellFeatureData/EquivalentDiameters")]
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -117,12 +117,12 @@ nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     component_count=1,
     data_format="",
-    initialization_value="1",
+    initialization_value_str="1",
     numeric_type=nx.NumericType.int32,
-    output_data_array=nx.DataPath("ImageDataContainer/Cell Data/Phases")
+    output_array_path=nx.DataPath("ImageDataContainer/Cell Data/Phases")
     # tuple_dimensions: List[List[float]] = ...  # Not currently part of the code
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -161,10 +161,10 @@ nx_filter = nx.FindFeatureCentroidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    centroids_array_path="Centroids",
-    feature_attribute_matrix=nx.DataPath("ImageDataContainer/CellFeatureData"),
+    centroids_array_name="Centroids",
+    feature_attribute_matrix_path =nx.DataPath("ImageDataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
-    selected_image_geometry=nx.DataPath("ImageDataContainer")
+    selected_image_geometry_path=nx.DataPath("ImageDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 

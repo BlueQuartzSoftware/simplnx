@@ -57,7 +57,7 @@ data_structure = nx.DataStructure()
 result = nxor.ReadAngDataFilter.execute(data_structure=data_structure, 
                                cell_attribute_matrix_name="Scan Data", 
                                cell_ensemble_attribute_matrix_name="Phase Data",
-                               data_container_name=nx.DataPath(["Small IN100"]), 
+                               created_image_geometry_path=nx.DataPath(["Small IN100"]), 
                                input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang")
 
 nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
@@ -74,12 +74,12 @@ nxtest.check_filter_result(nxor.RotateEulerRefFrameFilter, result)
 # Rotate the Sample Reference Frame 180@010
 #------------------------------------------------------------------------------
 result = nx.RotateSampleRefFrameFilter.execute(data_structure=data_structure,
-    # created_image_geometry=nx.DataPath(["Small IN100 Rotated"]),
+    # created_image_geometry_path=nx.DataPath(["Small IN100 Rotated"]),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis=[0,1,0,180],
     rotation_representation=0,
-    selected_image_geometry=nx.DataPath(["Small IN100"]),
+    selected_image_geometry_path=nx.DataPath(["Small IN100"]),
     #rotation_matrix=[[1,0,0],[0,1,0],[0,0,1]]
     )
 nxtest.check_filter_result(nx.RotateSampleRefFrameFilter, result)
@@ -103,8 +103,8 @@ threshold_set = nx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1, threshold_2]
 dt = nx.DataType.boolean
 result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
-                                        array_thresholds=threshold_set, 
-                                        created_data_path="Mask",
+                                        array_thresholds_object=threshold_set, 
+                                        created_data_array_name="Mask",
                                         created_mask_type=nx.DataType.boolean)
 nxtest.check_filter_result(nx.MultiThresholdObjects, result)
 

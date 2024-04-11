@@ -60,8 +60,8 @@ assert nx.CreateDataArray.execute(data_structure,
                                   numeric_type=nx.NumericType.float32, 
                                   component_count=1, 
                                   tuple_dimensions=[[3, 2]], 
-                                  output_data_array=array_path, 
-                                  initialization_value='0')
+                                  output_array_path=array_path, 
+                                  initialization_value_str='0')
 
 npdata = data_structure[array_path].npview()
 # Manipulate the underlying array

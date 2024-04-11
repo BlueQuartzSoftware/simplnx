@@ -29,14 +29,14 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
     delimiter_choice=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ConfidenceIndex.csv",
-    n_comp=1,
-    n_skip_lines=0,
+    number_comp=1,
+    skip_line_count=0,
     #n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/Confidence Index"),
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/Confidence Index"),
     scalar_type=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -47,14 +47,14 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
     delimiter_choice=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/FeatureIds.csv",
-    n_comp=1,
-    n_skip_lines=0,
+    number_comp=1,
+    skip_line_count=0,
     #n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
     scalar_type=nx.NumericType.int32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -65,14 +65,14 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
     delimiter_choice=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ImageQuality.csv",
-    n_comp=1,
-    n_skip_lines=0,
+    number_comp=1,
+    skip_line_count=0,
     #n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
     scalar_type=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -83,14 +83,14 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
     delimiter_choice=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/IPFColor.csv",
-    n_comp=3,
-    n_skip_lines=0,
+    number_comp=3,
+    skip_line_count=0,
     #n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
     scalar_type=nx.NumericType.uint8
 )
 nxtest.check_filter_result(nx_filter, result)

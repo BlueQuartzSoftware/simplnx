@@ -61,7 +61,7 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          array_handling=0,  # This does not matter for Image Geometry
                                          cell_attribute_matrix_name="Cell Data",
                                          dimensions=ig_dims,  # Note that the dimensions are list as  X, Y, Z
-                                         geometry_name=nx.DataPath("Image Geometry"),
+                                         created_geometry_path=nx.DataPath("Image Geometry"),
                                          geometry_type=0,  # 0 = Image Geometry
                                          origin=[0.0, 0.0, 0.0],
                                          spacing=[1.0, 1.0, 1.0])
@@ -84,8 +84,8 @@ output_array_path = nx.DataPath("Image Geometry/Cell Data/Float Cell Data")
 array_type = nx.NumericType.float32
 create_array_nx_filter = nx.CreateDataArray()
 result = create_array_nx_filter.execute(data_structure=data_structure, component_count=1, data_format="",
-                                     initialization_value="10",
-                                     numeric_type=array_type, output_data_array=output_array_path)
+                                     initialization_value_str="10",
+                                     numeric_type=array_type, output_array_path=output_array_path)
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
@@ -108,9 +108,9 @@ create_array_nx_filter = nx.CreateDataArray()
 result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
-                                     initialization_value="0",
+                                     initialization_value_str="0",
                                      numeric_type=array_type,
-                                     output_data_array=output_array_path,
+                                     output_array_path=output_array_path,
                                      tuple_dimensions=tuple_dims)
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
@@ -126,9 +126,9 @@ create_array_nx_filter = nx.CreateDataArray()
 result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
-                                     initialization_value="0",
+                                     initialization_value_str="0",
                                      numeric_type=array_type,
-                                     output_data_array=output_array_path,
+                                     output_array_path=output_array_path,
                                      tuple_dimensions=tuple_dims)
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
@@ -144,9 +144,9 @@ create_array_nx_filter = nx.CreateDataArray()
 result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
-                                     initialization_value="0",
+                                     initialization_value_str="0",
                                      numeric_type=array_type,
-                                     output_data_array=output_array_path,
+                                     output_array_path=output_array_path,
                                      tuple_dimensions=tuple_dims)
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
@@ -158,11 +158,11 @@ z_coords[:] = np.arange(20, 30, 1)
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          array_handling=1,  # Move the arrays from their original location.
                                          cell_attribute_matrix_name="Cell Data",
-                                         geometry_name=nx.DataPath("RectGrid Geometry"),
+                                         created_geometry_path=nx.DataPath("RectGrid Geometry"),
                                          geometry_type=1,
-                                         x_bounds=nx.DataPath("RectGridCoords/X Coords"),
-                                         y_bounds=nx.DataPath("RectGridCoords/Y Coords"),
-                                         z_bounds=nx.DataPath("RectGridCoords/Z Coords")
+                                         x_bounds_path=nx.DataPath("RectGridCoords/X Coords"),
+                                         y_bounds_path=nx.DataPath("RectGridCoords/Y Coords"),
+                                         z_bounds_path=nx.DataPath("RectGridCoords/Z Coords")
                                          )
 nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
@@ -184,8 +184,8 @@ result = nx.CreateDataArray.execute(data_structure,
                                     numeric_type=nx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[144]],
-                                    output_data_array=array_path,
-                                    initialization_value='0')
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
@@ -199,8 +199,8 @@ result = nx.CreateDataArray.execute(data_structure,
                                     numeric_type=nx.NumericType.uint64,
                                     component_count=3,
                                     tuple_dimensions=[[242]],
-                                    output_data_array=array_path,
-                                    initialization_value='0')
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
 # Read the CSV file into the DataArray using the numpy view
@@ -210,13 +210,13 @@ triangles[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          array_handling=1,  # Move the arrays from their original location.
-                                         geometry_name=nx.DataPath("Triangle Geometry"),
+                                         created_geometry_path=nx.DataPath("Triangle Geometry"),
                                          geometry_type=4,
                                          face_attribute_matrix_name="Triangle Data",
                                          edge_attribute_matrix_name="Triangle Edge Data",
                                          vertex_attribute_matrix_name="Vertex Data",
-                                         vertex_list_name=nx.DataPath('Vertices'),
-                                         triangle_list_name=nx.DataPath('Triangles')
+                                         vertex_list_path=nx.DataPath('Vertices'),
+                                         triangle_list_path=nx.DataPath('Triangles')
                                          )
 nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
@@ -230,8 +230,8 @@ result = nx.CreateDataArray.execute(data_structure,
                                     numeric_type=nx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[144]],
-                                    output_data_array=array_path,
-                                    initialization_value='0')
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
@@ -245,8 +245,8 @@ result = nx.CreateDataArray.execute(data_structure,
                                     numeric_type=nx.NumericType.uint64,
                                     component_count=2,
                                     tuple_dimensions=[[264]],
-                                    output_data_array=array_path,
-                                    initialization_value='0')
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
@@ -257,12 +257,12 @@ edges_view[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          array_handling=1,  # Move the arrays from their original location.
-                                         geometry_name=nx.DataPath("Edge Geometry"),
+                                         created_geometry_path=nx.DataPath("Edge Geometry"),
                                          geometry_type=3,
                                          edge_attribute_matrix_name="Edge Data",
                                          vertex_attribute_matrix_name="Vertex Data",
-                                         vertex_list_name=nx.DataPath('Vertices'),
-                                         edge_list_name=nx.DataPath('Edges')
+                                         vertex_list_path=nx.DataPath('Vertices'),
+                                         edge_list_path=nx.DataPath('Edges')
                                          )
 nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 

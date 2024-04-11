@@ -17,7 +17,7 @@ import_data.data_paths = None
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+result = nx_filter.execute(data_structure=data_structure, import_data_object=import_data)
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
@@ -48,9 +48,9 @@ nx_filter = cxor.FindAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_euler_angles_array_path="AvgEulerAngles",
-    avg_quats_array_path="AvgQuats",
-    cell_feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
+    avg_euler_angles_array_name="AvgEulerAngles",
+    avg_quats_array_name="AvgQuats",
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     cell_feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     cell_quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),

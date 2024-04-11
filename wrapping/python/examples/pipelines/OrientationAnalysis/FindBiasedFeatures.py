@@ -18,7 +18,7 @@ import_data.data_paths = None
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
-                        import_file_data=import_data
+                        import_data_object=import_data
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -54,12 +54,12 @@ nx_filter = nx.FindNeighbors()
 result = nx_filter.execute(
     data_structure=data_structure,
     #boundary_cells: str = ...,
-    cell_feature_arrays=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    image_geometry=nx.DataPath("DataContainer"),
-    neighbor_list="NeighborList",
-    number_of_neighbors="NumNeighbors",
-    shared_surface_area_list="SharedSurfaceAreaList",
+    cell_feature_array_path=nx.DataPath("DataContainer/CellFeatureData"),
+    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    selected_image_geometry_path =nx.DataPath("DataContainer"),
+    neighbor_list_name="NeighborList",
+    number_of_neighbors_name="NumNeighbors",
+    shared_surface_area_list_name="SharedSurfaceAreaList",
     store_boundary_cells=False,
     store_surface_features=False
     #surface_features: str = ...
@@ -72,10 +72,10 @@ nx_filter = nx.FindFeatureCentroidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    centroids_array_path="Centroids",
-    feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
+    centroids_array_name="Centroids",
+    feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    selected_image_geometry=nx.DataPath("DataContainer")
+    selected_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -89,7 +89,7 @@ result = nx_filter.execute(
     feature_geometry_path=nx.DataPath("DataContainer"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     mark_feature_0_neighbors=True,
-    surface_features_array_path="SurfaceFeatures"
+    surface_features_array_name="SurfaceFeatures"
 )
 nxtest.check_filter_result(nx_filter, result)
 

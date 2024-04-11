@@ -25,7 +25,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayName_Key = "surface_mesh_triangle_dihedral_angles_array_name";
-  static inline constexpr StringLiteral k_TGeometryDataPath_Key = "tri_geometry_data_path";
+  static inline constexpr StringLiteral k_TGeometryDataPath_Key = "selected_triangle_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

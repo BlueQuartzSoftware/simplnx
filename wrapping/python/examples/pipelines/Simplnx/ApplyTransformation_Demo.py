@@ -41,7 +41,7 @@ result = nx_filter.execute(
     #edge_attribute_matrix_name="Edge Data", (not used here)
     #edge_list_name: DataPath = ..., (not used here)
     #face_attribute_matrix_name="Face Data", (not used here)
-    geometry_name=nx.DataPath("Group 1/Group 2/[Geometry]"),
+    created_geometry_path=nx.DataPath("Group 1/Group 2/[Geometry]"),
     geometry_type=0,
     #hexahedral_list_name: DataPath = ..., (not used here)
     length_unit_type=7,
@@ -68,9 +68,9 @@ result = nx_filter.execute(
     data_structure=data_structure,
     component_count=1,
     data_format="",
-    initialization_value="2",
+    initialization_value_str="2",
     numeric_type=nx.NumericType.int32,
-    output_data_array=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data/Data"),
+    output_array_path=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data/Data"),
     tuple_dimensions=[[2.0, 10.0, 10.0]]
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -84,7 +84,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_path=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data"),
     interpolation_type=1,
     scale=[2.0, 2.0, 2.0],
-    selected_image_geometry=nx.DataPath("Group 1/Group 2/[Geometry]"),
+    selected_image_geometry_path=nx.DataPath("Group 1/Group 2/[Geometry]"),
     transformation_type=5,
     translate_geometry_to_global_origin=False
 )

@@ -65,7 +65,7 @@ result = nxor.ReadH5EbsdFilter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("DataContainer"),
+    created_image_geometry_path=nx.DataPath("DataContainer"),
     read_h5_ebsd_object=h5ebsdParameter
 )
 

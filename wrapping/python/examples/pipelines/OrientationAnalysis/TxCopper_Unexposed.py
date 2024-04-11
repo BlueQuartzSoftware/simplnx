@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("EBSD Scan Data"),
     cell_ensemble_attribute_matrix_name=("Phase Data"),
-    data_container_name=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
+    created_image_geometry_path =nx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
     input_file=nxtest.get_data_directory() / "Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf"
@@ -35,7 +35,7 @@ result = nx_filter.execute(
     rotation_axis=[0.0, 1.0, 0.0, 180.0],
     #rotation_matrix=
     rotation_representation=0,
-    selected_image_geometry=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2")
+    selected_image_geometry_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -49,7 +49,7 @@ result = nx_filter.execute(
     min_voxel=[488, 0, 0],
     remove_original_geometry=True,
     renumber_features=False,
-    selected_image_geometry=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2")
+    selected_image_geometry_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -63,8 +63,8 @@ threshold_1.value = 0.0
 threshold_set = nx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1]
 result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
-                                    array_thresholds=threshold_set,
-                                    created_data_path="Mask",
+                                    array_thresholds_object=threshold_set,
+                                    created_data_array_name="Mask",
                                     created_mask_type=nx.DataType.boolean)
 
 nxtest.check_filter_result(nx_filter, result)

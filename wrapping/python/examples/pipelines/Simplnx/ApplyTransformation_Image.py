@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("Small IN100"),
+    created_image_geometry_path =nx.DataPath("Small IN100"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -30,7 +30,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("Transform [Rotate]"),
+    created_image_geometry_path=nx.DataPath("Transform [Rotate]"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -44,7 +44,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_path=nx.DataPath("Transform [Rotate]/Cell Data"),
     interpolation_type=1,
     rotation=[0.0, 1.0, 0.0, 180.0],
-    selected_image_geometry=nx.DataPath("Transform [Rotate]"),
+    selected_image_geometry_path=nx.DataPath("Transform [Rotate]"),
     transformation_type=3,
     translate_geometry_to_global_origin=False
     # computed_transformation_matrix: DataPath = ...,  # Not used here
@@ -63,7 +63,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("Transform [Scale]"),
+    created_image_geometry_path=nx.DataPath("Transform [Scale]"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -77,7 +77,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_path=nx.DataPath("Transform [Scale]/Cell Data"),
     interpolation_type=1,
     scale=[2.0, 2.0, 1.0],  # Scale transformation
-    selected_image_geometry=nx.DataPath("Transform [Scale]"),
+    selected_image_geometry_path=nx.DataPath("Transform [Scale]"),
     transformation_type=5,  # Type for scale transformation
     translate_geometry_to_global_origin=False
     # computed_transformation_matrix: DataPath = ...,
@@ -95,7 +95,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("Transform [Translate]"),
+    created_image_geometry_path=nx.DataPath("Transform [Translate]"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -108,7 +108,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Transform [Translate]/Cell Data"),
     interpolation_type=1,
-    selected_image_geometry=nx.DataPath("Transform [Translate]"),
+    selected_image_geometry_path=nx.DataPath("Transform [Translate]"),
     transformation_type=4,
     translate_geometry_to_global_origin=False,
     translation=[50.0, 0.0, 0.0]
@@ -127,7 +127,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("Transform [Rotation-Interpolation]"),
+    created_image_geometry_path=nx.DataPath("Transform [Rotation-Interpolation]"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -141,7 +141,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_path=nx.DataPath("Transform [Rotation-Interpolation]/Cell Data"),
     interpolation_type=0,
     rotation=[0.0, 0.0, 1.0, 45.0],
-    selected_image_geometry=nx.DataPath("Transform [Rotation-Interpolation]"),
+    selected_image_geometry_path=nx.DataPath("Transform [Rotation-Interpolation]"),
     transformation_type=3,
     translate_geometry_to_global_origin=False
     # computed_transformation_matrix: DataPath = ...,
@@ -160,7 +160,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("Transform [Scale-Interpolation]"),
+    created_image_geometry_path=nx.DataPath("Transform [Scale-Interpolation]"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -174,7 +174,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_path=nx.DataPath("Transform [Scale-Interpolation]/Cell Data"),
     interpolation_type=0,
     scale=[3.0, 3.0, 1.0],
-    selected_image_geometry=nx.DataPath("Transform [Scale-Interpolation]"),
+    selected_image_geometry_path=nx.DataPath("Transform [Scale-Interpolation]"),
     transformation_type=5,
     translate_geometry_to_global_origin=False
     # computed_transformation_matrix: DataPath = ...,

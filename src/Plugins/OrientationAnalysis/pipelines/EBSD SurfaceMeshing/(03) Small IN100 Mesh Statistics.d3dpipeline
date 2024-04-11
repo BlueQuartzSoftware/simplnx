@@ -91,7 +91,7 @@
     {
       "args": {
         "output_normals_array_name": "FaceNormals",
-        "tri_geometry_data_path": "TriangleDataContainer"
+        "selected_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
@@ -103,7 +103,7 @@
     {
       "args": {
         "surface_mesh_triangle_dihedral_angles_array_name": "FaceDihedralAngles",
-        "tri_geometry_data_path": "TriangleDataContainer"
+        "selected_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
