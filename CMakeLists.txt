@@ -78,7 +78,7 @@ endif()
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
 project(simplnx
-  VERSION 1.2.7
+  VERSION 1.3.0
   DESCRIPTION "SIMPL Redesign"
   HOMEPAGE_URL "https://github.com/bluequartzsoftware/simplnx"
   LANGUAGES CXX
