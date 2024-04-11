@@ -92,7 +92,7 @@
       "args": {
         "cell_ensemble_attribute_matrix_name": "Cell Ensemble",
         "crystal_structures_array_name": "CrystalStructures",
-        "created_image_geometry_path": "[Image Geometry]",
+        "parent_group_path": "[Image Geometry]",
         "input_file": "Data/OrientationAnalysis/Ensemble.ini",
         "phase_types_array_name": "PhaseTypes"
       },

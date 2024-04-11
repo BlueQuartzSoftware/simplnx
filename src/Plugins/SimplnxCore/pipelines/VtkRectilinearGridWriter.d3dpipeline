@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -50,7 +50,7 @@
                 "cell_attribute_matrix_name": "CellData",
                 "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
                 "created_image_geometry_path": "DataContainer",
-                "read_h5_ebsd_parameter": {
+                "read_h5_ebsd_object": {
                   "end_slice": 117,
                   "euler_representation": 0,
                   "hdf5_data_paths": [
@@ -247,7 +247,7 @@
               "args": {
                 "avg_euler_angles_array_name": "AvgEulerAngles",
                 "avg_quats_array_name": "AvgQuats",
-                "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+                "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
                 "cell_feature_ids_array_path": "DataContainer/CellData/FeatureIds",
                 "cell_phases_array_path": "DataContainer/CellData/Phases",
                 "cell_quats_array_path": "DataContainer/CellData/Quats",
@@ -262,16 +262,16 @@
             },
             {
               "args": {
-                "boundary_cells": "BoundaryCells",
-                "cell_feature_arrays": "DataContainer/CellFeatureData",
-                "feature_ids": "DataContainer/CellData/FeatureIds",
-                "image_geometry": "DataContainer",
-                "neighbor_list": "NeighborList2",
-                "number_of_neighbors": "NumNeighbors2",
-                "shared_surface_area_list": "SharedSurfaceAreaList2",
+                "boundary_cells_name": "BoundaryCells",
+                "cell_feature_array_path": "DataContainer/CellFeatureData",
+                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "selected_image_geometry_path": "DataContainer",
+                "neighbor_list_name": "NeighborList2",
+                "number_of_neighbors_name": "NumNeighbors2",
+                "shared_surface_area_list_name": "SharedSurfaceAreaList2",
                 "store_boundary_cells": false,
                 "store_surface_features": false,
-                "surface_features": "SurfaceFeatures"
+                "surface_features_name": "SurfaceFeatures"
               },
               "comments": "",
               "filter": {
@@ -284,7 +284,7 @@
               "args": {
                 "active_array_name": "Active",
                 "angle_tolerance": 2.0,
-                "avg_quats_array_name": "DataContainer/CellFeatureData/AvgQuats",
+                "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
                 "axis_tolerance": 3.0,
                 "cell_parent_ids_array_name": "ParentIds",
                 "contiguous_neighbor_list_array_path": "DataContainer/CellFeatureData/NeighborList2",
@@ -292,7 +292,7 @@
                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
                 "feature_parent_ids_array_name": "ParentIds",
                 "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
-                "new_cell_feature_attribute_matrix_name": "NewGrain Data",
+                "created_feature_attribute_matrix_name": "NewGrain Data",
                 "non_contiguous_neighbor_list_array_path": "",
                 "use_non_contiguous_neighbors": false
               },
@@ -339,16 +339,16 @@
             },
             {
               "args": {
-                "boundary_cells": "BoundaryCells",
-                "cell_feature_arrays": "DataContainer/CellFeatureData",
-                "feature_ids": "DataContainer/CellData/FeatureIds",
-                "image_geometry": "DataContainer",
-                "neighbor_list": "NeighborList",
-                "number_of_neighbors": "NumNeighbors",
-                "shared_surface_area_list": "SharedSurfaceAreaList",
+                "boundary_cells_name": "BoundaryCells",
+                "cell_feature_array_path": "DataContainer/CellFeatureData",
+                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "selected_image_geometry_path": "DataContainer",
+                "neighbor_list_name": "NeighborList",
+                "number_of_neighbors_name": "NumNeighbors",
+                "shared_surface_area_list_name": "SharedSurfaceAreaList",
                 "store_boundary_cells": false,
                 "store_surface_features": false,
-                "surface_features": "SurfaceFeatures"
+                "surface_features_name": "SurfaceFeatures"
               },
               "comments": "",
               "filter": {
@@ -360,13 +360,13 @@
             {
               "args": {
                 "apply_to_single_phase": false,
-                "cell_attribute_matrix": "DataContainer/CellData",
-                "feature_ids": "DataContainer/CellData/FeatureIds",
-                "feature_phases": "Data Container/Feature Data/Phases",
+                "cell_attribute_matrix_path": "DataContainer/CellData",
+                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "feature_phases_path": "Data Container/Feature Data/Phases",
                 "ignored_voxel_arrays": [],
                 "image_geom": "DataContainer",
                 "min_num_neighbors": 2,
-                "num_neighbors": "DataContainer/CellFeatureData/NumNeighbors",
+                "num_neighbors_path": "DataContainer/CellFeatureData/NumNeighbors",
                 "phase_number": 0
               },
               "comments": "",

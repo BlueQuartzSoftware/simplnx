@@ -9,7 +9,7 @@
         "image_data_array_name": "ImageData",
         "image_geometry_path": "Porosity_Image",
         "image_transform_choice": 0,
-        "input_file_list_info": {
+        "input_file_list_object": {
           "end_index": 174,
           "file_extension": ".tif",
           "file_prefix": "slice_",

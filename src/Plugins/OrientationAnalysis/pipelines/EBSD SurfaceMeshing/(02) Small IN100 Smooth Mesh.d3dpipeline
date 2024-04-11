@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",

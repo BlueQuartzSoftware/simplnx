@@ -9,7 +9,7 @@
         "image_data_array_name": "ImageData",
         "image_geometry_path": "ImageDataContainer",
         "image_transform_choice": 0,
-        "input_file_list_info": {
+        "input_file_list_object": {
           "end_index": 174,
           "file_extension": ".tif",
           "file_prefix": "slice_",
@@ -66,9 +66,9 @@
     },
     {
       "args": {
-        "active_array_path": "Active",
-        "cell_feature_group_path": "CellFeatureData",
-        "feature_ids_path": "FeatureIds",
+        "active_array_name": "Active",
+        "cell_feature_group_name": "CellFeatureData",
+        "feature_ids_name": "FeatureIds",
         "selected_image_geometry_path": "ImageDataContainer",
         "input_array_path": "ImageDataContainer/Cell Data/ImageData",
         "mask_path": "ImageDataContainer/Cell Data/Mask",
@@ -104,7 +104,7 @@
       "args": {
         "created_array_suffix": "",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
-        "selected_feature_array_path": ["ImageDataContainer/CellFeatureData/EquivalentDiameters"]
+        "selected_feature_array_paths": ["ImageDataContainer/CellFeatureData/EquivalentDiameters"]
       },
       "comments": "",
       "filter": {
@@ -167,7 +167,7 @@
     },
     {
       "args": {
-        "centroids_array_path": "Centroids",
+        "centroids_array_name": "Centroids",
         "feature_attribute_matrix_path": "ImageDataContainer/CellFeatureData",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
         "selected_image_geometry_path": "ImageDataContainer"

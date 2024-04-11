@@ -116,12 +116,12 @@
     },
     {
       "args": {
-        "new_data_group_path": "",
+        "new_data_group_path": "DataContainer/Statistics",
         "histogram_suffix": " Histogram",
         "max_range": 1.0,
         "min_range": 0.0,
-        "new_data_group": true,
-        "new_data_group_name": "DataContainer/Statistics",
+        "create_new_data_group": true,
+        "output_data_group_path": "",
         "number_of_bins": 25,
         "selected_array_paths": [
           "DataContainer/Cell Data/Confidence Index"

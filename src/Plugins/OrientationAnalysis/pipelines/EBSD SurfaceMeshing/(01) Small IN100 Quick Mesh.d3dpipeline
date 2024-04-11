@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer/CellEnsembleData",
             "DataContainer/CellEnsembleData/CrystalStructures",
@@ -74,9 +74,9 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "created_image_geometry_path": "DataContainer",
-        "feature_ids": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "max_voxel": [
           140,
           140,

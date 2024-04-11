@@ -28,7 +28,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     data_container_name=nx.DataPath("DataContainer"),
-    read_h5_ebsd_parameter=h5ebsdParameter
+    read_h5_ebsd_object=h5ebsdParameter
 )
 nxtest.check_filter_result(nx_filter, result)
 

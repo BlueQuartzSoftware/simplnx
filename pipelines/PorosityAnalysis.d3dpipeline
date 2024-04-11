@@ -9,7 +9,7 @@
         "image_data_array_name": "ImageData",
         "image_geometry_path": "RoboMet.3D Image Stack",
         "image_transform_choice": 0,
-        "input_file_list_info": {
+        "input_file_list_object": {
           "end_index": 174,
           "file_extension": ".tif",
           "file_prefix": "slice_",
@@ -66,8 +66,8 @@
     },
     {
       "args": {
-        "active_array_path": "Active",
-        "cell_feature_group_path": "Pore Data",
+        "active_array_name": "Active",
+        "cell_feature_group_name": "Pore Data",
         "feature_ids_path": "FeatureIds",
         "selected_image_geometry_path": "RoboMet.3D Image Stack",
         "input_array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
@@ -104,7 +104,7 @@
       "args": {
         "created_array_suffix": "",
         "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
-        "selected_feature_array_path": ["RoboMet.3D Image Stack/Pore Data/EquivalentDiameters"]
+        "selected_feature_array_paths": ["RoboMet.3D Image Stack/Pore Data/EquivalentDiameters"]
       },
       "comments": "",
       "filter": {
@@ -165,7 +165,7 @@
     },
     {
       "args": {
-        "centroids_array_path": "Centroids",
+        "centroids_array_name": "Centroids",
         "feature_attribute_matrix_path": "RoboMet.3D Image Stack/Pore Data",
         "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
         "selected_image_geometry_path": "RoboMet.3D Image Stack"

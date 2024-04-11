@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -130,7 +130,7 @@
     },
     {
       "args": {
-        "avg_quats_array_name": "DataContainer/CellFeatureData/AvgQuats",
+        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
         "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",

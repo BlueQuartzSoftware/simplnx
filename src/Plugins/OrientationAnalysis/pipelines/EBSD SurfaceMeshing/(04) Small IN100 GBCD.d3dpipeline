@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -90,7 +90,7 @@
         "surface_mesh_face_areas_array_path": "TriangleDataContainer/FaceData/FaceAreas",
         "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
         "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals",
-        "triangle_geometry": "TriangleDataContainer"
+        "selected_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
@@ -105,7 +105,7 @@
         "cell_intensity_array_name": "MRD",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "gbcd_array_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
-        "image_geometry_name": "GBCD Pole Figure [Sigma 3]",
+        "image_geometry_path": "GBCD Pole Figure [Sigma 3]",
         "misorientation_rotation": [
           60.0,
           1.0,
@@ -128,7 +128,7 @@
         "cell_intensity_array_name": "MRD",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "gbcd_array_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
-        "image_geometry_name": "GBCD Pole Figure [Sigma 9]",
+        "image_geometry_path": "GBCD Pole Figure [Sigma 9]",
         "misorientation_rotation": [
           39.0,
           1.0,
@@ -151,7 +151,7 @@
         "cell_intensity_array_name": "MRD",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "gbcd_array_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
-        "image_geometry_name": "GBCD Pole Figure [Sigma 11]",
+        "image_geometry_path": "GBCD Pole Figure [Sigma 11]",
         "misorientation_rotation": [
           50.5,
           1.0,

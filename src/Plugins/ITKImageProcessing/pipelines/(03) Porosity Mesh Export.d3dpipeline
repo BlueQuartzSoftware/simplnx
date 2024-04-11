@@ -9,7 +9,7 @@
         "image_data_array_name": "ImageData",
         "image_geometry_path": "ImageDataContainer",
         "image_transform_choice": 0,
-        "input_file_list_info": {
+        "input_file_list_object": {
           "end_index": 174,
           "file_extension": ".tif",
           "file_prefix": "slice_",
@@ -66,9 +66,9 @@
     },
     {
       "args": {
-        "active_array_path": "Active",
-        "cell_feature_group_path": "CellFeatureData",
-        "feature_ids_path": "FeatureIds",
+        "active_array_name": "Active",
+        "cell_feature_group_name": "CellFeatureData",
+        "feature_ids_name": "FeatureIds",
         "selected_image_geometry_path": "ImageDataContainer",
         "input_array_path": "ImageDataContainer/Cell Data/ImageData",
         "mask_path": "ImageDataContainer/Cell Data/Mask",
@@ -133,7 +133,7 @@
           ]
         ],
         "delete_original_array": true,
-        "multicomponent_array": "TriangleDataContainer/Face Data/FaceLabels",
+        "multicomponent_array_path": "TriangleDataContainer/Face Data/FaceLabels",
         "postfix": "-",
         "select_components_to_extract": false
       },

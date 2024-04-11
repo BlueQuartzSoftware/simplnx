@@ -7,7 +7,11 @@
 #include <nlohmann/json.hpp>
 
 #include <sstream>
+#include <iostream>
 #include <vector>
+#include <string>
+#include <limits> // For std::numeric_limits
+#include <utility> // For std::pair
 
 using namespace nx::core;
 
@@ -256,18 +260,58 @@ nlohmann::json IFilter::toJson(const Arguments& args) const
   return json;
 }
 
+// Assuming levenshteinDistance function is defined as before
+int levenshteinDistance(const std::string &s1, const std::string &s2) {
+  const size_t len1 = s1.size(), len2 = s2.size();
+  std::vector<std::vector<unsigned int>> d(len1 + 1, std::vector<unsigned int>(len2 + 1));
+
+  d[0][0] = 0;
+  for(unsigned int i = 1; i <= len1; ++i) d[i][0] = i;
+  for(unsigned int i = 1; i <= len2; ++i) d[0][i] = i;
+
+  for(unsigned int i = 1; i <= len1; ++i)
+    for(unsigned int j = 1; j <= len2; ++j)
+      d[i][j] = std::min({d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (s1[i - 1] == s2[j - 1] ? 0 : 1)});
+
+  return d[len1][len2];
+}
+
+// Function to find best matching word pairs based on Levenshtein distance
+std::vector<std::pair<std::string, std::string>> findBestMatches(const std::vector<std::string> &vec1, const std::vector<std::string> &vec2) {
+  std::vector<std::pair<std::string, std::string>> bestPairs;
+  for (const auto &word1 : vec1) {
+    int bestDistance = std::numeric_limits<int>::max();
+    std::string bestMatch;
+    for (const auto &word2 : vec2) {
+      int currentDistance = levenshteinDistance(word1, word2);
+      if (currentDistance < bestDistance) {
+        bestDistance = currentDistance;
+        bestMatch = word2;
+      }
+    }
+    bestPairs.emplace_back(word1, bestMatch);
+  }
+  return bestPairs;
+}
+
+
 Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
 {
   Parameters params = parameters();
   Arguments args;
   std::vector<Error> errors;
   std::vector<Warning> warnings;
+
+  std::vector<std::string> paramKeyNotFound;
+  std::vector<std::string> jsonKeyNotFound;
+
   for(const auto& [name, param] : params)
   {
     if(!json.contains(name))
     {
-      warnings.push_back(Warning{-5432, fmt::format("PARAMETER_KEY_NOT_FOUND_IN_JSON | '{}' | Parameter Key '{}' missing from the JSON", className(), name)});
+      //warnings.push_back(Warning{-5432, fmt::format("PARAMETER_KEY_NOT_FOUND_IN_JSON | '{}' | Parameter Key '{}' missing from the JSON", className(), name)});
       args.insert(name, param->defaultValue());
+      paramKeyNotFound.push_back(name);
       continue;
     }
     const auto& jsonValue = json[name];
@@ -284,8 +328,18 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   {
     if(!params.contains(key))
     {
-      warnings.push_back(Warning{-5433, fmt::format("JSON_KEY_NOT_FOUND_IN_PARAMETER | '{}' | JSON Key '{}' missing from the parameter list", className(), key)});
+      //warnings.push_back(Warning{-5433, fmt::format("JSON_KEY_NOT_FOUND_IN_PARAMETER | '{}' | JSON Key '{}' missing from the parameter list", className(), key)});
+      jsonKeyNotFound.push_back(key);
       continue;
+    }
+  }
+
+  auto bestMatches = findBestMatches(jsonKeyNotFound, paramKeyNotFound);
+  for(const auto& match: bestMatches)
+  {
+    if(!match.first.empty() && !match.second.empty())
+    {
+      warnings.push_back(Warning{-5434, fmt::format("JSON Parameter Mismatch Suggestion: '{}': {}  ===>  {}", className(), match.first, match.second)});
     }
   }
 
