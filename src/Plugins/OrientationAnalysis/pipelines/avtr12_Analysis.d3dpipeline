@@ -433,7 +433,6 @@
         "output_path": "Data/Output/fw-ar-IF1-avtr12-corr/EqDiamHistogram.csv",
         "delimiter": 2,
         "file_extension": ".csv",
-        "output_path": "EqDiamHistogram",
         "output_dir": "",
         "includes": 1,
         "max_val_per_line": 0,
