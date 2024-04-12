@@ -71,7 +71,7 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       {
         std::vector<std::string> pathVec = m_Path.getPathVector();
 
-        // The canRename() function returns 1 if the base object already has the objects new name
+        // The canRename() function returns true if the base object already has the objects new name
         // so in that case we will never make it here
         for(const auto& name : pathVec)
         {

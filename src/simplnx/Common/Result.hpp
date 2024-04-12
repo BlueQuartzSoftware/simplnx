@@ -259,19 +259,6 @@ inline bool ExtractResult(Result<> result, std::vector<Error>& errors, std::vect
 template <typename T = void>
 inline Result<T> MergeResults(Result<T> first, Result<T> second)
 {
-  usize warningsSize = first.warnings().size() + second.warnings().size();
-  std::vector<Warning> warnings;
-  warnings.reserve(warningsSize);
-
-  for(auto&& warning : first.warnings())
-  {
-    warnings.push_back(std::move(warning));
-  }
-  for(auto&& warning : second.warnings())
-  {
-    warnings.push_back(std::move(warning));
-  }
-
   usize errorsSize = 0;
   if(first.invalid())
   {
@@ -300,7 +287,17 @@ inline Result<T> MergeResults(Result<T> first, Result<T> second)
   }
 
   Result<T> result = errors.empty() ? Result<T>{} : Result<T>{nonstd::make_unexpected(std::move(errors))};
-  result.warnings() = std::move(warnings);
+
+  result.m_Warnings.reserve(first.warnings().size() + second.warnings().size());
+  for(auto&& warning : first.warnings())
+  {
+    result.m_Warnings.push_back(std::move(warning));
+  }
+  for(auto&& warning : second.warnings())
+  {
+    result.m_Warnings.push_back(std::move(warning));
+  }
+
   return result;
 }
 
