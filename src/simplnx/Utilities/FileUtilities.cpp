@@ -172,9 +172,10 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
   }
 
   auto checkedPath = path;
-  if(isFile)
+  auto parentPath = checkedPath.parent_path();
+  if(isFile && !parentPath.empty())
   {
-    checkedPath = checkedPath.parent_path();
+    checkedPath = parentPath;
   }
   // We now have the parent directory. Let us see if *any* part of the path exists
 
