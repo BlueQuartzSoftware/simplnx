@@ -328,6 +328,11 @@ public:
    */
   std::vector<std::string> GetChildrenNames();
 
+  /**
+   * @brief Querys the DataMap for the object ids in m_DataMap
+   */
+  std::vector<DataObject::IdType> GetChildrenIds();
+
 protected:
   /**
    * @brief Creates a BaseGroup with the target DataStructure and name.

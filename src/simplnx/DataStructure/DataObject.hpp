@@ -207,7 +207,7 @@ public:
    * @param name
    * @return int: 0 = false, 1 = true, 2 = duplicate object found
    */
-  int canRename(const std::string& name) const;
+  bool canRename(const std::string& name) const;
 
   /**
    * @brief Attempts to rename the DataObject to the provided value.
