@@ -1,4 +1,4 @@
-# Read VTK Structured Points File
+# Read Vtk Structured Points File
 
 ## Group (Subgroup)
 

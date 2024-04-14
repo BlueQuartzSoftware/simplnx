@@ -1,4 +1,4 @@
-# ITK Gradient Magnitude Recursive Gaussian Image Filter (ITKGradientMagnitudeRecursiveGaussianImage)
+# ITK Gradient Magnitude Recursive Gaussian Image Filter
 
 Computes the Magnitude of the Gradient of an image by convolution with the first derivative of a Gaussian.
 

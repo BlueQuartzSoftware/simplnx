@@ -1,4 +1,4 @@
-# ITK Gradient Anisotropic Diffusion Image Filter (ITKGradientAnisotropicDiffusionImage)
+# ITK Gradient Anisotropic Diffusion Image Filter
 
 This filter performs anisotropic diffusion on a scalar itk::Image using the classic Perona-Malik, gradient magnitude based equation.
 

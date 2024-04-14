@@ -1,4 +1,4 @@
-# Find Difference Map
+# Find Differences Map
 
 ## Group (Subgroup)
 

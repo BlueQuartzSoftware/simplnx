@@ -1,4 +1,4 @@
-# Export INL File
+# Write INL File
 
 ## Group (Subgroup)
 

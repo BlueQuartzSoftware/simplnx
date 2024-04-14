@@ -1,4 +1,4 @@
-# FlyingEdges3D (Image Contouring)
+# Surface Contour Filter (Flying Edges 3D)
 
 ## Group (Subgroup)
 

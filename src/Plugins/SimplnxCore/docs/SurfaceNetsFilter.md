@@ -1,4 +1,4 @@
-# SurfaceNets Filter
+# SurfaceNets Meshing Filter
 
 ## Group (Subgroup)
 

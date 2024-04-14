@@ -1,4 +1,4 @@
-# Smooth Bad Data (Coordination Number)
+# Erode/Dilate Coordination Number
 
 ## Group (Subgroup)
 

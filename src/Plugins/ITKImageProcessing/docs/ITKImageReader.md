@@ -1,4 +1,4 @@
-# ITK::Image Reader
+# Read Image (ITK)
 
 This filter directly wraps an ITK filter of the same name.
 

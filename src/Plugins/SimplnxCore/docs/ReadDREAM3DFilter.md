@@ -1,4 +1,4 @@
-# Read DREAM3D Filter
+# Read DREAM.3D File
 
 ## Description
 

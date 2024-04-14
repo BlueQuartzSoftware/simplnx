@@ -1,4 +1,4 @@
-# Convert Hexagonal Grid Data to Square Grid Data (TSL - .ang)
+# Convert EDAX Hex Grid to Square Grid (.ang)
 
 ## Group (Subgroup)
 

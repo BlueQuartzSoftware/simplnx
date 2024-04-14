@@ -1,4 +1,4 @@
-# Write Vtk Structured Points File
+# Write Vtk Structured Points
 
 ## Group (Subgroup)
 

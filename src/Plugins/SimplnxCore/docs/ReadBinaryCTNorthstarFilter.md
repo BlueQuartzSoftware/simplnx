@@ -1,4 +1,4 @@
-# Import North Star Imaging CT File (Binary)
+# Read North Star Imaging CT (.nsihdr/.nsidat)
 
 ## Group (Subgroup)
 

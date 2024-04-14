@@ -1,4 +1,4 @@
-# Set Origin & Spacing (Image Geometry)  
+# Set Origin & Spacing (Image Geom)
 
 ## Group (Subgroup)
 

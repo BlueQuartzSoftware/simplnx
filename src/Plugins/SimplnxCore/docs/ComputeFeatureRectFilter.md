@@ -1,4 +1,4 @@
-# Compute Feature Rect
+# Compute Feature Corners
 
 ## Group (Subgroup)
 

@@ -1,4 +1,4 @@
-# GenerateFZQuaternions
+# Reduce Orientations to Fundamental Zone
 
 ## Group (Subgroup)
 

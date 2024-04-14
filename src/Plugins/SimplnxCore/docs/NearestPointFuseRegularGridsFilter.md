@@ -1,4 +1,4 @@
-# Fuse Regular Grids (Nearest Points)
+# Fuse Regular Grids (Nearest Point)
 
 ## Group (Subgroup)
 

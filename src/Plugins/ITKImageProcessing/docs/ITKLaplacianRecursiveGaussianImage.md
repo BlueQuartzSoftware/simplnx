@@ -1,4 +1,4 @@
-# ITK Laplacian Recursive Gaussian Image Filter (ITKLaplacianRecursiveGaussianImage)
+# ITK Laplacian Recursive Gaussian Image Filter
 
 Computes the Laplacian of Gaussian (LoG) of an image.
 
