@@ -1,4 +1,4 @@
-# Generate Feature Face Triangle Ids
+# Generate Triangle Face Ids
 
 ## Group (Subgroup)
 

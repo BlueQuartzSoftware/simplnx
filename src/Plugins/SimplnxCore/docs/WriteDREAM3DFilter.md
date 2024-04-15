@@ -1,4 +1,4 @@
-# Write DREAM3D Filter
+# Write DREAM3D NX File
 
 ## Description
 

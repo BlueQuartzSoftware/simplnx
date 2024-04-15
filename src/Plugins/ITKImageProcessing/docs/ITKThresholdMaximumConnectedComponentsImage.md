@@ -1,4 +1,4 @@
-# ITK Threshold Maximum Connected Components Image Filter (ITKThresholdMaximumConnectedComponentsImage)
+# ITK Threshold Maximum Connected Components Image Filter
 
 Finds the threshold value of an image based on maximizing the number of objects in the image that are larger than a given minimal size.
 

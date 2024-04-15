@@ -1,4 +1,4 @@
-# Compute MomentInvariants (2D)
+# Compute Moment Invariants (2D)
 
 ## Group (Subgroup)
 

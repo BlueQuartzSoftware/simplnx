@@ -1,4 +1,4 @@
-# Find Surface Area to Volume
+# Find Surface Area to Volume & Sphericity
 
 ## Group (Subgroup)
 

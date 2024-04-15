@@ -1,4 +1,4 @@
-# Generate Triangle Dihedral Angle Filter
+# Calculate Triangle Minimum Dihedral Angle
 
 ## Group (Subgroup)
 

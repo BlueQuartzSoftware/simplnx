@@ -1,4 +1,4 @@
-# ITK Connected Component Image Filter (ITKConnectedComponentImage)
+# ITK Connected Component Image Filter
 
 Label the objects in a binary image.
 

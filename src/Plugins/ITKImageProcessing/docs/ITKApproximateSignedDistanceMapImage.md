@@ -1,4 +1,4 @@
-# ITK Approximate Signed Distance Map Image Filter (ITKApproximateSignedDistanceMapImage)
+# ITK Approximate Signed Distance Map Image Filter
 
 Create a map of the approximate signed distance from the boundaries of a binary image.
 

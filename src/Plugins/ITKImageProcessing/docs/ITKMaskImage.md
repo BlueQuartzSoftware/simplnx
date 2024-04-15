@@ -1,4 +1,4 @@
-# ITK::Mask Image Filter
+# ITK Mask Image Filter
 
 This filter directly wraps an ITK filter of the same name.
 

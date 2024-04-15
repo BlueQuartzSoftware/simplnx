@@ -1,4 +1,4 @@
-# Resample RectGrid To ImageGeom
+# Resample Rectilinear Grid to Image Geom
 
 ## Group (Subgroup)
 

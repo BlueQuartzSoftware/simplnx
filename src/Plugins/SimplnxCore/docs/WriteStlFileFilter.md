@@ -1,4 +1,4 @@
-# Export STL Files From Triangle Geometry
+# Write STL Files from Triangle Geometry
 
 ## Group (Subgroup)
 

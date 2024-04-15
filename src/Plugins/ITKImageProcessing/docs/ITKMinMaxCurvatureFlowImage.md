@@ -1,4 +1,4 @@
-# ITK Min Max Curvature Flow Image Filter (ITKMinMaxCurvatureFlowImage)
+# ITK Min Max Curvature Flow Image Filter
 
 Denoise an image using min/max curvature flow.
 

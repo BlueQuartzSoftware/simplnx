@@ -1,4 +1,4 @@
-# ITK Regional Maxima Image Filter (ITKRegionalMaximaImage)
+# ITK Regional Maxima Image Filter
 
 Produce a binary image where foreground is the regional maxima of the input image.
 

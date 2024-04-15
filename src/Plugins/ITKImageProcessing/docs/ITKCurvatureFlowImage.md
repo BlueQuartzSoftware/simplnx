@@ -1,4 +1,4 @@
-# ITK Curvature Flow Image Filter (ITKCurvatureFlowImage)
+# ITK Curvature Flow Image Filter
 
 Denoise an image using curvature driven flow.
 

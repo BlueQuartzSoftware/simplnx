@@ -1,4 +1,4 @@
-# RenameDataObject
+# Rename DataObject
 
 ## Group (Subgroup)
 
