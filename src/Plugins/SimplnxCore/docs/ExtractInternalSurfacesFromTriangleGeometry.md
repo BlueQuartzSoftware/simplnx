@@ -1,4 +1,4 @@
-# Extract Internal Surfaces from Triangle Geometry
+# Extract Internal Surfaces From Triangle Geometry
 
 ## Group (Subgroup)
 

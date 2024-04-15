@@ -1,4 +1,4 @@
-# ITK::Import Images (3D Stack)
+# Read Images [3D Stack] (ITK)
 
 This filter directly wraps an ITK filter of the same name.
 

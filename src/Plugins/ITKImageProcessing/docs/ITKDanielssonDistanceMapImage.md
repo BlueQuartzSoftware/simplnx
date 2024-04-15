@@ -1,4 +1,4 @@
-# ITK Danielsson Distance Map Image Filter (ITKDanielssonDistanceMapImage)
+# ITK Danielsson Distance Map Image Filter
 
 This filter computes the distance map of the input image as an approximation with pixel accuracy to the Euclidean distance.
 

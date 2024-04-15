@@ -1,4 +1,4 @@
-# Create Feature Array From Element Array
+# Create Feature Array from Element Array
 
 ## Group (Subgroup)
 

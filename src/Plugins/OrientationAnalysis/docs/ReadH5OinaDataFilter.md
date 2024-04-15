@@ -1,4 +1,4 @@
-# Import Oxford AZtec H5OINA Data File (.h5oina)
+# Read Oxford Aztec Data (.h5oina)
 
 ## Group (Subgroup)
 

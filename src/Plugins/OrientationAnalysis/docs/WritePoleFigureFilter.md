@@ -1,4 +1,4 @@
-# Export Pole Figure Images
+# Generate and Write Pole Figure Images
 
 ## Group (Subgroup)
 

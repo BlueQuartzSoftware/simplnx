@@ -1,4 +1,4 @@
-# Label Triangle Geometry
+# Label CAD Geometry
 
 ## Group (Subgroup)
 

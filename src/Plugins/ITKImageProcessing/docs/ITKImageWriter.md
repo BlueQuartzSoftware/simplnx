@@ -1,4 +1,4 @@
-# ITK::Image Writer (KW)
+# Write Image (ITK)
 
 ## Group (Subgroup)
 

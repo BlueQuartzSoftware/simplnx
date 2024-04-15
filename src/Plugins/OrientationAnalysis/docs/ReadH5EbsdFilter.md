@@ -1,4 +1,4 @@
-# Read H5Ebsd
+# Read H5EBSD File
 
 ## Group (Subgroup)
 

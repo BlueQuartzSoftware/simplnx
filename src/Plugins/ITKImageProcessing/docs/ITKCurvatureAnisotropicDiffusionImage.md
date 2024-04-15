@@ -1,4 +1,4 @@
-# ITK Curvature Anisotropic Diffusion Image Filter (ITKCurvatureAnisotropicDiffusionImage)
+# ITK Curvature Anisotropic Diffusion Image Filter
 
 This filter performs anisotropic diffusion on a scalar itk::Image using the modified curvature diffusion equation (MCDE).
 

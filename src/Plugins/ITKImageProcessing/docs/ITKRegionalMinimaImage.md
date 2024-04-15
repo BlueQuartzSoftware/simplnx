@@ -1,4 +1,4 @@
-# ITK Regional Minima Image Filter (ITKRegionalMinimaImage)
+# ITK Regional Minima Image Filter
 
 Produce a binary image where foreground is the regional minima of the input image.
 

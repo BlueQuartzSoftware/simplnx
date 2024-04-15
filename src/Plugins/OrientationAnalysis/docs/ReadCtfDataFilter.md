@@ -1,4 +1,4 @@
-# Import Oxford Instr. Ebsd Data
+# Read Oxford Instr. EBSD Data (.ctf)
 
 ## Group (Subgroup)
 

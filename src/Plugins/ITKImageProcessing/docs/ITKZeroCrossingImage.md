@@ -1,4 +1,4 @@
-# ITK Zero Crossing Image Filter (ITKZeroCrossingImage)
+# ITK Zero Crossing Image Filter
 
 This filter finds the closest pixel to the zero-crossings (sign changes) in a signed itk::Image .
 

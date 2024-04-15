@@ -1,4 +1,4 @@
-# Extract Component as Attribute Array
+# Extract/Remove Components
 
 ## Group (Subgroup)
 

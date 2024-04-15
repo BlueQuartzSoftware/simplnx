@@ -1,4 +1,4 @@
-# ITK Iso Contour Distance Image Filter (ITKIsoContourDistanceImage)
+# ITK Iso Contour Distance Image Filter
 
 Compute an approximate distance from an interpolated isocontour to the close grid points.
 

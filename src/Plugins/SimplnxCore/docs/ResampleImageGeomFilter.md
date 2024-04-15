@@ -1,4 +1,4 @@
-# Resample Image Geometry
+# Resample Data (Image Geometry)
 
 ## Group (Subgroup)
 

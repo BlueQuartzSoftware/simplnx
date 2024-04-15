@@ -1,4 +1,4 @@
-# Create Geometry (Image)  
+# Create Geometry (Image)
 
 ## This filter should be considered deprecated. Use the "Create Geometry" filter instead
 

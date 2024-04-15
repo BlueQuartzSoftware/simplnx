@@ -1,4 +1,4 @@
-# Initialize Image Geom Cell Data
+# Initialize Image Geometry Cell Data
 
 ## Group (Subgroup)
 

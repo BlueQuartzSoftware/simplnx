@@ -1,4 +1,4 @@
-# Import Bruker Nano Esprit EBSD Data (.h5)
+# Read Bruker Nano Esprit Data (.h5)
 
 ## Group (Subgroup)
 

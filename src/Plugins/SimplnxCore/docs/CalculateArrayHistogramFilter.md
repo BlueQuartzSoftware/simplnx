@@ -1,4 +1,4 @@
-# CalculateArrayHistogram
+# Calculate Frequency Histogram
 
 ## Group (Subgroup)
 

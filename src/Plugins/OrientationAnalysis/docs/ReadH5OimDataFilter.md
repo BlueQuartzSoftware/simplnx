@@ -1,4 +1,4 @@
-# Import EDAX EBSD Data (.h5)
+# Read EDAX OIMAnalysis Data (.h5)
 
 ## Group (Subgroup)
 

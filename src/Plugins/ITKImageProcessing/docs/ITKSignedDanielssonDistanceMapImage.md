@@ -1,4 +1,4 @@
-# ITK Signed Danielsson Distance Map Image Filter (ITKSignedDanielssonDistanceMapImage)
+# ITK Signed Danielsson Distance Map Image Filter
 
 This filter computes the signed distance map of the input image as an approximation with pixel accuracy to the Euclidean distance.
 

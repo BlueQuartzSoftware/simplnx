@@ -1,4 +1,4 @@
-# Import Ensemble Info File
+# Read Ensemble Info File
 
 ## Group (Subgroup)
 

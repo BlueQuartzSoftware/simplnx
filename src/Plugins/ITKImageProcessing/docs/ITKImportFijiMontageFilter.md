@@ -1,4 +1,4 @@
-# Import Fiji Montage
+# Read Fiji Montage (ITK)
 
 ## Group (Subgroup)
 

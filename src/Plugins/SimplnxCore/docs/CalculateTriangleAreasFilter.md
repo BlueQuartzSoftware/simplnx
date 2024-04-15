@@ -1,4 +1,4 @@
-# Generate Triangle Areas
+# Calculate Triangle Areas
 
 ## Group (Subgroup)
 

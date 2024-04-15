@@ -1,4 +1,4 @@
-# Los Alamos FFT Writer
+# Write Los Alamos FFT File
 
 ## Group (Subgroup)
 
