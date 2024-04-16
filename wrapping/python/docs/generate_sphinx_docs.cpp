@@ -699,7 +699,7 @@ void GeneratePythonRstFiles()
       rstStream << ".. index:: pair: Filter Class Names; " << filter->className() << "\n";
 
       rstStream << "\n";
-      //rstStream << "-  **UI Name**: " << filter->humanName() << "\n\n";
+      // rstStream << "-  **UI Name**: " << filter->humanName() << "\n\n";
 
       rstStream << ".. _" << filterClassName << ":\n";
 
