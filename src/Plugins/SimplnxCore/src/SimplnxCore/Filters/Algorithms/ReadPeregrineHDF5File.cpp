@@ -40,7 +40,7 @@ Result<ScanData> readScan(const fs::path& scanPath, HDF5::FileReader& h5FileRead
     return {nonstd::make_unexpected(scanDimsResult.errors())};
   }
   std::vector<usize> scanDims = scanDimsResult.value();
-  usize totalElements = std::accumulate(scanDims.begin(), scanDims.end(), 1, std::multiplies<>());
+  usize totalElements = std::accumulate(scanDims.begin(), scanDims.end(), 1ull, std::multiplies<>());
   std::vector<float32> inputData(totalElements);
   nonstd::span<float32> span{inputData.data(), inputData.size()};
 
@@ -262,7 +262,7 @@ Result<> ReadPeregrineHDF5File::readScanDatasets(HDF5::FileReader& h5FileReader)
     }
 
     // Read the scan data into memory
-    fs::path scanPath = fs::path(ReadPeregrineHDF5File::k_ScansGroupPath) / std::to_string(z);
+    fs::path scanPath = fs::path(ReadPeregrineHDF5File::k_ScansGroupPath.view()) / std::to_string(z);
     m_MessageHandler(fmt::format("Reading Scan Dataset '{}' ({}/{})...", scanPath.string(), z - zStart + 1, zEnd - zStart));
     Result<ScanData> scanDataResult = readScan(scanPath, h5FileReader);
     if(scanDataResult.invalid())

@@ -380,30 +380,18 @@ template SIMPLNX_EXPORT std::vector<size_t> DatasetReader::readAsVector<size_t>(
 template SIMPLNX_EXPORT std::vector<float> DatasetReader::readAsVector<float>() const;
 template SIMPLNX_EXPORT std::vector<double> DatasetReader::readAsVector<double>() const;
 
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                     const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                      const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int32_t>(nonstd::span<int32_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                      const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int64_t>(nonstd::span<int64_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                      const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint8_t>(nonstd::span<uint8_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                      const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint16_t>(nonstd::span<uint16_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                       const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint32_t>(nonstd::span<uint32_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                       const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                       const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                   const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int32_t>(nonstd::span<int32_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<int64_t>(nonstd::span<int64_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint8_t>(nonstd::span<uint8_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint16_t>(nonstd::span<uint16_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint32_t>(nonstd::span<uint32_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
 #ifdef __APPLE__
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<size_t>(nonstd::span<size_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                     const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<size_t>(nonstd::span<size_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
 #endif
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                    const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                                     const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetReader::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
 } // namespace nx::core::HDF5

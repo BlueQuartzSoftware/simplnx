@@ -534,7 +534,7 @@ IFilter::PreflightResult ReadPeregrineHDF5FileFilter::preflightScanDatasets(cons
   usize numEdges = 0;
   for(usize i = zStart; i < zEnd; i++)
   {
-    fs::path scanPath = fs::path(ReadPeregrineHDF5File::k_ScansGroupPath) / std::to_string(i);
+    fs::path scanPath = fs::path(ReadPeregrineHDF5File::k_ScansGroupPath.view()) / std::to_string(i);
     Result<std::vector<usize>> scanDimsResult = ReadPeregrineHDF5File::ReadDatasetDimensions(h5FileReader, scanPath.string());
     if(scanDimsResult.invalid())
     {

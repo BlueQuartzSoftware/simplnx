@@ -13,7 +13,7 @@ namespace nx::core::GeometryUtilities
  * @brief The FindUniqueIdsImpl class implements a threaded algorithm that determines the set of
  * unique vertices in a given geometry
  */
-class FindUniqueIdsImpl
+class SIMPLNX_EXPORT FindUniqueIdsImpl
 {
 public:
   FindUniqueIdsImpl(nx::core::IGeometry::SharedVertexList& vertex, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds);

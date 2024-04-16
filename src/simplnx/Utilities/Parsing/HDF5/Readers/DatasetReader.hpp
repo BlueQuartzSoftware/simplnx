@@ -134,28 +134,17 @@ protected:
    */
   void closeHdf5() override;
 };
-extern template Result<> DatasetReader::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                           const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                             const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                              const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<int32_t>(nonstd::span<int32_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                              const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<int64_t>(nonstd::span<int64_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                              const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<uint8_t>(nonstd::span<uint8_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                              const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<uint16_t>(nonstd::span<uint16_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                               const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<uint32_t>(nonstd::span<uint32_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                               const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                               const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                            const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
-extern template Result<> DatasetReader::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<hsize_t>>& = std::nullopt,
-                                                             const std::optional<std::vector<hsize_t>>& = std::nullopt) const;
+extern template Result<> DatasetReader::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<int32_t>(nonstd::span<int32_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<int64_t>(nonstd::span<int64_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<uint8_t>(nonstd::span<uint8_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<uint16_t>(nonstd::span<uint16_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<uint32_t>(nonstd::span<uint32_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
 
 extern template std::vector<bool> DatasetReader::readAsVector<bool>() const;
 extern template std::vector<int8_t> DatasetReader::readAsVector<int8_t>() const;
