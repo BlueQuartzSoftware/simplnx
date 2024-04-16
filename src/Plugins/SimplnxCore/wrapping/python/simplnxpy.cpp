@@ -81,6 +81,8 @@
 #include <simplnx/Pipeline/Pipeline.hpp>
 #include <simplnx/Pipeline/PipelineFilter.hpp>
 #include <simplnx/Utilities/DataGroupUtilities.hpp>
+#include <simplnx/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp>
+#include <simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp>
 
 #include <fmt/ranges.h>
 
@@ -522,8 +524,7 @@ PYBIND11_MODULE(simplnx, mod)
   parameters.def("insert_linkable_parameter", &PyInsertLinkableParameter<ChoicesParameter>);
   parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, BoolParameter::ValueType value) { self.linkParameters(groupKey, childKey, value); });
   parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, ChoicesParameter::ValueType value) { self.linkParameters(groupKey, childKey, value); });
-  parameters.def(
-      "__getitem__", [](Parameters& self, std::string_view key) { return self.at(key).get(); }, py::return_value_policy::reference_internal);
+  parameters.def("__getitem__", [](Parameters& self, std::string_view key) { return self.at(key).get(); }, py::return_value_policy::reference_internal);
 
   py::class_<IArrayThreshold, std::shared_ptr<IArrayThreshold>> iArrayThreshold(mod, "IArrayThreshold");
 
@@ -1359,12 +1360,10 @@ PYBIND11_MODULE(simplnx, mod)
       "path"_a);
   pipeline.def_property("name", &Pipeline::getName, &Pipeline::setName);
   pipeline.def("execute", &ExecutePipeline);
-  pipeline.def(
-      "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
+  pipeline.def("__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
   pipeline.def("__len__", &Pipeline::size);
   pipeline.def("size", &Pipeline::size);
-  pipeline.def(
-      "__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
+  pipeline.def("__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
   pipeline.def(
       "insert",
       [internals](Pipeline& self, Pipeline::index_type index, const IFilter& filter, const py::dict& args) {
@@ -1378,10 +1377,8 @@ PYBIND11_MODULE(simplnx, mod)
   pipeline.def("remove", &Pipeline::removeAt, "index"_a);
 
   pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
-  pipelineFilter.def(
-      "set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
-  pipelineFilter.def(
-      "get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
+  pipelineFilter.def("set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
+  pipelineFilter.def("get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
   pipelineFilter.def(
       "name",
       [](const PipelineFilter& self) {
@@ -1514,4 +1511,51 @@ PYBIND11_MODULE(simplnx, mod)
   manualImportFinder.def("clear", &ManualImportFinder::clear);
   manualImportFinder.def("contains_path", &ManualImportFinder::containsPath, "path"_a);
   manualImportFinder.def("contains_module", &ManualImportFinder::containsModule, "mod_name"_a);
+
+  auto hdf5_module = mod.def_submodule("HDF5", "HDF5 submodule");
+  py::class_<nx::core::HDF5::FileReader>(hdf5_module, "FileReader")
+      .def(py::init<const std::filesystem::path&>(), "file_path"_a)
+      .def("is_valid", &nx::core::HDF5::FileReader::isValid)
+      .def("open_group", &nx::core::HDF5::FileReader::openGroup, "name"_a)
+      .def("open_dataset", &nx::core::HDF5::FileReader::openDataset, "name"_a)
+      .def("get_name", &nx::core::HDF5::FileReader::getName)
+      .def("get_attribute", &nx::core::HDF5::FileReader::getAttribute, "name"_a)
+      .def("get_attr_names", &nx::core::HDF5::FileReader::getAttributeNames)
+      .def("get_id", &nx::core::HDF5::FileReader::getId);
+
+  py::class_<nx::core::HDF5::AttributeReader>(hdf5_module, "AttributeReader")
+      .def(py::init<>())
+      .def("is_valid", &nx::core::HDF5::AttributeReader::isValid)
+      .def("get_name", &nx::core::HDF5::AttributeReader::getName)
+      .def("get_type", &nx::core::HDF5::AttributeReader::getType)
+      .def("get_attr_id", &nx::core::HDF5::AttributeReader::getAttributeId)
+      .def("read_as_value", [](nx::core::HDF5::AttributeReader& instance) -> std::variant<int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64> {
+        nx::core::HDF5::Type type = instance.getType();
+        std::cout << to_underlying(type) << std::endl;
+        switch(type)
+        {
+        case nx::core::HDF5::Type::int8:
+          return instance.readAsValue<int8>();
+        case nx::core::HDF5::Type::uint8:
+          return instance.readAsValue<uint8>();
+        case nx::core::HDF5::Type::int16:
+          return instance.readAsValue<int16>();
+        case nx::core::HDF5::Type::uint16:
+          return instance.readAsValue<uint16>();
+        case nx::core::HDF5::Type::int32:
+          return instance.readAsValue<int32>();
+        case nx::core::HDF5::Type::uint32:
+          return instance.readAsValue<uint32>();
+        case nx::core::HDF5::Type::int64:
+          return instance.readAsValue<int64>();
+        case nx::core::HDF5::Type::uint64:
+          return instance.readAsValue<uint64>();
+        case nx::core::HDF5::Type::float32:
+          return instance.readAsValue<float32>();
+        case nx::core::HDF5::Type::float64:
+          return instance.readAsValue<float64>();
+        default:
+          throw std::runtime_error("Unsupported type");
+        }
+      });
 }

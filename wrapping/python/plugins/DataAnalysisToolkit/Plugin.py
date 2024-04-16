@@ -37,7 +37,11 @@ try:
   _filters.append(NPSortArray)
 except ImportError:
   pass
-
+try:
+  from DataAnalysisToolkit.ReadPeregrineHDF5File import ReadPeregrineHDF5File
+  _filters.append(ReadPeregrineHDF5File)
+except ImportError:
+  pass
 
 import simplnx as nx
 
@@ -58,6 +62,5 @@ class DataAnalysisToolkit:
     return 'BlueQuartz Software'
 
   def get_filters(self):
-    return _filters 
-
+    return _filters
 

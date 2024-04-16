@@ -28,11 +28,15 @@ try:
   __all__.append('NPSortArray')
 except ImportError:
   pass
+try:
+  from DataAnalysisToolkit.ReadPeregrineHDF5File import ReadPeregrineHDF5File
+  __all__.append('ReadPeregrineHDF5File')
+except ImportError:
+  pass
 
 
-
+from DataAnalysisToolkit.ReadPeregrineHDF5File import ReadPeregrineHDF5File
 # FILTER_INCLUDE_INSERT
 
 def get_plugin():
   return DataAnalysisToolkit()
-
