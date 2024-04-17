@@ -301,7 +301,10 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   {
     if(!match.first.empty() && !match.second.empty())
     {
-      warnings.push_back(Warning{-5434, fmt::format("JSON Parameter Mismatch Suggestion: '{}': {}  ===>  {}", className(), match.first, match.second)});
+      warnings.push_back(
+          Warning{-5434, fmt::format("Filter '{}': JSON Parameter Warning\n    JSON Parameter Key '{}' is not an accepted Parameter Key for the filter. Closest match is "
+                                     "'{}'\n    Suggested change is '{}' ==> '{}' (This is *ONLY* a suggestion.)\n    Open the JSON file in a text editor and make the suggested changes.",
+                                     className(), match.first, match.second, match.first, match.second)});
     }
   }
 
