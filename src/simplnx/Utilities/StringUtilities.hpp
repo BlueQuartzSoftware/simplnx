@@ -32,12 +32,17 @@
 #pragma once
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/Types.hpp"
 
 #include <fmt/ranges.h>
 #include <nonstd/span.hpp>
 
+#include <algorithm>
 #include <cctype>
+#include <limits>
 #include <sstream>
+#include <string>
+#include <utility>
 #include <vector>
 
 /*' '(0x20)space(SPC)
@@ -439,4 +444,62 @@ inline std::string toLower(std::string input)
   return input;
 }
 
+/**
+ * @brief Calculates the Levenshtein distance between two strings.
+ * @param s1
+ * @param s2
+ * @return uint32
+ */
+inline uint32 CalculateLevenshteinDistance(const std::string& s1, const std::string& s2)
+{
+  usize len1 = s1.size();
+  usize len2 = s2.size();
+  std::vector<std::vector<uint32>> d(len1 + 1, std::vector<uint32>(len2 + 1));
+
+  d[0][0] = 0;
+  for(uint32 i = 1; i <= len1; ++i)
+  {
+    d[i][0] = i;
+  }
+  for(uint32 i = 1; i <= len2; ++i)
+  {
+    d[0][i] = i;
+  }
+
+  for(uint32 i = 1; i <= len1; ++i)
+  {
+    for(uint32 j = 1; j <= len2; ++j)
+    {
+      d[i][j] = std::min({d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (s1[i - 1] == s2[j - 1] ? 0 : 1)});
+    }
+  }
+  return d[len1][len2];
+}
+
+/**
+ * @brief Finds the best matches between two lists of strings using the Levenshtein distance.
+ * @param vec1
+ * @param vec2
+ * @return std::vector<std::pair<std::string, std::string>>
+ */
+inline std::vector<std::pair<std::string, std::string>> FindBestMatches(const std::vector<std::string>& vec1, const std::vector<std::string>& vec2)
+{
+  std::vector<std::pair<std::string, std::string>> bestPairs;
+  for(const auto& word1 : vec1)
+  {
+    uint32 bestDistance = std::numeric_limits<uint32>::max();
+    std::string bestMatch;
+    for(const auto& word2 : vec2)
+    {
+      uint32 currentDistance = CalculateLevenshteinDistance(word1, word2);
+      if(currentDistance < bestDistance)
+      {
+        bestDistance = currentDistance;
+        bestMatch = word2;
+      }
+    }
+    bestPairs.emplace_back(word1, bestMatch);
+  }
+  return bestPairs;
+}
 } // namespace nx::core::StringUtilities
