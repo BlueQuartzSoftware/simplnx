@@ -838,7 +838,7 @@ PYBIND11_MODULE(simplnx, mod)
   attributeMatrix.def("tuple_shape", &AttributeMatrix::getShape, "Returns the Tuple dimensions of the AttributeMatrix");
   attributeMatrix.def("__len__", &AttributeMatrix::getNumTuples, "Returns the total number of tuples");
   attributeMatrix.def_property_readonly("size", &AttributeMatrix::getNumTuples, "Returns the total number of tuples");
-  
+
   baseGroup.def("", &BaseGroup::getSize);
 
   py::class_<IArray, DataObject, std::shared_ptr<IArray>> iArray(mod, "IArray");
@@ -1358,6 +1358,10 @@ PYBIND11_MODULE(simplnx, mod)
   pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
   pipelineFilter.def("set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
   pipelineFilter.def("get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
+  pipelineFilter.def("name", [](PipelineFilter& self) { return self.getFilter()->name(); }, "Returns the C++ name of the filter");
+  pipelineFilter.def("human_name", [](PipelineFilter& self) { return self.getFilter()->humanName(); }, "Returns the human facing name of the filter");
+
+
 
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
