@@ -347,10 +347,9 @@ public:
     bool isPackage = modPath.extension() != ".py";
 
     auto importLibUtil = py::module_::import("importlib.util");
-    std::string modName = modPath.stem().string();
     fs::path initPyPath = isPackage ? modPath / "__init__.py" : modPath;
     py::object submoduleSearchLocations = isPackage ? py::list() : py::object(py::none());
-    auto spec = importLibUtil.attr("spec_from_file_location")(modName, initPyPath, py::arg("submodule_search_locations") = submoduleSearchLocations);
+    auto spec = importLibUtil.attr("spec_from_file_location")(fullname, initPyPath, py::arg("submodule_search_locations") = submoduleSearchLocations);
     return spec;
   }
 
