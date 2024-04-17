@@ -61,42 +61,42 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
 
   Result<> result = {};
 
-  bool validRename = dataObject->canRename(m_NewName);
-
-  if(!validRename)
+  if(m_Overwrite)
   {
-    if(m_Overwrite)
+    if(dataObject->getName() == m_NewName)
+    {
+      return result;
+    }
+
+    std::vector<std::string> pathVec = m_Path.getPathVector();
+    for(const auto& name : pathVec)
+    {
+      if(name == m_NewName)
+      {
+        std::string ss = fmt::format("{}The object that would be overwritten is a parent container to {} cannot rename to {}", prefix, m_Path.getTargetName(), m_NewName);
+        return MakeErrorResult(-6601, ss);
+      }
+    }
+
+    DataObject::IdType targetId = std::numeric_limits<DataObject::IdType>::max();
+    for(auto dataObjectID : dataStructure.getAllDataObjectIds())
+    {
+      if(dataStructure.getData(dataObjectID)->getName() == m_NewName)
+      {
+        targetId = dataObjectID;
+        break;
+      }
+    }
+
+    if(targetId != std::numeric_limits<DataObject::IdType>::max())
     {
       if(mode == Mode::Preflight)
       {
-        std::vector<std::string> pathVec = m_Path.getPathVector();
-
-        // The canRename() function returns true if the base object already has the objects new name
-        // so in that case we will never make it here
-        for(const auto& name : pathVec)
-        {
-          if(name == m_NewName)
-          {
-            std::string ss = fmt::format("{}The object that would be overwritten is a parent container to {} cannot rename to {}", prefix, m_Path.getTargetName(), m_NewName);
-            return MakeErrorResult(-6601, ss);
-          }
-        }
-
         std::string ss = fmt::format("{}Another object exists with that name, will overwrite destroying other DataObject at '{}' and replacing it with '{}'", prefix, m_NewName, m_Path.toString());
         result.warnings().emplace_back(Warning{-6602, ss});
       }
       else
       {
-        DataObject::IdType targetId = std::numeric_limits<DataObject::IdType>::max();
-        for(auto dataObjectID : dataStructure.getAllDataObjectIds())
-        {
-          if(dataStructure.getData(dataObjectID)->getName() == m_NewName)
-          {
-            targetId = dataObjectID;
-            break;
-          }
-        }
-
         if(dataStructure.getDataAs<BaseGroup>(targetId) != nullptr)
         {
           // Recursive removal of overwritten object
@@ -108,11 +108,11 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
         }
       }
     }
-    else
-    {
-      std::string ss = fmt::format("{}Could not rename DataObject at '{}' to '{}'", prefix, m_Path.toString(), m_NewName);
-      return MakeErrorResult(-6603, ss);
-    }
+  }
+  else if(!dataObject->canRename(m_NewName))
+  {
+    std::string ss = fmt::format("{}Could not rename DataObject at '{}' to '{}'", prefix, m_Path.toString(), m_NewName);
+    return MakeErrorResult(-6603, ss);
   }
 
   dataObject->rename(m_NewName);
