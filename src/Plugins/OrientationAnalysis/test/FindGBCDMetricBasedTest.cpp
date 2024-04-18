@@ -96,28 +96,19 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
 
   // read in exemplar and computed data files for comparison
   {
-    constexpr StringLiteral k_InputFile_Key = "input_file";
-    constexpr StringLiteral k_ScalarType_Key = "scalar_type";
-    constexpr StringLiteral k_NTuples_Key = "number_tuples";
-    constexpr StringLiteral k_NComp_Key = "number_comp";
-    constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
-    constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
-    constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
-    constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
 
     auto filter = filterListPtr->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
     // exemplar distribution
     {
       Arguments args;
-      args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarDistOutput));
-      args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
-      args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarDistributionPath));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarDistOutput));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarDistributionPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -125,13 +116,13 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
     // exemplar errors
     {
       Arguments args;
-      args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarErrorsOutput));
-      args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
-      args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarErrorPath));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarErrorsOutput));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarErrorPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -139,13 +130,13 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
     // computed distribution
     {
       Arguments args;
-      args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
-      args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
-      args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedDistributionPath));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedDistributionPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -153,13 +144,13 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
     // computed errors
     {
       Arguments args;
-      args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
-      args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
-      args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedErrorPath));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedErrorPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)

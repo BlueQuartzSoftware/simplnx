@@ -19,7 +19,7 @@ result = nx_filter.execute(
     component_count=1,
     data_format="",
     initialization_value_str="2",
-    numeric_type=nx.NumericType.int32,
+    numeric_type_index=nx.NumericType.int32,
     output_array_path=nx.DataPath("TestArray"),
     tuple_dimensions=[[10.0]]
 )
@@ -36,7 +36,7 @@ result = nx_filter.execute(
     component_count=1,
     data_format="",
     initialization_value_str="1.23878",
-    numeric_type=nx.NumericType.float32,
+    numeric_type_index=nx.NumericType.float32,
     output_array_path=nx.DataPath("Confidence Index"),
     tuple_dimensions=[[10.0]]
 )
@@ -52,7 +52,7 @@ result = nx_filter.execute(
     component_count=3,
     data_format="",
     initialization_value_str="1.23878",
-    numeric_type=nx.NumericType.float32,
+    numeric_type_index=nx.NumericType.float32,
     output_array_path=nx.DataPath("EulerAngles"),
     tuple_dimensions=[[10.0]]
 )
@@ -68,7 +68,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     calculated_array_path=nx.DataPath("Caclulated_TestArray"),
     calculator_parameter=calc_param, 
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -81,7 +81,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     calculated_array_path=nx.DataPath("Caclulated_ConfidenceIndex"),
     calculator_parameter=calc_param, 
-    scalar_type=nx.NumericType.float64
+    scalar_type_index=nx.NumericType.float64
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -95,7 +95,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     calculated_array_path=nx.DataPath("Caclulated_EulerAngles"),
     calculator_parameter=calc_param, 
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -108,7 +108,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     calculated_array_path=nx.DataPath("Caclulated_EulerAngles2"),
     calculator_parameter=calc_param, 
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 

@@ -26,7 +26,7 @@ public:
   ExtractVertexGeometryFilter& operator=(ExtractVertexGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling";
+  static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling_index";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_InputGeometryPath_Key = "input_grid_geometry_path";

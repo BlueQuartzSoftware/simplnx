@@ -240,6 +240,10 @@ TEST_CASE("Test Filter Parameter Keys")
         {
           output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_name' for a Parameter of Type " << pType << std::endl;
         }
+        if((pType == "simplnx.ChoicesParameter" || pType == "simplnx.NumericTypeParameter") && !nx::core::StringUtilities::ends_with(parameter.first, "_index"))
+        {
+          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_index' for a Parameter of Type " << pType << std::endl;
+        }
       }
     }
   }

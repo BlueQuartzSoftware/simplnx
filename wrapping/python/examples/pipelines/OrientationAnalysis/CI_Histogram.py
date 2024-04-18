@@ -29,7 +29,7 @@ nx_filter = cxor.RotateEulerRefFrameFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
-    rotation_axis=[0.0, 0.0, 1.0, 90.0]
+    rotation_axis_angle=[0.0, 0.0, 1.0, 90.0]
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -42,8 +42,8 @@ result = nx_filter.execute(
     output_image_geometry_path=nx.DataPath("beans"),
     remove_original_geometry=False,
     rotate_slice_by_slice=True,
-    rotation_axis=[0.0, 1.0, 0.0, 180.0],
-    rotation_representation=0,
+    rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],
+    rotation_representation_index=0,
     input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -110,12 +110,12 @@ output_file_path = nxtest.get_data_directory() / "Output/OrientationAnalysis/Tes
 result = nx_filter.execute(
     data_structure=data_structure,
     #file_extension: str = ...,
-    delimiter=2,
-    includes=1,
+    delimiter_index=2,
+    header_option_index=1,
     #max_val_per_line: int = ...,
     #output_dir: PathLike = ...,
     output_path=output_file_path,
-    output_style=1,
+    output_style_index=1,
     input_data_array_paths=[nx.DataPath("DataContainer/Statistics/Confidence Index Histogram")]
 )
 nxtest.check_filter_result(nx_filter, result)

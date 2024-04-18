@@ -11,7 +11,7 @@ namespace
 {
 constexpr StringLiteral k_Param1 = "param1";
 constexpr StringLiteral k_Param2 = "param2";
-constexpr StringLiteral k_Param3 = "param3";
+constexpr StringLiteral k_Param3 = "param3_index";
 } // namespace
 
 Test2Filter::Test2Filter() = default;

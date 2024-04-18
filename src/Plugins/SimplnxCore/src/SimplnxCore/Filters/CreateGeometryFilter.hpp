@@ -24,11 +24,11 @@ public:
   CreateGeometryFilter& operator=(CreateGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GeometryType_Key = "geometry_type";
-  static inline constexpr StringLiteral k_LengthUnitType_Key = "length_unit_type";
+  static inline constexpr StringLiteral k_GeometryType_Key = "geometry_type_index";
+  static inline constexpr StringLiteral k_LengthUnitType_Key = "length_unit_index";
   static inline constexpr StringLiteral k_GeometryPath_Key = "output_geometry_path";
   static inline constexpr StringLiteral k_WarningsAsErrors_Key = "warnings_as_errors";
-  static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling";
+  static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling_index";
   // Image Geometry
   static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
   static inline constexpr StringLiteral k_Origin_Key = "origin";

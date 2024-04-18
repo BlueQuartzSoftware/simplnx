@@ -33,9 +33,9 @@ result = nx_filter.execute(
     #output_image_geometry_path=nx.DataPath("DataContainer/"),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
-    rotation_axis=[0.0, 1.0, 0.0, 180.0],
+    rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],
     #rotation_matrix: List[List[float]] = ...,
-    rotation_representation=0,
+    rotation_representation_index=0,
     input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)

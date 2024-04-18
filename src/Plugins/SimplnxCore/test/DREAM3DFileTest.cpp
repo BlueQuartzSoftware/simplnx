@@ -159,7 +159,7 @@ Pipeline CreateExportPipeline()
   {
     Arguments args;
     args.insert("set_tuple_dimensions", std::make_any<bool>(true));
-    args.insert("numeric_type", std::make_any<NumericType>(NumericType::int8));
+    args.insert("numeric_type_index", std::make_any<NumericType>(NumericType::int8));
     args.insert("component_count", std::make_any<uint64>(3));
 
     args.insert("tuple_dimensions", DynamicTableInfo::TableDataType{{1.0}});

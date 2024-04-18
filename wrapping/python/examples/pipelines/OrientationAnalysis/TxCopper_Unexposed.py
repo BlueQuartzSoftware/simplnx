@@ -32,9 +32,9 @@ result = nx_filter.execute(
     data_structure=data_structure,
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
-    rotation_axis=[0.0, 1.0, 0.0, 180.0],
+    rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],
     #rotation_matrix=
-    rotation_representation=0,
+    rotation_representation_index=0,
     input_image_geometry_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -95,7 +95,7 @@ result = nx_filter.execute(
     image_array_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/IPF_Unexposed_001"),
     input_image_geometry_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
     index_offset=0,
-    plane=0
+    plane_index=0
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -108,10 +108,10 @@ result = nx_filter.execute(
     cell_euler_angles_array_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles"),
     cell_phases_array_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases"),
     crystal_structures_array_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures"),
-    generation_algorithm=0,
+    generation_algorithm_index=0,
     mask_array_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"),
     output_image_geometry_path=nx.DataPath("PoleFigure"),
-    image_layout=2,
+    image_layout_index=2,
     image_prefix="Cugrid_after 2nd_15kv_2kx_2_Unexposed_",
     image_size=1024,
     lambert_size=64,

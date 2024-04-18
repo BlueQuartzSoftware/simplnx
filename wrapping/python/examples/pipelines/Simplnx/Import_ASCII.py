@@ -15,16 +15,16 @@ nx_filter = nx.CreateGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_handling=0,
+    array_handling_index=0,
     cell_attribute_matrix_name="Cell Data",
     dimensions=[60, 80, 100],
     #edge_attribute_matrix_name: str = ...,
     #edge_list_name: DataPath = ...,
     #face_attribute_matrix_name: str = ...,
     output_geometry_path=nx.DataPath("[Image Geometry]"),
-    geometry_type=0,
+    geometry_type_index=0,
     #hexahedral_list_name: DataPath = ...,
-    length_unit_type=7,
+    length_unit_index=7,
     origin=[0, 0, 0],
     #quadrilateral_list_name: DataPath = ...,
     spacing=[1, 1, 1],
@@ -75,7 +75,7 @@ result = nx_filter.execute(
     component_count=1,
     data_format="",
     initialization_value_str="1",
-    numeric_type=nx.NumericType.int32,
+    numeric_type_index=nx.NumericType.int32,
     output_array_path=nx.DataPath("[Image Geometry]/Cell Data/Phase")
     #tuple_dimensions=[]
 )
@@ -146,7 +146,7 @@ result = nx_filter.execute(
     image_array_path=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
     input_image_geometry_path=nx.DataPath("[Image Geometry]"),
     index_offset=0,
-    plane=0
+    plane_index=0
     )
 nxtest.check_filter_result(nx_filter, result)
 

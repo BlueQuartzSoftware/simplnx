@@ -34,9 +34,8 @@ const FilterHandle k_ApplyTransformationToGeometryFilterHandle(k_ApplyTransforma
 
 inline constexpr StringLiteral k_SelectedImageGeometryKey = "input_image_geometry_path";
 inline constexpr StringLiteral k_CellAttributeMatrixPathKey = "cell_attribute_matrix_path";
-inline constexpr StringLiteral k_TransformationTypeKey = "transformation_type";
+inline constexpr StringLiteral k_TransformationTypeKey = "transformation_type_index";
 inline constexpr StringLiteral k_ManualTransformationMatrixKey = "manual_transformation_matrix";
-inline constexpr StringLiteral k_InterpolationTypeKey = "interpolation_type";
 inline constexpr StringLiteral k_TranslateGeometryToGlobalOrigin_Key = "translate_geometry_to_global_origin";
 
 const nx::core::ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;

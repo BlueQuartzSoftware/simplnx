@@ -109,7 +109,7 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     feature_reference_misorientations_array_name="FeatureReferenceMisorientations",
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
-    reference_orientation=0
+    reference_orientation_index=0
     # cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/"),  # Not currently part of the code
     # g_beuclidean_distances_array_path=nx.DataPath("DataContainer/"),  # Not currently part of the code
 )

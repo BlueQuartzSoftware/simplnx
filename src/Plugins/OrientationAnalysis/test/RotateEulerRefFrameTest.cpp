@@ -38,18 +38,6 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
   std::string inputFile = fmt::format("{}/ASCIIData/EulerAngles.csv", unit_test::k_TestFilesDir.view());
   std::string comparisonDataFile = fmt::format("{}/ASCIIData/EulersRotated.csv", unit_test::k_TestFilesDir.view());
 
-  // These are the argument keys for the Import Text filter. We cannot use the ones from the
-  // header file as that would bring in a dependency on the SimplnxCorePlugin
-  constexpr StringLiteral k_InputFile_Key = "input_file";
-  constexpr StringLiteral k_ScalarType_Key = "scalar_type";
-  constexpr StringLiteral k_NTuples_Key = "number_tuples";
-  constexpr StringLiteral k_NComp_Key = "number_comp";
-  constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
-  constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
-  constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
-  constexpr StringLiteral k_DataFormat_Key = "data_format";
-  constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
-
   // Make sure we can load the "Import Text Filter" filter from the plugin
   auto* filterList = Application::Instance()->getFilterList();
   // Make sure we can instantiate the Import Text Filter
@@ -59,13 +47,13 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
   // Run the "Import Text" Filter to import the data for the EulerAngles and EulersRotated
   {
     Arguments args;
-    args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-    args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-    args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_NumTuples));
-    args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(k_NumComponents));
-    args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
-    args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_EulerAnglesDataPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_NumTuples));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NumComponents));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_EulerAnglesDataPath));
 
     auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
@@ -81,13 +69,13 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
 
   {
     Arguments args;
-    args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(comparisonDataFile)));
-    args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-    args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_NumTuples));
-    args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(k_NumComponents));
-    args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
-    args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_EulersRotatedDataPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(comparisonDataFile)));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_NumTuples));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NumComponents));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_EulersRotatedDataPath));
 
     auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);

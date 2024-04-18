@@ -25,7 +25,7 @@ public:
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_MinPoint_Key = "min_point";
   static inline constexpr StringLiteral k_MaxPoint_Key = "max_point";
-  static inline constexpr StringLiteral k_InitType_Key = "init_type";
+  static inline constexpr StringLiteral k_InitType_Key = "init_type_index";
   static inline constexpr StringLiteral k_InitValue_Key = "init_value";
   static inline constexpr StringLiteral k_InitRange_Key = "init_range";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";

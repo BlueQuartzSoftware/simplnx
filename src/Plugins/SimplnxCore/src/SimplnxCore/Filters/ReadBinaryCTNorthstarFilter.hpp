@@ -37,7 +37,7 @@ public:
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
-  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
   static inline constexpr StringLiteral k_ImportSubvolume_Key = "import_subvolume";
   static inline constexpr StringLiteral k_StartVoxelCoord_Key = "start_voxel_coord";
   static inline constexpr StringLiteral k_EndVoxelCoord_Key = "end_voxel_coord";

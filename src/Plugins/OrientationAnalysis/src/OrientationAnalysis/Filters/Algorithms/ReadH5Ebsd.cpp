@@ -24,8 +24,8 @@
 namespace RotateSampleRefFrame
 {
 // Parameter Keys
-static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
-static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
+static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
+static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
 static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
 static inline constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 static inline constexpr nx::core::StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
@@ -51,7 +51,6 @@ static inline constexpr nx::core::StringLiteral k_NewName_Key = "new_name";
 namespace DeleteData
 {
 static inline constexpr nx::core::StringLiteral k_DataPath_Key = "removed_data_path";
-
 }
 
 namespace

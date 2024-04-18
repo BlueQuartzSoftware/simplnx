@@ -43,16 +43,16 @@ nx_filter = nx.CreateGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_handling=1,
+    array_handling_index=1,
     cell_attribute_matrix_name="CellData",
     # dimensions: List[int] = ...,
     # edge_attribute_matrix_name: str = ...,
     # edge_list_name: DataPath = ...,
     # face_attribute_matrix_name: str = ...,
     output_geometry_path=nx.DataPath("RectGridGeometry"),
-    geometry_type=1,
+    geometry_type_index=1,
     # hexahedral_list_name: DataPath = ...,
-    length_unit_type=7,
+    length_unit_index=7,
     # origin: List[float] = ...,
     # quadrilateral_list_name: DataPath = ...,
     # spacing: List[float] = ...,
@@ -76,13 +76,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ConfidenceIndex.csv",
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
     output_data_array_path=nx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"),
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -94,13 +94,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ImageQuality.csv",
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
     output_data_array_path=nx.DataPath("RectGridGeometry/CellData/ImageQuality"),
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -113,13 +113,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/SEM Signal.csv",
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
     output_data_array_path=nx.DataPath("RectGridGeometry/CellData/SEM Signal"),
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -131,13 +131,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/Fit.csv",
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
     output_data_array_path=nx.DataPath("RectGridGeometry/CellData/Fit"),
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -150,13 +150,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/EulerAngles.csv",
     number_comp=3,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
     output_data_array_path=nx.DataPath("RectGridGeometry/CellData/EulerAngles"),
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -168,13 +168,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/Phases.csv",
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
     output_data_array_path=nx.DataPath("RectGridGeometry/CellData/Phases"),
-    scalar_type=nx.NumericType.int32
+    scalar_type_index=nx.NumericType.int32
 )
 nxtest.check_filter_result(nx_filter, result)
 

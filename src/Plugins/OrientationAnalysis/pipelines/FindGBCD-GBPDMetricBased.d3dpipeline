@@ -413,9 +413,9 @@
                                                     {
                                                       "args": {
                                                         "input_orientation_array_path": "DataContainer/CellData/EulerAngles",
-                                                        "input_type": 0,
+                                                        "input_representation_index": 0,
                                                         "output_orientation_array_name": "Quats",
-                                                        "output_type": 2
+                                                        "output_representation_index": 2
                                                       },
                                                       "comments": "",
                                                       "filter": {
@@ -698,7 +698,7 @@
                                                         "feature_ids_path": "DataContainer/CellData/FeatureIds",
                                                         "ignored_data_array_paths": [],
                                                         "num_iterations": 2,
-                                                        "operation": 0,
+                                                        "operation_index": 0,
                                                         "input_image_geometry_path": "DataContainer",
                                                         "x_dir_on": true,
                                                         "y_dir_on": true,
@@ -716,7 +716,7 @@
                                                         "feature_ids_path": "DataContainer/CellData/FeatureIds",
                                                         "ignored_data_array_paths": [],
                                                         "num_iterations": 2,
-                                                        "operation": 1,
+                                                        "operation_index": 1,
                                                         "input_image_geometry_path": "DataContainer",
                                                         "x_dir_on": true,
                                                         "y_dir_on": true,

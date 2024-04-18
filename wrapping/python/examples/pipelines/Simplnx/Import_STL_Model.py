@@ -45,7 +45,7 @@ result = nx_filter.execute(
     component_count=1,
     data_format="",
     initialization_value_str="0",
-    numeric_type=nx.NumericType.float32,
+    numeric_type_index=nx.NumericType.float32,
     output_array_path=nx.DataPath("Node Type"),
     tuple_dimensions=[[1.0]]
 )

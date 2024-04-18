@@ -24,7 +24,7 @@ public:
   ConvertColorToGrayScaleFilter& operator=(ConvertColorToGrayScaleFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm";
+  static inline constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm_index";
   static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";
   static inline constexpr StringLiteral k_ColorChannel_Key = "color_channel";
   static inline constexpr StringLiteral k_InputDataArrayPath_Key = "input_data_array_paths";

@@ -30,10 +30,10 @@ nx_filter = nx.ReadRawBinaryFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     created_attribute_array_path=nx.DataPath("[Image Geometry]/Cell Data/Quats"),
-    endian=0,
+    endian_index=0,
     input_file=nxtest.get_data_directory() / "OrientationAnalysis/quats.raw",
     number_of_components=4,
-    scalar_type=nx.NumericType.float32,
+    scalar_type_index=nx.NumericType.float32,
     skip_header_bytes=0,
     tuple_dimensions=[[2.0, 100.0, 100.0]]
 )
@@ -46,9 +46,9 @@ nx_filter = cxor.ConvertOrientations()
 result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("[Image Geometry]/Cell Data/Quats"),
-    input_type=2,
+    input_representation_index=2,
     output_orientation_array_name="Eulers",
-    output_type=0
+    output_representation_index=0
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -63,7 +63,7 @@ result = nx_filter.execute(
     component_count=1,
     data_format="",
     initialization_value_str="1",
-    numeric_type=nx.NumericType.int32,
+    numeric_type_index=nx.NumericType.int32,
     output_array_path=nx.DataPath("[Image Geometry]/Cell Data/Phases"),
     tuple_dimensions=[[2.0, 100.0, 100.0]]
 )

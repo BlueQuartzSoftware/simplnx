@@ -28,7 +28,7 @@ public:
   static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
-  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
   static inline constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";

@@ -70,16 +70,6 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
 
   // Read Exemplar Shifts File
   {
-    constexpr StringLiteral k_InputFile_Key = "input_file";
-    constexpr StringLiteral k_ScalarType_Key = "scalar_type";
-    constexpr StringLiteral k_NTuples_Key = "number_tuples";
-    constexpr StringLiteral k_NComp_Key = "number_comp";
-    constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
-    constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
-    constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
-    constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
-
     // Compare the output of the shifts file with the exemplar file
 
     auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
@@ -87,14 +77,15 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
 
     Arguments args;
     // read in the exemplar shift data file
-    args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/align_sections_misorientation.txt", unit_test::k_TestFilesDir))));
-    args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
-    args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(116)}}));
-    args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(6));
-    args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(4));
-    args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarShiftsPath));
-    args.insertOrAssign(k_DataFormat_Key, std::make_any<DataStoreFormatParameter::ValueType>(""));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key,
+                        std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/align_sections_misorientation.txt", unit_test::k_TestFilesDir))));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(116)}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(6));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarShiftsPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataFormat_Key, std::make_any<DataStoreFormatParameter::ValueType>(""));
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
@@ -144,30 +135,20 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
 
   // Use the Read Text File Filter to read in the generated Shift File
   {
-    constexpr StringLiteral k_InputFile_Key = "input_file";
-    constexpr StringLiteral k_ScalarType_Key = "scalar_type";
-    constexpr StringLiteral k_NTuples_Key = "number_tuples";
-    constexpr StringLiteral k_NComp_Key = "number_comp";
-    constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
-    constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
-    constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
-    constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
-
     // Compare the output of the shifts file with the exemplar file
 
     auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
 
     Arguments args;
-    args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
-    args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
-    args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(116)}}));
-    args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(6));
-    args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(4));
-    args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_CalculatedShiftsPath));
-    args.insertOrAssign(k_DataFormat_Key, std::make_any<DataStoreFormatParameter::ValueType>(""));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(116)}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(6));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CalculatedShiftsPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataFormat_Key, std::make_any<DataStoreFormatParameter::ValueType>(""));
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);

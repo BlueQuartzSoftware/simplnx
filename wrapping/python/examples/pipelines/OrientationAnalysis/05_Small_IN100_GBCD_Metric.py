@@ -102,7 +102,7 @@ nx_filter = cxor.FindGBCDMetricBasedFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    chosen_limit_dists=0,
+    chosen_limit_dists_index=0,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     dist_output_file="Data/Output/SurfaceMesh/7_0_small_in100_distribution_1.dat",
     err_output_file="Data/Output/SurfaceMesh/7_0_small_in100_distribution_errors_1.dat",

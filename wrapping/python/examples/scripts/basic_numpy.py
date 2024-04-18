@@ -57,7 +57,7 @@ data_structure = nx.DataStructure()
 
 array_path = nx.DataPath(['data'])
 assert nx.CreateDataArray.execute(data_structure, 
-                                  numeric_type=nx.NumericType.float32, 
+                                  numeric_type_index=nx.NumericType.float32, 
                                   component_count=1, 
                                   tuple_dimensions=[[3, 2]], 
                                   output_array_path=array_path, 
@@ -74,7 +74,7 @@ degrees_data = npdata.copy()
 radians_data = np.radians(degrees_data)
 
 # Run a D3D filter to convert back to degrees
-result = nx.ChangeAngleRepresentation.execute(data_structure, conversion_type=0, angles_array_path=array_path)
+result = nx.ChangeAngleRepresentation.execute(data_structure, conversion_type_index=0, angles_array_path=array_path)
 nxtest.check_filter_result(nx.ChangeAngleRepresentation, result)
 
 # compare the 2 arrays

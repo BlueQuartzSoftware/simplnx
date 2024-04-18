@@ -33,9 +33,9 @@ result = nx_filter.execute(
     output_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr"),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
-    rotation_axis=[0.0, 1.0, 0.0, 180.0],
+    rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],
     #rotation_matrix=[]
-    rotation_representation=0,
+    rotation_representation_index=0,
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -69,9 +69,9 @@ nx_filter = cxor.ConvertOrientations()
 result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles"),
-    input_type=0,
+    input_representation_index=0,
     output_orientation_array_name="Quats",
-    output_type=2
+    output_representation_index=2
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -84,7 +84,7 @@ result = nx_filter.execute(
     comparison_data_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Error"),
     loop=False,
     min_confidence=0.0,
-    selected_comparison=0,
+    comparison_index=0,
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -114,7 +114,7 @@ result = nx_filter.execute(
     image_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_001"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr"),
     index_offset=0,
-    plane=0
+    plane_index=0
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -144,7 +144,7 @@ result = nx_filter.execute(
     image_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_010"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr"),
     index_offset=0,
-    plane=0
+    plane_index=0
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -173,7 +173,7 @@ result = nx_filter.execute(
     image_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/IPF_100"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr"),
     index_offset=0,
-    plane=0
+    plane_index=0
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -318,7 +318,7 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
     feature_reference_misorientations_array_name="FeatureReferenceMisorientations",
     quats_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Quats"),
-    reference_orientation=0
+    reference_orientation_index=0
     # Parameters for cell_feature_attribute_matrix_path and g_beuclidean_distances_array_path are not used
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -330,7 +330,7 @@ nx_filter = nx.WriteFeatureDataCSVFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     cell_feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData"),
-    delimiter_choice_int=2,
+    delimiter_index=2,
     feature_data_file=nxtest.get_data_directory() / "Output/fw-ar-IF1-aptr12-corr/FeatureData.csv",
     write_neighborlist_data=False,
     write_num_features_line=True
@@ -358,9 +358,9 @@ nx_filter = nx.WriteASCIIDataFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    delimiter=2,
+    delimiter_index=2,
     output_path=nxtest.get_data_directory() / "Output/fw-ar-IF1-aptr12-corr/EqDiamHistogram.csv",
-    output_style=1,
+    output_style_index=1,
     input_data_array_paths=[nx.DataPath("fw-ar-IF1-aptr12-corr/Histograms/EquivalentDiameters Histogram")]
 )
 nxtest.check_filter_result(nx_filter, result)

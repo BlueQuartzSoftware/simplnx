@@ -33,10 +33,10 @@
     {
       "args": {
         "created_attribute_array_path": "[Image Geometry]/Cell Data/Quats",
-        "endian": 0,
+        "endian_index": 0,
         "input_file": "Data/OrientationAnalysis/quats.raw",
         "number_of_components": 4,
-        "scalar_type": 8,
+        "scalar_type_index": 8,
         "skip_header_bytes": 0,
         "tuple_dimensions": [
           [
@@ -56,9 +56,9 @@
     {
       "args": {
         "input_orientation_array_path": "[Image Geometry]/Cell Data/Quats",
-        "input_type": 2,
+        "input_representation_index": 2,
         "output_orientation_array_name": "Eulers",
-        "output_type": 0
+        "output_representation_index": 0
       },
       "comments": "",
       "filter": {

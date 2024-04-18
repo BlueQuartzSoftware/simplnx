@@ -31,7 +31,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_InputFile_Key = "input_file";
   static inline constexpr StringLiteral k_DataGroupName_Key = "data_group_name";
-  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
   static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_ParentDataGroup_Key = "parent_data_group";

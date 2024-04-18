@@ -50,24 +50,15 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
 
     AlignSectionsFeatureCentroidFilter filter;
 
-    // Parameter Keys
-    constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
-    constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
-    constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
-    constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
-    constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-    constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-    constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
-
     Arguments args;
     // Create default Parameters for the filter.
-    args.insertOrAssign(k_WriteAlignmentShifts_Key, std::make_any<bool>(true));
-    args.insertOrAssign(k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
-    args.insertOrAssign(k_UseReferenceSlice_Key, std::make_any<bool>(true));
-    args.insertOrAssign(k_ReferenceSlice_Key, std::make_any<int32>(0));
-    args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
-    args.insertOrAssign(k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insertOrAssign(k_SelectedCellDataGroup_Key, std::make_any<DataPath>(k_CellAttributeMatrix));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_WriteAlignmentShifts_Key, std::make_any<bool>(true));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_UseReferenceSlice_Key, std::make_any<bool>(true));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_ReferenceSlice_Key, std::make_any<int32>(0));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedCellDataGroup_Key, std::make_any<DataPath>(k_CellAttributeMatrix));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -84,30 +75,20 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
 
   // Read Exemplar Shifts File
   {
-    constexpr StringLiteral k_InputFile_Key = "input_file";
-    constexpr StringLiteral k_ScalarType_Key = "scalar_type";
-    constexpr StringLiteral k_NTuples_Key = "number_tuples";
-    constexpr StringLiteral k_NComp_Key = "number_comp";
-    constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
-    constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
-    constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
-    constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
-
     // Compare the output of the shifts file with the exemplar file
 
     ReadTextDataArrayFilter filter;
 
     Arguments args;
     // read in the exemplar shift data file
-    args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(
-                                             fs::path(fmt::format("{}/6_6_align_sections_feature_centroids/6_6_align_sections_feature_centroids.txt", unit_test::k_TestFilesDir))));
-    args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-    args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(k_NumColumns));
-    args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(k_SkipHeaderLines));
-    args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(k_Comma));
-    args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarShiftsPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(
+                                                                      fmt::format("{}/6_6_align_sections_feature_centroids/6_6_align_sections_feature_centroids.txt", unit_test::k_TestFilesDir))));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NumColumns));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(k_SkipHeaderLines));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(k_Comma));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarShiftsPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -120,28 +101,18 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
 
   // Read Computed Shifts File
   {
-    constexpr StringLiteral k_InputFile_Key = "input_file";
-    constexpr StringLiteral k_ScalarType_Key = "scalar_type";
-    constexpr StringLiteral k_NTuples_Key = "number_tuples";
-    constexpr StringLiteral k_NComp_Key = "number_comp";
-    constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
-    constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_choice";
-    constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
-    constexpr StringLiteral k_DataFormat_Key = "data_format";
-    constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
-
     // Compare the output of the shifts file with the exemplar file
 
     ReadTextDataArrayFilter filter;
 
     Arguments args;
-    args.insertOrAssign(k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
-    args.insertOrAssign(k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-    args.insertOrAssign(k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insertOrAssign(k_NComp_Key, std::make_any<uint64>(k_NumColumns));
-    args.insertOrAssign(k_NSkipLines_Key, std::make_any<uint64>(k_SkipHeaderLines));
-    args.insertOrAssign(k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(k_Comma));
-    args.insertOrAssign(k_DataArrayPath_Key, std::make_any<DataPath>(k_CalculatedShiftsPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NumColumns));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(k_SkipHeaderLines));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(k_Comma));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CalculatedShiftsPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

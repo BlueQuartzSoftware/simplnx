@@ -65,9 +65,9 @@ nx_filter = cxor.ConvertOrientations()
 result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
-    input_type=0,
+    input_representation_index=0,
     output_orientation_array_name="Quats",
-    output_type=2
+    output_representation_index=2
 
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -339,7 +339,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     num_iterations=2,
-    operation=0,
+    operation_index=0,
     input_image_geometry_path=nx.DataPath("DataContainer"),
     x_dir_on=True,
     y_dir_on=True,
@@ -356,7 +356,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     num_iterations=2,
-    operation=1,  # Dilate operation
+    operation_index=1,  # Dilate operation
     input_image_geometry_path=nx.DataPath("DataContainer"),
     x_dir_on=True,
     y_dir_on=True,

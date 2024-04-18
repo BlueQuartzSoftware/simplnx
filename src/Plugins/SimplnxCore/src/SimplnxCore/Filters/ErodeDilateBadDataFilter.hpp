@@ -26,7 +26,7 @@ public:
   ErodeDilateBadDataFilter& operator=(ErodeDilateBadDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Operation_Key = "operation";
+  static inline constexpr StringLiteral k_Operation_Key = "operation_index";
   static inline constexpr StringLiteral k_NumIterations_Key = "num_iterations";
   static inline constexpr StringLiteral k_XDirOn_Key = "x_dir_on";
   static inline constexpr StringLiteral k_YDirOn_Key = "y_dir_on";

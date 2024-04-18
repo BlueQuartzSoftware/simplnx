@@ -67,7 +67,7 @@
           "selected_group": "",
           "units": 0
         },
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -84,7 +84,7 @@
           "selected_group": "",
           "units": 0
         },
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -101,7 +101,7 @@
           "selected_group": "",
           "units": 0
         },
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -118,7 +118,7 @@
           "selected_group": "",
           "units": 0
         },
-        "scalar_type": 9
+        "scalar_type_index": 9
       },
       "comments": "",
       "filter": {
@@ -135,7 +135,7 @@
           "selected_group": "",
           "units": 0
         },
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -152,7 +152,7 @@
           "selected_group": "",
           "units": 0
         },
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {

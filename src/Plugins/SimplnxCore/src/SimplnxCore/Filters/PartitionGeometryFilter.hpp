@@ -52,7 +52,7 @@ public:
   };
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PartitioningMode_Key = "partitioning_mode";
+  static inline constexpr StringLiteral k_PartitioningMode_Key = "partitioning_mode_index";
   static inline constexpr StringLiteral k_StartingFeatureID_Key = "starting_partition_id";
   static inline constexpr StringLiteral k_OutOfBoundsFeatureID_Key = "out_of_bounds_value";
   static inline constexpr StringLiteral k_NumberOfCellsPerAxis_Key = "number_of_partitions_per_axis";

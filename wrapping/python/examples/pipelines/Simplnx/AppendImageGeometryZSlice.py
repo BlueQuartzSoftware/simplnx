@@ -31,13 +31,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=True,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ConfidenceIndex.csv",
     number_comp=1,
     skip_line_count=0,
     number_tuples=[[480000.0]],
     output_data_array_path=nx.DataPath("Confidence Index"),
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -49,13 +49,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=True,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/FeatureIds.csv",
     number_comp=1,
     skip_line_count=0,
     number_tuples=[[480000.0]],
     output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
-    scalar_type=nx.NumericType.int32
+    scalar_type_index=nx.NumericType.int32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -68,13 +68,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=True,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ImageQuality.csv",
     number_comp=1,
     skip_line_count=0,
     number_tuples=[[480000.0]],
     output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 # Filter 5
@@ -85,13 +85,13 @@ result = nx_filter.execute(
     data_structure=data_structure,
     set_tuple_dimensions=True,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/IPFColor.csv",
     number_comp=3,
     skip_line_count=0,
     number_tuples=[[480000.0]],
     output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
-    scalar_type=nx.NumericType.uint8
+    scalar_type_index=nx.NumericType.uint8
 )
 nxtest.check_filter_result(nx_filter, result)
 # Filter 6

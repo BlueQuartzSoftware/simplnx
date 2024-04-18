@@ -31,7 +31,7 @@ result = nx_filter.execute(
     cell_attribute_matrix_name="Cell Data",
     image_data_array_name="ImageData",
     output_image_geometry_path=nx.DataPath("ImageDataContainer"),
-    image_transform_choice=0,
+    image_transform_index=0,
     input_file_list_object =generated_file_list_value,
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
@@ -121,7 +121,7 @@ result = nx_filter.execute(
     component_count=1,
     data_format="",
     initialization_value_str="1",
-    numeric_type=nx.NumericType.int32,
+    numeric_type_index=nx.NumericType.int32,
     output_array_path=nx.DataPath("ImageDataContainer/Cell Data/Phases")
     # tuple_dimensions: List[List[float]] = ...  # Not currently part of the code
 )

@@ -24,7 +24,7 @@
         "output_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
-        "rotation_axis": [
+        "rotation_axis_angle": [
           0.0,
           1.0,
           0.0,
@@ -95,9 +95,9 @@
     {
       "args": {
         "input_orientation_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles",
-        "input_type": 0,
+        "input_representation_index": 0,
         "output_orientation_array_name": "Quats",
-        "output_type": 2
+        "output_representation_index": 2
       },
       "comments": "",
       "filter": {

@@ -61,9 +61,9 @@ nx_filter = cxor.ConvertOrientations()
 result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
-    input_type=0,
+    input_representation_index=0,
     output_orientation_array_name="Quats",
-    output_type=2
+    output_representation_index=2
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -97,7 +97,7 @@ result = nx_filter.execute(
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     largest_cross_sections_array_name="LargestCrossSections",
-    plane=0
+    plane_index=0
 )
 nxtest.check_filter_result(nx_filter, result)
 

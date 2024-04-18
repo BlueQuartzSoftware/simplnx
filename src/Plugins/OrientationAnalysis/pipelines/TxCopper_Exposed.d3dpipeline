@@ -24,7 +24,7 @@
         "output_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2 [ROTATED]",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
-        "rotation_axis": [
+        "rotation_axis_angle": [
           0.0,
           1.0,
           0.0,

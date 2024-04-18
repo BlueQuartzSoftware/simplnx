@@ -27,7 +27,7 @@
     },
     {
       "args": {
-        "array_handling": 0,
+        "array_handling_index": 0,
         "cell_attribute_matrix_name": "Cell Data",
         "dimensions": [
           10,

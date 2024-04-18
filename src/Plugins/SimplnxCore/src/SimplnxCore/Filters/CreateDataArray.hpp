@@ -21,7 +21,7 @@ public:
   CreateDataArray& operator=(CreateDataArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumericType_Key = "numeric_type";
+  static inline constexpr StringLiteral k_NumericType_Key = "numeric_type_index";
   static inline constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
   static inline constexpr StringLiteral k_NumComps_Key = "component_count";
   static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";

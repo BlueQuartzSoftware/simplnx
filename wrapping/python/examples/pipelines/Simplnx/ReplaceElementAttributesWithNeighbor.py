@@ -59,8 +59,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
-    rotation_axis=[0.0, 1.0, 0.0, 180],
-    rotation_representation=0,
+    rotation_axis_angle=[0.0, 1.0, 0.0, 180],
+    rotation_representation_index=0,
     input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -72,7 +72,7 @@ nx_filter = cxor.RotateEulerRefFrameFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
-    rotation_axis=[0.0, 0.0, 1.0, 90.0]
+    rotation_axis_angle=[0.0, 0.0, 1.0, 90.0]
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -134,7 +134,7 @@ result = nx_filter.execute(
     comparison_data_path=nx.DataPath("DataContainer/Cell Data/Confidence Index"),
     loop=True,
     min_confidence=0.1,
-    selected_comparison=0,
+    comparison_index=0,
     input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)

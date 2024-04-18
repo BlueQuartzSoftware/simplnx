@@ -42,7 +42,7 @@
     },
     {
       "args": {
-        "array_handling": 1,
+        "array_handling_index": 1,
         "cell_attribute_matrix_name": "CellData",
         "dimensions": [
           20,
@@ -55,7 +55,7 @@
         "geometry_name": "RectGridGeometry",
         "geometry_type": 1,
         "hexahedral_list_name": "",
-        "length_unit_type": 7,
+        "length_unit_index": 7,
         "origin": [
           0.0,
           0.0,
@@ -87,7 +87,7 @@
       "args": {
         "set_tuple_dimensions": false,
         "data_format": "",
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/ConfidenceIndex.csv",
         "number_tuples": 1,
         "skip_line_count": 0,
@@ -97,7 +97,7 @@
           ]
         ],
         "output_array_path": "RectGridGeometry/CellData/ConfidenceIndex",
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -110,7 +110,7 @@
       "args": {
         "set_tuple_dimensions": false,
         "data_format": "",
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/ImageQuality.csv",
         "number_tuples": 1,
         "skip_line_count": 0,
@@ -120,7 +120,7 @@
           ]
         ],
         "output_array_path": "RectGridGeometry/CellData/ImageQuality",
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -133,7 +133,7 @@
       "args": {
         "set_tuple_dimensions": false,
         "data_format": "",
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/SEM Signal.csv",
         "number_tuples": 1,
         "skip_line_count": 0,
@@ -143,7 +143,7 @@
           ]
         ],
         "output_array_path": "RectGridGeometry/CellData/SEM Signal",
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -156,7 +156,7 @@
       "args": {
         "set_tuple_dimensions": false,
         "data_format": "",
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/Fit.csv",
         "number_tuples": 1,
         "skip_line_count": 0,
@@ -166,7 +166,7 @@
           ]
         ],
         "output_array_path": "RectGridGeometry/CellData/Fit",
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -179,7 +179,7 @@
       "args": {
         "set_tuple_dimensions": false,
         "data_format": "",
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/EulerAngles.csv",
         "number_tuples": 3,
         "skip_line_count": 0,
@@ -189,7 +189,7 @@
           ]
         ],
         "output_array_path": "RectGridGeometry/CellData/EulerAngles",
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -202,7 +202,7 @@
       "args": {
         "set_tuple_dimensions": false,
         "data_format": "",
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/Phases.csv",
         "number_tuples": 1,
         "skip_line_count": 0,
@@ -212,7 +212,7 @@
           ]
         ],
         "output_array_path": "RectGridGeometry/CellData/Phases",
-        "scalar_type": 4
+        "scalar_type_index": 4
       },
       "comments": "",
       "filter": {

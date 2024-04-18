@@ -44,7 +44,7 @@ nx_filter = cxor.FindGBCDMetricBasedFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    chosen_limit_dists=2,
+    chosen_limit_dists_index=2,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     dist_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbcd_distribution.dat",
     err_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbcd_distribution_errors.dat",

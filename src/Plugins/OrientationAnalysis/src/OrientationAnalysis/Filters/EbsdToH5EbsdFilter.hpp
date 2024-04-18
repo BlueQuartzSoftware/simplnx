@@ -25,8 +25,8 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
-  static inline constexpr StringLiteral k_StackingOrder_Key = "stacking_order";
-  static inline constexpr StringLiteral k_ReferenceFrame_Key = "reference_frame";
+  static inline constexpr StringLiteral k_StackingOrder_Key = "stacking_order_index";
+  static inline constexpr StringLiteral k_ReferenceFrame_Key = "reference_frame_index";
   static inline constexpr StringLiteral k_OutputPath_Key = "output_file_path";
   static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
 

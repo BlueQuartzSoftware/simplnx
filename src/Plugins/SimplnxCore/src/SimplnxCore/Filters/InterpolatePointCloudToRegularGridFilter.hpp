@@ -27,7 +27,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_StoreKernelDistances_Key = "store_kernel_distances";
-  static inline constexpr StringLiteral k_InterpolationTechnique_Key = "interpolation_technique";
+  static inline constexpr StringLiteral k_InterpolationTechnique_Key = "interpolation_index";
   static inline constexpr StringLiteral k_KernelSize_Key = "kernel_size";
   static inline constexpr StringLiteral k_GaussianSigmas_Key = "gaussian_sigmas";
   static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";

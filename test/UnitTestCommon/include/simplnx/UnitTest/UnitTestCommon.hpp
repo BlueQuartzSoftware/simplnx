@@ -438,7 +438,7 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
     newVal = newDataStore[i];
     if(oldVal != newVal)
     {
-      UNSCOPED_INFO(fmt::format("oldValue != newValue. {} != {}", oldVal, newVal));
+      UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", i, oldVal, newVal));
 
       if constexpr(std::is_floating_point_v<T>)
       {

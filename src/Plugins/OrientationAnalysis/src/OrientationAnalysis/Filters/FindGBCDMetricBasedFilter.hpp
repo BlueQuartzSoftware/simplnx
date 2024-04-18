@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_PhaseOfInterest_Key = "phase_of_interest";
   static inline constexpr StringLiteral k_MisorientationRotation_Key = "misorientation_rotation";
-  static inline constexpr StringLiteral k_ChosenLimitDists_Key = "chosen_limit_dists";
+  static inline constexpr StringLiteral k_ChosenLimitDists_Key = "chosen_limit_dists_index";
   static inline constexpr StringLiteral k_NumSamplPts_Key = "num_sampl_pts";
   static inline constexpr StringLiteral k_ExcludeTripleLines_Key = "exclude_triple_lines";
   static inline constexpr StringLiteral k_DistOutputFile_Key = "dist_output_file";

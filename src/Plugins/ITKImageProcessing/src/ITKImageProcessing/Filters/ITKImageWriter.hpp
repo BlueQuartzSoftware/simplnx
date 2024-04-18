@@ -24,7 +24,7 @@ public:
   ITKImageWriter& operator=(ITKImageWriter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Plane_Key = "plane";
+  static inline constexpr StringLiteral k_Plane_Key = "plane_index";
   static inline constexpr StringLiteral k_FileName_Key = "file_name";
   static inline constexpr StringLiteral k_IndexOffset_Key = "index_offset";
   static inline constexpr StringLiteral k_ImageArrayPath_Key = "image_array_path";

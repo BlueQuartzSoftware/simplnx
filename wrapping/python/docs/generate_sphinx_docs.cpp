@@ -814,6 +814,10 @@ void GeneratePythonRstFiles()
         {
           logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
         }
+        if((pType == "simplnx.ChoicesParameter" || pType == "simplnx.NumericTypeParameter") && !nx::core::StringUtilities::ends_with(parameterPair.first, "_index"))
+        {
+          logFile << filterClassName << "    " << parameterPair.first << "   " << pType << std::endl;
+        }
         if(nx::core::StringUtilities::contains(parameterPair.first, "data_array"))
         {
           thingsWithGeomInName.insert(parameterPair.first);

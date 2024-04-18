@@ -25,8 +25,8 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_TransformationType_Key = "transformation_type";
-  static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type";
+  static inline constexpr StringLiteral k_TransformationType_Key = "transformation_type_index";
+  static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type_index";
   static inline constexpr StringLiteral k_ManualTransformationMatrix_Key = "manual_transformation_matrix";
   static inline constexpr StringLiteral k_Rotation_Key = "rotation";
   static inline constexpr StringLiteral k_Translation_Key = "translation";

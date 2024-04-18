@@ -67,7 +67,7 @@ nxtest.check_filter_result(nxor.ReadAngDataFilter, result)
 #------------------------------------------------------------------------------
 result = nxor.RotateEulerRefFrameFilter.execute(data_structure=data_structure, 
                                                 euler_angles_array_path=nx.DataPath(["Small IN100", "Scan Data", "EulerAngles"]), 
-                                                rotation_axis=[0,0,1,90])
+                                                rotation_axis_angle=[0,0,1,90])
 nxtest.check_filter_result(nxor.RotateEulerRefFrameFilter, result)
 
 #------------------------------------------------------------------------------
@@ -77,8 +77,8 @@ result = nx.RotateSampleRefFrameFilter.execute(data_structure=data_structure,
     # output_image_geometry_path=nx.DataPath(["Small IN100 Rotated"]),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
-    rotation_axis=[0,1,0,180],
-    rotation_representation=0,
+    rotation_axis_angle=[0,1,0,180],
+    rotation_representation_index=0,
     input_image_geometry_path=nx.DataPath(["Small IN100"]),
     #rotation_matrix=[[1,0,0],[0,1,0],[0,0,1]]
     )
@@ -133,7 +133,7 @@ result = nxitk.ITKImageWriter.execute(data_structure=data_structure,
                                       image_array_path=nx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
                                       input_image_geometry_path=nx.DataPath(["Small IN100"]),
                                       index_offset=0,
-                                      plane=0)
+                                      plane_index=0)
 nxtest.check_filter_result(nxitk.ITKImageWriter, result)
 
 # #------------------------------------------------------------------------------
@@ -171,10 +171,10 @@ result = nxor.WritePoleFigureFilter.execute(data_structure=data_structure,
                                             cell_euler_angles_array_path=nx.DataPath(["Small IN100", "Scan Data", "EulerAngles"]), 
                                             cell_phases_array_path=nx.DataPath(["Small IN100", "Scan Data", "Phases"]),
                                             crystal_structures_array_path=nx.DataPath(["Small IN100", "Phase Data", "CrystalStructures"]),
-                                            generation_algorithm=1, # Discrete = 1 
+                                            generation_algorithm_index=1, # Discrete = 1 
                                             mask_array_path=nx.DataPath(["Small IN100", "Scan Data", "Mask"]), 
                                             output_image_geometry_path=nx.DataPath(["Small IN100 Pole Figure"]), 
-                                            image_layout=0, # O = Horizontal Layout 
+                                            image_layout_index=0, # O = Horizontal Layout 
                                             image_prefix=prefix, 
                                             image_size=512, 
                                             lambert_size=64, 

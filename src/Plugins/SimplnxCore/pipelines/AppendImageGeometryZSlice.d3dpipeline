@@ -32,7 +32,7 @@
     },
     {
       "args": {
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/ConfidenceIndex.csv",
         "number_tuples": 1,
         "skip_line_count": 0,
@@ -42,7 +42,7 @@
           ]
         ],
         "output_array_path": "[Image Geometry]/Cell Data/Confidence Index",
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -53,7 +53,7 @@
     },
     {
       "args": {
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/FeatureIds.csv",
         "number_tuples": 1,
         "skip_line_count": 0,
@@ -63,7 +63,7 @@
           ]
         ],
         "output_array_path": "[Image Geometry]/Cell Data/FeatureIds",
-        "scalar_type": 4
+        "scalar_type_index": 4
       },
       "comments": "",
       "filter": {
@@ -74,7 +74,7 @@
     },
     {
       "args": {
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/ImageQuality.csv",
         "number_tuples": 1,
         "skip_line_count": 0,
@@ -84,7 +84,7 @@
           ]
         ],
         "output_array_path": "[Image Geometry]/Cell Data/Image Quality",
-        "scalar_type": 8
+        "scalar_type_index": 8
       },
       "comments": "",
       "filter": {
@@ -95,7 +95,7 @@
     },
     {
       "args": {
-        "delimiter_choice": 0,
+        "delimiter_index": 0,
         "input_file": "Data/ASCIIData/IPFColor.csv",
         "number_tuples": 3,
         "skip_line_count": 0,
@@ -105,7 +105,7 @@
           ]
         ],
         "output_array_path": "[Image Geometry]/Cell Data/IPFColors",
-        "scalar_type": 1
+        "scalar_type_index": 1
       },
       "comments": "",
       "filter": {

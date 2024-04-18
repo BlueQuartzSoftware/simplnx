@@ -35,16 +35,16 @@ nx_filter = nx.CreateGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_handling=0,
+    array_handling_index=0,
     cell_attribute_matrix_name="Cell Data",
     dimensions=[10, 10 , 2],
     #edge_attribute_matrix_name="Edge Data", (not used here)
     #edge_list_name: DataPath = ..., (not used here)
     #face_attribute_matrix_name="Face Data", (not used here)
     output_geometry_path=nx.DataPath("Group 1/Group 2/[Geometry]"),
-    geometry_type=0,
+    geometry_type_index=0,
     #hexahedral_list_name: DataPath = ..., (not used here)
-    length_unit_type=7,
+    length_unit_index=7,
     origin=[0.0, 0.0, 0.0],
     #quadrilateral_list_name: DataPath = ..., (not used here)
     spacing=[1.0, 1.0, 1.0],
@@ -69,7 +69,7 @@ result = nx_filter.execute(
     component_count=1,
     data_format="",
     initialization_value_str="2",
-    numeric_type=nx.NumericType.int32,
+    numeric_type_index=nx.NumericType.int32,
     output_array_path=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data/Data"),
     tuple_dimensions=[[2.0, 10.0, 10.0]]
 )
@@ -82,10 +82,10 @@ nx_filter = nx.ApplyTransformationToGeometryFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data"),
-    interpolation_type=1,
+    interpolation_type_index=1,
     scale=[2.0, 2.0, 2.0],
     input_image_geometry_path=nx.DataPath("Group 1/Group 2/[Geometry]"),
-    transformation_type=5,
+    transformation_type_index=5,
     translate_geometry_to_global_origin=False
 )
 nxtest.check_filter_result(nx_filter, result)

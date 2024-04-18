@@ -48,12 +48,12 @@ result = nx_filter.execute(
     data_structure=data_structure,
     #cell_attribute_matrix_path: DataPath = ...,
     #computed_transformation_matrix: DataPath = ...,
-    interpolation_type=2,
+    interpolation_type_index=2,
     #manual_transformation_matrix: List[List[float]] = ...,
     rotation=[1.0, 0.0, 0.0, 180],
     #scale: List[float] = ...,
     input_image_geometry_path=nx.DataPath("Blade [Rotation]"),
-    transformation_type=3,
+    transformation_type_index=3,
     translate_geometry_to_global_origin=False
     #translation: List[float] = ...
 )
@@ -80,9 +80,9 @@ nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    interpolation_type=2,
+    interpolation_type_index=2,
     input_image_geometry_path=nx.DataPath("Blade [Translation]"),
-    transformation_type=4,
+    transformation_type_index=4,
     translate_geometry_to_global_origin=False,
     translation=[10.0, 10.0, 10.0]
 )
@@ -109,10 +109,10 @@ nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    interpolation_type=2,
+    interpolation_type_index=2,
     scale=[0.5, 0.5, 1.0],
     input_image_geometry_path=nx.DataPath("Blade [Scale]"),
-    transformation_type=5,
+    transformation_type_index=5,
     translate_geometry_to_global_origin=False
 )
 nxtest.check_filter_result(nx_filter, result)

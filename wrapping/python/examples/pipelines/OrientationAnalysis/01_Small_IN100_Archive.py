@@ -30,8 +30,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     input_file_list_object =generated_file_list_value,
     output_file_path=nxtest.get_data_directory() / "Output/Reconstruction/Small_IN100.h5ebsd",
-    reference_frame=0,
-    stacking_order=1,
+    reference_frame_index=0,
+    stacking_order_index=1,
     z_spacing=0.25
 )
 
