@@ -1241,6 +1241,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<IFilter::PreflightValue> preflightValue(filter, "PreflightValue");
   preflightValue.def(py::init<>());
+  preflightValue.def(py::init<std::string, std::string>(), "name"_a, "value"_a);
   preflightValue.def_readwrite("name", &IFilter::PreflightValue::name);
   preflightValue.def_readwrite("value", &IFilter::PreflightValue::value);
 
