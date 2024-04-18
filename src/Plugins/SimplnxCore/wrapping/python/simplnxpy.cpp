@@ -1373,9 +1373,27 @@ PYBIND11_MODULE(simplnx, mod)
   pipelineFilter.def(
       "get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
   pipelineFilter.def(
-      "name", [](PipelineFilter& self) { return self.getFilter()->name(); }, "Returns the C++ name of the filter");
+      "name",
+      [](const PipelineFilter& self) {
+        const IFilter* filter = self.getFilter();
+        if(filter == nullptr)
+        {
+          throw std::runtime_error("PipelineFilter doesn't contain a filter (nullptr)");
+        }
+        return filter->name();
+      },
+      "Returns the C++ name of the filter");
   pipelineFilter.def(
-      "human_name", [](PipelineFilter& self) { return self.getFilter()->humanName(); }, "Returns the human facing name of the filter");
+      "human_name",
+      [](const PipelineFilter& self) {
+        const IFilter* filter = self.getFilter();
+        if(filter == nullptr)
+        {
+          throw std::runtime_error("PipelineFilter doesn't contain a filter (nullptr)");
+        }
+        return filter->humanName();
+      },
+      "Returns the human facing name of the filter");
 
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
