@@ -836,11 +836,8 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<AttributeMatrix, BaseGroup, std::shared_ptr<AttributeMatrix>> attributeMatrix(mod, "AttributeMatrix");
   attributeMatrix.def("resize_tuples", &AttributeMatrix::resizeTuples, "Resize the tuples with the given shape");
-  attributeMatrix.def("tuple_shape", &AttributeMatrix::getShape, "Returns the Tuple dimensions of the AttributeMatrix");
-  attributeMatrix.def("__len__", &AttributeMatrix::getNumTuples, "Returns the total number of tuples");
+  attributeMatrix.def_property_readonly("tuple_shape", &AttributeMatrix::getShape, "Returns the Tuple dimensions of the AttributeMatrix");
   attributeMatrix.def_property_readonly("size", &AttributeMatrix::getNumTuples, "Returns the total number of tuples");
-
-  baseGroup.def("", &BaseGroup::getSize);
 
   py::class_<IArray, DataObject, std::shared_ptr<IArray>> iArray(mod, "IArray");
   iArray.def_property_readonly("tuple_shape", &IArray::getTupleShape);
