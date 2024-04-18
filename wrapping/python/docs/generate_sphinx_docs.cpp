@@ -594,42 +594,7 @@ void GenerateMarkdownFilterParameterTable()
         needTableHeader++;
       }
 
-#if SOMETHING
-      for(const auto& parameter : parameters)
-      {
-        auto const& paramValue = parameter.second;
-        if(paramValue->helpText().empty())
-        {
-          std::cout << filter->name() << "::" << paramValue->name() << " HELP Text is empty\n";
-        }
-        for(const auto& letter : paramValue->name())
-        {
-          if(::isupper(letter) != 0)
-          {
-            std::cout << filter->name() << "::" << paramValue->name() << " HAS CAPS. Should be lower snake case\n";
-            break;
-          }
-        }
 
-        if(CheckScalarPrimitive(pTableStream, paramValue))
-        {
-          continue;
-        }
-        if(CheckVectorPrimitive(pTableStream, paramValue))
-        {
-          continue;
-        }
-        if(CheckArraySelectionParameter(pTableStream, paramValue))
-        {
-          continue;
-        }
-        if(CheckGeometrySelectionParameter(pTableStream, paramValue))
-        {
-          continue;
-        }
-        CheckParameter(pTableStream, paramValue);
-      }
-#endif
 
       pTableStream << '\n';
 
@@ -765,18 +730,6 @@ void GeneratePythonRstFiles()
       for(const auto& parameter : parameters)
       {
         auto const& paramValue = parameter.second;
-        if(paramValue->helpText().empty())
-        {
-          std::cout << filter->name() << "::" << paramValue->name() << " HELP Text is empty\n";
-        }
-        for(const auto& letter : paramValue->name())
-        {
-          if(::isupper(letter) != 0)
-          {
-            std::cout << filter->name() << "::" << paramValue->name() << " HAS CAPS. Should be lower snake case\n";
-            break;
-          }
-        }
 
         rstStream << "   |" << CreateFilledString(paramValue->humanName(), columnWidths[0], ' ') << "|" << CreateFilledString(paramValue->name(), columnWidths[1], ' ') << "|\n";
         rstStream << "   +" << std::string(columnWidths[0], '-') << "+" << std::string(columnWidths[1], '-') << "+\n";
