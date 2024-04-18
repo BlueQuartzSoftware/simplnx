@@ -594,8 +594,6 @@ void GenerateMarkdownFilterParameterTable()
         needTableHeader++;
       }
 
-
-
       pTableStream << '\n';
 
       // Read the Current Filter's Documentation File
