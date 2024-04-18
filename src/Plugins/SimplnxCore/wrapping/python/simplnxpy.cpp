@@ -1234,6 +1234,17 @@ PYBIND11_MODULE(simplnx, mod)
   filterMessage.def_readwrite("type", &IFilter::Message::type);
   filterMessage.def_readwrite("message", &IFilter::Message::message);
 
+  py::class_<IFilter::ProgressMessage, IFilter::Message> progressMessage(filter, "ProgressMessage");
+  progressMessage.def(py::init([](std::string message, int32 progress) {
+                        IFilter::ProgressMessage progressMessage;
+                        progressMessage.type = IFilter::Message::Type::Progress;
+                        progressMessage.message = std::move(message);
+                        progressMessage.progress = progress;
+                        return progressMessage;
+                      }),
+                      "message"_a, "progress"_a);
+  progressMessage.def_readwrite("progress", &IFilter::ProgressMessage::progress);
+
   py::class_<IFilter::MessageHandler> messageHandler(filter, "MessageHandler");
   messageHandler.def(py::init<>());
   messageHandler.def_readwrite("callback", &IFilter::MessageHandler::m_Callback);
