@@ -634,18 +634,17 @@ PYBIND11_MODULE(simplnx, mod)
 
   dataStructure.def(
       "exists",
-      [](DataStructure& self, const std::string& path) {
-        auto pathConversionResult = DataPath::FromString(path);
-        if(!pathConversionResult)
+      [](const DataStructure& self, std::string_view path) {
+        auto convertedPath = DataPath::FromString(path);
+        if(!convertedPath)
         {
           return false;
         }
-        return (nullptr != self.getData(pathConversionResult.value()));
+        return self.containsData(convertedPath.value());
       },
-      "Returns true if there is a DataStructure object at the given path");
-
-  dataStructure.def(
-      "exists", [](DataStructure& self, const DataPath& path) { return (nullptr != self.getData(path)); }, "Returns true if there is a DataStructure object at the given path");
+      "Returns true if there is a DataStructure object at the given path", "path"_a);
+  dataStructure.def("exists", py::overload_cast<const DataPath&>(&DataStructure::containsData, py::const_), "Returns true if there is a DataStructure object at the given path", "path"_a);
+  dataStructure.def("__contains__", py::overload_cast<const DataPath&>(&DataStructure::containsData, py::const_), "Returns true if there is a DataStructure object at the given path", "path"_a);
   dataStructure.def("hierarchy_to_str", [](DataStructure& self) {
     std::stringstream ss;
     self.exportHierarchyAsText(ss);
