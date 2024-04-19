@@ -50,7 +50,8 @@ bool Is2DFormat(const fs::path& fileName)
 template <typename PixelT, uint32 Dimensions>
 Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath /*, const IFilter::MessageHandler& messanger*/)
 {
-  fs::path tempPath(fmt::format("{}/{}", fs::temp_directory_path().string(), filePath.filename().string()));
+  AtomicFile atomicFile(filePath);
+  auto tempPath = atomicFile.tempFilePath();
   try
   {
     using ImageType = itk::Image<PixelT, Dimensions>;
@@ -65,57 +66,57 @@ Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& f
     writer->Update();
   } catch(const itk::ExceptionObject& err)
   {
-    // Handle errors from the writer deleting the directory
-    fs::remove(tempPath);
-
     return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
   }
 
-  fs::rename(tempPath, filePath);
+  if(!atomicFile.commit())
+  {
+    return atomicFile.getResult();
+  }
   return {};
 }
 
 template <typename PixelT, uint32 Dimensions>
 Result<> WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const fs::path& filePath, uint64 indexOffset)
 {
-  // write to temp directory
-  auto namesGenerator = itk::NumericSeriesFileNames::New();
-  fs::path parentPath = fs::temp_directory_path();
-  fs::path fileName = filePath.stem();
-  fs::path extension = filePath.extension();
-  std::string format = fmt::format("{}/{}%03d{}", parentPath.string(), fileName.string(), extension.string());
-  namesGenerator->SetSeriesFormat(format);
-  namesGenerator->SetIncrementIndex(1);
-  namesGenerator->SetStartIndex(indexOffset);
-  namesGenerator->SetEndIndex(z_size - 1);
+  // Create list of AtomicFiles
+  std::vector<std::unique_ptr<AtomicFile>> atomicFiles = {};
 
-  // generate all the files in that new directory
-  try
+  for(uint64 index = indexOffset; index < (z_size - 1); index++)
   {
-    using InputImageType = itk::Image<PixelT, Dimensions>;
-    using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
-    using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
-    auto writer = SeriesWriterType::New();
-    writer->SetInput(&image);
-    writer->SetFileNames(namesGenerator->GetFileNames());
-    writer->UseCompressionOn();
-    writer->Update();
-  } catch(const itk::ExceptionObject& err)
+    atomicFiles.emplace_back(
+        std::make_unique<AtomicFile>((fs::absolute(fmt::format("{}/{}{:03d}{}", filePath.parent_path().string(), filePath.stem().string(), index, filePath.extension().string())))));
+  }
   {
-    // Handle errors from the writer deleting the directory
-    for(const auto& name : namesGenerator->GetFileNames())
+    std::vector<std::string> fileNames = {};
+    for(const auto& atomicFile : atomicFiles)
     {
-      fs::remove(name);
+      fileNames.emplace_back(atomicFile->tempFilePath().string());
     }
 
-    return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
+    // generate all the files in that new directory
+    try
+    {
+      using InputImageType = itk::Image<PixelT, Dimensions>;
+      using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
+      using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
+      auto writer = SeriesWriterType::New();
+      writer->SetInput(&image);
+      writer->SetFileNames(fileNames);
+      writer->UseCompressionOn();
+      writer->Update();
+    } catch(const itk::ExceptionObject& err)
+    {
+      return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
+    }
   }
 
-  // Move all the files from the new directory to the users actual directory
-  for(const auto& name : namesGenerator->GetFileNames())
+  for(const auto& atomicFile : atomicFiles)
   {
-    fs::path tempFile(name);
-    fs::rename(tempFile, {fmt::format("{}/{}", filePath.parent_path().string(), tempFile.filename().string())});
+    if(!atomicFile->commit())
+    {
+      return atomicFile->getResult();
+    }
   }
 
   return {};
