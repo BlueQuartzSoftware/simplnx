@@ -117,7 +117,13 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
     if(writeXdmf)
     {
       fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
-      fs::rename(xdmfFilePath, args.value<fs::path>(k_ExportFilePath).replace_extension(".xdmf"));
+      std::error_code errorCode;
+      fs::rename(xdmfFilePath, args.value<fs::path>(k_ExportFilePath).replace_extension(".xdmf"), errorCode);
+      if(errorCode)
+      {
+        std::string ss = fmt::format("Failed to rename xdmf file with error: '{}'", errorCode.message());
+        return MakeErrorResult(errorCode.value(), ss);
+      }
     }
   }
   return results;
