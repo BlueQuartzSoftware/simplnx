@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -78,8 +78,8 @@
     },
     {
       "args": {
-        "triangle_areas_array_path": "FaceAreas",
-        "triangle_geometry_data_path": "TriangleDataContainer"
+        "triangle_areas_array_name": "FaceAreas",
+        "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
@@ -90,8 +90,8 @@
     },
     {
       "args": {
-        "surface_mesh_triangle_normals_array_path": "FaceNormals",
-        "tri_geometry_data_path": "TriangleDataContainer"
+        "output_normals_array_name": "FaceNormals",
+        "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
@@ -103,7 +103,7 @@
     {
       "args": {
         "surface_mesh_triangle_dihedral_angles_array_name": "FaceDihedralAngles",
-        "tri_geometry_data_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {
@@ -151,7 +151,7 @@
         "feature_num_triangles_array_name": "NumTriangles",
         "grain_boundary_attribute_matrix_name": "SharedFeatureFace",
         "randomize_features": false,
-        "triangle_geometry_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
       "filter": {

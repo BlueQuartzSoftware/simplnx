@@ -33,8 +33,8 @@ TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[O
   args.insertOrAssign(FindAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
   args.insertOrAssign(FindAvgCAxesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
   args.insertOrAssign(FindAvgCAxesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-  args.insertOrAssign(FindAvgCAxesFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureDataPath));
-  args.insertOrAssign(FindAvgCAxesFilter::k_AvgCAxesArrayPath_Key, std::make_any<std::string>(k_AvgCAxesComputed));
+  args.insertOrAssign(FindAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>(k_AvgCAxesComputed));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -70,8 +70,8 @@ TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Invalid Filter Execution", "
   args.insertOrAssign(FindAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
   args.insertOrAssign(FindAvgCAxesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
   args.insertOrAssign(FindAvgCAxesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-  args.insertOrAssign(FindAvgCAxesFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureDataPath));
-  args.insertOrAssign(FindAvgCAxesFilter::k_AvgCAxesArrayPath_Key, std::make_any<std::string>(k_AvgCAxesComputed));
+  args.insertOrAssign(FindAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>(k_AvgCAxesComputed));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

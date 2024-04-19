@@ -57,11 +57,11 @@ data_structure = nx.DataStructure()
 # Create a DataArray to copy the Euler Angles into 
 array_path = nx.DataPath(['Euler Angles'])
 result = nx.CreateDataArray.execute(data_structure=data_structure,
-                                    numeric_type=nx.NumericType.float32,
+                                    numeric_type_index=nx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[99]],
-                                    output_data_array=array_path,
-                                    initialization_value='0')
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
@@ -82,9 +82,9 @@ npdata[:] = np.loadtxt(file_path, delimiter=',')
 quat_path = nx.DataPath(['Quaternions'])
 result = nxor.ConvertOrientations.execute(data_structure=data_structure,
                                           input_orientation_array_path=array_path,
-                                          input_type=0,
+                                          input_representation_index=0,
                                           output_orientation_array_name='Quaternions',
-                                          output_type=2)
+                                          output_representation_index=2)
 nxtest.check_filter_result(nxor.ConvertOrientations, result)
 
 

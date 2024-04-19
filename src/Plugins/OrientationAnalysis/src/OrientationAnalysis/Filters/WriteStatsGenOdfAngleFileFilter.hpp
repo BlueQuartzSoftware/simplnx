@@ -27,7 +27,7 @@ public:
   static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
   static inline constexpr StringLiteral k_Weight_Key = "weight";
   static inline constexpr StringLiteral k_Sigma_Key = "sigma";
-  static inline constexpr StringLiteral k_Delimiter_Key = "delimiter";
+  static inline constexpr StringLiteral k_Delimiter_Key = "delimiter_index";
   static inline constexpr StringLiteral k_ConvertToDegrees_Key = "convert_to_degrees";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";

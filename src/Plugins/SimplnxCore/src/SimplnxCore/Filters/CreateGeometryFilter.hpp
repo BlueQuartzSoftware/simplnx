@@ -24,35 +24,35 @@ public:
   CreateGeometryFilter& operator=(CreateGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GeometryType_Key = "geometry_type";
-  static inline constexpr StringLiteral k_LengthUnitType_Key = "length_unit_type";
-  static inline constexpr StringLiteral k_GeometryName_Key = "geometry_name";
+  static inline constexpr StringLiteral k_GeometryType_Key = "geometry_type_index";
+  static inline constexpr StringLiteral k_LengthUnitType_Key = "length_unit_index";
+  static inline constexpr StringLiteral k_GeometryPath_Key = "output_geometry_path";
   static inline constexpr StringLiteral k_WarningsAsErrors_Key = "warnings_as_errors";
-  static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling";
+  static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling_index";
   // Image Geometry
   static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
   // RectilinearGrid Geometry
-  static inline constexpr StringLiteral k_XBounds_Key = "x_bounds";
-  static inline constexpr StringLiteral k_YBounds_Key = "y_bounds";
-  static inline constexpr StringLiteral k_ZBounds_Key = "z_bounds";
+  static inline constexpr StringLiteral k_XBoundsPath_Key = "x_bounds_path";
+  static inline constexpr StringLiteral k_YBoundsPath_Key = "y_bounds_path";
+  static inline constexpr StringLiteral k_ZBoundsPath_Key = "z_bounds_path";
   // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry
-  static inline constexpr StringLiteral k_VertexListName_Key = "vertex_list_name";
+  static inline constexpr StringLiteral k_VertexListPath_Key = "vertex_list_path";
   static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
   // Edge Geometry
-  static inline constexpr StringLiteral k_EdgeListName_Key = "edge_list_name";
+  static inline constexpr StringLiteral k_EdgeListPath_Key = "edge_list_path";
   static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
   // Triangle Geometry
-  static inline constexpr StringLiteral k_TriangleListName_Key = "triangle_list_name";
+  static inline constexpr StringLiteral k_TriangleListPath_Key = "triangle_list_path";
   // Quadrilateral Geometry
-  static inline constexpr StringLiteral k_QuadrilateralListName_Key = "quadrilateral_list_name";
+  static inline constexpr StringLiteral k_QuadrilateralListPath_Key = "quadrilateral_list_path";
   // Triangle & Quadrilateral Geometry
   static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
   // Tetrahedral Geometry
-  static inline constexpr StringLiteral k_TetrahedralListName_Key = "tetrahedral_list_name";
+  static inline constexpr StringLiteral k_TetrahedralListPath_Key = "tetrahedral_list_path";
   // Hexahedral Geometry
-  static inline constexpr StringLiteral k_HexahedralListName_Key = "hexahedral_list_name";
+  static inline constexpr StringLiteral k_HexahedralListPath_Key = "hexahedral_list_path";
   // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
 

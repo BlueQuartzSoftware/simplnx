@@ -7,7 +7,7 @@
       "args": {
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "data_container_name": "DataContainer",
+        "output_image_geometry_path": "DataContainer",
         "input_file": "Data/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
       },
       "comments": "",
@@ -19,10 +19,10 @@
     },
     {
       "args": {
-        "created_image_geometry": "",
+        "output_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
-        "rotation_axis": [
+        "rotation_axis_angle": [
           0.0,
           1.0,
           0.0,
@@ -55,7 +55,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry": "DataContainer"
+        "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
@@ -67,7 +67,7 @@
     {
       "args": {
         "euler_angles_array_path": "DataContainer/CellData/EulerAngles",
-        "rotation_axis": [
+        "rotation_axis_angle": [
           0.0,
           0.0,
           1.0,
@@ -83,7 +83,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -98,7 +98,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "output_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -132,7 +132,7 @@
       "args": {
         "file_name": "Data/Output/Examples/Combo-EBSD-osc_r0c0.png",
         "image_array_path": "DataContainer/CellData/IPFColors",
-        "image_geom_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "index_offset": 0,
         "plane": 0
       },
@@ -146,9 +146,9 @@
     {
       "args": {
         "input_orientation_array_path": "DataContainer/CellData/EulerAngles",
-        "input_type": 0,
+        "input_representation_index": 0,
         "output_orientation_array_name": "Quats",
-        "output_type": 2
+        "output_representation_index": 2
       },
       "comments": "",
       "filter": {
@@ -165,7 +165,7 @@
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
         "mask_array_path": "DataContainer/CellData/Mask",
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "misorientation_tolerance": 5.0,
         "quats_array_path": "DataContainer/CellData/Quats",
         "randomize_feature_ids": true,
@@ -181,7 +181,7 @@
     {
       "args": {
         "avg_c_axes_array_path": "AvgCAxes",
-        "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
@@ -203,7 +203,7 @@
         "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
         "feature_reference_c_axis_misorientations_array_name": "FeatureRefCAxisMisorientation",
         "feature_stdev_c_axis_misorientations_array_name": "StdevCAxisMisorientation",
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "quats_array_path": "DataContainer/CellData/Quats"
       },
       "comments": "",
@@ -230,7 +230,7 @@
     {
       "args": {
         "output_rgb_array_name": "Feature Ids (Color)",
-        "selected_data_array_path": "DataContainer/CellData/FeatureIds",
+        "input_data_array_path": "DataContainer/CellData/FeatureIds",
         "selected_preset": "hsv",
         "use_mask": false
       },
@@ -243,7 +243,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -258,7 +258,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask Inverse"
+        "output_data_array_name": "Mask Inverse"
       },
       "comments": "",
       "filter": {
@@ -287,7 +287,7 @@
       "args": {
         "file_name": "Data/Output/Examples/Combo-EBSD-osc_r0c0._feature_ids.png",
         "image_array_path": "DataContainer/CellData/Feature Ids (Color)",
-        "image_geom_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "index_offset": 0,
         "plane": 0
       },
@@ -314,9 +314,9 @@
     },
     {
       "args": {
-        "avg_euler_angles_array_path": "AvgEulerAngles",
-        "avg_quats_array_path": "AvgQuats",
-        "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "avg_euler_angles_array_name": "AvgEulerAngles",
+        "avg_quats_array_name": "AvgQuats",
+        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "cell_feature_ids_array_path": "DataContainer/CellData/FeatureIds",
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "cell_quats_array_path": "DataContainer/CellData/Quats",
@@ -331,16 +331,16 @@
     },
     {
       "args": {
-        "boundary_cells": "BoundaryCells",
-        "cell_feature_arrays": "DataContainer/CellFeatureData",
-        "feature_ids": "DataContainer/CellData/FeatureIds",
-        "image_geometry": "DataContainer",
-        "neighbor_list": "NeighborList",
-        "number_of_neighbors": "NumNeighbors",
-        "shared_surface_area_list": "SharedSurfaceAreaList",
+        "boundary_cells_name": "BoundaryCells",
+        "cell_feature_array_path": "DataContainer/CellFeatureData",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "input_image_geometry_path": "DataContainer",
+        "neighbor_list_name": "NeighborList",
+        "number_of_neighbors_name": "NumNeighbors",
+        "shared_surface_area_list_name": "SharedSurfaceAreaList",
         "store_boundary_cells": false,
         "store_surface_features": false,
-        "surface_features": "SurfaceFeatures"
+        "surface_features_name": "SurfaceFeatures"
       },
       "comments": "",
       "filter": {

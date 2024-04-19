@@ -27,7 +27,7 @@ public:
   static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
   static inline constexpr StringLiteral k_NumCellsPath_Key = "num_cells_path";
   static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
+  static inline constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_ApplySinglePhase_Key = "apply_single_phase";
   static inline constexpr StringLiteral k_MinAllowedFeaturesSize_Key = "min_allowed_features_size";
   static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";

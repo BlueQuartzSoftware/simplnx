@@ -2,6 +2,7 @@
 
 #include "simplnx/simplnx_export.hpp"
 
+#include <fmt/chrono.h>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
@@ -10,6 +11,12 @@
 
 namespace nx::core
 {
+
+inline std::string timestamp()
+{
+  std::time_t t = std::time(nullptr);
+  return fmt::format("[{:%Y:%m:%d %H:%M:%S}]", fmt::localtime(t));
+}
 
 /**
  * @brief Converts a millisecond count to Hours:Minutes:Seconds type of display. This assumes

@@ -4,7 +4,7 @@
   "pipeline": [
     {
       "args": {
-        "input_file_list_info": {
+        "input_file_list_object": {
           "end_index": 117,
           "file_extension": ".ang",
           "file_prefix": "Slice_",

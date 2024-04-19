@@ -2,6 +2,7 @@
 
 #include "simplnx/Filter/DataParameter.hpp"
 #include "simplnx/Filter/ValueParameter.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
@@ -262,12 +263,17 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   Arguments args;
   std::vector<Error> errors;
   std::vector<Warning> warnings;
+
+  std::vector<std::string> paramKeyNotFound;
+  std::vector<std::string> jsonKeyNotFound;
+
   for(const auto& [name, param] : params)
   {
     if(!json.contains(name))
     {
-      warnings.push_back(Warning{-1, fmt::format("JSON does not contain key '{}'. Falling back to default value.", name)});
+      // warnings.push_back(Warning{-5432, fmt::format("PARAMETER_KEY_NOT_FOUND_IN_JSON | '{}' | Parameter Key '{}' missing from the JSON", className(), name)});
       args.insert(name, param->defaultValue());
+      paramKeyNotFound.push_back(name);
       continue;
     }
     const auto& jsonValue = json[name];
@@ -279,6 +285,29 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     }
     args.insert(name, std::move(jsonResult.value()));
   }
+
+  for(auto& [key, val] : json.items())
+  {
+    if(!params.contains(key))
+    {
+      // warnings.push_back(Warning{-5433, fmt::format("JSON_KEY_NOT_FOUND_IN_PARAMETER | '{}' | JSON Key '{}' missing from the parameter list", className(), key)});
+      jsonKeyNotFound.push_back(key);
+      continue;
+    }
+  }
+
+  auto bestMatches = StringUtilities::FindBestMatches(jsonKeyNotFound, paramKeyNotFound);
+  for(const auto& match : bestMatches)
+  {
+    if(!match.first.empty() && !match.second.empty())
+    {
+      warnings.push_back(
+          Warning{-5434, fmt::format("Filter '{}': JSON Parameter Warning\n    JSON Parameter Key '{}' is not an accepted Parameter Key for the filter. Closest match is "
+                                     "'{}'\n    Suggested change is '{}' ==> '{}' (This is *ONLY* a suggestion.)\n    Open the JSON file in a text editor and make the suggested changes.",
+                                     className(), match.first, match.second, match.first, match.second)});
+    }
+  }
+
   if(!errors.empty())
   {
     return {nonstd::make_unexpected(std::move(errors))};

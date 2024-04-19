@@ -3,6 +3,7 @@
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -50,10 +51,10 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
     // Create default Parameters for the filter.
     args.insertOrAssign(FlyingEdges3DFilter::k_IsoVal_Key, std::make_any<float64>(ContourTest::k_IsoVal));
     // Selected Data Objects
-    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometry_Key, std::make_any<GeometrySelectionParameter::ValueType>(ContourTest::k_GeometryPath));
-    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArray_Key, std::make_any<DataPath>(ContourTest::k_DataPath));
+    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometryPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(ContourTest::k_GeometryPath));
+    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(ContourTest::k_DataPath));
     // Output Path
-    args.insertOrAssign(FlyingEdges3DFilter::k_NewTriangleGeometryName_Key, std::make_any<DataObjectNameParameter::ValueType>(ContourTest::k_NewTriangleContourName));
+    args.insertOrAssign(FlyingEdges3DFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataGroupCreationParameter::ValueType>(ContourTest::k_NewContourPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

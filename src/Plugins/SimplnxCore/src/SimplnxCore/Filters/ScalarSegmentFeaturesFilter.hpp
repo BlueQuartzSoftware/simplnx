@@ -28,14 +28,14 @@ public:
   ScalarSegmentFeaturesFilter& operator=(ScalarSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
+  static inline constexpr StringLiteral k_GridGeomPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar_tolerance";
   static inline constexpr StringLiteral k_InputArrayPathKey = "input_array_path";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_path";
-  static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature_ids_path";
-  static inline constexpr StringLiteral k_CellFeaturePathKey = "cell_feature_group_path";
-  static inline constexpr StringLiteral k_ActiveArrayPathKey = "active_array_path";
+  static inline constexpr StringLiteral k_FeatureIdsName_Key = "feature_ids_name";
+  static inline constexpr StringLiteral k_CellFeatureName_Key = "cell_feature_group_name";
+  static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
   static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
 
   /**

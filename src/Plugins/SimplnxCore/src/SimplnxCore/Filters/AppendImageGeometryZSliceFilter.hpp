@@ -24,11 +24,11 @@ public:
   AppendImageGeometryZSliceFilter& operator=(AppendImageGeometryZSliceFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputGeometry_Key = "input_geometry";
-  static inline constexpr StringLiteral k_DestinationGeometry_Key = "destination_geometry";
+  static inline constexpr StringLiteral k_InputGeometry_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_DestinationGeometry_Key = "destination_image_geometry_path";
   static inline constexpr StringLiteral k_CheckResolution_Key = "check_resolution";
   static inline constexpr StringLiteral k_SaveAsNewGeometry_Key = "save_as_new_geometry";
-  static inline constexpr StringLiteral k_NewGeometry_Key = "new_geometry";
+  static inline constexpr StringLiteral k_NewGeometry_Key = "output_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -344,13 +344,13 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));
 
   params.insertSeparator({"Input Geometry and Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry on which to perform the rotation", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the rotation", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator({"Output Geometry and Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the rotated geometry", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The location of the rotated geometry", DataPath{}));
 
-  params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
+  params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometryPath_Key, false);
 
   return params;
 }
@@ -365,8 +365,8 @@ IFilter::UniquePointer RotateSampleRefFrameFilter::clone() const
 IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&, const std::atomic_bool&) const
 {
 
-  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -496,8 +496,8 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel) const
 {
-  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto sliceBySlice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
   auto removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
 
@@ -589,7 +589,8 @@ Result<Arguments> RotateSampleRefFrameFilter::FromSIMPLJson(const nlohmann::json
   results.push_back(
       SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, SIMPL::k_RotationAxisKey, SIMPL::k_RotationAngleKey, k_RotationAxisAngle_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_RotationTableKey, k_RotationMatrix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_SelectedImageGeometry_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

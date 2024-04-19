@@ -20,7 +20,7 @@ import_data.data_paths = None
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
-                        import_file_data=import_data)
+                        import_data_object=import_data)
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
@@ -32,7 +32,7 @@ result = nx_filter.execute(
     boundary_cells_array_name="BoundaryCells",
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     ignore_feature_zero=True,
-    image_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     include_volume_boundary=True,
 )
 nxtest.check_filter_result(nx_filter, result)

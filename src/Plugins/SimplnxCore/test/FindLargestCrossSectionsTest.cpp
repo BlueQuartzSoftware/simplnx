@@ -293,7 +293,7 @@ TEST_CASE("SimplnxCore::FindLargestCrossSectionsFilter: Valid Filter Execution",
   args.insertOrAssign(FindLargestCrossSectionsFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
   args.insertOrAssign(FindLargestCrossSectionsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_CellData, k_FeatureIds})));
   args.insertOrAssign(FindLargestCrossSectionsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_CellFeatureData})));
-  args.insertOrAssign(FindLargestCrossSectionsFilter::k_LargestCrossSectionsArrayPath_Key, std::make_any<std::string>(k_LargestCrossSections));
+  args.insertOrAssign(FindLargestCrossSectionsFilter::k_LargestCrossSectionsArrayName_Key, std::make_any<std::string>(k_LargestCrossSections));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -327,7 +327,7 @@ TEST_CASE("SimplnxCore::FindLargestCrossSectionsFilter: InValid Filter Execution
   args.insertOrAssign(FindLargestCrossSectionsFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(FindLargestCrossSectionsFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
   args.insertOrAssign(FindLargestCrossSectionsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_CellData, k_FeatureIds})));
-  args.insertOrAssign(FindLargestCrossSectionsFilter::k_LargestCrossSectionsArrayPath_Key, std::make_any<std::string>(k_LargestCrossSections));
+  args.insertOrAssign(FindLargestCrossSectionsFilter::k_LargestCrossSectionsArrayName_Key, std::make_any<std::string>(k_LargestCrossSections));
 
   SECTION("Invalid Image Geometry (should be 3D)")
   {

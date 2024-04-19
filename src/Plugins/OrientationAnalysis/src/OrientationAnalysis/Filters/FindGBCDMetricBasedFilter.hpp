@@ -26,13 +26,13 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_PhaseOfInterest_Key = "phase_of_interest";
   static inline constexpr StringLiteral k_MisorientationRotation_Key = "misorientation_rotation";
-  static inline constexpr StringLiteral k_ChosenLimitDists_Key = "chosen_limit_dists";
+  static inline constexpr StringLiteral k_ChosenLimitDists_Key = "chosen_limit_dists_index";
   static inline constexpr StringLiteral k_NumSamplPts_Key = "num_sampl_pts";
   static inline constexpr StringLiteral k_ExcludeTripleLines_Key = "exclude_triple_lines";
   static inline constexpr StringLiteral k_DistOutputFile_Key = "dist_output_file";
   static inline constexpr StringLiteral k_ErrOutputFile_Key = "err_output_file";
   static inline constexpr StringLiteral k_SaveRelativeErr_Key = "save_relative_err";
-  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_NodeTypesArrayPath_Key = "node_types_array_path";
   static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
   static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";

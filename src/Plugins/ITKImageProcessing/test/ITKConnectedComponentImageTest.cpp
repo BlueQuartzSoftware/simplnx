@@ -35,7 +35,7 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(default)", "[ITK
   Arguments args;
   args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -66,7 +66,7 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(mask)", "[ITKIma
   Arguments args;
   args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -97,7 +97,7 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(fullyconnected)"
   Arguments args;
   args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKConnectedComponentImage::k_FullyConnected_Key, std::make_any<BoolParameter::ValueType>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);

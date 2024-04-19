@@ -19,6 +19,7 @@ namespace nx::core
  *  "Rodrigues" = 4
  *  "Homochoric" = 5
  *  "Cubochoric" = 6
+ *  "Stereographic" = 7
  *
  */
 class ORIENTATIONANALYSIS_EXPORT ConvertOrientations : public IFilter
@@ -34,8 +35,8 @@ public:
   ConvertOrientations& operator=(ConvertOrientations&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputType_Key = "input_type";
-  static inline constexpr StringLiteral k_OutputType_Key = "output_type";
+  static inline constexpr StringLiteral k_InputType_Key = "input_representation_index";
+  static inline constexpr StringLiteral k_OutputType_Key = "output_representation_index";
   static inline constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
   static inline constexpr StringLiteral k_OutputOrientationArrayName_Key = "output_orientation_array_name";
 

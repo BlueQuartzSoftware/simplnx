@@ -41,7 +41,7 @@ TEST_CASE("OrientationAnalysis::FindKernelAvgMisorientationsFilter", "[Orientati
     // Create default Parameters for the filter.
     // Parameters
     args.insertOrAssign(FindKernelAvgMisorientationsFilter::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{1, 1, 1}));
-    args.insertOrAssign(FindKernelAvgMisorientationsFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insertOrAssign(FindKernelAvgMisorientationsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
     // Cell Arrays
     args.insertOrAssign(FindKernelAvgMisorientationsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
     args.insertOrAssign(FindKernelAvgMisorientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));

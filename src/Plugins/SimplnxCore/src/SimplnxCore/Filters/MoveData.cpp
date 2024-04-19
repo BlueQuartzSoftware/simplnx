@@ -47,8 +47,8 @@ Parameters MoveData::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<MultiPathSelectionParameter>(k_Data_Key, "Data to Move", "The complete paths to the data object(s) to be moved", MultiPathSelectionParameter::ValueType{}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_NewParent_Key, "New Parent", "The complete path to the parent data object to which the data will be moved", DataPath(),
+  params.insert(std::make_unique<MultiPathSelectionParameter>(k_SourceDataPaths_Key, "Data to Move", "The complete paths to the data object(s) to be moved", MultiPathSelectionParameter::ValueType{}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DestinationParentPath_Key, "New Parent", "The complete path to the parent data object to which the data will be moved", DataPath(),
                                                               BaseGroup::GetAllGroupTypes()));
   return params;
 }
@@ -62,8 +62,8 @@ IFilter::UniquePointer MoveData::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  auto dataPaths = args.value<MultiPathSelectionParameter::ValueType>(k_Data_Key);
-  auto newParentPath = args.value<DataPath>(k_NewParent_Key);
+  auto dataPaths = args.value<MultiPathSelectionParameter::ValueType>(k_SourceDataPaths_Key);
+  auto newParentPath = args.value<DataPath>(k_DestinationParentPath_Key);
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -124,13 +124,15 @@ Result<Arguments> MoveData::FromSIMPLJson(const nlohmann::json& json)
 
   if(json[SIMPL::k_WhatToMoveKey].get<int32>() == 0)
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixSourceKey, k_Data_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerDestinationKey, k_NewParent_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixSourceKey, k_SourceDataPaths_Key));
+    results.push_back(
+        SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerDestinationKey, k_DestinationParentPath_Key));
   }
   else
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_DataArraySourceKey, k_Data_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixDestinationKey, k_NewParent_Key));
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_DataArraySourceKey, k_SourceDataPaths_Key));
+    results.push_back(
+        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixDestinationKey, k_DestinationParentPath_Key));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

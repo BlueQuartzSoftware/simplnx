@@ -26,13 +26,13 @@ public:
   ErodeDilateMaskFilter& operator=(ErodeDilateMaskFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Operation_Key = "operation";
+  static inline constexpr StringLiteral k_Operation_Key = "operation_index";
   static inline constexpr StringLiteral k_NumIterations_Key = "num_iterations";
   static inline constexpr StringLiteral k_XDirOn_Key = "x_dir_on";
   static inline constexpr StringLiteral k_YDirOn_Key = "y_dir_on";
   static inline constexpr StringLiteral k_ZDirOn_Key = "z_dir_on";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

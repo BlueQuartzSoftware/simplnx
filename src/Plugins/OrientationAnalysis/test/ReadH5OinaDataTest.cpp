@@ -46,7 +46,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Valid Filter Execution", "
   args.insertOrAssign(ReadH5OinaDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
   args.insertOrAssign(ReadH5OinaDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0f)));
   args.insertOrAssign(ReadH5OinaDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ReadH5OinaDataFilter::k_ImageGeometryName_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
+  args.insertOrAssign(ReadH5OinaDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
   args.insertOrAssign(ReadH5OinaDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
   args.insertOrAssign(ReadH5OinaDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
@@ -91,7 +91,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: InValid Filter Execution",
   DataStructure dataStructure;
   Arguments args;
   args.insertOrAssign(ReadH5OinaDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0f)));
-  args.insertOrAssign(ReadH5OinaDataFilter::k_ImageGeometryName_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
+  args.insertOrAssign(ReadH5OinaDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
   args.insertOrAssign(ReadH5OinaDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
   args.insertOrAssign(ReadH5OinaDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 

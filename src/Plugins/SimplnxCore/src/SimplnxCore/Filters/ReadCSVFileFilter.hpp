@@ -34,10 +34,10 @@ public:
   ReadCSVFileFilter& operator=(ReadCSVFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data";
+  static inline constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
   static inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
-  static inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_data_group";
-  static inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group";
+  static inline constexpr StringLiteral k_SelectedAttributeMatrixPath_Key = "selected_attribute_matrix_path";
+  static inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

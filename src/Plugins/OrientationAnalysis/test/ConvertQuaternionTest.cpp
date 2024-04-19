@@ -62,7 +62,7 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter", "[OrientationAnalysis]
 
     // Create default Parameters for the filter.
     args.insertOrAssign(ConvertQuaternionFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({k_QuatName})));
-    args.insertOrAssign(ConvertQuaternionFilter::k_OutputDataArrayPath_Key, std::make_any<std::string>(k_ConvertedName));
+    args.insertOrAssign(ConvertQuaternionFilter::k_OutputDataArrayName_Key, std::make_any<std::string>(k_ConvertedName));
     args.insertOrAssign(ConvertQuaternionFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
     args.insertOrAssign(ConvertQuaternionFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(k_ToScalarVector));
 
@@ -87,7 +87,7 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter", "[OrientationAnalysis]
 
     // Create default Parameters for the filter.
     args.insertOrAssign(ConvertQuaternionFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({k_ConvertedName})));
-    args.insertOrAssign(ConvertQuaternionFilter::k_OutputDataArrayPath_Key, std::make_any<std::string>(k_Exemplar1));
+    args.insertOrAssign(ConvertQuaternionFilter::k_OutputDataArrayName_Key, std::make_any<std::string>(k_Exemplar1));
     args.insertOrAssign(ConvertQuaternionFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
     args.insertOrAssign(ConvertQuaternionFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(k_ToVectorScalar));
 

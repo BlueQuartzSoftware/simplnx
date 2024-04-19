@@ -28,9 +28,9 @@ public:
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "cell_quats_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
-  static inline constexpr StringLiteral k_AvgEulerAnglesArrayPath_Key = "avg_euler_angles_array_path";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrix_Key = "cell_feature_attribute_matrix";
+  static inline constexpr StringLiteral k_AvgQuatsArrayName_Key = "avg_quats_array_name";
+  static inline constexpr StringLiteral k_AvgEulerAnglesArrayName_Key = "avg_euler_angles_array_name";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

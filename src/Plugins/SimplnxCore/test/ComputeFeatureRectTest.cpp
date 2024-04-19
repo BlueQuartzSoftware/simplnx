@@ -108,7 +108,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: Valid filter execution", "[Sim
 
   args.insertOrAssign(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName, k_CellAttrMatrixName, k_FeatureIdsArrayName}}));
   args.insertOrAssign(ComputeFeatureRectFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName, k_FeatureAttrMatrixName}}));
-  args.insertOrAssign(ComputeFeatureRectFilter::k_FeatureRectArrayPath_Key, std::make_any<std::string>(k_RectCoordsArrayName));
+  args.insertOrAssign(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(k_RectCoordsArrayName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

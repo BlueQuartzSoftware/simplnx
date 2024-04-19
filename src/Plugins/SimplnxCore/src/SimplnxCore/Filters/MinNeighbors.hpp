@@ -21,15 +21,15 @@ public:
   MinNeighbors& operator=(MinNeighbors&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeom_Key = "image_geom";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_ApplyToSinglePhase_Key = "apply_to_single_phase";
   static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
-  static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
-  static inline constexpr StringLiteral k_FeaturePhases_Key = "feature_phases";
-  static inline constexpr StringLiteral k_NumNeighbors_Key = "num_neighbors";
+  static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
+  static inline constexpr StringLiteral k_NumNeighborsPath_Key = "num_neighbors_path";
   static inline constexpr StringLiteral k_MinNumNeighbors_Key = "min_num_neighbors";
   static inline constexpr StringLiteral k_IgnoredVoxelArrays_Key = "ignored_voxel_arrays";
-  static inline constexpr StringLiteral k_CellDataAttributeMatrix_Key = "cell_attribute_matrix";
+  static inline constexpr StringLiteral k_CellDataAttributeMatrixPath_Key = "cell_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

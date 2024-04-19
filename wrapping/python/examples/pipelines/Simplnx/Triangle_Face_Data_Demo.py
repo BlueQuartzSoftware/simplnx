@@ -15,13 +15,13 @@ nx_filter = nx.ReadStlFileFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(    
     data_structure=data_structure,
-    face_attribute_matrix="Face Data",
-    face_normals_data_path="Face Normals",
+    face_attribute_matrix_name="Face Data",
+    face_normals_name="Face Normals",
     scale_factor=1.0,
     scale_output=False,
     stl_file_path=nxtest.get_data_directory() / "STL_Models/ASTMD638_specimen.stl",
-    triangle_geometry_name=nx.DataPath("[Triangle Geometry]"),
-    vertex_attribute_matrix="Vertex Data"
+    output_triangle_geometry_path=nx.DataPath("[Triangle Geometry]"),
+    vertex_attribute_matrix_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -31,8 +31,8 @@ nx_filter = nx.CalculateTriangleAreasFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    triangle_areas_array_path="Face Areas",
-    triangle_geometry_data_path=nx.DataPath("[Triangle Geometry]")
+    triangle_areas_array_name="Face Areas",
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -42,8 +42,8 @@ nx_filter = nx.TriangleNormalFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    surface_mesh_triangle_normals_array_path="Face Normals (Calculated)",
-    tri_geometry_data_path=nx.DataPath("[Triangle Geometry]")
+    output_normals_array_name="Face Normals (Calculated)",
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -54,7 +54,7 @@ nx_filter = nx.TriangleDihedralAngleFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_dihedral_angles_array_name="Dihedral Angles",
-    tri_geometry_data_path=nx.DataPath("[Triangle Geometry]")
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -65,7 +65,7 @@ nx_filter = nx.TriangleCentroidFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_name="Centroids",
-    triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
+    input_triangle_geometry_path=nx.DataPath("[Triangle Geometry]")
 )
 nxtest.check_filter_result(nx_filter, result)
 

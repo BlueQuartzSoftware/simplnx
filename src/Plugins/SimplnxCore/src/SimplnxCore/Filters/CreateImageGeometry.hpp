@@ -24,7 +24,7 @@ public:
   CreateImageGeometry& operator=(CreateImageGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GeometryDataPath_Key = "geometry_data_path";
+  static inline constexpr StringLiteral k_GeometryDataPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";

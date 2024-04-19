@@ -50,9 +50,9 @@ TEST_CASE("SimplnxCore::CropVertexGeometry(Instantiate)", "[SimplnxCore][CropVer
   DataStructure dataStructure = createTestData();
   Arguments args;
 
-  args.insert(CropVertexGeometry::k_VertexGeom_Key, std::make_any<DataPath>(k_VertexGeomPath));
-  args.insert(CropVertexGeometry::k_CroppedGeom_Key, std::make_any<DataPath>(k_CroppedGeomPath));
-  args.insert(CropVertexGeometry::k_VertexDataName_Key, std::make_any<std::string>(k_VertexDataName));
+  args.insert(CropVertexGeometry::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
+  args.insert(CropVertexGeometry::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(k_CroppedGeomPath));
+  args.insert(CropVertexGeometry::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(k_VertexDataName));
   args.insert(CropVertexGeometry::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
   args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
@@ -70,9 +70,9 @@ TEST_CASE("SimplnxCore::CropVertexGeometry(Data)", "[SimplnxCore][CropVertexGeom
   DataStructure dataStructure = createTestData();
   Arguments args;
 
-  args.insert(CropVertexGeometry::k_VertexGeom_Key, std::make_any<DataPath>(k_VertexGeomPath));
-  args.insert(CropVertexGeometry::k_CroppedGeom_Key, std::make_any<DataPath>(k_CroppedGeomPath));
-  args.insert(CropVertexGeometry::k_VertexDataName_Key, std::make_any<std::string>(k_VertexDataName));
+  args.insert(CropVertexGeometry::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
+  args.insert(CropVertexGeometry::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(k_CroppedGeomPath));
+  args.insert(CropVertexGeometry::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(k_VertexDataName));
   args.insert(CropVertexGeometry::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
   args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));

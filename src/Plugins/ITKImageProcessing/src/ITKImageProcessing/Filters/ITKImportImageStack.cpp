@@ -33,8 +33,8 @@ namespace RotateSampleRefFrame
 static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
 static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
 static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-static inline constexpr nx::core::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
-static inline constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
+static inline constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+static inline constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "output_image_geometry_path";
 static inline constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
 static inline constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 
@@ -191,7 +191,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       Arguments colorToGrayscaleArgs;
       colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
       colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(luminosityValues));
-      colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{imageDataPath}));
+      colorToGrayscaleArgs.insertOrAssign("input_data_array_paths", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{imageDataPath}));
       colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
 
       // Run grayscale filter and process results and messages

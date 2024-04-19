@@ -105,7 +105,7 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
 
   Arguments args;
   // read in the exemplar shift data file
-  args.insertOrAssign(SplitAttributeArrayFilter::k_MultiCompArray_Key, std::make_any<DataPath>(arrayPath));
+  args.insertOrAssign(SplitAttributeArrayFilter::k_MultiCompArrayPath_Key, std::make_any<DataPath>(arrayPath));
   args.insertOrAssign(SplitAttributeArrayFilter::k_Postfix_Key, std::make_any<std::string>("Component"));
   args.insertOrAssign(SplitAttributeArrayFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
   if(!extractComps.empty())

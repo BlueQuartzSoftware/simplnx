@@ -45,8 +45,8 @@ TEST_CASE("SimplnxCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
     args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{0, 0, 0}));
     args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{188, 200, 50}));
     //  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(false));
-    args.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_CroppedBottomHalfPath));
+    args.insert(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insert(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_CroppedBottomHalfPath));
     args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
     args.insert(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
@@ -62,8 +62,8 @@ TEST_CASE("SimplnxCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
     args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{0, 0, 51}));
     args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{188, 200, 116}));
     //  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
-    args.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_CroppedTopHalfPath));
+    args.insert(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insert(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_CroppedTopHalfPath));
     args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
     args.insert(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
@@ -140,7 +140,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
     RenameDataObject renameFilter;
     Arguments renameArgs;
     renameArgs.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_CellData));
-    renameArgs.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_AppendedGeometryPath.createChildPath(ImageGeom::k_CellDataName)));
+    renameArgs.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_AppendedGeometryPath.createChildPath(ImageGeom::k_CellDataName)));
     auto renameResult = renameFilter.execute(dataStructure, renameArgs);
     SIMPLNX_RESULT_REQUIRE_VALID(renameResult.result)
 
@@ -183,8 +183,8 @@ TEST_CASE("SimplnxCore::AppendImageGeometryZSliceFilter: InValid Filter Executio
       cropArgs.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{0, 0, 0}));
       cropArgs.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{10, 10, 0}));
       //   cropArgs.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
-      cropArgs.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_InvalidTestGeometryPath2));
-      cropArgs.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_CroppedTopHalfPath));
+      cropArgs.insert(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InvalidTestGeometryPath2));
+      cropArgs.insert(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_CroppedTopHalfPath));
       cropArgs.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
       cropArgs.insert(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
       cropArgs.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));

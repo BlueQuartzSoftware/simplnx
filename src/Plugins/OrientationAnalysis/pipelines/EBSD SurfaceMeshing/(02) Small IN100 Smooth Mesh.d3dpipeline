@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -84,7 +84,7 @@
         "surface_point_lambda": 0.0,
         "surface_quad_point_lambda": 0.0,
         "surface_triple_line_lambda": 0.0,
-        "triangle_geometry_data_path": "TriangleDataContainer",
+        "input_triangle_geometry_path": "TriangleDataContainer",
         "triple_line_lambda": 0.20000000298023224,
         "use_taubin_smoothing": true
       },

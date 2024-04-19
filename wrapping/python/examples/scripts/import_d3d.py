@@ -57,7 +57,7 @@ import_data.data_paths = None  # Use 'None' to import the entire file.
 
 print(f'{import_data.file_path}')
 
-result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_data_object=import_data)
 nxtest.check_filter_result(nx.ReadDREAM3DFilter, result)
 
 #------------------------------------------------------------------------------

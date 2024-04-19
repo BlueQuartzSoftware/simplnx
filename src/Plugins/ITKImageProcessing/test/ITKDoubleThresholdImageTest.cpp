@@ -36,7 +36,7 @@ TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold1)",
   Arguments args;
   args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -67,7 +67,7 @@ TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold2)",
   Arguments args;
   args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold1_Key, std::make_any<Float64Parameter::ValueType>(0));
   args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold2_Key, std::make_any<Float64Parameter::ValueType>(0));
   args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold3_Key, std::make_any<Float64Parameter::ValueType>(3000));

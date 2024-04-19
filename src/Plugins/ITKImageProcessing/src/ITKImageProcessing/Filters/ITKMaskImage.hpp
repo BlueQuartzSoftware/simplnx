@@ -52,9 +52,9 @@ public:
   ITKMaskImage& operator=(ITKMaskImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
   static inline constexpr StringLiteral k_OutsideValue_Key = "outside_value";
   static inline constexpr StringLiteral k_MaskImageDataPath_Key = "mask_image_data_path";
 

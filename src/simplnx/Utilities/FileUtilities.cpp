@@ -168,13 +168,14 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
 {
   if(path.empty())
   {
-    return MakeErrorResult(-16, "ValidateDirectoryWritePermission() error: given path was empty.");
+    return MakeErrorResult(-16, "ValidateDirectoryWritePermission() Error: Input path empty.");
   }
 
   auto checkedPath = path;
-  if(isFile)
+  auto parentPath = checkedPath.parent_path();
+  if(isFile && !parentPath.empty())
   {
-    checkedPath = checkedPath.parent_path();
+    checkedPath = parentPath;
   }
   // We now have the parent directory. Let us see if *any* part of the path exists
 
@@ -186,7 +187,9 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
       checkedPath = fs::absolute(checkedPath);
     } catch(const std::filesystem::filesystem_error& error)
     {
-      return MakeErrorResult(-15, fmt::format("ValidateDirectoryWritePermission() threw an error: '{}'", error.what()));
+      return MakeErrorResult(-15, fmt::format("ValidateDirectoryWritePermission() Error: Input Path '{}' was relative and trying to create an absolute path threw an exception with message '{}'. "
+                                              "Further error code and message from the file system was: Code={} Message={}",
+                                              path.string(), error.what(), error.code().value(), error.code().message()));
     }
   }
 
@@ -207,12 +210,13 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
 
   if(checkedPath.empty())
   {
-    return MakeErrorResult(-19, "ValidateDirectoryWritePermission() resolved path was empty");
+    return MakeErrorResult(-19, fmt::format("ValidateDirectoryWritePermission() Error: Input path '{}' resolved to an empty path", path.string()));
   }
 
   if(!fs::exists(checkedPath))
   {
-    return MakeErrorResult(-11, fmt::format("ValidateDirectoryWritePermission() error: The drive does not exist on this system: '{}'", checkedPath.string()));
+    return MakeErrorResult(-11,
+                           fmt::format("ValidateDirectoryWritePermission() Error: Input Path '{}' resolved to '{}'. The drive does not exist on this system.", path.string(), checkedPath.string()));
   }
 
   // We should be at the top of the tree with an existing directory.
@@ -220,6 +224,6 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
   {
     return {};
   }
-  return MakeErrorResult(-8, fmt::format("User does not have write permissions to path '{}'", path.string()));
+  return MakeErrorResult(-8, fmt::format("ValidateDirectoryWritePermission() Error: User does not have write permissions to path '{}'", path.string()));
 }
 } // namespace nx::core::FileUtilities

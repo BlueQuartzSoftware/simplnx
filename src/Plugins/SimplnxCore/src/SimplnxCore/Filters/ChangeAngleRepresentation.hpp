@@ -24,7 +24,7 @@ public:
   ChangeAngleRepresentation& operator=(ChangeAngleRepresentation&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ConversionType_Key = "conversion_type";
+  static inline constexpr StringLiteral k_ConversionType_Key = "conversion_type_index";
   static inline constexpr StringLiteral k_AnglesArrayPath_Key = "angles_array_path";
 
   /**
