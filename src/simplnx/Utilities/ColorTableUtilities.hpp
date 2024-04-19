@@ -30,4 +30,11 @@ SIMPLNX_EXPORT Result<std::vector<float32>> ExtractControlPoints(const std::stri
  * @return The string name of the first RGB preset or empty string if none found
  */
 SIMPLNX_EXPORT std::string GetDefaultRGBPresetName();
+
+/**
+ * @brief IsValidPreset Returns true if the preset has has the "RGBPoints" and "ColorSpace" keys
+ * @return
+ */
+SIMPLNX_EXPORT bool IsValidPreset(const nlohmann::json& preset);
+
 } // namespace nx::core::ColorTableUtilities

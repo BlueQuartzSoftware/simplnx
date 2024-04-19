@@ -42,12 +42,12 @@ const std::string k_ColdAndHotPresetName = "Cold and Hot";
 const std::string k_GrayscalePresetName = "Grayscale";
 const std::string k_HazePresetName = "Haze";
 const std::string k_HSVPresetName = "hsv";
-const std::string k_JetPresetName = "jet";
+const std::string k_JetPresetName = "Jet";
 const std::string k_RainbowBlendedBlackPresetName = "Rainbow Blended Black";
 const std::string k_RainbowBlendedGreyPresetName = "Rainbow Blended Grey";
 const std::string k_RainbowBlendedWhitePresetName = "Rainbow Blended White";
 const std::string k_RainbowDesaturatedPresetName = "Rainbow Desaturated";
-const std::string k_RainbowPresetName = "rainbow";
+const std::string k_RainbowPresetName = "Rainbow";
 const std::string k_XRayPresetName = "X Ray";
 
 std::map<std::string, nlohmann::json> ReadPresets()
@@ -58,7 +58,7 @@ std::map<std::string, nlohmann::json> ReadPresets()
   std::map<std::string, nlohmann::json> presetsMap;
   for(const nlohmann::json& preset : result.value())
   {
-    if(preset.contains("Name") && preset.contains("RGBPoints") && preset["Name"].is_string())
+    if(ColorTableUtilities::IsValidPreset(preset))
     {
       presetsMap.insert({preset["Name"].get<std::string>(), preset});
     }
@@ -188,31 +188,33 @@ TEST_CASE("SimplnxCore::GenerateColorTableFilter: Valid filter execution")
     presetFilePath = k_XRayPresetPath;
   }
 
-  args.insertOrAssign(GenerateColorTableFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
-  args.insertOrAssign(GenerateColorTableFilter::k_RgbArrayPath_Key, std::make_any<std::string>("CI_RGB"));
-
-  IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-  // Validate Results
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}}));
-  const UInt8Array& resultArray = dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}});
-  const AbstractDataStore<uint8>& resultStore = resultArray.getDataStoreRef();
-
-  std::string buf;
-  std::ifstream inStream(presetFilePath);
-  usize currentLine = 0;
-  while(!inStream.eof())
   {
-    std::getline(inStream, buf);
-    std::vector<std::string> list = StringUtilities::split(buf, ',');
-    for(int i = 0; i < list.size(); i++)
+    args.insertOrAssign(GenerateColorTableFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
+    args.insertOrAssign(GenerateColorTableFilter::k_RgbArrayPath_Key, std::make_any<std::string>("CI_RGB"));
+
+    IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    // Validate Results
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}}));
+    const UInt8Array& resultArray = dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}});
+    const AbstractDataStore<uint8>& resultStore = resultArray.getDataStoreRef();
+
+    std::string buf;
+    std::ifstream inStream(presetFilePath);
+    usize currentLine = 0;
+    while(!inStream.eof())
     {
-      REQUIRE_NOTHROW(std::stoi(list[i]));
-      const uint8 exemplar = std::stoi(list[i]);
-      const uint8 generated = resultStore.getComponentValue(currentLine, i);
-      REQUIRE(exemplar == generated);
+      std::getline(inStream, buf);
+      std::vector<std::string> list = StringUtilities::split(buf, ',');
+      for(int i = 0; i < list.size(); i++)
+      {
+        REQUIRE_NOTHROW(std::stoi(list[i]));
+        const uint8 exemplar = std::stoi(list[i]);
+        const uint8 generated = resultStore.getComponentValue(currentLine, i);
+        REQUIRE(exemplar == generated);
+      }
+      currentLine++;
     }
-    currentLine++;
   }
 }
