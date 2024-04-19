@@ -27,8 +27,6 @@ DatasetWriter::DatasetWriter(IdType parentId, const std::string& datasetName)
 #endif
 }
 
-DatasetWriter::DatasetWriter(DatasetWriter&& other) noexcept = default;
-
 DatasetWriter::~DatasetWriter()
 {
   closeHdf5();

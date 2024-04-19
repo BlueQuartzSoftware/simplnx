@@ -29,7 +29,7 @@ public:
   DatasetWriter(IdType parentId, const std::string& datasetName);
 
   DatasetWriter(const DatasetWriter& other) = delete;
-  DatasetWriter(DatasetWriter&& other) noexcept;
+  DatasetWriter(DatasetWriter&& other) noexcept = default;
 
   /**
    * @brief Default destructor
