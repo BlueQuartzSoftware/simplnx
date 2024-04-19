@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
-    data_container_name=nx.DataPath("DataContainer"),
+    output_image_geometry_path =nx.DataPath("DataContainer"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -29,7 +29,7 @@ nx_filter = cxor.RotateEulerRefFrameFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
-    rotation_axis=[0.0, 0.0, 1.0, 90.0]
+    rotation_axis_angle=[0.0, 0.0, 1.0, 90.0]
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -41,9 +41,9 @@ result = nx_filter.execute(
     data_structure=data_structure,
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
-    rotation_axis=[0.0, 1.0, 0.0, 180.0],
-    rotation_representation=0,
-    selected_image_geometry=nx.DataPath("DataContainer")
+    rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],
+    rotation_representation_index=0,
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -64,8 +64,8 @@ nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="Mask",
+    array_thresholds_object=threshold_set,
+    output_data_array_name="Mask",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -96,9 +96,9 @@ result = nx_filter.execute(
     data_structure=data_structure,
     file_name=output_file_path,
     image_array_path=nx.DataPath("DataContainer/Cell Data/IPFColors"),
-    image_geom_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     index_offset=0,
-    plane=0
+    plane_index=0
 )
 nxtest.check_filter_result(nx_filter, result)
 

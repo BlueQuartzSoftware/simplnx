@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name="Cell Data",
     dimensions=[60, 80, 100],
-    geometry_data_path=nx.DataPath("[Image Geometry]"),
+    output_image_geometry_path=nx.DataPath("[Image Geometry]"),
     origin=[100.0, 100.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
@@ -29,15 +29,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=True,
+    set_tuple_dimensions=True,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ConfidenceIndex.csv",
-    n_comp=1,
-    n_skip_lines=0,
-    n_tuples=[[480000.0]],
-    output_data_array=nx.DataPath("Confidence Index"),
-    scalar_type=nx.NumericType.float32
+    number_comp=1,
+    skip_line_count=0,
+    number_tuples=[[480000.0]],
+    output_data_array_path=nx.DataPath("Confidence Index"),
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -47,15 +47,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=True,
+    set_tuple_dimensions=True,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/FeatureIds.csv",
-    n_comp=1,
-    n_skip_lines=0,
-    n_tuples=[[480000.0]],
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
-    scalar_type=nx.NumericType.int32
+    number_comp=1,
+    skip_line_count=0,
+    number_tuples=[[480000.0]],
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/FeatureIds"),
+    scalar_type_index=nx.NumericType.int32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -66,15 +66,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=True,
+    set_tuple_dimensions=True,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ImageQuality.csv",
-    n_comp=1,
-    n_skip_lines=0,
-    n_tuples=[[480000.0]],
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
-    scalar_type=nx.NumericType.float32
+    number_comp=1,
+    skip_line_count=0,
+    number_tuples=[[480000.0]],
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/Image Quality"),
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 # Filter 5
@@ -83,15 +83,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=True,
+    set_tuple_dimensions=True,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/IPFColor.csv",
-    n_comp=3,
-    n_skip_lines=0,
-    n_tuples=[[480000.0]],
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
-    scalar_type=nx.NumericType.uint8
+    number_comp=3,
+    skip_line_count=0,
+    number_tuples=[[480000.0]],
+    output_data_array_path=nx.DataPath("[Image Geometry]/Cell Data/IPFColors"),
+    scalar_type_index=nx.NumericType.uint8
 )
 nxtest.check_filter_result(nx_filter, result)
 # Filter 6
@@ -100,12 +100,12 @@ nx_filter = nx.CropImageGeometry()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_image_geometry=nx.DataPath("CroppedBottomHalf"),
+    output_image_geometry_path=nx.DataPath("CroppedBottomHalf"),
     max_voxel=[59, 79, 50],
     min_voxel=[0, 0, 0],
     remove_original_geometry=False,
     renumber_features=False,
-    selected_image_geometry=nx.DataPath("[Image Geometry]")
+    input_image_geometry_path=nx.DataPath("[Image Geometry]")
     #update_origin=False
     # cell_feature_attribute_matrix: DataPath = ...,  # Not currently part of the code
     # feature_ids: DataPath = ...,  # Not currently part of the code
@@ -119,12 +119,12 @@ nx_filter = nx.CropImageGeometry()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_image_geometry=nx.DataPath("CroppedTopHalf"),
+    output_image_geometry_path=nx.DataPath("CroppedTopHalf"),
     max_voxel=[59, 79, 99],
     min_voxel=[0, 0, 51],
     remove_original_geometry=False,
     renumber_features=False,
-    selected_image_geometry=nx.DataPath("[Image Geometry]")
+    input_image_geometry_path=nx.DataPath("[Image Geometry]")
     # update_origin=True
     # cell_feature_attribute_matrix: DataPath = ...,  # Not currently part of the code
     # feature_ids: DataPath = ...,  # Not currently part of the code
@@ -138,9 +138,9 @@ nx_filter = nx.AppendImageGeometryZSliceFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     check_resolution=True,
-    destination_geometry=nx.DataPath("CroppedBottomHalf"),
-    input_geometry=nx.DataPath("CroppedTopHalf"),
-    new_geometry=nx.DataPath("AppendedImageGeom"),
+    destination_image_geometry_path=nx.DataPath("CroppedBottomHalf"),
+    input_image_geometry_path=nx.DataPath("CroppedTopHalf"),
+    output_image_geometry_path=nx.DataPath("AppendedImageGeom"),
     save_as_new_geometry=True
 )
 nxtest.check_filter_result(nx_filter, result)

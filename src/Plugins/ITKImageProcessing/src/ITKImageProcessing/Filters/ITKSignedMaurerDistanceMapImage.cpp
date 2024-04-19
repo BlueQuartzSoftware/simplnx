@@ -86,14 +86,14 @@ Parameters ITKSignedMaurerDistanceMapImage::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value", "Set the background value which defines the object. Usually this value is = 0.", 0.0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ITK::GetIntegerScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Array Name",
+                                                          "The result of the processing will be stored in this Data Array inside the same group as the input data.", "Output Image Data"));
 
   return params;
 }
@@ -108,9 +108,9 @@ IFilter::UniquePointer ITKSignedMaurerDistanceMapImage::clone() const
 IFilter::PreflightResult ITKSignedMaurerDistanceMapImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel) const
 {
-  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto insideIsPositive = filterArgs.value<bool>(k_InsideIsPositive_Key);
   auto squaredDistance = filterArgs.value<bool>(k_SquaredDistance_Key);
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
@@ -127,9 +127,9 @@ IFilter::PreflightResult ITKSignedMaurerDistanceMapImage::preflightImpl(const Da
 Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                       const std::atomic_bool& shouldCancel) const
 {
-  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   auto insideIsPositive = filterArgs.value<bool>(k_InsideIsPositive_Key);
@@ -168,9 +168,9 @@ Result<Arguments> ITKSignedMaurerDistanceMapImage::FromSIMPLJson(const nlohmann:
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_SquaredDistanceKey, k_SquaredDistance_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UseImageSpacingKey, k_UseImageSpacing_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_BackgroundValueKey, k_BackgroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_SelectedImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_SelectedImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

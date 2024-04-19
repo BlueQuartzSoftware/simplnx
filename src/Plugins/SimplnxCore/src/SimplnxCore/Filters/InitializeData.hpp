@@ -22,10 +22,10 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ArrayPath_Key = "array_path";
-  static inline constexpr StringLiteral k_InitType_Key = "init_type";
+  static inline constexpr StringLiteral k_InitType_Key = "init_type_index";
   static inline constexpr StringLiteral k_InitValue_Key = "init_value";
   static inline constexpr StringLiteral k_StartingFillValue_Key = "starting_fill_value";
-  static inline constexpr StringLiteral k_StepOperation_Key = "step_operation";
+  static inline constexpr StringLiteral k_StepOperation_Key = "step_operation_index";
   static inline constexpr StringLiteral k_StepValue_Key = "step_value";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";

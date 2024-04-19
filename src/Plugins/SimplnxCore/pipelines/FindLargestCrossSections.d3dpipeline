@@ -7,8 +7,8 @@
       "args": {
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "data_container_name": "DataContainer",
-        "read_h5_ebsd_parameter": {
+        "output_image_geometry_path": "DataContainer",
+        "read_h5_ebsd_object": {
           "end_slice": 117,
           "euler_representation": 0,
           "hdf5_data_paths": [
@@ -35,7 +35,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -58,7 +58,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "output_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -70,9 +70,9 @@
     {
       "args": {
         "input_orientation_array_path": "DataContainer/CellData/EulerAngles",
-        "input_type": 0,
+        "input_representation_index": 0,
         "output_orientation_array_name": "Quats",
-        "output_type": 2
+        "output_representation_index": 2
       },
       "comments": "",
       "filter": {
@@ -89,7 +89,7 @@
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
         "mask_array_path": "DataContainer/CellData/Mask",
-        "grid_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "misorientation_tolerance": 5.0,
         "quats_array_path": "DataContainer/CellData/Quats",
         "randomize_features": true,
@@ -106,7 +106,7 @@
       "args": {
         "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "largest_cross_sections_array_path": "LargestCrossSections",
         "plane": 0
       },

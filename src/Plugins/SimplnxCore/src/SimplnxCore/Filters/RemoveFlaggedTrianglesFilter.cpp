@@ -52,13 +52,13 @@ Parameters RemoveFlaggedTrianglesFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_InputGeometry_Key, "Triangle|Quad Geometry", "The Triangle|Quad Geometry that will be processed.", DataPath(),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Triangle|Quad Geometry", "The Triangle|Quad Geometry that will be processed.", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle, IGeometry::Type::Quad}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Geometry"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_OutputGeometry_Key, "Created Geometry", "The name of the created Triangle Geometry", DataPath({"ReducedGeometry"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Geometry", "The name of the created Triangle Geometry", DataPath({"ReducedGeometry"})));
   return params;
 }
 
@@ -72,8 +72,8 @@ IFilter::UniquePointer RemoveFlaggedTrianglesFilter::clone() const
 IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel) const
 {
-  auto pInitialGeometryPathValue = filterArgs.value<DataPath>(k_InputGeometry_Key);
-  auto pReducedGeometryPathValue = filterArgs.value<DataPath>(k_OutputGeometry_Key);
+  auto pInitialGeometryPathValue = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
+  auto pReducedGeometryPathValue = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
 
   PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
@@ -109,9 +109,9 @@ Result<> RemoveFlaggedTrianglesFilter::executeImpl(DataStructure& dataStructure,
 {
   RemoveFlaggedTrianglesInputValues inputValues;
 
-  inputValues.TriangleGeometry = filterArgs.value<DataPath>(k_InputGeometry_Key);
+  inputValues.TriangleGeometry = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.ReducedTriangleGeometry = filterArgs.value<DataPath>(k_OutputGeometry_Key);
+  inputValues.ReducedTriangleGeometry = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
 
   return RemoveFlaggedTriangles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -132,9 +132,9 @@ Result<Arguments> RemoveFlaggedTrianglesFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_TriangleGeometryKey, k_InputGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_TriangleGeometryKey, k_SelectedTriangleGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ReducedTriangleGeometryKey, k_OutputGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ReducedTriangleGeometryKey, k_CreatedTriangleGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

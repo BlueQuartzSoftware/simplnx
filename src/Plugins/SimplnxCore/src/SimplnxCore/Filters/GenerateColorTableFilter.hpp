@@ -27,7 +27,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedPreset_Key = "selected_preset";
-  static inline constexpr StringLiteral k_SelectedDataArrayPath_Key = "selected_data_array_path";
+  static inline constexpr StringLiteral k_SelectedDataArrayPath_Key = "input_data_array_path";
   static inline constexpr StringLiteral k_RgbArrayPath_Key = "output_rgb_array_name";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";

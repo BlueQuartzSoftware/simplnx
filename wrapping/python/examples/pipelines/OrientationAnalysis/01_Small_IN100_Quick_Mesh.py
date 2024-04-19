@@ -18,7 +18,7 @@ import_data.data_paths = None
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
-                         import_file_data=import_data)
+                         import_data_object=import_data)
 
 nxtest.check_filter_result(nx_filter, result)
 
@@ -28,13 +28,13 @@ nx_filter = nx.CropImageGeometry()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
+    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     max_voxel=[140, 140, 99],
     min_voxel=[41, 41, 0],
     remove_original_geometry=True,
     renumber_features=True,
-    selected_image_geometry=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -61,9 +61,9 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     fix_problem_voxels=False,
     generate_triple_lines=False,
-    grid_geometry_data_path=nx.DataPath("DataContainer"),
+    input_grid_geometry_path=nx.DataPath("DataContainer"),
     node_types_array_name=("NodeType"),
-    triangle_geometry_name=nx.DataPath("TriangleDataContainer"),
+    output_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
     vertex_data_group_name=("VertexData")
 )
 nxtest.check_filter_result(nx_filter, result)

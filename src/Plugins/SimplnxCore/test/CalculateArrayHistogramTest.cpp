@@ -56,9 +56,9 @@ TEST_CASE("SimplnxCore::CalculateArrayHistogram: Valid Filter Execution", "[Simp
   // Create default Parameters for the filter.
   args.insertOrAssign(CalculateArrayHistogramFilter::k_NumberOfBins_Key, std::make_any<int32>(4));
   args.insertOrAssign(CalculateArrayHistogramFilter::k_UserDefinedRange_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CalculateArrayHistogramFilter::k_NewDataGroup_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CalculateArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
   args.insertOrAssign(CalculateArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(dataPaths));
-  args.insertOrAssign(CalculateArrayHistogramFilter::k_NewDataGroupName_Key, std::make_any<DataPath>(dataGPath));
+  args.insertOrAssign(CalculateArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(dataGPath));
   args.insertOrAssign(CalculateArrayHistogramFilter::k_HistoName_Key, std::make_any<std::string>("Histogram"));
 
   // Preflight the filter and check result

@@ -17,7 +17,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(Instantiate)", "[SimplnxCore][RenameDat
   Arguments args;
 
   args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
@@ -33,7 +33,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(Invalid Parameters)", "[SimplnxCore][Re
   Arguments args;
 
   args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -52,7 +52,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][Rena
   Arguments args;
 
   args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

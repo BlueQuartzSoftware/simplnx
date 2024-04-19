@@ -95,7 +95,7 @@ Result<> CombineStlFiles::operator()()
       ReadStlFileFilter stlFileReader;
       Arguments args;
       args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(stlFilePath));
-      args.insertOrAssign(ReadStlFileFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(DataPath({stlFilePath.stem().string()})));
+      args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(DataPath({stlFilePath.stem().string()})));
       auto executeResult = stlFileReader.execute(tempDataStructure, args);
       if(executeResult.result.invalid())
       {

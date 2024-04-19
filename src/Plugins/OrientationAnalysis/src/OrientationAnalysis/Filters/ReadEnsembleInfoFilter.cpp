@@ -60,7 +60,7 @@ Parameters ReadEnsembleInfoFilter::parameters() const
                                                           FileSystemPathParameter::ExtensionsType{".ini", ".txt"}, FileSystemPathParameter::PathType::InputFile));
   DataGroupSelectionParameter::AllowedTypes allowedGroupTypes = BaseGroup::GetAllGeometryGroupTypes();
   allowedGroupTypes.insert(BaseGroup::GroupType::DataGroup);
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerName_Key, "Data Container", "The path to the data object in which the ensemble information will be stored", DataPath{},
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_ParentGroupPath_Key, "Data Container", "The path to the data object in which the ensemble information will be stored", DataPath{},
                                                               allowedGroupTypes));
   params.insertSeparator(Parameters::Separator{"Created Ensemble Data"});
   params.insert(
@@ -83,7 +83,7 @@ IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructu
                                                                const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key).string();
-  auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
+  auto pDataContainerNameValue = filterArgs.value<DataPath>(k_ParentGroupPath_Key);
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
   auto pCrystalStructuresArrayNameValue = filterArgs.value<std::string>(k_CrystalStructuresArrayName_Key);
   auto pPhaseTypesArrayNameValue = filterArgs.value<std::string>(k_PhaseTypesArrayName_Key);
@@ -136,7 +136,7 @@ Result<> ReadEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const
   ReadEnsembleInfoInputValues inputValues;
 
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key).string();
-  inputValues.DataContainerName = filterArgs.value<DataPath>(k_DataContainerName_Key);
+  inputValues.DataContainerName = filterArgs.value<DataPath>(k_ParentGroupPath_Key);
   inputValues.CellEnsembleAttributeMatrixName = inputValues.DataContainerName.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
   inputValues.CrystalStructuresArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_CrystalStructuresArrayName_Key));
   inputValues.PhaseTypesArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_PhaseTypesArrayName_Key));
@@ -163,7 +163,7 @@ Result<Arguments> ReadEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& js
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataContainerName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ParentGroupPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
   results.push_back(

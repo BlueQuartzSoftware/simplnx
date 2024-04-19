@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKThresholdImageFilter(Default)", "[ITKImageProc
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKThresholdImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -64,9 +64,9 @@ TEST_CASE("ITKImageProcessing::ITKThresholdImageFilter(Threshold1)", "[ITKImageP
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKThresholdImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKThresholdImage::k_Lower_Key, std::make_any<Float64Parameter::ValueType>(25000));
   args.insertOrAssign(ITKThresholdImage::k_Upper_Key, std::make_any<Float64Parameter::ValueType>(65535));
 
@@ -97,9 +97,9 @@ TEST_CASE("ITKImageProcessing::ITKThresholdImageFilter(Threshold2)", "[ITKImageP
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKThresholdImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKThresholdImage::k_Lower_Key, std::make_any<Float64Parameter::ValueType>(0));
   args.insertOrAssign(ITKThresholdImage::k_Upper_Key, std::make_any<Float64Parameter::ValueType>(25000));
   args.insertOrAssign(ITKThresholdImage::k_OutsideValue_Key, std::make_any<Float64Parameter::ValueType>(25000));

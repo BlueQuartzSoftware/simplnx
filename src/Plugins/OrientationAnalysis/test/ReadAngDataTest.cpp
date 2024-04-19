@@ -33,7 +33,7 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Valid Execution", "[OrientationAnal
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadAngDataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(inputAngFile));
-  args.insertOrAssign(ReadAngDataFilter::k_DataContainerName_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(ReadAngDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
   args.insertOrAssign(ReadAngDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
   args.insertOrAssign(ReadAngDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 

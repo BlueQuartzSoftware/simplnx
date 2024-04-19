@@ -49,7 +49,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
   auto standardizeDataValue = args.value<bool>(FindArrayStatisticsFilter::k_StandardizeData_Key);
   auto inputArrayPath = args.value<DataPath>(FindArrayStatisticsFilter::k_SelectedArrayPath_Key);
   auto* inputArray = data.getDataAs<IDataArray>(inputArrayPath);
-  auto destinationAttributeMatrixValue = args.value<DataPath>(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key);
+  auto destinationAttributeMatrixValue = args.value<DataPath>(FindArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
   DataType dataType = inputArray->getDataType();
 
   size_t tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
@@ -142,7 +142,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
   }
   if(pFindNumUniqueValuesValue)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_NumUniqueValues_Key);
+    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_NumUniqueValuesName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
@@ -194,7 +194,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
                                                           nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(
-      std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed statistics", DataPath{}));
+      std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrixPath_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed statistics", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Histogram Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindHistogram_Key, "Find Histogram", "Whether to compute the histogram of the input array", false));
@@ -254,7 +254,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_StandardizedArrayName_Key, "Standardized Data Array Name", "The name of the standardized data array", "Standardized"));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindUniqueValues_Key, "Find Number of Unique Values", "Whether to compute the number of unique values in the input array", false));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NumUniqueValues_Key, "Number of Unique Values Array Name", "The name of the array which stores the calculated number of unique values",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NumUniqueValuesName_Key, "Number of Unique Values Array Name", "The name of the array which stores the calculated number of unique values",
                                                           "NumUniqueValues"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -278,7 +278,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.linkParameters(k_ComputeByIndex_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_ComputeByIndex_Key, k_FeatureHasDataArrayName_Key, true);
   params.linkParameters(k_StandardizeData_Key, k_StandardizedArrayName_Key, true);
-  params.linkParameters(k_FindUniqueValues_Key, k_NumUniqueValues_Key, true);
+  params.linkParameters(k_FindUniqueValues_Key, k_NumUniqueValuesName_Key, true);
 
   return params;
 }
@@ -310,7 +310,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
   auto pStandardizeDataValue = filterArgs.value<bool>(k_StandardizeData_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  auto pDestinationAttributeMatrixValue = filterArgs.value<DataPath>(k_DestinationAttributeMatrix_Key);
+  auto pDestinationAttributeMatrixValue = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
 
   PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
@@ -440,7 +440,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.SelectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrix_Key);
+  inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
   inputValues.FeatureHasDataArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureHasDataArrayName_Key));
   inputValues.HistogramArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistogramArrayName_Key));
   inputValues.MostPopulatedBinArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MostPopulatedBinArrayName_Key));
@@ -454,7 +454,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.StdDeviationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_StdDeviationArrayName_Key));
   inputValues.SummationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_SummationArrayName_Key));
   inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
-  inputValues.NumUniqueValuesName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_NumUniqueValues_Key));
+  inputValues.NumUniqueValuesName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_NumUniqueValuesName_Key));
 
   return FindArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -519,7 +519,7 @@ Result<Arguments> FindArrayStatisticsFilter::FromSIMPLJson(const nlohmann::json&
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_DestinationAttributeMatrixKey, k_DestinationAttributeMatrix_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_DestinationAttributeMatrixKey, k_DestinationAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_HistogramArrayNameKey, k_HistogramArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LengthArrayNameKey, k_LengthArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MinimumArrayNameKey, k_MinimumArrayName_Key));

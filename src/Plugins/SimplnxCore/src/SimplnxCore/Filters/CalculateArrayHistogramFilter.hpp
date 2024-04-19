@@ -28,10 +28,10 @@ public:
   static inline constexpr StringLiteral k_UserDefinedRange_Key = "user_defined_range";
   static inline constexpr StringLiteral k_MinRange_Key = "min_range";
   static inline constexpr StringLiteral k_MaxRange_Key = "max_range";
-  static inline constexpr StringLiteral k_NewDataGroup_Key = "new_data_group";
+  static inline constexpr StringLiteral k_CreateNewDataGroup_Key = "create_new_data_group";
   static inline constexpr StringLiteral k_SelectedArrayPaths_Key = "selected_array_paths";
-  static inline constexpr StringLiteral k_NewDataGroupName_Key = "new_data_group_name";
-  static inline constexpr StringLiteral k_DataGroupName_Key = "data_group_name";
+  static inline constexpr StringLiteral k_NewDataGroupPath_Key = "new_data_group_path";
+  static inline constexpr StringLiteral k_DataGroupPath_Key = "output_data_group_path";
   static inline constexpr StringLiteral k_HistoName_Key = "histogram_suffix";
 
   /**

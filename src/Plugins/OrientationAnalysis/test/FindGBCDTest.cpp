@@ -55,7 +55,7 @@ TEST_CASE("OrientationAnalysis::FindGBCD", "[OrientationAnalysis][FindGBCD]")
     // Create default Parameters for the filter.
     args.insertOrAssign(FindGBCDFilter::k_GBCDRes_Key, std::make_any<Float32Parameter::ValueType>(9.0F));
 
-    args.insertOrAssign(FindGBCDFilter::k_TriangleGeometry_Key, std::make_any<GeometrySelectionParameter::ValueType>(triangleDataContainerPath));
+    args.insertOrAssign(FindGBCDFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(triangleDataContainerPath));
 
     args.insertOrAssign(FindGBCDFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(faceLabels));
     args.insertOrAssign(FindGBCDFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(faceNormals));

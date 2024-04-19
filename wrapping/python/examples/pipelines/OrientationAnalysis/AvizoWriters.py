@@ -17,7 +17,7 @@ import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = str(nxtest.get_data_directory() / "Output/Reconstruction/SmallIN100_Final.dream3d")
 import_data.data_paths = None
 # Execute Filter with Parameters
-result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+result = nx_filter.execute(data_structure=data_structure, import_data_object=import_data)
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
@@ -27,7 +27,7 @@ output_file_path = nxtest.get_data_directory() / "Output/AzizoWriter/SmallIN100_
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     units="meters",
     write_binary_file=False
@@ -42,7 +42,7 @@ output_file_path = nxtest.get_data_directory() / "Output/AzizoWriter/SmallIN100_
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
     feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     units="meters",
     write_binary_file=False

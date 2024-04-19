@@ -24,12 +24,12 @@ public:
   UncertainRegularGridSampleSurfaceMeshFilter& operator=(UncertainRegularGridSampleSurfaceMeshFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_Uncertainty_Key = "uncertainty";
-  static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
+  static inline constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";

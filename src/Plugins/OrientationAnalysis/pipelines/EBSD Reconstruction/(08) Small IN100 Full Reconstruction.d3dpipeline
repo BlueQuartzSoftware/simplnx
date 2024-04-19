@@ -7,8 +7,8 @@
       "args": {
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "data_container_name": "DataContainer",
-        "read_h5_ebsd_parameter": {
+        "output_image_geometry_path": "DataContainer",
+        "read_h5_ebsd_object": {
           "end_slice": 117,
           "euler_representation": 0,
           "hdf5_data_paths": [
@@ -35,7 +35,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -58,7 +58,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "output_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -70,9 +70,9 @@
     {
       "args": {
         "input_orientation_array_path": "DataContainer/CellData/EulerAngles",
-        "input_type": 0,
+        "input_representation_index": 0,
         "output_orientation_array_name": "Quats",
-        "output_type": 2
+        "output_representation_index": 2
       },
       "comments": "",
       "filter": {
@@ -89,7 +89,7 @@
         "mask_array_path": "DataContainer/CellData/Mask",
         "misorientation_tolerance": 5.0,
         "quats_array_path": "DataContainer/CellData/Quats",
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "use_mask": true,
         "write_alignment_shifts": false
       },
@@ -104,7 +104,7 @@
       "args": {
         "fill_holes": false,
         "mask_array_path": "DataContainer/CellData/Mask",
-        "image_geometry": "DataContainer"
+        "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
@@ -119,7 +119,7 @@
         "mask_array_path": "DataContainer/CellData/Mask",
         "reference_slice": 0,
         "selected_cell_data_path": "DataContainer/CellData",
-        "selected_image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "use_reference_slice": true,
         "write_alignment_shifts": false
       },
@@ -135,7 +135,7 @@
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "mask_array_path": "DataContainer/CellData/Mask",
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "misorientation_tolerance": 5.0,
         "number_of_neighbors": 4,
         "quats_array_path": "DataContainer/CellData/Quats"
@@ -153,7 +153,7 @@
         "correlation_array_path": "DataContainer/CellData/Confidence Index",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "ignored_data_array_paths": [],
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "level": 2,
         "min_confidence": 0.20000000298023224,
         "misorientation_tolerance": 5.0,
@@ -173,10 +173,10 @@
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
-        "mask_array_path": "DataContainer/CellData/Mask",
-        "grid_geometry_path": "DataContainer",
+        "cell_mask_array_path": "DataContainer/CellData/Mask",
+        "input_image_geometry_path": "DataContainer",
         "misorientation_tolerance": 5.0,
-        "quats_array_path": "DataContainer/CellData/Quats",
+        "cell_quats_array_path": "DataContainer/CellData/Quats",
         "randomize_features": true,
         "use_mask": true
       },
@@ -203,9 +203,9 @@
     },
     {
       "args": {
-        "avg_euler_angles_array_path": "AvgEulerAngles",
-        "avg_quats_array_path": "AvgQuats",
-        "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "avg_euler_angles_array_name": "AvgEulerAngles",
+        "avg_quats_array_name": "AvgQuats",
+        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "cell_feature_ids_array_path": "DataContainer/CellData/FeatureIds",
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "cell_quats_array_path": "DataContainer/CellData/Quats",
@@ -220,16 +220,16 @@
     },
     {
       "args": {
-        "boundary_cells": "BoundaryCells",
-        "cell_feature_arrays": "DataContainer/CellFeatureData",
-        "feature_ids": "DataContainer/CellData/FeatureIds",
-        "image_geometry": "DataContainer",
-        "neighbor_list": "NeighborList2",
-        "number_of_neighbors": "NumNeighbors2",
-        "shared_surface_area_list": "SharedSurfaceAreaList2",
+        "boundary_cells_name": "BoundaryCells",
+        "cell_feature_array_path": "DataContainer/CellFeatureData",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "input_image_geometry_path": "DataContainer",
+        "neighbor_list_name": "NeighborList2",
+        "number_of_neighbors_name": "NumNeighbors2",
+        "shared_surface_area_list_name": "SharedSurfaceAreaList2",
         "store_boundary_cells": false,
         "store_surface_features": false,
-        "surface_features": "SurfaceFeatures"
+        "surface_features_name": "SurfaceFeatures"
       },
       "comments": "",
       "filter": {
@@ -250,7 +250,7 @@
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "feature_parent_ids_array_name": "ParentIds",
         "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
-        "new_cell_feature_attribute_matrix_name": "NewGrain Data",
+        "created_feature_attribute_matrix_name": "NewGrain Data",
         "non_contiguous_neighbor_list_array_path": "",
         "use_non_contiguous_neighbors": false
       },
@@ -263,13 +263,13 @@
     },
     {
       "args": {
-        "equivalent_diameters_path": "EquivalentDiameters",
-        "feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "equivalent_diameters_name": "EquivalentDiameters",
+        "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "geometry_path": "DataContainer",
-        "num_elements_path": "NumElements",
+        "input_image_geometry_path": "DataContainer",
+        "num_elements_name": "NumElements",
         "save_element_sizes": false,
-        "volumes_path": "Volumes"
+        "volumes_name": "Volumes"
       },
       "comments": "",
       "filter": {
@@ -283,7 +283,7 @@
         "apply_single_phase": false,
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "feature_phases_path": "",
-        "image_geom_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "min_allowed_features_size": 16,
         "num_cells_path": "DataContainer/CellFeatureData/NumElements",
         "phase_number": 0
@@ -297,16 +297,16 @@
     },
     {
       "args": {
-        "boundary_cells": "BoundaryCells",
-        "cell_feature_arrays": "DataContainer/CellFeatureData",
-        "feature_ids": "DataContainer/CellData/FeatureIds",
-        "image_geometry": "DataContainer",
-        "neighbor_list": "NeighborList",
-        "number_of_neighbors": "NumNeighbors",
-        "shared_surface_area_list": "SharedSurfaceAreaList",
+        "boundary_cells_name": "BoundaryCells",
+        "cell_feature_array_path": "DataContainer/CellFeatureData",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "input_image_geometry_path": "DataContainer",
+        "neighbor_list_name": "NeighborList",
+        "number_of_neighbors_name": "NumNeighbors",
+        "shared_surface_area_list_name": "SharedSurfaceAreaList",
         "store_boundary_cells": false,
         "store_surface_features": false,
-        "surface_features": "SurfaceFeatures"
+        "surface_features_name": "SurfaceFeatures"
       },
       "comments": "",
       "filter": {
@@ -318,13 +318,13 @@
     {
       "args": {
         "apply_to_single_phase": false,
-        "cell_attribute_matrix": "DataContainer/CellData",
-        "feature_ids": "DataContainer/CellData/FeatureIds",
-        "feature_phases": "Data Container/Feature Data/Phases",
+        "cell_attribute_matrix_path": "DataContainer/CellData",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_phases_path": "Data Container/Feature Data/Phases",
         "ignored_voxel_arrays": [],
-        "image_geom": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "min_num_neighbors": 2,
-        "num_neighbors": "DataContainer/CellFeatureData/NumNeighbors",
+        "num_neighbors_path": "DataContainer/CellFeatureData/NumNeighbors",
         "phase_number": 0
       },
       "comments": "",
@@ -341,7 +341,7 @@
         "ignored_data_array_paths": [],
         "min_allowed_defect_size": 1000,
         "selected_cell_data_group": "DataContainer/CellData",
-        "selected_image_geometry": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "store_as_new_phase": false
       },
       "comments": "",
@@ -356,9 +356,9 @@
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "ignored_data_array_paths": [],
         "num_iterations": 2,
-        "operation": 0,
-        "selected_feature_group": "DataContainer/CellFeatureData",
-        "selected_image_geometry": "DataContainer",
+        "operation_index": 0,
+        "selected_feature_group_path": "DataContainer/CellFeatureData",
+        "input_image_geometry_path": "DataContainer",
         "x_dir_on": true,
         "y_dir_on": true,
         "z_dir_on": true
@@ -375,9 +375,9 @@
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "ignored_data_array_paths": [],
         "num_iterations": 2,
-        "operation": 1,
-        "selected_feature_group": "DataContainer/CellFeatureData",
-        "selected_image_geometry": "DataContainer",
+        "operation_index": 1,
+        "selected_feature_group_path": "DataContainer/CellFeatureData",
+        "input_image_geometry_path": "DataContainer",
         "x_dir_on": true,
         "y_dir_on": true,
         "z_dir_on": true

@@ -34,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKHMinimaImageFilter(HMinima)", "[ITKImageProces
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKHMinimaImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKHMinimaImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKHMinimaImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKHMinimaImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKHMinimaImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKHMinimaImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKHMinimaImage::k_Height_Key, std::make_any<Float64Parameter::ValueType>(2000));
 
   auto preflightResult = filter.preflight(dataStructure, args);

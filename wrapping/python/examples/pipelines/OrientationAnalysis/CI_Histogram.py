@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
-    data_container_name=nx.DataPath("DataContainer"),
+    output_image_geometry_path =nx.DataPath("DataContainer"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang",
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -29,7 +29,7 @@ nx_filter = cxor.RotateEulerRefFrameFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
-    rotation_axis=[0.0, 0.0, 1.0, 90.0]
+    rotation_axis_angle=[0.0, 0.0, 1.0, 90.0]
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -39,12 +39,12 @@ nx_filter = nx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_image_geometry=nx.DataPath("beans"),
+    output_image_geometry_path=nx.DataPath("beans"),
     remove_original_geometry=False,
     rotate_slice_by_slice=True,
-    rotation_axis=[0.0, 1.0, 0.0, 180.0],
-    rotation_representation=0,
-    selected_image_geometry=nx.DataPath("DataContainer")
+    rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],
+    rotation_representation_index=0,
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -64,8 +64,8 @@ threshold_set.thresholds = [threshold_1]
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="Mask",
+    array_thresholds_object=threshold_set,
+    output_data_array_name="Mask",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -94,8 +94,8 @@ result = nx_filter.execute(
     histogram_suffix=" Histogram",
     max_range=1.0,
     min_range=0.0,
-    new_data_group=True,
-    new_data_group_name=nx.DataPath("DataContainer/Statistics"),
+    create_new_data_group=True,
+    new_data_group_path=nx.DataPath("DataContainer/Statistics"),
     number_of_bins=25,
     selected_array_paths=[nx.DataPath("DataContainer/Cell Data/Confidence Index")],
     user_defined_range=True
@@ -110,13 +110,13 @@ output_file_path = nxtest.get_data_directory() / "Output/OrientationAnalysis/Tes
 result = nx_filter.execute(
     data_structure=data_structure,
     #file_extension: str = ...,
-    delimiter=2,
-    includes=1,
+    delimiter_index=2,
+    header_option_index=1,
     #max_val_per_line: int = ...,
     #output_dir: PathLike = ...,
     output_path=output_file_path,
-    output_style=1,
-    selected_data_array_paths=[nx.DataPath("DataContainer/Statistics/Confidence Index Histogram")]
+    output_style_index=1,
+    input_data_array_paths=[nx.DataPath("DataContainer/Statistics/Confidence Index Histogram")]
 )
 nxtest.check_filter_result(nx_filter, result)
 

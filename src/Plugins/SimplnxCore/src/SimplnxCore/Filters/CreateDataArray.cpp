@@ -70,7 +70,7 @@ Parameters CreateDataArray::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Output Numeric Type", "Numeric Type of data to create", NumericType::int32));
-  params.insert(std::make_unique<StringParameter>(k_InitilizationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
+  params.insert(std::make_unique<StringParameter>(k_InitializationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
   params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Number of Components", "Number of components", 1));
 
   params.insertSeparator(Parameters::Separator{"Created DataArray"});
@@ -109,7 +109,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
   auto numComponents = filterArgs.value<uint64>(k_NumComps_Key);
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
-  auto initValue = filterArgs.value<std::string>(k_InitilizationValue_Key);
+  auto initValue = filterArgs.value<std::string>(k_InitializationValue_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
   auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
@@ -176,7 +176,7 @@ Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args
 {
   auto numericType = args.value<NumericType>(k_NumericType_Key);
   auto path = args.value<DataPath>(k_DataPath_Key);
-  auto initValue = args.value<std::string>(k_InitilizationValue_Key);
+  auto initValue = args.value<std::string>(k_InitializationValue_Key);
 
   switch(numericType)
   {
@@ -252,7 +252,7 @@ Result<Arguments> CreateDataArray::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumComps_Key));
   // Initialize Type parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitilizationValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitializationValue_Key));
   // Initialization Range parameter is not applicable in NX
   // Starting Index value parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayKey, k_DataPath_Key));

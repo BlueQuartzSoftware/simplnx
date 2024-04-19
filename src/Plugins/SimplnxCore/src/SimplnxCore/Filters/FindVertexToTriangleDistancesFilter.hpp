@@ -24,11 +24,11 @@ public:
   FindVertexToTriangleDistancesFilter& operator=(FindVertexToTriangleDistancesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_VertexDataContainer_Key = "vertex_data_container";
-  static inline constexpr StringLiteral k_TriangleDataContainer_Key = "triangle_data_container";
+  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_TriangleNormalsArrayPath_Key = "triangle_normals_array_path";
-  static inline constexpr StringLiteral k_DistancesArrayPath_Key = "distances_array_path";
-  static inline constexpr StringLiteral k_ClosestTriangleIdArrayPath_Key = "closest_triangle_id_array_path";
+  static inline constexpr StringLiteral k_DistancesArrayName_Key = "distances_array_name";
+  static inline constexpr StringLiteral k_ClosestTriangleIdArrayName_Key = "closest_triangle_id_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

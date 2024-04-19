@@ -99,7 +99,7 @@ Parameters MergeTwinsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_NewCellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created cell feature attribute matrix", "NewGrain Data"));
+      std::make_unique<DataObjectNameParameter>(k_CreatedFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created cell feature attribute matrix", "NewGrain Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureParentIdsArrayName_Key, "Parent Ids", "The name of the array specifying to which parent each Feature belongs", "ParentIds"));
   params.insert(std::make_unique<DataObjectNameParameter>(
       k_ActiveArrayName_Key, "Active",
@@ -131,7 +131,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   DataPath cellFeatureDataPath = pFeaturePhasesArrayPathValue.getParent();
   auto pCellParentIdsArrayNameValue = pFeatureIdsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
-  auto pNewCellFeatureAttributeMatrixNameValue = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewCellFeatureAttributeMatrixName_Key));
+  auto pNewCellFeatureAttributeMatrixNameValue = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
   auto pFeatureParentIdsArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
   auto pActiveArrayNameValue = pNewCellFeatureAttributeMatrixNameValue.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
@@ -239,7 +239,7 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   DataPath cellFeatureDataPath = inputValues.FeaturePhasesArrayPath.getParent();
   inputValues.CellParentIdsArrayName = inputValues.FeatureIdsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
-  inputValues.NewCellFeatureAttributeMatrixName = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewCellFeatureAttributeMatrixName_Key));
+  inputValues.NewCellFeatureAttributeMatrixName = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
   inputValues.FeatureParentIdsArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
   inputValues.ActiveArrayName = inputValues.NewCellFeatureAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.Seed = seed;
@@ -287,7 +287,7 @@ Result<Arguments> MergeTwinsFilter::FromSIMPLJson(const nlohmann::json& json)
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellParentIdsArrayNameKey, k_CellParentIdsArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewCellFeatureAttributeMatrixNameKey,
-                                                                                                                   k_NewCellFeatureAttributeMatrixName_Key));
+                                                                                                                   k_CreatedFeatureAttributeMatrixName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureParentIdsArrayNameKey, k_FeatureParentIdsArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ActiveArrayNameKey, k_ActiveArrayName_Key));
 

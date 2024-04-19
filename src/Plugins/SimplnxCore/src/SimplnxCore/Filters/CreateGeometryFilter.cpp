@@ -130,28 +130,28 @@ Parameters CreateGeometryFilter::parameters() const
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_XBounds_Key, "X Bounds", "The spatial locations of the planes along the x direction", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_XBoundsPath_Key, "X Bounds", "The spatial locations of the planes along the x direction", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_YBounds_Key, "Y Bounds", "The spatial locations of the planes along the y direction", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_YBoundsPath_Key, "Y Bounds", "The spatial locations of the planes along the y direction", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ZBounds_Key, "Z Bounds", "The spatial locations of the planes along the z direction", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ZBoundsPath_Key, "Z Bounds", "The spatial locations of the planes along the z direction", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VertexListName_Key, "Shared Vertex List", "The complete path to the data array defining the point coordinates for the geometry", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_VertexListPath_Key, "Shared Vertex List", "The complete path to the data array defining the point coordinates for the geometry", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_EdgeListName_Key, "Edge List", "The complete path to the data array defining the edges for the geometry", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_EdgeListPath_Key, "Edge List", "The complete path to the data array defining the edges for the geometry", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleListName_Key, "Triangle List", "The complete path to the data array defining the (triangular) faces for the geometry", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleListPath_Key, "Triangle List", "The complete path to the data array defining the (triangular) faces for the geometry", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_QuadrilateralListName_Key, "Quadrilateral List", "The complete path to the data array defining the (quad) faces for the geometry",
+  params.insert(std::make_unique<ArraySelectionParameter>(k_QuadrilateralListPath_Key, "Quadrilateral List", "The complete path to the data array defining the (quad) faces for the geometry",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TetrahedralListName_Key, "Tetrahedral List", "The complete path to the data array defining the tetrahedral elements for the geometry",
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TetrahedralListPath_Key, "Tetrahedral List", "The complete path to the data array defining the tetrahedral elements for the geometry",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_HexahedralListName_Key, "Hexahedral List", "The complete path to the data array defining the hexahedral elements for the geometry",
+  params.insert(std::make_unique<ArraySelectionParameter>(k_HexahedralListPath_Key, "Hexahedral List", "The complete path to the data array defining the hexahedral elements for the geometry",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{8}}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryName_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryPath_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex attribute matrix to be created with the geometry",
                                                           INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_EdgeAttributeMatrixName_Key, "Edge Attribute Matrix", "The name of the edge attribute matrix to be created with the geometry",
@@ -168,36 +168,36 @@ Parameters CreateGeometryFilter::parameters() const
   params.linkParameters(k_GeometryType_Key, k_Spacing_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_GeometryType_Key, k_CellAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(0));
   // rect grid
-  params.linkParameters(k_GeometryType_Key, k_XBounds_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_GeometryType_Key, k_YBounds_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_GeometryType_Key, k_ZBounds_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  params.linkParameters(k_GeometryType_Key, k_XBoundsPath_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  params.linkParameters(k_GeometryType_Key, k_YBoundsPath_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  params.linkParameters(k_GeometryType_Key, k_ZBoundsPath_Key, std::make_any<ChoicesParameter::ValueType>(1));
   params.linkParameters(k_GeometryType_Key, k_CellAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(1));
   // vertex
-  params.linkParameters(k_GeometryType_Key, k_VertexListName_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  params.linkParameters(k_GeometryType_Key, k_VertexListPath_Key, std::make_any<ChoicesParameter::ValueType>(2));
   params.linkParameters(k_GeometryType_Key, k_VertexAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(2));
   // edge
-  params.linkParameters(k_GeometryType_Key, k_VertexListName_Key, std::make_any<ChoicesParameter::ValueType>(3));
-  params.linkParameters(k_GeometryType_Key, k_EdgeListName_Key, std::make_any<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_GeometryType_Key, k_VertexListPath_Key, std::make_any<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_GeometryType_Key, k_EdgeListPath_Key, std::make_any<ChoicesParameter::ValueType>(3));
   params.linkParameters(k_GeometryType_Key, k_VertexAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(3));
   params.linkParameters(k_GeometryType_Key, k_EdgeAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(3));
   // triangle
-  params.linkParameters(k_GeometryType_Key, k_VertexListName_Key, std::make_any<ChoicesParameter::ValueType>(4));
-  params.linkParameters(k_GeometryType_Key, k_TriangleListName_Key, std::make_any<ChoicesParameter::ValueType>(4));
+  params.linkParameters(k_GeometryType_Key, k_VertexListPath_Key, std::make_any<ChoicesParameter::ValueType>(4));
+  params.linkParameters(k_GeometryType_Key, k_TriangleListPath_Key, std::make_any<ChoicesParameter::ValueType>(4));
   params.linkParameters(k_GeometryType_Key, k_VertexAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(4));
   params.linkParameters(k_GeometryType_Key, k_FaceAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(4));
   // quad
-  params.linkParameters(k_GeometryType_Key, k_VertexListName_Key, std::make_any<ChoicesParameter::ValueType>(5));
-  params.linkParameters(k_GeometryType_Key, k_QuadrilateralListName_Key, std::make_any<ChoicesParameter::ValueType>(5));
+  params.linkParameters(k_GeometryType_Key, k_VertexListPath_Key, std::make_any<ChoicesParameter::ValueType>(5));
+  params.linkParameters(k_GeometryType_Key, k_QuadrilateralListPath_Key, std::make_any<ChoicesParameter::ValueType>(5));
   params.linkParameters(k_GeometryType_Key, k_VertexAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(5));
   params.linkParameters(k_GeometryType_Key, k_FaceAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(5));
   // tet
-  params.linkParameters(k_GeometryType_Key, k_VertexListName_Key, std::make_any<ChoicesParameter::ValueType>(6));
-  params.linkParameters(k_GeometryType_Key, k_TetrahedralListName_Key, std::make_any<ChoicesParameter::ValueType>(6));
+  params.linkParameters(k_GeometryType_Key, k_VertexListPath_Key, std::make_any<ChoicesParameter::ValueType>(6));
+  params.linkParameters(k_GeometryType_Key, k_TetrahedralListPath_Key, std::make_any<ChoicesParameter::ValueType>(6));
   params.linkParameters(k_GeometryType_Key, k_VertexAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(6));
   params.linkParameters(k_GeometryType_Key, k_CellAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(6));
   // hex
-  params.linkParameters(k_GeometryType_Key, k_VertexListName_Key, std::make_any<ChoicesParameter::ValueType>(7));
-  params.linkParameters(k_GeometryType_Key, k_HexahedralListName_Key, std::make_any<ChoicesParameter::ValueType>(7));
+  params.linkParameters(k_GeometryType_Key, k_VertexListPath_Key, std::make_any<ChoicesParameter::ValueType>(7));
+  params.linkParameters(k_GeometryType_Key, k_HexahedralListPath_Key, std::make_any<ChoicesParameter::ValueType>(7));
   params.linkParameters(k_GeometryType_Key, k_VertexAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(7));
   params.linkParameters(k_GeometryType_Key, k_CellAttributeMatrixName_Key, std::make_any<ChoicesParameter::ValueType>(7));
 
@@ -214,7 +214,7 @@ IFilter::UniquePointer CreateGeometryFilter::clone() const
 IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                              const std::atomic_bool& shouldCancel) const
 {
-  auto pGeometryPath = filterArgs.value<DataPath>(k_GeometryName_Key);
+  auto pGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto pGeometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
   auto pWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
   auto pArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
@@ -231,7 +231,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_VertexGeometry || pGeometryType == k_EdgeGeometry || pGeometryType == k_TriangleGeometry || pGeometryType == k_QuadGeometry || pGeometryType == k_TetGeometry ||
      pGeometryType == k_HexGeometry)
   {
-    pVertexListPath = filterArgs.value<DataPath>(k_VertexListName_Key);
+    pVertexListPath = filterArgs.value<DataPath>(k_VertexListPath_Key);
     pVertexAMName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
 
     if(dataStructure.getDataAs<Float32Array>(pVertexListPath) == nullptr)
@@ -277,9 +277,9 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   }
   if(pGeometryType == k_RectGridGeometry) // RectGridGeom
   {
-    auto pXBoundsPath = filterArgs.value<DataPath>(k_XBounds_Key);
-    auto pYBoundsPath = filterArgs.value<DataPath>(k_YBounds_Key);
-    auto pZBoundsPath = filterArgs.value<DataPath>(k_ZBounds_Key);
+    auto pXBoundsPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
+    auto pYBoundsPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
+    auto pZBoundsPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
     const auto xBounds = dataStructure.getDataAs<Float32Array>(pXBoundsPath);
     if(xBounds == nullptr)
     {
@@ -316,7 +316,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   }
   if(pGeometryType == k_EdgeGeometry) // EdgeGeom
   {
-    auto pEdgeListPath = filterArgs.value<DataPath>(k_EdgeListName_Key);
+    auto pEdgeListPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
     auto pEdgeAMName = filterArgs.value<std::string>(k_EdgeAttributeMatrixName_Key);
     if(const auto edgeList = dataStructure.getDataAs<UInt64Array>(pEdgeListPath); edgeList == nullptr)
     {
@@ -329,7 +329,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   }
   if(pGeometryType == k_TriangleGeometry) // TriangleGeom
   {
-    auto pTriangleListPath = filterArgs.value<DataPath>(k_TriangleListName_Key);
+    auto pTriangleListPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
     if(const auto triangleList = dataStructure.getDataAs<UInt64Array>(pTriangleListPath); triangleList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9846, fmt::format("Cannot find selected triangle list at path '{}'", pTriangleListPath.toString())}})};
@@ -341,7 +341,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   }
   if(pGeometryType == k_QuadGeometry) // QuadGeom
   {
-    auto pQuadListPath = filterArgs.value<DataPath>(k_QuadrilateralListName_Key);
+    auto pQuadListPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
     if(const auto quadList = dataStructure.getDataAs<UInt64Array>(pQuadListPath); quadList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9847, fmt::format("Cannot find selected quadrilateral list at path '{}'", pQuadListPath.toString())}})};
@@ -353,7 +353,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   }
   if(pGeometryType == k_TetGeometry) // TetrahedralGeom
   {
-    auto pTetListPath = filterArgs.value<DataPath>(k_TetrahedralListName_Key);
+    auto pTetListPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
     if(const auto tetList = dataStructure.getDataAs<UInt64Array>(pTetListPath); tetList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9848, fmt::format("Cannot find selected quadrilateral list at path '{}'", pTetListPath.toString())}})};
@@ -365,7 +365,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   }
   if(pGeometryType == k_HexGeometry) // HexahedralGeom
   {
-    auto pHexListPath = filterArgs.value<DataPath>(k_HexahedralListName_Key);
+    auto pHexListPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
     if(const auto hexList = dataStructure.getDataAs<UInt64Array>(pHexListPath); hexList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9849, fmt::format("Cannot find selected quadrilateral list at path '{}'", pHexListPath.toString())}})};
@@ -384,7 +384,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
-  auto geometryPath = filterArgs.value<DataPath>(k_GeometryName_Key);
+  auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto geometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
   auto treatWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
   auto moveArrays = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key) == k_MoveArray;
@@ -399,23 +399,23 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
 
   if(geometryType == k_VertexGeometry || geometryType == k_EdgeGeometry || geometryType == k_TriangleGeometry || geometryType == k_QuadGeometry || geometryType == k_TetGeometry || geometryType == 7)
   {
-    sharedVertexListArrayPath = filterArgs.value<DataPath>(k_VertexListName_Key);
+    sharedVertexListArrayPath = filterArgs.value<DataPath>(k_VertexListPath_Key);
   }
   if(geometryType == k_TriangleGeometry)
   {
-    sharedFaceListArrayPath = filterArgs.value<DataPath>(k_TriangleListName_Key);
+    sharedFaceListArrayPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
   }
   if(geometryType == k_QuadGeometry)
   {
-    sharedFaceListArrayPath = filterArgs.value<DataPath>(k_QuadrilateralListName_Key);
+    sharedFaceListArrayPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
   }
   if(geometryType == k_TetGeometry)
   {
-    sharedCellListArrayPath = filterArgs.value<DataPath>(k_TetrahedralListName_Key);
+    sharedCellListArrayPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
   }
   if(geometryType == k_HexGeometry)
   {
-    sharedCellListArrayPath = filterArgs.value<DataPath>(k_HexahedralListName_Key);
+    sharedCellListArrayPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
   }
 
   Result<> warningResults;
@@ -423,7 +423,7 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
   // These checks must be done in execute since we are accessing the array values!
   if(geometryType == k_EdgeGeometry)
   {
-    auto sharedEdgeListArrayPath = filterArgs.value<DataPath>(k_EdgeListName_Key);
+    auto sharedEdgeListArrayPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
     const DataPath destEdgeListPath = geometryPath.createChildPath(sharedEdgeListArrayPath.getTargetName());
     const auto& edgesList = data.getDataRefAs<UInt64Array>(destEdgeListPath);
     const auto& vertexList = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
@@ -460,9 +460,9 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
   }
   if(geometryType == k_RectGridGeometry)
   {
-    auto xBoundsArrayPath = filterArgs.value<DataPath>(k_XBounds_Key);
-    auto yBoundsArrayPath = filterArgs.value<DataPath>(k_YBounds_Key);
-    auto zBoundsArrayPath = filterArgs.value<DataPath>(k_ZBounds_Key);
+    auto xBoundsArrayPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
+    auto yBoundsArrayPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
+    auto zBoundsArrayPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
     const auto& srcXBounds = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()));
     const auto& srcYBounds = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()));
     const auto& srcZBounds = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()));

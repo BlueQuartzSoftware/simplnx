@@ -19,7 +19,7 @@ import_data.data_paths = None
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
-                        import_file_data=import_data)
+                        import_data_object=import_data)
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
@@ -39,23 +39,23 @@ output_file_path = nxtest.get_data_directory() / "Output/Examples/SmallIN100_Fin
 # Execute Filter
 result = nx_filter.execute(
     data_structure=data_structure,
-    image_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     write_binary_file=True,
-    selected_data_array_paths=[
- nx.DataPath("DataContainer/CellData/Confidence Index"), 
- nx.DataPath("DataContainer/CellData/EulerAngles"),
- nx.DataPath("DataContainer/CellData/FeatureIds"),
- nx.DataPath("DataContainer/CellData/Fit"),
- nx.DataPath("DataContainer/CellData/IPFColors"),
- nx.DataPath("DataContainer/CellData/Image Quality"),
- nx.DataPath("DataContainer/CellData/Mask"),
- nx.DataPath("DataContainer/CellData/ParentIds"),
- nx.DataPath("DataContainer/CellData/Phases"),
- nx.DataPath("DataContainer/CellData/Quats"),
- nx.DataPath("DataContainer/CellData/SEM Signal"),
- nx.DataPath("DataContainer/CellData/X Position"),
- nx.DataPath("DataContainer/CellData/Y Position")]
+    input_data_array_paths=[
+            nx.DataPath("DataContainer/CellData/Confidence Index"), 
+            nx.DataPath("DataContainer/CellData/EulerAngles"),
+            nx.DataPath("DataContainer/CellData/FeatureIds"),
+            nx.DataPath("DataContainer/CellData/Fit"),
+            nx.DataPath("DataContainer/CellData/IPFColors"),
+            nx.DataPath("DataContainer/CellData/Image Quality"),
+            nx.DataPath("DataContainer/CellData/Mask"),
+            nx.DataPath("DataContainer/CellData/ParentIds"),
+            nx.DataPath("DataContainer/CellData/Phases"),
+            nx.DataPath("DataContainer/CellData/Quats"),
+            nx.DataPath("DataContainer/CellData/SEM Signal"),
+            nx.DataPath("DataContainer/CellData/X Position"),
+            nx.DataPath("DataContainer/CellData/Y Position")]
 )
 nxtest.check_filter_result(nx_filter, result)
 

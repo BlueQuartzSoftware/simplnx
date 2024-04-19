@@ -58,7 +58,7 @@ Parameters FindNeighborhoodsFilter::parameters() const
 
   params.insert(std::make_unique<Float32Parameter>(k_MultiplesOfAverage_Key, "Multiples of Average Diameter", "Defines the search radius to use when looking for 'neighboring' Features", 1.0F));
 
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath({"Data Container"}),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath({"Data Container"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
@@ -150,7 +150,7 @@ Result<> FindNeighborhoodsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
   inputValues.NeighborhoodsArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NeighborhoodsArrayName_Key));
   inputValues.NeighborhoodListArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NeighborhoodListArrayName_Key));
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return FindNeighborhoods(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -175,7 +175,7 @@ Result<Arguments> FindNeighborhoodsFilter::FromSIMPLJson(const nlohmann::json& j
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_EquivalentDiametersArrayPathKey,
-                                                                                                                                      k_SelectedImageGeometry_Key));
+                                                                                                                                      k_SelectedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_MultiplesOfAverageKey, k_MultiplesOfAverage_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_EquivalentDiametersArrayPathKey, k_EquivalentDiametersArrayPath_Key));

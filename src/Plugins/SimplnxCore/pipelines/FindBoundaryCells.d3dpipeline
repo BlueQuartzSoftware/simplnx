@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -59,7 +59,7 @@
         "boundary_cells_array_name": "BoundaryCells",
         "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
         "ignore_feature_zero": true,
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "include_volume_boundary": true
       },
       "comments": "",

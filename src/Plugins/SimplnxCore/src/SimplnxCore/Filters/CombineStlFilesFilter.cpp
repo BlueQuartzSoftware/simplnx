@@ -70,7 +70,7 @@ Parameters CombineStlFilesFilter::parameters() const
   params.linkParameters(k_LabelVertices_Key, k_VertexLabelName_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Created Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_TriangleDataContainerName_Key, "Triangle Geometry", "The path to the triangle geometry to be created from the combined STL files",
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The path to the triangle geometry to be created from the combined STL files",
                                                              DataPath({"TriangleGeometry"})));
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrixName_Key, "Face Attribute Matrix", "The name of the face level attribute matrix to be created with the geometry",
@@ -95,7 +95,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
                                                               const std::atomic_bool& shouldCancel) const
 {
   auto pStlFilesPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilesPath_Key);
-  auto pTriangleDataContainerNameValue = filterArgs.value<DataPath>(k_TriangleDataContainerName_Key);
+  auto pTriangleDataContainerNameValue = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   auto pFaceAttributeMatrixNameValue = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
   auto pFaceNormalsArrayNameValue = filterArgs.value<std::string>(k_FaceNormalsArrayName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
@@ -164,7 +164,7 @@ Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const 
   CombineStlFilesInputValues inputValues;
 
   inputValues.StlFilesPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilesPath_Key);
-  inputValues.TriangleDataContainerName = filterArgs.value<DataPath>(k_TriangleDataContainerName_Key);
+  inputValues.TriangleDataContainerName = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   inputValues.FaceAttributeMatrixName = inputValues.TriangleDataContainerName.createChildPath(filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key));
   inputValues.FaceNormalsArrayName = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceNormalsArrayName_Key));
 
@@ -195,7 +195,7 @@ Result<Arguments> CombineStlFilesFilter::FromSIMPLJson(const nlohmann::json& jso
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_StlFilesPathKey, k_StlFilesPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_TriangleDataContainerName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_TriangleGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_FaceNormalsArrayNameKey, k_FaceNormalsArrayName_Key));
 

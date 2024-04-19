@@ -25,7 +25,7 @@ public:
   RenameDataObject& operator=(RenameDataObject&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataObject_Key = "data_object";
+  static inline constexpr StringLiteral k_SourceDataObjectPath_Key = "source_data_object_path";
   static inline constexpr StringLiteral k_NewName_Key = "new_name";
 
   /**

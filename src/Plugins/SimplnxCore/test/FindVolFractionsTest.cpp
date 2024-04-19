@@ -36,7 +36,7 @@ TEST_CASE("SimplnxCore::FindVolFractionsFilter: Valid filter execution", "[Simpl
   // Create default Parameters for the filter.
   args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
   args.insertOrAssign(FindVolFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<std::string>(k_VolumeFractionsNX));
+  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -71,7 +71,7 @@ TEST_CASE("SimplnxCore::FindVolFractionsFilter: InValid filter execution", "[Sim
   // Create default Parameters for the filter.
   args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectCellPhasesPath));
   args.insertOrAssign(FindVolFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<std::string>(k_VolumeFractionsNX));
+  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

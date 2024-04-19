@@ -32,7 +32,7 @@ public:
   static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
   static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
   static inline constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

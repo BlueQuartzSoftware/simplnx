@@ -52,7 +52,7 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Path to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "Path to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", true));
   params.insert(
       std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Input Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
@@ -79,7 +79,7 @@ IFilter::UniquePointer SetImageGeomOriginScalingFilter::clone() const
 IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel) const
 {
-  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
@@ -148,7 +148,7 @@ Result<Arguments> SetImageGeomOriginScalingFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeOriginKey, k_ChangeOrigin_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeResolutionKey, k_ChangeSpacing_Key));

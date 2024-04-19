@@ -15,12 +15,12 @@ nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=True,
+    set_tuple_dimensions=True,
     component_count=1,
     data_format="",
-    initialization_value="2",
-    numeric_type=nx.NumericType.int32,
-    output_data_array=nx.DataPath("TestArray"),
+    initialization_value_str="2",
+    numeric_type_index=nx.NumericType.int32,
+    output_array_path=nx.DataPath("TestArray"),
     tuple_dimensions=[[10.0]]
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -32,12 +32,12 @@ nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=True,
+    set_tuple_dimensions=True,
     component_count=1,
     data_format="",
-    initialization_value="1.23878",
-    numeric_type=nx.NumericType.float32,
-    output_data_array=nx.DataPath("Confidence Index"),
+    initialization_value_str="1.23878",
+    numeric_type_index=nx.NumericType.float32,
+    output_array_path=nx.DataPath("Confidence Index"),
     tuple_dimensions=[[10.0]]
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -48,12 +48,12 @@ nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=True,
+    set_tuple_dimensions=True,
     component_count=3,
     data_format="",
-    initialization_value="1.23878",
-    numeric_type=nx.NumericType.float32,
-    output_data_array=nx.DataPath("EulerAngles"),
+    initialization_value_str="1.23878",
+    numeric_type_index=nx.NumericType.float32,
+    output_array_path=nx.DataPath("EulerAngles"),
     tuple_dimensions=[[10.0]]
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -66,9 +66,9 @@ calc_param = nx.CalculatorParameter.ValueType(nx.DataPath(""), "TestArray+TestAr
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    calculated_array=nx.DataPath("Caclulated_TestArray"),
+    calculated_array_path=nx.DataPath("Caclulated_TestArray"),
     calculator_parameter=calc_param, 
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -79,9 +79,9 @@ calc_param = nx.CalculatorParameter.ValueType(nx.DataPath(""), "Confidence Index
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    calculated_array=nx.DataPath("Caclulated_ConfidenceIndex"),
+    calculated_array_path=nx.DataPath("Caclulated_ConfidenceIndex"),
     calculator_parameter=calc_param, 
-    scalar_type=nx.NumericType.float64
+    scalar_type_index=nx.NumericType.float64
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -93,9 +93,9 @@ calc_param = nx.CalculatorParameter.ValueType(nx.DataPath(""), "EulerAngles/2", 
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    calculated_array=nx.DataPath("Caclulated_EulerAngles"),
+    calculated_array_path=nx.DataPath("Caclulated_EulerAngles"),
     calculator_parameter=calc_param, 
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -106,9 +106,9 @@ calc_param = nx.CalculatorParameter.ValueType(nx.DataPath(""), "EulerAngles[0]+E
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    calculated_array=nx.DataPath("Caclulated_EulerAngles2"),
+    calculated_array_path=nx.DataPath("Caclulated_EulerAngles2"),
     calculator_parameter=calc_param, 
-    scalar_type=nx.NumericType.float32
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 

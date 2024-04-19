@@ -6,6 +6,7 @@
 #include "simplnx/SIMPLNXVersion.hpp"
 #include "simplnx/SimplnxPython.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/TimeUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -293,7 +294,7 @@ Result<> ExecutePipeline(Pipeline& pipeline)
     std::string ss = "Error executing pipeline";
     return nx::core::MakeErrorResult(k_ExecutePipelineError, ss);
   }
-  cliOut << "Finished executing pipeline";
+  cliOut << timestamp() << " Finished executing pipeline";
   cliOut.endline();
   return {};
 }
@@ -307,6 +308,15 @@ Result<> ExecutePipeline(const Argument& arg)
     cliOut << fmt::format("Could not load pipeline at path: '{}'", pipelinePath);
     cliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
+  }
+  if(!loadPipelineResult.m_Warnings.empty())
+  {
+    cliOut << "Input Pipeline Warnings"
+           << "\n";
+    for(const auto& warning : loadPipelineResult.m_Warnings)
+    {
+      cliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
+    }
   }
 
   Pipeline pipeline = loadPipelineResult.value();
@@ -324,6 +334,15 @@ Result<> PreflightPipeline(const Argument& arg)
     cliOut << fmt::format("Could not load pipeline at path: '{}'", pipelinePath);
     cliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
+  }
+  if(!loadPipelineResult.m_Warnings.empty())
+  {
+    cliOut << "Input Pipeline Warnings"
+           << "\n";
+    for(const auto& warning : loadPipelineResult.m_Warnings)
+    {
+      cliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
+    }
   }
 
   cliOut << fmt::format("Preflighting pipeline at path: '{}'\n", pipelinePath);

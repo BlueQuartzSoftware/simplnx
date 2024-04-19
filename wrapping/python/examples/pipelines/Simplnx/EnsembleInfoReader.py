@@ -17,7 +17,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_data_name=("Cell Data"),
     dimensions=[100, 100, 2],
-    geometry_data_path=nx.DataPath("[Image Geometry]"),
+    output_image_geometry_path=nx.DataPath("[Image Geometry]"),
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
@@ -30,10 +30,10 @@ nx_filter = nx.ReadRawBinaryFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     created_attribute_array_path=nx.DataPath("[Image Geometry]/Cell Data/Quats"),
-    endian=0,
+    endian_index=0,
     input_file=nxtest.get_data_directory() / "OrientationAnalysis/quats.raw",
     number_of_components=4,
-    scalar_type=nx.NumericType.float32,
+    scalar_type_index=nx.NumericType.float32,
     skip_header_bytes=0,
     tuple_dimensions=[[2.0, 100.0, 100.0]]
 )
@@ -46,9 +46,9 @@ nx_filter = cxor.ConvertOrientations()
 result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("[Image Geometry]/Cell Data/Quats"),
-    input_type=2,
+    input_representation_index=2,
     output_orientation_array_name="Eulers",
-    output_type=0
+    output_representation_index=0
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -59,12 +59,12 @@ nx_filter = nx.CreateDataArray()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=True,
+    set_tuple_dimensions=True,
     component_count=1,
     data_format="",
-    initialization_value="1",
-    numeric_type=nx.NumericType.int32,
-    output_data_array=nx.DataPath("[Image Geometry]/Cell Data/Phases"),
+    initialization_value_str="1",
+    numeric_type_index=nx.NumericType.int32,
+    output_array_path=nx.DataPath("[Image Geometry]/Cell Data/Phases"),
     tuple_dimensions=[[2.0, 100.0, 100.0]]
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -77,7 +77,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_ensemble_attribute_matrix_name=("Cell Ensemble"),
     crystal_structures_array_name=("CrystalStructures"),
-    data_container_name=nx.DataPath("[Image Geometry]"),
+    parent_group_path=nx.DataPath("[Image Geometry]"),
     input_file=nxtest.get_data_directory() / "OrientationAnalysis/Ensemble.ini",
     phase_types_array_name=("PhaseTypes")
 )

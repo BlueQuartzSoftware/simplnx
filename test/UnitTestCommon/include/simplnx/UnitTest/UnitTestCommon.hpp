@@ -438,7 +438,7 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
     newVal = newDataStore[i];
     if(oldVal != newVal)
     {
-      UNSCOPED_INFO(fmt::format("oldValue != newValue. {} != {}", oldVal, newVal));
+      UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", i, oldVal, newVal));
 
       if constexpr(std::is_floating_point_v<T>)
       {
@@ -1211,8 +1211,8 @@ namespace SmallIn100
 //------------------------------------------------------------------------------
 inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList)
 {
-  constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
-  constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
+  constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds_object";
+  constexpr StringLiteral k_CreatedDataPath_Key = "output_data_array_name";
   INFO(fmt::format("Error creating Filter '{}'  ", k_MultiThresholdObjectsFilterHandle.getFilterName()));
 
   auto filter = filterList.createFilter(k_MultiThresholdObjectsFilterHandle);
@@ -1258,7 +1258,7 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
 
   // Parameter Keys
   constexpr StringLiteral k_FillHoles_Key = "fill_holes";
-  constexpr StringLiteral k_ImageGeom_Key = "image_geometry";
+  constexpr StringLiteral k_ImageGeom_Key = "input_image_geometry_path";
   constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   Arguments args;

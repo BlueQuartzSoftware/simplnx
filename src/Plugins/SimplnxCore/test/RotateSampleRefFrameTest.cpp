@@ -136,7 +136,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     Arguments args;
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                         std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::AxisAngle)));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_OriginalGeomPath));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_OriginalGeomPath));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false)); // We need to keep the geometries around.
 
     REQUIRE(dc != nullptr);
@@ -155,7 +155,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     REQUIRE(expectedRotatedArray != nullptr);
 
     const DataPath testAxisAngleGeomPath({fmt::format("{}_Test_AxisAngle", name)});
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(testAxisAngleGeomPath));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(testAxisAngleGeomPath));
 
     const std::vector<std::string> parts = StringUtilities::split(name, '_');
     REQUIRE(parts.size() == 5);
@@ -197,7 +197,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                         std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(table));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(testRotationMatrixGeomPath));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(testRotationMatrixGeomPath));
 
     auto preflightRotationMatrixResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightRotationMatrixResult.outputActions);

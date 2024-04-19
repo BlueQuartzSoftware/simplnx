@@ -46,7 +46,7 @@ Wait until the environment is fully installed.
 
         .. code:: shell
 
-            dream3dnx
+            DREAM3DNX
 
     **Windows**
 
@@ -120,7 +120,7 @@ After you have generated your Python plugin/filters, close the current instance 
 
         .. code:: shell
 
-            dream3dnx
+            DREAM3DNX
 
     **Windows**
 

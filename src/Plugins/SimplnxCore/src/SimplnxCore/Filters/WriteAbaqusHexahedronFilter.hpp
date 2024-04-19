@@ -24,7 +24,7 @@ public:
   WriteAbaqusHexahedronFilter& operator=(WriteAbaqusHexahedronFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
   static inline constexpr StringLiteral k_JobName_Key = "job_name";
   static inline constexpr StringLiteral k_OutputPath_Key = "output_path";

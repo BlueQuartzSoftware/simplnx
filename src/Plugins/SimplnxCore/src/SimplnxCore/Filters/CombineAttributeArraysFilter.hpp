@@ -26,8 +26,8 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_NormalizeData_Key = "normalize_data";
   static inline constexpr StringLiteral k_MoveValues_Key = "move_values";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
-  static inline constexpr StringLiteral k_StackedDataArrayName_Key = "stacked_data_array_name";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static inline constexpr StringLiteral k_StackedDataArrayName_Key = "output_data_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

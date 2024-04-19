@@ -24,7 +24,7 @@ public:
   FindFeatureClusteringFilter& operator=(FindFeatureClusteringFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_NumberOfBins_Key = "number_of_bins";
   static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
   static inline constexpr StringLiteral k_RemoveBiasedFeatures_Key = "remove_biased_features";
@@ -35,7 +35,7 @@ public:
   static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
   static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
   static inline constexpr StringLiteral k_BiasedFeaturesArrayPath_Key = "biased_features_array_path";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixPath_Key = "cell_ensemble_attribute_matrix_path";
   static inline constexpr StringLiteral k_ClusteringListArrayName_Key = "clustering_list_array_name";
   static inline constexpr StringLiteral k_RDFArrayName_Key = "rdf_array_name";
   static inline constexpr StringLiteral k_MaxMinArrayName_Key = "max_min_array_name";

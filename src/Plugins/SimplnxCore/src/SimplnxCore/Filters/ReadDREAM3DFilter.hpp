@@ -27,7 +27,7 @@ public:
   ReadDREAM3DFilter& operator=(ReadDREAM3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImportFileData = "import_file_data";
+  static inline constexpr StringLiteral k_ImportFileData = "import_data_object";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

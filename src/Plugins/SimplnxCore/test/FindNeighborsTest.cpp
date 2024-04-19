@@ -31,19 +31,19 @@ TEST_CASE("SimplnxCore::FindNeighbors", "[SimplnxCore][FindNeighbors]")
     FindNeighbors filter;
     Arguments args;
 
-    args.insertOrAssign(FindNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insertOrAssign(FindNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(featureIdsDataPath));
-    args.insertOrAssign(FindNeighbors::k_CellFeatures_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
+    args.insertOrAssign(FindNeighbors::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insertOrAssign(FindNeighbors::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(FindNeighbors::k_CellFeaturesPath_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
 
     args.insertOrAssign(FindNeighbors::k_StoreBoundary_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighbors::k_BoundaryCells_Key, std::make_any<std::string>(boundaryCellsName));
+    args.insertOrAssign(FindNeighbors::k_BoundaryCellsName_Key, std::make_any<std::string>(boundaryCellsName));
 
     args.insertOrAssign(FindNeighbors::k_StoreSurface_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighbors::k_SurfaceFeatures_Key, std::make_any<std::string>(surfaceFeaturesName));
+    args.insertOrAssign(FindNeighbors::k_SurfaceFeaturesName_Key, std::make_any<std::string>(surfaceFeaturesName));
 
-    args.insertOrAssign(FindNeighbors::k_NumNeighbors_Key, std::make_any<std::string>(numNeighborName));
-    args.insertOrAssign(FindNeighbors::k_NeighborList_Key, std::make_any<std::string>(neighborListName));
-    args.insertOrAssign(FindNeighbors::k_SharedSurfaceArea_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
+    args.insertOrAssign(FindNeighbors::k_NumNeighborsName_Key, std::make_any<std::string>(numNeighborName));
+    args.insertOrAssign(FindNeighbors::k_NeighborListName_Key, std::make_any<std::string>(neighborListName));
+    args.insertOrAssign(FindNeighbors::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

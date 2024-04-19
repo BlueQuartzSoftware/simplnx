@@ -95,8 +95,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
 
     // Preflight the filter and check result
@@ -136,8 +136,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][
     threshold->setComparisonValue(15);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
 
     // Preflight the filter and check result
@@ -183,8 +183,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
   threshold->setComparisonValue(15);
   thresholdSet.setArrayThresholds({threshold});
 
-  args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+  args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   args.insertOrAssign(MultiThresholdObjects::k_UseCustomTrueValue, std::make_any<bool>(true));
   args.insertOrAssign(MultiThresholdObjects::k_CustomTrueValue, std::make_any<float64>(trueValue));
   args.insertOrAssign(MultiThresholdObjects::k_UseCustomFalseValue, std::make_any<bool>(true));
@@ -226,8 +226,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
   {
     ArrayThresholdSet thresholdSet;
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
   SECTION("Empty ArrayThreshold DataPath")
   {
@@ -237,8 +237,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
   SECTION("MultiComponents in Threshold Array")
   {
@@ -249,8 +249,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
   SECTION("Mismatching Tuples in Threshold Arrays")
   {
@@ -265,8 +265,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
     threshold2->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold1, threshold2});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
 
   // Preflight the filter and check result
@@ -324,8 +324,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out 
   threshold->setComparisonValue(15);
   thresholdSet.setArrayThresholds({threshold});
 
-  args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+  args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   args.insertOrAssign(MultiThresholdObjects::k_UseCustomTrueValue, std::make_any<bool>(true));
   args.insertOrAssign(MultiThresholdObjects::k_CustomTrueValue, std::make_any<float64>(trueValue));
   args.insertOrAssign(MultiThresholdObjects::k_UseCustomFalseValue, std::make_any<bool>(true));
@@ -366,8 +366,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custo
   threshold->setComparisonValue(15);
   thresholdSet.setArrayThresholds({threshold});
 
-  args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+  args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
 
   // Preflight the filter
@@ -416,8 +416,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int8));
 
     // Preflight the filter and check result
@@ -443,8 +443,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int16));
 
     // Preflight the filter and check result
@@ -470,8 +470,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int32));
 
     // Preflight the filter and check result
@@ -497,8 +497,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int64));
 
     // Preflight the filter and check result
@@ -525,8 +525,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint8));
 
     // Preflight the filter and check result
@@ -552,8 +552,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint16));
 
     // Preflight the filter and check result
@@ -579,8 +579,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint32));
 
     // Preflight the filter and check result
@@ -606,8 +606,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint64));
 
     // Preflight the filter and check result
@@ -634,8 +634,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float32));
 
     // Preflight the filter and check result
@@ -661,8 +661,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     threshold->setComparisonValue(0.1);
     thresholdSet.setArrayThresholds({threshold});
 
-    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float64));
 
     // Preflight the filter and check result

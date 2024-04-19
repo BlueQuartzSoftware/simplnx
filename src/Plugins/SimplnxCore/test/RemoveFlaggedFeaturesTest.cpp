@@ -144,7 +144,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[Simplnx
   // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_ImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
@@ -172,7 +172,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Simpln
 
   // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_ImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CreatedImageGeometryPrefix_Key, std::make_any<std::string>(k_NewImgGeomPrefix));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
@@ -210,7 +210,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorith
   // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(2));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_ImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CreatedImageGeometryPrefix_Key, std::make_any<std::string>(k_NewImgGeomPrefix));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));

@@ -30,9 +30,9 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Optical Data",
     image_data_array_name="Image Data",
-    image_geometry_path=nx.DataPath("RoboMet.3D Image Stack"),
-    image_transform_choice=0,
-    input_file_list_info=generated_file_list_value,
+    output_image_geometry_path=nx.DataPath("RoboMet.3D Image Stack"),
+    image_transform_index=0,
+    input_file_list_object =generated_file_list_value,
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
@@ -54,8 +54,8 @@ nx_filter = nx.MultiThresholdObjects()
 # Execute filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="Mask",
+    array_thresholds_object=threshold_set,
+    output_data_array_name="Mask",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -66,10 +66,10 @@ nx_filter = nx.ScalarSegmentFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    active_array_path="Active",
-    cell_feature_group_path="Pore Data",
-    feature_ids_path="FeatureIds",
-    grid_geometry_path=nx.DataPath("RoboMet.3D Image Stack"),
+    active_array_name="Active",
+    cell_feature_group_name="Pore Data",
+    feature_ids_name="FeatureIds",
+    input_image_geometry_path =nx.DataPath("RoboMet.3D Image Stack"),
     input_array_path=nx.DataPath("RoboMet.3D Image Stack/Optical Data/Image Data"),
     mask_path=nx.DataPath("RoboMet.3D Image Stack/Optical Data/Mask"),
     randomize_features=False,
@@ -89,13 +89,13 @@ result = nx_filter.execute(
     face_feature_attribute_matrix_name="Face Feature Data",
     face_labels_array_name="FaceLabels",
     feature_ids_path=nx.DataPath("RoboMet.3D Image Stack/Optical Data/FeatureIds"),
-    grid_geometry_data_path=nx.DataPath("RoboMet.3D Image Stack"),
+    input_grid_geometry_path=nx.DataPath("RoboMet.3D Image Stack"),
     max_distance_from_voxel=1.0,
     node_types_array_name="NodeTypes",
     relaxation_factor=0.5,
-    #selected_data_array_paths: List[DataPath] = ...,
+    #input_data_array_paths: List[DataPath] = ...,
     smoothing_iterations=20,
-    triangle_geometry_name=nx.DataPath("TriangleDataContainer"),
+    output_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
     vertex_data_group_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)

@@ -211,12 +211,12 @@ public:
     Arguments args;
 
     args.insertOrAssign(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
-    args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_ImageGeometryPath));
+    args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_ImageGeometryPath));
     args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(m_MinVoxelVector));
     args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(m_MaxVoxelVector));
-    args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(m_CreatedImgGeomPath));
+    args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(m_CreatedImgGeomPath));
 
     auto preflightResult = filter.preflight(m_DataStructure, args);
     if(preflightResult.outputActions.invalid())
@@ -319,7 +319,7 @@ Result<> RemoveFlaggedFeatures::operator()()
 
       args.insert(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(m_InputValues->FeatureIdsArrayPath));
       args.insert(ComputeFeatureRectFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(m_InputValues->TempBoundsPath.getParent()));
-      args.insert(ComputeFeatureRectFilter::k_FeatureRectArrayPath_Key, std::make_any<std::string>(m_InputValues->TempBoundsPath.getTargetName()));
+      args.insert(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(m_InputValues->TempBoundsPath.getTargetName()));
 
       auto preflightResult = filter.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())

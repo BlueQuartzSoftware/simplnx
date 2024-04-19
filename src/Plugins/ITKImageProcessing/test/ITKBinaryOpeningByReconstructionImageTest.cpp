@@ -37,9 +37,9 @@ TEST_CASE("ITKImageProcessing::ITKBinaryOpeningByReconstructionImageFilter(Binar
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{5, 1, 1}));
   args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
   args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(200));

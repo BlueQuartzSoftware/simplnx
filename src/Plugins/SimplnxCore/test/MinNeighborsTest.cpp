@@ -73,19 +73,19 @@ TEST_CASE("SimplnxCore::MinNeighbors", "[SimplnxCore][MinNeighbors]")
     FindNeighbors filter;
     Arguments args;
 
-    args.insertOrAssign(FindNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insertOrAssign(FindNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(featureIdsDataPath));
-    args.insertOrAssign(FindNeighbors::k_CellFeatures_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
+    args.insertOrAssign(FindNeighbors::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insertOrAssign(FindNeighbors::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(FindNeighbors::k_CellFeaturesPath_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
 
     args.insertOrAssign(FindNeighbors::k_StoreBoundary_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighbors::k_BoundaryCells_Key, std::make_any<std::string>(boundaryCellsName));
+    args.insertOrAssign(FindNeighbors::k_BoundaryCellsName_Key, std::make_any<std::string>(boundaryCellsName));
 
     args.insertOrAssign(FindNeighbors::k_StoreSurface_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighbors::k_SurfaceFeatures_Key, std::make_any<std::string>(surfaceFeaturesName));
+    args.insertOrAssign(FindNeighbors::k_SurfaceFeaturesName_Key, std::make_any<std::string>(surfaceFeaturesName));
 
-    args.insertOrAssign(FindNeighbors::k_NumNeighbors_Key, std::make_any<std::string>(numNeighborName));
-    args.insertOrAssign(FindNeighbors::k_NeighborList_Key, std::make_any<std::string>(neighborListName));
-    args.insertOrAssign(FindNeighbors::k_SharedSurfaceArea_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
+    args.insertOrAssign(FindNeighbors::k_NumNeighborsName_Key, std::make_any<std::string>(numNeighborName));
+    args.insertOrAssign(FindNeighbors::k_NeighborListName_Key, std::make_any<std::string>(neighborListName));
+    args.insertOrAssign(FindNeighbors::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -104,10 +104,10 @@ TEST_CASE("SimplnxCore::MinNeighbors", "[SimplnxCore][MinNeighbors]")
     args.insertOrAssign(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
     // args.insertOrAssign(MinNeighbors::k_PhaseNumber_Key, std::make_any<uint64>(0));
     // args.insertOrAssign(MinNeighbors::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
-    args.insertOrAssign(MinNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insertOrAssign(MinNeighbors::k_CellDataAttributeMatrix_Key, std::make_any<DataPath>(cellDataAttributeMatrix));
-    args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(featureIdsDataPath));
-    args.insertOrAssign(MinNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(numNeighborPath));
+    args.insertOrAssign(MinNeighbors::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insertOrAssign(MinNeighbors::k_CellDataAttributeMatrixPath_Key, std::make_any<DataPath>(cellDataAttributeMatrix));
+    args.insertOrAssign(MinNeighbors::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(MinNeighbors::k_NumNeighborsPath_Key, std::make_any<DataPath>(numNeighborPath));
     // args.insertOrAssign(MinNeighbors::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
 
     // Preflight the filter and check result
@@ -156,7 +156,7 @@ TEST_CASE("SimplnxCore::MinNeighbors: Bad Phase Number", "[MinNeighbors]")
   uint64 k_MinNumNeighbors = 1;
   std::vector<DataPath> k_VoxelArrays = k_VoxelArrayPaths;
 
-  args.insertOrAssign(MinNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(MinNeighbors::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(k_ApplyToSinglePhase));
   args.insertOrAssign(MinNeighbors::k_PhaseNumber_Key, std::make_any<uint64>(k_PhaseNumber));
   args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
@@ -190,7 +190,7 @@ TEST_CASE("SimplnxCore::MinNeighbors: Phase Array", "[MinNeighbors]")
   uint64 k_MinNumNeighbors = 1;
   std::vector<DataPath> k_VoxelArrays = k_VoxelArrayPaths;
 
-  args.insertOrAssign(MinNeighbors::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(MinNeighbors::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(k_ApplyToSinglePhase));
   args.insertOrAssign(MinNeighbors::k_PhaseNumber_Key, std::make_any<uint64>(k_PhaseNumber));
   args.insertOrAssign(MinNeighbors::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));

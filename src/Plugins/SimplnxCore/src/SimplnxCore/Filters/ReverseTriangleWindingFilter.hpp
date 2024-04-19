@@ -32,7 +32,7 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static inline constexpr StringLiteral k_TriGeomPath_Key = "triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriGeomPath_Key = "input_triangle_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -224,7 +224,7 @@ TEST_CASE("PipelineTest:PipelineJson")
   Arguments filter2Args;
   filter2Args.insert("param1", 42);
   filter2Args.insert("param2", std::string("foobarbaz"));
-  filter2Args.insert("param3", ChoicesParameter::ValueType{});
+  filter2Args.insert("param3_index", ChoicesParameter::ValueType{});
   pipeline.push_back(k_Test2FilterHandle, filter2Args);
 
   nlohmann::json pipelineJson = pipeline.toJson();

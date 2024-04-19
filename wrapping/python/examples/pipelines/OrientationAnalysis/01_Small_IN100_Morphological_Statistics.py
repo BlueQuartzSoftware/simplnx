@@ -19,7 +19,7 @@ import_data.data_paths = None
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
-                        import_file_data=import_data
+                        import_data_object=import_data
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -42,10 +42,10 @@ nx_filter = nx.FindFeatureCentroidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    centroids_array_path=("Centroids"),
-    feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
+    centroids_array_name="Centroids",
+    feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    selected_image_geometry=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -56,13 +56,13 @@ nx_filter = nx.CalculateFeatureSizesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    equivalent_diameters_path=("EquivalentDiameters"),
-    feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
+    equivalent_diameters_name="EquivalentDiameters",
+    feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    geometry_path=nx.DataPath("DataContainer"),
-    num_elements_path=("NumElements"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
+    num_elements_name="NumElements",
     save_element_sizes=False,
-    volumes_path=("Size Volumes")
+    volumes_name="Size Volumes"
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -79,7 +79,7 @@ result = nx_filter.execute(
     centroids_array_path=nx.DataPath("DataContainer/CellFeatureData/Centroids"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     omega3s_array_name=("Omega3s"),
-    selected_image_geometry=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     volumes_array_name=("Shape Volumes")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -93,12 +93,12 @@ result = nx_filter.execute(
     data_structure=data_structure,
     # Boundary cells parameter is not currently part of the code
     # boundary_cells: str = ...,
-    cell_feature_arrays=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    image_geometry=nx.DataPath("DataContainer"),
-    neighbor_list=("NeighborList"),
-    number_of_neighbors=("NumNeighbors"),
-    shared_surface_area_list=("SharedSurfaceAreaList"),
+    cell_feature_array_path=nx.DataPath("DataContainer/CellFeatureData"),
+    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    input_image_geometry_path =nx.DataPath("DataContainer"),
+    neighbor_list_name=("NeighborList"),
+    number_of_neighbors_name=("NumNeighbors"),
+    shared_surface_area_list_name=("SharedSurfaceAreaList"),
     store_boundary_cells=False,
     # Surface features parameter is not currently part of the code
     # surface_features: str = ...,
@@ -120,7 +120,7 @@ result = nx_filter.execute(
     multiples_of_average=1.0,
     neighborhood_list_array_name=("NeighborhoodList"),
     neighborhoods_array_name=("Neighborhoods"),
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -141,7 +141,7 @@ result = nx_filter.execute(
     # nearest_neighbors_array_name: str = ...,
     q_pdistances_array_name=("QPManhattanDistances"),
     save_nearest_neighbors=False,
-    selected_image_geometry=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     t_jdistances_array_name=("TJManhattanDistances")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -156,7 +156,7 @@ result = nx_filter.execute(
     calculate_sphericity=True,
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     num_cells_array_path=nx.DataPath("DataContainer/CellFeatureData/NumElements"),
-    selected_image_geometry=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     sphericity_array_name=("Sphericity"),
     surface_area_volume_ratio_array_name=("SurfaceAreaVolumeRatio")
 )

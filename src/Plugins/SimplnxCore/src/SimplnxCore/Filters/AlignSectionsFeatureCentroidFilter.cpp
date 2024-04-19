@@ -74,7 +74,7 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
   params.linkParameters(k_UseReferenceSlice_Key, k_ReferenceSlice_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
                                                              DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Attribute Matrix", "Cell Data Attribute Matrix", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the DataArray Mask", DataPath({"Mask"}),
@@ -104,7 +104,7 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   auto pAlignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
   auto pReferenceSliceValue = filterArgs.value<int32>(k_ReferenceSlice_Key);
   auto pGoodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
   PreflightResult preflightResult;
@@ -154,7 +154,7 @@ Result<> AlignSectionsFeatureCentroidFilter::executeImpl(DataStructure& dataStru
   inputValues.UseReferenceSlice = filterArgs.value<bool>(k_UseReferenceSlice_Key);
   inputValues.ReferenceSlice = filterArgs.value<int32>(k_ReferenceSlice_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
   return AlignSectionsFeatureCentroid(dataStructure, messageHandler, shouldCancel, &inputValues)();

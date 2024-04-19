@@ -53,10 +53,10 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key, std::make_any<uint64>(samplingGridType));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(k_VertexGeometryPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(k_ManualImageGeomPathComputed));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeometryPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_ManualImageGeomPathComputed));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<std::string>(k_VoxelIndicesManualComputed.getTargetName()));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndicesName_Key, std::make_any<std::string>(k_VoxelIndicesManualComputed.getTargetName()));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_CellDataName_Key, std::make_any<std::string>(k_CellData));
 
   // Preflight the filter and check result
@@ -88,11 +88,11 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key, std::make_any<uint64>(samplingGridType));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(k_VertexGeometryPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(k_ManualMaskImageGeomPathComputed));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeometryPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_ManualMaskImageGeomPathComputed));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(true));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(k_MaskPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<std::string>(k_VoxelIndicesManualMaskComputed.getTargetName()));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndicesName_Key, std::make_any<std::string>(k_VoxelIndicesManualMaskComputed.getTargetName()));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_CellDataName_Key, std::make_any<std::string>(k_CellData));
 
   // Preflight the filter and check result
@@ -122,11 +122,11 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
   uint64 samplingGridType = 1;
 
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key, std::make_any<uint64>(samplingGridType));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(k_VertexGeometryPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ExistingImageGeometry_Key, std::make_any<DataPath>(k_ExistingImageGeomPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeometryPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ExistingImageGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(true));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(k_MaskPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<std::string>(k_VoxelIndicesExistingMaskComputed.getTargetName()));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndicesName_Key, std::make_any<std::string>(k_VoxelIndicesExistingMaskComputed.getTargetName()));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -155,24 +155,24 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Invalid Filter Executi
   std::vector<int32> gridDimensions{11, 11, 26};
 
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key, std::make_any<uint64>(samplingGridType));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(k_VertexGeometryPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(k_ManualMaskImageGeomPathComputed));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeometryPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_ManualMaskImageGeomPathComputed));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(true));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<std::string>(k_VoxelIndicesManualMaskComputed.getTargetName()));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndicesName_Key, std::make_any<std::string>(k_VoxelIndicesManualMaskComputed.getTargetName()));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_CellDataName_Key, std::make_any<std::string>(k_CellData));
 
   SECTION("Invalid Grid Dimensions")
   {
     gridDimensions[2] = 0;
     args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));
-    args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+    args.insertOrAssign(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
   }
   SECTION("Mismatching mask & voxel indices array tuples")
   {
     const std::string invalidMask = "Invalid Mask Array";
     UnitTest::CreateTestDataArray<bool>(dataStructure, invalidMask, std::vector<usize>{100}, std::vector<usize>{1});
     args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));
-    args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(DataPath({invalidMask})));
+    args.insertOrAssign(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key, std::make_any<DataPath>(DataPath({invalidMask})));
   }
 
   // Preflight the filter and check result

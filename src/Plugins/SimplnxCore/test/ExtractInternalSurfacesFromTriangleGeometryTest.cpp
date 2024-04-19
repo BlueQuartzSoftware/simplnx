@@ -60,13 +60,13 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometry(Instantiate)
   DataStructure dataStructure = createTestData(k_TriangleGeomName, k_NodeTypesName);
   Arguments args;
 
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_TriangleGeom_Key, std::make_any<DataPath>(k_TriangleGeomPath));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_InternalTriangleGeom_Key, std::make_any<DataPath>(k_InternalTrianglePath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_InternalTrianglePath));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_NodeTypesPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_CopyVertexPaths));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_CopyTrianglePaths));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_VertexDataName_Key, std::make_any<std::string>("Vertex Data"));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_FaceDataName_Key, std::make_any<std::string>("Face Data"));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
 
   auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -78,13 +78,13 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometry(Data)", "[Si
   DataStructure dataStructure = createTestData(k_TriangleGeomName, k_NodeTypesName);
   Arguments args;
 
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_TriangleGeom_Key, std::make_any<DataPath>(k_TriangleGeomPath));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_InternalTriangleGeom_Key, std::make_any<DataPath>(k_InternalTrianglePath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_InternalTrianglePath));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_NodeTypesPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_CopyVertexPaths));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_CopyTrianglePaths));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_VertexDataName_Key, std::make_any<std::string>("Vertex Data"));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_FaceDataName_Key, std::make_any<std::string>("Face Data"));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
 
   auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);

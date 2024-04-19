@@ -2358,7 +2358,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_ImageGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2369,25 +2369,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageOrigin));
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageSpacing));
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
@@ -2456,7 +2456,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_RectGridGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2464,25 +2464,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(xBoundsPath));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(yBoundsPath));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(zBoundsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(xBoundsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(yBoundsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(zBoundsPath));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
@@ -2516,7 +2516,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_VertexGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2524,25 +2524,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(srcVerticesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(srcVerticesPath));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAmName));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
@@ -2569,7 +2569,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_EdgeGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2577,25 +2577,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(srcVerticesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(srcVerticesPath));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAmName));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(srcEdgesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(srcEdgesPath));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(edgeAmName));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
@@ -2631,7 +2631,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_TriangleGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2639,25 +2639,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(srcVerticesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(srcVerticesPath));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAmName));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(srcTrianglesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(srcTrianglesPath));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(faceAmName));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
@@ -2693,7 +2693,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_QuadGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2701,25 +2701,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(srcVerticesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(srcVerticesPath));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAmName));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(srcQuadsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(srcQuadsPath));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(faceAmName));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
@@ -2755,7 +2755,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_TetGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2763,25 +2763,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(srcTetVerticesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(srcTetVerticesPath));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAmName));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(srcTetsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(srcTetsPath));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
@@ -2817,7 +2817,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_HexGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2825,25 +2825,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(srcHexVerticesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(srcHexVerticesPath));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAmName));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(srcHexsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(srcHexsPath));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
@@ -2879,7 +2879,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_TriangleGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_MoveArray));
     // Image Geometry parameters
@@ -2887,25 +2887,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(srcVerticesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(srcVerticesPath));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAmName));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(srcTrianglesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(srcTrianglesPath));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(faceAmName));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
@@ -2942,7 +2942,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   {
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_TetGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(true));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -2950,25 +2950,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(incompatibleVerticesPath));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(incompatibleVerticesPath));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAmName));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(srcTetsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(srcTetsPath));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
@@ -3031,7 +3031,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_RectGridGeometry));
-    args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(true));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
@@ -3039,25 +3039,25 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_XBounds_Key, std::make_any<DataPath>(xBoundsPath));
-    args.insertOrAssign(CreateGeometryFilter::k_YBounds_Key, std::make_any<DataPath>(yBoundsPath));
-    args.insertOrAssign(CreateGeometryFilter::k_ZBounds_Key, std::make_any<DataPath>(zBoundsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(xBoundsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(yBoundsPath));
+    args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(zBoundsPath));
     // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_VertexListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Edge Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_EdgeListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Triangle Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TriangleListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Quadrilateral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Triangle & Quadrilateral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(""));
     // Tetrahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Hexahedral Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListName_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(DataPath{}));
     // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 

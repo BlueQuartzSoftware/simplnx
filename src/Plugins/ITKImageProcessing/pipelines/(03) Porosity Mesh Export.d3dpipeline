@@ -7,9 +7,9 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "image_data_array_name": "ImageData",
-        "image_geometry_path": "ImageDataContainer",
+        "output_image_geometry_path": "ImageDataContainer",
         "image_transform_choice": 0,
-        "input_file_list_info": {
+        "input_file_list_object": {
           "end_index": 174,
           "file_extension": ".tif",
           "file_prefix": "slice_",
@@ -40,7 +40,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -55,7 +55,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Mask"
+        "output_data_array_name": "Mask"
       },
       "comments": "",
       "filter": {
@@ -66,10 +66,10 @@
     },
     {
       "args": {
-        "active_array_path": "Active",
-        "cell_feature_group_path": "CellFeatureData",
-        "feature_ids_path": "FeatureIds",
-        "grid_geometry_path": "ImageDataContainer",
+        "active_array_name": "Active",
+        "cell_feature_group_name": "CellFeatureData",
+        "feature_ids_name": "FeatureIds",
+        "input_image_geometry_path": "ImageDataContainer",
         "input_array_path": "ImageDataContainer/Cell Data/ImageData",
         "mask_path": "ImageDataContainer/Cell Data/Mask",
         "randomize_features": true,
@@ -91,10 +91,10 @@
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
         "fix_problem_voxels": true,
         "generate_triple_lines": false,
-        "grid_geometry_data_path": "ImageDataContainer",
+        "input_grid_geometry_path": "ImageDataContainer",
         "node_types_array_name": "NodeTypes",
-        "selected_data_array_paths": [],
-        "triangle_geometry_name": "TriangleDataContainer",
+        "input_data_array_paths": [],
+        "output_triangle_geometry_path": "TriangleDataContainer",
         "vertex_data_group_name": "Vertex Data"
       },
       "comments": "",
@@ -114,7 +114,7 @@
         "surface_point_lambda": 0.0,
         "surface_quad_point_lambda": 0.0,
         "surface_triple_line_lambda": 0.0,
-        "triangle_geometry_data_path": "TriangleDataContainer",
+        "input_triangle_geometry_path": "TriangleDataContainer",
         "triple_line_lambda": 0.10000000149011612,
         "use_taubin_smoothing": true
       },
@@ -133,7 +133,7 @@
           ]
         ],
         "delete_original_array": true,
-        "multicomponent_array": "TriangleDataContainer/Face Data/FaceLabels",
+        "multicomponent_array_path": "TriangleDataContainer/Face Data/FaceLabels",
         "postfix": "-",
         "select_components_to_extract": false
       },
@@ -146,7 +146,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -161,7 +161,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "FaceLabels-0 Mask"
+        "output_data_array_name": "FaceLabels-0 Mask"
       },
       "comments": "",
       "filter": {
@@ -172,7 +172,7 @@
     },
     {
       "args": {
-        "array_thresholds": {
+        "array_thresholds_object": {
           "inverted": false,
           "thresholds": [
             {
@@ -187,7 +187,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "FaceLabels-1 Mask"
+        "output_data_array_name": "FaceLabels-1 Mask"
       },
       "comments": "",
       "filter": {
@@ -230,11 +230,11 @@
       "args": {
         "move_values": true,
         "normalize_data": false,
-        "selected_data_array_paths": [
+        "input_data_array_paths": [
           "TriangleDataContainer/Face Data/FaceLabels-0",
           "TriangleDataContainer/Face Data/FaceLabels-1"
         ],
-        "stacked_data_array_name": "Face Labels"
+        "output_data_array_name": "Face Labels"
       },
       "comments": "",
       "filter": {

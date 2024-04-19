@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   static inline constexpr StringLiteral k_NumberOfNeighbors_Key = "number_of_neighbors";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";

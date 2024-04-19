@@ -24,7 +24,7 @@ public:
   LabelTriangleGeometryFilter& operator=(LabelTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
+  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_CreatedRegionIdsPath_Key = "created_region_ids_path";
   static inline constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
   static inline constexpr StringLiteral k_NumTrianglesName_Key = "num_triangles_name";

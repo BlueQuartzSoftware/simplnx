@@ -52,14 +52,14 @@ TEST_CASE("SimplnxCore::FindNeighborListStatistics: Test Algorithm", "[FindNeigh
   args.insertOrAssign(FindNeighborListStatistics::k_FindStandardDeviation_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
 
-  args.insertOrAssign(FindNeighborListStatistics::k_InputArray_Key, std::make_any<DataPath>(inputArrayPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Length_Key, std::make_any<std::string>(length));
-  args.insertOrAssign(FindNeighborListStatistics::k_Minimum_Key, std::make_any<std::string>(minimum));
-  args.insertOrAssign(FindNeighborListStatistics::k_Maximum_Key, std::make_any<std::string>(maximum));
-  args.insertOrAssign(FindNeighborListStatistics::k_Mean_Key, std::make_any<std::string>(mean));
-  args.insertOrAssign(FindNeighborListStatistics::k_Median_Key, std::make_any<std::string>(median));
-  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviation_Key, std::make_any<std::string>(stdDev));
-  args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<std::string>(summation));
+  args.insertOrAssign(FindNeighborListStatistics::k_InputNeighborListPath_Key, std::make_any<DataPath>(inputArrayPath));
+  args.insertOrAssign(FindNeighborListStatistics::k_LengthName_Key, std::make_any<std::string>(length));
+  args.insertOrAssign(FindNeighborListStatistics::k_MinimumName_Key, std::make_any<std::string>(minimum));
+  args.insertOrAssign(FindNeighborListStatistics::k_MaximumName_Key, std::make_any<std::string>(maximum));
+  args.insertOrAssign(FindNeighborListStatistics::k_MeanName_Key, std::make_any<std::string>(mean));
+  args.insertOrAssign(FindNeighborListStatistics::k_MedianName_Key, std::make_any<std::string>(median));
+  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviationName_Key, std::make_any<std::string>(stdDev));
+  args.insertOrAssign(FindNeighborListStatistics::k_SummationName_Key, std::make_any<std::string>(summation));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -178,14 +178,14 @@ TEST_CASE("SimplnxCore::FindNeighborListStatistics: Invalid Input Array", "[Find
   args.insertOrAssign(FindNeighborListStatistics::k_FindStandardDeviation_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
 
-  args.insertOrAssign(FindNeighborListStatistics::k_InputArray_Key, std::make_any<DataPath>(inputArrayPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Length_Key, std::make_any<std::string>(length));
-  args.insertOrAssign(FindNeighborListStatistics::k_Minimum_Key, std::make_any<std::string>(minimum));
-  args.insertOrAssign(FindNeighborListStatistics::k_Maximum_Key, std::make_any<std::string>(maximum));
-  args.insertOrAssign(FindNeighborListStatistics::k_Mean_Key, std::make_any<std::string>(mean));
-  args.insertOrAssign(FindNeighborListStatistics::k_Median_Key, std::make_any<std::string>(median));
-  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviation_Key, std::make_any<std::string>(stdDev));
-  args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<std::string>(summation));
+  args.insertOrAssign(FindNeighborListStatistics::k_InputNeighborListPath_Key, std::make_any<DataPath>(inputArrayPath));
+  args.insertOrAssign(FindNeighborListStatistics::k_LengthName_Key, std::make_any<std::string>(length));
+  args.insertOrAssign(FindNeighborListStatistics::k_MinimumName_Key, std::make_any<std::string>(minimum));
+  args.insertOrAssign(FindNeighborListStatistics::k_MaximumName_Key, std::make_any<std::string>(maximum));
+  args.insertOrAssign(FindNeighborListStatistics::k_MeanName_Key, std::make_any<std::string>(mean));
+  args.insertOrAssign(FindNeighborListStatistics::k_MedianName_Key, std::make_any<std::string>(median));
+  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviationName_Key, std::make_any<std::string>(stdDev));
+  args.insertOrAssign(FindNeighborListStatistics::k_SummationName_Key, std::make_any<std::string>(summation));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

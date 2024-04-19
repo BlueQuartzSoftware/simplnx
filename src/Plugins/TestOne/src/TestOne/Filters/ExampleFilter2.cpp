@@ -19,20 +19,18 @@ namespace
 {
 constexpr StringLiteral k_Param1 = "param1";
 constexpr StringLiteral k_Param2 = "param2";
-constexpr StringLiteral k_Param3 = "param3";
+constexpr StringLiteral k_Param3 = "param3_index";
 constexpr StringLiteral k_Param4 = "param4";
-constexpr StringLiteral k_Param5 = "param5";
-constexpr StringLiteral k_Param6 = "param6";
+constexpr StringLiteral k_Param5 = "param5_path";
+constexpr StringLiteral k_Param6 = "param6_path";
 constexpr StringLiteral k_Param7 = "param7";
-constexpr StringLiteral k_Param8 = "param8";
-constexpr StringLiteral k_Param9 = "param9";
-constexpr StringLiteral k_Param10 = "param10";
-constexpr StringLiteral k_Param11 = "param11";
-constexpr StringLiteral k_Param12 = "param12";
+constexpr StringLiteral k_Param8 = "param8_path";
+constexpr StringLiteral k_Param9 = "param9_path";
+constexpr StringLiteral k_Param10 = "param10_path";
+constexpr StringLiteral k_Param11 = "param11_path";
+constexpr StringLiteral k_Param12 = "param12s";
 constexpr StringLiteral k_Param13 = "param13";
-constexpr StringLiteral k_Param14 = "param14";
-constexpr StringLiteral k_Param15 = "param15";
-constexpr StringLiteral k_Param16 = "param16";
+
 } // namespace
 
 namespace nx::core

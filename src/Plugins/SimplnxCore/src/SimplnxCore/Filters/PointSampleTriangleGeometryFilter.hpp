@@ -28,13 +28,13 @@ public:
   // static inline constexpr StringLiteral k_SamplesNumberType_Key = "samples_number_type";
   static inline constexpr StringLiteral k_NumberOfSamples_Key = "number_of_samples";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_TriangleGeometry_Key = "triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriangleGeometry_Key = "input_triangle_geometry_path";
   // static inline constexpr StringLiteral k_ParentGeometry_Key = "parent_geometry";
   static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "triangle_areas_array_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
-  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "vertex_geometry_path";
-  static inline constexpr StringLiteral k_VertexDataGroupPath_Key = "vertex_data_group_path";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "output_vertex_geometry_path";
+  static inline constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";

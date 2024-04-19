@@ -24,7 +24,7 @@ public:
   SilhouetteFilter& operator=(SilhouetteFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric";
+  static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric_index";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";

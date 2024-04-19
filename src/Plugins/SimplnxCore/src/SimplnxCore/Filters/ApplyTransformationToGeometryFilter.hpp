@@ -24,14 +24,14 @@ public:
   ApplyTransformationToGeometryFilter& operator=(ApplyTransformationToGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
-  static inline constexpr StringLiteral k_TransformationType_Key = "transformation_type";
-  static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_TransformationType_Key = "transformation_type_index";
+  static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type_index";
   static inline constexpr StringLiteral k_ManualTransformationMatrix_Key = "manual_transformation_matrix";
   static inline constexpr StringLiteral k_Rotation_Key = "rotation";
   static inline constexpr StringLiteral k_Translation_Key = "translation";
   static inline constexpr StringLiteral k_Scale_Key = "scale";
-  static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix";
+  static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix_path";
   static inline constexpr StringLiteral k_TranslateGeometryToGlobalOrigin_Key = "translate_geometry_to_global_origin";
   static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
 

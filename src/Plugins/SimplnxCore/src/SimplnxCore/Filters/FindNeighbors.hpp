@@ -23,14 +23,14 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_StoreBoundary_Key = "store_boundary_cells";
   static inline constexpr StringLiteral k_StoreSurface_Key = "store_surface_features";
-  static inline constexpr StringLiteral k_ImageGeom_Key = "image_geometry";
-  static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
-  static inline constexpr StringLiteral k_CellFeatures_Key = "cell_feature_arrays";
-  static inline constexpr StringLiteral k_BoundaryCells_Key = "boundary_cells";
-  static inline constexpr StringLiteral k_NumNeighbors_Key = "number_of_neighbors";
-  static inline constexpr StringLiteral k_NeighborList_Key = "neighbor_list";
-  static inline constexpr StringLiteral k_SharedSurfaceArea_Key = "shared_surface_area_list";
-  static inline constexpr StringLiteral k_SurfaceFeatures_Key = "surface_features";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellFeaturesPath_Key = "cell_feature_array_path";
+  static inline constexpr StringLiteral k_BoundaryCellsName_Key = "boundary_cells_name";
+  static inline constexpr StringLiteral k_NumNeighborsName_Key = "number_of_neighbors_name";
+  static inline constexpr StringLiteral k_NeighborListName_Key = "neighbor_list_name";
+  static inline constexpr StringLiteral k_SharedSurfaceAreaName_Key = "shared_surface_area_list_name";
+  static inline constexpr StringLiteral k_SurfaceFeaturesName_Key = "surface_features_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

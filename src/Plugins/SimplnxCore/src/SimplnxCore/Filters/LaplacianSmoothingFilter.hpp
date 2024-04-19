@@ -24,7 +24,7 @@ public:
   LaplacianSmoothingFilter& operator=(LaplacianSmoothingFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "triangle_geometry_data_path";
+  static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_IterationSteps_Key = "iteration_steps";
   static inline constexpr StringLiteral k_Lambda_Key = "lambda_value";
   static inline constexpr StringLiteral k_UseTaubinSmoothing_Key = "use_taubin_smoothing";
