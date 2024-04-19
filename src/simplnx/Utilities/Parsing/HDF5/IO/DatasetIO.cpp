@@ -24,7 +24,7 @@ DatasetIO::DatasetIO(IdType parentId, const std::string& datasetName)
 }
 
 DatasetIO::DatasetIO(DatasetIO&& other) noexcept
-: ObjectIO(other)
+: ObjectIO(std::move(other))
 , m_DatasetName(std::move(other.m_DatasetName))
 {
 }

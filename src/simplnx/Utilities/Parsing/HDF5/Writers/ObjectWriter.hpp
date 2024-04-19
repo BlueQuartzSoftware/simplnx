@@ -25,6 +25,9 @@ public:
    */
   ObjectWriter(IdType parentId, IdType objectId = 0);
 
+  ObjectWriter(const ObjectWriter& other) = delete;
+  ObjectWriter(ObjectWriter&& other) noexcept = default;
+
   /**
    * @brief Releases the wrapped HDF5 object.
    */
@@ -89,6 +92,9 @@ public:
    * @return AttributeWriter
    */
   AttributeWriter createAttribute(const std::string& name);
+
+  ObjectWriter& operator=(const ObjectWriter& other) = delete;
+  ObjectWriter& operator=(ObjectWriter&& other) noexcept = default;
 
 protected:
   /**

@@ -61,6 +61,8 @@ public:
    */
   FileIO(IdType fileId);
 
+  FileIO(const FileIO& rhs) = delete;
+
   /**
    * @brief Move constructor.
    * @param rhs
@@ -78,6 +80,9 @@ public:
    * @return std::string
    */
   std::string getName() const override;
+
+  FileIO& operator=(const FileIO& rhs) = delete;
+  FileIO& operator=(FileIO&& rhs) noexcept = default;
 
 protected:
   /**

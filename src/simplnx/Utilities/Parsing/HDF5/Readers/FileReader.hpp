@@ -26,6 +26,9 @@ public:
    */
   FileReader(IdType fileId);
 
+  FileReader(const FileReader& other) = delete;
+  FileReader(FileReader&& other) noexcept = default;
+
   /**
    * @brief Releases the HDF5 file ID.
    */
@@ -37,6 +40,9 @@ public:
    * @return std::string
    */
   std::string getName() const override;
+
+  FileReader& operator=(const FileReader& other) = delete;
+  FileReader& operator=(FileReader&& other) noexcept = default;
 
 protected:
   /**
