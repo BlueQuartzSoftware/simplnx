@@ -50,7 +50,7 @@ bool Is2DFormat(const fs::path& fileName)
 template <typename PixelT, uint32 Dimensions>
 Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath /*, const IFilter::MessageHandler& messanger*/)
 {
-  AtomicFile atomicFile(filePath);
+  AtomicFile atomicFile(filePath.string());
   auto tempPath = atomicFile.tempFilePath();
   try
   {
