@@ -94,7 +94,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     return MakeErrorResult(-6201, errorMessages.str());
   }
 
-  return {};
+  return ConvertResult(std::move(dataStructureResult));
 }
 
 IDataAction::UniquePointer ImportH5ObjectPathsAction::clone() const
