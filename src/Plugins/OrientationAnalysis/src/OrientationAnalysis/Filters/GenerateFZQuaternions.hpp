@@ -25,11 +25,11 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "input_quats_array_path";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_FZQuatsArrayPath_Key = "f_zquats_array_path";
+  static inline constexpr StringLiteral k_FZQuatsArrayName_Key = "output_fz_quats_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

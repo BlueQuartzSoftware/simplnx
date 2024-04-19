@@ -26,10 +26,10 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
-  static inline constexpr StringLiteral k_SelectedComparison_Key = "selected_comparison";
+  static inline constexpr StringLiteral k_SelectedComparison_Key = "comparison_index";
   static inline constexpr StringLiteral k_Loop_Key = "loop";
   static inline constexpr StringLiteral k_ComparisonDataPath = "comparison_data_path";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

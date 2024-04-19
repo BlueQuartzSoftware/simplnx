@@ -55,7 +55,7 @@ Parameters SplitAttributeArrayFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MultiCompArray_Key, "Multicomponent Attribute Array", "The multicomponent Attribute Array to split", DataPath{}, GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MultiCompArrayPath_Key, "Multicomponent Attribute Array", "The multicomponent Attribute Array to split", DataPath{}, GetAllDataTypes()));
   params.insert(std::make_unique<StringParameter>(k_Postfix_Key, "Postfix", "Postfix to add to the end of the split Attribute Arrays", "_Component"));
   params.insert(std::make_unique<BoolParameter>(k_DeleteOriginal_Key, "Remove Original Array", "Whether or not to remove the original multicomponent array after splitting", false));
 
@@ -80,7 +80,7 @@ IFilter::UniquePointer SplitAttributeArrayFilter::clone() const
 IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel) const
 {
-  auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArray_Key);
+  auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);
   auto pPostfix = filterArgs.value<std::string>(k_Postfix_Key);
   auto pRemoveOriginal = filterArgs.value<bool>(k_DeleteOriginal_Key);
   auto pSelectComponents = filterArgs.value<bool>(k_SelectComponents_Key);
@@ -143,7 +143,7 @@ Result<> SplitAttributeArrayFilter::executeImpl(DataStructure& dataStructure, co
                                                 const std::atomic_bool& shouldCancel) const
 {
   SplitAttributeArrayInputValues inputValues;
-  inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArray_Key);
+  inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);
   inputValues.SplitArraysSuffix = filterArgs.value<std::string>(k_Postfix_Key);
   if(filterArgs.value<bool>(k_SelectComponents_Key))
   {
@@ -183,7 +183,7 @@ Result<Arguments> SplitAttributeArrayFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputArrayPathKey, k_MultiCompArray_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputArrayPathKey, k_MultiCompArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_SplitArraysSuffixKey, k_Postfix_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

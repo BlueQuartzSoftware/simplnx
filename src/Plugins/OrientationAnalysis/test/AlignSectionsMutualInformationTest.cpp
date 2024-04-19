@@ -56,7 +56,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_UseMask_Key, std::make_any<bool>(true));
-    args.insertOrAssign(AlignSectionsMutualInformationFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(AlignSectionsMutualInformationFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
     args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
@@ -75,14 +75,6 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
 
   // Read Exemplar Shifts File
   {
-    static constexpr StringLiteral k_InputFileKey = "input_file";
-    static constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
-    static constexpr StringLiteral k_NTuplesKey = "n_tuples";
-    static constexpr StringLiteral k_NCompKey = "n_comp";
-    static constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
-    static constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
-    static constexpr StringLiteral k_DataArrayKey = "output_data_array";
-
     // Compare the output of the shifts file with the exemplar file
 
     auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
@@ -90,14 +82,14 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
 
     Arguments args;
     // read in the exemplar shift data file
-    args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(
-                                            fs::path(fmt::format("{}/6_5_align_sections_mutual_information/6_5_align_sections_mutual_information.txt", unit_test::k_TestFilesDir))));
-    args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));
-    args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
-    args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(4));
-    args.insertOrAssign(k_DataArrayKey, std::make_any<DataPath>(k_ExemplarShiftsPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(
+                                                                      fmt::format("{}/6_5_align_sections_mutual_information/6_5_align_sections_mutual_information.txt", unit_test::k_TestFilesDir))));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(6));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarShiftsPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
@@ -110,27 +102,19 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
 
   // Read Computed Shifts File
   {
-    static constexpr StringLiteral k_InputFileKey = "input_file";
-    static constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
-    static constexpr StringLiteral k_NTuplesKey = "n_tuples";
-    static constexpr StringLiteral k_NCompKey = "n_comp";
-    static constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
-    static constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
-    static constexpr StringLiteral k_DataArrayKey = "output_data_array";
-
     // Compare the output of the shifts file with the exemplar file
 
     auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
 
     Arguments args;
-    args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
-    args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));
-    args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
-    args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(4));
-    args.insertOrAssign(k_DataArrayKey, std::make_any<DataPath>(k_CalculatedShiftsPath));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::int32));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(6));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(4));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CalculatedShiftsPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
@@ -167,7 +151,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: InValid fi
                       std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/AlignSectionsMutualInformation_2.txt", unit_test::k_BinaryDir))));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_UseMask_Key, std::make_any<bool>(true));
-  args.insertOrAssign(AlignSectionsMutualInformationFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(AlignSectionsMutualInformationFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MaskArrayPath_Key,

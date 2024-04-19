@@ -47,7 +47,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: NO Smoothing", "[SimplnxCore][Surface
 
     args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
 
-    args.insertOrAssign(SurfaceNetsFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeometryPath));
+    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeometryPath));
 
     const DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
@@ -124,7 +124,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: With Smoothing", "[SimplnxCore][Surfa
 
     args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
 
-    args.insertOrAssign(SurfaceNetsFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeometryPath));
+    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeometryPath));
 
     const DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));

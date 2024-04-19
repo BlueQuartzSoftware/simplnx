@@ -25,10 +25,10 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_RectilinearGridPath_Key = "rectilinear_grid_path";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
   static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
-  static inline constexpr StringLiteral k_ImageGeomCellAttributeMatrix_Key = "image_geom_cell_attribute_matrix";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeomCellAttributeMatrixName_Key = "image_geom_cell_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

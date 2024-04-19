@@ -24,13 +24,13 @@ public:
   WriteStlFileFilter& operator=(WriteStlFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GroupingType_Key = "grouping_type";
+  static inline constexpr StringLiteral k_GroupingType_Key = "grouping_type_index";
   static inline constexpr StringLiteral k_OutputStlFile_Key = "output_stl_file";
   static inline constexpr StringLiteral k_OutputStlDirectory_Key = "output_stl_directory";
   static inline constexpr StringLiteral k_OutputStlPrefix_Key = "output_stl_prefix";
   static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
-  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
+  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "input_triangle_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

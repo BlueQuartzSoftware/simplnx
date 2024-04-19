@@ -119,12 +119,12 @@ array_type = nx.NumericType.float32
 tuple_dims = [[10]]
 create_array_nx_filter = nx.CreateDataArray()
 result  = create_array_nx_filter.execute(data_structure=data_structure, 
-                                      component_count=1, 
-                                      data_format="", 
-                                      initialization_value="10", 
-                                        numeric_type=array_type, 
-                                        output_data_array=output_array_path, 
-                                        tuple_dimensions=tuple_dims)
+                                          component_count=1, 
+                                          data_format="", 
+                                          initialization_value_str="10", 
+                                          numeric_type_index=array_type, 
+                                          output_array_path=output_array_path, 
+                                          tuple_dimensions=tuple_dims)
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
 
@@ -144,9 +144,9 @@ create_array_nx_filter = nx.CreateDataArray()
 result  = create_array_nx_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
-                                      initialization_value="10", 
-                                        numeric_type=array_type, 
-                                        output_data_array=output_array_path, 
+                                      initialization_value_str="10", 
+                                        numeric_type_index=array_type, 
+                                        output_array_path=output_array_path, 
                                         tuple_dimensions=tuple_dims)
 nxtest.check_filter_result(nx.CreateDataArray, result)
 
@@ -173,9 +173,9 @@ create_array_nx_filter = nx.CreateDataArray()
 result = create_array_nx_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
-                                      initialization_value="10", 
-                                        numeric_type=array_type, 
-                                        output_data_array=output_array_path, 
+                                      initialization_value_str="10", 
+                                        numeric_type_index=array_type, 
+                                        output_array_path=output_array_path, 
                                         tuple_dimensions=tuple_dims)
 nxtest.check_filter_result(nx.CreateDataArray, result)
 

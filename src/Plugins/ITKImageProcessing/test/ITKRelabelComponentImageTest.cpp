@@ -34,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKRelabelComponentImageFilter(default)", "[ITKIm
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKRelabelComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKRelabelComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKRelabelComponentImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKRelabelComponentImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKRelabelComponentImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKRelabelComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -65,9 +65,9 @@ TEST_CASE("ITKImageProcessing::ITKRelabelComponentImageFilter(no_sorting)", "[IT
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKRelabelComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKRelabelComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKRelabelComponentImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKRelabelComponentImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKRelabelComponentImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKRelabelComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKRelabelComponentImage::k_SortByObjectSize_Key, std::make_any<BoolParameter::ValueType>(false));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -97,9 +97,9 @@ TEST_CASE("ITKImageProcessing::ITKRelabelComponentImageFilter(no_sorting2)", "[I
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKRelabelComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKRelabelComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKRelabelComponentImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKRelabelComponentImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKRelabelComponentImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKRelabelComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKRelabelComponentImage::k_SortByObjectSize_Key, std::make_any<BoolParameter::ValueType>(false));
   args.insertOrAssign(ITKRelabelComponentImage::k_MinimumObjectSize_Key, std::make_any<UInt64Parameter::ValueType>(140));
 

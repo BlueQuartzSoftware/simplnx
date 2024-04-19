@@ -60,7 +60,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
                       std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{
                           k_RectGridCellDataPath.createChildPath(k_ConfidenceIndex), k_RectGridCellDataPath.createChildPath(k_EulerAngles), k_RectGridCellDataPath.createChildPath(k_FeatureIds),
                           k_RectGridCellDataPath.createChildPath(k_NeighborListArrayName), k_RectGridCellDataPath.createChildPath(k_StringArrayName)}));
-  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeomCellAttributeMatrix_Key, std::make_any<std::string>(k_CellData));
+  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeomCellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
 
   std::string exemplarImageGeomName;
 
@@ -98,7 +98,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: InValid Filter Execut
   // Create Parameters for the filter.
   args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_RectilinearGridPath_Key, std::make_any<DataPath>(k_RectGridGeomPath));
   args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomComputed));
-  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeomCellAttributeMatrix_Key, std::make_any<std::string>(k_CellData));
+  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeomCellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
 
   SECTION("Missing Selected Arrays")
   {

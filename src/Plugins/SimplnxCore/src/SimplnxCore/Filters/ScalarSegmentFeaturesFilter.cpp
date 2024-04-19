@@ -82,11 +82,11 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsPathKey, "Cell Feature IDs", "Path to the created Feature IDs path", "FeatureIds"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsName_Key, "Cell Feature IDs", "Path to the created Feature IDs path", "FeatureIds"));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeaturePathKey, "Cell Feature Attribute Matrix", "Created Cell Feature Attribute Matrix", "CellFeatureData"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayPathKey, "Active", "Created array", "Active"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureName_Key, "Cell Feature Attribute Matrix", "Created Cell Feature Attribute Matrix", "CellFeatureData"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayName_Key, "Active", "Created array", "Active"));
 
   return params;
 }
@@ -101,9 +101,9 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 {
   auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
   int scalarTolerance = args.value<int>(k_ScalarToleranceKey);
-  auto featureIdsName = args.value<std::string>(k_FeatureIdsPathKey);
-  auto cellFeaturesName = args.value<std::string>(k_CellFeaturePathKey);
-  auto activeArrayName = args.value<std::string>(k_ActiveArrayPathKey);
+  auto featureIdsName = args.value<std::string>(k_FeatureIdsName_Key);
+  auto cellFeaturesName = args.value<std::string>(k_CellFeatureName_Key);
+  auto activeArrayName = args.value<std::string>(k_ActiveArrayName_Key);
   DataPath featureIdsPath = inputDataPath.getParent().createChildPath(featureIdsName);
 
   bool useGoodVoxels = args.value<bool>(k_UseMask_Key);
@@ -195,12 +195,12 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arg
   inputValues.pInputDataPath = args.value<DataPath>(k_InputArrayPathKey);
   inputValues.pScalarTolerance = args.value<int>(k_ScalarToleranceKey);
   inputValues.pShouldRandomizeFeatureIds = args.value<bool>(k_RandomizeFeatures_Key);
-  inputValues.pFeatureIdsPath = inputValues.pInputDataPath.getParent().createChildPath(args.value<std::string>(k_FeatureIdsPathKey));
+  inputValues.pFeatureIdsPath = inputValues.pInputDataPath.getParent().createChildPath(args.value<std::string>(k_FeatureIdsName_Key));
   inputValues.pUseGoodVoxels = args.value<bool>(k_UseMask_Key);
   inputValues.pGoodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.pGridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
-  inputValues.pCellFeaturesPath = inputValues.pGridGeomPath.createChildPath(args.value<std::string>(k_CellFeaturePathKey));
-  inputValues.pActiveArrayPath = inputValues.pCellFeaturesPath.createChildPath(args.value<std::string>(k_ActiveArrayPathKey));
+  inputValues.pCellFeaturesPath = inputValues.pGridGeomPath.createChildPath(args.value<std::string>(k_CellFeatureName_Key));
+  inputValues.pActiveArrayPath = inputValues.pCellFeaturesPath.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
 
   nx::core::ScalarSegmentFeatures filterAlgorithm(data, &inputValues, shouldCancel, messageHandler);
   Result<> result = filterAlgorithm();
@@ -233,10 +233,10 @@ Result<Arguments> ScalarSegmentFeaturesFilter::FromSIMPLJson(const nlohmann::jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_RandomizeFeatureIdsKey, k_RandomizeFeatures_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ScalarArrayPathKey, k_InputArrayPathKey));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayNameKey, k_FeatureIdsPathKey));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixNameKey, k_CellFeaturePathKey));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayNameKey, k_FeatureIdsName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixNameKey, k_CellFeatureName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ScalarArrayPathKey, k_GridGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ActiveArrayNameKey, k_ActiveArrayPathKey));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ActiveArrayNameKey, k_ActiveArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

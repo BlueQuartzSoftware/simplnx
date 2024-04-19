@@ -70,7 +70,7 @@ Parameters ConvertQuaternionFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Input Quaternions", "Specifies the quaternions to convert", DataPath({"CellData", "Quats"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Output Quaternions", "The DataPath to the converted quaternions", "Quaternions [Converted]"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Output Quaternions", "The DataPath to the converted quaternions", "Quaternions [Converted]"));
 
   return params;
 }
@@ -86,7 +86,7 @@ IFilter::PreflightResult ConvertQuaternionFilter::preflightImpl(const DataStruct
                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pQuaternionDataArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayPath_Key));
+  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -121,7 +121,7 @@ Result<> ConvertQuaternionFilter::executeImpl(DataStructure& dataStructure, cons
   ConvertQuaternionInputValues inputValues;
 
   inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayPath_Key));
+  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
   inputValues.ConversionType = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
 
@@ -146,7 +146,7 @@ Result<Arguments> ConvertQuaternionFilter::FromSIMPLJson(const nlohmann::json& j
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_QuaternionDataArrayPathKey, k_CellQuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_OutputDataArrayPathKey, k_OutputDataArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_OutputDataArrayPathKey, k_OutputDataArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ConversionTypeKey, k_ConversionType_Key));
 

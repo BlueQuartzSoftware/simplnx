@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "import_file_data": {
+        "import_data_object": {
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
@@ -57,16 +57,16 @@
     },
     {
       "args": {
-        "boundary_cells": "BoundaryCells",
-        "cell_feature_arrays": "DataContainer/CellFeatureData",
-        "feature_ids": "DataContainer/CellData/FeatureIds",
-        "image_geometry": "DataContainer",
-        "neighbor_list": "NeighborList",
-        "number_of_neighbors": "NumNeighbors",
-        "shared_surface_area_list": "SharedSurfaceAreaList",
+        "boundary_cells_name": "BoundaryCells",
+        "cell_feature_array_path": "DataContainer/CellFeatureData",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "input_image_geometry_path": "DataContainer",
+        "neighbor_list_name": "NeighborList",
+        "number_of_neighbors_name": "NumNeighbors",
+        "shared_surface_area_list_name": "SharedSurfaceAreaList",
         "store_boundary_cells": false,
         "store_surface_features": false,
-        "surface_features": "SurfaceFeatures"
+        "surface_features_name": "SurfaceFeatures"
       },
       "comments": "",
       "filter": {
@@ -77,10 +77,10 @@
     },
     {
       "args": {
-        "centroids_array_path": "Centroids",
-        "feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "centroids_array_name": "Centroids",
+        "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
-        "selected_image_geometry": "DataContainer"
+        "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
@@ -91,7 +91,7 @@
     },
     {
       "args": {
-        "feature_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "mark_feature_0_neighbors": true,
         "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
@@ -109,7 +109,7 @@
         "biased_features_array_name": "BiasedFeatures",
         "calc_by_phase": true,
         "centroids_array_path": "DataContainer/CellFeatureData/Centroids",
-        "image_geometry_path": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "phases_array_path": "DataContainer/CellFeatureData/Phases",
         "surface_features_array_path": "DataContainer/CellFeatureData/SurfaceFeatures"
       },

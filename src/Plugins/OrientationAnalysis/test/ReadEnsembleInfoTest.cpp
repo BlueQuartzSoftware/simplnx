@@ -39,7 +39,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: Valid Filter Execution",
   DataStructure ds;
   DataGroup* topLevelGroup = DataGroup::Create(ds, Constants::k_DataContainer);
   Arguments args;
-  args.insertOrAssign(ReadEnsembleInfoFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer})));
+  args.insertOrAssign(ReadEnsembleInfoFilter::k_ParentGroupPath_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer})));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>(Constants::k_CrystalStructures));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>(Constants::k_Phases));
@@ -91,7 +91,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
   DataStructure ds;
   DataGroup* topLevelGroup = DataGroup::Create(ds, Constants::k_DataContainer);
   Arguments args;
-  args.insertOrAssign(ReadEnsembleInfoFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer})));
+  args.insertOrAssign(ReadEnsembleInfoFilter::k_ParentGroupPath_Key, std::make_any<DataPath>(DataPath({Constants::k_DataContainer})));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>(Constants::k_CrystalStructures));
   args.insertOrAssign(ReadEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>(Constants::k_Phases));

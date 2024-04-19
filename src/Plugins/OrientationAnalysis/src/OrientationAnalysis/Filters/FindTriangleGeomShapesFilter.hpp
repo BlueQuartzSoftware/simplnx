@@ -25,14 +25,14 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
   static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
   static inline constexpr StringLiteral k_VolumesArrayPath_Key = "volumes_array_path";
   static inline constexpr StringLiteral k_Omega3sArrayName_Key = "omega3s_array_name";
   static inline constexpr StringLiteral k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
   static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
   static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
-  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

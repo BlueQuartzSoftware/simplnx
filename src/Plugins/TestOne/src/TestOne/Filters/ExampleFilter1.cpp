@@ -25,10 +25,10 @@ constexpr StringLiteral k_Param2 = "param2";
 constexpr StringLiteral k_Param3 = "param3";
 constexpr StringLiteral k_Param4 = "param4";
 constexpr StringLiteral k_Param5 = "param5";
-constexpr StringLiteral k_Param6 = "param6";
+constexpr StringLiteral k_Param6 = "param6_index";
 constexpr StringLiteral k_Param7 = "param7";
 constexpr StringLiteral k_Param8 = "param8";
-constexpr StringLiteral k_Param9 = "param9";
+constexpr StringLiteral k_Param9 = "param9_index";
 constexpr StringLiteral k_Param10 = "param10";
 } // namespace
 

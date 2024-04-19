@@ -16,7 +16,7 @@ TEST_CASE("SimplnxCore::IdentifySample : Valid filter execution", "[SimplnxCore]
   DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_identify_sample/6_6_identify_sample.dream3d", unit_test::k_TestFilesDir)));
   IdentifySample filter;
   Arguments args;
-  args.insert(IdentifySample::k_ImageGeom_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insert(IdentifySample::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insert(IdentifySample::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
 
   std::string k_ExemplarDataContainerName;
@@ -56,7 +56,7 @@ TEST_CASE("SimplnxCore::IdentifySample : Invalid filter execution", "[SimplnxCor
   IdentifySample filter;
   Arguments args;
   args.insert(IdentifySample::k_FillHoles_Key, std::make_any<bool>(false));
-  args.insert(IdentifySample::k_ImageGeom_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insert(IdentifySample::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insert(IdentifySample::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_CellAttributeMatrix.createChildPath(k_InvalidMaskArrayName)));
 
   // Preflight the filter and check result

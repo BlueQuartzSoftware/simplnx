@@ -76,7 +76,7 @@ import_data.data_paths =[
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
-                        import_file_data=import_data)
+                        import_data_object=import_data)
 
 nxtest.check_filter_result(nx_filter, result)
 
@@ -92,7 +92,7 @@ result = nx_filter.execute(
     feature_num_triangles_array_name="NumTriangles",
     grain_boundary_attribute_matrix_name="SharedFeatureFace",
     randomize_features=False,
-    triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -102,7 +102,7 @@ nx_filter = cxor.FindGBCDMetricBasedFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    chosen_limit_dists=0,
+    chosen_limit_dists_index=0,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     dist_output_file="Data/Output/SurfaceMesh/7_0_small_in100_distribution_1.dat",
     err_output_file="Data/Output/SurfaceMesh/7_0_small_in100_distribution_errors_1.dat",
@@ -118,7 +118,7 @@ result = nx_filter.execute(
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
     surface_mesh_feature_face_labels_array_path=nx.DataPath("TriangleDataContainer/SharedFeatureFace/FaceLabels"),
-    triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 

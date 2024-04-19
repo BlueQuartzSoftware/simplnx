@@ -17,7 +17,7 @@ import_data.data_paths = None
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+result = nx_filter.execute(data_structure=data_structure, import_data_object=import_data)
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
@@ -48,9 +48,9 @@ nx_filter = cxor.FindAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_euler_angles_array_path="AvgEulerAngles",
-    avg_quats_array_path="AvgQuats",
-    cell_feature_attribute_matrix=nx.DataPath("DataContainer/CellFeatureData"),
+    avg_euler_angles_array_name="AvgEulerAngles",
+    avg_quats_array_name="AvgQuats",
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     cell_feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
     cell_quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
@@ -109,7 +109,7 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     feature_reference_misorientations_array_name="FeatureReferenceMisorientations",
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
-    reference_orientation=0
+    reference_orientation_index=0
     # cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/"),  # Not currently part of the code
     # g_beuclidean_distances_array_path=nx.DataPath("DataContainer/"),  # Not currently part of the code
 )
@@ -127,7 +127,7 @@ result = nx_filter.execute(
     kernel_average_misorientations_array_name="KernelAverageMisorientations",
     kernel_size=[1, 1, 1],
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
-    selected_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 

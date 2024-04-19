@@ -158,13 +158,13 @@ Pipeline CreateExportPipeline()
   }
   {
     Arguments args;
-    args.insert("advanced_options", std::make_any<bool>(true));
-    args.insert("numeric_type", std::make_any<NumericType>(NumericType::int8));
+    args.insert("set_tuple_dimensions", std::make_any<bool>(true));
+    args.insert("numeric_type_index", std::make_any<NumericType>(NumericType::int8));
     args.insert("component_count", std::make_any<uint64>(3));
 
     args.insert("tuple_dimensions", DynamicTableInfo::TableDataType{{1.0}});
-    args.insert("initialization_value", std::make_any<std::string>("7"));
-    args.insert("output_data_array", DataPath({DataNames::k_ArrayName}));
+    args.insert("initialization_value_str", std::make_any<std::string>("7"));
+    args.insert("output_array_path", DataPath({DataNames::k_ArrayName}));
     args.insert("data_format", std::string(""));
     pipeline.push_back(k_CreateDataArrayHandle, args);
   }
@@ -185,7 +185,7 @@ Pipeline CreateImportPipeline()
     Dream3dImportParameter::ImportData importData;
     importData.FilePath = GetExportDataPath();
     importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name}), DataPath({DataNames::k_ArrayName})};
-    args.insert("import_file_data", importData);
+    args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }
   {
@@ -241,7 +241,7 @@ Pipeline CreateMultiImportPipeline()
     Dream3dImportParameter::ImportData importData;
     importData.FilePath = GetMultiExportDataPath1();
     importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name})};
-    args.insert("import_file_data", importData);
+    args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }
   {
@@ -249,7 +249,7 @@ Pipeline CreateMultiImportPipeline()
     Dream3dImportParameter::ImportData importData;
     importData.FilePath = GetMultiExportDataPath2();
     importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group2Name})};
-    args.insert("import_file_data", importData);
+    args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }
   {

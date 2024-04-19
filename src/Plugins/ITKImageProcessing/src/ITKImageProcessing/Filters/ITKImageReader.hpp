@@ -25,11 +25,11 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FileName_Key = "file_name";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "created_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "output_geometry_path";
   static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
   static inline constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
 
-  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
 
   static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
   static inline constexpr StringLiteral k_CenterOrigin_Key = "center_origin";

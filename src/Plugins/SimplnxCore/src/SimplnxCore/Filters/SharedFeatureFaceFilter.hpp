@@ -24,7 +24,7 @@ public:
   SharedFeatureFaceFilter& operator=(SharedFeatureFaceFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
   static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
   static inline constexpr StringLiteral k_FeatureFaceIdsArrayName_Key = "feature_face_ids_array_name";

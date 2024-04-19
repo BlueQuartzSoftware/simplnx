@@ -27,8 +27,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="CellData",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
-    data_container_name=nx.DataPath("DataContainer"),
-    read_h5_ebsd_parameter=h5ebsdParameter
+    output_image_geometry_path =nx.DataPath("DataContainer"),
+    read_h5_ebsd_object=h5ebsdParameter
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -53,8 +53,8 @@ nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="Mask",
+    array_thresholds_object=threshold_set,
+    output_data_array_name="Mask",
     created_mask_type=nx.DataType.boolean
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -66,9 +66,9 @@ nx_filter = cxor.ConvertOrientations()
 result = nx_filter.execute(
     data_structure=data_structure,
     input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
-    input_type=0,
+    input_representation_index=0,
     output_orientation_array_name="Quats",
-    output_type=2
+    output_representation_index=2
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -84,7 +84,7 @@ result = nx_filter.execute(
     mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
     misorientation_tolerance=5.0,
     quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
-    selected_image_geometry_path=nx.DataPath("DataContainer"),
+    input_image_geometry_path=nx.DataPath("DataContainer"),
     use_mask=True,
     write_alignment_shifts=True
 )

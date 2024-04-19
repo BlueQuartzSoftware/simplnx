@@ -9,7 +9,7 @@ namespace nx::core
 {
 /**
  * @class WriteFeatureDataCSVFilter
- * @brief This filter will export feature data as ASCII to a single file using choice delimiter
+ * @brief This filter will export feature data as ASCII to a single file using choice delimiter_index
  */
 class SIMPLNXCORE_EXPORT WriteFeatureDataCSVFilter : public IFilter
 {
@@ -36,7 +36,7 @@ public:
   static inline constexpr StringLiteral k_FeatureDataFile_Key = "feature_data_file";
   static inline constexpr StringLiteral k_WriteNeighborListData_Key = "write_neighborlist_data";
   static inline constexpr StringLiteral k_WriteNumFeaturesLine_Key = "write_num_features_line";
-  static inline constexpr StringLiteral k_DelimiterChoiceInt_Key = "delimiter_choice_int";
+  static inline constexpr StringLiteral k_DelimiterChoiceInt_Key = "delimiter_index";
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
   /**

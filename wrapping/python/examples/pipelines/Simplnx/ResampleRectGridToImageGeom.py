@@ -29,8 +29,8 @@ nx_filter = nx.ReadCSVFileFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    created_data_group=nx.DataPath("Bounds"),
-    read_csv_data=read_csv_data,
+    created_data_group_path=nx.DataPath("Bounds"),
+    read_csv_data_object=read_csv_data,
     # selected_data_group: DataPath = ...,
     use_existing_group=False,
 )
@@ -43,16 +43,16 @@ nx_filter = nx.CreateGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_handling=1,
+    array_handling_index=1,
     cell_attribute_matrix_name="CellData",
     # dimensions: List[int] = ...,
     # edge_attribute_matrix_name: str = ...,
     # edge_list_name: DataPath = ...,
     # face_attribute_matrix_name: str = ...,
-    geometry_name=nx.DataPath("RectGridGeometry"),
-    geometry_type=1,
+    output_geometry_path=nx.DataPath("RectGridGeometry"),
+    geometry_type_index=1,
     # hexahedral_list_name: DataPath = ...,
-    length_unit_type=7,
+    length_unit_index=7,
     # origin: List[float] = ...,
     # quadrilateral_list_name: DataPath = ...,
     # spacing: List[float] = ...,
@@ -61,9 +61,9 @@ result = nx_filter.execute(
     # vertex_attribute_matrix_name: str = ...,
     # vertex_list_name: DataPath = ...,
     warnings_as_errors=False,
-    x_bounds=nx.DataPath("Bounds/x"),
-    y_bounds=nx.DataPath("Bounds/y"),
-    z_bounds=nx.DataPath("Bounds/z")
+    x_bounds_path=nx.DataPath("Bounds/x"),
+    y_bounds_path=nx.DataPath("Bounds/y"),
+    z_bounds_path=nx.DataPath("Bounds/z")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -74,15 +74,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ConfidenceIndex.csv",
-    n_comp=1,
-    n_skip_lines=0,
+    number_comp=1,
+    skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"),
-    scalar_type=nx.NumericType.float32
+    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"),
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -92,15 +92,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/ImageQuality.csv",
-    n_comp=1,
-    n_skip_lines=0,
+    number_comp=1,
+    skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("RectGridGeometry/CellData/ImageQuality"),
-    scalar_type=nx.NumericType.float32
+    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/ImageQuality"),
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -111,15 +111,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/SEM Signal.csv",
-    n_comp=1,
-    n_skip_lines=0,
+    number_comp=1,
+    skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("RectGridGeometry/CellData/SEM Signal"),
-    scalar_type=nx.NumericType.float32
+    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/SEM Signal"),
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -129,15 +129,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/Fit.csv",
-    n_comp=1,
-    n_skip_lines=0,
+    number_comp=1,
+    skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("RectGridGeometry/CellData/Fit"),
-    scalar_type=nx.NumericType.float32
+    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/Fit"),
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -148,15 +148,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/EulerAngles.csv",
-    n_comp=3,
-    n_skip_lines=0,
+    number_comp=3,
+    skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("RectGridGeometry/CellData/EulerAngles"),
-    scalar_type=nx.NumericType.float32
+    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/EulerAngles"),
+    scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -166,15 +166,15 @@ nx_filter = nx.ReadTextDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    advanced_options=False,
+    set_tuple_dimensions=False,
     data_format="",
-    delimiter_choice=0,
+    delimiter_index=0,
     input_file=nxtest.get_data_directory() / "ASCIIData/Phases.csv",
-    n_comp=1,
-    n_skip_lines=0,
+    number_comp=1,
+    skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array=nx.DataPath("RectGridGeometry/CellData/Phases"),
-    scalar_type=nx.NumericType.int32
+    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/Phases"),
+    scalar_type_index=nx.NumericType.int32
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -186,10 +186,10 @@ nx_filter = nx.ResampleRectGridToImageGeomFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     dimensions=[20, 20, 20],
-    image_geom_cell_attribute_matrix="CellData",
-    image_geometry_path=nx.DataPath("Image Geometry"),
+    image_geom_cell_attribute_matrix_name="CellData",
+    input_image_geometry_path=nx.DataPath("Image Geometry"),
     rectilinear_grid_path=nx.DataPath("RectGridGeometry"),
-    selected_data_array_paths=[nx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"), 
+    input_data_array_paths=[nx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"), 
                                nx.DataPath("RectGridGeometry/CellData/EulerAngles"),
                                nx.DataPath("RectGridGeometry/CellData/Fit"),
                                nx.DataPath("RectGridGeometry/CellData/ImageQuality"),

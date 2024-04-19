@@ -27,12 +27,12 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SaveElementSizes_Key = "save_element_sizes";
-  static inline constexpr StringLiteral k_GeometryPath_Key = "geometry_path";
+  static inline constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix";
-  static inline constexpr StringLiteral k_VolumesPath_Key = "volumes_path";
-  static inline constexpr StringLiteral k_EquivalentDiametersPath_Key = "equivalent_diameters_path";
-  static inline constexpr StringLiteral k_NumElementsPath_Key = "num_elements_path";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static inline constexpr StringLiteral k_VolumesName_Key = "volumes_name";
+  static inline constexpr StringLiteral k_EquivalentDiametersName_Key = "equivalent_diameters_name";
+  static inline constexpr StringLiteral k_NumElementsName_Key = "num_elements_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

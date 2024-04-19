@@ -25,11 +25,11 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_Title_Key = "title";
-  static inline constexpr StringLiteral k_GenerationAlgorithm_Key = "generation_algorithm";
+  static inline constexpr StringLiteral k_GenerationAlgorithm_Key = "generation_algorithm_index";
   static inline constexpr StringLiteral k_LambertSize_Key = "lambert_size";
   static inline constexpr StringLiteral k_NumColors_Key = "num_colors";
   static inline constexpr StringLiteral k_ImageFormat_Key = "image_format";
-  static inline constexpr StringLiteral k_ImageLayout_Key = "image_layout";
+  static inline constexpr StringLiteral k_ImageLayout_Key = "image_layout_index";
   static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
   static inline constexpr StringLiteral k_ImagePrefix_Key = "image_prefix";
   static inline constexpr StringLiteral k_ImageSize_Key = "image_size";
@@ -41,7 +41,7 @@ public:
   static inline constexpr StringLiteral k_MaterialNameArrayPath_Key = "material_name_array_path";
   static inline constexpr StringLiteral k_SaveAsImageGeometry_Key = "save_as_image_geometry";
   static inline constexpr StringLiteral k_WriteImageToDisk = "write_image_to_disk";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

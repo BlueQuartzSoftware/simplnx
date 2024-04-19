@@ -34,7 +34,7 @@ public:
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static inline constexpr StringLiteral k_CellParentIdsArrayName_Key = "cell_parent_ids_array_name";
-  static inline constexpr StringLiteral k_NewCellFeatureAttributeMatrixName_Key = "new_cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CreatedFeatureAttributeMatrixName_Key = "created_feature_attribute_matrix_name";
   static inline constexpr StringLiteral k_FeatureParentIdsArrayName_Key = "feature_parent_ids_array_name";
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";

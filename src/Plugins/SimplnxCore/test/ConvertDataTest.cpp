@@ -38,8 +38,8 @@ Arguments getArgs(const DataPath& inputArray, DataType type, const std::string& 
   Arguments args;
 
   args.insertOrAssign(ConvertDataFilter::k_ScalarType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint8>(type)));
-  args.insertOrAssign(ConvertDataFilter::k_ArrayToConvert_Key, std::make_any<DataPath>(inputArray));
-  args.insertOrAssign(ConvertDataFilter::k_ConvertedArray_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ConvertDataFilter::k_ArrayToConvertPath_Key, std::make_any<DataPath>(inputArray));
+  args.insertOrAssign(ConvertDataFilter::k_ConvertedArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   return args;
 }

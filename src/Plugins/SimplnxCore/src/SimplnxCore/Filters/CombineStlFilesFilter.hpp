@@ -25,7 +25,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_StlFilesPath_Key = "stl_files_path";
-  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "triangle_data_container_name";
+  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "output_triangle_geometry_path";
   static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
   static inline constexpr StringLiteral k_FaceNormalsArrayName_Key = "face_normals_array_name";
   static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";

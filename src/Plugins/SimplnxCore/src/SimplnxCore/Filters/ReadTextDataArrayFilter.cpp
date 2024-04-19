@@ -54,16 +54,16 @@ Parameters ReadTextDataArrayFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File path that points to the imported file", fs::path("<file to import goes here>"),
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "File path that points to the imported file", fs::path("<file to import goes here>"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Input Numeric Type", "Data Type to interpret and store data into.", NumericType::int8));
-  params.insert(std::make_unique<UInt64Parameter>(k_NCompKey, "Number of Components", "Number of columns", 1));
-  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLinesKey, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
-  params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoiceKey, "Delimiter", "Delimiter for values on a line", 0,
+  params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Input Numeric Type", "Data Type to interpret and store data into.", NumericType::int8));
+  params.insert(std::make_unique<UInt64Parameter>(k_NComp_Key, "Number of Components", "Number of columns", 1));
+  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLines_Key, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
+  params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoice_Key, "Delimiter", "Delimiter for values on a line", 0,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
 
   params.insertSeparator(Parameters::Separator{"Created DataArray"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array Path", "DataPath or Name for the underlying Data Array", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayPath_Key, "Created Array Path", "DataPath or Name for the underlying Data Array", DataPath{}));
   params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
                                                            "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
 
@@ -75,10 +75,10 @@ Parameters ReadTextDataArrayFilter::parameters() const
   DynamicTableInfo tableInfo;
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "DIM {}"));
-  params.insert(std::make_unique<DynamicTableParameter>(k_NTuplesKey, "Data Array Dimensions (Slowest to Fastest Dimensions)",
+  params.insert(std::make_unique<DynamicTableParameter>(k_NTuples_Key, "Data Array Dimensions (Slowest to Fastest Dimensions)",
                                                         "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
 
-  params.linkParameters(k_AdvancedOptions_Key, k_NTuplesKey, true);
+  params.linkParameters(k_AdvancedOptions_Key, k_NTuples_Key, true);
 
   return params;
 }
@@ -90,12 +90,12 @@ IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
 
 IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  auto numericType = args.value<NumericType>(k_ScalarTypeKey);
-  auto arrayPath = args.value<DataPath>(k_DataArrayKey);
-  auto nComp = args.value<uint64>(k_NCompKey);
+  auto numericType = args.value<NumericType>(k_ScalarType_Key);
+  auto arrayPath = args.value<DataPath>(k_DataArrayPath_Key);
+  auto nComp = args.value<uint64>(k_NComp_Key);
 
   auto useDims = args.value<bool>(k_AdvancedOptions_Key);
-  auto tableData = args.value<DynamicTableParameter::ValueType>(k_NTuplesKey);
+  auto tableData = args.value<DynamicTableParameter::ValueType>(k_NTuples_Key);
   auto dataFormat = args.value<std::string>(k_DataFormat_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -147,11 +147,11 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel) const
 {
-  auto inputFilePath = args.value<fs::path>(k_InputFileKey);
-  auto numericType = args.value<NumericType>(k_ScalarTypeKey);
-  auto skipLines = args.value<uint64>(k_NSkipLinesKey);
-  auto choiceIndex = args.value<uint64>(k_DelimiterChoiceKey);
-  auto path = args.value<DataPath>(k_DataArrayKey);
+  auto inputFilePath = args.value<fs::path>(k_InputFile_Key);
+  auto numericType = args.value<NumericType>(k_ScalarType_Key);
+  auto skipLines = args.value<uint64>(k_NSkipLines_Key);
+  auto choiceIndex = args.value<uint64>(k_DelimiterChoice_Key);
+  auto path = args.value<DataPath>(k_DataArrayPath_Key);
 
   char delimiter = nx::core::CsvParser::IndexToDelimiter(choiceIndex);
 
@@ -222,12 +222,12 @@ Result<Arguments> ReadTextDataArrayFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFileKey));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarTypeKey));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NCompKey));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_SkipHeaderLinesKey, k_NSkipLinesKey));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DelimiterKey, k_DelimiterChoiceKey));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeArrayPathKey, k_DataArrayKey));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NComp_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_SkipHeaderLinesKey, k_NSkipLines_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DelimiterKey, k_DelimiterChoice_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeArrayPathKey, k_DataArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

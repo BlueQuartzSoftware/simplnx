@@ -65,7 +65,7 @@ Parameters GenerateQuaternionConjugateFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Created Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Created Quaternion Conjugate", "The name of the generated quaternion conjugate array", "Quaternions [Conjugate]"));
+      std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Created Quaternion Conjugate", "The name of the generated quaternion conjugate array", "Quaternions [Conjugate]"));
 
   return params;
 }
@@ -81,7 +81,7 @@ IFilter::PreflightResult GenerateQuaternionConjugateFilter::preflightImpl(const 
                                                                           const std::atomic_bool& shouldCancel) const
 {
   auto pQuaternionDataArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayPath_Key));
+  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -116,7 +116,7 @@ Result<> GenerateQuaternionConjugateFilter::executeImpl(DataStructure& dataStruc
   GenerateQuaternionConjugateInputValues inputValues;
 
   inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayPath_Key));
+  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return GenerateQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -139,7 +139,7 @@ Result<Arguments> GenerateQuaternionConjugateFilter::FromSIMPLJson(const nlohman
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_QuaternionDataArrayPathKey, k_CellQuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_OutputDataArrayPathKey, k_OutputDataArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_OutputDataArrayPathKey, k_OutputDataArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

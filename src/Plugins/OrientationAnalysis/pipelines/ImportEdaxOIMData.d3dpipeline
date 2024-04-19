@@ -40,7 +40,7 @@
     {
       "args": {
         "euler_angles_array_path": "ImageGeom/Cell Data/EulerAngles",
-        "rotation_axis": [
+        "rotation_axis_angle": [
           0.0,
           0.0,
           1.0,
@@ -56,10 +56,10 @@
     },
     {
       "args": {
-        "created_image_geometry": "",
+        "output_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": true,
-        "rotation_axis": [
+        "rotation_axis_angle": [
           0.0,
           1.0,
           0.0,
@@ -92,7 +92,7 @@
           ]
         ],
         "rotation_representation": 0,
-        "selected_image_geometry": "ImageGeom"
+        "input_image_geometry_path": "ImageGeom"
       },
       "comments": "",
       "filter": {

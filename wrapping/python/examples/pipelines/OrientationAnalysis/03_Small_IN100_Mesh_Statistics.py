@@ -17,7 +17,7 @@ import_data.data_paths = None
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters
-result = nx_filter.execute(data_structure=data_structure, import_file_data=import_data)
+result = nx_filter.execute(data_structure=data_structure, import_data_object=import_data)
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
@@ -26,8 +26,8 @@ nx_filter = nx.CalculateTriangleAreasFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    triangle_areas_array_path="FaceAreas",
-    triangle_geometry_data_path=nx.DataPath("TriangleDataContainer")
+    triangle_areas_array_name="FaceAreas",
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -37,8 +37,8 @@ nx_filter = nx.TriangleNormalFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    surface_mesh_triangle_normals_array_path="FaceNormals",
-    tri_geometry_data_path=nx.DataPath("TriangleDataContainer")
+    output_normals_array_name="FaceNormals",
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -49,7 +49,7 @@ nx_filter = nx.TriangleDihedralAngleFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     surface_mesh_triangle_dihedral_angles_array_name="FaceDihedralAngles",
-    tri_geometry_data_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -94,7 +94,7 @@ result = nx_filter.execute(
     feature_num_triangles_array_name="NumTriangles",
     grain_boundary_attribute_matrix_name="SharedFeatureFace",
     randomize_features=False,
-    triangle_geometry_path=nx.DataPath("TriangleDataContainer")
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
 

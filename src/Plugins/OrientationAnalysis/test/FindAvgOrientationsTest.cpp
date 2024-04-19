@@ -45,33 +45,20 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-namespace FindAvgOrientationsTest
-{
-// These are the argument keys for the Import Text filter. We cannot use the ones from the
-// header file as that would bring in a dependency on the SimplnxCorePlugin
-static constexpr StringLiteral k_InputFileKey = "input_file";
-static constexpr StringLiteral k_ScalarTypeKey = "scalar_type";
-static constexpr StringLiteral k_NTuplesKey = "n_tuples";
-static constexpr StringLiteral k_NCompKey = "n_comp";
-static constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
-static constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
-static constexpr StringLiteral k_DataArrayKey = "output_data_array";
-} // namespace FindAvgOrientationsTest
-
 void runReadTextDataArrayFilter(const std::string k_InputFileName, nx::core::NumericType k_NumericType, const uint64 k_NumTuples, const uint64 k_NumComponents, const DataPath k_InputFileDataPath,
                                 DataStructure& dataStructure)
 {
   auto* filterList = Application::Instance()->getFilterList();
 
   Arguments args;
-  args.insertOrAssign(FindAvgOrientationsTest::k_InputFileKey,
+  args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key,
                       std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/ASCIIData/{}.csv", unit_test::k_TestFilesDir, k_InputFileName))));
-  args.insertOrAssign(FindAvgOrientationsTest::k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-  args.insertOrAssign(FindAvgOrientationsTest::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NumTuples)}}));
-  args.insertOrAssign(FindAvgOrientationsTest::k_NCompKey, std::make_any<uint64>(k_NumComponents));
-  args.insertOrAssign(FindAvgOrientationsTest::k_NSkipLinesKey, std::make_any<uint64>(0));
-  args.insertOrAssign(FindAvgOrientationsTest::k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(FindAvgOrientationsTest::k_DataArrayKey, std::make_any<DataPath>(k_InputFileDataPath));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NumTuples)}}));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NumComponents));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_InputFileDataPath));
 
   auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
   REQUIRE(nullptr != filter);
@@ -154,11 +141,11 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
     args.insertOrAssign(FindAvgOrientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesDataPath));
     args.insertOrAssign(FindAvgOrientationsFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsDataPath));
     args.insertOrAssign(FindAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructureDataPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>({k_GrainDataStr}));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>({k_GrainDataStr}));
 
     // These are the output AvgQuats and output AvgEuler paths NOT the Exemplar AvgQuats & AvgEulers
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<std::string>(k_AvgQuats));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayPath_Key, std::make_any<std::string>(k_AvgEulers));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuats));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayName_Key, std::make_any<std::string>(k_AvgEulers));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

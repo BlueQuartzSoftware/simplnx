@@ -29,7 +29,7 @@ public:
   static inline constexpr StringLiteral k_BoundaryNoise_Key = "boundary_noise";
   static inline constexpr StringLiteral k_BoundaryVolFraction_Key = "boundary_vol_fraction";
   static inline constexpr StringLiteral k_GBEuclideanDistancesArrayPath_Key = "gb_euclidean_distances_array_path";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";

@@ -39,7 +39,7 @@ TEST_CASE("SimplnxCore::FindNeighborhoods", "[SimplnxCore][FindNeighborhoods]")
 
     // Create default Parameters for the filter.
     args.insert(FindNeighborhoodsFilter::k_MultiplesOfAverage_Key, std::make_any<float32>(1.0F));
-    args.insert(FindNeighborhoodsFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insert(FindNeighborhoodsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
     args.insert(FindNeighborhoodsFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataAM.createChildPath(k_EquivalentDiameters)));
     args.insert(FindNeighborhoodsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataAM.createChildPath(k_Phases)));
     args.insert(FindNeighborhoodsFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataAM.createChildPath(k_Centroids)));

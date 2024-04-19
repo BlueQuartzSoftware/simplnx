@@ -39,9 +39,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_InputGeometry_Key, std::make_any<DataPath>(::k_TriangleGeomPath));
+    args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(::k_TriangleGeomPath));
     args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(::k_MaskPath));
-    args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_OutputGeometry_Key, std::make_any<DataPath>(::k_ReducedGeomPath));
+    args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(::k_ReducedGeomPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

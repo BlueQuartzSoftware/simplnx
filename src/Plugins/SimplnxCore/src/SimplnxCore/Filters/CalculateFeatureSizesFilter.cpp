@@ -69,9 +69,9 @@ Parameters CalculateFeatureSizesFilter::parameters() const
                                                                     DataPath({"CellFeatureData"})));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_EquivalentDiametersPath_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", "EquivalentDiameters"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NumElementsPath_Key, "Number of Elements", "DataPath to Num Elements array", "NumElements"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesPath_Key, "Volumes", "DataPath to volumes array", "Volumes"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_EquivalentDiametersName_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", "EquivalentDiameters"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NumElementsName_Key, "Number of Elements", "DataPath to Num Elements array", "NumElements"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesName_Key, "Volumes", "DataPath to volumes array", "Volumes"));
 
   return params;
 }
@@ -87,9 +87,9 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
 
   auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-  auto volumesName = args.value<std::string>(k_VolumesPath_Key);
-  auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersPath_Key);
-  auto numElementsName = args.value<std::string>(k_NumElementsPath_Key);
+  auto volumesName = args.value<std::string>(k_VolumesName_Key);
+  auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersName_Key);
+  auto numElementsName = args.value<std::string>(k_NumElementsName_Key);
   DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
   DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
   DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
@@ -150,9 +150,9 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arg
   if(nullptr != imageGeom)
   {
     auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-    auto volumesName = args.value<std::string>(k_VolumesPath_Key);
-    auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersPath_Key);
-    auto numElementsName = args.value<std::string>(k_NumElementsPath_Key);
+    auto volumesName = args.value<std::string>(k_VolumesName_Key);
+    auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersName_Key);
+    auto numElementsName = args.value<std::string>(k_NumElementsName_Key);
 
     DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
     DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
@@ -243,9 +243,9 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arg
   }
   else
   {
-    auto volumesPath = args.value<DataPath>(k_VolumesPath_Key);
-    auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
-    auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
+    auto volumesPath = args.value<DataPath>(k_VolumesName_Key);
+    auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersName_Key);
+    auto numElementsPath = args.value<DataPath>(k_NumElementsName_Key);
 
     auto& volumes = data.getDataRefAs<Float32Array>(volumesPath);
     auto& equivalentDiameters = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
@@ -318,9 +318,9 @@ Result<Arguments> CalculateFeatureSizesFilter::FromSIMPLJson(const nlohmann::jso
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureAttributeMatrixNameKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_EquivalentDiametersArrayNameKey, k_EquivalentDiametersPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NumElementsArrayNameKey, k_NumElementsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VolumesArrayNameKey, k_VolumesPath_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_EquivalentDiametersArrayNameKey, k_EquivalentDiametersName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NumElementsArrayNameKey, k_NumElementsName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VolumesArrayNameKey, k_VolumesName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

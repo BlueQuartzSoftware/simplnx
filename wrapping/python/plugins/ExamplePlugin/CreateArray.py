@@ -1,9 +1,9 @@
 from typing import List, Union
 import simplnx as nx
 
-def _convert_str_to_num(init_value: str, numeric_type: nx.NumericType) -> Union[int, float, None]:
+def _convert_str_to_num(init_value: str, numeric_type_index: nx.NumericType) -> Union[int, float, None]:
   try:
-    if numeric_type == nx.NumericType.float32 or numeric_type == nx.NumericType.float64:
+    if numeric_type_index == nx.NumericType.float32 or numeric_type_index == nx.NumericType.float64:
       return float(init_value)
     else:
       return int(init_value)
@@ -11,10 +11,10 @@ def _convert_str_to_num(init_value: str, numeric_type: nx.NumericType) -> Union[
     return None
 
 class CreateArrayFilter:
-  NUMERIC_TYPE_KEY = "numeric_type"
-  INITILIZATION_VALUE_KEY = "initialization_value"
+  NUMERIC_TYPE_KEY = "numeric_type_index"
+  INITILIZATION_VALUE_KEY = "initialization_value_str"
   NUM_COMPS_KEY = "component_count"
-  DATA_PATH_KEY = "output_data_array"
+  DATA_PATH_KEY = "output_array_path"
   TUPLE_DIMS_KEY = "tuple_dimensions"
 
   def uuid(self) -> nx.Uuid:
@@ -50,7 +50,7 @@ class CreateArrayFilter:
     return params
 
   def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
-    numeric_type: nx.NumericType = args[CreateArrayFilter.NUMERIC_TYPE_KEY]
+    numeric_type_index: nx.NumericType = args[CreateArrayFilter.NUMERIC_TYPE_KEY]
     init_value: str = args[CreateArrayFilter.INITILIZATION_VALUE_KEY]
     num_components: int = args[CreateArrayFilter.NUM_COMPS_KEY]
     data_array_path: nx.DataPath = args[CreateArrayFilter.DATA_PATH_KEY]
@@ -59,7 +59,7 @@ class CreateArrayFilter:
     if init_value == '':
       return nx.IFilter.PreflightResult(errors=[nx.Error(-123, 'Init Value cannot be empty')])
 
-    if _convert_str_to_num(init_value, numeric_type) is None:
+    if _convert_str_to_num(init_value, numeric_type_index) is None:
       return nx.IFilter.PreflightResult(errors=[nx.Error(-124, 'Init Value cannot be converted')])
 
     tuple_dims: List[int] = []
@@ -69,18 +69,18 @@ class CreateArrayFilter:
       tuple_dims.append(int(value))
 
     output_actions = nx.OutputActions()
-    output_actions.append_action(nx.CreateArrayAction(nx.convert_numeric_type_to_data_type(numeric_type), tuple_dims, [num_components], data_array_path))
+    output_actions.append_action(nx.CreateArrayAction(nx.convert_numeric_type_to_data_type(numeric_type_index), tuple_dims, [num_components], data_array_path))
 
     return nx.IFilter.PreflightResult(output_actions=output_actions)
 
   def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
-    numeric_type: nx.NumericType = args[CreateArrayFilter.NUMERIC_TYPE_KEY]
+    numeric_type_index: nx.NumericType = args[CreateArrayFilter.NUMERIC_TYPE_KEY]
     init_value: str = args[CreateArrayFilter.INITILIZATION_VALUE_KEY]
     data_array_path: nx.DataPath = args[CreateArrayFilter.DATA_PATH_KEY]
 
-    value = _convert_str_to_num(init_value, numeric_type)
+    value = _convert_str_to_num(init_value, numeric_type_index)
     if value is None:
-      raise RuntimeError(f'Unable to convert init value "{init_value}" to "{numeric_type}"')
+      raise RuntimeError(f'Unable to convert init value "{init_value}" to "{numeric_type_index}"')
 
     data_array = data_structure[data_array_path]
     data = data_array.store.npview()

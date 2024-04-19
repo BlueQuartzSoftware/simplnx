@@ -31,9 +31,9 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     image_data_array_name="ImageData",
-    image_geometry_path=nx.DataPath("ImageDataContainer"),
-    image_transform_choice=0,
-    input_file_list_info=generated_file_list_value,
+    output_image_geometry_path=nx.DataPath("ImageDataContainer"),
+    image_transform_index=0,
+    input_file_list_object =generated_file_list_value,
     origin=[0.0, 0.0, 0.0],
     spacing=[1.0, 1.0, 1.0]
 )
@@ -55,8 +55,8 @@ nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="Mask",
+    array_thresholds_object=threshold_set,
+    output_data_array_name="Mask",
     created_mask_type=dt,
     use_custom_false_value=False,
     use_custom_true_value=False
@@ -71,10 +71,10 @@ nx_filter = nx.ScalarSegmentFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    active_array_path="Active",
-    cell_feature_group_path="CellFeatureData",
-    feature_ids_path="FeatureIds",
-    grid_geometry_path=nx.DataPath("ImageDataContainer"),
+    active_array_name="Active",
+    cell_feature_group_name="CellFeatureData",
+    feature_ids_name="FeatureIds",
+    input_image_geometry_path=nx.DataPath("ImageDataContainer"),
     input_array_path=nx.DataPath("ImageDataContainer/Cell Data/ImageData"),
     mask_path=nx.DataPath("ImageDataContainer/Cell Data/Mask"),
     randomize_features=True,
@@ -95,10 +95,10 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     fix_problem_voxels=True,
     generate_triple_lines=False,
-    grid_geometry_data_path=nx.DataPath("ImageDataContainer"),
+    input_grid_geometry_path=nx.DataPath("ImageDataContainer"),
     node_types_array_name="NodeTypes",
-    selected_data_array_paths=[],
-    triangle_geometry_name=nx.DataPath("TriangleDataContainer"),
+    input_data_array_paths=[],
+    output_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
     vertex_data_group_name="Vertex Data"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -118,7 +118,7 @@ result = nx_filter.execute(
     surface_point_lambda=0.0,
     surface_quad_point_lambda=0.0,
     surface_triple_line_lambda=0.0,
-    triangle_geometry_data_path=nx.DataPath("TriangleDataContainer"),
+    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
     triple_line_lambda=0.1,
     use_taubin_smoothing=True
 )
@@ -131,7 +131,7 @@ nx_filter = nx.SplitAttributeArrayFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     delete_original_array=True,
-    multicomponent_array=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
+    multicomponent_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
     postfix="-",
     select_components_to_extract=False
     # components_to_extract: List[List[float]] = ...,  # Not currently part of the code
@@ -155,8 +155,8 @@ nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="FaceLabels-0 Mask",
+    array_thresholds_object=threshold_set,
+    output_data_array_name="FaceLabels-0 Mask",
     created_mask_type=dt,  # Use the DataType variable here
     use_custom_false_value=False,
     use_custom_true_value=False
@@ -182,8 +182,8 @@ nx_filter = nx.MultiThresholdObjects()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    array_thresholds=threshold_set,
-    created_data_path="FaceLabels-1 Mask",
+    array_thresholds_object=threshold_set,
+    output_data_array_name="FaceLabels-1 Mask",
     created_mask_type=dt,  # Use the DataType variable here
     use_custom_false_value=False,
     use_custom_true_value=False
@@ -231,8 +231,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     move_values=True,
     normalize_data=False,
-    stacked_data_array_name="Face Labels",
-    selected_data_array_paths=[
+    output_data_array_name="Face Labels",
+    input_data_array_paths=[
         nx.DataPath("TriangleDataContainer/Face Data/FaceLabels-0"),
         nx.DataPath("TriangleDataContainer/Face Data/FaceLabels-1")
     ]

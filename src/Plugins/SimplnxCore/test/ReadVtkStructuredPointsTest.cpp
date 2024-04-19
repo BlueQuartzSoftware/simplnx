@@ -42,8 +42,8 @@ Arguments createArgs(const fs::path& filePath)
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(filePath));
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadPointData_Key, std::make_any<BoolParameter::ValueType>(true));
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadCellData_Key, std::make_any<BoolParameter::ValueType>(true));
-  args.insertOrAssign(ReadVtkStructuredPointsFilter::k_VertexDataContainerName_Key, std::make_any<DataGroupCreationParameter::ValueType>(DataPath{{pointDataContainerName}}));
-  args.insertOrAssign(ReadVtkStructuredPointsFilter::k_VolumeDataContainerName_Key, std::make_any<DataGroupCreationParameter::ValueType>(DataPath{{cellDataContainerName}}));
+  args.insertOrAssign(ReadVtkStructuredPointsFilter::k_CreatedVertexGeometryPath_Key, std::make_any<DataGroupCreationParameter::ValueType>(DataPath{{pointDataContainerName}}));
+  args.insertOrAssign(ReadVtkStructuredPointsFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataGroupCreationParameter::ValueType>(DataPath{{cellDataContainerName}}));
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_VertexAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(pointAttrMatrixName));
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(cellAttrMatrixName));
 
