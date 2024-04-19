@@ -216,7 +216,7 @@ class ExampleFilter1:
     file_list: nx.GeneratedFileListParameter.ValueType = [ExampleFilter1.PARAM17_KEY].generate()
     
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Preflight: {input_dir_path}'))
-    return nx.IFilter.PreflightResult()
+    return nx.IFilter.PreflightResult(preflight_values=[nx.IFilter.PreflightValue('name', 'value')])
 
   def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
     """ This method actually executes the filter algorithm and reports results.
