@@ -27,6 +27,9 @@ public:
    */
   DatasetReader(IdType parentId, const std::string& dataName);
 
+  DatasetReader(const DatasetReader& other) = delete;
+  DatasetReader(DatasetReader&& other) noexcept = default;
+
   /**
    * @brief Releases the HDF5 dataset.
    */
@@ -121,6 +124,9 @@ public:
   std::vector<hsize_t> getDimensions() const;
 
   std::string getFilterName() const;
+
+  DatasetReader& operator=(const DatasetReader& other) = delete;
+  DatasetReader& operator=(DatasetReader&& other) noexcept = default;
 
 protected:
   /**

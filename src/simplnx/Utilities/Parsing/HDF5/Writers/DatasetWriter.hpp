@@ -28,6 +28,9 @@ public:
    */
   DatasetWriter(IdType parentId, const std::string& datasetName);
 
+  DatasetWriter(const DatasetWriter& other) = delete;
+  DatasetWriter(DatasetWriter&& other) noexcept = default;
+
   /**
    * @brief Default destructor
    */
@@ -202,6 +205,9 @@ public:
    * @return IdType
    */
   IdType getPListId() const;
+
+  DatasetWriter& operator=(const DatasetWriter& other) = delete;
+  DatasetWriter& operator=(DatasetWriter&& other) noexcept = default;
 
 protected:
   /**

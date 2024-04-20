@@ -24,6 +24,9 @@ public:
    */
   ObjectReader(IdType parentId, const std::string& targetName);
 
+  ObjectReader(const ObjectReader& other) = delete;
+  ObjectReader(ObjectReader&& other) noexcept = default;
+
   /**
    * @brief Releases the wrapped HDF5 object.
    */
@@ -95,6 +98,9 @@ public:
    * @return AttributeReader
    */
   AttributeReader getAttributeByIdx(size_t idx) const;
+
+  ObjectReader& operator=(const ObjectReader& other) = delete;
+  ObjectReader& operator=(ObjectReader&& other) noexcept = default;
 
 protected:
   /**

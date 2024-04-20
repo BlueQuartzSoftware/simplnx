@@ -31,6 +31,9 @@ public:
    */
   AttributeWriter(IdType objectId, const std::string& attributeName);
 
+  AttributeWriter(const AttributeWriter& other) = delete;
+  AttributeWriter(AttributeWriter&& other) noexcept = default;
+
   /**
    * @brief Default destructor
    */
@@ -203,6 +206,9 @@ public:
 
     return returnError;
   }
+
+  AttributeWriter& operator=(const AttributeWriter& other) = delete;
+  AttributeWriter& operator=(AttributeWriter&& other) noexcept = default;
 
 protected:
   /**

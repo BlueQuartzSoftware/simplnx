@@ -21,6 +21,9 @@ public:
    */
   GroupIO(IdType parentId, const std::string& groupName);
 
+  GroupIO(const GroupIO& other) = delete;
+  GroupIO(GroupIO&& other) noexcept = default;
+
   /**
    * @brief Releases the wrapped HDF5 group.
    */
@@ -134,6 +137,9 @@ public:
    * @return bool
    */
   bool isDataset(const std::string& childName) const;
+
+  GroupIO& operator=(const GroupIO& other) = delete;
+  GroupIO& operator=(GroupIO&& other) noexcept = default;
 
 protected:
   /**
