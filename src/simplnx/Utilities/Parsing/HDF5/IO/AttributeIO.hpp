@@ -37,6 +37,9 @@ public:
    */
   AttributeIO(IdType objectId, const std::string& attrName);
 
+  AttributeIO(const AttributeIO& other) = delete;
+  AttributeIO(AttributeIO&& other) noexcept = default;
+
   /**
    * @brief Releases the wrapped HDF5 attribute.
    */
@@ -163,6 +166,9 @@ public:
    */
   template <typename T>
   Result<> writeVector(const DimsVector& dims, const std::vector<T>& vector);
+
+  AttributeIO& operator=(const AttributeIO& other) = delete;
+  AttributeIO& operator=(AttributeIO&& other) noexcept = default;
 
 protected:
   /**

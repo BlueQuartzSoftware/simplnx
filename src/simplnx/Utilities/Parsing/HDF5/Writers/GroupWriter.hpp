@@ -24,6 +24,9 @@ public:
    */
   GroupWriter(IdType parentId, const std::string& objectName);
 
+  GroupWriter(const GroupWriter& other) = delete;
+  GroupWriter(GroupWriter&& other) noexcept = default;
+
   /**
    * @brief Closes the HDF5 group.
    */
@@ -61,6 +64,9 @@ public:
    * @return Result<>
    */
   Result<> createLink(const std::string& objectPath);
+
+  GroupWriter& operator=(const GroupWriter& other) = delete;
+  GroupWriter& operator=(GroupWriter&& other) noexcept = default;
 
 protected:
   /**

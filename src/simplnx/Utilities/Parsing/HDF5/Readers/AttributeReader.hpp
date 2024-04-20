@@ -36,6 +36,9 @@ public:
    */
   AttributeReader(IdType objectId, const std::string& attrName);
 
+  AttributeReader(const AttributeReader& other) = delete;
+  AttributeReader(AttributeReader&& other) noexcept = default;
+
   /**
    * @brief Releases the wrapped HDF5 attribute.
    */
@@ -145,6 +148,9 @@ public:
    * @return std::string
    */
   std::string readAsString() const;
+
+  AttributeReader& operator=(const AttributeReader& other) = delete;
+  AttributeReader& operator=(AttributeReader&& other) noexcept = default;
 
 protected:
   /**

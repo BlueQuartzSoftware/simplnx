@@ -19,6 +19,9 @@ public:
    */
   GroupReader(IdType parentId, const std::string& groupName);
 
+  GroupReader(const GroupReader& other) = delete;
+  GroupReader(GroupReader&& other) noexcept = default;
+
   /**
    * @brief Releases the wrapped HDF5 group.
    */
@@ -86,6 +89,9 @@ public:
    * @return bool
    */
   bool isDataset(const std::string& childName) const;
+
+  GroupReader& operator=(const GroupReader& other) = delete;
+  GroupReader& operator=(GroupReader&& other) noexcept = default;
 
 protected:
   /**

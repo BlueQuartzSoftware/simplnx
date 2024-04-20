@@ -37,6 +37,12 @@ public:
   FileWriter();
 
   /**
+   * @brief Copy constructor.
+   * @param rhs
+   */
+  FileWriter(const FileWriter& rhs) = delete;
+
+  /**
    * @brief Move constructor.
    * @param rhs
    */
@@ -53,6 +59,9 @@ public:
    * @return std::string
    */
   std::string getName() const override;
+
+  FileWriter& operator=(const FileWriter& rhs) = delete;
+  FileWriter& operator=(FileWriter&& rhs) noexcept = default;
 
 protected:
   /**
