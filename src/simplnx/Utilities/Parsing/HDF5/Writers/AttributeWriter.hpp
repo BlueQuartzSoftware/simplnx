@@ -208,7 +208,7 @@ public:
   }
 
   AttributeWriter& operator=(const AttributeWriter& other) = delete;
-  AttributeWriter& operator=(AttributeWriter&& other) noexcept = default;
+  AttributeWriter& operator=(AttributeWriter&& other) noexcept = delete;
 
 protected:
   /**

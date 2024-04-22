@@ -83,7 +83,7 @@ public:
     Filter
   };
 
-  virtual ~AbstractPipelineNode();
+  virtual ~AbstractPipelineNode() noexcept;
 
   /**
    * @brief Returns the node type for quick type checking.

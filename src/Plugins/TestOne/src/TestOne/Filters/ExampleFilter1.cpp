@@ -72,8 +72,8 @@ Parameters ExampleFilter1::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputDir_Key, "Input Directory", "Example input directory help text", "Data", FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::InputDir));
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "Example input file help text", "/opt/local/bin/ninja", FileSystemPathParameter::ExtensionsType{},
-                                                          FileSystemPathParameter::PathType::InputFile, true));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Ouptut Directory", "Example output directory help text", "Output Data", FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::InputFile, false));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Output Directory", "Example output directory help text", "Output Data", FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "Example output file help text", "", FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputFile));

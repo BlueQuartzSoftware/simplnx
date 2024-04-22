@@ -81,30 +81,28 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     // Create the output file by opening the same file for OVER WRITE.
     std::ofstream outFile = std::ofstream(initPyPath.string(), std::ios_base::binary | std::ios_base::trunc);
 
+    std::string filterMarkerLine = fmt::format("# FILTER_START: {}", filterName);
+    std::string lastMarkerLine = "def get_plugin():";
+
     std::string filterImportToken = fmt::format("from {0}.{1} import {1}", pluginName, filterName);
     bool insertToken = true;
     for(auto& line : lines)
     {
 
-      // If the line is the exact same as the generated import statement mark false
-      if(line == filterImportToken)
+      if(line == filterMarkerLine)
       {
         insertToken = false;
       }
-      // If we hit the include marker comment, then possibly write the newly generated token
-      if(nx::core::StringUtilities::starts_with(line, k_FilterIncludeInsertToken))
+      if(line == lastMarkerLine && insertToken)
       {
-        if(insertToken)
-        {
-          outFile << filterImportToken << '\n';
-        }
+        outFile << "# FILTER_START: " << filterName << "\n"
+                << "try:\n"
+                << "  from " << pluginName << "." << filterName << " import " << filterName << "\n"
+                << "  __all__.append('" << filterName << "')\n"
+                << "except ImportError:\n"
+                << "  pass\n"
+                << "# FILTER_END: " << filterName << "\n\n";
       }
-      // Do we need to append the filter to the list of filters
-      if(nx::core::StringUtilities::contains(line, k_FilterNameInsertToken) && insertToken)
-      {
-        line = nx::core::StringUtilities::replace(line, "__all__ = [", fmt::format("__all__ = ['{}', ", filterName));
-      }
-
       outFile << line << '\n'; // Write the line out to the file
     }
     outFile.close();
@@ -125,6 +123,9 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     // Create the output file by opening the same file for OVER WRITE.
     std::ofstream outFile = std::ofstream(pluginPyPath.string(), std::ios_base::binary | std::ios_base::trunc);
 
+    std::string filterMarkerLine = fmt::format("# FILTER_START: {}", filterName);
+    std::string lastMarkerLine = "import simplnx as nx";
+
     std::string filterImportToken = fmt::format("from {0}.{1} import {1}", pluginName, filterName);
     std::string filterInsertToken = fmt::format("'{}'", filterName);
 
@@ -132,24 +133,20 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     for(auto& line : lines)
     {
       // If the line is the exact same as the generated import statement mark false
-      if(line == filterImportToken)
+      if(line == filterMarkerLine)
       {
         insertToken = false;
       }
-      // If we hit the include marker comment, then possibly write the newly generated token
-      if(nx::core::StringUtilities::starts_with(line, k_FilterIncludeInsertToken))
+      if(line == lastMarkerLine && insertToken)
       {
-        if(insertToken)
-        {
-          outFile << filterImportToken << '\n';
-        }
+        outFile << "# FILTER_START: " << filterName << "\n"
+                << "try:\n"
+                << "  from " << pluginName << "." << filterName << " import " << filterName << "\n"
+                << "  _filters_.append(" << filterName << ")\n"
+                << "except ImportError:\n"
+                << "  pass\n"
+                << "# FILTER_END: " << filterName << "\n\n";
       }
-      // Do we need to append the filter to the list of filters
-      if(nx::core::StringUtilities::contains(line, k_FilterNameInsertToken) && insertToken)
-      {
-        line = nx::core::StringUtilities::replace(line, "return [", fmt::format("return [{}, ", filterName));
-      }
-
       outFile << line << '\n'; // Write the line out to the file
     }
     outFile.close();
@@ -279,13 +276,19 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
   auto filterList = StringUtilities::split(pluginFilterList, ',');
   content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", fmt::format("{}", fmt::join(filterList, ", ")));
 
-  std::string importStatements;
+  std::stringstream ss;
+
   for(const auto& name : filterList)
   {
-    importStatements.append(fmt::format("from {}.{} import {}\n", pluginName, name, name));
+    ss << "# FILTER_START: " << name << "\n"
+       << "try:\n"
+       << "  from " << pluginName << "." << name << " import " << name << "\n"
+       << "  _filters.append(" << name << ")\n"
+       << "except ImportError:\n"
+       << "  pass\n"
+       << "# FILTER_END: " << name << "\n\n";
   }
-
-  content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", importStatements);
+  content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", ss.str());
 
   return content;
 }
@@ -301,7 +304,7 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
  * @return
  */
 inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirectory, const std::string& pluginName, const std::string& pluginShortName, const std::string& pluginDescription,
-                                       const std::string& pluginFilterList, bool createBatchShellScript, const std::string& anacondaEnvName)
+                                       const std::string& pluginFilterList)
 {
 
   auto pluginRootPath = outputDirectory / pluginName;
@@ -333,40 +336,6 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
     if(!tempFile.commit())
     {
       return tempFile.getResult();
-    }
-  }
-
-  if(createBatchShellScript)
-  {
-#ifdef __WIN32__
-    outputPath = pluginRootPath / "init_evn.bat";
-#else
-    outputPath = pluginRootPath / "init_evn.sh";
-#endif
-    AtomicFile initTempFile(outputPath.string());
-    auto creationResult = initTempFile.getResult();
-    if(creationResult.invalid())
-    {
-      return creationResult;
-    }
-    {
-      // Scope this so that the file closes first before we then 'commit' with the atomic file
-      std::ofstream fout(initTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
-      if(!fout.is_open())
-      {
-        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", initTempFile.tempFilePath().string()));
-      }
-      std::string content = PluginBatchFile();
-
-      content = StringUtilities::replace(content, "@PYTHONPATH@", outputDirectory.string());
-      content = StringUtilities::replace(content, "@SIMPLNX_PYTHON_PLUGINS@", pluginName);
-      content = StringUtilities::replace(content, "@ANACONDA_ENV_NAME@", anacondaEnvName);
-
-      fout << content;
-    }
-    if(!initTempFile.commit())
-    {
-      return initTempFile.getResult();
     }
   }
 
@@ -403,13 +372,18 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       aList.append("'get_plugin'");
       content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", aList);
 
-      std::string importStatements;
+      std::stringstream ss;
       for(const auto& name : filterList)
       {
-        importStatements.append(fmt::format("from {}.{} import {}\n", pluginName, name, name));
+        ss << "# FILTER_START: " << name << "\n"
+           << "try:\n"
+           << "  from " << pluginName << "." << name << " import " << name << "\n"
+           << "  __all__.append('" << name << "')\n"
+           << "except ImportError:\n"
+           << "  pass\n"
+           << "# FILTER_END: " << name << "\n\n";
       }
-
-      content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", importStatements);
+      content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", ss.str());
 
       fout << content;
     }

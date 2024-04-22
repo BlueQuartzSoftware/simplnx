@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Pipeline/AbstractPipelineNode.hpp"
+#include "simplnx/Pipeline/AbstractPipelineFilter.hpp"
 
 #include <nod/nod.hpp>
 
@@ -16,7 +16,7 @@ class FilterList;
  * IFilter object. The node keeps track of the resulting DataStructure as well
  * as error and warning messages.
  */
-class SIMPLNX_EXPORT PipelineFilter : public AbstractPipelineNode
+class SIMPLNX_EXPORT PipelineFilter : public AbstractPipelineFilter
 {
 public:
   using WarningsChangedSignal = nod::signal<void(std::vector<nx::core::Warning>)>;
@@ -75,13 +75,7 @@ public:
    */
   PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args = {});
 
-  ~PipelineFilter() override;
-
-  /**
-   * @brief Returns the node type for quick type checking.
-   * @return NodeType
-   */
-  NodeType getType() const override;
+  ~PipelineFilter() noexcept override;
 
   /**
    * @brief Returns the filter's human label.
@@ -112,12 +106,6 @@ public:
    * @param args
    */
   void setArguments(const Arguments& args);
-
-  /**
-   * @brief Sets the index of this filter in an executing pipeline
-   * @param index
-   */
-  void setIndex(int32 index);
 
   /**
    * @brief Gets the node's filter comments.
@@ -201,6 +189,12 @@ public:
    */
   void renamePathArgs(const RenamedPaths& renamedPaths);
 
+  /**
+   * @brief Returns the type of filter of this node (filter or placeholder)
+   * @return AbstractPipelineFilter::FilterType
+   */
+  FilterType getFilterType() const override;
+
 protected:
   /**
    * @brief Returns implementation-specific json value for the node.
@@ -236,7 +230,6 @@ protected:
 private:
   IFilter::UniquePointer m_Filter;
   Arguments m_Arguments;
-  int32 m_Index = 0;
   std::string m_Comments;
   std::vector<nx::core::Warning> m_Warnings;
   std::vector<nx::core::Error> m_Errors;

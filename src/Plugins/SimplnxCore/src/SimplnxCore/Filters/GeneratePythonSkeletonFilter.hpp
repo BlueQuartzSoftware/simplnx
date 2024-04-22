@@ -29,8 +29,6 @@ public:
   static inline constexpr StringLiteral k_PluginHumanName_Key = "plugin_human_name";
   static inline constexpr StringLiteral k_PluginInputDirectory_Key = "plugin_input_directory";
   static inline constexpr StringLiteral k_PluginOutputDirectory_Key = "plugin_output_directory";
-  static inline constexpr StringLiteral k_CreateBatchFile_Key = "create_batch_shell_script";
-  static inline constexpr StringLiteral k_AnacondaEnvName_Key = "anaconda_env_name";
   static inline constexpr StringLiteral k_PluginFilterNames = "filter_names";
 
   /**

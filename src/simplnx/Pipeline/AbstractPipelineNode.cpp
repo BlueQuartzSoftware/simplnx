@@ -21,7 +21,7 @@ AbstractPipelineNode::AbstractPipelineNode(Pipeline* parent)
 {
 }
 
-AbstractPipelineNode::~AbstractPipelineNode() = default;
+AbstractPipelineNode::~AbstractPipelineNode() noexcept = default;
 
 Pipeline* AbstractPipelineNode::getParentPipeline() const
 {

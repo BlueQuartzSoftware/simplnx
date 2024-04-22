@@ -16,6 +16,8 @@
 #include <string>
 
 #if SIMPLNX_EMBED_PYTHON
+#include "NxPythonEmbed/NxPythonEmbed.hpp"
+
 #include <pybind11/embed.h>
 #endif
 
@@ -491,22 +493,6 @@ Result<> SetLogFile(const Argument& argument)
   std::filesystem::path filepath(argument.value);
   return cliOut.setLogFile(filepath);
 }
-
-#if SIMPLNX_EMBED_PYTHON
-std::vector<std::string> GetPythonPluginList()
-{
-  auto* var = std::getenv("SIMPLNX_PYTHON_PLUGINS");
-  if(var == nullptr)
-  {
-    return {};
-  }
-#if defined(Q_OS_WIN)
-  return nx::core::StringUtilities::split(var, ';');
-#else
-  return nx::core::StringUtilities::split(var, ':');
-#endif
-}
-#endif
 } // namespace
 
 int main(int argc, char* argv[])
@@ -565,60 +551,36 @@ int main(int argc, char* argv[])
   LoadApp();
 
 #if SIMPLNX_EMBED_PYTHON
-  {
-    constexpr const char k_PYTHONHOME[] = "PYTHONHOME";
-    constexpr const char k_CONDA_PREFIX[] = "CONDA_PREFIX";
+  nx::python::OutputCallback outputCallback = [](const std::string& message) { std::cout << message << "\n"; };
 
-    std::string condaPrefix;
-    char* condaPrefixPtr = getenv(k_CONDA_PREFIX);
-    if(condaPrefixPtr != nullptr)
-    {
-      condaPrefix = condaPrefixPtr;
-      std::cout << "CONDA_PREFIX=" << condaPrefix << std::endl;
-    }
+  nx::python::SetupPythonEnvironmentVars(outputCallback);
 
-    std::string pythonHome;
-    char* pythonHomePtr = getenv(k_PYTHONHOME);
-    if(pythonHomePtr != nullptr)
-    {
-      pythonHome = pythonHomePtr;
-      std::cout << "PYTHONHOME=" << pythonHome << std::endl;
-    }
-
-    if(pythonHome.empty() && !condaPrefix.empty())
-    {
-      std::string envVar = fmt::format("{}={}", k_PYTHONHOME, condaPrefix);
-      putenv(envVar.data());
-      std::cout << envVar << std::endl;
-    }
-  }
+  std::set<std::string> pythonPlugins = nx::python::GetPythonPluginListFromEnvironment();
 
   py::scoped_interpreter guard{};
 
+  nx::python::PluginLoadErrorCallback pluginLoadErrorCallback = [](const nx::python::PluginLoadErrorInfo& errorInfo) {
+    std::string exceptionType = nx::python::ExceptionTypeToString(errorInfo.type);
+    std::string text = fmt::format("{} exception while while attempting to import '{}': ", exceptionType, errorInfo.pluginName);
+    std::cout << text << "\n";
+    std::cout << errorInfo.message << "\n";
+  };
+  nx::python::PythonErrorCallback pythonErrorCallback = [](const nx::python::PythonErrorInfo& errorInfo) {
+    std::string exceptionType = nx::python::ExceptionTypeToString(errorInfo.type);
+    std::string text = fmt::format("{} exception while importing plugins: ", exceptionType);
+    std::cout << text;
+    std::cout << errorInfo.message;
+  };
+
   try
   {
-    auto cx = py::module_::import(SIMPLNX_PYTHON_MODULE);
-
-    auto pythonPlugins = GetPythonPluginList();
-
-    fmt::print("Loading Python plugins: {}\n", pythonPlugins);
-
-    for(const auto& pluginName : pythonPlugins)
-    {
-      fmt::print("Attempting to load Python plugin: '{}'\n", pluginName);
-      auto mod = py::module_::import(pluginName.c_str());
-      cx.attr("load_python_plugin")(mod);
-      auto pluginPath = mod.attr("__file__").cast<std::string>();
-      fmt::print("Successfully loaded Python plugin '{}' from '{}'\n", pluginName, pluginPath);
-    }
-  } catch(const py::error_already_set& exception)
-  {
-    fmt::print("Python exception while importing plugins: {}\n", exception.what());
-    return 1;
+    auto manualImportFinder = nx::python::ManualImportFinderHolder::Create();
+    manualImportFinder.addToMetaPath();
+    nx::python::LoadPythonPlugins(pythonPlugins, outputCallback, pluginLoadErrorCallback, pythonErrorCallback);
   } catch(const std::exception& exception)
   {
-    fmt::print("C++ exception while importing plugins: {}\n", exception.what());
-    return 1;
+    std::cout << "Aborting python plugin loading due to exception: \n";
+    std::cout << exception.what();
   }
 #endif
 

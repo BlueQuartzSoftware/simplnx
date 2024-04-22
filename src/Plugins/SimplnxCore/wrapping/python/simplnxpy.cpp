@@ -278,6 +278,91 @@ nx::core::DataPath CreateDataPath(std::string_view path)
   return result.value();
 }
 
+class ManualImportFinder
+{
+public:
+  bool insert(const fs::path& path)
+  {
+    if(containsPath(path))
+    {
+      return false;
+    }
+    std::string modName = GetModuleNameFromPath(path);
+    if(containsModule(modName))
+    {
+      return false;
+    }
+    m_ModuleToPathMap.insert({modName, path});
+    m_PathToModuleMap.insert({path, modName});
+    return true;
+  }
+
+  void removePath(const fs::path& path)
+  {
+    if(!containsPath(path))
+    {
+      return;
+    }
+    std::string modName = GetModuleNameFromPath(path);
+    m_ModuleToPathMap.erase(modName);
+    m_PathToModuleMap.erase(path);
+  }
+
+  void removeModule(const std::string& modName)
+  {
+    if(!containsModule(modName))
+    {
+      return;
+    }
+    fs::path modPath = m_ModuleToPathMap.at(modName);
+    m_ModuleToPathMap.erase(modName);
+    m_PathToModuleMap.erase(modPath);
+  }
+
+  void clear()
+  {
+    m_ModuleToPathMap.clear();
+    m_PathToModuleMap.clear();
+  }
+
+  bool containsPath(const fs::path& path) const
+  {
+    return m_PathToModuleMap.count(path) > 0;
+  }
+
+  bool containsModule(const std::string& modName) const
+  {
+    return m_ModuleToPathMap.count(modName) > 0;
+  }
+
+  py::object findSpec(const std::string& fullname, py::object path, py::object target) const
+  {
+    if(!containsModule(fullname))
+    {
+      return py::none();
+    }
+
+    fs::path modPath = m_ModuleToPathMap.at(fullname);
+
+    bool isPackage = modPath.extension() != ".py";
+
+    auto importLibUtil = py::module_::import("importlib.util");
+    fs::path initPyPath = isPackage ? modPath / "__init__.py" : modPath;
+    py::object submoduleSearchLocations = isPackage ? py::list() : py::object(py::none());
+    auto spec = importLibUtil.attr("spec_from_file_location")(fullname, initPyPath, py::arg("submodule_search_locations") = submoduleSearchLocations);
+    return spec;
+  }
+
+private:
+  static std::string GetModuleNameFromPath(const fs::path& path)
+  {
+    return path.stem().string();
+  }
+
+  std::map<std::string, fs::path> m_ModuleToPathMap;
+  std::map<fs::path, std::string> m_PathToModuleMap;
+};
+
 PYBIND11_MODULE(simplnx, mod)
 {
   auto* internals = new Internals();
@@ -546,16 +631,33 @@ PYBIND11_MODULE(simplnx, mod)
     }
     return self.removeData(pathConversionResult.value());
   });
+
+  dataStructure.def(
+      "exists",
+      [](const DataStructure& self, std::string_view path) {
+        auto convertedPath = DataPath::FromString(path);
+        if(!convertedPath)
+        {
+          return false;
+        }
+        return self.containsData(convertedPath.value());
+      },
+      "Returns true if there is a DataStructure object at the given path", "path"_a);
+  dataStructure.def("exists", py::overload_cast<const DataPath&>(&DataStructure::containsData, py::const_), "Returns true if there is a DataStructure object at the given path", "path"_a);
+  dataStructure.def("__contains__", py::overload_cast<const DataPath&>(&DataStructure::containsData, py::const_), "Returns true if there is a DataStructure object at the given path", "path"_a);
   dataStructure.def("hierarchy_to_str", [](DataStructure& self) {
     std::stringstream ss;
     self.exportHierarchyAsText(ss);
     return ss.str();
   });
-  dataStructure.def("hierarchy_to_graphviz", [](DataStructure& self) {
-    std::stringstream ss;
-    self.exportHierarchyAsGraphViz(ss);
-    return ss.str();
-  });
+  dataStructure.def(
+      "hierarchy_to_graphviz",
+      [](DataStructure& self) {
+        std::stringstream ss;
+        self.exportHierarchyAsGraphViz(ss);
+        return ss.str();
+      },
+      "Returns the DataStructure hierarchy expressed in the 'dot' language. Use a GraphViz package to render.");
   dataStructure.def("get_children", [](DataStructure& self, nx::core::DataPath& parentPath) {
     if(parentPath.empty())
     {
@@ -734,6 +836,8 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<AttributeMatrix, BaseGroup, std::shared_ptr<AttributeMatrix>> attributeMatrix(mod, "AttributeMatrix");
   attributeMatrix.def("resize_tuples", &AttributeMatrix::resizeTuples, "Resize the tuples with the given shape");
+  attributeMatrix.def_property_readonly("tuple_shape", &AttributeMatrix::getShape, "Returns the Tuple dimensions of the AttributeMatrix");
+  attributeMatrix.def_property_readonly("size", &AttributeMatrix::getNumTuples, "Returns the total number of tuples");
 
   py::class_<IArray, DataObject, std::shared_ptr<IArray>> iArray(mod, "IArray");
   iArray.def_property_readonly("tuple_shape", &IArray::getTupleShape);
@@ -1126,6 +1230,17 @@ PYBIND11_MODULE(simplnx, mod)
   filterMessage.def_readwrite("type", &IFilter::Message::type);
   filterMessage.def_readwrite("message", &IFilter::Message::message);
 
+  py::class_<IFilter::ProgressMessage, IFilter::Message> progressMessage(filter, "ProgressMessage");
+  progressMessage.def(py::init([](std::string message, int32 progress) {
+                        IFilter::ProgressMessage progressMessage;
+                        progressMessage.type = IFilter::Message::Type::Progress;
+                        progressMessage.message = std::move(message);
+                        progressMessage.progress = progress;
+                        return progressMessage;
+                      }),
+                      "message"_a, "progress"_a);
+  progressMessage.def_readwrite("progress", &IFilter::ProgressMessage::progress);
+
   py::class_<IFilter::MessageHandler> messageHandler(filter, "MessageHandler");
   messageHandler.def(py::init<>());
   messageHandler.def_readwrite("callback", &IFilter::MessageHandler::m_Callback);
@@ -1133,6 +1248,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<IFilter::PreflightValue> preflightValue(filter, "PreflightValue");
   preflightValue.def(py::init<>());
+  preflightValue.def(py::init<std::string, std::string>(), "name"_a, "value"_a);
   preflightValue.def_readwrite("name", &IFilter::PreflightValue::name);
   preflightValue.def_readwrite("value", &IFilter::PreflightValue::value);
 
@@ -1256,6 +1372,28 @@ PYBIND11_MODULE(simplnx, mod)
       "set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
   pipelineFilter.def(
       "get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
+  pipelineFilter.def(
+      "name",
+      [](const PipelineFilter& self) {
+        const IFilter* filter = self.getFilter();
+        if(filter == nullptr)
+        {
+          throw std::runtime_error("PipelineFilter doesn't contain a filter (nullptr)");
+        }
+        return filter->name();
+      },
+      "Returns the C++ name of the filter");
+  pipelineFilter.def(
+      "human_name",
+      [](const PipelineFilter& self) {
+        const IFilter* filter = self.getFilter();
+        if(filter == nullptr)
+        {
+          throw std::runtime_error("PipelineFilter doesn't contain a filter (nullptr)");
+        }
+        return filter->humanName();
+      },
+      "Returns the human facing name of the filter");
 
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
@@ -1346,4 +1484,15 @@ PYBIND11_MODULE(simplnx, mod)
   });
 
   mod.def("reload_python_plugins", [internals]() { internals->reloadPythonPlugins(); });
+  mod.def("unload_python_plugins", [internals]() { internals->unloadPythonPlugins(); });
+
+  py::class_<ManualImportFinder> manualImportFinder(mod, "ManualImportFinder");
+  manualImportFinder.def(py::init<>());
+  manualImportFinder.def("find_spec", &ManualImportFinder::findSpec, "fullname"_a, "path"_a = py::none(), "target"_a = py::none());
+  manualImportFinder.def("insert", &ManualImportFinder::insert, "path"_a);
+  manualImportFinder.def("remove_path", &ManualImportFinder::removePath, "path"_a);
+  manualImportFinder.def("remove_module", &ManualImportFinder::removeModule, "mod_name"_a);
+  manualImportFinder.def("clear", &ManualImportFinder::clear);
+  manualImportFinder.def("contains_path", &ManualImportFinder::containsPath, "path"_a);
+  manualImportFinder.def("contains_module", &ManualImportFinder::containsModule, "mod_name"_a);
 }

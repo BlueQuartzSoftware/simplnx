@@ -8,6 +8,7 @@
 #include "simplnx/Pipeline/Messaging/NodeRemovedMessage.hpp"
 #include "simplnx/Pipeline/Messaging/PipelineNodeMessage.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/Pipeline/PlaceholderFilter.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -83,7 +84,7 @@ Pipeline::Pipeline(Pipeline&& other) noexcept
   resetCollectionParent();
 }
 
-Pipeline::~Pipeline()
+Pipeline::~Pipeline() noexcept
 {
   for(auto& node : m_Collection)
   {
@@ -590,8 +591,13 @@ bool Pipeline::contains(const Uuid& id) const
     switch(nodeType)
     {
     case NodeType::Filter: {
-      const auto& filterNode = dynamic_cast<const PipelineFilter&>(*node);
-      if(id == filterNode.getFilter()->uuid())
+      const auto& filterNode = dynamic_cast<const AbstractPipelineFilter&>(*node);
+      if(filterNode.getFilterType() == AbstractPipelineFilter::FilterType::Placeholder)
+      {
+        continue;
+      }
+      const auto& pipelineFilter = dynamic_cast<const PipelineFilter&>(filterNode);
+      if(id == pipelineFilter.getFilter()->uuid())
       {
         return true;
       }
@@ -600,6 +606,34 @@ bool Pipeline::contains(const Uuid& id) const
     case NodeType::Pipeline: {
       const auto& pipeline = dynamic_cast<const Pipeline&>(*node);
       if(pipeline.contains(id))
+      {
+        return true;
+      }
+      break;
+    }
+    }
+  }
+  return false;
+}
+
+bool Pipeline::containsPlaceholder() const
+{
+  for(const auto& node : *this)
+  {
+    NodeType nodeType = node->getType();
+    switch(nodeType)
+    {
+    case NodeType::Filter: {
+      const auto& filterNode = dynamic_cast<const AbstractPipelineFilter&>(*node);
+      if(filterNode.getFilterType() == AbstractPipelineFilter::FilterType::Placeholder)
+      {
+        return true;
+      }
+      break;
+    }
+    case NodeType::Pipeline: {
+      const auto& pipeline = dynamic_cast<const Pipeline&>(*node);
+      if(pipeline.containsPlaceholder())
       {
         return true;
       }
@@ -740,12 +774,12 @@ nlohmann::json Pipeline::toJsonImpl() const
   return CreatePipelineJson(m_Name, std::move(jsonArray));
 }
 
-Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json)
+Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, bool allowPlaceholderFilters)
 {
-  return FromJson(json, Application::Instance()->getFilterList());
+  return FromJson(json, Application::Instance()->getFilterList(), allowPlaceholderFilters);
 }
 
-Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filterList)
+Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filterList, bool allowPlaceholderFilters)
 {
   if(!json.contains(k_PipelineNameKey.view()))
   {
@@ -771,14 +805,21 @@ Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filt
     {
       warnings.push_back(std::move(warning));
     }
+
     if(filterResult.invalid())
     {
-      Result<Pipeline> result{nonstd::make_unexpected(std::move(filterResult.errors()))};
-      result.warnings() = std::move(warnings);
-      return result;
+      if(!allowPlaceholderFilters)
+      {
+        Result<Pipeline> result{nonstd::make_unexpected(std::move(filterResult.errors()))};
+        result.warnings() = std::move(warnings);
+        return result;
+      }
+      pipeline.push_back(PlaceholderFilter::Create(item));
     }
-
-    pipeline.push_back(std::move(filterResult.value()));
+    else
+    {
+      pipeline.push_back(std::move(filterResult.value()));
+    }
   }
 
   Result<Pipeline> result{std::move(pipeline)};
@@ -787,13 +828,13 @@ Result<Pipeline> Pipeline::FromJson(const nlohmann::json& json, FilterList* filt
   return result;
 }
 
-Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path)
+Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, bool allowPlaceholderFilters)
 {
   auto app = Application::Instance();
-  return FromFile(path, app->getFilterList());
+  return FromFile(path, app->getFilterList(), allowPlaceholderFilters);
 }
 
-Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, FilterList* filterList)
+Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, FilterList* filterList, bool allowPlaceholderFilters)
 {
   std::ifstream file(path);
 
@@ -812,7 +853,7 @@ Result<Pipeline> Pipeline::FromFile(const std::filesystem::path& path, FilterLis
     return MakeErrorResult<Pipeline>(-2, exception.what());
   }
 
-  return FromJson(pipelineJson, filterList);
+  return FromJson(pipelineJson, filterList, allowPlaceholderFilters);
 }
 
 void Pipeline::onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg)
