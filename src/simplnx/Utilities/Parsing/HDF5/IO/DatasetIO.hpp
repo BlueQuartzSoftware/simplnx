@@ -38,10 +38,13 @@ public:
 
   DatasetIO(DatasetIO&& other) noexcept;
 
+  DatasetIO& operator=(const DatasetIO& rhs) = delete;
+  DatasetIO& operator=(DatasetIO&& rhs) noexcept;
+
   /**
    * @brief Releases the HDF5 dataset.
    */
-  virtual ~DatasetIO();
+  ~DatasetIO() noexcept override;
 
   /**
    * @brief Returns true if the DatasetIO has a valid target. Otherwise,
@@ -259,9 +262,6 @@ public:
     auto properties = CreateDatasetChunkProperties(chunkDimensions);
     createOrOpenDataset<T>(dimensions, properties);
   }
-
-  DatasetIO& operator=(const DatasetIO& rhs) = delete;
-  DatasetIO& operator=(DatasetIO&& rhs) noexcept;
 
 protected:
   /**

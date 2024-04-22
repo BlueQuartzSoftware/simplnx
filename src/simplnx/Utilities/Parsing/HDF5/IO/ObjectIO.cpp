@@ -26,6 +26,21 @@ ObjectIO::ObjectIO(IdType parentId, const std::string& targetName)
   m_Id = H5Oopen(parentId, targetName.c_str(), H5P_DEFAULT);
 }
 
+ObjectIO::ObjectIO(ObjectIO&& other) noexcept
+{
+  m_Id = std::exchange(other.m_Id, 0);
+  m_ParentId = std::exchange(other.m_ParentId, 0);
+  m_SharedParentPtr = std::move(other.m_SharedParentPtr);
+}
+
+ObjectIO& ObjectIO::operator=(ObjectIO&& other) noexcept
+{
+  m_Id = std::exchange(other.m_Id, 0);
+  m_ParentId = std::exchange(other.m_ParentId, 0);
+  m_SharedParentPtr = std::move(other.m_SharedParentPtr);
+  return *this;
+}
+
 ObjectIO::~ObjectIO() noexcept
 {
   closeHdf5();

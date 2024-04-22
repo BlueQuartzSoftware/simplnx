@@ -8,10 +8,7 @@
 
 namespace nx::core::HDF5
 {
-GroupWriter::GroupWriter()
-: ObjectWriter()
-{
-}
+GroupWriter::GroupWriter() = default;
 
 GroupWriter::GroupWriter(IdType parentId, IdType objectId)
 : ObjectWriter(parentId, objectId)
@@ -36,7 +33,7 @@ GroupWriter::GroupWriter(IdType parentId, const std::string& groupName)
   }
 }
 
-GroupWriter::~GroupWriter()
+GroupWriter::~GroupWriter() noexcept
 {
   closeHdf5();
 }

@@ -25,6 +25,19 @@ ObjectReader::ObjectReader(IdType parentId, const std::string& targetName)
   m_Id = H5Oopen(parentId, targetName.c_str(), H5P_DEFAULT);
 }
 
+ObjectReader::ObjectReader(ObjectReader&& other) noexcept
+{
+  m_Id = std::exchange(other.m_Id, 0);
+  m_ParentId = std::exchange(other.m_ParentId, 0);
+}
+
+ObjectReader& ObjectReader::operator=(ObjectReader&& other) noexcept
+{
+  m_Id = std::exchange(other.m_Id, 0);
+  m_ParentId = std::exchange(other.m_ParentId, 0);
+  return *this;
+}
+
 ObjectReader::~ObjectReader() noexcept
 {
   closeHdf5();

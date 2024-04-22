@@ -38,12 +38,15 @@ public:
   AttributeIO(IdType objectId, const std::string& attrName);
 
   AttributeIO(const AttributeIO& other) = delete;
-  AttributeIO(AttributeIO&& other) noexcept = default;
+  AttributeIO(AttributeIO&& other) noexcept;
+
+  AttributeIO& operator=(const AttributeIO& other) = delete;
+  AttributeIO& operator=(AttributeIO&& other) noexcept;
 
   /**
    * @brief Releases the wrapped HDF5 attribute.
    */
-  virtual ~AttributeIO();
+  ~AttributeIO() noexcept;
 
   /**
    * @brief Returns true if the AttributeIO has a valid target.
@@ -167,9 +170,6 @@ public:
   template <typename T>
   Result<> writeVector(const DimsVector& dims, const std::vector<T>& vector);
 
-  AttributeIO& operator=(const AttributeIO& other) = delete;
-  AttributeIO& operator=(AttributeIO&& other) noexcept = delete;
-
 protected:
   /**
    * @brief Closes the HDF5 ID and resets it to 0.
@@ -186,7 +186,7 @@ protected:
 private:
   IdType m_ObjectId = 0;
   IdType m_AttributeId = 0;
-  const std::string m_AttributeName;
+  std::string m_AttributeName;
 };
 
 extern template SIMPLNX_EXPORT int8_t AttributeIO::readAsValue<int8_t>() const;

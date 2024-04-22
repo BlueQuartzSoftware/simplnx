@@ -32,12 +32,15 @@ public:
   AttributeWriter(IdType objectId, const std::string& attributeName);
 
   AttributeWriter(const AttributeWriter& other) = delete;
-  AttributeWriter(AttributeWriter&& other) noexcept = default;
+  AttributeWriter(AttributeWriter&& other) noexcept;
+
+  AttributeWriter& operator=(const AttributeWriter& other) = delete;
+  AttributeWriter& operator=(AttributeWriter&& other) noexcept;
 
   /**
    * @brief Default destructor
    */
-  virtual ~AttributeWriter();
+  ~AttributeWriter() noexcept;
 
   /**
    * @brief Returns true if the AttributeReader has a valid target.
@@ -207,9 +210,6 @@ public:
     return returnError;
   }
 
-  AttributeWriter& operator=(const AttributeWriter& other) = delete;
-  AttributeWriter& operator=(AttributeWriter&& other) noexcept = delete;
-
 protected:
   /**
    * @brief Finds and deletes any existing attribute with the current name.
@@ -219,7 +219,7 @@ protected:
   Result<> findAndDeleteAttribute();
 
 private:
-  const IdType m_ObjectId = 0;
-  const std::string m_AttributeName;
+  IdType m_ObjectId = 0;
+  std::string m_AttributeName;
 };
 } // namespace nx::core::HDF5

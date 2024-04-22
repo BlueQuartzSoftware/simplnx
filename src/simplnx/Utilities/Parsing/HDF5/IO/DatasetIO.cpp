@@ -12,9 +12,7 @@
 
 namespace nx::core::HDF5
 {
-DatasetIO::DatasetIO()
-{
-}
+DatasetIO::DatasetIO() = default;
 
 DatasetIO::DatasetIO(IdType parentId, const std::string& datasetName)
 : ObjectIO(parentId)
