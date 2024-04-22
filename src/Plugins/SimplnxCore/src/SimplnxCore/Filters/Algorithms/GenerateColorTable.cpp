@@ -240,7 +240,7 @@ Result<> GenerateColorTable::operator()()
 {
   const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
 
-  auto controlPointsResult = ColorTableUtilities::ExtractContolPoints(m_InputValues->PresetName);
+  auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(m_InputValues->PresetName);
   if(controlPointsResult.invalid())
   {
     auto error = *controlPointsResult.errors().begin();
