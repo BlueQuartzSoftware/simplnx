@@ -3,13 +3,35 @@
 Insert documentation here.
 """
 
-from ExamplePlugin.ExampleFilter1 import ExampleFilter1
-from ExamplePlugin.ExampleFilter2 import ExampleFilter2
-from ExamplePlugin.CreateArray import CreateArrayFilter
-from ExamplePlugin.InitializeData import InitializeDataPythonFilter
-from ExamplePlugin.TemplateFilter import TemplateFilter
+_filters = []
 
-# FILTER_INCLUDE_INSERT
+try:
+  from ExamplePlugin.ExampleFilter1 import ExampleFilter1
+  _filters.append(ExampleFilter1)
+except ImportError:
+  pass
+try:
+  from ExamplePlugin.ExampleFilter2 import ExampleFilter2
+  _filters.append(ExampleFilter2)
+except ImportError:
+  pass
+try:
+  from ExamplePlugin.CreateArray import CreateArrayFilter
+  _filters.append(CreateArrayFilter)
+except ImportError:
+  pass
+try:
+  from ExamplePlugin.InitializeData import InitializeDataPythonFilter
+  _filters.append(InitializeDataPythonFilter)
+except ImportError:
+  pass
+try:
+  from ExamplePlugin.TemplateFilter import TemplateFilter
+  _filters.append(TemplateFilter)
+except ImportError:
+  pass
+
+
 
 import simplnx as nx
 
@@ -30,4 +52,4 @@ class ExamplePlugin:
     return 'Description'
 
   def get_filters(self):
-    return [ExampleFilter1,ExampleFilter2,CreateArrayFilter,InitializeDataPythonFilter,TemplateFilter] # FILTER_NAME_INSERT
+    return _filters 

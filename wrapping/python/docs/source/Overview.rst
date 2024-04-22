@@ -163,6 +163,7 @@ scales, allowing for connections and correlations to be assessed.
    :target: path
 
    Mapping between AttributeMatrix using **Cell Data** "FeatureIds" to link to the feature data and **Cell Data** "Phases" to link to the Ensemble Data
+
 --------------
 
 .. figure:: Images/Elements_Features_Ensembles.png

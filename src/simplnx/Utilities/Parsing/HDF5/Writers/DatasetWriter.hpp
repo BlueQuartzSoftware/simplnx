@@ -207,7 +207,7 @@ public:
   IdType getPListId() const;
 
   DatasetWriter& operator=(const DatasetWriter& other) = delete;
-  DatasetWriter& operator=(DatasetWriter&& other) noexcept = default;
+  DatasetWriter& operator=(DatasetWriter&& other) noexcept = delete;
 
 protected:
   /**

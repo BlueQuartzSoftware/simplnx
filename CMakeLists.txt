@@ -461,9 +461,11 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.hpp
   ${SIMPLNX_SOURCE_DIR}/Parameters/util/ReadCSVData.hpp
 
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineFilter.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Pipeline.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/PipelineFilter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/PlaceholderFilter.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/AbstractPipelineMessage.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.hpp
@@ -664,9 +666,11 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Parameters/util/ReadCSVData.cpp
   ${SIMPLNX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.cpp
 
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineFilter.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Pipeline.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/PipelineFilter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/PlaceholderFilter.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/AbstractPipelineMessage.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.cpp

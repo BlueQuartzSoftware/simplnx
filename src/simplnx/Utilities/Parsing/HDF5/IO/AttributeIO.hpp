@@ -168,7 +168,7 @@ public:
   Result<> writeVector(const DimsVector& dims, const std::vector<T>& vector);
 
   AttributeIO& operator=(const AttributeIO& other) = delete;
-  AttributeIO& operator=(AttributeIO&& other) noexcept = default;
+  AttributeIO& operator=(AttributeIO&& other) noexcept = delete;
 
 protected:
   /**

@@ -66,15 +66,10 @@ Parameters GeneratePythonSkeletonFilter::parameters() const
   params.insert(
       std::make_unique<StringParameter>(k_PluginFilterNames, "Filter Names (comma-separated)", "The names of filters that will be created, separated by commas (,).", "FirstFilter,SecondFilter"));
 
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_CreateBatchFile_Key, "Create Anaconda Init Batch/Shell Script", "Generates a script file that can be used to export needed environment variables", false));
-  params.insert(std::make_unique<StringParameter>(k_AnacondaEnvName_Key, "Anaconda Environment Name", "The name of the Anaconda environment.", "nxpython"));
-
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginName_Key, false);
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginHumanName_Key, false);
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginOutputDirectory_Key, false);
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginInputDirectory_Key, true);
-  params.linkParameters(k_CreateBatchFile_Key, k_AnacondaEnvName_Key, true);
   return params;
 }
 
@@ -99,20 +94,41 @@ IFilter::PreflightResult GeneratePythonSkeletonFilter::preflightImpl(const DataS
 
   auto filterList = StringUtilities::split(filterNames, ',');
 
+  std::stringstream preflightUpdatedValue;
+
   std::string pluginPath = fmt::format("{}{}{}", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName);
   if(useExistingPlugin)
   {
     pluginPath = pluginInputDir.string();
   }
+  std::string fullPath = fmt::format("{}{}{}{}Plugin.py", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName, std::string{fs::path::preferred_separator});
+  if(std::filesystem::exists({fullPath}))
+  {
+    fullPath = "[REPLACE]: " + fullPath;
+  }
+  else
+  {
+    fullPath = "[New]: " + fullPath;
+  }
+  preflightUpdatedValue << fullPath << '\n';
 
-  std::stringstream preflightUpdatedValue;
+  fullPath = fmt::format("{}{}{}{}__init__.py", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName, std::string{fs::path::preferred_separator});
+  if(std::filesystem::exists({fullPath}))
+  {
+    fullPath = "[REPLACE]: " + fullPath;
+  }
+  else
+  {
+    fullPath = "[New]: " + fullPath;
+  }
+  preflightUpdatedValue << fullPath << '\n';
 
   for(const auto& filterName : filterList)
   {
-    std::string fullPath = fmt::format("{}{}{}.py", pluginPath, std::string{fs::path::preferred_separator}, filterName);
+    fullPath = fmt::format("{}{}{}.py", pluginPath, std::string{fs::path::preferred_separator}, filterName);
     if(std::filesystem::exists({fullPath}))
     {
-      fullPath = "[EXISTS]: " + fullPath;
+      fullPath = "[REPLACE]: " + fullPath;
     }
     else
     {
@@ -139,8 +155,6 @@ Result<> GeneratePythonSkeletonFilter::executeImpl(DataStructure& dataStructure,
   inputValues.pluginName = filterArgs.value<StringParameter::ValueType>(k_PluginName_Key);
   inputValues.pluginHumanName = filterArgs.value<StringParameter::ValueType>(k_PluginHumanName_Key);
   inputValues.filterNames = filterArgs.value<StringParameter::ValueType>(k_PluginFilterNames);
-  inputValues.createBatchShellScript = filterArgs.value<BoolParameter::ValueType>(k_CreateBatchFile_Key);
-  inputValues.anacondaEnvName = filterArgs.value<StringParameter::ValueType>(k_AnacondaEnvName_Key);
 
   return GeneratePythonSkeleton(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

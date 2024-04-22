@@ -74,18 +74,13 @@ std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handl
 }
 
 PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args)
-: AbstractPipelineNode()
+: AbstractPipelineFilter()
 , m_Filter(std::move(filter))
 , m_Arguments(args)
 {
 }
 
-PipelineFilter::~PipelineFilter() = default;
-
-AbstractPipelineNode::NodeType PipelineFilter::getType() const
-{
-  return NodeType::Filter;
-}
+PipelineFilter::~PipelineFilter() noexcept = default;
 
 std::string PipelineFilter::getName() const
 {
@@ -125,11 +120,6 @@ Arguments PipelineFilter::getArguments() const
 void PipelineFilter::setArguments(const Arguments& args)
 {
   m_Arguments = args;
-}
-
-void PipelineFilter::setIndex(int32 index)
-{
-  m_Index = index;
 }
 
 const std::string& PipelineFilter::getComments() const
@@ -719,4 +709,9 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
   }
 
   return {std::move(pipelineFilter), std::move(warnings)};
+}
+
+AbstractPipelineFilter::FilterType PipelineFilter::getFilterType() const
+{
+  return FilterType::Filter;
 }

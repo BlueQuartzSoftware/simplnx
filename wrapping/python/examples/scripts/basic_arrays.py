@@ -111,6 +111,15 @@ nxtest.check_filter_result(nx.CreateDataGroup, result)
 
 
 #------------------------------------------------------------------------------
+# Check if that object exists in the DataStructure
+#------------------------------------------------------------------------------
+value = data_structure.exists("/Some/Path/To/Group")
+print(f'The path "/Some/Path/To/Group" exists: {value} ')
+
+value = data_structure.exists("/Some/Path/To/NonExistantGroup")
+print(f'The path "/Some/Path/To/NonExistantGroup" exists: {value} ')
+
+#------------------------------------------------------------------------------
 # Create 1D Array 
 #------------------------------------------------------------------------------
 # Create the Input Parameters to the CreateDataArray filter

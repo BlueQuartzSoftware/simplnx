@@ -20,8 +20,6 @@ struct SIMPLNXCORE_EXPORT GeneratePythonSkeletonInputValues
   std::string pluginName;
   std::string pluginHumanName;
   std::string filterNames;
-  bool createBatchShellScript;
-  std::string anacondaEnvName;
 };
 
 /**

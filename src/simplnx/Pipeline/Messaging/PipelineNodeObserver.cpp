@@ -8,7 +8,7 @@ PipelineNodeObserver::PipelineNodeObserver()
 {
 }
 
-PipelineNodeObserver::~PipelineNodeObserver()
+PipelineNodeObserver::~PipelineNodeObserver() noexcept
 {
   stopObservingNode();
 }

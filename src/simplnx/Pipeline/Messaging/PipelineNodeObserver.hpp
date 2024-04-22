@@ -39,7 +39,7 @@ public:
    */
   PipelineNodeObserver(PipelineNodeObserver&& other) = delete;
 
-  virtual ~PipelineNodeObserver();
+  virtual ~PipelineNodeObserver() noexcept;
 
   /**
    * @brief Returns a pointer to the observed pipeline node. Returns nullptr

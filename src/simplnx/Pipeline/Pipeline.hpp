@@ -41,7 +41,7 @@ public:
    * @param json
    * @return
    */
-  static Result<Pipeline> FromJson(const nlohmann::json& json);
+  static Result<Pipeline> FromJson(const nlohmann::json& json, bool allowPlaceholderFilters = false);
 
   /**
    * @brief Constructs a Pipeline from json and the given filter list.
@@ -49,14 +49,14 @@ public:
    * @param filterList
    * @return
    */
-  static Result<Pipeline> FromJson(const nlohmann::json& json, FilterList* filterList);
+  static Result<Pipeline> FromJson(const nlohmann::json& json, FilterList* filterList, bool allowPlaceholderFilters = false);
 
   /**
    * @brief Constructs a Pipeline from a JSON file.
    * @param path
    * @return Result<Pipeline>
    */
-  static Result<Pipeline> FromFile(const std::filesystem::path& path);
+  static Result<Pipeline> FromFile(const std::filesystem::path& path, bool allowPlaceholderFilters = false);
 
   /**
    * @brief Constructs a Pipeline from a JSON file with the given FilterList.
@@ -64,7 +64,7 @@ public:
    * @param filterList
    * @return Result<Pipeline>
    */
-  static Result<Pipeline> FromFile(const std::filesystem::path& path, FilterList* filterList);
+  static Result<Pipeline> FromFile(const std::filesystem::path& path, FilterList* filterList, bool allowPlaceholderFilters = false);
 
   /**
    * @brief Attempts to read a SIMPL json pipeline and convert to a simplnx Pipeline.
@@ -115,7 +115,7 @@ public:
    */
   Pipeline(Pipeline&& other) noexcept;
 
-  ~Pipeline() override;
+  ~Pipeline() noexcept override;
 
   /**
    * @brief Returns the node type for quick type checking.
@@ -437,6 +437,12 @@ public:
    * @return bool
    */
   bool contains(const Uuid& id) const;
+
+  /**
+   * @brief Returns true if the pipeline contains a placeholder filter.
+   * @return
+   */
+  bool containsPlaceholder() const;
 
   /**
    * @brief Inserts the specified pipeline node to the front of the pipeline

@@ -35,7 +35,7 @@ if(SIMPLNX_EMBED_PYTHON)
 
   target_link_libraries(nxrunner
     PRIVATE
-      pybind11::embed
+      NxPythonEmbed
   )
 endif()
 

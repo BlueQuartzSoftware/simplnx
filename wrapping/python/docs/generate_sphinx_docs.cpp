@@ -693,13 +693,13 @@ void GeneratePythonRstFiles()
       IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
       // auto plugin = filterListPtr->getPlugin(filterHandle);
 
-      rstStream << filterClassName << "\n";
-      rstStream << GenerateUnderline(filterClassName.size(), '-') << "\n\n";
+      rstStream << filter->humanName() << "\n";
+      rstStream << GenerateUnderline(filter->humanName().size(), '-') << "\n\n";
       rstStream << ".. index:: pair: Filter Human Names; " << filter->humanName() << "\n";
       rstStream << ".. index:: pair: Filter Class Names; " << filter->className() << "\n";
 
       rstStream << "\n";
-      rstStream << "-  **UI Name**: " << filter->humanName() << "\n\n";
+      // rstStream << "-  **UI Name**: " << filter->humanName() << "\n\n";
 
       rstStream << ".. _" << filterClassName << ":\n";
 

@@ -10,6 +10,19 @@ target_link_libraries(CxPybind
     pybind11::headers
 )
 
+add_library(NxPythonEmbed INTERFACE)
+
+target_include_directories(NxPythonEmbed
+  INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/NxPythonEmbed
+)
+
+target_link_libraries(NxPythonEmbed
+  INTERFACE
+    simplnx
+    pybind11::embed
+)
+
 pybind11_add_module(simplnxpy "${SimplnxCore_SOURCE_DIR}/wrapping/python/simplnxpy.cpp")
 
 target_compile_definitions(simplnxpy PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)

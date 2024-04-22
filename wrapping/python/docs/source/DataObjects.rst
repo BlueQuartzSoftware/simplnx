@@ -406,3 +406,136 @@ Geometry
 ----------
 
 Please see the :ref:`Geometry<Geometry Descriptions>` documentation.
+
+Pipeline
+--------
+
+   The Pipeline object holds a collections of filters. This collection can come from loading a .d3dpipeline file,
+   or from programmatically appending filters into a `nx.Pipeline` object.
+
+.. attention::
+
+   This API is still in development so expect some changes
+
+
+.. py:class:: Pipeline
+
+   This class holds a DREAM3D-NX pipeline which consists of a number of Filter instances. 
+
+   :ivar dtype: The type of Data stored in the DataStore
+
+   .. py:method:: from_file(file_path)
+
+      :ivar file_path: PathLike: The filepath to the input pipeline file
+
+   .. py:method:: to_file(name, output_file_path)
+
+      :ivar name: str: The name of the pipeline. Can be different from the file name
+      :ivar output_file_path: PathLike: The filepath to the output pipeline file
+
+   .. py:method:: execute(data_structure)
+
+      :ivar data_structure: nx.DataStructure: 
+      :return: The result of executing the pipeline
+      :rtype: nx.IFilter.ExecuteResult
+
+   .. py:method:: size()
+
+      :return: The number of filters in the pipeline
+
+   .. py:method:: insert(index, filter, parameters)
+
+      Inserts a new filter at the index specified with the specified argument dictionary
+
+      :ivar index: The index to insert the filter at. (Zero based indexing)
+      :ivar filter: The filter to insert
+      :ivar parameters: Dictionary: The dictionary of arguments (parameters) that the filter will use when it is executed.
+
+   .. py:method:: append(filter, parameters)
+
+      :ivar filter: nx.IFilter: The filter to append to the pipeline
+      :ivar parameters: Dictionary: The dictionary of arguments (parameters) that the filter will use when it is executed.
+
+   .. py:method:: clear()
+      
+      Removes all filters from the pipeline
+
+   .. py:method:: remove(index)
+
+      Removes a filter at the given index (Zero based indexing)
+
+   .. code:: python
+
+      # Shows modifying a pipeline that is read in from disk
+      # Create the DataStructure instance
+      data_structure = nx.DataStructure()
+      # Read the pipeline file
+      pipeline = nx.Pipeline().from_file( 'Pipelines/lesson_2.d3dpipeline')
+
+      create_data_array_args:dict = {
+            "data_format": "",
+            "component_count":1, 
+            "initialization_value":"0", 
+            "numeric_type":nx.NumericType.int8, 
+            "output_data_array":nx.DataPath("Geometry/Cell Data/data"),
+            "advanced_options": False,
+            "tuple_dimensions": [[10,20,30]]
+      }
+      pipeline[1].set_args(create_data_array_args)
+      # Execute the modified pipeline
+      result = pipeline.execute(data_structure)
+      nxutility.check_pipeline_result(result=result)
+      # Save the modified pipeline to a file.
+      pipeline.to_file( "Modified Pipeline", "Output/lesson_2b_modified_pipeline.d3dpipeline")
+
+.. py:class:: PipelineFilter
+
+   This class represents a filter in a Pipeline object. It can be modified in place with a new
+   set of parameters and the pipeline run again. 
+
+   .. py:method:: get_args()
+
+      Returns the dictionary of parameters for a filter
+      
+      :return: The parameter dictionary for the filter
+      :rtype: Dictionary
+
+
+   .. py:method:: set_args(parameter_dictionary)
+
+      Sets the dictionary of parameters that a filter will use.
+
+      :ivar parameter_dictionary: Dictionary: The dictionary of parameter arguments for the filter.
+
+   .. py:method:: get_filter()  
+
+      Returns the nx.IFilter object
+
+   .. code:: python
+
+      """
+      This shows how to loop on a pipeline making changes each loop.
+      Filter [0] is the ReadAngDataFilter which we will need to adjust the input file
+      Filter [5] is the image writing filter where we need to adjust the output file
+      """
+
+      for i in range(1, 6):
+         # Create the DataStructure instance
+         data_structure = nx.DataStructure()
+         # Read the pipeline file
+         pipeline = nx.Pipeline().from_file( 'Pipelines/lesson_2_ebsd.d3dpipeline')
+         # Get the parameter dictionary for the first filter and
+         # modify the input file. Then set the modified dictionary back into
+         # the pipeine at the same location
+         read_ang_parameters = pipeline[0].get_args()
+         read_ang_parameters["input_file"] = f"Data/Small_IN100/Slice_{i}.ang"
+         pipeline[0].set_args(read_ang_parameters)
+
+         # Do the same modification here for the 5th filter in the pipeline
+         write_image_parameters = pipeline[5].get_args()
+         write_image_parameters["file_name"] = f"Output/Edax_IPF_Colors/Small_IN100_Slice_{i}.png"
+         pipeline[5].set_args(write_image_parameters)
+
+         # Execute the modified pipeline
+         result = pipeline.execute(data_structure)
+         nxutility.check_pipeline_result(result=result)
