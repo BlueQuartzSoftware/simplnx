@@ -27,7 +27,7 @@ DatasetIO::DatasetIO(DatasetIO&& other) noexcept
 {
 }
 
-DatasetIO::~DatasetIO()
+DatasetIO::~DatasetIO() noexcept
 {
   closeHdf5();
 }
