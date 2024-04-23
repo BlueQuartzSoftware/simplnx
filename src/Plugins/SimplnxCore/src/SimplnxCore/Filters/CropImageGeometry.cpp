@@ -672,7 +672,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
 
     // NOW DO THE ACTUAL RENUMBERING and updating.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
-    return Sampling::RenumberFeatures(dataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, shouldCancel);
+    return Sampling::RenumberFeatures(dataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, messageHandler, shouldCancel);
   }
 
   // The deferred actions will take care of removing the original and renaming the output if

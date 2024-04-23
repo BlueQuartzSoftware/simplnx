@@ -318,7 +318,7 @@ IFilter::UniquePointer RemoveMinimumSizeFeaturesFilter::clone() const
   return std::make_unique<RemoveMinimumSizeFeaturesFilter>();
 }
 
-IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
@@ -336,12 +336,12 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
     return {nonstd::make_unexpected(std::vector<Error>{Error{-k_BadMinAllowedFeatureSize, ss}})};
   }
 
-  const FeatureIdsArrayType* featureIdsPtr = data.getDataAs<FeatureIdsArrayType>(featureIdsPath);
+  const FeatureIdsArrayType* featureIdsPtr = dataStructure.getDataAs<FeatureIdsArrayType>(featureIdsPath);
   if(featureIdsPtr == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadNumCellsPath, "FeatureIds not provided as an Int32 Array."}})};
   }
-  const NumCellsArrayType* numCellsPtr = data.getDataAs<NumCellsArrayType>(numCellsPath);
+  const NumCellsArrayType* numCellsPtr = dataStructure.getDataAs<NumCellsArrayType>(numCellsPath);
   if(numCellsPtr == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadNumCellsPath, "Num Cells not provided as an Int32 Array."}})};
@@ -350,19 +350,19 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
 
   if(applyToSinglePhase)
   {
-    const PhasesArrayType* featurePhasesPtr = data.getDataAs<PhasesArrayType>(featurePhasesPath);
-    const PhasesArrayType::store_type* featurePhases = nullptr;
+    const PhasesArrayType* featurePhasesPtr = dataStructure.getDataAs<PhasesArrayType>(featurePhasesPath);
+    // const PhasesArrayType::store_type* featurePhases = nullptr;
     if(featurePhasesPtr != nullptr)
     {
       dataArrayPaths.push_back(featurePhasesPath);
-      featurePhases = featurePhasesPtr->getDataStore();
+      // featurePhases = featurePhasesPtr->getDataStore();
     }
   }
 
-  data.validateNumberOfTuples(dataArrayPaths);
+  dataStructure.validateNumberOfTuples(dataArrayPaths);
 
   DataPath featureGroupDataPath = numCellsPath.getParent();
-  const BaseGroup* featureDataGroup = data.getDataAs<BaseGroup>(featureGroupDataPath);
+  const BaseGroup* featureDataGroup = dataStructure.getDataAs<BaseGroup>(featureGroupDataPath);
   if(nullptr == featureDataGroup)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_ParentlessPathError, "The provided NumCells DataPath does not have a parent."}})};
@@ -372,30 +372,32 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
-  std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
-                               featureIdsPath.toString(), featureGroupDataPath.toString());
-
-  auto result = nx::core::GetAllChildDataPaths(data, featureGroupDataPath, DataObject::Type::NeighborList);
-  if(!result.has_value())
+  // This section gives a warning to the user about NeighborLists possibly being removed
   {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the neighbor list children of group '{}'", featureGroupDataPath.toString())}})};
+    // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
+    std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
+                                 featureIdsPath.toString(), featureGroupDataPath.toString());
+
+    auto result = nx::core::GetAllChildDataPaths(dataStructure, featureGroupDataPath, DataObject::Type::NeighborList);
+    if(!result.has_value())
+    {
+      return {nonstd::make_unexpected(
+          std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the neighbor list children of group '{}'", featureGroupDataPath.toString())}})};
+    }
+    std::vector<DataPath> featureNeighborListArrays = result.value();
+    for(const auto& featureNeighborList : featureNeighborListArrays)
+    {
+      ss.append("  " + featureNeighborList.toString() + "\n");
+      auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
+      resultOutputActions.value().actions.emplace_back(std::move(action));
+    }
+
+    // Inform users that the following arrays are going to be modified in place
+    // Feature Data is going to be modified
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
+
+    resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
   }
-  std::vector<DataPath> featureNeighborListArrays = result.value();
-  for(const auto& featureNeighborList : featureNeighborListArrays)
-  {
-    ss.append("  " + featureNeighborList.toString() + "\n");
-    auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
-    resultOutputActions.value().actions.emplace_back(std::move(action));
-  }
-
-  // Inform users that the following arrays are going to be modified in place
-  // Feature Data is going to be modified
-  nx::core::AppendDataObjectModifications(data, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
-
-  resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
-
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -466,7 +468,7 @@ Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructu
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
   messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
 
-  nx::core::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArrayRef, currentFeatureCount);
+  nx::core::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArrayRef, currentFeatureCount, messageHandler);
 
   return {};
 }

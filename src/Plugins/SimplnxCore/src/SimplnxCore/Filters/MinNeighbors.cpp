@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -21,6 +22,8 @@ namespace
 constexpr int64 k_TupleCountInvalidError = -250;
 constexpr int64 k_MissingFeaturePhasesError = -251;
 constexpr int32 k_InconsistentTupleCount = -252;
+constexpr int32 k_NeighborListRemoval = -5558;
+constexpr int32 k_FetchChildArrayError = -5559;
 
 void assignBadPoints(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
@@ -401,12 +404,42 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataSt
   // Feature Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
 
+  // This section gives a warning to the user about NeighborLists possibly being removed
+  {
+    DataPath featureGroupDataPath = numNeighborsPath.getParent();
+
+    // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
+    std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
+                                 featureIdsPath.toString(), featureGroupDataPath.toString());
+
+    auto result = nx::core::GetAllChildDataPaths(dataStructure, featureGroupDataPath, DataObject::Type::NeighborList);
+    if(!result.has_value())
+    {
+      return {nonstd::make_unexpected(
+          std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the neighbor list children of group '{}'", featureGroupDataPath.toString())}})};
+    }
+    std::vector<DataPath> featureNeighborListArrays = result.value();
+    for(const auto& featureNeighborList : featureNeighborListArrays)
+    {
+      ss.append("  " + featureNeighborList.toString() + "\n");
+      auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
+      resultOutputActions.value().actions.emplace_back(std::move(action));
+    }
+
+    // Inform users that the following arrays are going to be modified in place
+    // Feature Data is going to be modified
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
+
+    resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+  }
+
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> MinNeighbors::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                   const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
@@ -418,7 +451,7 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   // we don't have access to the data yet
   if(applyToSinglePhase)
   {
-    auto& featurePhasesArray = data.getDataRefAs<Int32Array>(featurePhasesPath);
+    auto& featurePhasesArray = dataStructure.getDataRefAs<Int32Array>(featurePhasesPath);
     auto& featurePhases = featurePhasesArray.getDataStoreRef();
 
     usize numFeatures = featurePhasesArray.getNumberOfTuples();
@@ -439,27 +472,27 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
     }
   }
 
-  auto activeObjectsResult = mergeContainedFeatures(data, args, shouldCancel);
+  auto activeObjectsResult = mergeContainedFeatures(dataStructure, args, shouldCancel);
   if(!activeObjectsResult.has_value())
   {
     return {nonstd::make_unexpected(std::vector<Error>{activeObjectsResult.error()})};
   }
 
   auto cellDataAttrMatrix = args.value<DataPath>(MinNeighbors::k_CellDataAttributeMatrixPath_Key);
-  auto result = nx::core::GetAllChildDataPaths(data, cellDataAttrMatrix, DataObject::Type::DataArray);
+  auto result = nx::core::GetAllChildDataPaths(dataStructure, cellDataAttrMatrix, DataObject::Type::DataArray);
   if(!result.has_value())
   {
     return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Group '{}'", cellDataAttrMatrix.toString()));
   }
 
   // Run the algorithm.
-  assignBadPoints(data, args, shouldCancel);
+  assignBadPoints(dataStructure, args, shouldCancel);
 
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIdsPath_Key);
-  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
   auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighborsPath_Key);
-  auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
+  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
 
   DataPath cellFeatureGroupPath = numNeighborsPath.getParent();
   size_t currentFeatureCount = numNeighborsArray.getNumberOfTuples();
@@ -473,7 +506,7 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
   messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
 
-  nx::core::RemoveInactiveObjects(data, cellFeatureGroupPath, activeObjects, featureIdsArray, currentFeatureCount);
+  nx::core::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArray, currentFeatureCount, messageHandler);
 
   return {};
 }
