@@ -9,5 +9,5 @@ dependencies:
   - pillow
   - scipy
   - imageio
-  - simplnx
+  - dream3dnx
   
