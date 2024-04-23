@@ -389,7 +389,7 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
     {
       ss.append("  " + featureNeighborList.toString() + "\n");
       auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
-      resultOutputActions.value().actions.emplace_back(std::move(action));
+      resultOutputActions.value().deferredActions.emplace_back(std::move(action));
     }
 
     // Inform users that the following arrays are going to be modified in place

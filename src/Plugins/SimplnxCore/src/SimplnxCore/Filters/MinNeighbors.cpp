@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
+
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -423,7 +424,7 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataSt
     {
       ss.append("  " + featureNeighborList.toString() + "\n");
       auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
-      resultOutputActions.value().actions.emplace_back(std::move(action));
+      resultOutputActions.value().deferredActions.emplace_back(std::move(action));
     }
 
     // Inform users that the following arrays are going to be modified in place
