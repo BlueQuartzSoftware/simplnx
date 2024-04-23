@@ -1,8 +1,15 @@
-.. Tutorial 1:
+.. _Tutorial_1:
 
 =====================================
 Tutorial 1: Basic Python Integration
 =====================================
+
+This tutorial is meant to be a very basic introduction to interacting with the DREAM3D-NX underlying library called 'simplnx'. This
+tutorial will cover environment setup, minimal import statements and executing a few basic filters. Once you understand how to
+execute a filter, all filters are generally setup the same way. Use the search feature on the web site to find the filter 
+that you are interested in running.
+
+.. _Tutorial_1_Setup:
 
 ###################################
 Anaconda Virtual Environment Setup
@@ -12,9 +19,9 @@ Anaconda Virtual Environment Setup
 
       conda config --add channels conda-forge
       conda config --set channel_priority strict
-      conda create -n nxpython python=3.12
+      conda create -c bluequartzsoftware -n nxpython python=3.12 dream3dnx
       conda activate nxpython
-      conda install -c bluequartzsoftware dream3dnx
+  
 
 ###################################
 Introduction
@@ -63,7 +70,7 @@ A few caveats to take note of:
 First Steps: Create a Group in the DataStructure
 ################################################
 
-As in the user interface of DREAM3D-NX, you as the developer can execute any of filter from DREAM3D-NX using only Python codes. This is performed
+As in the user interface of DREAM3D-NX, you as the developer can execute any of the filters from DREAM3D-NX using only Python codes. This is performed
 by instantiating the filter and then calling the `execute()` method with the appropriate parameters used in the call. With the current API, we are tending to
 inline instantiate the filter and execute it all in the same line. Some things to note with this small piece of code:
 
@@ -112,7 +119,7 @@ And the output would look like the following:
 Result Objects
 ################################################
 
-Each time a filter is executed, it will return an `nx.ExecuteResult` object. This 
+Each time a filter is executed, it will return a :ref:`nx.IFilter.ExecuteResult <result>` object. This 
 object can be interrogated for both warnings and errors that occured while the 
 filter was executing. A typical function that can be written to properly error
 check the 'result' value is the following:
@@ -127,15 +134,15 @@ check the 'result' value is the following:
         """
         if len(result.warnings) != 0:
             for w in result.warnings:
-            print(f'Warning: ({w.code}) {w.message}')
+                print(f'Warning: ({w.code}) {w.message}')
         
         has_errors = len(result.errors) != 0 
         if has_errors:
             for err in result.errors:
-            print(f'Error: ({err.code}) {err.message}')
-            raise RuntimeError(result)
-        
-        print(f"{filter.name()} :: No errors running the filter")
+                print(f'Error: ({err.code}) {err.message}')
+                raise RuntimeError(result)
+        else:
+            print(f"{filter.name()} :: No errors running the filter")
 
 If you were to integrate this into your own code, then we would get the following when we wanted to execute a filter:
 
@@ -153,7 +160,7 @@ Creating a DataArray Object
 Raw data is stored in a :ref:`DataArray` object within the :ref:`DataStructure`. The DREAM3D-NX python bindings only expose a subset of functionality
 from the :ref:`DataArray`, enough to get the name, tuple shape and component shape. **ALL** interactions to modify a :ref:`DataArray` are done via a 
 `numpy view <https://numpy.org/doc/stable/user/basics.copies.html>`_. Let us first create a :ref:`DataArray` object within the :ref:`DataStructure` by using the
-:ref:`CreateDataArray` filter. Adding into the current python source file... 
+:ref:`CreateDataArray <CreateDataArray>` filter. Adding into the current python source file... 
 
 .. code:: python
 
@@ -245,6 +252,23 @@ And if you wanted to use `matplotlib <https://matplotlib.org/>`_ to view the dat
 
 
 ################################################
+Saving your Data to a .dream3d file
+################################################
+
+Most pipelines would want to save any modified data to a .dream3d file (if you are wanting the easiest compatibility with DREAM3D-NX). In order
+to do this one would run the :ref:`WriteDREAM3DFilter <WriteDREAM3DFilter>`. Appending the following code will write the entire
+:ref:`DataStructure` to a .dream3d file (which is a plain HDF5 file).
+
+.. code:: python
+
+    # Use the WriteDREAM3DFilter to write out the modified DataStructure to disk
+    result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure,
+                                        export_file_path="Output/lesson_4.dream3d",
+                                        write_xdmf_file=False)
+    check_filter_result( nx.WriteDREAM3DFilter(), result)
+
+
+################################################
 Complete Source Code
 ################################################
 
@@ -255,26 +279,52 @@ Complete Source Code
     import matplotlib.pyplot as plt
     import nxutility
 
+
+    def check_filter_result(filter: nx.IFilter, result: nx.IFilter.ExecuteResult) -> None:
+        """
+        This function will check the `result` for any errors. If errors do exist then a 
+        `RuntimeError` will be thrown. Your own code to modify this to return something
+        else that doesn't just stop your script in its tracks.
+        """
+        if len(result.warnings) != 0:
+            for w in result.warnings:
+                print(f'Warning: ({w.code}) {w.message}')
+        
+        has_errors = len(result.errors) != 0 
+        if has_errors:
+            for err in result.errors:
+                print(f'Error: ({err.code}) {err.message}')
+                raise RuntimeError(result)
+        else:
+            print(f"{filter.name()} :: No errors running the filter")
+
+
+    # #############################################################################
+    # Script Starts Here
+    # #############################################################################
+
     # Create the DataStructure instance
     data_structure = nx.DataStructure()
 
     result = nx.CreateDataGroup.execute(data_structure=data_structure, 
                                         data_object_path=nx.DataPath("Top Level Group"))
+    check_filter_result(nx.CreateDataGroup(), result)
 
     # Loop to create a bunch of DataGroups.
     for i in range(1, 6):
         current_data_group_path = nx.DataPath(f"Top Level Group {i}")
         result = nx.CreateDataGroup.execute(data_structure=data_structure, 
                                             data_object_path=current_data_group_path)
+        check_filter_result(nx.CreateDataGroup(), result)
 
-    # Execute the filter
+    # Execute the CreateDataArray filter
     result = nx.CreateDataArray().execute(data_structure=data_structure, 
                                         component_count=1, 
                                         initialization_value_str="0", 
                                         numeric_type_index=nx.NumericType.float32, 
                                         output_array_path=nx.DataPath("Top Level Group/2D Array"), 
                                         tuple_dimensions=[[4,5]])
-    nxutility.check_filter_result( nx.CreateDataArray(), result)
+    check_filter_result(nx.CreateDataArray(), result)
     print(f'{data_structure.hierarchy_to_str()}')
 
     # Try to get the array from the DataStructure
@@ -283,7 +333,7 @@ Complete Source Code
     except AttributeError as attrerr:
         print(f'{attrerr}')
         quit(1) # This is pretty harsh! Maybe something more elegant to unwind from this error
-    
+
     # Fill the numpy data view with random numbers
     rng = np.random.default_rng()
     rng.standard_normal(out=array_view, dtype=np.float32)
@@ -295,4 +345,11 @@ Complete Source Code
     plt.title("Random Data")
     plt.axis('off')  # to turn off axes
     plt.show()
+
+
+    # Use the WriteDREAM3DFilter to write out the modified DataStructure to disk
+    result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure,
+                                        export_file_path="Output/tutorial_1.dream3d",
+                                        write_xdmf_file=False)
+    check_filter_result( nx.WriteDREAM3DFilter(), result)
 

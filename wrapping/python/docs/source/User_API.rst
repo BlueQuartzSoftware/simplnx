@@ -1,7 +1,7 @@
-.. _UserAPIDocs:
-
 SIMPLNX Python API
 ===================
+
+.. _UserAPIDocs:
 
 Error & Warning Reporting
 --------------------------
@@ -11,7 +11,7 @@ Error & Warning Reporting
 
 
 .. _Result:
-.. py:class:: Result
+.. py:class:: IFilter.ExecuteResult
 
    The object that encapsulates any warnings or errors from either preflighting or executing a simplnx.Filter object.
    It can be queried for the list of errors or warnings and thus printed if needed.
@@ -23,11 +23,17 @@ Error & Warning Reporting
                                           input_type=0,
                                           output_orientation_array_name='Quaternions',
                                           output_type=2)
-      if len(result.errors) != 0:
-         print('Errors: {}', result.errors)
-         print('Warnings: {}', result.warnings)
+      if len(result.warnings) != 0:
+         for w in result.warnings:
+            print(f'Warning: ({w.code}) {w.message}')
+
+      has_errors = len(result.errors) != 0
+      if has_errors:
+         for err in result.errors:
+            print(f'Error: ({err.code}) {err.message}')
+            raise RuntimeError(result)
       else:
-         print("No errors running the ConvertOrientations")
+         print(f"{filter.name()} :: No errors running the filter")
 
 Creating Geometries
 ------------------
