@@ -51,14 +51,6 @@ Result<FileWriter> FileWriter::WrapHdf5FileId(IdType fileId)
 
 FileWriter::FileWriter() = default;
 
-FileWriter::FileWriter(FileWriter&& rhs) noexcept
-: GroupWriter()
-{
-  auto rhsId = rhs.getId();
-  setId(rhsId);
-  rhs.setId(-1);
-}
-
 FileWriter::FileWriter(const std::filesystem::path& filepath)
 : GroupWriter(0, H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT))
 {
@@ -75,7 +67,7 @@ FileWriter::FileWriter(IdType fileId)
 {
 }
 
-FileWriter::~FileWriter()
+FileWriter::~FileWriter() noexcept
 {
   closeHdf5();
 }

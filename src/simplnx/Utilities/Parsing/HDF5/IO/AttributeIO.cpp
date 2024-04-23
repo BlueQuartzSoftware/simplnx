@@ -31,7 +31,22 @@ AttributeIO::AttributeIO(IdType objectId, const std::string& attrName)
   HDF_ERROR_HANDLER_ON
 }
 
-AttributeIO::~AttributeIO()
+AttributeIO::AttributeIO(AttributeIO&& other) noexcept
+{
+  m_ObjectId = std::exchange(other.m_ObjectId, 0);
+  m_AttributeId = std::exchange(other.m_AttributeId, 0);
+  m_AttributeName = std::move(other.m_AttributeName);
+}
+
+AttributeIO& AttributeIO::operator=(AttributeIO&& other) noexcept
+{
+  m_ObjectId = std::exchange(other.m_ObjectId, 0);
+  m_AttributeId = std::exchange(other.m_AttributeId, 0);
+  m_AttributeName = std::move(other.m_AttributeName);
+  return *this;
+}
+
+AttributeIO::~AttributeIO() noexcept
 {
   closeHdf5();
 }

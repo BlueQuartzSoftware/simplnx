@@ -7,9 +7,7 @@
 namespace nx::core::HDF5
 {
 
-ObjectWriter::ObjectWriter()
-{
-}
+ObjectWriter::ObjectWriter() = default;
 
 ObjectWriter::ObjectWriter(IdType parentId, IdType objectId)
 : m_ParentId(parentId)
@@ -17,7 +15,20 @@ ObjectWriter::ObjectWriter(IdType parentId, IdType objectId)
 {
 }
 
-ObjectWriter::~ObjectWriter() = default;
+ObjectWriter::ObjectWriter(ObjectWriter&& other) noexcept
+{
+  m_Id = std::exchange(other.m_Id, 0);
+  m_ParentId = std::exchange(other.m_ParentId, 0);
+}
+
+ObjectWriter& ObjectWriter::operator=(ObjectWriter&& other) noexcept
+{
+  m_Id = std::exchange(other.m_Id, 0);
+  m_ParentId = std::exchange(other.m_ParentId, 0);
+  return *this;
+}
+
+ObjectWriter::~ObjectWriter() noexcept = default;
 
 IdType ObjectWriter::getFileId() const
 {
@@ -27,6 +38,11 @@ IdType ObjectWriter::getFileId() const
   }
 
   return H5Iget_file_id(getParentId());
+}
+
+void ObjectWriter::setParentId(IdType parentId)
+{
+  m_ParentId = parentId;
 }
 
 IdType ObjectWriter::getParentId() const

@@ -26,12 +26,15 @@ public:
   ObjectWriter(IdType parentId, IdType objectId = 0);
 
   ObjectWriter(const ObjectWriter& other) = delete;
-  ObjectWriter(ObjectWriter&& other) noexcept = default;
+  ObjectWriter(ObjectWriter&& other) noexcept;
+
+  ObjectWriter& operator=(const ObjectWriter& other) = delete;
+  ObjectWriter& operator=(ObjectWriter&& other) noexcept;
 
   /**
    * @brief Releases the wrapped HDF5 object.
    */
-  virtual ~ObjectWriter();
+  virtual ~ObjectWriter() noexcept;
 
   /**
    * @brief Returns true if the ObjectWriter has a valid target. Otherwise,
@@ -93,14 +96,18 @@ public:
    */
   AttributeWriter createAttribute(const std::string& name);
 
-  ObjectWriter& operator=(const ObjectWriter& other) = delete;
-  ObjectWriter& operator=(ObjectWriter&& other) noexcept = default;
-
 protected:
   /**
    * @brief Closes the HDF5 ID and resets it to 0.
    */
   virtual void closeHdf5() = 0;
+
+  /**
+   * @brief Sets a new parent ID.
+   * This method should only be used in the move operations of derived classes.
+   * @param parentId
+   */
+  void setParentId(IdType parentId);
 
 private:
   IdType m_ParentId = 0;

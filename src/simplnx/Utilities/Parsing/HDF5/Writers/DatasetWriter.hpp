@@ -29,12 +29,15 @@ public:
   DatasetWriter(IdType parentId, const std::string& datasetName);
 
   DatasetWriter(const DatasetWriter& other) = delete;
-  DatasetWriter(DatasetWriter&& other) noexcept = default;
+  DatasetWriter(DatasetWriter&& other) noexcept;
+
+  DatasetWriter& operator=(const DatasetWriter& other) = delete;
+  DatasetWriter& operator=(DatasetWriter&& other) noexcept;
 
   /**
    * @brief Default destructor
    */
-  virtual ~DatasetWriter();
+  ~DatasetWriter() noexcept override;
 
   /**
    * @brief Returns true if the DatasetWriter has a valid target. Otherwise,
@@ -206,9 +209,6 @@ public:
    */
   IdType getPListId() const;
 
-  DatasetWriter& operator=(const DatasetWriter& other) = delete;
-  DatasetWriter& operator=(DatasetWriter&& other) noexcept = delete;
-
 protected:
   /**
    * @brief Finds and deletes any existing attribute with the current name.
@@ -248,6 +248,6 @@ protected:
   void closeHdf5() override;
 
 private:
-  const std::string m_DatasetName;
+  std::string m_DatasetName;
 };
 } // namespace nx::core::HDF5

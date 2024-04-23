@@ -27,10 +27,13 @@ public:
   GroupWriter(const GroupWriter& other) = delete;
   GroupWriter(GroupWriter&& other) noexcept = default;
 
+  GroupWriter& operator=(const GroupWriter& other) = delete;
+  GroupWriter& operator=(GroupWriter&& other) noexcept = default;
+
   /**
    * @brief Closes the HDF5 group.
    */
-  virtual ~GroupWriter();
+  ~GroupWriter() noexcept override;
 
   /**
    * @brief Returns true if the GroupWriter is valid. Returns false otherwise.
@@ -64,9 +67,6 @@ public:
    * @return Result<>
    */
   Result<> createLink(const std::string& objectPath);
-
-  GroupWriter& operator=(const GroupWriter& other) = delete;
-  GroupWriter& operator=(GroupWriter&& other) noexcept = default;
 
 protected:
   /**

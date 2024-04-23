@@ -26,6 +26,19 @@ AttributeReader::AttributeReader(IdType objectId, const std::string& attrName)
   HDF_ERROR_HANDLER_ON
 }
 
+AttributeReader::AttributeReader(AttributeReader&& other) noexcept
+{
+  m_ObjectId = std::exchange(other.m_ObjectId, 0);
+  m_AttributeId = std::exchange(other.m_AttributeId, 0);
+}
+
+AttributeReader& AttributeReader::operator=(AttributeReader&& other) noexcept
+{
+  m_ObjectId = std::exchange(other.m_ObjectId, 0);
+  m_AttributeId = std::exchange(other.m_AttributeId, 0);
+  return *this;
+}
+
 AttributeReader::~AttributeReader() noexcept
 {
   closeHdf5();
