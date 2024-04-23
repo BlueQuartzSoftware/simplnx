@@ -1,3 +1,5 @@
+# https://www.hmilch.net/downloads/cli_format.html
+
 import simplnx as nx
 import numpy as np
 from typing import List, Dict
@@ -6,6 +8,10 @@ from DataAnalysisToolkit.utilities.cli_tools import parse_file, parse_geometry_a
 
 class CliReaderFilter:
   CLI_FILE_PATH = 'cli_file_path'
+  USE_BOUNDING_BOX_MASK = 'use_bounding_box_mask'
+  MIN_MAX_X_COORDS = 'min_max_x_coords'
+  MIN_MAX_Y_COORDS = 'min_max_y_coords'
+  MIN_MAX_Z_COORDS = 'min_max_z_coords'
   OUTPUT_EDGE_GEOM_PATH = 'output_edge_geom_path'
   OUTPUT_VERTEX_ATTRMAT_NAME = 'output_vertex_attrmat_name'
   OUTPUT_EDGE_ATTRMAT_NAME = 'output_edge_attrmat_name'
@@ -38,6 +44,10 @@ class CliReaderFilter:
 
     params.insert(nx.Parameters.Separator("Parameters"))
     params.insert(nx.FileSystemPathParameter(CliReaderFilter.CLI_FILE_PATH, 'Input CLI File', 'The path to the input CLI file that will be read.', '', {'.cli'}, nx.FileSystemPathParameter.PathType.InputFile))
+    params.insert_linkable_parameter(nx.BoolParameter(CliReaderFilter.USE_BOUNDING_BOX_MASK, 'Use Bounding Box Mask', 'Determines whether or not to use a bounding box to mask out any part of the dataset that is outside the bounding box.', False))
+    params.insert(nx.VectorFloat64Parameter(CliReaderFilter.MIN_MAX_X_COORDS, 'X Min/Max', 'The minimum and maximum X coordinate for the bounding box mask.', [0.0, 100.0], ['X Min', 'X Max']))
+    params.insert(nx.VectorFloat64Parameter(CliReaderFilter.MIN_MAX_Y_COORDS, 'Y Min/Max', 'The minimum and maximum Y coordinate for the bounding box mask.', [0.0, 100.0], ['Y Min', 'Y Max']))
+    params.insert(nx.VectorFloat64Parameter(CliReaderFilter.MIN_MAX_Z_COORDS, 'Z Min/Max', 'The minimum and maximum Z coordinate for the bounding box mask.', [0.0, 100.0], ['Z Min', 'Z Max']))
     params.insert(nx.Parameters.Separator("Created Data Objects"))
     params.insert(nx.DataGroupCreationParameter(CliReaderFilter.OUTPUT_EDGE_GEOM_PATH, 'Output Edge Geometry', 'The path to the newly created edge geometry.', nx.DataPath("[Edge Geometry]")))
     params.insert(nx.DataObjectNameParameter(CliReaderFilter.OUTPUT_VERTEX_ATTRMAT_NAME, 'Output Vertex Attribute Matrix Name', 'The name of the newly created vertex attribute matrix.', 'Vertex Data'))
@@ -45,6 +55,10 @@ class CliReaderFilter:
     params.insert(nx.DataObjectNameParameter(CliReaderFilter.OUTPUT_FEATURE_ATTRMAT_NAME, 'Output Feature Attribute Matrix Name', 'The name of the newly created feature attribute matrix.', 'Feature Data'))
     params.insert(nx.DataObjectNameParameter(CliReaderFilter.SHARED_VERTICES_ARRAY_NAME, 'Shared Vertices Array Name', 'The name of the newly created shared vertices array.', 'Shared Vertices'))
     params.insert(nx.DataObjectNameParameter(CliReaderFilter.SHARED_EDGES_ARRAY_NAME, 'Shared Edges Array Name', 'The name of the newly created shared edges array.', 'Shared Edges'))
+
+    params.link_parameters(CliReaderFilter.USE_BOUNDING_BOX_MASK, CliReaderFilter.MIN_MAX_X_COORDS, True)
+    params.link_parameters(CliReaderFilter.USE_BOUNDING_BOX_MASK, CliReaderFilter.MIN_MAX_Y_COORDS, True)
+    params.link_parameters(CliReaderFilter.USE_BOUNDING_BOX_MASK, CliReaderFilter.MIN_MAX_Z_COORDS, True)
 
     return params
 
@@ -56,7 +70,18 @@ class CliReaderFilter:
     output_feature_attrmat_name: str = args[CliReaderFilter.OUTPUT_FEATURE_ATTRMAT_NAME]
     shared_vertices_array_name: str = args[CliReaderFilter.SHARED_VERTICES_ARRAY_NAME]
     shared_edges_array_name: str = args[CliReaderFilter.SHARED_EDGES_ARRAY_NAME]
-
+    use_bounding_box_mask: bool = args[CliReaderFilter.USE_BOUNDING_BOX_MASK]
+    min_max_x_coords: list = args[CliReaderFilter.MIN_MAX_X_COORDS]
+    min_max_y_coords: list = args[CliReaderFilter.MIN_MAX_Y_COORDS]
+    min_max_z_coords: list = args[CliReaderFilter.MIN_MAX_Z_COORDS]
+    
+    if use_bounding_box_mask:
+      if min_max_x_coords[0] > min_max_x_coords[1]:
+        return nx.IFilter.PreflightResult(nx.OutputActions(), [nx.Error(-9100, f"Invalid Bounding Box Mask: The minimum X coordinate ({min_max_x_coords[0]}) is larger than the maximum X coordinate ({min_max_x_coords[1]}).")])
+      if min_max_y_coords[0] > min_max_y_coords[1]:
+        return nx.IFilter.PreflightResult(nx.OutputActions(), [nx.Error(-9101, f"Invalid Bounding Box Mask: The minimum Y coordinate ({min_max_y_coords[0]}) is larger than the maximum Y coordinate ({min_max_y_coords[1]}).")])
+      if min_max_z_coords[0] > min_max_z_coords[1]:
+        return nx.IFilter.PreflightResult(nx.OutputActions(), [nx.Error(-9102, f"Invalid Bounding Box Mask: The minimum Z coordinate ({min_max_z_coords[0]}) is larger than the maximum Z coordinate ({min_max_z_coords[1]}).")])
 
     # Here we create the Edge Geometry (and the 2 internal Attribute Matrix to hold vertex and edge data arrays.)
     # Because this is a "reader" type of filter we do not know (at least in this reader implementation)
@@ -92,12 +117,17 @@ class CliReaderFilter:
     output_edge_geom_path: nx.DataPath = args[CliReaderFilter.OUTPUT_EDGE_GEOM_PATH]
     output_edge_attrmat_name: str = args[CliReaderFilter.OUTPUT_EDGE_ATTRMAT_NAME]
     output_feature_attrmat_name: str = args[CliReaderFilter.OUTPUT_FEATURE_ATTRMAT_NAME]
-    output_vertex_attrmat_name: str = args[CliReaderFilter.OUTPUT_VERTEX_ATTRMAT_NAME]
+    use_bounding_box_mask: bool = args[CliReaderFilter.USE_BOUNDING_BOX_MASK]
+    min_max_x_coords: list = args[CliReaderFilter.MIN_MAX_X_COORDS]
+    min_max_y_coords: list = args[CliReaderFilter.MIN_MAX_Y_COORDS]
+    min_max_z_coords: list = args[CliReaderFilter.MIN_MAX_Z_COORDS]
 
-    layer_features = []
+    bounding_box_coords = None
+    if use_bounding_box_mask:
+      bounding_box_coords = min_max_x_coords+min_max_y_coords+min_max_z_coords
 
     try:
-      layer_features, layer_heights, hatch_labels = parse_file(Path(cli_file_path))
+      layer_features, layer_heights, hatch_labels = parse_file(Path(cli_file_path), bounding_box=bounding_box_coords)
     except Exception as e:
       return nx.Result([nx.Error(-1000, f"An error occurred while parsing the CLI file '{cli_file_path}': {e}")])
 
@@ -116,6 +146,8 @@ class CliReaderFilter:
       message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Importing layer {layer_idx + 1}/{len(layer_features)}...'))
 
       for hatch in layer:
+        if hatch.n == 0:
+          continue
         num_of_hatches += hatch.n
         for start_x, start_y in zip(hatch.start_xvals, hatch.start_yvals):
           start_vertices.append([start_x, start_y, hatch.z_height])
