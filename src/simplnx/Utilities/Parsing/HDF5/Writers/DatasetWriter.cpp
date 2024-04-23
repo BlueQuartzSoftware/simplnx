@@ -10,10 +10,7 @@
 
 namespace nx::core::HDF5
 {
-DatasetWriter::DatasetWriter()
-: ObjectWriter()
-{
-}
+DatasetWriter::DatasetWriter() = default;
 
 DatasetWriter::DatasetWriter(IdType parentId, const std::string& datasetName)
 : ObjectWriter(parentId)
@@ -27,7 +24,25 @@ DatasetWriter::DatasetWriter(IdType parentId, const std::string& datasetName)
 #endif
 }
 
-DatasetWriter::~DatasetWriter()
+DatasetWriter::DatasetWriter(DatasetWriter&& other) noexcept
+: ObjectWriter(std::move(other))
+, m_DatasetName(std::move(other.m_DatasetName))
+{
+}
+
+DatasetWriter& DatasetWriter::operator=(DatasetWriter&& other) noexcept
+{
+  setParentId(other.getParentId());
+  setId(other.getId());
+  m_DatasetName = std::move(other.m_DatasetName);
+
+  other.setId(0);
+  other.setParentId(0);
+
+  return *this;
+}
+
+DatasetWriter::~DatasetWriter() noexcept
 {
   closeHdf5();
 }

@@ -73,12 +73,19 @@ function(simplnx_enable_warnings)
       set(SHADOW_WARNING "shadow-all")
     endif()
 
+    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+      set(CLANG_WARNINGS
+        -Werror=implicit-exception-spec-mismatch # Wimplicit-exception-spec-mismatch: function previously declared with an explicit/implicit exception specification redeclared with an implicit/explicit exception specification
+      )
+    endif()
+
     target_compile_options(${ARG_TARGET}
       PRIVATE
         # Warning to error
         -Werror=parentheses # Wparentheses: Warn if parentheses are omitted in certain contexts, such as when there is an assignment in a context where a truth value is expected, or when operators are nested whose precedence people often get confused about
         -Werror=return-type # Wreturn-type: Warn about any "return" statement with no return value in a function whose return type is not "void"
         -Werror=${SHADOW_WARNING} # Wshadow: Warn whenever a local variable or type declaration shadows another variable, parameter, type, class member (in C++), or instance variable (in Objective-C) or whenever a built-in function is shadowed.
+        ${CLANG_WARNINGS}
     )
   
   endif()

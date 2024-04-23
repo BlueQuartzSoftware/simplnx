@@ -29,10 +29,13 @@ public:
   FileReader(const FileReader& other) = delete;
   FileReader(FileReader&& other) noexcept = default;
 
+  FileReader& operator=(const FileReader& other) = delete;
+  FileReader& operator=(FileReader&& other) noexcept = default;
+
   /**
    * @brief Releases the HDF5 file ID.
    */
-  virtual ~FileReader() noexcept;
+  ~FileReader() noexcept override;
 
   /**
    * @brief Returns the HDF5 file name. Returns an empty string if the file
@@ -40,9 +43,6 @@ public:
    * @return std::string
    */
   std::string getName() const override;
-
-  FileReader& operator=(const FileReader& other) = delete;
-  FileReader& operator=(FileReader&& other) noexcept = default;
 
 protected:
   /**

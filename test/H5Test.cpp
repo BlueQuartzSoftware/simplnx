@@ -19,6 +19,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
@@ -80,50 +81,6 @@ bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
   }
   return true;
 }
-} // namespace
-
-#if TEST_LEGACY
-TEST_CASE("Read Legacy DREAM.3D Data")
-{
-  auto app = Application::GetOrCreateInstance();
-  std::filesystem::path filepath = GetLegacyFilepath();
-  REQUIRE(exists(filepath));
-  Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
-  DataStructure dataStructure = result.value();
-
-  const std::string geomName = "Small IN100";
-  const auto* image = dataStructure.getDataAs<ImageGeom>(DataPath({geomName}));
-  REQUIRE(image != nullptr);
-  REQUIRE(equalsf(image->getOrigin(), FloatVec3(-47.0f, 0.0f, -29.0f)));
-  REQUIRE(image->getDimensions() == SizeVec3(189, 201, 117));
-  REQUIRE(equalsf(image->getSpacing(), FloatVec3(0.25f, 0.25f, 0.25f)));
-
-  {
-    const std::string testDCName = "DataContainer";
-    DataPath testDCPath({testDCName});
-    auto* testDC = dataStructure.getDataAs<DataGroup>(testDCPath);
-    REQUIRE(testDC != nullptr);
-
-    DataPath testAMPath = testDCPath.createChildPath("AttributeMatrix");
-    REQUIRE(dataStructure.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
-
-    REQUIRE(dataStructure.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
-    REQUIRE(dataStructure.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(testAMPath.createChildPath("Float32")) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(testAMPath.createChildPath("Float64")) != nullptr);
-    REQUIRE(dataStructure.getDataAs<BoolArray>(testAMPath.createChildPath("Bool")) != nullptr);
-  }
-
-  {
-    DataPath grainDataPath({geomName, "Grain Data"});
-    REQUIRE(dataStructure.getData(grainDataPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<NeighborList<int32_t>>(grainDataPath.createChildPath("NeighborList")) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumElements")) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumNeighbors")) != nullptr);
-  }
-}
-#endif
 
 DataStructure GetTestDataStructure()
 {
@@ -131,10 +88,7 @@ DataStructure GetTestDataStructure()
   auto group = DataGroup::Create(dataStructure, "Group");
   REQUIRE(group != nullptr);
 
-  auto montage = GridMontage::Create(dataStructure, "Montage", group->getId());
-  REQUIRE(montage != nullptr);
-
-  auto geom = ImageGeom::Create(dataStructure, "Geometry", montage->getId());
+  auto geom = ImageGeom::Create(dataStructure, "Geometry");
   REQUIRE(geom != nullptr);
 
   auto scalar = ScalarData<int32>::Create(dataStructure, "Scalar", 7, geom->getId());
@@ -195,69 +149,6 @@ DataStructure CreateDataStructure()
   Int32Array* laue_data = CreateTestDataArray<int32>("Laue Class", dataStructure, {numTuples}, {numComponents}, phase_group->getId());
 
   return dataStructure;
-}
-
-TEST_CASE("ImageGeometryIO")
-{
-  fs::path dataDir = GetDataDir();
-
-  if(!fs::exists(dataDir))
-  {
-    REQUIRE(fs::create_directories(dataDir));
-  }
-
-  const DataPath imageGeomPath({"ImageGeom"});
-  const std::string cellDataName = "CellData";
-  const DataPath cellDataPath = imageGeomPath.createChildPath(cellDataName);
-  const CreateImageGeometryAction::DimensionType dims = {10, 10, 10};
-  const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
-  const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
-
-  DataStructure originalDataStructure;
-  auto action = CreateImageGeometryAction(imageGeomPath, dims, origin, spacing, cellDataName, IGeometry::LengthUnit::Micrometer);
-  Result<> actionResult = action.apply(originalDataStructure, IDataAction::Mode::Execute);
-  SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
-
-  fs::path filePath = dataDir / "ImageGeometryIO.dream3d";
-
-  std::string filePathString = filePath.string();
-
-  {
-    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePathString);
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
-
-    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
-    REQUIRE(fileWriter.isValid());
-
-    Result<> writeResult = HDF5::DataStructureWriter::WriteFile(originalDataStructure, fileWriter);
-    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-  }
-
-  {
-    nx::core::HDF5::FileReader fileReader(filePathString);
-    REQUIRE(fileReader.isValid());
-
-    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
-    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
-    DataStructure newDataStructure = std::move(readResult.value());
-
-    auto* imageGeom = newDataStructure.getDataAs<ImageGeom>(imageGeomPath);
-    REQUIRE(imageGeom != nullptr);
-
-    REQUIRE(imageGeom->getDimensions() == SizeVec3(dims));
-    REQUIRE(imageGeom->getOrigin() == FloatVec3(origin));
-    REQUIRE(imageGeom->getSpacing() == FloatVec3(spacing));
-
-    auto* cellData = imageGeom->getCellData();
-    REQUIRE(cellData != nullptr);
-
-    REQUIRE(cellData->getName() == cellDataName);
-    REQUIRE(imageGeom->getCellDataPath() == cellDataPath);
-
-    auto cellDataShape = std::vector<usize>(dims.crbegin(), dims.crend());
-
-    REQUIRE(cellData->getShape() == cellDataShape);
-  }
 }
 
 const std::string k_TriangleGroupName = "TRIANGLE_GEOMETRY";
@@ -564,6 +455,170 @@ void checkNodeGeomData(const DataStructure& dataStructure, const NodeBasedGeomDa
   REQUIRE(newNodeData == nodeData);
 }
 
+template <class T>
+HDF5::IdType GetId(const T& object)
+{
+  if constexpr(std::is_same_v<T, HDF5::AttributeReader> || std::is_same_v<T, HDF5::AttributeIO>)
+  {
+    return object.getAttributeId();
+  }
+  else if constexpr(std::is_same_v<T, HDF5::AttributeWriter>)
+  {
+    return object.getObjectId();
+  }
+  else
+  {
+    return object.getId();
+  }
+}
+
+template <class H5ClassT>
+H5ClassT CreateTempObject()
+{
+  if constexpr(std::is_same_v<H5ClassT, HDF5::FileReader>)
+  {
+    return HDF5::FileReader(0);
+  }
+  else
+  {
+    return H5ClassT();
+  }
+}
+
+template <class H5ClassT>
+H5ClassT TestH5ImplicitCopy(H5ClassT&& originalObject, std::string_view testedClassName)
+{
+  INFO(testedClassName)
+
+  REQUIRE(originalObject.isValid());
+
+  HDF5::IdType originalId = GetId(originalObject);
+
+  H5ClassT moveConstructorObject(std::move(originalObject));
+
+  REQUIRE_FALSE(originalObject.isValid());
+  REQUIRE(GetId(originalObject) != originalId);
+  REQUIRE(moveConstructorObject.isValid());
+  REQUIRE(GetId(moveConstructorObject) == originalId);
+
+  H5ClassT moveOperatorObject = CreateTempObject<H5ClassT>();
+  moveOperatorObject = std::move(moveConstructorObject);
+
+  REQUIRE_FALSE(moveConstructorObject.isValid());
+  REQUIRE(GetId(moveConstructorObject) != originalId);
+  REQUIRE(moveOperatorObject.isValid());
+  REQUIRE(GetId(moveOperatorObject) == originalId);
+
+  return moveOperatorObject;
+}
+} // namespace
+
+#if TEST_LEGACY
+TEST_CASE("Read Legacy DREAM.3D Data")
+{
+  auto app = Application::GetOrCreateInstance();
+  std::filesystem::path filepath = GetLegacyFilepath();
+  REQUIRE(exists(filepath));
+  Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  DataStructure dataStructure = result.value();
+
+  const std::string geomName = "Small IN100";
+  const auto* image = dataStructure.getDataAs<ImageGeom>(DataPath({geomName}));
+  REQUIRE(image != nullptr);
+  REQUIRE(equalsf(image->getOrigin(), FloatVec3(-47.0f, 0.0f, -29.0f)));
+  REQUIRE(image->getDimensions() == SizeVec3(189, 201, 117));
+  REQUIRE(equalsf(image->getSpacing(), FloatVec3(0.25f, 0.25f, 0.25f)));
+
+  {
+    const std::string testDCName = "DataContainer";
+    DataPath testDCPath({testDCName});
+    auto* testDC = dataStructure.getDataAs<DataGroup>(testDCPath);
+    REQUIRE(testDC != nullptr);
+
+    DataPath testAMPath = testDCPath.createChildPath("AttributeMatrix");
+    REQUIRE(dataStructure.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
+
+    REQUIRE(dataStructure.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32Array>(testAMPath.createChildPath("Float32")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64Array>(testAMPath.createChildPath("Float64")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<BoolArray>(testAMPath.createChildPath("Bool")) != nullptr);
+  }
+
+  {
+    DataPath grainDataPath({geomName, "Grain Data"});
+    REQUIRE(dataStructure.getData(grainDataPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<NeighborList<int32_t>>(grainDataPath.createChildPath("NeighborList")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumElements")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumNeighbors")) != nullptr);
+  }
+}
+#endif
+
+TEST_CASE("ImageGeometryIO")
+{
+  fs::path dataDir = GetDataDir();
+
+  if(!fs::exists(dataDir))
+  {
+    REQUIRE(fs::create_directories(dataDir));
+  }
+
+  const DataPath imageGeomPath({"ImageGeom"});
+  const std::string cellDataName = "CellData";
+  const DataPath cellDataPath = imageGeomPath.createChildPath(cellDataName);
+  const CreateImageGeometryAction::DimensionType dims = {10, 10, 10};
+  const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
+  const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
+
+  DataStructure originalDataStructure;
+  auto action = CreateImageGeometryAction(imageGeomPath, dims, origin, spacing, cellDataName, IGeometry::LengthUnit::Micrometer);
+  Result<> actionResult = action.apply(originalDataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
+
+  fs::path filePath = dataDir / "ImageGeometryIO.dream3d";
+
+  std::string filePathString = filePath.string();
+
+  {
+    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePathString);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
+    REQUIRE(fileWriter.isValid());
+
+    Result<> writeResult = HDF5::DataStructureWriter::WriteFile(originalDataStructure, fileWriter);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  }
+
+  {
+    nx::core::HDF5::FileReader fileReader(filePathString);
+    REQUIRE(fileReader.isValid());
+
+    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    DataStructure newDataStructure = std::move(readResult.value());
+
+    auto* imageGeom = newDataStructure.getDataAs<ImageGeom>(imageGeomPath);
+    REQUIRE(imageGeom != nullptr);
+
+    REQUIRE(imageGeom->getDimensions() == SizeVec3(dims));
+    REQUIRE(imageGeom->getOrigin() == FloatVec3(origin));
+    REQUIRE(imageGeom->getSpacing() == FloatVec3(spacing));
+
+    auto* cellData = imageGeom->getCellData();
+    REQUIRE(cellData != nullptr);
+
+    REQUIRE(cellData->getName() == cellDataName);
+    REQUIRE(imageGeom->getCellDataPath() == cellDataPath);
+
+    auto cellDataShape = std::vector<usize>(dims.crbegin(), dims.crend());
+
+    REQUIRE(cellData->getShape() == cellDataShape);
+  }
+}
+
 TEST_CASE("Node Based Geometry IO")
 {
   auto app = Application::GetOrCreateInstance();
@@ -798,4 +853,114 @@ TEST_CASE("H5 Utilities")
   REQUIRE(objectName == "Data");
   objectName = nx::core::HDF5::GetNameFromBuffer("/Data");
   REQUIRE(objectName == "Data");
+}
+
+TEST_CASE("HDF5ImplicitCopyReaderTest")
+{
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::FileReader>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::GroupReader>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::DatasetReader>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::AttributeReader>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::FileReader>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::GroupReader>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::DatasetReader>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::AttributeReader>);
+  fs::path filePath = GetDataDir() / "HDF5ImplicitCopyReaderTest.dream3d";
+  {
+    DataStructure dataStructure = GetTestDataStructure();
+
+    Result<> writeFileResult = DREAM3D::WriteFile(filePath, dataStructure);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
+  }
+  HDF5::FileReader fileReader(filePath);
+  HDF5::FileReader newFileReader = TestH5ImplicitCopy(std::move(fileReader), "HDF5::FileReader");
+
+  HDF5::GroupReader groupReader = newFileReader.openGroup("DataStructure");
+  HDF5::GroupReader newGroupReader = TestH5ImplicitCopy(std::move(groupReader), "HDF5::GroupReader");
+
+  HDF5::GroupReader groupReaderIntermediate = newGroupReader.openGroup("Geometry");
+  REQUIRE(groupReaderIntermediate.isValid());
+
+  HDF5::DatasetReader datasetReader = groupReaderIntermediate.openDataset("DataArray");
+  TestH5ImplicitCopy(std::move(datasetReader), "HDF5::DatasetReader");
+
+  HDF5::ObjectReader objectReader = groupReaderIntermediate.openObject("Scalar");
+  TestH5ImplicitCopy(std::move(objectReader), "HDF5::ObjectReader");
+
+  HDF5::AttributeReader originalAttributeReader = newFileReader.getAttribute("FileVersion");
+  TestH5ImplicitCopy(std::move(originalAttributeReader), "HDF5::AttributeReader");
+}
+
+TEST_CASE("HDF5ImplicitCopyWriterTest")
+{
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::FileWriter>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::GroupWriter>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::DatasetWriter>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::AttributeWriter>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::FileWriter>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::GroupWriter>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::DatasetWriter>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::AttributeWriter>);
+
+  fs::path outputPath = GetDataDir() / "HDF5ImplicitCopyWriterTest.h5";
+  fs::remove(outputPath);
+
+  auto fileWriterResult = HDF5::FileWriter::CreateFile(outputPath);
+  SIMPLNX_RESULT_REQUIRE_VALID(fileWriterResult);
+
+  HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
+  HDF5::FileWriter newFileWriter = TestH5ImplicitCopy(std::move(fileWriter), "HDF5::FileWriter");
+
+  HDF5::GroupWriter groupWriter = newFileWriter.createGroupWriter("foo");
+  TestH5ImplicitCopy(std::move(groupWriter), "HDF5::GroupWriter");
+
+  HDF5::DatasetWriter datasetWriter = newFileWriter.createDatasetWriter("bar");
+  REQUIRE(datasetWriter.isValid());
+  std::array<int32, 5> data = {1, 2, 3, 4, 5};
+  HDF5::DatasetWriter::DimsType dims = {data.size()};
+  Result<> datasetResult = datasetWriter.writeSpan<int32>(dims, nonstd::span<int32>(data));
+  SIMPLNX_RESULT_REQUIRE_VALID(datasetResult);
+  TestH5ImplicitCopy(std::move(datasetWriter), "HDF5::DatasetWriter");
+
+  HDF5::AttributeWriter attributeWriter = newFileWriter.createAttribute("baz");
+  TestH5ImplicitCopy(std::move(attributeWriter), "HDF5::AttributeWriter");
+}
+
+TEST_CASE("HDF5ImplicitCopyIOTest")
+{
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::FileIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::GroupIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::DatasetIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::AttributeIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::FileIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::GroupIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::DatasetIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::AttributeIO>);
+
+  fs::path filePath = GetDataDir() / "HDF5ImplicitCopyIOTest.dream3d";
+  {
+    DataStructure dataStructure = GetTestDataStructure();
+
+    Result<> writeFileResult = DREAM3D::WriteFile(filePath, dataStructure);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
+  }
+
+  auto fileIOResult = HDF5::FileIO::CreateFile(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(fileIOResult);
+
+  HDF5::FileIO fileIO = std::move(fileIOResult.value());
+  HDF5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileIO), "HDF5::FileIO");
+
+  HDF5::GroupIO groupIO = newFileIO.createGroup("DataStructure");
+  HDF5::GroupIO newGroupIO = TestH5ImplicitCopy(std::move(groupIO), "HDF5::GroupIO");
+
+  HDF5::GroupIO groupIOIntermediate = newGroupIO.openGroup("Geometry");
+  REQUIRE(groupIOIntermediate.isValid());
+
+  HDF5::DatasetIO datasetIO = groupIOIntermediate.openDataset("DataArray");
+  REQUIRE(datasetIO.open());
+  TestH5ImplicitCopy(std::move(datasetIO), "HDF5::DatasetIO");
+
+  HDF5::AttributeIO attributeIO = newFileIO.getAttribute("FileVersion");
+  TestH5ImplicitCopy(std::move(attributeIO), "HDF5::AttributeReader");
 }

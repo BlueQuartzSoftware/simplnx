@@ -11,9 +11,7 @@
 
 namespace nx::core::HDF5
 {
-AttributeWriter::AttributeWriter()
-{
-}
+AttributeWriter::AttributeWriter() = default;
 
 AttributeWriter::AttributeWriter(IdType objectId, const std::string& attributeName)
 : m_ObjectId(objectId)
@@ -21,7 +19,20 @@ AttributeWriter::AttributeWriter(IdType objectId, const std::string& attributeNa
 {
 }
 
-AttributeWriter::~AttributeWriter() = default;
+AttributeWriter::AttributeWriter(AttributeWriter&& other) noexcept
+{
+  m_ObjectId = std::exchange(other.m_ObjectId, 0);
+  m_AttributeName = std::move(other.m_AttributeName);
+}
+
+AttributeWriter& AttributeWriter::operator=(AttributeWriter&& other) noexcept
+{
+  m_ObjectId = std::exchange(other.m_ObjectId, 0);
+  m_AttributeName = std::move(other.m_AttributeName);
+  return *this;
+}
+
+AttributeWriter::~AttributeWriter() noexcept = default;
 
 nx::core::Result<> AttributeWriter::findAndDeleteAttribute()
 {

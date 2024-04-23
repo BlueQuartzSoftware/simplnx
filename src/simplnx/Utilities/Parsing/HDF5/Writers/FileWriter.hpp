@@ -46,12 +46,15 @@ public:
    * @brief Move constructor.
    * @param rhs
    */
-  FileWriter(FileWriter&& rhs) noexcept;
+  FileWriter(FileWriter&& rhs) noexcept = default;
+
+  FileWriter& operator=(const FileWriter& rhs) = delete;
+  FileWriter& operator=(FileWriter&& rhs) noexcept = default;
 
   /**
    * @brief Closes the HDF5 file.
    */
-  ~FileWriter() override;
+  ~FileWriter() noexcept override;
 
   /**
    * @brief Returns the HDF5 file name. Returns an empty string if the writer
@@ -59,9 +62,6 @@ public:
    * @return std::string
    */
   std::string getName() const override;
-
-  FileWriter& operator=(const FileWriter& rhs) = delete;
-  FileWriter& operator=(FileWriter&& rhs) noexcept = default;
 
 protected:
   /**

@@ -24,10 +24,13 @@ public:
   GroupIO(const GroupIO& other) = delete;
   GroupIO(GroupIO&& other) noexcept = default;
 
+  GroupIO& operator=(const GroupIO& other) = delete;
+  GroupIO& operator=(GroupIO&& other) noexcept = default;
+
   /**
    * @brief Releases the wrapped HDF5 group.
    */
-  virtual ~GroupIO() noexcept;
+  ~GroupIO() noexcept override;
 
   /**
    * @brief Attempts to open a nested HDF5 group with the specified name.
@@ -137,9 +140,6 @@ public:
    * @return bool
    */
   bool isDataset(const std::string& childName) const;
-
-  GroupIO& operator=(const GroupIO& other) = delete;
-  GroupIO& operator=(GroupIO&& other) noexcept = default;
 
 protected:
   /**

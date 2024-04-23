@@ -67,12 +67,15 @@ public:
    * @brief Move constructor.
    * @param rhs
    */
-  FileIO(FileIO&& rhs) noexcept;
+  FileIO(FileIO&& rhs) noexcept = default;
+
+  FileIO& operator=(const FileIO& rhs) = delete;
+  FileIO& operator=(FileIO&& rhs) noexcept = default;
 
   /**
    * @brief Releases the HDF5 file ID.
    */
-  virtual ~FileIO() noexcept;
+  ~FileIO() noexcept override;
 
   /**
    * @brief Returns the HDF5 file name. Returns an empty string if the file
@@ -80,9 +83,6 @@ public:
    * @return std::string
    */
   std::string getName() const override;
-
-  FileIO& operator=(const FileIO& rhs) = delete;
-  FileIO& operator=(FileIO&& rhs) noexcept = default;
 
 protected:
   /**

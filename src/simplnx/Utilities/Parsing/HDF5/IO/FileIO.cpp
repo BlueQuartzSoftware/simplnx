@@ -115,10 +115,7 @@ hid_t createOrOpenFile(const std::filesystem::path& filepath)
   return H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 }
 
-FileIO::FileIO()
-: GroupIO()
-{
-}
+FileIO::FileIO() = default;
 
 FileIO::FileIO(const std::filesystem::path& filepath)
 : GroupIO(0, createOrOpenFile(filepath))
@@ -128,14 +125,6 @@ FileIO::FileIO(const std::filesystem::path& filepath)
 FileIO::FileIO(IdType fileId)
 : GroupIO(0, fileId)
 {
-}
-
-FileIO::FileIO(FileIO&& rhs) noexcept
-: GroupIO()
-{
-  auto rhsId = rhs.getId();
-  setId(rhsId);
-  rhs.setId(-1);
 }
 
 FileIO::~FileIO() noexcept

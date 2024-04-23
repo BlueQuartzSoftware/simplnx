@@ -27,7 +27,10 @@ public:
   ObjectIO(IdType parentId, const std::string& targetName);
 
   ObjectIO(const ObjectIO& other) = delete;
-  ObjectIO(ObjectIO&& other) noexcept = default;
+  ObjectIO(ObjectIO&& other) noexcept;
+
+  ObjectIO& operator=(const ObjectIO& other) = delete;
+  ObjectIO& operator=(ObjectIO&& other) noexcept;
 
   /**
    * @brief Releases the wrapped HDF5 object.
@@ -130,9 +133,6 @@ public:
    * @return AttributeIO
    */
   AttributeIO createAttribute(const std::string& name);
-
-  ObjectIO& operator=(const ObjectIO& other) = delete;
-  ObjectIO& operator=(ObjectIO&& other) noexcept = default;
 
 protected:
   /**

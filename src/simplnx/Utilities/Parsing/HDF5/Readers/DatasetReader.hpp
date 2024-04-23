@@ -30,10 +30,13 @@ public:
   DatasetReader(const DatasetReader& other) = delete;
   DatasetReader(DatasetReader&& other) noexcept = default;
 
+  DatasetReader& operator=(const DatasetReader& other) = delete;
+  DatasetReader& operator=(DatasetReader&& other) noexcept = default;
+
   /**
    * @brief Releases the HDF5 dataset.
    */
-  virtual ~DatasetReader();
+  ~DatasetReader() noexcept override;
 
   /**
    * @brief Returns the dataspace's HDF5 ID. Returns 0 if the attribute is
@@ -124,9 +127,6 @@ public:
   std::vector<hsize_t> getDimensions() const;
 
   std::string getFilterName() const;
-
-  DatasetReader& operator=(const DatasetReader& other) = delete;
-  DatasetReader& operator=(DatasetReader&& other) noexcept = default;
 
 protected:
   /**

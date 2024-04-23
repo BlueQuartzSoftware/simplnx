@@ -10,16 +10,14 @@
 
 namespace nx::core::HDF5
 {
-DatasetReader::DatasetReader()
-{
-}
+DatasetReader::DatasetReader() = default;
 
 DatasetReader::DatasetReader(IdType parentId, const std::string& dataName)
 : ObjectReader(parentId, H5Dopen(parentId, dataName.c_str(), H5P_DEFAULT))
 {
 }
 
-DatasetReader::~DatasetReader()
+DatasetReader::~DatasetReader() noexcept
 {
   closeHdf5();
 }
