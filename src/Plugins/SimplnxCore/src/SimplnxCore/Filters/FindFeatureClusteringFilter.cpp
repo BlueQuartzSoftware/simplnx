@@ -85,7 +85,7 @@ Parameters FindFeatureClusteringFilter::parameters() const
                                                                     "The path to the cell ensemble attribute matrix where the RDF and RDF min and max distance arrays will be stored", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_ClusteringListArrayName_Key, "Clustering List", "Distance of each Features's centroid to ever other Features's centroid", "ClusteringList"));
+      std::make_unique<DataObjectNameParameter>(k_ClusteringListArrayName_Key, "Clustering List", "Distance of each Feature's centroid to every other Feature's centroid", "ClusteringList"));
   params.insertSeparator(Parameters::Separator{"Created Cell Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_RDFArrayName_Key, "Radial Distribution Function", "A histogram of the normalized frequency at each bin", "RDF"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MaxMinArrayName_Key, "Max and Min Separation Distances", "The max and min distance found between Features", "RDFMaxMinDistances"));
