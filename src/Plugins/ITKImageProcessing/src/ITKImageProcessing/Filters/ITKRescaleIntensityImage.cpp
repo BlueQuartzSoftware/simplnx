@@ -104,7 +104,7 @@ IFilter::PreflightResult ITKRescaleIntensityImage::preflightImpl(const DataStruc
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKRescaleIntensityImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -118,7 +118,7 @@ Result<> ITKRescaleIntensityImage::executeImpl(DataStructure& dataStructure, con
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);

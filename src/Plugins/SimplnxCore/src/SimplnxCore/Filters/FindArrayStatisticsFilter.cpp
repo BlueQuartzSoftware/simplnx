@@ -136,8 +136,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
   if(standardizeDataValue)
   {
     auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_StandardizedArrayName_Key);
-    auto action =
-        std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, inputArrayPath.getParent().createChildPath(arrayPath));
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, inputArrayPath.replaceName(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(pFindNumUniqueValuesValue)
@@ -453,7 +452,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.ModeArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_ModeArrayName_Key));
   inputValues.StdDeviationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_StdDeviationArrayName_Key));
   inputValues.SummationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_SummationArrayName_Key));
-  inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
+  inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.replaceName(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
   inputValues.NumUniqueValuesName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_NumUniqueValuesName_Key));
 
   return FindArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();

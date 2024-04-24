@@ -102,7 +102,7 @@ IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStruc
                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedDataArrayPathValue = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-  auto pRgbArrayPathValue = pSelectedDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
+  auto pRgbArrayPathValue = pSelectedDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_RgbArrayPath_Key));
 
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
@@ -154,7 +154,7 @@ Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, con
 
   inputValues.PresetName = filterArgs.value<GenerateColorTableParameter::ValueType>(k_SelectedPreset_Key);
   inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-  inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
+  inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.replaceName(filterArgs.value<std::string>(k_RgbArrayPath_Key));
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.InvalidColor = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);

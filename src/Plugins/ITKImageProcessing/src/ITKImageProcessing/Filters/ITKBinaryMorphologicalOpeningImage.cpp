@@ -115,7 +115,7 @@ IFilter::PreflightResult ITKBinaryMorphologicalOpeningImage::preflightImpl(const
   auto kernelType = static_cast<itk::simple::KernelEnum>(filterArgs.value<uint64>(k_KernelType_Key));
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKBinaryMorphologicalOpeningImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -129,7 +129,7 @@ Result<> ITKBinaryMorphologicalOpeningImage::executeImpl(DataStructure& dataStru
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto kernelRadius = filterArgs.value<VectorParameter<uint32>::ValueType>(k_KernelRadius_Key);
   auto kernelType = static_cast<itk::simple::KernelEnum>(filterArgs.value<uint64>(k_KernelType_Key));

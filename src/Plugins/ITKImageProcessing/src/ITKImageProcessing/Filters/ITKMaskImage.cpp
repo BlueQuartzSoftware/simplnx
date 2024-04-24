@@ -174,7 +174,7 @@ IFilter::PreflightResult ITKMaskImage::preflightImpl(const DataStructure& dataSt
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskImageDataPath_Key);
 
@@ -197,7 +197,7 @@ Result<> ITKMaskImage::executeImpl(DataStructure& dataStructure, const Arguments
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskImageDataPath_Key);
 

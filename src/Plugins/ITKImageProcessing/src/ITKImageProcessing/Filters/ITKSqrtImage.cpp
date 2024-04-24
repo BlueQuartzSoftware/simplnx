@@ -92,7 +92,7 @@ IFilter::PreflightResult ITKSqrtImage::preflightImpl(const DataStructure& dataSt
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKSqrtImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -106,7 +106,7 @@ Result<> ITKSqrtImage::executeImpl(DataStructure& dataStructure, const Arguments
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const cxITKSqrtImage::ITKSqrtImageFunctor itkFunctor = {};
 

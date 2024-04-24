@@ -518,8 +518,8 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
   }
 
   // Create the output boolean array
-  auto action = std::make_unique<CreateArrayAction>(maskArrayType, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, firstDataPath.getParent().createChildPath(maskArrayName),
-                                                    dataArray->getDataFormat());
+  auto action =
+      std::make_unique<CreateArrayAction>(maskArrayType, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, firstDataPath.replaceName(maskArrayName), dataArray->getDataFormat());
 
   OutputActions actions;
   actions.appendAction(std::move(action));
@@ -543,7 +543,7 @@ Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const 
   float64 falseValue = useCustomFalseValue ? customFalseValue : 0.0;
 
   bool firstValueFound = false;
-  DataPath maskArrayPath = (*thresholdsObject.getRequiredPaths().begin()).getParent().createChildPath(maskArrayName);
+  DataPath maskArrayPath = (*thresholdsObject.getRequiredPaths().begin()).replaceName(maskArrayName);
   int32_t err = 0;
   ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
   for(const std::shared_ptr<IArrayThreshold>& threshold : thresholdSet)

@@ -130,7 +130,7 @@ IFilter::PreflightResult ITKThresholdMaximumConnectedComponentsImage::preflightI
   auto upperBoundary = filterArgs.value<float64>(k_UpperBoundary_Key);
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKThresholdMaximumConnectedComponentsImage::ArrayOptionsType, cxITKThresholdMaximumConnectedComponentsImage::FilterOutputType>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -145,7 +145,7 @@ Result<> ITKThresholdMaximumConnectedComponentsImage::executeImpl(DataStructure&
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto minimumObjectSizeInPixels = filterArgs.value<uint32>(k_MinimumObjectSizeInPixels_Key);
   auto upperBoundary = filterArgs.value<float64>(k_UpperBoundary_Key);

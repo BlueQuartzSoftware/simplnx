@@ -102,7 +102,7 @@ IFilter::PreflightResult ITKConnectedComponentImage::preflightImpl(const DataStr
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKConnectedComponentImage::ArrayOptionsType, cxITKConnectedComponentImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -117,7 +117,7 @@ Result<> ITKConnectedComponentImage::executeImpl(DataStructure& dataStructure, c
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
 

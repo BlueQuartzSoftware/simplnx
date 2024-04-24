@@ -111,7 +111,7 @@ IFilter::PreflightResult ITKGrayscaleMorphologicalOpeningImage::preflightImpl(co
   auto kernelRadius = filterArgs.value<VectorParameter<uint32>::ValueType>(k_KernelRadius_Key);
   auto kernelType = static_cast<itk::simple::KernelEnum>(filterArgs.value<uint64>(k_KernelType_Key));
   auto safeBorder = filterArgs.value<bool>(k_SafeBorder_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKGrayscaleMorphologicalOpeningImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -125,7 +125,7 @@ Result<> ITKGrayscaleMorphologicalOpeningImage::executeImpl(DataStructure& dataS
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto kernelRadius = filterArgs.value<VectorParameter<uint32>::ValueType>(k_KernelRadius_Key);
   auto kernelType = static_cast<itk::simple::KernelEnum>(filterArgs.value<uint64>(k_KernelType_Key));

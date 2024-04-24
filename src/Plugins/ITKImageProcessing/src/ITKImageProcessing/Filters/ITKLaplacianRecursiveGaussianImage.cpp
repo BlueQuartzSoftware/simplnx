@@ -105,7 +105,7 @@ IFilter::PreflightResult ITKLaplacianRecursiveGaussianImage::preflightImpl(const
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto sigma = filterArgs.value<float64>(k_Sigma_Key);
   auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKLaplacianRecursiveGaussianImage::ArrayOptionsType, cxITKLaplacianRecursiveGaussianImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -120,7 +120,7 @@ Result<> ITKLaplacianRecursiveGaussianImage::executeImpl(DataStructure& dataStru
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto sigma = filterArgs.value<float64>(k_Sigma_Key);
   auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);

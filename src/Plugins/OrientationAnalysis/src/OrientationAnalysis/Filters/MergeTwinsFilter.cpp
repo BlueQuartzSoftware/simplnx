@@ -130,8 +130,8 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   DataPath cellFeatureDataPath = pFeaturePhasesArrayPathValue.getParent();
-  auto pCellParentIdsArrayNameValue = pFeatureIdsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
-  auto pNewCellFeatureAttributeMatrixNameValue = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
+  auto pCellParentIdsArrayNameValue = pFeatureIdsArrayPathValue.replaceName(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
+  auto pNewCellFeatureAttributeMatrixNameValue = cellFeatureDataPath.replaceName(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
   auto pFeatureParentIdsArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
   auto pActiveArrayNameValue = pNewCellFeatureAttributeMatrixNameValue.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
@@ -238,8 +238,8 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   DataPath cellFeatureDataPath = inputValues.FeaturePhasesArrayPath.getParent();
-  inputValues.CellParentIdsArrayName = inputValues.FeatureIdsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
-  inputValues.NewCellFeatureAttributeMatrixName = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
+  inputValues.CellParentIdsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
+  inputValues.NewCellFeatureAttributeMatrixName = cellFeatureDataPath.replaceName(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
   inputValues.FeatureParentIdsArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
   inputValues.ActiveArrayName = inputValues.NewCellFeatureAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.Seed = seed;

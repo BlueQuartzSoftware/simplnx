@@ -95,7 +95,7 @@ IFilter::PreflightResult ITKNormalizeImage::preflightImpl(const DataStructure& d
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKNormalizeImage::ArrayOptionsType, cxITKNormalizeImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -110,7 +110,7 @@ Result<> ITKNormalizeImage::executeImpl(DataStructure& dataStructure, const Argu
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const cxITKNormalizeImage::ITKNormalizeImageFunctor itkFunctor = {};
 

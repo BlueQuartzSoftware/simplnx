@@ -114,7 +114,7 @@ IFilter::PreflightResult GenerateFaceIPFColoringFilter::preflightImpl(const Data
     return {MakeErrorResult<OutputActions>(-2432, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  DataPath faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshFaceIPFColorsArrayNameValue);
+  DataPath faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshFaceIPFColorsArrayNameValue);
   auto action = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{6}, faceIpfColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(action));
 

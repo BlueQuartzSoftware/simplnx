@@ -100,7 +100,7 @@ IFilter::PreflightResult ITKNormalizeToConstantImage::preflightImpl(const DataSt
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   auto constant = filterArgs.value<float64>(k_Constant_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKNormalizeToConstantImage::ArrayOptionsType, cxITKNormalizeToConstantImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -115,7 +115,7 @@ Result<> ITKNormalizeToConstantImage::executeImpl(DataStructure& dataStructure, 
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto constant = filterArgs.value<float64>(k_Constant_Key);
 

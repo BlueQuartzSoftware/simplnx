@@ -104,7 +104,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   auto featureIdsName = args.value<std::string>(k_FeatureIdsName_Key);
   auto cellFeaturesName = args.value<std::string>(k_CellFeatureName_Key);
   auto activeArrayName = args.value<std::string>(k_ActiveArrayName_Key);
-  DataPath featureIdsPath = inputDataPath.getParent().createChildPath(featureIdsName);
+  DataPath featureIdsPath = inputDataPath.replaceName(featureIdsName);
 
   bool useGoodVoxels = args.value<bool>(k_UseMask_Key);
   DataPath goodVoxelsPath;
@@ -195,7 +195,7 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arg
   inputValues.pInputDataPath = args.value<DataPath>(k_InputArrayPathKey);
   inputValues.pScalarTolerance = args.value<int>(k_ScalarToleranceKey);
   inputValues.pShouldRandomizeFeatureIds = args.value<bool>(k_RandomizeFeatures_Key);
-  inputValues.pFeatureIdsPath = inputValues.pInputDataPath.getParent().createChildPath(args.value<std::string>(k_FeatureIdsName_Key));
+  inputValues.pFeatureIdsPath = inputValues.pInputDataPath.replaceName(args.value<std::string>(k_FeatureIdsName_Key));
   inputValues.pUseGoodVoxels = args.value<bool>(k_UseMask_Key);
   inputValues.pGoodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.pGridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);

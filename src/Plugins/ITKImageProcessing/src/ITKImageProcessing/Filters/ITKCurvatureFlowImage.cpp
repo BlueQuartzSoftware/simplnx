@@ -103,7 +103,7 @@ IFilter::PreflightResult ITKCurvatureFlowImage::preflightImpl(const DataStructur
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKCurvatureFlowImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -117,7 +117,7 @@ Result<> ITKCurvatureFlowImage::executeImpl(DataStructure& dataStructure, const 
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);

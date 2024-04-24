@@ -80,7 +80,7 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
   auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArrayName_Key);
   auto pRemoveOriginal = filterArgs.value<bool>(k_DeleteOriginal_Key);
 
-  DataPath const convertedArrayPath = pInputArrayPath.getParent().createChildPath(pConvertedArrayName);
+  DataPath const convertedArrayPath = pInputArrayPath.replaceName(pConvertedArrayName);
 
   DataType const pScalarType = StringToDataType(GetAllDataTypesAsStrings()[pScalarTypeIndex]);
 
@@ -116,7 +116,7 @@ Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.ScalarType = StringToDataType(GetAllDataTypesAsStrings()[scalarTypeIndex]);
   inputValues.SelectedArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
   auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArrayName_Key);
-  inputValues.OutputArrayName = inputValues.SelectedArrayPath.getParent().createChildPath(pConvertedArrayName);
+  inputValues.OutputArrayName = inputValues.SelectedArrayPath.replaceName(pConvertedArrayName);
 
   return ConvertData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

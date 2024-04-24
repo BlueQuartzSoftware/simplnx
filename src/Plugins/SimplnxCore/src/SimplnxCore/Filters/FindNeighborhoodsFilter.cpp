@@ -121,14 +121,12 @@ IFilter::PreflightResult FindNeighborhoodsFilter::preflightImpl(const DataStruct
 
   // Create the Neighborhoods Array in the Feature Attribute Matrix
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatureData->getShape(), std::vector<usize>{1ULL},
-                                                      pFeaturePhasesArrayPathValue.getParent().createChildPath(pNeighborhoodsArrayNameValue));
+    auto action = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatureData->getShape(), std::vector<usize>{1ULL}, pFeaturePhasesArrayPathValue.replaceName(pNeighborhoodsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
-    auto action =
-        std::make_unique<CreateNeighborListAction>(DataType::int32, cellFeatureData->getNumTuples(), pFeaturePhasesArrayPathValue.getParent().createChildPath(pNeighborhoodListArrayNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, cellFeatureData->getNumTuples(), pFeaturePhasesArrayPathValue.replaceName(pNeighborhoodListArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -148,8 +146,8 @@ Result<> FindNeighborhoodsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.EquivalentDiametersArrayPath = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.NeighborhoodsArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NeighborhoodsArrayName_Key));
-  inputValues.NeighborhoodListArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NeighborhoodListArrayName_Key));
+  inputValues.NeighborhoodsArrayName = inputValues.FeaturePhasesArrayPath.replaceName(filterArgs.value<std::string>(k_NeighborhoodsArrayName_Key));
+  inputValues.NeighborhoodListArrayName = inputValues.FeaturePhasesArrayPath.replaceName(filterArgs.value<std::string>(k_NeighborhoodListArrayName_Key));
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return FindNeighborhoods(dataStructure, messageHandler, shouldCancel, &inputValues)();

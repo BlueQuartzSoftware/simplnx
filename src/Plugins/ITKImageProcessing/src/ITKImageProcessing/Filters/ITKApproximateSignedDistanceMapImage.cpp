@@ -103,7 +103,7 @@ IFilter::PreflightResult ITKApproximateSignedDistanceMapImage::preflightImpl(con
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto insideValue = filterArgs.value<float64>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKApproximateSignedDistanceMapImage::ArrayOptionsType, cxITKApproximateSignedDistanceMapImage::FilterOutputType>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -118,7 +118,7 @@ Result<> ITKApproximateSignedDistanceMapImage::executeImpl(DataStructure& dataSt
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto insideValue = filterArgs.value<float64>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);

@@ -179,7 +179,7 @@ Result<> GenerateFaceIPFColoring::operator()()
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
   auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  DataPath faceIpfColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.getParent().createChildPath(m_InputValues->SurfaceMeshFaceIPFColorsArrayName);
+  DataPath faceIpfColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.replaceName(m_InputValues->SurfaceMeshFaceIPFColorsArrayName);
   auto& faceIpfColors = m_DataStructure.getDataRefAs<UInt8Array>(faceIpfColorsArrayPath);
   int64 numTriangles = faceLabels.getNumberOfTuples();
 

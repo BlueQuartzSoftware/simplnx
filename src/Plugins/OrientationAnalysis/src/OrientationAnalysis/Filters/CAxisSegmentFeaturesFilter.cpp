@@ -105,7 +105,7 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   auto pCellFeatureAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key);
   auto pActiveArrayNameValue = filterArgs.value<std::string>(k_ActiveArrayName_Key);
 
-  const DataPath featureIdsPath = pQuatsArrayPathValue.getParent().createChildPath(pFeatureIdsArrayNameValue);
+  const DataPath featureIdsPath = pQuatsArrayPathValue.replaceName(pFeatureIdsArrayNameValue);
   const DataPath cellFeatureAMPath = pImageGeometryPath.createChildPath(pCellFeatureAttributeMatrixNameValue);
   const DataPath activePath = cellFeatureAMPath.createChildPath(pActiveArrayNameValue);
 
@@ -160,7 +160,7 @@ Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureIdsArrayName = inputValues.QuatsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  inputValues.FeatureIdsArrayName = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.CellFeatureAttributeMatrixName = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayName = inputValues.CellFeatureAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
 
