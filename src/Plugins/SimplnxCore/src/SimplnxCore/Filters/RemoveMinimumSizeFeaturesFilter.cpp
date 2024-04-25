@@ -351,7 +351,6 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   if(applyToSinglePhase)
   {
     const PhasesArrayType* featurePhasesPtr = dataStructure.getDataAs<PhasesArrayType>(featurePhasesPath);
-    // const PhasesArrayType::store_type* featurePhases = nullptr;
     if(featurePhasesPtr != nullptr)
     {
       dataArrayPaths.push_back(featurePhasesPath);
