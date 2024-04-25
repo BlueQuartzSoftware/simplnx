@@ -1,38 +1,43 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKOtsuMultipleThresholdsImage.hpp"
+#include "ITKImageProcessing/Filters/ITKOtsuMultipleThresholdsImageFilter.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+
 
 #include <filesystem>
-
 namespace fs = std::filesystem;
 
 using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(default)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][default]")
 {
   DataStructure dataStructure;
-  ITKOtsuMultipleThresholdsImage filter;
+  const ITKOtsuMultipleThresholdsImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
-  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
-  SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
+  { // Start Image Comparison Scope
+    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
+    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
+  } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -47,23 +52,25 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(default)", "
 TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(two_on_float)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][two_on_float]")
 {
   DataStructure dataStructure;
-  ITKOtsuMultipleThresholdsImage filter;
+  const ITKOtsuMultipleThresholdsImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
-  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/Ramp-Zero-One-Float.nrrd";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
-  SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
+  { // Start Image Comparison Scope
+    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/Ramp-Zero-One-Float.nrrd";
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
+    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
+  } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(2));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(2));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -78,24 +85,26 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(two_on_float
 TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(three_on)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][three_on]")
 {
   DataStructure dataStructure;
-  ITKOtsuMultipleThresholdsImage filter;
+  const ITKOtsuMultipleThresholdsImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
-  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
-  SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
+  { // Start Image Comparison Scope
+    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
+    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
+  } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(3));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfHistogramBins_Key, std::make_any<UInt32Parameter::ValueType>(256));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(3));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<UInt32Parameter::ValueType>(256));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -110,24 +119,26 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(three_on)", 
 TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(valley_emphasis)", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImage][valley_emphasis]")
 {
   DataStructure dataStructure;
-  ITKOtsuMultipleThresholdsImage filter;
+  const ITKOtsuMultipleThresholdsImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
-  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
-  Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
-  SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
+  { // Start Image Comparison Scope
+    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
+    SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
+  } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(3));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ValleyEmphasis_Key, std::make_any<BoolParameter::ValueType>(true));
-  args.insertOrAssign(ITKOtsuMultipleThresholdsImage::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<UInt8Parameter::ValueType>(3));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_ValleyEmphasis_Key, std::make_any<BoolParameter::ValueType>(true));
+  args.insertOrAssign(ITKOtsuMultipleThresholdsImageFilter::k_ReturnBinMidpoint_Key, std::make_any<BoolParameter::ValueType>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

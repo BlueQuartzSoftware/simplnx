@@ -1,13 +1,14 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKBinaryProjectionImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKBinaryProjectionImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -19,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImageFilter(defaults)", "[ITKImageProcessing][ITKBinaryProjectionImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKBinaryProjectionImage filter;
+  const ITKBinaryProjectionImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImageFilter(defaults)", "[ITKI
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryProjectionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryProjectionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryProjectionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -50,7 +51,7 @@ TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImageFilter(defaults)", "[ITKI
 TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImageFilter(another_dimension)", "[ITKImageProcessing][ITKBinaryProjectionImage][another_dimension]")
 {
   DataStructure dataStructure;
-  const ITKBinaryProjectionImage filter;
+  const ITKBinaryProjectionImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -64,11 +65,11 @@ TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImageFilter(another_dimension)
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryProjectionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryProjectionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryProjectionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKBinaryProjectionImage::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(1));
-  args.insertOrAssign(ITKBinaryProjectionImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
+  args.insertOrAssign(ITKBinaryProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryProjectionImageFilter::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(1));
+  args.insertOrAssign(ITKBinaryProjectionImageFilter::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

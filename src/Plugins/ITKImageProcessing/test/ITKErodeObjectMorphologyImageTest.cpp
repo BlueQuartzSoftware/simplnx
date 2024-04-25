@@ -1,15 +1,16 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKErodeObjectMorphologyImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKErodeObjectMorphologyImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -21,7 +22,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKErodeObjectMorphologyImageFilter(float)", "[ITKImageProcessing][ITKErodeObjectMorphologyImage][float]")
 {
   DataStructure dataStructure;
-  const ITKErodeObjectMorphologyImage filter;
+  const ITKErodeObjectMorphologyImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -35,11 +36,11 @@ TEST_CASE("ITKImageProcessing::ITKErodeObjectMorphologyImageFilter(float)", "[IT
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -59,7 +60,7 @@ TEST_CASE("ITKImageProcessing::ITKErodeObjectMorphologyImageFilter(float)", "[IT
 TEST_CASE("ITKImageProcessing::ITKErodeObjectMorphologyImageFilter(short)", "[ITKImageProcessing][ITKErodeObjectMorphologyImage][short]")
 {
   DataStructure dataStructure;
-  const ITKErodeObjectMorphologyImage filter;
+  const ITKErodeObjectMorphologyImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -73,11 +74,11 @@ TEST_CASE("ITKImageProcessing::ITKErodeObjectMorphologyImageFilter(short)", "[IT
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(ITKErodeObjectMorphologyImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(ITKErodeObjectMorphologyImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

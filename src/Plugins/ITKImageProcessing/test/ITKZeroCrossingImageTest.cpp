@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKZeroCrossingImage.hpp"
+#include "ITKImageProcessing/Filters/ITKZeroCrossingImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -33,8 +33,8 @@ TEST_CASE("ITKImageProcessing::ITKZeroCrossingImageFilter(defaults)", "[ITKImage
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKZeroCrossingImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKZeroCrossingImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKZeroCrossingImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKZeroCrossingImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKZeroCrossingImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -64,8 +64,8 @@ TEST_CASE("ITKImageProcessing::ITKZeroCrossingImageFilter(inverted)", "[ITKImage
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKZeroCrossingImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKZeroCrossingImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKZeroCrossingImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKZeroCrossingImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKZeroCrossingImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKZeroCrossingImage::k_ForegroundValue_Key, std::make_any<UInt8Parameter::ValueType>(0));
   args.insertOrAssign(ITKZeroCrossingImage::k_BackgroundValue_Key, std::make_any<UInt8Parameter::ValueType>(2));

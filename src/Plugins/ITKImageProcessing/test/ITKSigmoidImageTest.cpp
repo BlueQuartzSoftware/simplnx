@@ -1,13 +1,14 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKSigmoidImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKSigmoidImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -19,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKSigmoidImageFilter(defaults)", "[ITKImageProcessing][ITKSigmoidImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKSigmoidImage filter;
+  const ITKSigmoidImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKSigmoidImageFilter(defaults)", "[ITKImageProce
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKSigmoidImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKSigmoidImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKSigmoidImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKSigmoidImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKSigmoidImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKSigmoidImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

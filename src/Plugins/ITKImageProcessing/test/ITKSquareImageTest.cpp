@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKSquareImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKSquareImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -18,7 +18,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKSquareImageFilter(defaults)", "[ITKImageProcessing][ITKSquareImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKSquareImage filter;
+  const ITKSquareImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -32,9 +32,9 @@ TEST_CASE("ITKImageProcessing::ITKSquareImageFilter(defaults)", "[ITKImageProces
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKSquareImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKSquareImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKSquareImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKSquareImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKSquareImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKSquareImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

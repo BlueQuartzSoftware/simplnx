@@ -1,6 +1,6 @@
 #include "ReadImageUtils.hpp"
 
-namespace cxItkImageReader
+namespace cxItkImageReaderFilter
 {
 
 //------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
-#include "ITKImageProcessing/Filters/ITKMhaFileReader.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
+#include "ITKImageProcessing/Filters/ITKMhaFileReaderFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -12,11 +12,11 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITKImageProcessing][ITKMhaFileReader]")
+TEST_CASE("ITKImageProcessing::ITKMhaFileReaderFilter: Read 2D & 3D Image Data", "[ITKImageProcessing][ITKMhaFileReaderFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_v3.tar.gz", "ITKMhaFileReaderTest_v3");
 
-  // Load plugins (this is needed because ITKMhaFileReader needs access to the SimplnxCore plugin)
+  // Load plugins (this is needed because ITKMhaFileReaderFilter needs access to the SimplnxCore plugin)
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Test reading 2D & 3D image data
@@ -34,7 +34,7 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
     exemplaryGeomName = "ExemplarySmallIN100";
   }
 
-  const ITKMhaFileReader filter;
+  const ITKMhaFileReaderFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplaryFilePath);
   Arguments args;
 
@@ -53,13 +53,13 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   const DataPath exemplaryArrayPath{{exemplaryGeomName, exemplaryAMName, exemplaryArrName}};
   const DataPath exemplaryTMatrixPath{{exemplaryGeomName, exemplaryTMatrixName}};
 
-  args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
-  args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geomPath);
-  args.insertOrAssign(ITKImageReader::k_CellDataName_Key, amName);
-  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrName);
-  args.insertOrAssign(ITKMhaFileReader::k_ApplyImageTransformation, true);
-  args.insertOrAssign(ITKMhaFileReader::k_SaveImageTransformationAsArray, true);
-  args.insertOrAssign(ITKMhaFileReader::k_TransformationMatrixDataArrayPathKey, tMatrixPath);
+  args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, filePath);
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, geomPath);
+  args.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, amName);
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, arrName);
+  args.insertOrAssign(ITKMhaFileReaderFilter::k_ApplyImageTransformation, true);
+  args.insertOrAssign(ITKMhaFileReaderFilter::k_SaveImageTransformationAsArray, true);
+  args.insertOrAssign(ITKMhaFileReaderFilter::k_TransformationMatrixDataArrayPathKey, tMatrixPath);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

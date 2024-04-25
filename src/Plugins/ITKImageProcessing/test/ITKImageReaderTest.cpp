@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -16,9 +16,9 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][ITKImageReader]")
+TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Read PNG", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  ITKImageReader filter;
+  ITKImageReaderFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -28,12 +28,12 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
 
-  args.insertOrAssign(ITKImageReader::k_FileName_Key, inputFilePath);
-  args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, inputGeometryPath);
-  args.insertOrAssign(ITKImageReader::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_ImageCellDataName));
-  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_InputDataName));
-  args.insertOrAssign(ITKImageReader::k_ChangeOrigin_Key, false);
-  args.insertOrAssign(ITKImageReader::k_ChangeSpacing_Key, false);
+  args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, inputFilePath);
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, inputGeometryPath);
+  args.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_ImageCellDataName));
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_InputDataName));
+  args.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key, false);
+  args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, false);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -69,9 +69,9 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][
   REQUIRE(arrayComponentDims == expectedArrayComponentDims);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImageReader: Override Origin", "[ITKImageProcessing][ITKImageReader]")
+TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override Origin", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  ITKImageReader filter;
+  ITKImageReaderFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -86,17 +86,17 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Override Origin", "[ITKImageProce
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
 
-  args.insertOrAssign(ITKImageReader::k_FileName_Key, inputFilePath);
-  args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, inputGeometryPath);
-  args.insertOrAssign(ITKImageReader::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_ImageCellDataName));
-  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_InputDataName));
-  args.insertOrAssign(ITKImageReader::k_ChangeOrigin_Key, true);
+  args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, inputFilePath);
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, inputGeometryPath);
+  args.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_ImageCellDataName));
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_InputDataName));
+  args.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key, true);
 
-  args.insert(ITKImageReader::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
-  args.insert(ITKImageReader::k_CenterOrigin_Key, std::make_any<bool>(false));
-  args.insert(ITKImageReader::k_ChangeSpacing_Key, std::make_any<bool>(k_ChangeResolution));
-  args.insert(ITKImageReader::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
-  args.insert(ITKImageReader::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
+  args.insert(ITKImageReaderFilter::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
+  args.insert(ITKImageReaderFilter::k_CenterOrigin_Key, std::make_any<bool>(false));
+  args.insert(ITKImageReaderFilter::k_ChangeSpacing_Key, std::make_any<bool>(k_ChangeResolution));
+  args.insert(ITKImageReaderFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
+  args.insert(ITKImageReaderFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -118,9 +118,9 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Override Origin", "[ITKImageProce
   REQUIRE(imageSpacing == k_Spacing);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImageReader: Centering Origin in Geometry", "[ITKImageProcessing][ITKImageReader]")
+TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Centering Origin in Geometry", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  ITKImageReader filter;
+  ITKImageReaderFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -135,16 +135,16 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Centering Origin in Geometry", "[
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);
 
-  args.insertOrAssign(ITKImageReader::k_FileName_Key, inputFilePath);
-  args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, inputGeometryPath);
-  args.insertOrAssign(ITKImageReader::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_ImageCellDataName));
-  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_InputDataName));
+  args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, inputFilePath);
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, inputGeometryPath);
+  args.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_ImageCellDataName));
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(ITKTestBase::k_InputDataName));
 
-  args.insert(ITKImageReader::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
-  args.insert(ITKImageReader::k_CenterOrigin_Key, std::make_any<bool>(true));
-  args.insert(ITKImageReader::k_ChangeSpacing_Key, std::make_any<bool>(k_ChangeResolution));
-  args.insert(ITKImageReader::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
-  args.insert(ITKImageReader::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
+  args.insert(ITKImageReaderFilter::k_ChangeOrigin_Key, std::make_any<bool>(k_ChangeOrigin));
+  args.insert(ITKImageReaderFilter::k_CenterOrigin_Key, std::make_any<bool>(true));
+  args.insert(ITKImageReaderFilter::k_ChangeSpacing_Key, std::make_any<bool>(k_ChangeResolution));
+  args.insert(ITKImageReaderFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
+  args.insert(ITKImageReaderFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

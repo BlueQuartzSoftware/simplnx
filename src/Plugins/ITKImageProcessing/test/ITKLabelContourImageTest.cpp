@@ -1,14 +1,15 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKLabelContourImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKLabelContourImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -20,7 +21,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKLabelContourImageFilter(default)", "[ITKImageProcessing][ITKLabelContourImage][default]")
 {
   DataStructure dataStructure;
-  const ITKLabelContourImage filter;
+  const ITKLabelContourImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -34,9 +35,9 @@ TEST_CASE("ITKImageProcessing::ITKLabelContourImageFilter(default)", "[ITKImageP
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKLabelContourImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKLabelContourImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKLabelContourImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKLabelContourImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKLabelContourImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKLabelContourImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

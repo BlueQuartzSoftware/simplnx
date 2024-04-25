@@ -2,7 +2,7 @@
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/ReadImageUtils.hpp"
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -183,7 +183,7 @@ private:
     Result<> outputResult = {};
 
     auto* filterListPtr = Application::Instance()->getFilterList();
-    // auto imageImportFilter = ITKImageReader();
+    // auto imageImportFilter = ITKImageReaderFilter();
 
     for(const auto& bound : m_Cache.bounds)
     {
@@ -213,7 +213,7 @@ private:
       image->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
 
       // Use ITKUtils to read the image into the DataStructure
-      Result<> imageReaderResult = cxItkImageReader::ReadImageExecute<cxItkImageReader::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string());
+      Result<> imageReaderResult = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string());
       if(imageReaderResult.invalid())
       {
         for(const auto& error : imageReaderResult.errors())

@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKStandardDeviationProjectionImage.hpp"
+#include "ITKImageProcessing/Filters/ITKStandardDeviationProjectionImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKStandardDeviationProjectionImageFilter(z_proje
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKStandardDeviationProjectionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKStandardDeviationProjectionImage::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(2));
 
   auto preflightResult = filter.preflight(dataStructure, args);

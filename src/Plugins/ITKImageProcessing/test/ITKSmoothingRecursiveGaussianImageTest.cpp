@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKSmoothingRecursiveGaussianImage.hpp"
+#include "ITKImageProcessing/Filters/ITKSmoothingRecursiveGaussianImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -34,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(default)
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -70,9 +70,9 @@ TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(rgb_imag
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_Sigma_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{
                                                                            5.0,
                                                                            5.0,

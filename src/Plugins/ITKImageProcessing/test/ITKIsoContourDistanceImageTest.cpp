@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKIsoContourDistanceImage.hpp"
+#include "ITKImageProcessing/Filters/ITKIsoContourDistanceImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -33,8 +33,8 @@ TEST_CASE("ITKImageProcessing::ITKIsoContourDistanceImageFilter(default)", "[ITK
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKIsoContourDistanceImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKIsoContourDistanceImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKIsoContourDistanceImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKIsoContourDistanceImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKIsoContourDistanceImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKIsoContourDistanceImage::k_LevelSetValue_Key, std::make_any<Float64Parameter::ValueType>(50.0));
 

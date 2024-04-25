@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKMinMaxCurvatureFlowImage.hpp"
+#include "ITKImageProcessing/Filters/ITKMinMaxCurvatureFlowImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -33,8 +33,8 @@ TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImageFilter(defaults)", "[I
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -71,8 +71,8 @@ TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImageFilter(longer)", "[ITK
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.1));
   args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));

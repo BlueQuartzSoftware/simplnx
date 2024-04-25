@@ -1,26 +1,28 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKOpeningByReconstructionImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKOpeningByReconstructionImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
+
 
 #include <filesystem>
-
 namespace fs = std::filesystem;
 
 using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKOpeningByReconstructionImageFilter(OpeningByReconstruction)", "[ITKImageProcessing][ITKOpeningByReconstructionImage][OpeningByReconstruction]")
 {
   DataStructure dataStructure;
-  ITKOpeningByReconstructionImage filter;
+  const ITKOpeningByReconstructionImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -34,11 +36,11 @@ TEST_CASE("ITKImageProcessing::ITKOpeningByReconstructionImageFilter(OpeningByRe
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKOpeningByReconstructionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKOpeningByReconstructionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKOpeningByReconstructionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKOpeningByReconstructionImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(ITKOpeningByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
+  args.insertOrAssign(ITKOpeningByReconstructionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKOpeningByReconstructionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKOpeningByReconstructionImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKOpeningByReconstructionImageFilter::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(ITKOpeningByReconstructionImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

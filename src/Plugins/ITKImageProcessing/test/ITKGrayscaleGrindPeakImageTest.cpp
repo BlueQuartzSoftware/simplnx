@@ -1,13 +1,14 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKGrayscaleGrindPeakImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKGrayscaleGrindPeakImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -19,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPeak1)", "[ITKImageProcessing][ITKGrayscaleGrindPeakImage][GrayscaleGrindPeak1]")
 {
   DataStructure dataStructure;
-  const ITKGrayscaleGrindPeakImage filter;
+  const ITKGrayscaleGrindPeakImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPe
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -50,7 +51,7 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPe
 TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPeak2)", "[ITKImageProcessing][ITKGrayscaleGrindPeakImage][GrayscaleGrindPeak2]")
 {
   DataStructure dataStructure;
-  const ITKGrayscaleGrindPeakImage filter;
+  const ITKGrayscaleGrindPeakImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -64,9 +65,9 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPe
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKGrayscaleGrindPeakImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKGrayscaleGrindPeakImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

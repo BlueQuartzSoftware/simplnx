@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKAsinImage.hpp"
+#include "ITKImageProcessing/Filters/ITKAsinImageFilter.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -8,17 +9,16 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
-
 namespace fs = std::filesystem;
 
 using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKAsinImageFilter(defaults)", "[ITKImageProcessing][ITKAsinImage][defaults]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-
   DataStructure dataStructure;
-  ITKAsinImage filter;
+  const ITKAsinImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -32,9 +32,9 @@ TEST_CASE("ITKImageProcessing::ITKAsinImageFilter(defaults)", "[ITKImageProcessi
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKAsinImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKAsinImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKAsinImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKAsinImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKAsinImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKAsinImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -42,11 +42,11 @@ TEST_CASE("ITKImageProcessing::ITKAsinImageFilter(defaults)", "[ITKImageProcessi
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters_AsinImageFilter_defaults.nrrd";
-  DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
-  DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
-  DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
-  Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
+  const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters_AsinImageFilter_defaults.nrrd";
+  const DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
+  const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
+  const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
+  const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
 }

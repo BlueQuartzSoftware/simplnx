@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKDanielssonDistanceMapImage.hpp"
+#include "ITKImageProcessing/Filters/ITKDanielssonDistanceMapImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -33,8 +33,8 @@ TEST_CASE("ITKImageProcessing::ITKDanielssonDistanceMapImageFilter(default)", "[
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKDanielssonDistanceMapImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKDanielssonDistanceMapImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);

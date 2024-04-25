@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKDoubleThresholdImage.hpp"
+#include "ITKImageProcessing/Filters/ITKDoubleThresholdImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -34,8 +34,8 @@ TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold1)",
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKDoubleThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -65,8 +65,8 @@ TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold2)",
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKDoubleThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKDoubleThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold1_Key, std::make_any<Float64Parameter::ValueType>(0));
   args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold2_Key, std::make_any<Float64Parameter::ValueType>(0));

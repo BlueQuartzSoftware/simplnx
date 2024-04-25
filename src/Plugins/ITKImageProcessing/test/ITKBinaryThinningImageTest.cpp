@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKBinaryThinningImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKBinaryThinningImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -18,7 +18,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKBinaryThinningImageFilter(BinaryThinning)", "[ITKImageProcessing][ITKBinaryThinningImage][BinaryThinning]")
 {
   DataStructure dataStructure;
-  const ITKBinaryThinningImage filter;
+  const ITKBinaryThinningImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -32,9 +32,9 @@ TEST_CASE("ITKImageProcessing::ITKBinaryThinningImageFilter(BinaryThinning)", "[
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryThinningImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryThinningImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryThinningImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryThinningImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryThinningImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryThinningImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

@@ -1,13 +1,14 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKValuedRegionalMinimaImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKValuedRegionalMinimaImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -19,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKValuedRegionalMinimaImageFilter(defaults)", "[ITKImageProcessing][ITKValuedRegionalMinimaImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKValuedRegionalMinimaImage filter;
+  const ITKValuedRegionalMinimaImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKValuedRegionalMinimaImageFilter(defaults)", "[
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKValuedRegionalMinimaImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKValuedRegionalMinimaImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKValuedRegionalMinimaImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKValuedRegionalMinimaImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKValuedRegionalMinimaImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKValuedRegionalMinimaImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

@@ -1,16 +1,17 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKBinaryErodeImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKBinaryErodeImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -22,7 +23,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKBinaryErodeImageFilter(BinaryErode)", "[ITKImageProcessing][ITKBinaryErodeImage][BinaryErode]")
 {
   DataStructure dataStructure;
-  const ITKBinaryErodeImage filter;
+  const ITKBinaryErodeImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -36,12 +37,12 @@ TEST_CASE("ITKImageProcessing::ITKBinaryErodeImageFilter(BinaryErode)", "[ITKIma
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryErodeImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryErodeImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryErodeImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKBinaryErodeImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(ITKBinaryErodeImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
-  args.insertOrAssign(ITKBinaryErodeImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
+  args.insertOrAssign(ITKBinaryErodeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryErodeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryErodeImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryErodeImageFilter::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(ITKBinaryErodeImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
+  args.insertOrAssign(ITKBinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

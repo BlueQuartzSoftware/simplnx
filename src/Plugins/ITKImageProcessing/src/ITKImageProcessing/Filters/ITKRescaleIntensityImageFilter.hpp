@@ -1,0 +1,129 @@
+#pragma once
+
+#include "ITKImageProcessing/ITKImageProcessing_export.hpp"
+
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+
+namespace nx::core
+{
+/**
+ * @class ITKRescaleIntensityImageFilter
+ * @brief Applies a linear transformation to the intensity levels of the input Image .
+ *
+ * RescaleIntensityImageFilter applies pixel-wise a linear transformation to the intensity values of input image pixels. The linear transformation is defined by the user in terms of the minimum and
+ * maximum values that the output image should have.
+ *
+ * The following equation gives the mapping of the intensity values
+ *
+ * \par
+ *  \f[ outputPixel = ( inputPixel - inputMin) \cdot \frac{(outputMax - outputMin )}{(inputMax - inputMin)} + outputMin \f]
+ *
+ *
+ * All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.
+ *
+ * NOTE: In this filter the minimum and maximum values of the input image are computed internally using the MinimumMaximumImageCalculator . Users are not supposed to set those values in this filter.
+ * If you need a filter where you can set the minimum and maximum values of the input, please use the IntensityWindowingImageFilter . If you want a filter that can use a user-defined linear
+ * transformation for the intensity, then please use the ShiftScaleImageFilter .
+ *
+ * @see IntensityWindowingImageFilter
+ *
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
+ */
+class ITKIMAGEPROCESSING_EXPORT ITKRescaleIntensityImageFilter : public IFilter
+{
+public:
+  ITKRescaleIntensityImageFilter() = default;
+  ~ITKRescaleIntensityImageFilter() noexcept override = default;
+
+  ITKRescaleIntensityImageFilter(const ITKRescaleIntensityImageFilter&) = delete;
+  ITKRescaleIntensityImageFilter(ITKRescaleIntensityImageFilter&&) noexcept = delete;
+
+  ITKRescaleIntensityImageFilter& operator=(const ITKRescaleIntensityImageFilter&) = delete;
+  ITKRescaleIntensityImageFilter& operator=(ITKRescaleIntensityImageFilter&&) noexcept = delete;
+
+  // Parameter Keys
+  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static inline constexpr StringLiteral k_OutputMinimum_Key = "output_minimum";
+  static inline constexpr StringLiteral k_OutputMaximum_Key = "output_maximum";
+
+  /**
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
+   * @brief Returns the name of the filter.
+   * @return
+   */
+  std::string name() const override;
+
+  /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
+   * @brief Returns the uuid of the filter.
+   * @return
+   */
+  Uuid uuid() const override;
+
+  /**
+   * @brief Returns the human readable name of the filter.
+   * @return
+   */
+  std::string humanName() const override;
+
+  /**
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
+
+  /**
+   * @brief Returns the parameters of the filter (i.e. its inputs)
+   * @return
+   */
+  Parameters parameters() const override;
+
+  /**
+   * @brief Returns a copy of the filter.
+   * @return
+   */
+  UniquePointer clone() const override;
+
+protected:
+  /**
+   * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
+   * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
+   * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
+   * @param dataStructure The input DataStructure instance
+   * @param filterArgs These are the input values for each parameter that is required for the filter
+   * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
+   * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
+   */
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+
+  /**
+   * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
+   * On failure, there is no guarantee that the DataStructure is in a correct state.
+   * @param dataStructure The input DataStructure instance
+   * @param filterArgs These are the input values for each parameter that is required for the filter
+   * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
+   * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
+   */
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
+};
+} // namespace nx::core
+
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKRescaleIntensityImageFilter, "ec7737cc-17e0-4ac5-9745-c4c5266b3f96");

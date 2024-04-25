@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKLaplacianRecursiveGaussianImage.hpp"
+#include "ITKImageProcessing/Filters/ITKLaplacianRecursiveGaussianImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -34,8 +34,8 @@ TEST_CASE("ITKImageProcessing::ITKLaplacianRecursiveGaussianImageFilter(default)
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);

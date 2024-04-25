@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKNormalizeToConstantImage.hpp"
+#include "ITKImageProcessing/Filters/ITKNormalizeToConstantImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKNormalizeToConstantImageFilter(defaults)", "[I
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKNormalizeToConstantImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKNormalizeToConstantImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKNormalizeToConstantImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -69,9 +69,9 @@ TEST_CASE("ITKImageProcessing::ITKNormalizeToConstantImageFilter(vector)", "[ITK
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKNormalizeToConstantImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKNormalizeToConstantImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKNormalizeToConstantImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKNormalizeToConstantImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKNormalizeToConstantImage::k_Constant_Key, std::make_any<Float64Parameter::ValueType>(0.0));
 
   auto preflightResult = filter.preflight(dataStructure, args);

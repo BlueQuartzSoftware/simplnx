@@ -1,15 +1,16 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKGrayscaleMorphologicalClosingImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKGrayscaleMorphologicalClosingImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -18,11 +19,10 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalClosingImageFilter(GrayscaleMorphologicalClosing)",
-          "[ITKImageProcessing][ITKGrayscaleMorphologicalClosingImage][GrayscaleMorphologicalClosing]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalClosingImageFilter(GrayscaleMorphologicalClosing)", "[ITKImageProcessing][ITKGrayscaleMorphologicalClosingImage][GrayscaleMorphologicalClosing]")
 {
   DataStructure dataStructure;
-  const ITKGrayscaleMorphologicalClosingImage filter;
+  const ITKGrayscaleMorphologicalClosingImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -36,11 +36,11 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalClosingImageFilter(Grays
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
+  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImageFilter::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(ITKGrayscaleMorphologicalClosingImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

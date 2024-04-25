@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKGradientAnisotropicDiffusionImage.hpp"
+#include "ITKImageProcessing/Filters/ITKGradientAnisotropicDiffusionImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -33,8 +33,8 @@ TEST_CASE("ITKImageProcessing::ITKGradientAnisotropicDiffusionImageFilter(defaul
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
 
@@ -70,8 +70,8 @@ TEST_CASE("ITKImageProcessing::ITKGradientAnisotropicDiffusionImageFilter(longer
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
   args.insertOrAssign(ITKGradientAnisotropicDiffusionImage::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));

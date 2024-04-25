@@ -1,14 +1,15 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKHMinimaImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKHMinimaImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -20,7 +21,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKHMinimaImageFilter(HMinima)", "[ITKImageProcessing][ITKHMinimaImage][HMinima]")
 {
   DataStructure dataStructure;
-  const ITKHMinimaImage filter;
+  const ITKHMinimaImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -34,10 +35,10 @@ TEST_CASE("ITKImageProcessing::ITKHMinimaImageFilter(HMinima)", "[ITKImageProces
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKHMinimaImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKHMinimaImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKHMinimaImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKHMinimaImage::k_Height_Key, std::make_any<Float64Parameter::ValueType>(2000));
+  args.insertOrAssign(ITKHMinimaImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKHMinimaImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKHMinimaImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKHMinimaImageFilter::k_Height_Key, std::make_any<Float64Parameter::ValueType>(2000));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

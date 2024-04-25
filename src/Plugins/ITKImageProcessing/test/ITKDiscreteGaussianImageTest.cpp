@@ -1,15 +1,16 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKDiscreteGaussianImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKDiscreteGaussianImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
+
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -20,10 +21,8 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(float)", "[ITKImageProcessing][ITKDiscreteGaussianImage][float]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-
   DataStructure dataStructure;
-  const ITKDiscreteGaussianImage filter;
+  const ITKDiscreteGaussianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -37,9 +36,9 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(float)", "[ITKImag
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -58,10 +57,8 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(float)", "[ITKImag
 
 TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(short)", "[ITKImageProcessing][ITKDiscreteGaussianImage][short]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-
   DataStructure dataStructure;
-  const ITKDiscreteGaussianImage filter;
+  const ITKDiscreteGaussianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -75,9 +72,9 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(short)", "[ITKImag
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -90,16 +87,14 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(short)", "[ITKImag
   const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
-  Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 1.0);
+  Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.6);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
 }
 
 TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(bigG)", "[ITKImageProcessing][ITKDiscreteGaussianImage][bigG]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-
   DataStructure dataStructure;
-  const ITKDiscreteGaussianImage filter;
+  const ITKDiscreteGaussianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -113,15 +108,11 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(bigG)", "[ITKImage
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_Variance_Key, std::make_any<VectorFloat64Parameter::ValueType>(VectorFloat64Parameter::ValueType{
-                                                                    100.0,
-                                                                    100.0,
-                                                                    100.0,
-                                                                }));
-  args.insertOrAssign(ITKDiscreteGaussianImage::k_MaximumKernelWidth_Key, std::make_any<UInt32Parameter::ValueType>(64));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_Variance_Key, std::make_any<VectorFloat64Parameter::ValueType>(VectorFloat64Parameter::ValueType{100.0,100.0,100.0,}));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_MaximumKernelWidth_Key, std::make_any<UInt32Parameter::ValueType>(64));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

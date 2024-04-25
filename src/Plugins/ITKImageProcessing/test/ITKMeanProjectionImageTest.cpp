@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKMeanProjectionImage.hpp"
+#include "ITKImageProcessing/Filters/ITKMeanProjectionImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKMeanProjectionImageFilter(z_projection)", "[IT
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMeanProjectionImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMeanProjectionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMeanProjectionImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMeanProjectionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMeanProjectionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMeanProjectionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKMeanProjectionImage::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(2));
 
   auto preflightResult = filter.preflight(dataStructure, args);

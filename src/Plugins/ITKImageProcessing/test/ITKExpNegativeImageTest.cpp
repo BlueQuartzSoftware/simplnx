@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Filters/ITKExpNegativeImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKExpNegativeImage.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -18,7 +18,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKExpNegativeImageFilter(defaults)", "[ITKImageProcessing][ITKExpNegativeImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKExpNegativeImage filter;
+  const ITKExpNegativeImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -32,9 +32,9 @@ TEST_CASE("ITKImageProcessing::ITKExpNegativeImageFilter(defaults)", "[ITKImageP
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKExpNegativeImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKExpNegativeImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKExpNegativeImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKExpNegativeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKExpNegativeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKExpNegativeImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
