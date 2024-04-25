@@ -354,7 +354,6 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
     if(featurePhasesPtr != nullptr)
     {
       dataArrayPaths.push_back(featurePhasesPath);
-      // featurePhases = featurePhasesPtr->getDataStore();
     }
   }
 
