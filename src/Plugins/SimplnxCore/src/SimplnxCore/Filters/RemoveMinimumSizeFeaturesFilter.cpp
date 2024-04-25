@@ -371,7 +371,7 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // This section will warn the user about the removal of NeighborLists
-  auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, featurePhasesPath, resultOutputActions);
+  auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, numCellsPath, resultOutputActions);
   if(result.outputActions.invalid())
   {
     return result;

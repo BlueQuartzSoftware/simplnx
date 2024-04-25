@@ -294,8 +294,9 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     {
       resultOutputActions.m_Warnings.push_back(Warning(
           {-55503,
-           fmt::format("This filter will modify the Cell Level Array '{}' which causes all Feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
-                       featureIdsArrayPath.toString(), warningMsg)}));
+           fmt::format(
+               "This filter will modify the Cell Level Array '{}' which causes all Feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
+               featureIdsArrayPath.toString(), warningMsg)}));
     }
   }
 
