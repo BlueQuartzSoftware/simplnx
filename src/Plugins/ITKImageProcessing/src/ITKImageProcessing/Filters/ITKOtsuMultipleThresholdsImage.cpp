@@ -119,7 +119,7 @@ IFilter::PreflightResult ITKOtsuMultipleThresholdsImage::preflightImpl(const Dat
   auto numberOfHistogramBins = filterArgs.value<uint32>(k_NumberOfHistogramBins_Key);
   auto valleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key);
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKOtsuMultipleThresholdsImage::ArrayOptionsType, cxITKOtsuMultipleThresholdsImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -134,7 +134,7 @@ Result<> ITKOtsuMultipleThresholdsImage::executeImpl(DataStructure& dataStructur
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto numberOfThresholds = filterArgs.value<uint8>(k_NumberOfThresholds_Key);
   auto labelOffset = filterArgs.value<uint8>(k_LabelOffset_Key);

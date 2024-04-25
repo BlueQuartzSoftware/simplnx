@@ -100,22 +100,22 @@ IFilter::PreflightResult FindSlipTransmissionMetricsFilter::preflightImpl(const 
   usize tupShape = dataStructure.getDataAs<Int32NeighborList>(pNeighborListPathValue)->getNumberOfTuples();
 
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF1ListNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.replaceName(pF1ListNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF1sptListNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.replaceName(pF1sptListNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF7ListNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.replaceName(pF7ListNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pmPrimeListNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.replaceName(pmPrimeListNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -133,10 +133,10 @@ Result<> FindSlipTransmissionMetricsFilter::executeImpl(DataStructure& dataStruc
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.F1ListArrayName = inputValues.NeighborListArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_F1ListArrayName_Key));
-  inputValues.F1sptListArrayName = inputValues.NeighborListArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_F1sptListArrayName_Key));
-  inputValues.F7ListArrayName = inputValues.NeighborListArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_F7ListArrayName_Key));
-  inputValues.mPrimeListArrayName = inputValues.NeighborListArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_mPrimeListArrayName_Key));
+  inputValues.F1ListArrayName = inputValues.NeighborListArrayPath.replaceName(filterArgs.value<std::string>(k_F1ListArrayName_Key));
+  inputValues.F1sptListArrayName = inputValues.NeighborListArrayPath.replaceName(filterArgs.value<std::string>(k_F1sptListArrayName_Key));
+  inputValues.F7ListArrayName = inputValues.NeighborListArrayPath.replaceName(filterArgs.value<std::string>(k_F7ListArrayName_Key));
+  inputValues.mPrimeListArrayName = inputValues.NeighborListArrayPath.replaceName(filterArgs.value<std::string>(k_mPrimeListArrayName_Key));
 
   return FindSlipTransmissionMetrics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -211,7 +211,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
 
       // rename grayscale array to reflect original
       {
-        auto& gray = importedDataStructure.getDataRefAs<IDataArray>(imageDataPath.getParent().createChildPath("gray" + imageDataPath.getTargetName()));
+        auto& gray = importedDataStructure.getDataRefAs<IDataArray>(imageDataPath.replaceName("gray" + imageDataPath.getTargetName()));
         if(!gray.canRename(imageDataPath.getTargetName()))
         {
           return MakeErrorResult(-64543, fmt::format("Unable to rename the internal grayscale array to {}", imageDataPath.getTargetName()));

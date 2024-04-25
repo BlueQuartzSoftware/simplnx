@@ -109,19 +109,19 @@ IFilter::PreflightResult FindFeatureReferenceCAxisMisorientationsFilter::preflig
 
   std::vector<usize> tupleShape = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape();
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1},
-                                                                 pFeatureIdsArrayPathValue.getParent().createChildPath(pFeatureReferenceCAxisMisorientationsArrayNameValue));
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pFeatureIdsArrayPathValue.replaceName(pFeatureReferenceCAxisMisorientationsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   tupleShape = dataStructure.getDataRefAs<Float32Array>(pAvgCAxesArrayPathValue).getTupleShape();
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pAvgCAxesArrayPathValue.getParent().createChildPath(pFeatureAvgCAxisMisorientationsArrayNameValue));
+        std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pAvgCAxesArrayPathValue.replaceName(pFeatureAvgCAxisMisorientationsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pAvgCAxesArrayPathValue.getParent().createChildPath(pFeatureStDevCAxisMisorientationsArrayNameValue));
+        std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pAvgCAxesArrayPathValue.replaceName(pFeatureStDevCAxisMisorientationsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -143,10 +143,9 @@ Result<> FindFeatureReferenceCAxisMisorientationsFilter::executeImpl(DataStructu
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.AvgCAxesArrayPath = filterArgs.value<DataPath>(k_AvgCAxesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureAvgCAxisMisorientationsArrayName = inputValues.AvgCAxesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureAvgCAxisMisorientationsArrayName_Key));
-  inputValues.FeatureStdevCAxisMisorientationsArrayName = inputValues.AvgCAxesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureStdevCAxisMisorientationsArrayName_Key));
-  inputValues.FeatureReferenceCAxisMisorientationsArrayName =
-      inputValues.FeatureIdsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureReferenceCAxisMisorientationsArrayName_Key));
+  inputValues.FeatureAvgCAxisMisorientationsArrayName = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureAvgCAxisMisorientationsArrayName_Key));
+  inputValues.FeatureStdevCAxisMisorientationsArrayName = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureStdevCAxisMisorientationsArrayName_Key));
+  inputValues.FeatureReferenceCAxisMisorientationsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureReferenceCAxisMisorientationsArrayName_Key));
 
   return FindFeatureReferenceCAxisMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

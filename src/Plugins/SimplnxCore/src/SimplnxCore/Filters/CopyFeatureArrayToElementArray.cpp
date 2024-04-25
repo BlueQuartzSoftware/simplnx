@@ -157,7 +157,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
 
   for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
   {
-    DataPath createdArrayPath = pFeatureIdsArrayPathValue.getParent().createChildPath(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
+    DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
     const auto& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(selectedFeatureArrayPath);
     DataType dataType = selectedFeatureArray.getDataType();
     auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, tDims, selectedFeatureArray.getComponentShape(), createdArrayPath);
@@ -178,7 +178,7 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
   for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
   {
-    DataPath createdArrayPath = pFeatureIdsArrayPathValue.getParent().createChildPath(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
+    DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
     const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(selectedFeatureArrayPath);
 
     messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating number of featureIds in input array '{}'...", selectedFeatureArrayPath.toString())});

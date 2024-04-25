@@ -104,7 +104,7 @@ IFilter::PreflightResult ITKGradientMagnitudeImage::preflightImpl(const DataStru
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKGradientMagnitudeImage::ArrayOptionsType, cxITKGradientMagnitudeImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -119,7 +119,7 @@ Result<> ITKGradientMagnitudeImage::executeImpl(DataStructure& dataStructure, co
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
 

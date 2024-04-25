@@ -139,7 +139,7 @@ IFilter::PreflightResult ITKDoubleThresholdImage::preflightImpl(const DataStruct
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKDoubleThresholdImage::ArrayOptionsType, cxITKDoubleThresholdImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -154,7 +154,7 @@ Result<> ITKDoubleThresholdImage::executeImpl(DataStructure& dataStructure, cons
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto threshold1 = filterArgs.value<float64>(k_Threshold1_Key);
   auto threshold2 = filterArgs.value<float64>(k_Threshold2_Key);

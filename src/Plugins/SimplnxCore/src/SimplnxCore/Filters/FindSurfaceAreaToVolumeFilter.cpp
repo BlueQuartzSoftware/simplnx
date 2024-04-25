@@ -110,14 +110,14 @@ IFilter::PreflightResult FindSurfaceAreaToVolumeFilter::preflightImpl(const Data
   IDataStore::ShapeType tupleShape = cellFeatureData->getShape();
   // Create the SurfaceAreaVolumeRatio
   {
-    auto arrayPath = pNumCellsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
+    auto arrayPath = pNumCellsArrayPathValue.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, arrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the SphericityArray
   if(pCalculateSphericityValue)
   {
-    auto arrayPath = pNumCellsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_SphericityArrayName_Key));
+    auto arrayPath = pNumCellsArrayPathValue.replaceName(filterArgs.value<std::string>(k_SphericityArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, arrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
@@ -136,9 +136,9 @@ Result<> FindSurfaceAreaToVolumeFilter::executeImpl(DataStructure& dataStructure
 
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.NumCellsArrayPath = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
-  inputValues.SurfaceAreaVolumeRatioArrayName = inputValues.NumCellsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
+  inputValues.SurfaceAreaVolumeRatioArrayName = inputValues.NumCellsArrayPath.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
   inputValues.CalculateSphericity = filterArgs.value<bool>(k_CalculateSphericity_Key);
-  inputValues.SphericityArrayName = inputValues.NumCellsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_SphericityArrayName_Key));
+  inputValues.SphericityArrayName = inputValues.NumCellsArrayPath.replaceName(filterArgs.value<std::string>(k_SphericityArrayName_Key));
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return FindSurfaceAreaToVolume(dataStructure, messageHandler, shouldCancel, &inputValues)();

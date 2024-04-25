@@ -97,7 +97,7 @@ IFilter::PreflightResult GenerateVectorColorsFilter::preflightImpl(const DataStr
 
   std::vector<usize> vectorsTupShape = dataStructure.getDataAs<Float32Array>(pVectorsArrayPathValue)->getTupleShape();
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::uint8, vectorsTupShape, std::vector<usize>{3}, pVectorsArrayPathValue.getParent().createChildPath(pCellVectorColorsArrayNameValue));
+    auto action = std::make_unique<CreateArrayAction>(DataType::uint8, vectorsTupShape, std::vector<usize>{3}, pVectorsArrayPathValue.replaceName(pCellVectorColorsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -128,7 +128,7 @@ Result<> GenerateVectorColorsFilter::executeImpl(DataStructure& dataStructure, c
   {
     inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   }
-  inputValues.CellVectorColorsArrayPath = inputValues.VectorsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CellVectorColorsArrayName_Key));
+  inputValues.CellVectorColorsArrayPath = inputValues.VectorsArrayPath.replaceName(filterArgs.value<std::string>(k_CellVectorColorsArrayName_Key));
 
   return GenerateVectorColors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

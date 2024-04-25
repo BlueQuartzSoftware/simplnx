@@ -102,26 +102,23 @@ IFilter::PreflightResult FindBoundaryStrengthsFilter::preflightImpl(const DataSt
 
   std::vector<usize> faceLabelsTupShape = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue)->getTupleShape();
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2},
-                                                      pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshF1sArrayNameValue));
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2}, pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshF1sArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2},
-                                                      pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshF1sptsArrayNameValue));
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2}, pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshF1sptsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2},
-                                                      pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshF7sArrayNameValue));
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2}, pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshF7sArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2},
-                                                      pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshmPrimesArrayNameValue));
+    auto action =
+        std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2}, pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshmPrimesArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 

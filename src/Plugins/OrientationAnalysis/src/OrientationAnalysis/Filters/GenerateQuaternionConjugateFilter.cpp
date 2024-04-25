@@ -81,7 +81,7 @@ IFilter::PreflightResult GenerateQuaternionConjugateFilter::preflightImpl(const 
                                                                           const std::atomic_bool& shouldCancel) const
 {
   auto pQuaternionDataArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -116,7 +116,7 @@ Result<> GenerateQuaternionConjugateFilter::executeImpl(DataStructure& dataStruc
   GenerateQuaternionConjugateInputValues inputValues;
 
   inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return GenerateQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();

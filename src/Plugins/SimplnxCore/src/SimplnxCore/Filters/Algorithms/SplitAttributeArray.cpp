@@ -19,7 +19,7 @@ struct SplitArraysFunctor
     for(const auto& j : inputValues->ExtractComponents)
     {
       std::string arrayName = inputValues->InputArrayPath.getTargetName() + inputValues->SplitArraysSuffix + StringUtilities::number(j);
-      DataPath splitArrayPath = inputValues->InputArrayPath.getParent().createChildPath(arrayName);
+      DataPath splitArrayPath = inputValues->InputArrayPath.replaceName(arrayName);
       auto& splitArray = dataStructure.getDataRefAs<DataArray<T>>(splitArrayPath);
 
       for(usize i = 0; i < numTuples; i++)

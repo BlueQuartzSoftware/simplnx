@@ -107,7 +107,7 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
   auto surfaceFeaturesName = args.value<std::string>(k_SurfaceFeaturesName_Key);
   auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeaturesPath_Key);
 
-  DataPath boundaryCellsPath = featureIdsPath.getParent().createChildPath(boundaryCellsName);
+  DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);
   DataPath numNeighborsPath = featureAttrMatrixPath.createChildPath(numNeighborsName);
   DataPath neighborListPath = featureAttrMatrixPath.createChildPath(neighborListName);
   DataPath sharedSurfaceAreaPath = featureAttrMatrixPath.createChildPath(sharedSurfaceAreaName);
@@ -177,7 +177,7 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
   auto surfaceFeaturesName = args.value<std::string>(k_SurfaceFeaturesName_Key);
   auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeaturesPath_Key);
 
-  DataPath boundaryCellsPath = featureIdsPath.getParent().createChildPath(boundaryCellsName);
+  DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);
   DataPath numNeighborsPath = featureAttrMatrixPath.createChildPath(numNeighborsName);
   DataPath neighborListPath = featureAttrMatrixPath.createChildPath(neighborListName);
   DataPath sharedSurfaceAreaPath = featureAttrMatrixPath.createChildPath(sharedSurfaceAreaName);

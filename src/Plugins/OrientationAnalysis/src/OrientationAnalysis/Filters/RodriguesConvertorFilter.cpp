@@ -81,7 +81,7 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pRodriguesDataArrayPathValue = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
-  auto pOutputDataArrayPathValue = pRodriguesDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  auto pOutputDataArrayPathValue = pRodriguesDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -116,7 +116,7 @@ Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, con
   RodriguesConvertorInputValues inputValues;
 
   inputValues.RodriguesDataArrayPath = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.RodriguesDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  inputValues.OutputDataArrayPath = inputValues.RodriguesDataArrayPath.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return RodriguesConvertor(dataStructure, messageHandler, shouldCancel, &inputValues)();

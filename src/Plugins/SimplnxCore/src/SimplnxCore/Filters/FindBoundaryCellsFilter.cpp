@@ -84,7 +84,7 @@ IFilter::PreflightResult FindBoundaryCellsFilter::preflightImpl(const DataStruct
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pBoundaryCellsArrayNameValue = filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key);
 
-  const DataPath boundaryCellsArrayPath = pFeatureIdsArrayPathValue.getParent().createChildPath(pBoundaryCellsArrayNameValue);
+  const DataPath boundaryCellsArrayPath = pFeatureIdsArrayPathValue.replaceName(pBoundaryCellsArrayNameValue);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -117,7 +117,7 @@ Result<> FindBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.IncludeVolumeBoundary = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.BoundaryCellsArrayName = inputValues.FeatureIdsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
+  inputValues.BoundaryCellsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
 
   return FindBoundaryCells(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

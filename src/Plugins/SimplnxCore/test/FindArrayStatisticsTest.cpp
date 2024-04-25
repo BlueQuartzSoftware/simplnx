@@ -139,7 +139,7 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm", "[SimplnxCor
     REQUIRE(stdArray != nullptr);
     auto* sumArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(sum));
     REQUIRE(sumArray != nullptr);
-    auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.getParent().createChildPath(standardization));
+    auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.replaceName(standardization));
     REQUIRE(standardizeArray != nullptr);
     REQUIRE(standardizeArray->getNumberOfTuples() == 11);
     auto* histArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(histogram));
@@ -352,7 +352,7 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[S
     auto* sumArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(sum));
     REQUIRE(sumArray != nullptr);
     REQUIRE(sumArray->getNumberOfTuples() == 3);
-    auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.getParent().createChildPath(standardization));
+    auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.replaceName(standardization));
     REQUIRE(standardizeArray != nullptr);
     REQUIRE(standardizeArray->getNumberOfTuples() == 12);
     auto* histArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(histogram));

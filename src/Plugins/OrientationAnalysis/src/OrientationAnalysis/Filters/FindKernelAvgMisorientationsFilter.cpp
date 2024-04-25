@@ -91,7 +91,7 @@ IFilter::PreflightResult FindKernelAvgMisorientationsFilter::preflightImpl(const
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pKernelAverageMisorientationsArrayNameValue = pCellPhasesArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_KernelAverageMisorientationsArrayName_Key));
+  auto pKernelAverageMisorientationsArrayNameValue = pCellPhasesArrayPathValue.replaceName(filterArgs.value<std::string>(k_KernelAverageMisorientationsArrayName_Key));
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   PreflightResult preflightResult;
@@ -123,7 +123,7 @@ Result<> FindKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataStru
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.KernelAverageMisorientationsArrayName = inputValues.CellPhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_KernelAverageMisorientationsArrayName_Key));
+  inputValues.KernelAverageMisorientationsArrayName = inputValues.CellPhasesArrayPath.replaceName(filterArgs.value<std::string>(k_KernelAverageMisorientationsArrayName_Key));
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return FindKernelAvgMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();

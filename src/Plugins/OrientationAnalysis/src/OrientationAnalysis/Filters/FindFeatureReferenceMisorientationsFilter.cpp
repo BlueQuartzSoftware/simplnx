@@ -118,7 +118,7 @@ IFilter::PreflightResult FindFeatureReferenceMisorientationsFilter::preflightImp
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pCellFeatAttributeMatrixArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-  auto pFeatureReferenceMisorientationsArrayPathValue = pFeatureIdsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureReferenceMisorientationsArrayName_Key));
+  auto pFeatureReferenceMisorientationsArrayPathValue = pFeatureIdsArrayPathValue.replaceName(filterArgs.value<std::string>(k_FeatureReferenceMisorientationsArrayName_Key));
   auto pFeatureAvgMisorientationsArrayNameValue = filterArgs.value<std::string>(k_FeatureAvgMisorientationsArrayName_Key);
 
   PreflightResult preflightResult;
@@ -188,11 +188,11 @@ Result<> FindFeatureReferenceMisorientationsFilter::executeImpl(DataStructure& d
   inputValues.GBEuclideanDistancesArrayPath = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureReferenceMisorientationsArrayName = inputValues.FeatureIdsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureReferenceMisorientationsArrayName_Key));
+  inputValues.FeatureReferenceMisorientationsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureReferenceMisorientationsArrayName_Key));
   auto pCellFeatAttributeMatrixArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   auto featAvgMisorientationName = filterArgs.value<std::string>(k_FeatureAvgMisorientationsArrayName_Key);
-  inputValues.FeatureAvgMisorientationsArrayName = inputValues.ReferenceOrientation == 0 ? inputValues.AvgQuatsArrayPath.getParent().createChildPath(featAvgMisorientationName) :
-                                                                                           pCellFeatAttributeMatrixArrayPathValue.createChildPath(featAvgMisorientationName);
+  inputValues.FeatureAvgMisorientationsArrayName =
+      inputValues.ReferenceOrientation == 0 ? inputValues.AvgQuatsArrayPath.replaceName(featAvgMisorientationName) : pCellFeatAttributeMatrixArrayPathValue.createChildPath(featAvgMisorientationName);
 
   return FindFeatureReferenceMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

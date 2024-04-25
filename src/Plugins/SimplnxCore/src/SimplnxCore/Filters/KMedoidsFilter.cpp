@@ -126,8 +126,7 @@ IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& data
   }
 
   {
-    auto createAction =
-        std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.getParent().createChildPath(pFeatureIdsArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -190,7 +189,7 @@ Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Argumen
   inputValues.Seed = seed;
 
   inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  auto fIdsPath = inputValues.ClusteringArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  auto fIdsPath = inputValues.ClusteringArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   dataStructure.getDataAs<Int32Array>(fIdsPath)->fill(0);
   inputValues.FeatureIdsArrayPath = fIdsPath;
 

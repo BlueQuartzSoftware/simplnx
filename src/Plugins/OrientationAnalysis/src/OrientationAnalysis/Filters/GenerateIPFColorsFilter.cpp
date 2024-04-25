@@ -108,7 +108,7 @@ IFilter::PreflightResult GenerateIPFColorsFilter::preflightImpl(const DataStruct
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pCellIPFColorsArrayNameValue = pCellEulerAnglesArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
+  auto pCellIPFColorsArrayNameValue = pCellEulerAnglesArrayPathValue.replaceName(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
 
   // Validate the Crystal Structures array
   const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
@@ -185,7 +185,7 @@ Result<> GenerateIPFColorsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.cellIpfColorsArrayPath = inputValues.cellEulerAnglesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
+  inputValues.cellIpfColorsArrayPath = inputValues.cellEulerAnglesArrayPath.replaceName(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
 
   // Let the Algorithm instance do the work
   return GenerateIPFColors(dataStructure, messageHandler, shouldCancel, &inputValues)();

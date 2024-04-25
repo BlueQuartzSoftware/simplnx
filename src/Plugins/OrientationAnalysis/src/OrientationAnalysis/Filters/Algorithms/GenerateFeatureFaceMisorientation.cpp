@@ -128,7 +128,7 @@ Result<> GenerateFeatureFaceMisorientation::operator()()
   auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
   auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  DataPath faceMisorientationColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.getParent().createChildPath(m_InputValues->SurfaceMeshFaceMisorientationColorsArrayName);
+  DataPath faceMisorientationColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.replaceName(m_InputValues->SurfaceMeshFaceMisorientationColorsArrayName);
   auto& faceMisorientationColors = m_DataStructure.getDataRefAs<Float32Array>(faceMisorientationColorsArrayPath);
   int64 numTriangles = faceLabels.getNumberOfTuples();
 

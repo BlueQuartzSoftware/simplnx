@@ -122,8 +122,7 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   {
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedDataArrayPathsValue[0]);
     auto tupleShape = dataArray->getTupleShape();
-    auto action =
-        std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].getParent().createChildPath(stackedDataArrayName));
+    auto action = std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].replaceName(stackedDataArrayName));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -151,7 +150,7 @@ Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure,
   inputValues.NormalizeData = filterArgs.value<bool>(k_NormalizeData_Key);
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  inputValues.StackedDataArrayPath = inputValues.SelectedDataArrayPaths[0].getParent().createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key));
+  inputValues.StackedDataArrayPath = inputValues.SelectedDataArrayPaths[0].replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key));
 
   return CombineAttributeArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

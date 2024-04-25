@@ -111,7 +111,7 @@ IFilter::PreflightResult ITKCurvatureAnisotropicDiffusionImage::preflightImpl(co
   auto conductanceParameter = filterArgs.value<float64>(k_ConductanceParameter_Key);
   auto conductanceScalingUpdateInterval = filterArgs.value<uint32>(k_ConductanceScalingUpdateInterval_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKCurvatureAnisotropicDiffusionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -125,7 +125,7 @@ Result<> ITKCurvatureAnisotropicDiffusionImage::executeImpl(DataStructure& dataS
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto conductanceParameter = filterArgs.value<float64>(k_ConductanceParameter_Key);

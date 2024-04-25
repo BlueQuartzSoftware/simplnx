@@ -93,21 +93,32 @@ DataPath DataPath::getParent() const
   }
 
   std::vector<std::string> parentPath(m_Path.cbegin(), m_Path.cend() - 1);
-  return DataPath(std::move(parentPath));
+  return {(std::move(parentPath))};
 }
 
 DataPath DataPath::createChildPath(std::string name) const
 {
   std::vector<std::string> path = m_Path;
   path.push_back(std::move(name));
-  return DataPath(std::move(path));
+  return {(std::move(path))};
+}
+
+DataPath DataPath::replaceName(const std::string& newName) const
+{
+  if(m_Path.empty())
+  {
+    return DataPath({newName});
+  }
+  std::vector<std::string> newPath = m_Path;
+  newPath.back() = newName;
+  return {(std::move(newPath))};
 }
 
 DataPath DataPath::replace(std::string_view symbol, std::string_view targetName) const
 {
   std::vector<std::string> newPath = m_Path;
   std::replace(newPath.begin(), newPath.end(), symbol, targetName);
-  return DataPath(std::move(newPath));
+  return {(std::move(newPath))};
 }
 
 bool DataPath::attemptRename(const DataPath& oldPath, const DataPath& newPath)

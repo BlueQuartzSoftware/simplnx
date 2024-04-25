@@ -151,7 +151,7 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath_Key);
   auto createdMaskName = args.value<std::string>(k_ArrayCreationName_Key);
 
-  const DataPath createdMaskPath = inputArrayPath.getParent().createChildPath(createdMaskName);
+  const DataPath createdMaskPath = inputArrayPath.replaceName(createdMaskName);
 
   std::vector<DataPath> dataPaths;
 
@@ -199,7 +199,7 @@ Result<> RobustAutomaticThreshold::executeImpl(DataStructure& data, const Argume
 
   const auto& inputArray = data.getDataRefAs<IDataArray>(inputArrayPath);
   const auto& gradientArray = data.getDataRefAs<Float32Array>(gradientArrayPath);
-  auto& maskArray = data.getDataRefAs<BoolArray>(inputArrayPath.getParent().createChildPath(createdMaskName));
+  auto& maskArray = data.getDataRefAs<BoolArray>(inputArrayPath.replaceName(createdMaskName));
 
   FindThreshold(inputArray, gradientArray, maskArray);
 

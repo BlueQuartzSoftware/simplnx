@@ -111,7 +111,7 @@ IFilter::PreflightResult ITKDanielssonDistanceMapImage::preflightImpl(const Data
   auto inputIsBinary = filterArgs.value<bool>(k_InputIsBinary_Key);
   auto squaredDistance = filterArgs.value<bool>(k_SquaredDistance_Key);
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKDanielssonDistanceMapImage::ArrayOptionsType, cxITKDanielssonDistanceMapImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -126,7 +126,7 @@ Result<> ITKDanielssonDistanceMapImage::executeImpl(DataStructure& dataStructure
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto inputIsBinary = filterArgs.value<bool>(k_InputIsBinary_Key);
   auto squaredDistance = filterArgs.value<bool>(k_SquaredDistance_Key);
