@@ -4,7 +4,7 @@
 
 #include "OrientationAnalysis/Filters/AlignSectionsMisorientationFilter.hpp"
 #include "OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.hpp"
-#include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
+#include "OrientationAnalysis/Filters/ConvertOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
 #include "OrientationAnalysis/Filters/NeighborOrientationCorrelationFilter.hpp"
 
@@ -137,10 +137,10 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
   REQUIRE(nullptr != filter);
 
   Arguments args;
-  args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  args.insertOrAssign(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(Constants::k_EulersArrayPath));
-  args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_Quats));
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(Constants::k_EulersArrayPath));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_Quats));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);

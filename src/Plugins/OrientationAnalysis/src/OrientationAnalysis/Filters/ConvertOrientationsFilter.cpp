@@ -1,4 +1,4 @@
-#include "ConvertOrientations.hpp"
+#include "ConvertOrientationsFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -301,37 +301,37 @@ private:
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ConvertOrientations::name() const
+std::string ConvertOrientationsFilter::name() const
 {
-  return FilterTraits<ConvertOrientations>::name.str();
+  return FilterTraits<ConvertOrientationsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ConvertOrientations::className() const
+std::string ConvertOrientationsFilter::className() const
 {
-  return FilterTraits<ConvertOrientations>::className;
+  return FilterTraits<ConvertOrientationsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ConvertOrientations::uuid() const
+Uuid ConvertOrientationsFilter::uuid() const
 {
-  return FilterTraits<ConvertOrientations>::uuid;
+  return FilterTraits<ConvertOrientationsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ConvertOrientations::humanName() const
+std::string ConvertOrientationsFilter::humanName() const
 {
   return "Convert Orientation Representation";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ConvertOrientations::defaultTags() const
+std::vector<std::string> ConvertOrientationsFilter::defaultTags() const
 {
   return {className(), "Processing", "Conversion", "Orientation", "Quaternions", "Euler Angles", "Orientation Matrix", "Cubochoric", "Homochoric", "Rodrigues", "AxisAngle"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ConvertOrientations::parameters() const
+Parameters ConvertOrientationsFilter::parameters() const
 {
   using OrientationConverterType = OrientationConverter<EbsdDataArray<float>, float>;
 
@@ -350,14 +350,14 @@ Parameters ConvertOrientations::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConvertOrientations::clone() const
+IFilter::UniquePointer ConvertOrientationsFilter::clone() const
 {
-  return std::make_unique<ConvertOrientations>();
+  return std::make_unique<ConvertOrientationsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConvertOrientations::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto inputType = static_cast<OrientationRepresentation::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto outputType = static_cast<OrientationRepresentation::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
@@ -405,8 +405,8 @@ IFilter::PreflightResult ConvertOrientations::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertOrientations::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
@@ -814,9 +814,9 @@ constexpr StringLiteral k_OutputOrientationArrayNameKey = "OutputOrientationArra
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ConvertOrientations::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ConvertOrientationsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ConvertOrientations().getDefaultArguments();
+  Arguments args = ConvertOrientationsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

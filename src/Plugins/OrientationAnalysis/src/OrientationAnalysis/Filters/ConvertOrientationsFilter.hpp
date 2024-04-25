@@ -7,29 +7,38 @@
 
 namespace nx::core
 {
+
 /**
- * @class GenerateFZQuaternions
- * @brief This filter will ....
+ * @class ConvertOrientations
+ * @brief This filter will convert between the various representations of an Orientation. Those representations are:
+ *
+ * "Euler" = 0
+ *  "OrientationMatrix" = 1
+ *  "Quaternion" = 2
+ *  "AxisAngle" = 3
+ *  "Rodrigues" = 4
+ *  "Homochoric" = 5
+ *  "Cubochoric" = 6
+ *  "Stereographic" = 7
+ *
  */
-class ORIENTATIONANALYSIS_EXPORT GenerateFZQuaternions : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ConvertOrientationsFilter : public IFilter
 {
 public:
-  GenerateFZQuaternions() = default;
-  ~GenerateFZQuaternions() noexcept override = default;
+  ConvertOrientationsFilter() = default;
+  ~ConvertOrientationsFilter() noexcept override = default;
 
-  GenerateFZQuaternions(const GenerateFZQuaternions&) = delete;
-  GenerateFZQuaternions(GenerateFZQuaternions&&) noexcept = delete;
+  ConvertOrientationsFilter(const ConvertOrientationsFilter&) = delete;
+  ConvertOrientationsFilter(ConvertOrientationsFilter&&) noexcept = delete;
 
-  GenerateFZQuaternions& operator=(const GenerateFZQuaternions&) = delete;
-  GenerateFZQuaternions& operator=(GenerateFZQuaternions&&) noexcept = delete;
+  ConvertOrientationsFilter& operator=(const ConvertOrientationsFilter&) = delete;
+  ConvertOrientationsFilter& operator=(ConvertOrientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "input_quats_array_path";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_FZQuatsArrayName_Key = "output_fz_quats_array_name";
+  static inline constexpr StringLiteral k_InputType_Key = "input_representation_index";
+  static inline constexpr StringLiteral k_OutputType_Key = "output_representation_index";
+  static inline constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
+  static inline constexpr StringLiteral k_OutputOrientationArrayName_Key = "output_orientation_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -104,4 +113,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, GenerateFZQuaternions, "8b651407-08a9-4c25-967a-d86444eca87f");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ConvertOrientationsFilter, "501e54e6-a66f-4eeb-ae37-00e649c00d4b");

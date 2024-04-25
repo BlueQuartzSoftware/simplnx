@@ -1,4 +1,4 @@
-#include "GenerateFZQuaternions.hpp"
+#include "GenerateFZQuaternionsFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -113,37 +113,37 @@ private:
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string GenerateFZQuaternions::name() const
+std::string GenerateFZQuaternionsFilter::name() const
 {
-  return FilterTraits<GenerateFZQuaternions>::name.str();
+  return FilterTraits<GenerateFZQuaternionsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateFZQuaternions::className() const
+std::string GenerateFZQuaternionsFilter::className() const
 {
-  return FilterTraits<GenerateFZQuaternions>::className;
+  return FilterTraits<GenerateFZQuaternionsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid GenerateFZQuaternions::uuid() const
+Uuid GenerateFZQuaternionsFilter::uuid() const
 {
-  return FilterTraits<GenerateFZQuaternions>::uuid;
+  return FilterTraits<GenerateFZQuaternionsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateFZQuaternions::humanName() const
+std::string GenerateFZQuaternionsFilter::humanName() const
 {
   return "Reduce Orientations to Fundamental Zone";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> GenerateFZQuaternions::defaultTags() const
+std::vector<std::string> GenerateFZQuaternionsFilter::defaultTags() const
 {
   return {className(), "Processing", "OrientationAnalysis", "Quaternion"};
 }
 
 //------------------------------------------------------------------------------
-Parameters GenerateFZQuaternions::parameters() const
+Parameters GenerateFZQuaternionsFilter::parameters() const
 {
   Parameters params;
 
@@ -174,14 +174,14 @@ Parameters GenerateFZQuaternions::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer GenerateFZQuaternions::clone() const
+IFilter::UniquePointer GenerateFZQuaternionsFilter::clone() const
 {
-  return std::make_unique<GenerateFZQuaternions>();
+  return std::make_unique<GenerateFZQuaternionsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult GenerateFZQuaternionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                    const std::atomic_bool& shouldCancel) const
 {
 
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
@@ -248,8 +248,8 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateFZQuaternions::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+Result<> GenerateFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -330,9 +330,9 @@ constexpr StringLiteral k_FZQuatsArrayPathKey = "FZQuatsArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> GenerateFZQuaternions::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> GenerateFZQuaternionsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = GenerateFZQuaternions().getDefaultArguments();
+  Arguments args = GenerateFZQuaternionsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

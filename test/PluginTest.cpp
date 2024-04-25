@@ -202,7 +202,10 @@ TEST_CASE("Test Filter Parameter Keys")
     {
       const std::string filterClassName = filterHandle.getClassName();
       IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
-
+      if(!nx::core::StringUtilities::ends_with(filterClassName, "Filter"))
+      {
+        output << "- [ ] " << plugName << "->" << filter->name() << ". Filter class names should end with 'Filter'.\n";
+      }
       const auto& parameters = filter->parameters();
       // Loop over each Parameter
       for(const auto& parameter : parameters)
