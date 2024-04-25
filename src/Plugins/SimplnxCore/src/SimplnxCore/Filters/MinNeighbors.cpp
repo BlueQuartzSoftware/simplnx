@@ -3,18 +3,15 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
-
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {
@@ -23,7 +20,6 @@ namespace
 constexpr int64 k_TupleCountInvalidError = -250;
 constexpr int64 k_MissingFeaturePhasesError = -251;
 constexpr int32 k_InconsistentTupleCount = -252;
-constexpr int32 k_NeighborListRemoval = -5558;
 constexpr int32 k_FetchChildArrayError = -5559;
 
 void assignBadPoints(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
@@ -405,33 +401,11 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& dataSt
   // Feature Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
 
-  // This section gives a warning to the user about NeighborLists possibly being removed
+  // This section will warn the user about the removal of NeighborLists
+  auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, numNeighborsPath, resultOutputActions);
+  if(result.outputActions.invalid())
   {
-    DataPath featureGroupDataPath = numNeighborsPath.getParent();
-
-    // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
-    std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
-                                 featureIdsPath.toString(), featureGroupDataPath.toString());
-
-    auto result = nx::core::GetAllChildDataPaths(dataStructure, featureGroupDataPath, DataObject::Type::NeighborList);
-    if(!result.has_value())
-    {
-      return {nonstd::make_unexpected(
-          std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the neighbor list children of group '{}'", featureGroupDataPath.toString())}})};
-    }
-    std::vector<DataPath> featureNeighborListArrays = result.value();
-    for(const auto& featureNeighborList : featureNeighborListArrays)
-    {
-      ss.append("  " + featureNeighborList.toString() + "\n");
-      auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
-      resultOutputActions.value().deferredActions.emplace_back(std::move(action));
-    }
-
-    // Inform users that the following arrays are going to be modified in place
-    // Feature Data is going to be modified
-    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
-
-    resultOutputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
+    return result;
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

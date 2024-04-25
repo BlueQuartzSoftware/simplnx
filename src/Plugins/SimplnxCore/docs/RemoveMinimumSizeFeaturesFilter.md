@@ -10,9 +10,9 @@ This **Filter** removes **Features** that have a total number of **Cells** below
 
 The **Filter** can be run in a mode where the minimum number of neighbors is applied to a single **Ensemble**.  The user can select to apply the minimum to one specific **Ensemble**.
 
-## Notes
+## WARNING: NeighborList Removal
 
-If any features are removed **and** the Cell Feature AttributeMatrix contains any *NeighborList* data arrays those arrays will be **REMOVED** because those lists are now invalid. Re-run the *Find Neighbors* filter to re-create the lists.
+If the Cell Feature AttributeMatrix contains any *NeighborList* data arrays, those arrays will be **REMOVED** because those lists are now invalid. Re-run the *Find Neighbors* filter to re-create the lists.
 
 % Auto generated parameter table will be inserted here
 

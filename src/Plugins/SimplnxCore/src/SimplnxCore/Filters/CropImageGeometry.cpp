@@ -18,14 +18,13 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
-#include "simplnx/Utilities/SamplingUtils.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
+#include "simplnx/Utilities/SamplingUtils.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
@@ -462,6 +461,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
     std::string warningMsg;
     DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
+    DataPath anyFeatureAMDataPath;
     auto tDims = srcCellFeatureData->getShape();
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
     for(const auto& [identifier, object] : *srcCellFeatureData)
@@ -480,9 +480,11 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
     if(!warningMsg.empty())
     {
-      resultOutputActions.m_Warnings.push_back(
-          Warning({-55503, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}", featureIdsArrayPath.toString(),
-                                       warningMsg)}));
+      resultOutputActions.m_Warnings.push_back(Warning(
+          {-55503,
+           fmt::format(
+               "This filter will modify the Cell Level Array '{}' which causes all Feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
+               featureIdsArrayPath.toString(), warningMsg)}));
     }
   }
 

@@ -21,7 +21,7 @@ Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IData
   DataObject* targetObject = dataStructure.getData(path);
   if(targetObject == nullptr)
   {
-    return MakeWarningVoidResult(k_TargetNotFoundErrorCode, fmt::format("Trying to delete DataObject '{}' which does not exist.", path.getTargetName()));
+    return MakeErrorResult(k_TargetNotFoundErrorCode, fmt::format("Trying to delete DataObject '{}' which does not exist.", path.getTargetName()));
   }
 
   dataStructure.removeData(targetObject->getId());

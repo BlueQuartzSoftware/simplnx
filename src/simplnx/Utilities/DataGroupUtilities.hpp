@@ -14,7 +14,9 @@ namespace nx::core
 {
 
 /**
- * @brief RemoveInactiveObjects This assumes a single Dimension TupleShape, i.e., a Linear array, (1D).
+ * @brief RemoveInactiveObjects This assumes a single Dimension TupleShape, i.e., a Linear array, (1D)
+ *
+ * NeighborLists are NO LONGER Removed. That is the responsibility of the filter.
  *
  * @param dataStructure
  * @param featureDataGroupPath
