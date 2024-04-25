@@ -78,7 +78,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][Renam
 
   args.insert(RenameDataObject::k_AllowOverwrite_Key, std::make_any<bool>(true));
   args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -126,12 +126,13 @@ TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][Ren
   static const DataPath k_DataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
 
   RenameDataObject filter;
+
   DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   Arguments args;
 
   args.insert(RenameDataObject::k_AllowOverwrite_Key, std::make_any<bool>(true));
   args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
