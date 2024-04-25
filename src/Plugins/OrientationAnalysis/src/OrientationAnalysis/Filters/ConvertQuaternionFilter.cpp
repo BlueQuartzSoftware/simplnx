@@ -86,7 +86,7 @@ IFilter::PreflightResult ConvertQuaternionFilter::preflightImpl(const DataStruct
                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pQuaternionDataArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -121,7 +121,7 @@ Result<> ConvertQuaternionFilter::executeImpl(DataStructure& dataStructure, cons
   ConvertQuaternionInputValues inputValues;
 
   inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
   inputValues.ConversionType = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
 

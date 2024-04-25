@@ -99,7 +99,7 @@ IFilter::PreflightResult ITKStandardDeviationProjectionImage::preflightImpl(cons
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKStandardDeviationProjectionImage::ArrayOptionsType, cxITKStandardDeviationProjectionImage::FilterOutputType>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -114,7 +114,7 @@ Result<> ITKStandardDeviationProjectionImage::executeImpl(DataStructure& dataStr
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
 

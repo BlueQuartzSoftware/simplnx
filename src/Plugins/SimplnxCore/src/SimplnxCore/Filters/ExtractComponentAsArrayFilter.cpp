@@ -88,7 +88,7 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   auto pRemoveComponentsFromArrayValue = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
   auto pCompNumberValue = filterArgs.value<int32>(k_CompNumber_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  auto pNewArrayPathValue = pSelectedArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_NewArrayName_Key));
+  auto pNewArrayPathValue = pSelectedArrayPathValue.replaceName(filterArgs.value<std::string>(k_NewArrayName_Key));
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -154,7 +154,7 @@ Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure
   // This is the array on the original array path whether its removed or not
   inputValues.BaseArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   // If move components to new array is true this is a valid path
-  inputValues.NewArrayPath = inputValues.BaseArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewArrayName_Key));
+  inputValues.NewArrayPath = inputValues.BaseArrayPath.replaceName(filterArgs.value<std::string>(k_NewArrayName_Key));
 
   return ExtractComponentAsArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

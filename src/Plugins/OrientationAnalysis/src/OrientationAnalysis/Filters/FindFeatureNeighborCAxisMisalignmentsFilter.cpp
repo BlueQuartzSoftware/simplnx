@@ -107,15 +107,15 @@ IFilter::PreflightResult FindFeatureNeighborCAxisMisalignmentsFilter::preflightI
 
   const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
   {
-    auto createArrayAction = std::make_unique<CreateNeighborListAction>(DataType::float32, featurePhases.getNumberOfTuples(),
-                                                                        pFeaturePhasesArrayPathValue.getParent().createChildPath(pCAxisMisalignmentListArrayNameValue));
+    auto createArrayAction =
+        std::make_unique<CreateNeighborListAction>(DataType::float32, featurePhases.getNumberOfTuples(), pFeaturePhasesArrayPathValue.replaceName(pCAxisMisalignmentListArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   if(pFindAvgMisalsValue)
   {
     auto pAvgCAxisMisalignmentsArrayNameValue = filterArgs.value<std::string>(k_AvgCAxisMisalignmentsArrayName_Key);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, featurePhases.getTupleShape(), std::vector<usize>{1},
-                                                                 pFeaturePhasesArrayPathValue.getParent().createChildPath(pAvgCAxisMisalignmentsArrayNameValue));
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(DataType::float32, featurePhases.getTupleShape(), std::vector<usize>{1}, pFeaturePhasesArrayPathValue.replaceName(pAvgCAxisMisalignmentsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -136,8 +136,8 @@ Result<> FindFeatureNeighborCAxisMisalignmentsFilter::executeImpl(DataStructure&
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.CAxisMisalignmentListArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CAxisMisalignmentListArrayName_Key));
-  inputValues.AvgCAxisMisalignmentsArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_AvgCAxisMisalignmentsArrayName_Key));
+  inputValues.CAxisMisalignmentListArrayName = inputValues.FeaturePhasesArrayPath.replaceName(filterArgs.value<std::string>(k_CAxisMisalignmentListArrayName_Key));
+  inputValues.AvgCAxisMisalignmentsArrayName = inputValues.FeaturePhasesArrayPath.replaceName(filterArgs.value<std::string>(k_AvgCAxisMisalignmentsArrayName_Key));
 
   return FindFeatureNeighborCAxisMisalignments(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

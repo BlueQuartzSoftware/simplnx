@@ -108,7 +108,7 @@ IFilter::PreflightResult ITKThresholdImage::preflightImpl(const DataStructure& d
   auto lower = filterArgs.value<float64>(k_Lower_Key);
   auto upper = filterArgs.value<float64>(k_Upper_Key);
   auto outsideValue = filterArgs.value<float64>(k_OutsideValue_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKThresholdImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -122,7 +122,7 @@ Result<> ITKThresholdImage::executeImpl(DataStructure& dataStructure, const Argu
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto lower = filterArgs.value<float64>(k_Lower_Key);
   auto upper = filterArgs.value<float64>(k_Upper_Key);

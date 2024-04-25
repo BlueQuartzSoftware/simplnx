@@ -116,7 +116,7 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
                                 comp, pInputArrayPath.toString(), numComponents, numComponents - 1)}})};
       }
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::number(compIndex);
-      DataPath newArrayPath = pInputArrayPath.getParent().createChildPath(arrayName);
+      DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
     }
   }
@@ -125,7 +125,7 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
     for(usize i = 0; i < numComponents; i++)
     {
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::number(i);
-      DataPath newArrayPath = pInputArrayPath.getParent().createChildPath(arrayName);
+      DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
     }
   }

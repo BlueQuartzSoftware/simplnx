@@ -90,7 +90,7 @@ IFilter::PreflightResult FindCAxisLocationsFilter::preflightImpl(const DataStruc
   }
 
   {
-    const DataPath pCAxisLocationsPathValue = pQuatsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_CAxisLocationsArrayName_Key));
+    const DataPath pCAxisLocationsPathValue = pQuatsArrayPathValue.replaceName(filterArgs.value<std::string>(k_CAxisLocationsArrayName_Key));
     const std::vector<usize> tupleShape = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue).getTupleShape();
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3}, pCAxisLocationsPathValue);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
@@ -111,7 +111,7 @@ Result<> FindCAxisLocationsFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.CAxisLocationsArrayName = inputValues.QuatsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CAxisLocationsArrayName_Key));
+  inputValues.CAxisLocationsArrayName = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_CAxisLocationsArrayName_Key));
 
   return FindCAxisLocations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

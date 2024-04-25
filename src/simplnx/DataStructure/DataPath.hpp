@@ -24,10 +24,10 @@ public:
   /**
    * @brief Attempts to create a DataPath from the given string by splitting it using the given delimiter.
    * @param string
-   * @param delimter
+   * @param delimiter
    * @return
    */
-  static std::optional<DataPath> FromString(std::string_view string, char delimter = '/');
+  static std::optional<DataPath> FromString(std::string_view string, char delimiter = '/');
 
   /**
    * @brief Default constructor.
@@ -89,6 +89,21 @@ public:
    * @return std::string
    */
   std::string getTargetName() const;
+
+  /**
+   * @Brief Returns a newly constructed DataPath where the only change is the replacement of the last
+   * element in the DataPath to the 'newName' value.
+   *
+   * @code
+   *
+   * DataPath foo({"A", "B", "C"});  // foo is now "A/B/C"
+   * DataPath bar = foo.replaceName("D"); // bar is now "A/B/D"
+   * @endcode
+   *
+   * @param newName The replacement value for the last element in the DataPath
+   * @return DataPath
+   */
+  [[nodiscard]] DataPath replaceName(const std::string& newName) const;
 
   /**
    * @brief Returns the path as a vector of strings.

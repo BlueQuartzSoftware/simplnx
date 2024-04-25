@@ -105,7 +105,7 @@ IFilter::PreflightResult FindBiasedFeaturesFilter::preflightImpl(const DataStruc
   };
 
   auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue).getTupleShape(), std::vector<usize>{1},
-                                                    pCentroidsArrayPathValue.getParent().createChildPath(pBiasedFeaturesArrayNameValue));
+                                                    pCentroidsArrayPathValue.replaceName(pBiasedFeaturesArrayNameValue));
   resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -122,7 +122,7 @@ Result<> FindBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
   inputValues.SurfaceFeaturesArrayPath = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
   inputValues.PhasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
-  inputValues.BiasedFeaturesArrayName = inputValues.CentroidsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key));
+  inputValues.BiasedFeaturesArrayName = inputValues.CentroidsArrayPath.replaceName(filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key));
 
   return FindBiasedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

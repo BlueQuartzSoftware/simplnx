@@ -108,7 +108,7 @@ IFilter::PreflightResult ITKMinMaxCurvatureFlowImage::preflightImpl(const DataSt
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);
   auto stencilRadius = filterArgs.value<int32>(k_StencilRadius_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKMinMaxCurvatureFlowImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -122,7 +122,7 @@ Result<> ITKMinMaxCurvatureFlowImage::executeImpl(DataStructure& dataStructure, 
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);

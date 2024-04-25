@@ -103,7 +103,7 @@ IFilter::PreflightResult ITKZeroCrossingImage::preflightImpl(const DataStructure
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto foregroundValue = filterArgs.value<uint8>(k_ForegroundValue_Key);
   auto backgroundValue = filterArgs.value<uint8>(k_BackgroundValue_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKZeroCrossingImage::ArrayOptionsType, cxITKZeroCrossingImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -118,7 +118,7 @@ Result<> ITKZeroCrossingImage::executeImpl(DataStructure& dataStructure, const A
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto foregroundValue = filterArgs.value<uint8>(k_ForegroundValue_Key);
   auto backgroundValue = filterArgs.value<uint8>(k_BackgroundValue_Key);

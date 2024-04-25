@@ -115,7 +115,7 @@ IFilter::PreflightResult ITKMorphologicalWatershedImage::preflightImpl(const Dat
   auto level = filterArgs.value<float64>(k_Level_Key);
   auto markWatershedLine = filterArgs.value<bool>(k_MarkWatershedLine_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKMorphologicalWatershedImage::ArrayOptionsType, cxITKMorphologicalWatershedImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -130,7 +130,7 @@ Result<> ITKMorphologicalWatershedImage::executeImpl(DataStructure& dataStructur
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto level = filterArgs.value<float64>(k_Level_Key);
   auto markWatershedLine = filterArgs.value<bool>(k_MarkWatershedLine_Key);

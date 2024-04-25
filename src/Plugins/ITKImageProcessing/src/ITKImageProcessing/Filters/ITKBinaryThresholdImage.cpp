@@ -113,7 +113,7 @@ IFilter::PreflightResult ITKBinaryThresholdImage::preflightImpl(const DataStruct
   auto upperThreshold = filterArgs.value<float64>(k_UpperThreshold_Key);
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKBinaryThresholdImage::ArrayOptionsType, cxITKBinaryThresholdImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -128,7 +128,7 @@ Result<> ITKBinaryThresholdImage::executeImpl(DataStructure& dataStructure, cons
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto lowerThreshold = filterArgs.value<float64>(k_LowerThreshold_Key);
   auto upperThreshold = filterArgs.value<float64>(k_UpperThreshold_Key);

@@ -109,7 +109,7 @@ IFilter::PreflightResult ITKRelabelComponentImage::preflightImpl(const DataStruc
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto minimumObjectSize = filterArgs.value<uint64>(k_MinimumObjectSize_Key);
   auto sortByObjectSize = filterArgs.value<bool>(k_SortByObjectSize_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKRelabelComponentImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -123,7 +123,7 @@ Result<> ITKRelabelComponentImage::executeImpl(DataStructure& dataStructure, con
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto minimumObjectSize = filterArgs.value<uint64>(k_MinimumObjectSize_Key);
   auto sortByObjectSize = filterArgs.value<bool>(k_SortByObjectSize_Key);

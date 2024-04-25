@@ -103,7 +103,7 @@ IFilter::PreflightResult GenerateFeatureFaceMisorientationFilter::preflightImpl(
     return MakePreflightErrorResult(-98411, fmt::format("Could not find the face labels data array at path '{}'", pSurfaceMeshFaceLabelsArrayPathValue.toString()));
   }
 
-  DataPath faceMisorientationColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshFaceMisorientationColorsArrayNameValue);
+  DataPath faceMisorientationColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshFaceMisorientationColorsArrayNameValue);
   auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{3}, faceMisorientationColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(action));
 

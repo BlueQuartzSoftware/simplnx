@@ -118,7 +118,7 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
   auto pMaxMinArrayNameValue = filterArgs.value<std::string>(k_MaxMinArrayName_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
-  const DataPath clusteringListPath = pFeaturePhasesArrayPathValue.getParent().createChildPath(pClusteringListArrayNameValue);
+  const DataPath clusteringListPath = pFeaturePhasesArrayPathValue.replaceName(pClusteringListArrayNameValue);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -187,7 +187,7 @@ Result<> FindFeatureClusteringFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
   inputValues.BiasedFeaturesArrayPath = filterArgs.value<DataPath>(k_BiasedFeaturesArrayPath_Key);
   inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
-  inputValues.ClusteringListArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_ClusteringListArrayName_Key));
+  inputValues.ClusteringListArrayName = inputValues.FeaturePhasesArrayPath.replaceName(filterArgs.value<std::string>(k_ClusteringListArrayName_Key));
   inputValues.RDFArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_RDFArrayName_Key));
   inputValues.MaxMinArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_MaxMinArrayName_Key));
 

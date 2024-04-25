@@ -117,7 +117,7 @@ IFilter::PreflightResult ITKRegionalMinimaImage::preflightImpl(const DataStructu
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto flatIsMinima = filterArgs.value<bool>(k_FlatIsMinima_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
       ITK::DataCheck<cxITKRegionalMinimaImage::ArrayOptionsType, cxITKRegionalMinimaImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -132,7 +132,7 @@ Result<> ITKRegionalMinimaImage::executeImpl(DataStructure& dataStructure, const
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
