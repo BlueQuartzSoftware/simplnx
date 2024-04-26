@@ -151,6 +151,38 @@ Result<> ITKDiscreteGaussianImageFilter::executeImpl(DataStructure& dataStructur
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKDiscreteGaussianImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKDiscreteGaussianImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_VarianceKey = "Variance";
+constexpr StringLiteral k_MaximumKernelWidthKey = "MaximumKernelWidth";
+constexpr StringLiteral k_MaximumErrorKey = "MaximumError";
+constexpr StringLiteral k_UseImageSpacingKey = "UseImageSpacing";
+constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ITKDiscreteGaussianImage::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ITKDiscreteGaussianImage().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_VarianceKey, k_Variance_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint32>>(args, json, SIMPL::k_MaximumKernelWidthKey, k_MaximumKernelWidth_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_MaximumErrorKey, k_MaximumError_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UseImageSpacingKey, k_UseImageSpacing_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace nx::core

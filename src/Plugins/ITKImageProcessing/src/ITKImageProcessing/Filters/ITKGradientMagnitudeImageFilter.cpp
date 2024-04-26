@@ -127,7 +127,33 @@ Result<> ITKGradientMagnitudeImageFilter::executeImpl(DataStructure& dataStructu
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKGradientMagnitudeImageFilter::ArrayOptionsType, cxITKGradientMagnitudeImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
+  return ITK::Execute<cxITKGradientMagnitudeImage::ArrayOptionsType, cxITKGradientMagnitudeImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                     shouldCancel);
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_UseImageSpacingKey = "UseImageSpacing";
+constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ITKGradientMagnitudeImage::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ITKGradientMagnitudeImage().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UseImageSpacingKey, k_UseImageSpacing_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace nx::core

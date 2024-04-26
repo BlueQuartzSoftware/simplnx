@@ -113,6 +113,30 @@ Result<> ITKExpImageFilter::executeImpl(DataStructure& dataStructure, const Argu
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKExpImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKExpImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ITKExpImage::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ITKExpImage().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace nx::core
