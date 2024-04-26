@@ -70,8 +70,10 @@ Parameters ITKValuedRegionalMinimaImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected", "", false));
-
+  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected Components",
+                                                "Whether the connected components are defined strictly by face connectivity (False) or by face+edge+vertex connectivity (True). Default is False"
+                                                "For objects that are 1 pixel wide, use True.",
+                                                false));
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));

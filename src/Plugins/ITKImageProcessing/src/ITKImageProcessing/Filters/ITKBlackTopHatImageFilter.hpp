@@ -38,7 +38,7 @@ public:
   static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
   static inline constexpr StringLiteral k_KernelRadius_Key = "kernel_radius";
-  static inline constexpr StringLiteral k_KernelType_Key = "kernel_type";
+  static inline constexpr StringLiteral k_KernelType_Key = "kernel_type_index";
   static inline constexpr StringLiteral k_SafeBorder_Key = "safe_border";
 
   /**

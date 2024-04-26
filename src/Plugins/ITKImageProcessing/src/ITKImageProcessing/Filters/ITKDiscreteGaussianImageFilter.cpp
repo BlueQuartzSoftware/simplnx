@@ -80,11 +80,18 @@ Parameters ITKDiscreteGaussianImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_Variance_Key, "Variance", "", std::vector<double>(3, 1.0), std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat64Parameter>(
+      k_Variance_Key, "Variance",
+      "The variance for the discrete Gaussian kernel. Sets the variance independently for each dimension, but see also SetVariance(const double v) . The default is 0.0 in each dimension. If "
+      "UseImageSpacing is true, the units are the physical units of your image. If UseImageSpacing is false then the units are pixels.",
+      std::vector<double>(3, 1.0), std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(std::make_unique<UInt32Parameter>(k_MaximumKernelWidth_Key, "MaximumKernelWidth",
                                                   "Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels.", 32u));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_MaximumError_Key, "MaximumError", "", std::vector<double>(3, 0.01), std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat64Parameter>(
+      k_MaximumError_Key, "MaximumError",
+      "The algorithm will size the discrete kernel so that the error resulting from truncation of the kernel is no greater than MaximumError. The default is 0.01 in each dimension.",
+      std::vector<double>(3, 0.01), std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(
       std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing",

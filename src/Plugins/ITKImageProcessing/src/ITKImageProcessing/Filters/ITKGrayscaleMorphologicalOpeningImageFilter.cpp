@@ -78,7 +78,8 @@ Parameters ITKGrayscaleMorphologicalOpeningImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorParameter<uint32>>(k_KernelRadius_Key, "KernelRadius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
                                                           std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "", static_cast<uint64>(itk::simple::sitkBall), ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "Set the kernel or structuring element used for the morphology.", static_cast<uint64>(itk::simple::sitkBall),
+                                                   ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
   params.insert(std::make_unique<BoolParameter>(k_SafeBorder_Key, "SafeBorder", "A safe border is added to input image to avoid borders effects and remove it once the closing is done", true));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});

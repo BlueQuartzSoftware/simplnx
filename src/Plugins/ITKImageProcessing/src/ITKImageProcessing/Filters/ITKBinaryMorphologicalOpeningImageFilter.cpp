@@ -80,7 +80,8 @@ Parameters ITKBinaryMorphologicalOpeningImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorParameter<uint32>>(k_KernelRadius_Key, "KernelRadius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
                                                           std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "", static_cast<uint64>(itk::simple::sitkBall), ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "Set the kernel or structuring element used for the morphology.", static_cast<uint64>(itk::simple::sitkBall),
+                                                   ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
   params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set the value in eroded part of the image. Defaults to zero", 0.0));
   params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "Set the value in the image to consider as 'foreground'. Defaults to maximum value of PixelType.", 1.0));
 

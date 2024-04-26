@@ -78,7 +78,7 @@ Parameters ITKBinaryThresholdImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_LowerThreshold_Key, "LowerThreshold", "", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_LowerThreshold_Key, "LowerThreshold", "The lower threshold that a pixel value could be and still be considered 'Inside Value'", 0.0));
   params.insert(std::make_unique<Float64Parameter>(k_UpperThreshold_Key, "UpperThreshold",
                                                    "Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is "
                                                    "NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.",
