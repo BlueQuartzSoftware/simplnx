@@ -19,6 +19,7 @@ inline constexpr int32_t k_StlHeaderParseError = -1104;
 inline constexpr int32_t k_TriangleCountParseError = -1105;
 inline constexpr int32_t k_TriangleParseError = -1106;
 inline constexpr int32_t k_AttributeParseError = -1107;
+inline constexpr int32_t k_StlFileLengthError = -1108;
 
 enum class StlFileType : int
 {
