@@ -128,7 +128,7 @@ Result<> ITKGrayscaleErodeImageFilter::executeImpl(DataStructure& dataStructure,
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKGrayscaleErodeImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKGrayscaleErodeImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -142,9 +142,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKGrayscaleErodeImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKGrayscaleErodeImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKGrayscaleErodeImage().getDefaultArguments();
+  Arguments args = ITKGrayscaleErodeImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

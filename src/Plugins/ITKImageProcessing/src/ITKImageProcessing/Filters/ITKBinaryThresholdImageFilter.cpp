@@ -142,8 +142,8 @@ Result<> ITKBinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBinaryThresholdImage::ArrayOptionsType, cxITKBinaryThresholdImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
-                                                                                                                shouldCancel);
+  return ITK::Execute<cxITKBinaryThresholdImageFilter::ArrayOptionsType, cxITKBinaryThresholdImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                            itkFunctor, shouldCancel);
 }
 
 namespace
@@ -159,9 +159,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBinaryThresholdImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBinaryThresholdImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBinaryThresholdImage().getDefaultArguments();
+  Arguments args = ITKBinaryThresholdImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

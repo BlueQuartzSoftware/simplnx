@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedFromMarkersImageFilter(defaults)", "[ITKImageProcessing][ITKMorphologicalWatershedFromMarkersImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKMorphologicalWatershedFromMarkersImage filter;
+  const ITKMorphologicalWatershedFromMarkersImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedFromMarkersImageFilter(d
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMorphologicalWatershedFromMarkersImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMorphologicalWatershedFromMarkersImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMorphologicalWatershedFromMarkersImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMorphologicalWatershedFromMarkersImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMorphologicalWatershedFromMarkersImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMorphologicalWatershedFromMarkersImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

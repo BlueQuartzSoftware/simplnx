@@ -20,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold1)", "[ITKImageProcessing][ITKDoubleThresholdImage][DoubleThreshold1]")
 {
   DataStructure dataStructure;
-  const ITKDoubleThresholdImage filter;
+  const ITKDoubleThresholdImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -34,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold1)",
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKDoubleThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -51,7 +51,7 @@ TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold1)",
 TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold2)", "[ITKImageProcessing][ITKDoubleThresholdImage][DoubleThreshold2]")
 {
   DataStructure dataStructure;
-  const ITKDoubleThresholdImage filter;
+  const ITKDoubleThresholdImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -65,13 +65,13 @@ TEST_CASE("ITKImageProcessing::ITKDoubleThresholdImageFilter(DoubleThreshold2)",
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKDoubleThresholdImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold1_Key, std::make_any<Float64Parameter::ValueType>(0));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold2_Key, std::make_any<Float64Parameter::ValueType>(0));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold3_Key, std::make_any<Float64Parameter::ValueType>(3000));
-  args.insertOrAssign(ITKDoubleThresholdImage::k_Threshold4_Key, std::make_any<Float64Parameter::ValueType>(2700));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_Threshold1_Key, std::make_any<Float64Parameter::ValueType>(0));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_Threshold2_Key, std::make_any<Float64Parameter::ValueType>(0));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_Threshold3_Key, std::make_any<Float64Parameter::ValueType>(3000));
+  args.insertOrAssign(ITKDoubleThresholdImageFilter::k_Threshold4_Key, std::make_any<Float64Parameter::ValueType>(2700));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

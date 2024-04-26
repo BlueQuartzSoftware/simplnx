@@ -127,8 +127,8 @@ Result<> ITKGradientMagnitudeImageFilter::executeImpl(DataStructure& dataStructu
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKGradientMagnitudeImage::ArrayOptionsType, cxITKGradientMagnitudeImage::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
-                                                                                                                    shouldCancel);
+  return ITK::Execute<cxITKGradientMagnitudeImageFilter::ArrayOptionsType, cxITKGradientMagnitudeImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                itkFunctor, shouldCancel);
 }
 
 namespace
@@ -141,9 +141,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKGradientMagnitudeImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKGradientMagnitudeImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKGradientMagnitudeImage().getDefaultArguments();
+  Arguments args = ITKGradientMagnitudeImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

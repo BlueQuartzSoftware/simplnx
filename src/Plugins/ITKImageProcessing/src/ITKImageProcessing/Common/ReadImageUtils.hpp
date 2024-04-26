@@ -188,4 +188,4 @@ struct ImageReaderOptions
 Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, const std::string& cellDataName, const std::string& arrayName,
                                          const ImageReaderOptions& imageReaderOptions);
 
-} // namespace cxItkImageReader
+} // namespace cxItkImageReaderFilter

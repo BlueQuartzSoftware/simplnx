@@ -1,16 +1,15 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKGrayscaleMorphologicalOpeningImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
+#include "ITKImageProcessing/Filters/ITKGrayscaleMorphologicalOpeningImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -19,7 +18,8 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpening)", "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpening]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpening)",
+          "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpening]")
 {
   DataStructure dataStructure;
   const ITKGrayscaleMorphologicalOpeningImageFilter filter;
@@ -52,7 +52,8 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImageFilter(Grays
   REQUIRE(md5Hash == "867de5ed8cf49c4657e1545bd57f2c23");
 }
 
-TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpeningVectorRadius1)", "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpeningVectorRadius1]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpeningVectorRadius1)",
+          "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpeningVectorRadius1]")
 {
   DataStructure dataStructure;
   const ITKGrayscaleMorphologicalOpeningImageFilter filter;
@@ -85,7 +86,8 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImageFilter(Grays
   REQUIRE(md5Hash == "5651a92320cfd9f01be4463131a4e573");
 }
 
-TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpeningVectorRadius2)", "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpeningVectorRadius2]")
+TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalOpeningImageFilter(GrayscaleMorphologicalOpeningVectorRadius2)",
+          "[ITKImageProcessing][ITKGrayscaleMorphologicalOpeningImage][GrayscaleMorphologicalOpeningVectorRadius2]")
 {
   DataStructure dataStructure;
   const ITKGrayscaleMorphologicalOpeningImageFilter filter;

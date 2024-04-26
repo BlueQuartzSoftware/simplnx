@@ -148,7 +148,7 @@ Result<> ITKBinaryOpeningByReconstructionImageFilter::executeImpl(DataStructure&
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBinaryOpeningByReconstructionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKBinaryOpeningByReconstructionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -165,9 +165,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBinaryOpeningByReconstructionImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBinaryOpeningByReconstructionImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBinaryOpeningByReconstructionImage().getDefaultArguments();
+  Arguments args = ITKBinaryOpeningByReconstructionImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -133,7 +133,7 @@ Result<> ITKHConvexImageFilter::executeImpl(DataStructure& dataStructure, const 
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKHConvexImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKHConvexImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -147,9 +147,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKHConvexImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKHConvexImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKHConvexImage().getDefaultArguments();
+  Arguments args = ITKHConvexImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

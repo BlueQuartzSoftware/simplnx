@@ -112,7 +112,7 @@ Result<> ITKBinaryThinningImageFilter::executeImpl(DataStructure& dataStructure,
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBinaryThinningImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKBinaryThinningImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -124,9 +124,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBinaryThinningImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBinaryThinningImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBinaryThinningImage().getDefaultArguments();
+  Arguments args = ITKBinaryThinningImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

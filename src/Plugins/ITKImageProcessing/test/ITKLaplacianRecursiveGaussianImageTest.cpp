@@ -20,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKLaplacianRecursiveGaussianImageFilter(default)", "[ITKImageProcessing][ITKLaplacianRecursiveGaussianImage][default]")
 {
   DataStructure dataStructure;
-  const ITKLaplacianRecursiveGaussianImage filter;
+  const ITKLaplacianRecursiveGaussianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -34,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKLaplacianRecursiveGaussianImageFilter(default)
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKLaplacianRecursiveGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKLaplacianRecursiveGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

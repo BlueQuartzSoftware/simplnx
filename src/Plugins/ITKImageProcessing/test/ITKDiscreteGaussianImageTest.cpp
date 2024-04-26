@@ -1,16 +1,15 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKDiscreteGaussianImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
+#include "ITKImageProcessing/Filters/ITKDiscreteGaussianImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -111,7 +110,11 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(bigG)", "[ITKImage
   args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_Variance_Key, std::make_any<VectorFloat64Parameter::ValueType>(VectorFloat64Parameter::ValueType{100.0,100.0,100.0,}));
+  args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_Variance_Key, std::make_any<VectorFloat64Parameter::ValueType>(VectorFloat64Parameter::ValueType{
+                                                                          100.0,
+                                                                          100.0,
+                                                                          100.0,
+                                                                      }));
   args.insertOrAssign(ITKDiscreteGaussianImageFilter::k_MaximumKernelWidth_Key, std::make_any<UInt32Parameter::ValueType>(64));
 
   auto preflightResult = filter.preflight(dataStructure, args);

@@ -134,7 +134,7 @@ Result<> ITKDilateObjectMorphologyImageFilter::executeImpl(DataStructure& dataSt
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKDilateObjectMorphologyImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKDilateObjectMorphologyImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -149,9 +149,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKDilateObjectMorphologyImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKDilateObjectMorphologyImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKDilateObjectMorphologyImage().getDefaultArguments();
+  Arguments args = ITKDilateObjectMorphologyImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

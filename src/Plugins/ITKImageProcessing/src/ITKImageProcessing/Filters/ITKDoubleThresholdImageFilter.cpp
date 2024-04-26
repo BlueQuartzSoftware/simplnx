@@ -127,7 +127,7 @@ IFilter::UniquePointer ITKDoubleThresholdImageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKDoubleThresholdImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+                                                                      const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -149,7 +149,7 @@ IFilter::PreflightResult ITKDoubleThresholdImageFilter::preflightImpl(const Data
 
 //------------------------------------------------------------------------------
 Result<> ITKDoubleThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                                    const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -168,7 +168,7 @@ Result<> ITKDoubleThresholdImageFilter::executeImpl(DataStructure& dataStructure
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKDoubleThresholdImageFilter::ArrayOptionsType, cxITKDoubleThresholdImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
-                                                                                                                shouldCancel);
+  return ITK::Execute<cxITKDoubleThresholdImageFilter::ArrayOptionsType, cxITKDoubleThresholdImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                            itkFunctor, shouldCancel);
 }
 } // namespace nx::core

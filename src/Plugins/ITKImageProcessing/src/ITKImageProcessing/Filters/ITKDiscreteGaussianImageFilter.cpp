@@ -151,7 +151,7 @@ Result<> ITKDiscreteGaussianImageFilter::executeImpl(DataStructure& dataStructur
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKDiscreteGaussianImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKDiscreteGaussianImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -167,9 +167,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKDiscreteGaussianImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKDiscreteGaussianImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKDiscreteGaussianImage().getDefaultArguments();
+  Arguments args = ITKDiscreteGaussianImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

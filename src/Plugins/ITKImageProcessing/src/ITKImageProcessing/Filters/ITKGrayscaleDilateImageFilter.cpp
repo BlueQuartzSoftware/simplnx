@@ -128,7 +128,7 @@ Result<> ITKGrayscaleDilateImageFilter::executeImpl(DataStructure& dataStructure
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKMorphologicalGradientImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKGrayscaleDilateImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -142,9 +142,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKMorphologicalGradientImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKGrayscaleDilateImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKMorphologicalGradientImage().getDefaultArguments();
+  Arguments args = ITKGrayscaleDilateImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

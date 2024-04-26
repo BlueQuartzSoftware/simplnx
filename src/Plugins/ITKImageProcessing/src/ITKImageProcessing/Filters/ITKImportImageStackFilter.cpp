@@ -337,7 +337,7 @@ IFilter::UniquePointer ITKImportImageStackFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
@@ -444,7 +444,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
 
 //------------------------------------------------------------------------------
 Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel) const
 {
   auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
@@ -478,52 +478,52 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
   {
   case NumericType::uint8: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                              messageHandler, shouldCancel);
+                                                                    messageHandler, shouldCancel);
     break;
   }
   case NumericType::int8: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                             messageHandler, shouldCancel);
+                                                                   messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint16: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                               messageHandler, shouldCancel);
+                                                                     messageHandler, shouldCancel);
     break;
   }
   case NumericType::int16: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                              messageHandler, shouldCancel);
+                                                                    messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint32: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                               messageHandler, shouldCancel);
+                                                                     messageHandler, shouldCancel);
     break;
   }
   case NumericType::int32: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                              messageHandler, shouldCancel);
+                                                                    messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint64: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<uint64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                               messageHandler, shouldCancel);
+                                                                     messageHandler, shouldCancel);
     break;
   }
   case NumericType::int64: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                              messageHandler, shouldCancel);
+                                                                    messageHandler, shouldCancel);
     break;
   }
   case NumericType::float32: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<float32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                messageHandler, shouldCancel);
+                                                                      messageHandler, shouldCancel);
     break;
   }
   case NumericType::float64: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<float64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                messageHandler, shouldCancel);
+                                                                      messageHandler, shouldCancel);
     break;
   }
   default: {

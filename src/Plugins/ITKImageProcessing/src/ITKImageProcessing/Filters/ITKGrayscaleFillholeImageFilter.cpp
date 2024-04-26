@@ -124,7 +124,7 @@ Result<> ITKGrayscaleFillholeImageFilter::executeImpl(DataStructure& dataStructu
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKGrayscaleFillholeImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKGrayscaleFillholeImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -137,9 +137,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKGrayscaleFillholeImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKGrayscaleFillholeImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKGrayscaleFillholeImage().getDefaultArguments();
+  Arguments args = ITKGrayscaleFillholeImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

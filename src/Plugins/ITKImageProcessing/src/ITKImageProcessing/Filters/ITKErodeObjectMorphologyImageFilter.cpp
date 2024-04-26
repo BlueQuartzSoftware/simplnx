@@ -139,7 +139,7 @@ Result<> ITKErodeObjectMorphologyImageFilter::executeImpl(DataStructure& dataStr
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKErodeObjectMorphologyImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKErodeObjectMorphologyImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -155,9 +155,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKErodeObjectMorphologyImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKErodeObjectMorphologyImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKErodeObjectMorphologyImage().getDefaultArguments();
+  Arguments args = ITKErodeObjectMorphologyImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

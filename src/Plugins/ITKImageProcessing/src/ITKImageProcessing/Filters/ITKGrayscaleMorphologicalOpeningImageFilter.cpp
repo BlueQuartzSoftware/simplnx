@@ -134,7 +134,7 @@ Result<> ITKGrayscaleMorphologicalOpeningImageFilter::executeImpl(DataStructure&
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKGrayscaleMorphologicalOpeningImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKGrayscaleMorphologicalOpeningImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -149,9 +149,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKGrayscaleMorphologicalOpeningImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKGrayscaleMorphologicalOpeningImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKGrayscaleMorphologicalOpeningImage().getDefaultArguments();
+  Arguments args = ITKGrayscaleMorphologicalOpeningImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

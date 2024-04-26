@@ -121,7 +121,7 @@ IFilter::UniquePointer ITKThresholdMaximumConnectedComponentsImageFilter::clone(
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKThresholdMaximumConnectedComponentsImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                    const std::atomic_bool& shouldCancel) const
+                                                                                          const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -132,15 +132,16 @@ IFilter::PreflightResult ITKThresholdMaximumConnectedComponentsImageFilter::pref
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKThresholdMaximumConnectedComponentsImageFilter::ArrayOptionsType, cxITKThresholdMaximumConnectedComponentsImageFilter::FilterOutputType>(
-      dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ITK::DataCheck<cxITKThresholdMaximumConnectedComponentsImageFilter::ArrayOptionsType, cxITKThresholdMaximumConnectedComponentsImageFilter::FilterOutputType>(dataStructure, selectedInputArray,
+                                                                                                                                                                   imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKThresholdMaximumConnectedComponentsImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+Result<> ITKThresholdMaximumConnectedComponentsImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
+                                                                        const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -152,7 +153,8 @@ Result<> ITKThresholdMaximumConnectedComponentsImageFilter::executeImpl(DataStru
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  const cxITKThresholdMaximumConnectedComponentsImageFilter::ITKThresholdMaximumConnectedComponentsImageFilterFunctor itkFunctor = {minimumObjectSizeInPixels, upperBoundary, insideValue, outsideValue};
+  const cxITKThresholdMaximumConnectedComponentsImageFilter::ITKThresholdMaximumConnectedComponentsImageFilterFunctor itkFunctor = {minimumObjectSizeInPixels, upperBoundary, insideValue,
+                                                                                                                                    outsideValue};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 

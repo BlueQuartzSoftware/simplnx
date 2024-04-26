@@ -124,7 +124,7 @@ Result<> ITKHMaximaImageFilter::executeImpl(DataStructure& dataStructure, const 
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKHMaximaImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKHMaximaImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -137,9 +137,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKHMaximaImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKHMaximaImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKHMaximaImage().getDefaultArguments();
+  Arguments args = ITKHMaximaImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

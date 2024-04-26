@@ -139,7 +139,7 @@ Result<> ITKBinaryMorphologicalOpeningImageFilter::executeImpl(DataStructure& da
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBinaryMorphologicalOpeningImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKBinaryMorphologicalOpeningImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -155,9 +155,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBinaryMorphologicalOpeningImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBinaryMorphologicalOpeningImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBinaryMorphologicalOpeningImage().getDefaultArguments();
+  Arguments args = ITKBinaryMorphologicalOpeningImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

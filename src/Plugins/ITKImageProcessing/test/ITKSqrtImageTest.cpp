@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKSqrtImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
+#include "ITKImageProcessing/Filters/ITKSqrtImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 

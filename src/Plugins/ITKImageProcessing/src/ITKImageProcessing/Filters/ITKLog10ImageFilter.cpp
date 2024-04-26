@@ -113,7 +113,7 @@ Result<> ITKLog10ImageFilter::executeImpl(DataStructure& dataStructure, const Ar
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKExpNegativeImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKLog10ImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -125,9 +125,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKExpNegativeImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKLog10ImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKExpNegativeImage().getDefaultArguments();
+  Arguments args = ITKLog10ImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

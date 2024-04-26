@@ -145,7 +145,7 @@ Result<> ITKAdaptiveHistogramEqualizationImageFilter::executeImpl(DataStructure&
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKAdaptiveHistogramEqualizationImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKAdaptiveHistogramEqualizationImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace nx::core
 
@@ -161,9 +161,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKAdaptiveHistogramEqualizationImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKAdaptiveHistogramEqualizationImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKAdaptiveHistogramEqualizationImage().getDefaultArguments();
+  Arguments args = ITKAdaptiveHistogramEqualizationImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

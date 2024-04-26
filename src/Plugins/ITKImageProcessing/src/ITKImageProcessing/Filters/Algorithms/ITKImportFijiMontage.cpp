@@ -213,7 +213,8 @@ private:
       image->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
 
       // Use ITKUtils to read the image into the DataStructure
-      Result<> imageReaderResult = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string());
+      Result<> imageReaderResult =
+          cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string());
       if(imageReaderResult.invalid())
       {
         for(const auto& error : imageReaderResult.errors())

@@ -1,17 +1,16 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKBinaryOpeningByReconstructionImageFilter.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
+#include "ITKImageProcessing/Filters/ITKBinaryOpeningByReconstructionImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -20,7 +19,8 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("ITKImageProcessing::ITKBinaryOpeningByReconstructionImageFilter(BinaryOpeningByReconstruction)", "[ITKImageProcessing][ITKBinaryOpeningByReconstructionImage][BinaryOpeningByReconstruction]")
+TEST_CASE("ITKImageProcessing::ITKBinaryOpeningByReconstructionImageFilter(BinaryOpeningByReconstruction)",
+          "[ITKImageProcessing][ITKBinaryOpeningByReconstructionImage][BinaryOpeningByReconstruction]")
 {
   DataStructure dataStructure;
   const ITKBinaryOpeningByReconstructionImageFilter filter;

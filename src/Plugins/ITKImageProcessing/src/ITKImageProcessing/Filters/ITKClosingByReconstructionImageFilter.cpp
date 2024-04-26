@@ -144,7 +144,7 @@ Result<> ITKClosingByReconstructionImageFilter::executeImpl(DataStructure& dataS
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKClosingByReconstructionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKClosingByReconstructionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -160,9 +160,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKClosingByReconstructionImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKClosingByReconstructionImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKClosingByReconstructionImage().getDefaultArguments();
+  Arguments args = ITKClosingByReconstructionImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

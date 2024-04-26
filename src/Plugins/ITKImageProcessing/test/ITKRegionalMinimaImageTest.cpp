@@ -20,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKRegionalMinimaImageFilter(defaults)", "[ITKImageProcessing][ITKRegionalMinimaImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKRegionalMinimaImage filter;
+  const ITKRegionalMinimaImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -34,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKRegionalMinimaImageFilter(defaults)", "[ITKIma
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKRegionalMinimaImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKRegionalMinimaImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKRegionalMinimaImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKRegionalMinimaImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKRegionalMinimaImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKRegionalMinimaImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

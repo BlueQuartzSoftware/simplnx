@@ -96,7 +96,7 @@ IFilter::UniquePointer ITKApproximateSignedDistanceMapImageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKApproximateSignedDistanceMapImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                             const std::atomic_bool& shouldCancel) const
+                                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ITKApproximateSignedDistanceMapImageFilter::preflightIm
 
 //------------------------------------------------------------------------------
 Result<> ITKApproximateSignedDistanceMapImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel) const
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -128,6 +128,6 @@ Result<> ITKApproximateSignedDistanceMapImageFilter::executeImpl(DataStructure& 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   return ITK::Execute<cxITKApproximateSignedDistanceMapImageFilter::ArrayOptionsType, cxITKApproximateSignedDistanceMapImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath,
-                                                                                                                                          outputArrayPath, itkFunctor, shouldCancel);
+                                                                                                                                                      outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace nx::core

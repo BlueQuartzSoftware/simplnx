@@ -133,7 +133,7 @@ Result<> ITKHMinimaImageFilter::executeImpl(DataStructure& dataStructure, const 
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKHMinimaImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKHMinimaImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -147,9 +147,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKHMinimaImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKHMinimaImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKHMinimaImage().getDefaultArguments();
+  Arguments args = ITKHMinimaImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

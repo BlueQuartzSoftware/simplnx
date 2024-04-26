@@ -145,7 +145,7 @@ Result<> ITKBinaryErodeImageFilter::executeImpl(DataStructure& dataStructure, co
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBinaryErodeImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKBinaryErodeImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -162,9 +162,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBinaryErodeImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBinaryErodeImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBinaryErodeImage().getDefaultArguments();
+  Arguments args = ITKBinaryErodeImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

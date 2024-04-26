@@ -135,7 +135,7 @@ Result<> ITKBinaryContourImageFilter::executeImpl(DataStructure& dataStructure, 
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBinaryContourImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKBinaryContourImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -150,9 +150,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBinaryContourImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBinaryContourImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBinaryContourImage().getDefaultArguments();
+  Arguments args = ITKBinaryContourImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

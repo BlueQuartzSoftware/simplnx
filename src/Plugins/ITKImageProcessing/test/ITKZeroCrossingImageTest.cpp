@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKZeroCrossingImageFilter(defaults)", "[ITKImageProcessing][ITKZeroCrossingImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKZeroCrossingImage filter;
+  const ITKZeroCrossingImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKZeroCrossingImageFilter(defaults)", "[ITKImage
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKZeroCrossingImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKZeroCrossingImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKZeroCrossingImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKZeroCrossingImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKZeroCrossingImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKZeroCrossingImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -50,7 +50,7 @@ TEST_CASE("ITKImageProcessing::ITKZeroCrossingImageFilter(defaults)", "[ITKImage
 TEST_CASE("ITKImageProcessing::ITKZeroCrossingImageFilter(inverted)", "[ITKImageProcessing][ITKZeroCrossingImage][inverted]")
 {
   DataStructure dataStructure;
-  const ITKZeroCrossingImage filter;
+  const ITKZeroCrossingImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -64,11 +64,11 @@ TEST_CASE("ITKImageProcessing::ITKZeroCrossingImageFilter(inverted)", "[ITKImage
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKZeroCrossingImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKZeroCrossingImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKZeroCrossingImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKZeroCrossingImage::k_ForegroundValue_Key, std::make_any<UInt8Parameter::ValueType>(0));
-  args.insertOrAssign(ITKZeroCrossingImage::k_BackgroundValue_Key, std::make_any<UInt8Parameter::ValueType>(2));
+  args.insertOrAssign(ITKZeroCrossingImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKZeroCrossingImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKZeroCrossingImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKZeroCrossingImageFilter::k_ForegroundValue_Key, std::make_any<UInt8Parameter::ValueType>(0));
+  args.insertOrAssign(ITKZeroCrossingImageFilter::k_BackgroundValue_Key, std::make_any<UInt8Parameter::ValueType>(2));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

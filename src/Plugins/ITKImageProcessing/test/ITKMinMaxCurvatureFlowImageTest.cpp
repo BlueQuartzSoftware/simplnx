@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImageFilter(defaults)", "[ITKImageProcessing][ITKMinMaxCurvatureFlowImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKMinMaxCurvatureFlowImage filter;
+  const ITKMinMaxCurvatureFlowImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImageFilter(defaults)", "[I
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -57,7 +57,7 @@ TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImageFilter(defaults)", "[I
 TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImageFilter(longer)", "[ITKImageProcessing][ITKMinMaxCurvatureFlowImage][longer]")
 {
   DataStructure dataStructure;
-  const ITKMinMaxCurvatureFlowImage filter;
+  const ITKMinMaxCurvatureFlowImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -71,11 +71,11 @@ TEST_CASE("ITKImageProcessing::ITKMinMaxCurvatureFlowImageFilter(longer)", "[ITK
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.1));
-  args.insertOrAssign(ITKMinMaxCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImageFilter::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.1));
+  args.insertOrAssign(ITKMinMaxCurvatureFlowImageFilter::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

@@ -134,7 +134,7 @@ Result<> ITKBlackTopHatImageFilter::executeImpl(DataStructure& dataStructure, co
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBlackTopHatImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKBlackTopHatImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -149,9 +149,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBlackTopHatImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBlackTopHatImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBlackTopHatImage().getDefaultArguments();
+  Arguments args = ITKBlackTopHatImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -285,8 +285,8 @@ Parameters ITKMhaFileReaderFilter::parameters() const
                                                          DataPath({"ImageDataContainer", "TransformationMatrix"})));
 
   params.insertSeparator(Parameters::Separator{"Created Image Data Objects"});
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(ITKImageReaderFilter::k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(ITKImageReaderFilter::k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry",
+                                                             DataPath({"ImageDataContainer"})));
 
   params.insert(
       std::make_unique<DataObjectNameParameter>(ITKImageReaderFilter::k_CellDataName_Key, "Created Cell Attribute Matrix", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
@@ -307,7 +307,7 @@ IFilter::UniquePointer ITKMhaFileReaderFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKMhaFileReaderFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel) const
+                                                               const std::atomic_bool& shouldCancel) const
 {
   auto fileNamePath = filterArgs.value<FileSystemPathParameter::ValueType>(ITKImageReaderFilter::k_FileName_Key);
   auto imageGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(ITKImageReaderFilter::k_ImageGeometryPath_Key);
@@ -400,7 +400,7 @@ IFilter::PreflightResult ITKMhaFileReaderFilter::preflightImpl(const DataStructu
 
 //------------------------------------------------------------------------------
 Result<> ITKMhaFileReaderFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel) const
+                                             const std::atomic_bool& shouldCancel) const
 {
   auto fileNamePath = filterArgs.value<FileSystemPathParameter::ValueType>(ITKImageReaderFilter::k_FileName_Key);
   auto imageGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(ITKImageReaderFilter::k_ImageGeometryPath_Key);

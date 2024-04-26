@@ -88,7 +88,7 @@ IFilter::UniquePointer ITKBoundedReciprocalImageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKBoundedReciprocalImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+                                                                        const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -103,7 +103,7 @@ IFilter::PreflightResult ITKBoundedReciprocalImageFilter::preflightImpl(const Da
 
 //------------------------------------------------------------------------------
 Result<> ITKBoundedReciprocalImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+                                                      const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -114,7 +114,7 @@ Result<> ITKBoundedReciprocalImageFilter::executeImpl(DataStructure& dataStructu
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBoundedReciprocalImageFilter::ArrayOptionsType, cxITKBoundedReciprocalImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
-                                                                                                                    shouldCancel);
+  return ITK::Execute<cxITKBoundedReciprocalImageFilter::ArrayOptionsType, cxITKBoundedReciprocalImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                itkFunctor, shouldCancel);
 }
 } // namespace nx::core

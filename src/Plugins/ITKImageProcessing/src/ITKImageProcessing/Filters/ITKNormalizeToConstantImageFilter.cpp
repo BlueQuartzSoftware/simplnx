@@ -94,7 +94,7 @@ IFilter::UniquePointer ITKNormalizeToConstantImageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKNormalizeToConstantImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                          const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -110,7 +110,7 @@ IFilter::PreflightResult ITKNormalizeToConstantImageFilter::preflightImpl(const 
 
 //------------------------------------------------------------------------------
 Result<> ITKNormalizeToConstantImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                        const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -123,7 +123,26 @@ Result<> ITKNormalizeToConstantImageFilter::executeImpl(DataStructure& dataStruc
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKNormalizeToConstantImageFilter::ArrayOptionsType, cxITKNormalizeToConstantImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
-                                                                                                                        shouldCancel);
+  return ITK::Execute<cxITKNormalizeToConstantImageFilter::ArrayOptionsType, cxITKNormalizeToConstantImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                    itkFunctor, shouldCancel);
+}
+
+//------------------------------------------------------------------------------
+Result<> ITKNormalizeToConstantImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel) const
+{
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
+
+  auto constant = filterArgs.value<float64>(k_Constant_Key);
+
+  const cxITKNormalizeToConstantImage::ITKNormalizeToConstantImageFunctor itkFunctor = {constant};
+
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+
+  return ITK::Execute<cxITKNormalizeToConstantImageFilter::ArrayOptionsType, cxITKNormalizeToConstantImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                    itkFunctor, shouldCancel);
 }
 } // namespace nx::core

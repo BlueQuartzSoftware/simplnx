@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImageFilter(defaults)", "[ITKImageProcessing][ITKCurvatureAnisotropicDiffusionImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKCurvatureAnisotropicDiffusionImage filter;
+  const ITKCurvatureAnisotropicDiffusionImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,10 +33,10 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImageFilter(defau
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -56,7 +56,7 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImageFilter(defau
 TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImageFilter(longer)", "[ITKImageProcessing][ITKCurvatureAnisotropicDiffusionImage][longer]")
 {
   DataStructure dataStructure;
-  const ITKCurvatureAnisotropicDiffusionImage filter;
+  const ITKCurvatureAnisotropicDiffusionImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -70,11 +70,11 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureAnisotropicDiffusionImageFilter(longe
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
-  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImage::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.01));
+  args.insertOrAssign(ITKCurvatureAnisotropicDiffusionImageFilter::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

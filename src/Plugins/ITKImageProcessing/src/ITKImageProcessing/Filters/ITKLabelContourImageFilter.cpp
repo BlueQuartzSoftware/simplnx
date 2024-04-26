@@ -131,7 +131,7 @@ Result<> ITKLabelContourImageFilter::executeImpl(DataStructure& dataStructure, c
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKGrayscaleGrindPeakImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKLabelContourImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -144,9 +144,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKGrayscaleGrindPeakImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKLabelContourImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKGrayscaleGrindPeakImage().getDefaultArguments();
+  Arguments args = ITKLabelContourImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

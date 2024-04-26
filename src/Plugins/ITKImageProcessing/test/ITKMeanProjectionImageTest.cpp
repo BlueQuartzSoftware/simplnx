@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKMeanProjectionImageFilter(z_projection)", "[ITKImageProcessing][ITKMeanProjectionImage][z_projection]")
 {
   DataStructure dataStructure;
-  const ITKMeanProjectionImage filter;
+  const ITKMeanProjectionImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKMeanProjectionImageFilter(z_projection)", "[IT
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMeanProjectionImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMeanProjectionImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMeanProjectionImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMeanProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMeanProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMeanProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKMeanProjectionImage::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(2));
 
   auto preflightResult = filter.preflight(dataStructure, args);

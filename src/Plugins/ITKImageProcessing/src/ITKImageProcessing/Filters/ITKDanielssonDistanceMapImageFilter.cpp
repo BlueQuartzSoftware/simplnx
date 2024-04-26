@@ -103,7 +103,7 @@ IFilter::UniquePointer ITKDanielssonDistanceMapImageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKDanielssonDistanceMapImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+                                                                            const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -113,15 +113,15 @@ IFilter::PreflightResult ITKDanielssonDistanceMapImageFilter::preflightImpl(cons
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  Result<OutputActions> resultOutputActions =
-      ITK::DataCheck<cxITKDanielssonDistanceMapImageFilter::ArrayOptionsType, cxITKDanielssonDistanceMapImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKDanielssonDistanceMapImageFilter::ArrayOptionsType, cxITKDanielssonDistanceMapImageFilter::FilterOutputType>(
+      dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 
   return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ITKDanielssonDistanceMapImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+                                                          const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -136,7 +136,7 @@ Result<> ITKDanielssonDistanceMapImageFilter::executeImpl(DataStructure& dataStr
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKDanielssonDistanceMapImageFilter::ArrayOptionsType, cxITKDanielssonDistanceMapImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
-                                                                                                                            itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKDanielssonDistanceMapImageFilter::ArrayOptionsType, cxITKDanielssonDistanceMapImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath,
+                                                                                                                                        outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace nx::core

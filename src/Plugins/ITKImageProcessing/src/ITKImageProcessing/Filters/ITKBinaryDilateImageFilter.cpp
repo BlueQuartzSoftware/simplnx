@@ -145,7 +145,7 @@ Result<> ITKBinaryDilateImageFilter::executeImpl(DataStructure& dataStructure, c
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKBinaryDilateImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKBinaryDilateImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -162,9 +162,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBinaryDilateImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBinaryDilateImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBinaryDilateImage().getDefaultArguments();
+  Arguments args = ITKBinaryDilateImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

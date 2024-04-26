@@ -102,7 +102,7 @@ IFilter::UniquePointer ITKCurvatureAnisotropicDiffusionImageFilter::clone() cons
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKCurvatureAnisotropicDiffusionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                              const std::atomic_bool& shouldCancel) const
+                                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -120,7 +120,7 @@ IFilter::PreflightResult ITKCurvatureAnisotropicDiffusionImageFilter::preflightI
 
 //------------------------------------------------------------------------------
 Result<> ITKCurvatureAnisotropicDiffusionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -132,7 +132,8 @@ Result<> ITKCurvatureAnisotropicDiffusionImageFilter::executeImpl(DataStructure&
   auto conductanceScalingUpdateInterval = filterArgs.value<uint32>(k_ConductanceScalingUpdateInterval_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);
 
-  const cxITKCurvatureAnisotropicDiffusionImageFilter::ITKCurvatureAnisotropicDiffusionImageFilterFunctor itkFunctor = {timeStep, conductanceParameter, conductanceScalingUpdateInterval, numberOfIterations};
+  const cxITKCurvatureAnisotropicDiffusionImageFilter::ITKCurvatureAnisotropicDiffusionImageFilterFunctor itkFunctor = {timeStep, conductanceParameter, conductanceScalingUpdateInterval,
+                                                                                                                        numberOfIterations};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 

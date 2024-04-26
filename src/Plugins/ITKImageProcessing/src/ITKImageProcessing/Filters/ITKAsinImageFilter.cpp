@@ -113,7 +113,7 @@ Result<> ITKAsinImageFilter::executeImpl(DataStructure& dataStructure, const Arg
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKAsinImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKAsinImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -125,9 +125,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKAsinImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKAsinImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKAsinImage().getDefaultArguments();
+  Arguments args = ITKAsinImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

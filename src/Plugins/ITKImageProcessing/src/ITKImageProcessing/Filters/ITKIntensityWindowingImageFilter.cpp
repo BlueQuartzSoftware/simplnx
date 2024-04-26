@@ -136,7 +136,7 @@ Result<> ITKIntensityWindowingImageFilter::executeImpl(DataStructure& dataStruct
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKIntensityWindowingImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKIntensityWindowingImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -152,9 +152,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKIntensityWindowingImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKIntensityWindowingImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKIntensityWindowingImage().getDefaultArguments();
+  Arguments args = ITKIntensityWindowingImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

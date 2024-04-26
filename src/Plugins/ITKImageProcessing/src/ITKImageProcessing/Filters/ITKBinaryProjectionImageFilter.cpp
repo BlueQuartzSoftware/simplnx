@@ -136,7 +136,7 @@ Result<> ITKBinaryProjectionImageFilter::executeImpl(DataStructure& dataStructur
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  auto result = ITK::Execute<cxITKBinaryProjectionImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  auto result = ITK::Execute<cxITKBinaryProjectionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 
   IArray& iArrayRef = dataStructure.getDataRefAs<IArray>(outputArrayPath);
   auto iArrayTupleShape = iArrayRef.getTupleShape();
@@ -168,9 +168,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKBinaryProjectionImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKBinaryProjectionImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKBinaryProjectionImage().getDefaultArguments();
+  Arguments args = ITKBinaryProjectionImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -130,7 +130,7 @@ Result<> ITKMedianImageFilter::executeImpl(DataStructure& dataStructure, const A
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKMedianImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKMedianImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -143,9 +143,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKMedianImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKMedianImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKMedianImage().getDefaultArguments();
+  Arguments args = ITKMedianImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

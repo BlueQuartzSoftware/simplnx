@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImageFilter(defaults)", "[ITKImageProcessing][ITKCurvatureFlowImage][defaults]")
 {
   DataStructure dataStructure;
-  const ITKCurvatureFlowImage filter;
+  const ITKCurvatureFlowImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImageFilter(defaults)", "[ITKImag
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKCurvatureFlowImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKCurvatureFlowImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKCurvatureFlowImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKCurvatureFlowImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKCurvatureFlowImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKCurvatureFlowImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -55,7 +55,7 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImageFilter(defaults)", "[ITKImag
 TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImageFilter(longer)", "[ITKImageProcessing][ITKCurvatureFlowImage][longer]")
 {
   DataStructure dataStructure;
-  const ITKCurvatureFlowImage filter;
+  const ITKCurvatureFlowImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -69,11 +69,11 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImageFilter(longer)", "[ITKImageP
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKCurvatureFlowImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKCurvatureFlowImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKCurvatureFlowImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKCurvatureFlowImage::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.1));
-  args.insertOrAssign(ITKCurvatureFlowImage::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));
+  args.insertOrAssign(ITKCurvatureFlowImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKCurvatureFlowImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKCurvatureFlowImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKCurvatureFlowImageFilter::k_TimeStep_Key, std::make_any<Float64Parameter::ValueType>(0.1));
+  args.insertOrAssign(ITKCurvatureFlowImageFilter::k_NumberOfIterations_Key, std::make_any<UInt32Parameter::ValueType>(10));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

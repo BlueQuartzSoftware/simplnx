@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKIsoContourDistanceImageFilter(default)", "[ITKImageProcessing][ITKIsoContourDistanceImage][default]")
 {
   DataStructure dataStructure;
-  const ITKIsoContourDistanceImage filter;
+  const ITKIsoContourDistanceImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,10 +33,10 @@ TEST_CASE("ITKImageProcessing::ITKIsoContourDistanceImageFilter(default)", "[ITK
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKIsoContourDistanceImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKIsoContourDistanceImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKIsoContourDistanceImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKIsoContourDistanceImage::k_LevelSetValue_Key, std::make_any<Float64Parameter::ValueType>(50.0));
+  args.insertOrAssign(ITKIsoContourDistanceImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKIsoContourDistanceImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKIsoContourDistanceImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKIsoContourDistanceImageFilter::k_LevelSetValue_Key, std::make_any<Float64Parameter::ValueType>(50.0));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImageFilter(default)", "[ITKImageProcessing][ITKThresholdMaximumConnectedComponentsImage][default]")
 {
   DataStructure dataStructure;
-  const ITKThresholdMaximumConnectedComponentsImage filter;
+  const ITKThresholdMaximumConnectedComponentsImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImageFilter
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -50,7 +50,7 @@ TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImageFilter
 TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImageFilter(parameters)", "[ITKImageProcessing][ITKThresholdMaximumConnectedComponentsImage][parameters]")
 {
   DataStructure dataStructure;
-  const ITKThresholdMaximumConnectedComponentsImage filter;
+  const ITKThresholdMaximumConnectedComponentsImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -64,11 +64,11 @@ TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImageFilter
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_MinimumObjectSizeInPixels_Key, std::make_any<UInt32Parameter::ValueType>(40));
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_UpperBoundary_Key, std::make_any<Float64Parameter::ValueType>(150));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<UInt32Parameter::ValueType>(40));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_UpperBoundary_Key, std::make_any<Float64Parameter::ValueType>(150));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -83,7 +83,7 @@ TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImageFilter
 TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImageFilter(float)", "[ITKImageProcessing][ITKThresholdMaximumConnectedComponentsImage][float]")
 {
   DataStructure dataStructure;
-  const ITKThresholdMaximumConnectedComponentsImage filter;
+  const ITKThresholdMaximumConnectedComponentsImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -97,9 +97,9 @@ TEST_CASE("ITKImageProcessing::ITKThresholdMaximumConnectedComponentsImageFilter
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKThresholdMaximumConnectedComponentsImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

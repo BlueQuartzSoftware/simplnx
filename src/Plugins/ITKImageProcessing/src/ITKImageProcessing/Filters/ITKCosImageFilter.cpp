@@ -113,7 +113,7 @@ Result<> ITKCosImageFilter::executeImpl(DataStructure& dataStructure, const Argu
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKCosImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKCosImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -125,9 +125,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKCosImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKCosImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKCosImage().getDefaultArguments();
+  Arguments args = ITKCosImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

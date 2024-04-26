@@ -122,7 +122,7 @@ Result<> ITKInvertIntensityImageFilter::executeImpl(DataStructure& dataStructure
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  return ITK::Execute<cxITKInvertIntensityImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  return ITK::Execute<cxITKInvertIntensityImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 
 namespace
@@ -135,9 +135,9 @@ constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ITKInvertIntensityImage::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ITKInvertIntensityImageFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ITKInvertIntensityImage().getDefaultArguments();
+  Arguments args = ITKInvertIntensityImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

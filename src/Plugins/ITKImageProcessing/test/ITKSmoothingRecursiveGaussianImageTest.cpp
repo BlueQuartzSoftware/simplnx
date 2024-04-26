@@ -20,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(default)", "[ITKImageProcessing][ITKSmoothingRecursiveGaussianImage][default]")
 {
   DataStructure dataStructure;
-  const ITKSmoothingRecursiveGaussianImage filter;
+  const ITKSmoothingRecursiveGaussianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -34,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(default)
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -56,7 +56,7 @@ TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(default)
 TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(rgb_image)", "[ITKImageProcessing][ITKSmoothingRecursiveGaussianImage][rgb_image]")
 {
   DataStructure dataStructure;
-  const ITKSmoothingRecursiveGaussianImage filter;
+  const ITKSmoothingRecursiveGaussianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -70,9 +70,9 @@ TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(rgb_imag
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKSmoothingRecursiveGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   args.insertOrAssign(ITKSmoothingRecursiveGaussianImage::k_Sigma_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{
                                                                            5.0,
                                                                            5.0,
