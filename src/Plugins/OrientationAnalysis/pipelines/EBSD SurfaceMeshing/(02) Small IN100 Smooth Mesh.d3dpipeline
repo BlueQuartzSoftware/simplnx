@@ -28,7 +28,7 @@
             "DataContainer/CellFeatureData",
             "DataContainer/CellFeatureData/Active",
             "DataContainer/CellFeatureData/Phases",
-            "DataContainer/CellFeatureData/NumNeighbors2",
+            
             "DataContainer/CellFeatureData/ParentIds",
             "DataContainer/CellFeatureData/Centroids",
             "DataContainer/CellFeatureData/EquivalentDiameters",

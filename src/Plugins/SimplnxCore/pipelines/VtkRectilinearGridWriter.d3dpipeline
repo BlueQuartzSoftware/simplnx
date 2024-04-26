@@ -28,7 +28,7 @@
             "DataContainer/CellFeatureData/Phases",
             "DataContainer/CellFeatureData/AvgQuats",
             "DataContainer/CellFeatureData/AvgEulerAngles",
-            "DataContainer/CellFeatureData/NumNeighbors2",
+            
             "DataContainer/NewGrain Data",
             "DataContainer/CellData/ParentIds",
             "DataContainer/CellFeatureData/ParentIds",

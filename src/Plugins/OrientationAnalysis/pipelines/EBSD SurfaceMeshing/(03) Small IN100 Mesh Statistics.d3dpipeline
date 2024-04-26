@@ -43,7 +43,7 @@
             "DataContainer/CellFeatureData/Neighborhoods",
             "DataContainer/CellFeatureData/NumElements",
             "DataContainer/CellFeatureData/NumNeighbors",
-            "DataContainer/CellFeatureData/NumNeighbors2",
+            
             "DataContainer/CellFeatureData/Omega3s",
             "DataContainer/CellFeatureData/ParentIds",
             "DataContainer/CellFeatureData/Phases",

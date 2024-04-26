@@ -43,7 +43,7 @@
             "DataContainer/CellFeatureData/Neighborhoods",
             "DataContainer/CellFeatureData/NumElements",
             "DataContainer/CellFeatureData/NumNeighbors",
-            "DataContainer/CellFeatureData/NumNeighbors2",
+            
             "DataContainer/CellFeatureData/Omega3s",
             "DataContainer/CellFeatureData/ParentIds",
             "DataContainer/CellFeatureData/Phases",
@@ -112,7 +112,7 @@
                     "DataContainer/CellFeatureData/Neighborhoods",
                     "DataContainer/CellFeatureData/NumElements",
                     "DataContainer/CellFeatureData/NumNeighbors",
-                    "DataContainer/CellFeatureData/NumNeighbors2",
+                    
                     "DataContainer/CellFeatureData/Omega3s",
                     "DataContainer/CellFeatureData/ParentIds",
                     "DataContainer/CellFeatureData/Phases",
@@ -176,7 +176,7 @@
                             "DataContainer/CellFeatureData/Neighborhoods",
                             "DataContainer/CellFeatureData/NumElements",
                             "DataContainer/CellFeatureData/NumNeighbors",
-                            "DataContainer/CellFeatureData/NumNeighbors2",
+                            
                             "DataContainer/CellFeatureData/Omega3s",
                             "DataContainer/CellFeatureData/ParentIds",
                             "DataContainer/CellFeatureData/Phases",
@@ -220,7 +220,7 @@
                                     "DataContainer/CellFeatureData/Active",
                                     "DataContainer/CellData/FeatureIds",
                                     "DataContainer/CellFeatureData/Phases",
-                                    "DataContainer/CellFeatureData/NumNeighbors2",
+                                    
                                     "DataContainer/NewGrain Data",
                                     "DataContainer/CellData/ParentIds",
                                     "DataContainer/CellFeatureData/ParentIds",
@@ -280,7 +280,7 @@
                                             "DataContainer/CellFeatureData/Active",
                                             "DataContainer/CellData/FeatureIds",
                                             "DataContainer/CellFeatureData/Phases",
-                                            "DataContainer/CellFeatureData/NumNeighbors2",
+                                            
                                             "DataContainer/NewGrain Data",
                                             "DataContainer/CellData/ParentIds",
                                             "DataContainer/CellFeatureData/ParentIds",
@@ -333,7 +333,7 @@
                                                     "DataContainer/CellFeatureData/Phases",
                                                     "DataContainer/CellFeatureData/AvgQuats",
                                                     "DataContainer/CellFeatureData/AvgEulerAngles",
-                                                    "DataContainer/CellFeatureData/NumNeighbors2",
+                                                    
                                                     "DataContainer/NewGrain Data",
                                                     "DataContainer/CellData/ParentIds",
                                                     "DataContainer/CellFeatureData/ParentIds",
