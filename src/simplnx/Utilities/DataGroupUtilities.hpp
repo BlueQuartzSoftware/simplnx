@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <memory>
@@ -13,16 +14,19 @@ namespace nx::core
 {
 
 /**
- * @brief RemoveInactiveObjects This assumes a single Dimension TupleShape, i.e., a Linear array, (1D).
+ * @brief RemoveInactiveObjects This assumes a single Dimension TupleShape, i.e., a Linear array, (1D)
+ *
+ * NeighborLists are NO LONGER Removed. That is the responsibility of the filter.
  *
  * @param dataStructure
  * @param featureDataGroupPath
  * @param activeObjects
  * @param cellFeatureIds
+ * @param messageHandler
  * @return
  */
 SIMPLNX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds,
-                                          size_t currentFeatureCount);
+                                          size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler);
 
 /**
  * @brief This function will gather all of the sibling DataArrays to the input DataPath, then filter out all the 'IgnoredDataPaths`

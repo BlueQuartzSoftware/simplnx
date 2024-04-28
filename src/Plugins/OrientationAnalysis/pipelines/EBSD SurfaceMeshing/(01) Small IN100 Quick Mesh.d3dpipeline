@@ -24,7 +24,7 @@
             "DataContainer/CellFeatureData/Active",
             "DataContainer/CellData/FeatureIds",
             "DataContainer/CellFeatureData/Phases",
-            "DataContainer/CellFeatureData/NumNeighbors2",
+            
             "DataContainer/NewGrain Data",
             "DataContainer/CellData/ParentIds",
             "DataContainer/CellFeatureData/ParentIds",

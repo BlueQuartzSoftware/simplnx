@@ -5,7 +5,8 @@
 
 namespace nx::core
 {
-bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount)
+bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount,
+                           const IFilter::MessageHandler& messageHandler)
 {
   bool acceptableMatrix = true;
 
@@ -97,7 +98,8 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
           std::vector<DataPath> neighborListDataPaths = result.value();
           for(const auto& neighborListDataPath : neighborListDataPaths)
           {
-            dataStructure.removeData(neighborListDataPath);
+            messageHandler(
+                nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("NeighborList '{}' will be removed from the DataStructure.", neighborListDataPath.toString())});
           }
         }
       }

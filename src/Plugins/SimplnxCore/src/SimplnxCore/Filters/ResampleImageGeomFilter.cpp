@@ -292,9 +292,11 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     }
     if(!warningMsg.empty())
     {
-      resultOutputActions.m_Warnings.push_back(
-          Warning({-55503, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}", featureIdsArrayPath.toString(),
-                                       warningMsg)}));
+      resultOutputActions.m_Warnings.push_back(Warning(
+          {-55503,
+           fmt::format(
+               "This filter will modify the Cell Level Array '{}' which causes all Feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
+               featureIdsArrayPath.toString(), warningMsg)}));
     }
   }
 
@@ -396,9 +398,7 @@ namespace
 {
 namespace SIMPL
 {
-constexpr StringLiteral k_CurrentGeomtryInfoKey = "CurrentGeomtryInfo";
 constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_NewGeomtryInfoKey = "NewGeomtryInfo";
 constexpr StringLiteral k_RenumberFeaturesKey = "RenumberFeatures";
 constexpr StringLiteral k_SaveAsNewDataContainerKey = "SaveAsNewDataContainer";
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";

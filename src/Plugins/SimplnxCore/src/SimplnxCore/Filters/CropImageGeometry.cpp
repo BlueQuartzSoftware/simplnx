@@ -18,14 +18,13 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
-#include "simplnx/Utilities/SamplingUtils.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
+#include "simplnx/Utilities/SamplingUtils.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
@@ -480,9 +479,11 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
     if(!warningMsg.empty())
     {
-      resultOutputActions.m_Warnings.push_back(
-          Warning({-55503, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}", featureIdsArrayPath.toString(),
-                                       warningMsg)}));
+      resultOutputActions.m_Warnings.push_back(Warning(
+          {-55503,
+           fmt::format(
+               "This filter will modify the Cell Level Array '{}' which causes all Feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
+               featureIdsArrayPath.toString(), warningMsg)}));
     }
   }
 
@@ -672,7 +673,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
 
     // NOW DO THE ACTUAL RENUMBERING and updating.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
-    return Sampling::RenumberFeatures(dataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, shouldCancel);
+    return Sampling::RenumberFeatures(dataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, messageHandler, shouldCancel);
   }
 
   // The deferred actions will take care of removing the original and renaming the output if
