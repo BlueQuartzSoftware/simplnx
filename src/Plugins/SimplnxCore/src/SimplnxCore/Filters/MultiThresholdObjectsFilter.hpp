@@ -8,17 +8,17 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT MultiThresholdObjects : public IFilter
+class SIMPLNXCORE_EXPORT MultiThresholdObjectsFilter : public IFilter
 {
 public:
-  MultiThresholdObjects() = default;
-  ~MultiThresholdObjects() noexcept override = default;
+  MultiThresholdObjectsFilter() = default;
+  ~MultiThresholdObjectsFilter() noexcept override = default;
 
-  MultiThresholdObjects(const MultiThresholdObjects&) = delete;
-  MultiThresholdObjects(MultiThresholdObjects&&) noexcept = delete;
+  MultiThresholdObjectsFilter(const MultiThresholdObjectsFilter&) = delete;
+  MultiThresholdObjectsFilter(MultiThresholdObjectsFilter&&) noexcept = delete;
 
-  MultiThresholdObjects& operator=(const MultiThresholdObjects&) = delete;
-  MultiThresholdObjects& operator=(MultiThresholdObjects&&) noexcept = delete;
+  MultiThresholdObjectsFilter& operator=(const MultiThresholdObjectsFilter&) = delete;
+  MultiThresholdObjectsFilter& operator=(MultiThresholdObjectsFilter&&) noexcept = delete;
 
   static inline constexpr StringLiteral k_ArrayThresholdsObject_Key = "array_thresholds_object";
   static inline constexpr StringLiteral k_UseCustomTrueValue = "use_custom_true_value";
@@ -110,4 +110,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, MultiThresholdObjects, "4246245e-1011-4add-8436-0af6bed19228");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, MultiThresholdObjectsFilter, "4246245e-1011-4add-8436-0af6bed19228");

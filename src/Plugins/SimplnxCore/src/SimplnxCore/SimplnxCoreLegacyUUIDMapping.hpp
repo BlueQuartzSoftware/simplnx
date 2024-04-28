@@ -12,12 +12,12 @@
 #include "SimplnxCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
 #include "SimplnxCore/Filters/AlignSectionsListFilter.hpp"
 #include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
-#include "SimplnxCore/Filters/ApproximatePointCloudHull.hpp"
+#include "SimplnxCore/Filters/ApproximatePointCloudHullFilter.hpp"
 #include "SimplnxCore/Filters/ArrayCalculatorFilter.hpp"
 #include "SimplnxCore/Filters/CalculateArrayHistogramFilter.hpp"
 #include "SimplnxCore/Filters/CalculateFeatureSizesFilter.hpp"
 #include "SimplnxCore/Filters/CalculateTriangleAreasFilter.hpp"
-#include "SimplnxCore/Filters/ChangeAngleRepresentation.hpp"
+#include "SimplnxCore/Filters/ChangeAngleRepresentationFilter.hpp"
 #include "SimplnxCore/Filters/CombineAttributeArraysFilter.hpp"
 #include "SimplnxCore/Filters/ConditionalSetValue.hpp"
 #include "SimplnxCore/Filters/ConvertColorToGrayScaleFilter.hpp"
@@ -72,7 +72,7 @@
 #include "SimplnxCore/Filters/MapPointCloudToRegularGridFilter.hpp"
 #include "SimplnxCore/Filters/MinNeighbors.hpp"
 #include "SimplnxCore/Filters/MoveData.hpp"
-#include "SimplnxCore/Filters/MultiThresholdObjects.hpp"
+#include "SimplnxCore/Filters/MultiThresholdObjectsFilter.hpp"
 #include "SimplnxCore/Filters/PointSampleTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/ReadRawBinaryFilter.hpp"
@@ -134,7 +134,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("accf8f6c-0551-5da3-9a3d-e4be41c3985c").value(), {nx::core::FilterTraits<AlignSectionsListFilter>::uuid, &AlignSectionsListFilter::FromSIMPLJson}}, // AlignSectionsListFilter
     {nx::core::Uuid::FromString("7ff0ebb3-7b0d-5ff7-b9d8-5147031aca10").value(), {nx::core::FilterTraits<ArrayCalculatorFilter>::uuid, &ArrayCalculatorFilter::FromSIMPLJson}}, // ArrayCalculatorFilter
     {nx::core::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), {nx::core::FilterTraits<ApplyTransformationToGeometryFilter>::uuid, &ApplyTransformationToGeometryFilter::FromSIMPLJson}}, // ApplyTransformationToGeometry
-    {nx::core::Uuid::FromString("fab669ad-66c6-5a39-bdb7-fc47b94311ed").value(), {nx::core::FilterTraits<ApproximatePointCloudHull>::uuid, &ApproximatePointCloudHull::FromSIMPLJson}}, // ApproximatePointCloudHull
+    {nx::core::Uuid::FromString("fab669ad-66c6-5a39-bdb7-fc47b94311ed").value(), {nx::core::FilterTraits<ApproximatePointCloudHullFilter>::uuid, &ApproximatePointCloudHullFilter::FromSIMPLJson}}, // ApproximatePointCloudHullFilter
     {nx::core::Uuid::FromString("289f0d8c-29ab-5fbc-91bd-08aac01e37c5").value(), {nx::core::FilterTraits<CalculateArrayHistogramFilter>::uuid, &CalculateArrayHistogramFilter::FromSIMPLJson}}, // CalculateArrayHistogram
     {nx::core::Uuid::FromString("656f144c-a120-5c3b-bee5-06deab438588").value(), {nx::core::FilterTraits<CalculateFeatureSizesFilter>::uuid, &CalculateFeatureSizesFilter::FromSIMPLJson}}, // FindSizes
     {nx::core::Uuid::FromString("a9900cc3-169e-5a1b-bcf4-7569e1950d41").value(), {nx::core::FilterTraits<CalculateTriangleAreasFilter>::uuid, &CalculateTriangleAreasFilter::FromSIMPLJson}}, // TriangleAreaFilter
@@ -186,8 +186,8 @@ namespace nx::core
     {nx::core::Uuid::FromString("9fe34deb-99e1-5f3a-a9cc-e90c655b47ee").value(), {nx::core::FilterTraits<MapPointCloudToRegularGridFilter>::uuid, &MapPointCloudToRegularGridFilter::FromSIMPLJson}}, // MapPointCloudToRegularGrid
     {nx::core::Uuid::FromString("dab5de3c-5f81-5bb5-8490-73521e1183ea").value(), {nx::core::FilterTraits<MinNeighbors>::uuid, &MinNeighbors::FromSIMPLJson}}, // MinNeighbors
     {nx::core::Uuid::FromString("fe2cbe09-8ae1-5bea-9397-fd5741091fdb").value(), {nx::core::FilterTraits<MoveData>::uuid, &MoveData::FromSIMPLJson}}, // MoveData
-    {nx::core::Uuid::FromString("014b7300-cf36-5ede-a751-5faf9b119dae").value(), {nx::core::FilterTraits<MultiThresholdObjects>::uuid, &MultiThresholdObjects::FromSIMPLJson}}, // MultiThresholdObjects
-    {nx::core::Uuid::FromString("686d5393-2b02-5c86-b887-dd81a8ae80f2").value(), {nx::core::FilterTraits<MultiThresholdObjects>::uuid, &MultiThresholdObjects::FromSIMPLJson}}, // MultiThresholdObjects2
+    {nx::core::Uuid::FromString("014b7300-cf36-5ede-a751-5faf9b119dae").value(), {nx::core::FilterTraits<MultiThresholdObjectsFilter>::uuid, &MultiThresholdObjectsFilter::FromSIMPLJson}}, // MultiThresholdObjects
+    {nx::core::Uuid::FromString("686d5393-2b02-5c86-b887-dd81a8ae80f2").value(), {nx::core::FilterTraits<MultiThresholdObjectsFilter>::uuid, &MultiThresholdObjectsFilter::FromSIMPLJson}}, // MultiThresholdObjects2
     {nx::core::Uuid::FromString("119861c5-e303-537e-b210-2e62936222e9").value(), {nx::core::FilterTraits<PointSampleTriangleGeometryFilter>::uuid, &PointSampleTriangleGeometryFilter::FromSIMPLJson}}, // PointSampleTriangleGeometry
     {nx::core::Uuid::FromString("07b49e30-3900-5c34-862a-f1fb48bad568").value(), {nx::core::FilterTraits<QuickSurfaceMeshFilter>::uuid, &QuickSurfaceMeshFilter::FromSIMPLJson}}, // QuickSurfaceMesh
     {nx::core::Uuid::FromString("0791f556-3d73-5b1e-b275-db3f7bb6850d").value(), {nx::core::FilterTraits<ReadRawBinaryFilter>::uuid, &ReadRawBinaryFilter::FromSIMPLJson}}, // RawBinaryReader

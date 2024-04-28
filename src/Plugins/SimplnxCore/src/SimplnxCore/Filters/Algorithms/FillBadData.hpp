@@ -24,8 +24,7 @@ struct SIMPLNXCORE_EXPORT FillBadDataInputValues
 
 /**
  * @class FillBadData
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
+
  */
 class SIMPLNXCORE_EXPORT FillBadData
 {

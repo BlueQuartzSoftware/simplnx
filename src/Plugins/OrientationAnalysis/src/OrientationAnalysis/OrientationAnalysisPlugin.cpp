@@ -10,7 +10,7 @@ namespace
 // This maps previous filters from DREAM.3D Version 6.x to DREAM.3D Version 7.x
 std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{f4a7c2df-e9b0-5da9-b745-a862666d6c99}").value(), Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value()}, /* BadDataNeighborOrientationCheck */
-    {Uuid::FromString("{f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792}").value(), Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value()}, /* ChangeAngleRepresentation */
+    {Uuid::FromString("{f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792}").value(), Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value()}, /* ChangeAngleRepresentationFilter */
     {Uuid::FromString("{e1343abe-e5ad-5eb1-a89d-c209e620e4de}").value(), Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value()}, /* ConvertHexGridToSquareGrid */
     {Uuid::FromString("{e5629880-98c4-5656-82b8-c9fe2b9744de}").value(), Uuid::FromString("e5629880-98c4-5656-82b8-c9fe2b9744de").value()}, /* ConvertOrientations */
     {Uuid::FromString("{439e31b7-3198-5d0d-aef6-65a9e9c1a016}").value(), Uuid::FromString("439e31b7-3198-5d0d-aef6-65a9e9c1a016").value()}, /* ConvertQuaternion */

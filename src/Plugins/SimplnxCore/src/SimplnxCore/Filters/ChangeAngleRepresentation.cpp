@@ -1,4 +1,4 @@
-#include "ChangeAngleRepresentation.hpp"
+#include "ChangeAngleRepresentationFilter.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -56,37 +56,37 @@ private:
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ChangeAngleRepresentation::name() const
+std::string ChangeAngleRepresentationFilter::name() const
 {
-  return FilterTraits<ChangeAngleRepresentation>::name.str();
+  return FilterTraits<ChangeAngleRepresentationFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ChangeAngleRepresentation::className() const
+std::string ChangeAngleRepresentationFilter::className() const
 {
-  return FilterTraits<ChangeAngleRepresentation>::className;
+  return FilterTraits<ChangeAngleRepresentationFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ChangeAngleRepresentation::uuid() const
+Uuid ChangeAngleRepresentationFilter::uuid() const
 {
-  return FilterTraits<ChangeAngleRepresentation>::uuid;
+  return FilterTraits<ChangeAngleRepresentationFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ChangeAngleRepresentation::humanName() const
+std::string ChangeAngleRepresentationFilter::humanName() const
 {
   return "Convert Angles to Degrees or Radians";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ChangeAngleRepresentation::defaultTags() const
+std::vector<std::string> ChangeAngleRepresentationFilter::defaultTags() const
 {
   return {className(), "Processing", "Conversion"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ChangeAngleRepresentation::parameters() const
+Parameters ChangeAngleRepresentationFilter::parameters() const
 {
   Parameters params;
 
@@ -100,13 +100,13 @@ Parameters ChangeAngleRepresentation::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ChangeAngleRepresentation::clone() const
+IFilter::UniquePointer ChangeAngleRepresentationFilter::clone() const
 {
-  return std::make_unique<ChangeAngleRepresentation>();
+  return std::make_unique<ChangeAngleRepresentationFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ChangeAngleRepresentation::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult ChangeAngleRepresentationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pConversionTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
@@ -120,7 +120,7 @@ IFilter::PreflightResult ChangeAngleRepresentation::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ChangeAngleRepresentation::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ChangeAngleRepresentationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
@@ -159,9 +159,9 @@ constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPat
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ChangeAngleRepresentation::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ChangeAngleRepresentationFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ChangeAngleRepresentation().getDefaultArguments();
+  Arguments args = ChangeAngleRepresentationFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

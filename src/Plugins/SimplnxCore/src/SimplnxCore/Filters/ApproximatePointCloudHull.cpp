@@ -1,4 +1,4 @@
-#include "ApproximatePointCloudHull.hpp"
+#include "ApproximatePointCloudHullFilter.hpp"
 
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
@@ -27,37 +27,37 @@ bool validNeighbor(const SizeVec3& dims, int64 neighborhood[78], usize index, in
 } // namespace
 
 //------------------------------------------------------------------------------
-std::string ApproximatePointCloudHull::name() const
+std::string ApproximatePointCloudHullFilter::name() const
 {
-  return FilterTraits<ApproximatePointCloudHull>::name;
+  return FilterTraits<ApproximatePointCloudHullFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string ApproximatePointCloudHull::className() const
+std::string ApproximatePointCloudHullFilter::className() const
 {
-  return FilterTraits<ApproximatePointCloudHull>::className;
+  return FilterTraits<ApproximatePointCloudHullFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ApproximatePointCloudHull::uuid() const
+Uuid ApproximatePointCloudHullFilter::uuid() const
 {
-  return FilterTraits<ApproximatePointCloudHull>::uuid;
+  return FilterTraits<ApproximatePointCloudHullFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ApproximatePointCloudHull::humanName() const
+std::string ApproximatePointCloudHullFilter::humanName() const
 {
   return "Approximate Point Cloud Hull";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ApproximatePointCloudHull::defaultTags() const
+std::vector<std::string> ApproximatePointCloudHullFilter::defaultTags() const
 {
   return {className(), "Point Cloud", "Grid", "Vertex Geometry", "Geometry", "Hull"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ApproximatePointCloudHull::parameters() const
+Parameters ApproximatePointCloudHullFilter::parameters() const
 {
   Parameters params;
 
@@ -74,13 +74,13 @@ Parameters ApproximatePointCloudHull::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ApproximatePointCloudHull::clone() const
+IFilter::UniquePointer ApproximatePointCloudHullFilter::clone() const
 {
-  return std::make_unique<ApproximatePointCloudHull>();
+  return std::make_unique<ApproximatePointCloudHullFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ApproximatePointCloudHull::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
   auto numberOfEmptyNeighbors = args.value<uint64>(k_MinEmptyNeighbors_Key);
@@ -111,7 +111,7 @@ IFilter::PreflightResult ApproximatePointCloudHull::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
   auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
@@ -315,9 +315,9 @@ constexpr StringLiteral k_HullDataContainerNameKey = "HullDataContainerName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ApproximatePointCloudHull::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ApproximatePointCloudHullFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ApproximatePointCloudHull().getDefaultArguments();
+  Arguments args = ApproximatePointCloudHullFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

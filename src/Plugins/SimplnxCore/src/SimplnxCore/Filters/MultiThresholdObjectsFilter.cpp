@@ -1,4 +1,4 @@
-#include "MultiThresholdObjects.hpp"
+#include "MultiThresholdObjectsFilter.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -374,37 +374,37 @@ struct CheckCustomValueInBounds
 } // namespace
 
 // -----------------------------------------------------------------------------
-std::string MultiThresholdObjects::name() const
+std::string MultiThresholdObjectsFilter::name() const
 {
-  return FilterTraits<MultiThresholdObjects>::name;
+  return FilterTraits<MultiThresholdObjectsFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string MultiThresholdObjects::className() const
+std::string MultiThresholdObjectsFilter::className() const
 {
-  return FilterTraits<MultiThresholdObjects>::className;
+  return FilterTraits<MultiThresholdObjectsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid MultiThresholdObjects::uuid() const
+Uuid MultiThresholdObjectsFilter::uuid() const
 {
-  return FilterTraits<MultiThresholdObjects>::uuid;
+  return FilterTraits<MultiThresholdObjectsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string MultiThresholdObjects::humanName() const
+std::string MultiThresholdObjectsFilter::humanName() const
 {
   return "Multi-Threshold Objects";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> MultiThresholdObjects::defaultTags() const
+std::vector<std::string> MultiThresholdObjectsFilter::defaultTags() const
 {
   return {className(), "Find Outliers", "Threshold", "Isolate", "Data Management"};
 }
 
 //------------------------------------------------------------------------------
-Parameters MultiThresholdObjects::parameters() const
+Parameters MultiThresholdObjectsFilter::parameters() const
 {
   Parameters params;
 
@@ -425,13 +425,13 @@ Parameters MultiThresholdObjects::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer MultiThresholdObjects::clone() const
+IFilter::UniquePointer MultiThresholdObjectsFilter::clone() const
 {
-  return std::make_unique<MultiThresholdObjects>();
+  return std::make_unique<MultiThresholdObjectsFilter>();
 }
 
 // -----------------------------------------------------------------------------
-IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
   auto maskArrayName = args.value<std::string>(k_CreatedDataName_Key);
@@ -528,7 +528,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
 }
 
 // -----------------------------------------------------------------------------
-Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
@@ -575,9 +575,9 @@ constexpr StringLiteral k_DestinationArrayNameKey = "DestinationArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> MultiThresholdObjects::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = MultiThresholdObjects().getDefaultArguments();
+  Arguments args = MultiThresholdObjectsFilter().getDefaultArguments();
   static constexpr StringLiteral k_FilterUuidKey = "Filter_Uuid";
   static constexpr StringLiteral v1Uuid = "{014b7300-cf36-5ede-a751-5faf9b119dae}";
 

@@ -13,12 +13,12 @@ set(FilterList
   AlignSectionsListFilter
   AppendImageGeometryZSliceFilter
   ApplyTransformationToGeometryFilter
-  ApproximatePointCloudHull
+  ApproximatePointCloudHullFilter
   ArrayCalculatorFilter
   CalculateArrayHistogramFilter
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
-  ChangeAngleRepresentation
+  ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter
   CombineStlFilesFilter
   ComputeFeatureRectFilter

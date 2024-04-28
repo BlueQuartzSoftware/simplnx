@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class ChangeAngleRepresentation
+ * @class ChangeAngleRepresentationFilter
  * @brief This filter will convert angles from Degrees to Radians or vice-versa
  */
-class SIMPLNXCORE_EXPORT ChangeAngleRepresentation : public IFilter
+class SIMPLNXCORE_EXPORT ChangeAngleRepresentationFilter : public IFilter
 {
 public:
-  ChangeAngleRepresentation() = default;
-  ~ChangeAngleRepresentation() noexcept override = default;
+  ChangeAngleRepresentationFilter() = default;
+  ~ChangeAngleRepresentationFilter() noexcept override = default;
 
-  ChangeAngleRepresentation(const ChangeAngleRepresentation&) = delete;
-  ChangeAngleRepresentation(ChangeAngleRepresentation&&) noexcept = delete;
+  ChangeAngleRepresentationFilter(const ChangeAngleRepresentationFilter&) = delete;
+  ChangeAngleRepresentationFilter(ChangeAngleRepresentationFilter&&) noexcept = delete;
 
-  ChangeAngleRepresentation& operator=(const ChangeAngleRepresentation&) = delete;
-  ChangeAngleRepresentation& operator=(ChangeAngleRepresentation&&) noexcept = delete;
+  ChangeAngleRepresentationFilter& operator=(const ChangeAngleRepresentationFilter&) = delete;
+  ChangeAngleRepresentationFilter& operator=(ChangeAngleRepresentationFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ConversionType_Key = "conversion_type_index";
@@ -100,4 +100,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ChangeAngleRepresentation, "565e06e2-6fd0-4232-89c4-ee672926d565");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ChangeAngleRepresentationFilter, "565e06e2-6fd0-4232-89c4-ee672926d565");

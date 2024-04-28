@@ -237,7 +237,7 @@
                     "uuid": "{c681caf4-22f2-5885-bbc9-a0476abc72eb}"
                 },
                 {
-                    "name": "ApproximatePointCloudHull",
+                    "name": "ApproximatePointCloudHullFilter",
                     "parameters": [
                         {
                             "name": "GridResolution",
@@ -13205,7 +13205,7 @@
                     "uuid": "{f4a7c2df-e9b0-5da9-b745-a862666d6c99}"
                 },
                 {
-                    "name": "ChangeAngleRepresentation",
+                    "name": "ChangeAngleRepresentationFilter",
                     "parameters": [
                         {
                             "name": "ConversionType",

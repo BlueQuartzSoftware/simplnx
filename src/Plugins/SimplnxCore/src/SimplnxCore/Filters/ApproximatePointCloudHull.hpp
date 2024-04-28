@@ -9,20 +9,20 @@
 namespace nx::core
 {
 /**
- * @class ApproximatePointCloudHull
+ * @class ApproximatePointCloudHullFilter
  * @brief
  */
-class SIMPLNXCORE_EXPORT ApproximatePointCloudHull : public IFilter
+class SIMPLNXCORE_EXPORT ApproximatePointCloudHullFilter : public IFilter
 {
 public:
-  ApproximatePointCloudHull() = default;
-  ~ApproximatePointCloudHull() noexcept override = default;
+  ApproximatePointCloudHullFilter() = default;
+  ~ApproximatePointCloudHullFilter() noexcept override = default;
 
-  ApproximatePointCloudHull(const ApproximatePointCloudHull&) = delete;
-  ApproximatePointCloudHull(ApproximatePointCloudHull&&) noexcept = delete;
+  ApproximatePointCloudHullFilter(const ApproximatePointCloudHullFilter&) = delete;
+  ApproximatePointCloudHullFilter(ApproximatePointCloudHullFilter&&) noexcept = delete;
 
-  ApproximatePointCloudHull& operator=(const ApproximatePointCloudHull&) = delete;
-  ApproximatePointCloudHull& operator=(ApproximatePointCloudHull&&) noexcept = delete;
+  ApproximatePointCloudHullFilter& operator=(const ApproximatePointCloudHullFilter&) = delete;
+  ApproximatePointCloudHullFilter& operator=(ApproximatePointCloudHullFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_GridResolution_Key = "grid_resolution";
@@ -101,4 +101,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ApproximatePointCloudHull, "c19203b7-2217-4e52-bff4-7f611695421a");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ApproximatePointCloudHullFilter, "c19203b7-2217-4e52-bff4-7f611695421a");

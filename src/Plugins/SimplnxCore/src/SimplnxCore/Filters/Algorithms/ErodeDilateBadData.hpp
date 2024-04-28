@@ -39,8 +39,7 @@ struct SIMPLNXCORE_EXPORT ErodeDilateBadDataInputValues
 
 /**
  * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
+
  */
 class SIMPLNXCORE_EXPORT ErodeDilateBadData
 {

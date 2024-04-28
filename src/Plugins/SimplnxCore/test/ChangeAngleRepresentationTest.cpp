@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/ChangeAngleRepresentation.hpp"
+#include "SimplnxCore/Filters/ChangeAngleRepresentationFilter.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -9,32 +9,32 @@
 
 using namespace nx::core;
 
-TEST_CASE("SimplnxCore::ChangeAngleRepresentation: Invalid Execution", "[OrientationAnalysis][ChangeAngleRepresentation]")
+TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Invalid Execution", "[OrientationAnalysis][ChangeAngleRepresentationFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ChangeAngleRepresentation filter;
+  ChangeAngleRepresentationFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
   // This should fail
-  args.insertOrAssign(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(ChangeAngleRepresentation::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ChangeAngleRepresentationFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ChangeAngleRepresentationFilter::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
   // This should fail because parameter is out of range
-  args.insertOrAssign(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  args.insertOrAssign(ChangeAngleRepresentationFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(2));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 }
 
-TEST_CASE("SimplnxCore::ChangeAngleRepresentation: Degrees To Radians")
+TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ChangeAngleRepresentation filter;
+  ChangeAngleRepresentationFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -56,8 +56,8 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentation: Degrees To Radians")
 
   // Create default Parameters for the filter.
   // This should fail
-  args.insertOrAssign(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(ChangeAngleRepresentation::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
+  args.insertOrAssign(ChangeAngleRepresentationFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ChangeAngleRepresentationFilter::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -78,10 +78,10 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentation: Degrees To Radians")
   }
 }
 
-TEST_CASE("SimplnxCore::ChangeAngleRepresentation: Radians To Degrees")
+TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Radians To Degrees")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ChangeAngleRepresentation filter;
+  ChangeAngleRepresentationFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -103,8 +103,8 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentation: Radians To Degrees")
 
   // Create default Parameters for the filter.
   // This should fail
-  args.insertOrAssign(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(ChangeAngleRepresentation::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
+  args.insertOrAssign(ChangeAngleRepresentationFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  args.insertOrAssign(ChangeAngleRepresentationFilter::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
