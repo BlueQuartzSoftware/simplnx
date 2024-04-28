@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKApproximateSignedDistanceMapImageFilter.h>
+#include <itkApproximateSignedDistanceMapImageFilter.h>
 
 using namespace nx::core;
 

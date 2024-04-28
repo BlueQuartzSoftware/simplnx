@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKCurvatureFlowImageFilter.h>
+#include <itkCurvatureFlowImageFilter.h>
 
 using namespace nx::core;
 

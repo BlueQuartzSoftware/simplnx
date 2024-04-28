@@ -9,7 +9,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKRegionalMinimaImageFilter.h>
+#include <itkRegionalMinimaImageFilter.h>
 
 using namespace nx::core;
 

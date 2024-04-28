@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKGradientAnisotropicDiffusionImageFilter.h>
+#include <itkGradientAnisotropicDiffusionImageFilter.h>
 
 using namespace nx::core;
 

@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKCurvatureAnisotropicDiffusionImageFilter.h>
+#include <itkCurvatureAnisotropicDiffusionImageFilter.h>
 
 using namespace nx::core;
 

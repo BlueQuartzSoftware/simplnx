@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKNormalizeToConstantImageFilter.h>
+#include <itkNormalizeToConstantImageFilter.h>
 
 using namespace nx::core;
 

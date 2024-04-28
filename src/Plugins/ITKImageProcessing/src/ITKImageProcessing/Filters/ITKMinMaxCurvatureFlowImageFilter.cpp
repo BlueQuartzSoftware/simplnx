@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKMinMaxCurvatureFlowImageFilter.h>
+#include <itkMinMaxCurvatureFlowImageFilter.h>
 
 using namespace nx::core;
 

@@ -9,7 +9,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKDoubleThresholdImageFilter.h>
+#include <itkDoubleThresholdImageFilter.h>
 
 using namespace nx::core;
 

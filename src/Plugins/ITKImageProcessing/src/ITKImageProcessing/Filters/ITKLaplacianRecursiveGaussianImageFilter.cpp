@@ -9,7 +9,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKLaplacianRecursiveGaussianImageFilter.h>
+#include <itkLaplacianRecursiveGaussianImageFilter.h>
 
 using namespace nx::core;
 

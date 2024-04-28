@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKThresholdMaximumConnectedComponentsImageFilter.h>
+#include <itkThresholdMaximumConnectedComponentsImageFilter.h>
 
 using namespace nx::core;
 

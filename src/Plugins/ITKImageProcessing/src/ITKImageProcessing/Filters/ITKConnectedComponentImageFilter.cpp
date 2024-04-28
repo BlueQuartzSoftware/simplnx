@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
-#include <ITKConnectedComponentImageFilter.h>
+#include <itkConnectedComponentImageFilter.h>
 
 using namespace nx::core;
 

@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
-#include <ITKMorphologicalWatershedFromMarkersImageFilter.h>
+#include <itkMorphologicalWatershedFromMarkersImageFilter.h>
 
 using namespace nx::core;
 

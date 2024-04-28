@@ -1,6 +1,6 @@
 #include <CxPybind/CxPybind.hpp>
 
-#include <ITKImageProcessing/ITKImageProcessingPlugin.hpp>
+#include <itkImageProcessing/ITKImageProcessingPlugin.hpp>
 
 #include "ITKImageProcessing/ITKImageProcessingFilterBinding.hpp"
 

@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKStandardDeviationProjectionImageFilter.h>
+#include <itkStandardDeviationProjectionImageFilter.h>
 
 using namespace nx::core;
 

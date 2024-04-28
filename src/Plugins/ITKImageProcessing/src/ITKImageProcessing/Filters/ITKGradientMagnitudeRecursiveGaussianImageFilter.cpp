@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKGradientMagnitudeRecursiveGaussianImageFilter.h>
+#include <itkGradientMagnitudeRecursiveGaussianImageFilter.h>
 
 using namespace nx::core;
 

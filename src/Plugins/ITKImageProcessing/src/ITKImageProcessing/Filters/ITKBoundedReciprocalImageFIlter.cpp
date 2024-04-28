@@ -7,7 +7,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
-#include <ITKBoundedReciprocalImageFilter.h>
+#include <itkBoundedReciprocalImageFilter.h>
 
 using namespace nx::core;
 

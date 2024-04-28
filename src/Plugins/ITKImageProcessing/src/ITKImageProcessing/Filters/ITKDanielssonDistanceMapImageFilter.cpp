@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
-#include <ITKDanielssonDistanceMapImageFilter.h>
+#include <itkDanielssonDistanceMapImageFilter.h>
 
 using namespace nx::core;
 

@@ -9,7 +9,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
-#include <ITKSmoothingRecursiveGaussianImageFilter.h>
+#include <itkSmoothingRecursiveGaussianImageFilter.h>
 
 using namespace nx::core;
 

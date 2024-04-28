@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKMeanProjectionImageFilter.h>
+#include <itkMeanProjectionImageFilter.h>
 
 using namespace nx::core;
 

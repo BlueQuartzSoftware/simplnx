@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKZeroCrossingImageFilter.h>
+#include <itkZeroCrossingImageFilter.h>
 
 using namespace nx::core;
 

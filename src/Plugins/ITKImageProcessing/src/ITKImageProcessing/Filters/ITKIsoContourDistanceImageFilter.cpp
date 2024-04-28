@@ -8,7 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKIsoContourDistanceImageFilter.h>
+#include <itkIsoContourDistanceImageFilter.h>
 
 using namespace nx::core;
 

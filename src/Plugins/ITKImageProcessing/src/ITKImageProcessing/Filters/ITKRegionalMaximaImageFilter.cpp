@@ -9,7 +9,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-#include <ITKRegionalMaximaImageFilter.h>
+#include <itkRegionalMaximaImageFilter.h>
 
 using namespace nx::core;
 
