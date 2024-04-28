@@ -218,11 +218,20 @@ Result<> ReadStlFile::operator()()
     }
     // Get the current File Position
     fgetpos(f, &pos);
+#if defined(__APPLE__) || defined(_WIN32)
     if(pos >= stlFileSize)
+#else
+    if(pos.__pos >= stlFileSize)
+#endif
     {
       std::string msg = fmt::format(
           "Trying to read at file position {} >= file size {}.\n  File Header: '{}'\n  Header Triangle Count: {}  Current Triangle: {}\n  The STL File does not conform to the STL file specification.",
-          pos, stlFileSize, stlHeaderStr, triCount, t);
+#if defined(__APPLE__) || defined(_WIN32)
+          pos,
+#else
+          pos.__pos,
+#endif
+          stlFileSize, stlHeaderStr, triCount, t);
       return MakeErrorResult(nx::core::StlConstants::k_StlFileLengthError, msg);
     }
 
