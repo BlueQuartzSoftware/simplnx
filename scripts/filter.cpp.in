@@ -45,7 +45,7 @@ IFilter::UniquePointer @FILTER_NAME@::clone() const
   return std::make_unique<@FILTER_NAME@>();
 }
 
-IFilter::PreflightResult @FILTER_NAME@::preflightImpl(const DataStructure& data, const Arguments& args) const
+IFilter::PreflightResult @FILTER_NAME@::preflightImpl(const DataStructure& dataStructure, const Arguments& args) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -53,7 +53,7 @@ IFilter::PreflightResult @FILTER_NAME@::preflightImpl(const DataStructure& data,
   return {};
 }
 
-Result<> @FILTER_NAME@::executeImpl(DataStructure& data, const Arguments& args) const
+Result<> @FILTER_NAME@::executeImpl(DataStructure& dataStructure, const Arguments& args) const
 {
   /****************************************************************************
    * Write your algorithm implementation in this function

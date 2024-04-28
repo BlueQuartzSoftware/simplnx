@@ -381,7 +381,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
   auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
@@ -389,7 +389,7 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
   auto treatWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
   auto moveArrays = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key) == k_MoveArray;
 
-  auto iGeometry = data.getDataAs<IGeometry>(geometryPath);
+  auto iGeometry = dataStructure.getDataAs<IGeometry>(geometryPath);
   auto lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key));
   iGeometry->setUnits(lengthUnit);
 
@@ -425,8 +425,8 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
   {
     auto sharedEdgeListArrayPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
     const DataPath destEdgeListPath = geometryPath.createChildPath(sharedEdgeListArrayPath.getTargetName());
-    const auto& edgesList = data.getDataRefAs<UInt64Array>(destEdgeListPath);
-    const auto& vertexList = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
+    const auto& edgesList = dataStructure.getDataRefAs<UInt64Array>(destEdgeListPath);
+    const auto& vertexList = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
     auto results = checkGeometryArraysCompatible(vertexList, edgesList, treatWarningsAsErrors, "edge");
     if(results.invalid())
     {
@@ -437,8 +437,8 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
   if(geometryType == k_TriangleGeometry || geometryType == k_QuadGeometry)
   {
     const DataPath destFaceListPath = geometryPath.createChildPath(sharedFaceListArrayPath.getTargetName());
-    const auto& faceList = data.getDataRefAs<UInt64Array>(destFaceListPath);
-    const auto& vertexList = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
+    const auto& faceList = dataStructure.getDataRefAs<UInt64Array>(destFaceListPath);
+    const auto& vertexList = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
     auto results = checkGeometryArraysCompatible(vertexList, faceList, treatWarningsAsErrors, (geometryType == 4 ? "triangle" : "quadrilateral"));
     if(results.invalid())
     {
@@ -449,8 +449,8 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
   if(geometryType == k_TetGeometry || geometryType == k_HexGeometry)
   {
     const DataPath destCellListPath = geometryPath.createChildPath(sharedCellListArrayPath.getTargetName());
-    const auto& cellList = data.getDataRefAs<UInt64Array>(destCellListPath);
-    const auto& vertexList = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
+    const auto& cellList = dataStructure.getDataRefAs<UInt64Array>(destCellListPath);
+    const auto& vertexList = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
     auto results = checkGeometryArraysCompatible(vertexList, cellList, treatWarningsAsErrors, (geometryType == 6 ? "tetrahedral" : "hexahedral"));
     if(results.invalid())
     {
@@ -463,9 +463,9 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
     auto xBoundsArrayPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
     auto yBoundsArrayPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
     auto zBoundsArrayPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
-    const auto& srcXBounds = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()));
-    const auto& srcYBounds = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()));
-    const auto& srcZBounds = data.getDataRefAs<Float32Array>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()));
+    const auto& srcXBounds = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()));
+    const auto& srcYBounds = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()));
+    const auto& srcZBounds = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()));
     auto xResults = checkGridBoundsResolution(srcXBounds, treatWarningsAsErrors, "X");
     auto yResults = checkGridBoundsResolution(srcYBounds, treatWarningsAsErrors, "Y");
     auto zResults = checkGridBoundsResolution(srcZBounds, treatWarningsAsErrors, "Z");

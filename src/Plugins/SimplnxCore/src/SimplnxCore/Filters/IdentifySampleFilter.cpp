@@ -19,14 +19,14 @@ constexpr int64 k_MISSING_GEOM_ERR = -650;
 struct IdentifySampleFunctor
 {
   template <typename T>
-  void operator()(DataStructure& data, const DataPath& imageGeomPath, const DataPath& goodVoxelsArrayPath, bool fillHoles)
+  void operator()(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& goodVoxelsArrayPath, bool fillHoles)
   {
     using ArrayType = DataArray<T>;
 
-    const auto* imageGeom = data.getDataAs<ImageGeom>(imageGeomPath);
+    const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
 
     std::vector<usize> cDims = {1};
-    auto* goodVoxelsPtr = data.getDataAs<ArrayType>(goodVoxelsArrayPath);
+    auto* goodVoxelsPtr = dataStructure.getDataAs<ArrayType>(goodVoxelsArrayPath);
     auto& goodVoxels = goodVoxelsPtr->getDataStoreRef();
 
     const auto totalPoints = static_cast<int64>(goodVoxelsPtr->getNumberOfTuples());
@@ -280,12 +280,13 @@ IFilter::UniquePointer IdentifySampleFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel) const
 {
   const auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
 
-  const auto& inputData = data.getDataRefAs<IDataArray>(goodVoxelsArrayPath);
+  const auto& inputData = dataStructure.getDataRefAs<IDataArray>(goodVoxelsArrayPath);
   const DataType arrayType = inputData.getDataType();
   if(arrayType != DataType::boolean && arrayType != DataType::uint8)
   {
@@ -298,17 +299,17 @@ IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> IdentifySampleFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
   const auto fillHoles = args.value<bool>(k_FillHoles_Key);
   const auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
 
-  const auto& inputData = data.getDataRefAs<IDataArray>(goodVoxelsArrayPath);
+  const auto& inputData = dataStructure.getDataRefAs<IDataArray>(goodVoxelsArrayPath);
   const DataType arrayType = inputData.getDataType();
 
-  ExecuteDataFunction(IdentifySampleFunctor{}, arrayType, data, imageGeomPath, goodVoxelsArrayPath, fillHoles);
+  ExecuteDataFunction(IdentifySampleFunctor{}, arrayType, dataStructure, imageGeomPath, goodVoxelsArrayPath, fillHoles);
 
   return {};
 }

@@ -22,7 +22,7 @@ struct SIMPLNXCORE_EXPORT ReadRawBinaryInputValues
 class SIMPLNXCORE_EXPORT ReadRawBinary
 {
 public:
-  ReadRawBinary(DataStructure& data, const ReadRawBinaryInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  ReadRawBinary(DataStructure& dataStructure, const ReadRawBinaryInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~ReadRawBinary() noexcept;
 
   ReadRawBinary(const ReadRawBinary&) = delete;

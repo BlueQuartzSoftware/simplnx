@@ -32,7 +32,7 @@ struct SIMPLNXCORE_EXPORT LaplacianSmoothingInputValues
 class SIMPLNXCORE_EXPORT LaplacianSmoothing
 {
 public:
-  LaplacianSmoothing(DataStructure& data, LaplacianSmoothingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  LaplacianSmoothing(DataStructure& dataStructure, LaplacianSmoothingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~LaplacianSmoothing() noexcept;
 
   LaplacianSmoothing(const LaplacianSmoothing&) = delete;

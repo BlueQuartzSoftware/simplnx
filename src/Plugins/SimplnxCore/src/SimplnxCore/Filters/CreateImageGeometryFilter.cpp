@@ -126,7 +126,7 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateImageGeometryFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CreateImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************

@@ -22,7 +22,7 @@ constexpr int64 k_MissingFeaturePhasesError = -251;
 constexpr int32 k_InconsistentTupleCount = -252;
 constexpr int32 k_FetchChildArrayError = -5559;
 
-void assignBadPoints(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
+void assignBadPoints(DataStructure& dataStructure, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighborsFilter::k_SelectedImageGeometryPath_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
@@ -30,8 +30,8 @@ void assignBadPoints(DataStructure& data, const Arguments& args, const std::atom
   auto ignoredVoxelArrayPaths = args.value<std::vector<DataPath>>(MinNeighborsFilter::k_IgnoredVoxelArrays_Key);
   auto cellDataAttrMatrix = args.value<DataPath>(MinNeighborsFilter::k_CellDataAttributeMatrixPath_Key);
 
-  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
 
   auto& featureIds = featureIdsArray.getDataStoreRef();
 
@@ -40,16 +40,16 @@ void assignBadPoints(DataStructure& data, const Arguments& args, const std::atom
   if(applyToSinglePhase)
   {
     auto featurePhasesPath = args.value<DataPath>(MinNeighborsFilter::k_FeaturePhasesPath_Key);
-    featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
+    featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
   }
 
   usize totalPoints = featureIdsArray.getNumberOfTuples();
-  SizeVec3 udims = data.getDataRefAs<ImageGeom>(imageGeomPath).getDimensions();
+  SizeVec3 udims = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getDimensions();
 
   // This was checked up in the execute function (which is called before this function)
   // so if we got this far then all should be good with the return. We might get
   // an empty vector<> but that is OK.
-  std::vector<DataPath> cellDataArrayPaths = nx::core::GetAllChildDataPaths(data, cellDataAttrMatrix, DataObject::Type::DataArray).value();
+  std::vector<DataPath> cellDataArrayPaths = nx::core::GetAllChildDataPaths(dataStructure, cellDataAttrMatrix, DataObject::Type::DataArray).value();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -199,7 +199,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args, const std::atom
       {
         for(const auto& cellArrayPath : cellDataArrayPaths)
         {
-          auto* voxelArray = data.getDataAs<IDataArray>(cellArrayPath);
+          auto* voxelArray = dataStructure.getDataAs<IDataArray>(cellArrayPath);
           dynamic_cast<IDataArray*>(voxelArray)->copyTuple(neighbor, featureIdIndex);
         }
       }
@@ -207,7 +207,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args, const std::atom
   }
 }
 
-nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
+nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& dataStructure, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighborsFilter::k_SelectedImageGeometryPath_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
@@ -216,8 +216,8 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
 
   auto phaseNumber = args.value<uint64>(MinNeighborsFilter::k_PhaseNumber_Key);
 
-  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
 
   auto& featureIds = featureIdsArray.getDataStoreRef();
   auto& numNeighbors = numNeighborsArray.getDataStoreRef();
@@ -227,11 +227,11 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
   if(applyToSinglePhase)
   {
     auto featurePhasesPath = args.value<DataPath>(MinNeighborsFilter::k_FeaturePhasesPath_Key);
-    featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
+    featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
   }
 
   bool good = false;
-  usize totalPoints = data.getDataRefAs<ImageGeom>(imageGeomPath).getNumberOfCells();
+  usize totalPoints = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getNumberOfCells();
   usize totalFeatures = numNeighborsArray.getNumberOfTuples();
 
   std::vector<bool> activeObjects(totalFeatures, true);
@@ -413,7 +413,7 @@ IFilter::PreflightResult MinNeighborsFilter::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> MinNeighborsFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> MinNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
@@ -454,7 +454,7 @@ Result<> MinNeighborsFilter::executeImpl(DataStructure& data, const Arguments& a
   }
 
   auto cellDataAttrMatrix = args.value<DataPath>(MinNeighborsFilter::k_CellDataAttributeMatrixPath_Key);
-  auto result = nx::core::GetAllChildDataPaths(data, cellDataAttrMatrix, DataObject::Type::DataArray);
+  auto result = nx::core::GetAllChildDataPaths(dataStructure, cellDataAttrMatrix, DataObject::Type::DataArray);
   if(!result.has_value())
   {
     return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Group '{}'", cellDataAttrMatrix.toString()));
@@ -464,10 +464,10 @@ Result<> MinNeighborsFilter::executeImpl(DataStructure& data, const Arguments& a
   assignBadPoints(dataStructure, args, shouldCancel);
 
   auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
-  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
   auto numNeighborsPath = args.value<DataPath>(MinNeighborsFilter::k_NumNeighborsPath_Key);
-  auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
+  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
 
   DataPath cellFeatureGroupPath = numNeighborsPath.getParent();
   size_t currentFeatureCount = numNeighborsArray.getNumberOfTuples();

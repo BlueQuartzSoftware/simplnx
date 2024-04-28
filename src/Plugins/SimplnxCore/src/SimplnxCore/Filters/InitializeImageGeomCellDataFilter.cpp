@@ -225,7 +225,7 @@ IFilter::UniquePointer InitializeImageGeomCellDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                           const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
@@ -268,7 +268,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
     errors.push_back(Error{-5553, fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin)});
   }
 
-  const auto& imageGeom = data.getDataRefAs<ImageGeom>(imageGeomPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   if(xMax > (static_cast<int64>(imageGeom.getNumXCells()) - 1))
   {
@@ -289,7 +289,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 
   for(const DataPath& path : cellArrayPaths)
   {
-    const auto& dataArray = data.getDataRefAs<IDataArray>(path);
+    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
     std::vector<usize> tupleShape = dataArray.getIDataStoreRef().getTupleShape();
 
     if(tupleShape.size() != reversedImageDims.size())
@@ -321,7 +321,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
@@ -339,7 +339,7 @@ Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& data, con
   }
 
   // Store Seed Value in Top Level Array
-  data.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  dataStructure.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   uint64 xMin = minPoint.at(0);
   uint64 yMin = minPoint.at(1);
@@ -352,13 +352,13 @@ Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& data, con
   InitType initType = ConvertIndexToInitType(initTypeIndex);
   RangeType initRange = {initRangeVec.at(0), initRangeVec.at(1)};
 
-  const ImageGeom& imageGeom = data.getDataRefAs<ImageGeom>(imageGeomPath);
+  const ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   std::array<usize, 3> dims = imageGeom.getDimensions().toArray();
 
   for(const DataPath& path : cellArrayPaths)
   {
-    auto& iDataArray = data.getDataRefAs<IDataArray>(path);
+    auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(path);
 
     ExecuteNeighborFunction(InitializeArrayFunctor{}, iDataArray.getDataType(), iDataArray, dims, xMin, xMax, yMin, yMax, zMin, zMax, initType, initValue, initRange, seed); // NO BOOL
 

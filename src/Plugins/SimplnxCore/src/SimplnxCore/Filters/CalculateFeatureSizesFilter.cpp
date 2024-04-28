@@ -81,7 +81,8 @@ IFilter::UniquePointer CalculateFeatureSizesFilter::clone() const
   return std::make_unique<CalculateFeatureSizesFilter>();
 }
 
-IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto geometryPath = args.value<DataPath>(k_GeometryPath_Key);
 
@@ -94,9 +95,9 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
   DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
 
-  const auto* featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
+  const auto* featureIdsArray = dataStructure.getDataAs<Int32Array>(featureIdsPath);
 
-  const auto* geometry = data.getDataAs<IGeometry>(geometryPath);
+  const auto* geometry = dataStructure.getDataAs<IGeometry>(geometryPath);
 
   if(geometry == nullptr)
   {
@@ -110,7 +111,7 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
 
   const std::string arrayDataFormat = featureIdsArray->getDataFormat();
 
-  const auto* featAttributeMatrix = data.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  const auto* featAttributeMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
   if(featAttributeMatrix == nullptr)
   {
     return {nonstd::make_unexpected(
@@ -132,18 +133,18 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
-Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
   auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  const auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   const auto& featureIds = featureIdsArray.getDataStoreRef();
 
   usize totalPoints = featureIdsArray.getNumberOfTuples();
 
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
-  auto* geom = data.getDataAs<IGeometry>(geomPath);
+  auto* geom = dataStructure.getDataAs<IGeometry>(geomPath);
 
   // If the geometry is an ImageGeometry or a RectilinearGeometry
   auto* imageGeom = dynamic_cast<ImageGeom*>(geom);
@@ -157,9 +158,9 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arg
     DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
     DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
     DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
-    auto& volumes = data.getDataRefAs<Float32Array>(volumesPath);
-    auto& equivalentDiameters = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
-    auto& numElements = data.getDataRefAs<Int32Array>(numElementsPath);
+    auto& volumes = dataStructure.getDataRefAs<Float32Array>(volumesPath);
+    auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(equivalentDiametersPath);
+    auto& numElements = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
 
     usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
     usize maxValue = featureIds[featureIdsMaxIdx];
@@ -247,9 +248,9 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arg
     auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersName_Key);
     auto numElementsPath = args.value<DataPath>(k_NumElementsName_Key);
 
-    auto& volumes = data.getDataRefAs<Float32Array>(volumesPath);
-    auto& equivalentDiameters = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
-    auto& numElements = data.getDataRefAs<Int32Array>(numElementsPath);
+    auto& volumes = dataStructure.getDataRefAs<Float32Array>(volumesPath);
+    auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(equivalentDiametersPath);
+    auto& numElements = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
 
     usize numfeatures = volumes.getNumberOfTuples();
 

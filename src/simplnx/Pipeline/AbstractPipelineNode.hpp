@@ -122,7 +122,7 @@ public:
    * @param data
    * @return bool
    */
-  virtual bool preflight(DataStructure& data, const std::atomic_bool& shouldCancel) = 0;
+  virtual bool preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) = 0;
 
   /**
    * @brief Attempts to preflight the node using the provided DataStructure.
@@ -134,7 +134,7 @@ public:
    * @param allowRenaming
    * @return bool
    */
-  virtual bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) = 0;
+  virtual bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) = 0;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -142,7 +142,7 @@ public:
    * @param data
    * @return bool
    */
-  virtual bool execute(DataStructure& data, const std::atomic_bool& shouldCancel) = 0;
+  virtual bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) = 0;
 
   /**
    * @brief Creates and returns a unique pointer to a copy of the node.

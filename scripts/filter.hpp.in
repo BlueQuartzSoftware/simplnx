@@ -55,7 +55,7 @@ protected:
    * @param args
    * @return
    */
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args) const override;
 
   /**
    * @brief
@@ -63,7 +63,7 @@ protected:
    * @param args
    * @return
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args) const override;
 };
 } // namespace nx::core
 

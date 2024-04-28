@@ -487,7 +487,8 @@ IFilter::UniquePointer InitializeDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel) const
 {
   auto seedArrayNameValue = args.value<std::string>(k_SeedArrayName_Key);
   auto initializeTypeValue = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
@@ -495,7 +496,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
+  auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
   usize numComp = iDataArray.getNumberOfComponents(); // check that the values string is greater than max comps
 
   if(iDataArray.getDataType() == DataType::boolean)
@@ -663,7 +664,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeDataFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> InitializeDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
   auto initType = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
@@ -677,7 +678,7 @@ Result<> InitializeDataFilter::executeImpl(DataStructure& data, const Arguments&
   if(initType == InitializeType::Random || initType == InitializeType::RangedRandom)
   {
     // Store Seed Value in Top Level Array
-    data.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+    dataStructure.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
   }
 
   InitializeDataInputValues inputValues;
@@ -692,7 +693,7 @@ Result<> InitializeDataFilter::executeImpl(DataStructure& data, const Arguments&
   inputValues.randEnd = StringUtilities::split(StringUtilities::trimmed(args.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
   inputValues.standardizeSeed = args.value<bool>(k_StandardizeSeed_Key);
 
-  auto& iDataArray = data.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
+  auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(args.value<DataPath>(k_ArrayPath_Key));
 
   ExecuteDataFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, inputValues);
 

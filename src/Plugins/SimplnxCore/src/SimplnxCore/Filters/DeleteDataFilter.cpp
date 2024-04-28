@@ -193,7 +193,8 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
   return {std::move(deleteActions)};
 }
 
-Result<> DeleteDataFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> DeleteDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel) const
 {
   return {};
 }

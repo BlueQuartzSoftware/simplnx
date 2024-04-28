@@ -431,7 +431,8 @@ IFilter::UniquePointer MultiThresholdObjectsFilter::clone() const
 }
 
 // -----------------------------------------------------------------------------
-IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
   auto maskArrayName = args.value<std::string>(k_CreatedDataName_Key);
@@ -450,7 +451,7 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
 
   for(const auto& path : thresholdPaths)
   {
-    if(data.getData(path) == nullptr)
+    if(dataStructure.getData(path) == nullptr)
     {
       auto errorMessage = fmt::format("Could not find DataArray at path {}.", path.toString());
       return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::PathNotFoundError), errorMessage}})};
@@ -460,7 +461,7 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
   // Check for Scalar arrays
   for(const auto& dataPath : thresholdPaths)
   {
-    const auto* currentDataArray = data.getDataAs<IDataArray>(dataPath);
+    const auto* currentDataArray = dataStructure.getDataAs<IDataArray>(dataPath);
     if(currentDataArray != nullptr && currentDataArray->getNumberOfComponents() != 1)
     {
       auto errorMessage = fmt::format("Data Array is not a Scalar Data Array. Data Arrays must only have a single component. '{}:{}'", dataPath.toString(), currentDataArray->getNumberOfComponents());
@@ -470,12 +471,12 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
 
   // Check that all arrays the number of tuples match
   DataPath firstDataPath = *(thresholdPaths.begin());
-  const auto* dataArray = data.getDataAs<IDataArray>(firstDataPath);
+  const auto* dataArray = dataStructure.getDataAs<IDataArray>(firstDataPath);
   size_t numTuples = dataArray->getNumberOfTuples();
 
   for(const auto& dataPath : thresholdPaths)
   {
-    const auto* currentDataArray = data.getDataAs<IDataArray>(dataPath);
+    const auto* currentDataArray = dataStructure.getDataAs<IDataArray>(dataPath);
     if(numTuples != currentDataArray->getNumberOfTuples())
     {
       auto errorMessage =

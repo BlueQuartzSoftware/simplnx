@@ -133,13 +133,13 @@ void PipelineFilter::setComments(const std::string& comments)
 }
 
 // -----------------------------------------------------------------------------
-bool PipelineFilter::preflight(DataStructure& data, const std::atomic_bool& shouldCancel)
+bool PipelineFilter::preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
   RenamedPaths renamedPaths;
-  return preflight(data, renamedPaths, shouldCancel, true);
+  return preflight(dataStructure, renamedPaths, shouldCancel, true);
 }
 
-bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   sendFilterRunStateMessage(m_Index, RunState::Preflighting);
 
@@ -152,13 +152,13 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   {
     m_Errors.push_back(Error{-10, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
     setHasErrors();
-    setPreflightStructure(data, false);
+    setPreflightStructure(dataStructure, false);
     sendFilterFaultMessage(m_Index, getFaultState());
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
     return false;
   }
 
-  IFilter::PreflightResult result = m_Filter->preflight(data, getArguments(), messageHandler, shouldCancel);
+  IFilter::PreflightResult result = m_Filter->preflight(dataStructure, getArguments(), messageHandler, shouldCancel);
   m_Warnings = std::move(result.outputActions.warnings());
   setHasWarnings(!m_Warnings.empty());
   m_PreflightValues = std::move(result.outputValues);
@@ -167,7 +167,7 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   {
     m_Errors = std::move(result.outputActions.errors());
     setHasErrors();
-    setPreflightStructure(data, false);
+    setPreflightStructure(dataStructure, false);
     sendFilterFaultMessage(m_Index, getFaultState());
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
     return false;
@@ -175,7 +175,7 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
 
   m_Errors.clear();
 
-  Result<> actionsResult = result.outputActions.value().applyAll(data, IDataAction::Mode::Preflight);
+  Result<> actionsResult = result.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
 
   for(auto&& warning : actionsResult.warnings())
   {
@@ -185,7 +185,7 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   if(actionsResult.invalid())
   {
     m_Errors = std::move(actionsResult.errors());
-    setPreflightStructure(data, false);
+    setPreflightStructure(dataStructure, false);
     setHasErrors();
     sendFilterFaultMessage(m_Index, getFaultState());
     sendFilterFaultDetailMessage(m_Index, m_Warnings, m_Errors);
@@ -216,7 +216,7 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   m_CreatedPaths = newCreatedPaths;
   m_DataModifiedActions = result.outputActions.value().modifiedActions;
 
-  setPreflightStructure(data);
+  setPreflightStructure(dataStructure);
   sendFilterFaultMessage(m_Index, getFaultState());
   if(!m_Warnings.empty() || !m_Errors.empty())
   {
@@ -234,7 +234,7 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
 }
 
 // -----------------------------------------------------------------------------
-bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& shouldCancel)
+bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
   this->sendFilterRunStateMessage(m_Index, nx::core::RunState::Executing);
   this->sendFilterUpdateMessage(m_Index, "Begin");
@@ -253,7 +253,7 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
   IFilter::ExecuteResult result;
   if(m_Filter != nullptr)
   {
-    result = m_Filter->execute(data, getArguments(), this, messageHandler, shouldCancel);
+    result = m_Filter->execute(dataStructure, getArguments(), this, messageHandler, shouldCancel);
     m_Warnings = result.result.warnings();
     m_PreflightValues = std::move(result.outputValues);
     if(result.result.invalid())
@@ -268,7 +268,7 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
 
   setHasWarnings(!m_Warnings.empty());
   setHasErrors(!m_Errors.empty());
-  endExecution(data);
+  endExecution(dataStructure);
 
   if(!m_Warnings.empty() || !m_Errors.empty())
   {

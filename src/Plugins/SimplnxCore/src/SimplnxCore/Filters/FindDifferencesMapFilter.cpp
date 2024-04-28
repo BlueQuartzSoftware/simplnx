@@ -21,12 +21,12 @@ constexpr int32 k_MissingInputArray = -567;
 constexpr int32 k_ComponentCountMismatchError = -90003;
 constexpr int32 k_InvalidNumTuples = -90004;
 
-IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std::vector<DataPath>& dataPaths)
+IFilter::PreflightResult validateArrayTypes(const DataStructure& dataStructure, const std::vector<DataPath>& dataPaths)
 {
   std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
-    if(auto dataArray = data.getDataAs<IDataArray>(dataPath))
+    if(auto dataArray = dataStructure.getDataAs<IDataArray>(dataPath))
     {
       if(!dataType.has_value())
       {
@@ -47,27 +47,27 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std
   return {};
 }
 
-WarningCollection warnOnUnsignedTypes(const DataStructure& data, const std::vector<DataPath>& paths)
+WarningCollection warnOnUnsignedTypes(const DataStructure& dataStructure, const std::vector<DataPath>& paths)
 {
   WarningCollection results;
   for(const auto& dataPath : paths)
   {
-    if(data.getDataAs<UInt8Array>(dataPath))
+    if(dataStructure.getDataAs<UInt8Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint8_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{-90004, ss});
     }
-    if(data.getDataAs<UInt16Array>(dataPath))
+    if(dataStructure.getDataAs<UInt16Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint16_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{-90005, ss});
     }
-    if(data.getDataAs<UInt32Array>(dataPath))
+    if(dataStructure.getDataAs<UInt32Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint32_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{-90006, ss});
     }
-    if(data.getDataAs<UInt64Array>(dataPath))
+    if(dataStructure.getDataAs<UInt64Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint64_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{-90007, ss});
@@ -252,12 +252,12 @@ IFilter::PreflightResult FindDifferencesMapFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> FindDifferencesMapFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> FindDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                const std::atomic_bool& shouldCancel) const
 {
-  auto firstInputArray = data.getDataAs<IDataArray>(args.value<DataPath>(k_FirstInputArrayPath_Key));
-  auto secondInputArray = data.getDataAs<IDataArray>(args.value<DataPath>(k_SecondInputArrayPath_Key));
-  auto differenceMapArray = data.getDataAs<IDataArray>(args.value<DataPath>(k_DifferenceMapArrayPath_Key));
+  auto firstInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_FirstInputArrayPath_Key));
+  auto secondInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_SecondInputArrayPath_Key));
+  auto differenceMapArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_DifferenceMapArrayPath_Key));
 
   auto dataType = firstInputArray->getDataType();
   ExecuteDataFunction(ExecuteFindDifferenceMapFunctor{}, dataType, firstInputArray, secondInputArray, differenceMapArray);

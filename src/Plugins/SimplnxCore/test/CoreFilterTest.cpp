@@ -134,16 +134,16 @@ TEST_CASE("CoreFilterTest:CreateDataGroupFilter")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  DataStructure data;
+  DataStructure dataStructure;
   CreateDataGroupFilter filter;
   Arguments args;
   const DataPath path({"foo", "bar", "baz"});
   args.insert(CreateDataGroupFilter::k_DataObjectPath, path);
-  auto result = filter.execute(data, args);
+  auto result = filter.execute(dataStructure, args);
   REQUIRE(result.result.valid());
-  DataObject* object = data.getData(path);
+  DataObject* object = dataStructure.getData(path);
   REQUIRE(object != nullptr);
   auto* group = dynamic_cast<DataGroup*>(object);
   REQUIRE(group != nullptr);
-  REQUIRE(data.getSize() == path.getLength());
+  REQUIRE(dataStructure.getSize() == path.getLength());
 }

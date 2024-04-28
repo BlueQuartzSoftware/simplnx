@@ -21,11 +21,11 @@ constexpr int32 k_RbrTupleDimsError = -196;
 constexpr int32 k_RbrTupleDimsInconsistent = -197;
 
 template <class T>
-void CreateAndInitArray(DataStructure& data, const DataPath& path, const std::string& initValue)
+void CreateAndInitArray(DataStructure& dataStructure, const DataPath& path, const std::string& initValue)
 {
   Result<T> result = ConvertTo<T>::convert(initValue);
   T value = result.value();
-  auto& dataArray = data.getDataRefAs<DataArray<T>>(path);
+  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(path);
   auto& dataStore = dataArray.getDataStoreRef();
   std::fill(dataStore.begin(), dataStore.end(), value);
 }
@@ -115,7 +115,7 @@ IFilter::PreflightResult CreateOutOfCoreArray::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
-Result<> CreateOutOfCoreArray::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CreateOutOfCoreArray::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
   auto numericType = args.value<NumericType>(k_NumericType_Key);

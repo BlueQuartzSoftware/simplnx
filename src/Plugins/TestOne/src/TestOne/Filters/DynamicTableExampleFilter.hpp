@@ -69,17 +69,20 @@ protected:
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
-   * @brief
-   * @param data
-   * @param args
-   * @param pipelineNode
-   * @param messageHandler
-   * @return Result<>
+   * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
+   * On failure, there is no guarantee that the DataStructure is in a correct state.
+   * @param dataStructure The input DataStructure instance
+   * @param filterArgs These are the input values for each parameter that is required for the filter
+   * @param pipelineNode The PipelineNode object that called this filter
+   * @param messageHandler The MessageHandler object
+   * @param shouldCancel The atomic boolean that holds if the filter should be canceled
+   * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace nx::core
 

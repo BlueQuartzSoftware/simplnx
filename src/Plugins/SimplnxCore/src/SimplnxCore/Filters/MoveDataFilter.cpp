@@ -60,7 +60,7 @@ IFilter::UniquePointer MoveDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto dataPaths = args.value<MultiPathSelectionParameter::ValueType>(k_SourceDataPaths_Key);
   auto newParentPath = args.value<DataPath>(k_DestinationParentPath_Key);
@@ -70,12 +70,12 @@ IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data
 
   // Scope AM check since we fully expect it to be a nullptr
   {
-    const auto* possibleAM = data.getDataAs<AttributeMatrix>(newParentPath);
+    const auto* possibleAM = dataStructure.getDataAs<AttributeMatrix>(newParentPath);
     if(possibleAM != nullptr)
     {
       for(const auto& path : dataPaths)
       {
-        const auto* possibleIArray = data.getDataAs<IArray>(path);
+        const auto* possibleIArray = dataStructure.getDataAs<IArray>(path);
         if(possibleIArray != nullptr)
         {
           if(possibleAM->getShape() != possibleIArray->getTupleShape())
@@ -99,7 +99,8 @@ IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> MoveDataFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> MoveDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                     const std::atomic_bool& shouldCancel) const
 {
   return {};
 }

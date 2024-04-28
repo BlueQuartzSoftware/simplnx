@@ -80,7 +80,7 @@ IFilter::UniquePointer ApproximatePointCloudHullFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel) const
 {
   auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
@@ -100,7 +100,7 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
     return {nonstd::make_unexpected(std::vector<Error>{Error{-11001, ss}})};
   }
 
-  auto vertexGeom = data.getDataAs<VertexGeom>(vertexGeomPath);
+  auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
 
   int64 numVertices = vertexGeom->getNumberOfVertices();
   auto action = std::make_unique<CreateVertexGeometryAction>(hullVertexGeomPath, numVertices, INodeGeometry0D::k_VertexDataName, CreateVertexGeometryAction::k_SharedVertexListName);
@@ -112,7 +112,7 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                       const std::atomic_bool& shouldCancel) const
 {
   auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
@@ -122,7 +122,7 @@ Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& data, const
 
   float inverseResolution[3] = {1.0f / gridResolution[0], 1.0f / gridResolution[1], 1.0f / gridResolution[2]};
 
-  auto* source = data.getDataAs<VertexGeom>(vertexGeomPath);
+  auto* source = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
   auto* verts = source->getVertices();
 
   DataStructure temp;
@@ -289,7 +289,7 @@ Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& data, const
     }
   }
 
-  auto* hull = data.getDataAs<VertexGeom>(hullVertexGeomPath);
+  auto* hull = dataStructure.getDataAs<VertexGeom>(hullVertexGeomPath);
   hull->resizeVertexList(tmpVerts.size() / 3);
   if(hull->getVertexAttributeMatrix() != nullptr)
   {

@@ -336,7 +336,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 }
 
 //------------------------------------------------------------------------------
-Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel) const
 {
   auto useMask = args.value<bool>(k_UseMask_Key);
@@ -353,8 +353,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   const DataPath interpolatedGroupPath = imageGeomPath.createChildPath(interpolatedGroupName);
   const auto sigmas = args.value<std::vector<float32>>(k_GaussianSigmas_Key);
 
-  auto vertices = data.getDataAs<VertexGeom>(vertexGeomPath);
-  auto image = data.getDataAs<ImageGeom>(imageGeomPath);
+  auto vertices = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
+  auto image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
   SizeVec3 dims = image->getDimensions();
   FloatVec3 res = image->getSpacing();
   int64 kernelNumVoxels[3] = {0, 0, 0};
@@ -370,19 +370,19 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   BoolArray::store_type* mask = nullptr;
   if(useMask)
   {
-    mask = data.getDataAs<BoolArray>(args.value<DataPath>(k_InputMaskPath_Key))->getDataStore();
+    mask = dataStructure.getDataAs<BoolArray>(args.value<DataPath>(k_InputMaskPath_Key))->getDataStore();
   }
 
-  auto& voxelIndices = data.getDataRefAs<UInt64Array>(voxelIndicesPath);
+  auto& voxelIndices = dataStructure.getDataRefAs<UInt64Array>(voxelIndicesPath);
 
   // Make sure the NeighborList's outer most vector is resized to the number of tuples and initialized to non null values (empty vectors)
   for(const auto& interpolatedDataPath : interpolatedDataPaths)
   {
-    InitializeNeighborList(data, interpolatedGroupPath.createChildPath(interpolatedDataPath.getTargetName()));
+    InitializeNeighborList(dataStructure, interpolatedGroupPath.createChildPath(interpolatedDataPath.getTargetName()));
   }
   for(const auto& copyDataPath : copyDataPaths)
   {
-    InitializeNeighborList(data, interpolatedGroupPath.createChildPath(copyDataPath.getTargetName()));
+    InitializeNeighborList(dataStructure, interpolatedGroupPath.createChildPath(copyDataPath.getTargetName()));
   }
 
   usize maxImageIndex = ((dims[2] - 1) * dims[0] * dims[1]) + ((dims[1] - 1) * dims[0]) + (dims[0] - 1);
@@ -455,8 +455,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     for(const auto& interpolatedDataPathItem : interpolatedDataPaths)
     {
       const auto dynamicArrayPath = interpolatedGroupPath.createChildPath(interpolatedDataPathItem.getTargetName());
-      auto* dynamicArrayToInterpolate = data.getDataAs<INeighborList>(dynamicArrayPath);
-      auto* sourceArray = data.getDataAs<IDataArray>(interpolatedDataPathItem);
+      auto* dynamicArrayToInterpolate = dataStructure.getDataAs<INeighborList>(dynamicArrayPath);
+      auto* sourceArray = dataStructure.getDataAs<IDataArray>(interpolatedDataPathItem);
 
       const auto& type = sourceArray->getDataType();
       if(type == DataType::boolean) // Can't be executed will throw error
@@ -471,8 +471,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     for(const auto& copyDataPath : copyDataPaths)
     {
       auto dynamicArrayPath = interpolatedGroupPath.createChildPath(copyDataPath.getTargetName());
-      auto* dynamicArrayToCopy = data.getDataAs<INeighborList>(dynamicArrayPath);
-      auto* sourceArray = data.getDataAs<IDataArray>(copyDataPath);
+      auto* dynamicArrayToCopy = dataStructure.getDataAs<INeighborList>(dynamicArrayPath);
+      auto* sourceArray = dataStructure.getDataAs<IDataArray>(copyDataPath);
 
       const auto& type = sourceArray->getDataType();
       if(type == DataType::boolean) // Can't be executed will throw error
@@ -487,8 +487,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     if(storeKernelDistances)
     {
       const DataPath kernelDistPath = interpolatedGroupPath.createChildPath(args.value<std::string>(k_KernelDistancesArrayName_Key));
-      InitializeNeighborList(data, kernelDistPath);
-      auto* kernelDistances = data.getDataAs<Float32NeighborList>(kernelDistPath);
+      InitializeNeighborList(dataStructure, kernelDistPath);
+      auto* kernelDistances = dataStructure.getDataAs<Float32NeighborList>(kernelDistPath);
       mapKernelDistances(kernelDistances, kernelValDistances, kernel, kernelNumVoxels, dims.data(), x, y, z);
     }
 

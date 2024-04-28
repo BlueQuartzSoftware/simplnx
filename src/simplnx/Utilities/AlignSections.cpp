@@ -103,8 +103,8 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-AlignSections::AlignSections(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
-: m_DataStructure(data)
+AlignSections::AlignSections(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
+: m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {

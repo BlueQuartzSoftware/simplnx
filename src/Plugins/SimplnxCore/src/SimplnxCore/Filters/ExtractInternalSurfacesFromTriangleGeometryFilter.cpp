@@ -256,7 +256,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel) const
 {
   auto nodeTypesArrayPath = args.value<DataPath>(k_NodeTypesPath_Key);
@@ -269,20 +269,20 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
 
   auto minMaxNodeValues = args.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
 
-  auto& triangleGeom = data.getDataRefAs<TriangleGeom>(triangleGeomPath);
-  auto& internalTriangleGeom = data.getDataRefAs<TriangleGeom>(internalTrianglesPath);
+  auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
+  auto& internalTriangleGeom = dataStructure.getDataRefAs<TriangleGeom>(internalTrianglesPath);
   auto& vertices = *triangleGeom.getVertices();
   auto& triangles = *triangleGeom.getFaces();
   auto numVerts = triangleGeom.getNumberOfVertices();
   auto numTris = triangleGeom.getNumberOfFaces();
 
-  auto& nodeTypes = data.getDataRefAs<Int8Array>(nodeTypesArrayPath);
+  auto& nodeTypes = dataStructure.getDataRefAs<Int8Array>(nodeTypesArrayPath);
 
   auto internalVerticesPath = internalTrianglesPath.createChildPath(CreateTriangleGeometryAction::k_DefaultVerticesName);
-  internalTriangleGeom.setVertices(*data.getDataAs<Float32Array>(internalVerticesPath));
+  internalTriangleGeom.setVertices(*dataStructure.getDataAs<Float32Array>(internalVerticesPath));
 
   auto internalFacesPath = internalTrianglesPath.createChildPath(CreateTriangleGeometryAction::k_DefaultFacesName);
-  internalTriangleGeom.setFaceList(*data.getDataAs<UInt64Array>(internalFacesPath));
+  internalTriangleGeom.setFaceList(*dataStructure.getDataAs<UInt64Array>(internalFacesPath));
 
   // int64 progIncrement = numTris / 100;
   // int64 prog = 1;
@@ -385,8 +385,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
   for(const auto& targetArrayPath : copyVertexPaths)
   {
     DataPath destinationPath = internalTrianglesPath.createChildPath(vertexDataName).createChildPath(targetArrayPath.getTargetName());
-    auto& src = data.getDataRefAs<IDataArray>(targetArrayPath);
-    auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
+    auto& src = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
+    auto& dest = dataStructure.getDataRefAs<IDataArray>(destinationPath);
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, vertNewIndex);
   }
@@ -394,8 +394,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
   for(const auto& targetArrayPath : copyTrianglePaths)
   {
     DataPath destinationPath = internalTrianglesPath.createChildPath(faceDataName).createChildPath(targetArrayPath.getTargetName());
-    auto& src = data.getDataRefAs<IDataArray>(targetArrayPath);
-    auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
+    auto& src = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
+    auto& dest = dataStructure.getDataRefAs<IDataArray>(destinationPath);
     dest.getIDataStore()->resizeTuples({currentNewTriIndex});
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, triNewIndex);

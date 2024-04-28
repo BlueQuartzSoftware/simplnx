@@ -187,7 +187,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 }
 
 // -----------------------------------------------------------------------------
-Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
   ScalarSegmentFeaturesInputValues inputValues;
@@ -202,7 +202,7 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arg
   inputValues.pCellFeaturesPath = inputValues.pGridGeomPath.createChildPath(args.value<std::string>(k_CellFeatureName_Key));
   inputValues.pActiveArrayPath = inputValues.pCellFeaturesPath.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
 
-  nx::core::ScalarSegmentFeatures filterAlgorithm(data, &inputValues, shouldCancel, messageHandler);
+  nx::core::ScalarSegmentFeatures filterAlgorithm(dataStructure, &inputValues, shouldCancel, messageHandler);
   Result<> result = filterAlgorithm();
   return result;
 }

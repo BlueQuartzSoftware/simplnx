@@ -190,16 +190,16 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
   return {std::move(actions)};
 }
 
-Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                      const std::atomic_bool& shouldCancel) const
 {
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath_Key);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath_Key);
   auto createdMaskName = args.value<std::string>(k_ArrayCreationName_Key);
 
-  const auto& inputArray = data.getDataRefAs<IDataArray>(inputArrayPath);
-  const auto& gradientArray = data.getDataRefAs<Float32Array>(gradientArrayPath);
-  auto& maskArray = data.getDataRefAs<BoolArray>(inputArrayPath.replaceName(createdMaskName));
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+  const auto& gradientArray = dataStructure.getDataRefAs<Float32Array>(gradientArrayPath);
+  auto& maskArray = dataStructure.getDataRefAs<BoolArray>(inputArrayPath.replaceName(createdMaskName));
 
   FindThreshold(inputArray, gradientArray, maskArray);
 

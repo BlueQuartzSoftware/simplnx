@@ -82,7 +82,7 @@ IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> RenameDataObjectFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RenameDataObjectFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                              const std::atomic_bool& shouldCancel) const
 {
   return {};

@@ -88,7 +88,8 @@ IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
   return std::make_unique<ReadTextDataArrayFilter>();
 }
 
-IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                const std::atomic_bool& shouldCancel) const
 {
   auto numericType = args.value<NumericType>(k_ScalarType_Key);
   auto arrayPath = args.value<DataPath>(k_DataArrayPath_Key);
@@ -102,7 +103,7 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 
   std::vector<usize> tupleDims = {};
 
-  auto* parentAM = data.getDataAs<AttributeMatrix>(arrayPath.getParent());
+  auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
   if(parentAM == nullptr)
   {
     if(!useDims)
@@ -144,7 +145,7 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
   return {std::move(resultOutputActions)};
 }
 
-Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel) const
 {
   auto inputFilePath = args.value<fs::path>(k_InputFile_Key);
@@ -158,43 +159,43 @@ Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& data, const Argumen
   switch(numericType)
   {
   case NumericType::int8: {
-    auto dataArray = nx::core::ArrayFromPath<int8>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<int8>(dataStructure, path);
     return CsvParser::ReadFile<int8_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::uint8: {
-    auto dataArray = nx::core::ArrayFromPath<uint8>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<uint8>(dataStructure, path);
     return CsvParser::ReadFile<uint8_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::int16: {
-    auto dataArray = nx::core::ArrayFromPath<int16>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<int16>(dataStructure, path);
     return CsvParser::ReadFile<int16_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::uint16: {
-    auto dataArray = nx::core::ArrayFromPath<uint16>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<uint16>(dataStructure, path);
     return CsvParser::ReadFile<uint16_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::int32: {
-    auto dataArray = nx::core::ArrayFromPath<int32>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<int32>(dataStructure, path);
     return CsvParser::ReadFile<int32_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::uint32: {
-    auto dataArray = nx::core::ArrayFromPath<uint32>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<uint32>(dataStructure, path);
     return CsvParser::ReadFile<uint32_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::int64: {
-    auto dataArray = nx::core::ArrayFromPath<int64>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<int64>(dataStructure, path);
     return CsvParser::ReadFile<int64_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::uint64: {
-    auto dataArray = nx::core::ArrayFromPath<uint64>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<uint64>(dataStructure, path);
     return CsvParser::ReadFile<uint64_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::float32: {
-    auto dataArray = nx::core::ArrayFromPath<float32>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<float32>(dataStructure, path);
     return CsvParser::ReadFile<float>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::float64: {
-    auto dataArray = nx::core::ArrayFromPath<float64>(data, path);
+    auto dataArray = nx::core::ArrayFromPath<float64>(dataStructure, path);
     return CsvParser::ReadFile<double>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   default:

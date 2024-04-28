@@ -21,8 +21,8 @@ namespace nx::core
 class SIMPLNXCORE_EXPORT ReadStlFile
 {
 public:
-  ReadStlFile(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput, float32 scaleFactor,
-              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  ReadStlFile(DataStructure& dataStructure, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
+              float32 scaleFactor, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~ReadStlFile() noexcept;
 
   ReadStlFile(const ReadStlFile&) = delete;

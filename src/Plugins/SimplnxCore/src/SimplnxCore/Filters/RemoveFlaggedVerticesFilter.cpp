@@ -212,17 +212,17 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);
   auto reducedVertexPath = args.value<DataPath>(k_CreatedVertexGeometryPath_Key);
 
-  const VertexGeom& vertexGeom = data.getDataRefAs<VertexGeom>(vertexGeomPath);
+  const VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
   const std::string vertexDataName = vertexGeom.getVertexAttributeMatrixDataPath().getTargetName();
 
-  auto& mask = data.getDataRefAs<BoolArray>(maskArrayPath);
+  auto& mask = dataStructure.getDataRefAs<BoolArray>(maskArrayPath);
 
   const size_t numVerticesToKeep = std::count(mask.begin(), mask.end(), false);
   const size_t numberOfVertices = vertexGeom.getNumberOfVertices();
@@ -230,7 +230,7 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& data, const Arg
   const std::vector<usize> tDims = {numVerticesToKeep};
 
   // Resize the reduced vertex geometry object
-  VertexGeom& reducedVertexGeom = data.getDataRefAs<VertexGeom>(reducedVertexPath);
+  VertexGeom& reducedVertexGeom = dataStructure.getDataRefAs<VertexGeom>(reducedVertexPath);
   reducedVertexGeom.resizeVertexList(numVerticesToKeep);
   reducedVertexGeom.getVertexAttributeMatrix()->resizeTuples(tDims);
 
@@ -260,7 +260,7 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& data, const Arg
 
     const DataPath destinationPath = reducedVertexGeom.getVertexAttributeMatrixDataPath().createChildPath(src.getName());
 
-    auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
+    auto& dest = dataStructure.getDataRefAs<IDataArray>(destinationPath);
     messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName())});
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, mask, numVerticesToKeep);

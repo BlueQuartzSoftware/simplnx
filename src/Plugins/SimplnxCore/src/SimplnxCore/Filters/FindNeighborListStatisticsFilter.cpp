@@ -156,7 +156,7 @@ private:
 } // namespace
 
 //------------------------------------------------------------------------------
-OutputActions FindNeighborListStatisticsFilter::createCompatibleArrays(const DataStructure& data, const Arguments& args) const
+OutputActions FindNeighborListStatisticsFilter::createCompatibleArrays(const DataStructure& dataStructure, const Arguments& args) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
   auto findMin = args.value<bool>(k_FindMinimum_Key);
@@ -167,7 +167,7 @@ OutputActions FindNeighborListStatisticsFilter::createCompatibleArrays(const Dat
   auto findSummation = args.value<bool>(k_FindSummation_Key);
 
   auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
-  auto* inputArray = data.getDataAs<INeighborList>(inputArrayPath);
+  auto* inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
   std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
   DataType dataType = inputArray->getDataType();
   const DataPath outputGroupPath = inputArrayPath.getParent();
@@ -286,7 +286,7 @@ IFilter::UniquePointer FindNeighborListStatisticsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindNeighborListStatisticsFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult FindNeighborListStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                          const std::atomic_bool& shouldCancel) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
@@ -308,7 +308,7 @@ IFilter::PreflightResult FindNeighborListStatisticsFilter::preflightImpl(const D
 
   std::vector<DataPath> dataArrayPaths;
 
-  auto inputArray = data.getDataAs<INeighborList>(inputArrayPath);
+  auto inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
   if(inputArray == nullptr)
   {
     std::string ss = fmt::format("Missing input array");
@@ -317,11 +317,11 @@ IFilter::PreflightResult FindNeighborListStatisticsFilter::preflightImpl(const D
 
   dataArrayPaths.push_back(inputArrayPath);
 
-  return {std::move(createCompatibleArrays(data, args))};
+  return {std::move(createCompatibleArrays(dataStructure, args))};
 }
 
 //------------------------------------------------------------------------------
-Result<> FindNeighborListStatisticsFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> FindNeighborListStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
@@ -338,7 +338,7 @@ Result<> FindNeighborListStatisticsFilter::executeImpl(DataStructure& data, cons
   }
 
   auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
-  auto& inputArray = data.getDataRefAs<INeighborList>(inputArrayPath);
+  auto& inputArray = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
   const DataPath outputGroupPath = inputArrayPath.getParent();
 
   std::vector<IDataArray*> arrays(7, nullptr);
@@ -346,37 +346,37 @@ Result<> FindNeighborListStatisticsFilter::executeImpl(DataStructure& data, cons
   if(findLength)
   {
     auto lengthPath = outputGroupPath.createChildPath(args.value<std::string>(k_LengthName_Key));
-    arrays[0] = data.getDataAs<IDataArray>(lengthPath);
+    arrays[0] = dataStructure.getDataAs<IDataArray>(lengthPath);
   }
   if(findMin)
   {
     auto minPath = outputGroupPath.createChildPath(args.value<std::string>(k_MinimumName_Key));
-    arrays[1] = data.getDataAs<IDataArray>(minPath);
+    arrays[1] = dataStructure.getDataAs<IDataArray>(minPath);
   }
   if(findMax)
   {
     auto maxPath = outputGroupPath.createChildPath(args.value<std::string>(k_MaximumName_Key));
-    arrays[2] = data.getDataAs<IDataArray>(maxPath);
+    arrays[2] = dataStructure.getDataAs<IDataArray>(maxPath);
   }
   if(findMean)
   {
     auto meanPath = outputGroupPath.createChildPath(args.value<std::string>(k_MeanName_Key));
-    arrays[3] = data.getDataAs<IDataArray>(meanPath);
+    arrays[3] = dataStructure.getDataAs<IDataArray>(meanPath);
   }
   if(findMedian)
   {
     auto medianPath = outputGroupPath.createChildPath(args.value<std::string>(k_MedianName_Key));
-    arrays[4] = data.getDataAs<IDataArray>(medianPath);
+    arrays[4] = dataStructure.getDataAs<IDataArray>(medianPath);
   }
   if(findStdDeviation)
   {
     auto stdDeviationPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviationName_Key));
-    arrays[5] = data.getDataAs<IDataArray>(stdDeviationPath);
+    arrays[5] = dataStructure.getDataAs<IDataArray>(stdDeviationPath);
   }
   if(findSummation)
   {
     auto summationPath = outputGroupPath.createChildPath(args.value<std::string>(k_SummationName_Key));
-    arrays[6] = data.getDataAs<IDataArray>(summationPath);
+    arrays[6] = dataStructure.getDataAs<IDataArray>(summationPath);
   }
 
   DataType type = inputArray.getDataType();

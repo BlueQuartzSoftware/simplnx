@@ -94,7 +94,7 @@ IFilter::UniquePointer FindNeighborsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
@@ -115,7 +115,7 @@ IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure&
 
   OutputActions actions;
 
-  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   std::vector<usize> tupleShape = featureIdsArray.getIDataStore()->getTupleShape();
 
   const std::vector<usize> cDims{1};
@@ -130,7 +130,7 @@ IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure&
   // Feature Data:
   // Validating the Feature Attribute Matrix and trying to find a child of the Group
   // that is an IDataArray subclass, so we can get the proper tuple shape
-  const auto* featureAttrMatrix = data.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
+  const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-12600, "Cell Feature AttributeMatrix Path is NOT an AttributeMatrix"}})};
@@ -164,7 +164,7 @@ IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> FindNeighborsFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> FindNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
@@ -184,13 +184,13 @@ Result<> FindNeighborsFilter::executeImpl(DataStructure& data, const Arguments& 
   DataPath sharedSurfaceAreaPath = featureAttrMatrixPath.createChildPath(sharedSurfaceAreaName);
   DataPath surfaceFeaturesPath = featureAttrMatrixPath.createChildPath(surfaceFeaturesName);
 
-  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
-  auto& neighborList = data.getDataRefAs<Int32NeighborList>(neighborListPath);
-  auto& sharedSurfaceAreaList = data.getDataRefAs<Float32NeighborList>(sharedSurfaceAreaPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
+  auto& neighborList = dataStructure.getDataRefAs<Int32NeighborList>(neighborListPath);
+  auto& sharedSurfaceAreaList = dataStructure.getDataRefAs<Float32NeighborList>(sharedSurfaceAreaPath);
 
-  auto* boundaryCellsArray = data.getDataAs<Int8Array>(boundaryCellsPath);
-  auto* surfaceFeaturesArray = data.getDataAs<BoolArray>(surfaceFeaturesPath);
+  auto* boundaryCellsArray = dataStructure.getDataAs<Int8Array>(boundaryCellsPath);
+  auto* surfaceFeaturesArray = dataStructure.getDataAs<BoolArray>(surfaceFeaturesPath);
 
   auto& featureIds = featureIdsArray.getDataStoreRef();
   auto& numNeighbors = numNeighborsArray.getDataStoreRef();
@@ -209,7 +209,7 @@ Result<> FindNeighborsFilter::executeImpl(DataStructure& data, const Arguments& 
     return MakeErrorResult(-24500, out.str());
   }
 
-  auto& imageGeom = data.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   SizeVec3 udims = imageGeom.getDimensions();
   const auto imageGeomNumX = imageGeom.getNumXCells();
   const auto imageGeomNumY = imageGeom.getNumYCells();

@@ -43,7 +43,7 @@ public:
    * @param shouldCancel
    * @return bool
    */
-  bool preflight(DataStructure& data, const std::atomic_bool& shouldCancel) override;
+  bool preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Attempts to preflight the node using the provided DataStructure.
@@ -54,7 +54,7 @@ public:
    * @param allowRenaming
    * @return bool
    */
-  bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
+  bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -63,7 +63,7 @@ public:
    * @param shouldCancel
    * @return bool
    */
-  bool execute(DataStructure& data, const std::atomic_bool& shouldCancel) override;
+  bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Creates and returns a unique pointer to a copy of the node.

@@ -70,7 +70,8 @@ IFilter::UniquePointer CopyDataObjectFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel) const
 {
   auto dataArrayPaths = args.value<MultiPathSelectionParameter::ValueType>(k_DataPath_Key);
   auto useNewParent = args.value<bool>(k_UseNewParent_Key);
@@ -91,12 +92,12 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
       parentPath = args.value<DataPath>(k_NewPath_Key);
       // Scope AM check since we fully expect it to be a nullptr
       {
-        const auto* possibleAM = data.getDataAs<AttributeMatrix>(parentPath);
+        const auto* possibleAM = dataStructure.getDataAs<AttributeMatrix>(parentPath);
         if(possibleAM != nullptr)
         {
           for(const auto& path : dataArrayPaths)
           {
-            const auto* possibleIArray = data.getDataAs<IArray>(path);
+            const auto* possibleIArray = dataStructure.getDataAs<IArray>(path);
             if(possibleIArray != nullptr)
             {
               if(possibleAM->getShape() != possibleIArray->getTupleShape())
@@ -115,9 +116,9 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
     DataPath newDataPath = parentPath.createChildPath(newTargetName);
 
     std::vector<DataPath> allCreatedPaths = {newDataPath};
-    if(data.getDataAs<BaseGroup>(dataArrayPath) != nullptr)
+    if(dataStructure.getDataAs<BaseGroup>(dataArrayPath) != nullptr)
     {
-      const auto pathsToBeCopied = GetAllChildDataPathsRecursive(data, dataArrayPath);
+      const auto pathsToBeCopied = GetAllChildDataPathsRecursive(dataStructure, dataArrayPath);
       if(pathsToBeCopied.has_value())
       {
         for(const auto& sourcePath : pathsToBeCopied.value())
@@ -135,7 +136,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> CopyDataObjectFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CopyDataObjectFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
   return {};
