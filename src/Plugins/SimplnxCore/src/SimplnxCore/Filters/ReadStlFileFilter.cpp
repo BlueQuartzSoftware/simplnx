@@ -182,7 +182,7 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& data, const Arguments& fi
   auto scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
 
   // The actual STL File Reading is placed in a separate class `ReadStlFile`
-  Result<> result = ReadStlFile(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel)();
+  Result<> result = ReadStlFile(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel, messageHandler)();
   return result;
 }
 
