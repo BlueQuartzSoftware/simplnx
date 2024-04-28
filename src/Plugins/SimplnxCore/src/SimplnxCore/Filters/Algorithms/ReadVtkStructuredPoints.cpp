@@ -193,12 +193,12 @@ int32 skipVolume(std::istream& in, bool binary, usize numElements)
   {
     const usize BUFFER_SIZE = 16384;
     usize foundItems = 0;
-    std::vector<char> buffer(BUFFER_SIZE, 0);
+    std::vector<char> buffer(BUFFER_SIZE + 1, 0);
     while(foundItems < numElements)
     {
-      memset(buffer.data(), 0, BUFFER_SIZE + 1);
-      err = CsvParser::ReadLine(in, buffer.data(), buffer.size());
-      foundItems += count_tokens(buffer.data(), ' ', false, BUFFER_SIZE);
+      memset(buffer.data(), 0, BUFFER_SIZE + 1);                 // Splat Zeros across everything
+      err = CsvParser::ReadLine(in, buffer.data(), BUFFER_SIZE); // Read BUFFER_SIZE worth of data.
+      foundItems += count_tokens(buffer.data(), ' ', false, BUFFER_SIZE + 1);
     }
   }
   return err;
@@ -221,10 +221,9 @@ int32 vtkReadBinaryData(std::istream& in, DataArray<T>& data)
   DataStoreType& dataStore = data.getDataStoreRef();
 
   usize numBytesToRead = static_cast<usize>(numTuples) * static_cast<usize>(numComp) * sizeof(T);
-  usize numRead = 0;
   // Cast our pointer to a pointer that std::istream will take
 
-  numRead = 0;
+  usize numRead = 0;
   // Now start reading the data in chunks if needed.
   usize chunkSize = DEFAULT_BLOCKSIZE;
 
