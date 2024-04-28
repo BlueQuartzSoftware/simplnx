@@ -24,7 +24,7 @@ generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 2
 
 # Instantiate Filter
-nx_filter = cxitk.ITKImportImageStack()
+nx_filter = cxitk.ITKImportImageStackFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -50,7 +50,7 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean
 
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Execute filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

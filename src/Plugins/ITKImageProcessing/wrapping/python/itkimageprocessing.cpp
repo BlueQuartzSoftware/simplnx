@@ -1,8 +1,7 @@
 #include <CxPybind/CxPybind.hpp>
 
-#include <itkImageProcessing/ITKImageProcessingPlugin.hpp>
-
 #include "ITKImageProcessing/ITKImageProcessingFilterBinding.hpp"
+#include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
 
 using namespace nx::core;
 using namespace nx::core::CxPybind;

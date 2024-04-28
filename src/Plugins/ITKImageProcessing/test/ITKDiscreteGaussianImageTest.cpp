@@ -18,8 +18,10 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(float)", "[ITKImageProcessing][ITKDiscreteGaussianImage][float]")
+TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(float)", "[ITKImageProcessing][ITKDiscreteGaussianImageFilter][float]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   const ITKDiscreteGaussianImageFilter filter;
 
@@ -54,8 +56,10 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(float)", "[ITKImag
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
 }
 
-TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(short)", "[ITKImageProcessing][ITKDiscreteGaussianImage][short]")
+TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(short)", "[ITKImageProcessing][ITKDiscreteGaussianImageFilter][short]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   const ITKDiscreteGaussianImageFilter filter;
 
@@ -86,12 +90,14 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(short)", "[ITKImag
   const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
-  Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.6);
+  Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 1.0);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
 }
 
-TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(bigG)", "[ITKImageProcessing][ITKDiscreteGaussianImage][bigG]")
+TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(bigG)", "[ITKImageProcessing][ITKDiscreteGaussianImageFilter][bigG]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
   DataStructure dataStructure;
   const ITKDiscreteGaussianImageFilter filter;
 

@@ -41,7 +41,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = cxor.ConvertOrientations()
+nx_filter = cxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

@@ -61,7 +61,7 @@ threshold_set = nx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1]
 
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
                         array_thresholds_object=threshold_set,

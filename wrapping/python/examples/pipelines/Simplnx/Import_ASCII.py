@@ -135,7 +135,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriter()
+nx_filter = cxitk.ITKImageWriterFilter()
 # Output file path for Filter 7
 output_file_path = nxtest.get_data_directory() / "Output/Import_ASCII/IPF.png"
 

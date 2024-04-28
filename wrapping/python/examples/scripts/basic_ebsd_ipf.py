@@ -102,7 +102,7 @@ threshold_2.value = 120
 threshold_set = nx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1, threshold_2]
 dt = nx.DataType.boolean
-result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
+result = nx.MultiThresholdObjectsFilter.execute(data_structure=data_structure,
                                         array_thresholds_object=threshold_set, 
                                         output_data_array_name="Mask",
                                         created_mask_type=nx.DataType.boolean)

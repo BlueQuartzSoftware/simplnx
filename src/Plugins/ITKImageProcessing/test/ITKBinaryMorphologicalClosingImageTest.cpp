@@ -13,16 +13,15 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
 
-TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosing)", "[ITKImageProcessing][ITKBinaryMorphologicalClosingImage][BinaryMorphologicalClosing]")
+TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosing)", "[ITKImageProcessing][ITKBinaryMorphologicalClosingImageFilter][BinaryMorphologicalClosing]")
 {
   DataStructure dataStructure;
-  const ITKBinaryMorphologicalClosingImageFilter filter;
+  ITKBinaryMorphologicalClosingImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -53,10 +52,10 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMo
 }
 
 TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosingWithBorder)",
-          "[ITKImageProcessing][ITKBinaryMorphologicalClosingImage][BinaryMorphologicalClosingWithBorder]")
+          "[ITKImageProcessing][ITKBinaryMorphologicalClosingImageFilter][BinaryMorphologicalClosingWithBorder]")
 {
   DataStructure dataStructure;
-  const ITKBinaryMorphologicalClosingImageFilter filter;
+  ITKBinaryMorphologicalClosingImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -73,7 +72,7 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMo
   args.insertOrAssign(ITKBinaryMorphologicalClosingImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKBinaryMorphologicalClosingImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKBinaryMorphologicalClosingImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKBinaryMorphologicalClosingImageFilter::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{5, 1, 1}));
+  args.insertOrAssign(ITKBinaryMorphologicalClosingImageFilter::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{5, 5, 5}));
   args.insertOrAssign(ITKBinaryMorphologicalClosingImageFilter::k_SafeBorder_Key, std::make_any<BoolParameter::ValueType>(false));
   args.insertOrAssign(ITKBinaryMorphologicalClosingImageFilter::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
   args.insertOrAssign(ITKBinaryMorphologicalClosingImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));

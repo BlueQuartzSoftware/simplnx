@@ -62,7 +62,7 @@ threshold_1.value = 0.0
 
 threshold_set = nx.ArrayThresholdSet()
 threshold_set.thresholds = [threshold_1]
-result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
+result = nx.MultiThresholdObjectsFilter.execute(data_structure=data_structure,
                                     array_thresholds_object=threshold_set,
                                     output_data_array_name="Mask",
                                     created_mask_type=nx.DataType.boolean)
@@ -87,7 +87,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriter()
+nx_filter = cxitk.ITKImageWriterFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
