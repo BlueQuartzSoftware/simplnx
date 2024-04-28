@@ -6,7 +6,7 @@
 
 #include "SimplnxCore/Filters/AppendImageGeometryZSliceFilter.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
-#include "SimplnxCore/Filters/RenameDataObject.hpp"
+#include "SimplnxCore/Filters/RenameDataObjectFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include <filesystem>
@@ -137,10 +137,10 @@ TEST_CASE("SimplnxCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     // rename the cell data attribute matrix for easier comparison with exemplar data
-    RenameDataObject renameFilter;
+    RenameDataObjectFilter renameFilter;
     Arguments renameArgs;
-    renameArgs.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_CellData));
-    renameArgs.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_AppendedGeometryPath.createChildPath(ImageGeom::k_CellDataName)));
+    renameArgs.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_CellData));
+    renameArgs.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_AppendedGeometryPath.createChildPath(ImageGeom::k_CellDataName)));
     auto renameResult = renameFilter.execute(dataStructure, renameArgs);
     SIMPLNX_RESULT_REQUIRE_VALID(renameResult.result)
 

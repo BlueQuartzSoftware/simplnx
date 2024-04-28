@@ -27,11 +27,11 @@ set(FilterList
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
   CopyDataObjectFilter
-  CopyFeatureArrayToElementArray
+  CopyFeatureArrayToElementArrayFilter
   CreateAttributeMatrixFilter
-  CreateDataArray
+  CreateDataArrayFilter
   CreateDataGroupFilter
-  CreateFeatureArrayFromElementArray
+  CreateFeatureArrayFromElementArrayFilter
   CreateGeometryFilter
   CreateImageGeometryFilter
   CropImageGeometryFilter
@@ -59,8 +59,8 @@ set(FilterList
   FindFeaturePhasesFilter
   FindLargestCrossSectionsFilter
   FindNeighborhoodsFilter
-  FindNeighborListStatistics
-  FindNeighbors
+  FindNeighborListStatisticsFilter
+  FindNeighborsFilter
   FindNumFeaturesFilter
   FindSurfaceAreaToVolumeFilter
   FindSurfaceFeaturesFilter
@@ -83,7 +83,7 @@ set(FilterList
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
   MinNeighborsFilter
-  MoveData
+  MoveDataFilter
   MultiThresholdObjectsFilter
   NearestPointFuseRegularGridsFilter
   PartitionGeometryFilter
@@ -93,7 +93,7 @@ set(FilterList
   ReadCSVFileFilter
   ReadDeformKeyFileV12Filter
   ReadDREAM3DFilter
-  ReadHDF5Dataset
+  ReadHDF5DatasetFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
   ReadTextDataArrayFilter
@@ -101,14 +101,14 @@ set(FilterList
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedTrianglesFilter
-  RemoveFlaggedVertices
+  RemoveFlaggedVerticesFilter
   RemoveMinimumSizeFeaturesFilter
-  RenameDataObject
+  RenameDataObjectFilter
   ReplaceElementAttributesWithNeighborValuesFilter
   ResampleImageGeomFilter
   ResampleRectGridToImageGeomFilter
   ReverseTriangleWindingFilter
-  RobustAutomaticThreshold
+  RobustAutomaticThresholdFilter
   RotateSampleRefFrameFilter
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter

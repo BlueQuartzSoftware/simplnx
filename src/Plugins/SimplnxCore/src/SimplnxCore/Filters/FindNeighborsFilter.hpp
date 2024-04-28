@@ -8,17 +8,17 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT FindNeighbors : public IFilter
+class SIMPLNXCORE_EXPORT FindNeighborsFilter : public IFilter
 {
 public:
-  FindNeighbors() = default;
-  ~FindNeighbors() noexcept override = default;
+  FindNeighborsFilter() = default;
+  ~FindNeighborsFilter() noexcept override = default;
 
-  FindNeighbors(const FindNeighbors&) = delete;
-  FindNeighbors(FindNeighbors&&) noexcept = delete;
+  FindNeighborsFilter(const FindNeighborsFilter&) = delete;
+  FindNeighborsFilter(FindNeighborsFilter&&) noexcept = delete;
 
-  FindNeighbors& operator=(const FindNeighbors&) = delete;
-  FindNeighbors& operator=(FindNeighbors&&) noexcept = delete;
+  FindNeighborsFilter& operator=(const FindNeighborsFilter&) = delete;
+  FindNeighborsFilter& operator=(FindNeighborsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_StoreBoundary_Key = "store_boundary_cells";
@@ -103,4 +103,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindNeighbors, "7177e88c-c3ab-4169-abe9-1fdaff20e598");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindNeighborsFilter, "7177e88c-c3ab-4169-abe9-1fdaff20e598");

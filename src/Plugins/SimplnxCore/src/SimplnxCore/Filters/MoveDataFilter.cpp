@@ -1,4 +1,4 @@
-#include "MoveData.hpp"
+#include "MoveDataFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
@@ -12,37 +12,37 @@
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string MoveData::name() const
+std::string MoveDataFilter::name() const
 {
-  return FilterTraits<MoveData>::name;
+  return FilterTraits<MoveDataFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string MoveData::className() const
+std::string MoveDataFilter::className() const
 {
-  return FilterTraits<MoveData>::className;
+  return FilterTraits<MoveDataFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid MoveData::uuid() const
+Uuid MoveDataFilter::uuid() const
 {
-  return FilterTraits<MoveData>::uuid;
+  return FilterTraits<MoveDataFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string MoveData::humanName() const
+std::string MoveDataFilter::humanName() const
 {
   return "Move Data";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> MoveData::defaultTags() const
+std::vector<std::string> MoveDataFilter::defaultTags() const
 {
   return {className(), "Move", "Memory Management", "Data Management", "Data Structure"};
 }
 
 //------------------------------------------------------------------------------
-Parameters MoveData::parameters() const
+Parameters MoveDataFilter::parameters() const
 {
   Parameters params;
 
@@ -54,13 +54,13 @@ Parameters MoveData::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer MoveData::clone() const
+IFilter::UniquePointer MoveDataFilter::clone() const
 {
-  return std::make_unique<MoveData>();
+  return std::make_unique<MoveDataFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto dataPaths = args.value<MultiPathSelectionParameter::ValueType>(k_SourceDataPaths_Key);
   auto newParentPath = args.value<DataPath>(k_DestinationParentPath_Key);
@@ -99,7 +99,7 @@ IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, cons
 }
 
 //------------------------------------------------------------------------------
-Result<> MoveData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> MoveDataFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
@@ -116,9 +116,9 @@ constexpr StringLiteral k_AttributeMatrixDestinationKey = "AttributeMatrixDestin
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> MoveData::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> MoveDataFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = MoveData().getDefaultArguments();
+  Arguments args = MoveDataFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

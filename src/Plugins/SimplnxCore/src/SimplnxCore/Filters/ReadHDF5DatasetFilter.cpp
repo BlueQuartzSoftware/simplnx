@@ -1,4 +1,4 @@
-#include "ReadHDF5Dataset.hpp"
+#include "ReadHDF5DatasetFilter.hpp"
 
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -101,37 +101,37 @@ Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ReadHDF5Dataset::name() const
+std::string ReadHDF5DatasetFilter::name() const
 {
-  return FilterTraits<ReadHDF5Dataset>::name.str();
+  return FilterTraits<ReadHDF5DatasetFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ReadHDF5Dataset::className() const
+std::string ReadHDF5DatasetFilter::className() const
 {
-  return FilterTraits<ReadHDF5Dataset>::className;
+  return FilterTraits<ReadHDF5DatasetFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ReadHDF5Dataset::uuid() const
+Uuid ReadHDF5DatasetFilter::uuid() const
 {
-  return FilterTraits<ReadHDF5Dataset>::uuid;
+  return FilterTraits<ReadHDF5DatasetFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ReadHDF5Dataset::humanName() const
+std::string ReadHDF5DatasetFilter::humanName() const
 {
   return "Read HDF5 Dataset";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ReadHDF5Dataset::defaultTags() const
+std::vector<std::string> ReadHDF5DatasetFilter::defaultTags() const
 {
   return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ReadHDF5Dataset::parameters() const
+Parameters ReadHDF5DatasetFilter::parameters() const
 {
   Parameters params;
 
@@ -142,14 +142,14 @@ Parameters ReadHDF5Dataset::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadHDF5Dataset::clone() const
+IFilter::UniquePointer ReadHDF5DatasetFilter::clone() const
 {
-  return std::make_unique<ReadHDF5Dataset>();
+  return std::make_unique<ReadHDF5DatasetFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadHDF5Dataset::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
@@ -352,8 +352,8 @@ IFilter::PreflightResult ReadHDF5Dataset::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadHDF5Dataset::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                      const std::atomic_bool& shouldCancel) const
+Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
@@ -445,9 +445,9 @@ constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix"
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ReadHDF5Dataset::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadHDF5DatasetFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ReadHDF5Dataset().getDefaultArguments();
+  Arguments args = ReadHDF5DatasetFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

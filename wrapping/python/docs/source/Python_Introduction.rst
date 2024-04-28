@@ -76,7 +76,7 @@ An example of executing a file in immediate mode using a filter from the simplnx
 
     import simplnx as nx
 
-    result  = nx.CreateDataArray.execute(data_structure=data_structure, 
+    result  = nx.CreateDataArrayFilter.execute(data_structure=data_structure, 
                                         component_count=1, 
                                         data_format="", 
                                         initialization_value="10", 
@@ -122,14 +122,14 @@ A :ref:`DataGroup` can be created with the :ref:`simplnx.CreateDataGroupFilter.E
 Creating a DataArray
 --------------------
 
-*simplnx* stores data in a :ref:`DataArray` object that is created through the :ref:`simplnx.CreateDataArray.Execute() <CreateDataArray>` method.
+*simplnx* stores data in a :ref:`DataArray` object that is created through the :ref:`simplnx.CreateDataArrayFilter.Execute() <CreateDataArrayFilter>` method.
 This will allow you to create an array that you can then fill with data using any python API that you wish. A basic use
 of the method is as follows.
 
 .. code:: python
 
-    # Instantiate and execute immediately teh CreateDataArray Filter
-    result  = nx.CreateDataArray.execute(data_structure=data_structure, 
+    # Instantiate and execute immediately teh CreateDataArrayFilter Filter
+    result  = nx.CreateDataArrayFilter.execute(data_structure=data_structure, 
                                         component_count=1, 
                                         data_format="", 
                                         initialization_value="10", 
@@ -253,7 +253,7 @@ connectivity from a sample file.
 
     # Create the vertex array and fill it from data on disk
     array_path = nx.DataPath(['Vertices'])
-    result = nx.CreateDataArray.execute(data_structure,
+    result = nx.CreateDataArrayFilter.execute(data_structure,
                                         numeric_type=nx.NumericType.float32,
                                         component_count=3,
                                         tuple_dimensions=[[144]],
@@ -265,7 +265,7 @@ connectivity from a sample file.
 
     # Create the triangle connectivity array and fill it from data on disk
     array_path = nx.DataPath(['Triangles'])
-    result = nx.CreateDataArray.execute(data_structure,
+    result = nx.CreateDataArrayFilter.execute(data_structure,
                                         numeric_type=nx.NumericType.uint64,
                                         component_count=3,
                                         tuple_dimensions=[[242]],
@@ -334,7 +334,7 @@ The next code section was take from `basic_arrays.py <https://github.com/bluequa
     output_array_path = nx.DataPath(["1D Array"])
     array_type = nx.NumericType.float32
     tuple_dims = [[10]]
-    create_array_filter = nx.CreateDataArray()
+    create_array_filter = nx.CreateDataArrayFilter()
     result  = create_array_filter.execute(data_structure=data_structure, 
                                         component_count=1, 
                                         data_format="", 
@@ -354,7 +354,7 @@ The next code section was take from `basic_arrays.py <https://github.com/bluequa
     data_structure = nx.DataStructure()
     # Create a DataArray to copy the Euler Angles into 
     array_path = nx.DataPath(['Euler Angles'])
-    result = nx.CreateDataArray.execute(data_structure=data_structure,
+    result = nx.CreateDataArrayFilter.execute(data_structure=data_structure,
                                     numeric_type=nx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[99]],

@@ -1,4 +1,4 @@
-#include "ExampleFilter2.hpp"
+#include "ExampleFilter2Filter.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -36,37 +36,37 @@ constexpr StringLiteral k_Param13 = "param13";
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ExampleFilter2::name() const
+std::string ExampleFilter2Filter::name() const
 {
-  return FilterTraits<ExampleFilter2>::name;
+  return FilterTraits<ExampleFilter2Filter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string ExampleFilter2::className() const
+std::string ExampleFilter2Filter::className() const
 {
-  return FilterTraits<ExampleFilter2>::className;
+  return FilterTraits<ExampleFilter2Filter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ExampleFilter2::uuid() const
+Uuid ExampleFilter2Filter::uuid() const
 {
-  return FilterTraits<ExampleFilter2>::uuid;
+  return FilterTraits<ExampleFilter2Filter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ExampleFilter2::humanName() const
+std::string ExampleFilter2Filter::humanName() const
 {
   return "Example Filter 2";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ExampleFilter2::defaultTags() const
+std::vector<std::string> ExampleFilter2Filter::defaultTags() const
 {
   return {className(), "Example", "Test"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ExampleFilter2::parameters() const
+Parameters ExampleFilter2Filter::parameters() const
 {
   Parameters params;
   params.insertSeparator({"1rst Group of Parameters"});
@@ -103,19 +103,20 @@ Parameters ExampleFilter2::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExampleFilter2::clone() const
+IFilter::UniquePointer ExampleFilter2Filter::clone() const
 {
-  return std::make_unique<ExampleFilter2>();
+  return std::make_unique<ExampleFilter2Filter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExampleFilter2::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ExampleFilter2Filter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExampleFilter2::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ExampleFilter2Filter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel) const
 {
   return {};
 }

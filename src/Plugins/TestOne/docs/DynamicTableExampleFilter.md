@@ -1,4 +1,4 @@
-# ExampleFilter1
+# DynamicTableExampleFilter
 
 ## Group (Subgroup)
 

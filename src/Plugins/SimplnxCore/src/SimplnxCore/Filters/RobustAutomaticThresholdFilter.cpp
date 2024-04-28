@@ -1,4 +1,4 @@
-#include "RobustAutomaticThreshold.hpp"
+#include "RobustAutomaticThresholdFilter.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -99,32 +99,32 @@ void FindThreshold(const IDataArray& inputObject, const Float32Array& gradMagnit
 
 namespace nx::core
 {
-std::string RobustAutomaticThreshold::name() const
+std::string RobustAutomaticThresholdFilter::name() const
 {
-  return FilterTraits<RobustAutomaticThreshold>::name;
+  return FilterTraits<RobustAutomaticThresholdFilter>::name;
 }
 
-std::string RobustAutomaticThreshold::className() const
+std::string RobustAutomaticThresholdFilter::className() const
 {
-  return FilterTraits<RobustAutomaticThreshold>::className;
+  return FilterTraits<RobustAutomaticThresholdFilter>::className;
 }
 
-Uuid RobustAutomaticThreshold::uuid() const
+Uuid RobustAutomaticThresholdFilter::uuid() const
 {
-  return FilterTraits<RobustAutomaticThreshold>::uuid;
+  return FilterTraits<RobustAutomaticThresholdFilter>::uuid;
 }
 
-std::string RobustAutomaticThreshold::humanName() const
+std::string RobustAutomaticThresholdFilter::humanName() const
 {
   return "Robust Automatic Threshold";
 }
 //------------------------------------------------------------------------------
-std::vector<std::string> RobustAutomaticThreshold::defaultTags() const
+std::vector<std::string> RobustAutomaticThresholdFilter::defaultTags() const
 {
   return {className(), "SimplnxCore", "Threshold"};
 }
 
-Parameters RobustAutomaticThreshold::parameters() const
+Parameters RobustAutomaticThresholdFilter::parameters() const
 {
   Parameters params;
 
@@ -139,13 +139,13 @@ Parameters RobustAutomaticThreshold::parameters() const
   return params;
 }
 
-IFilter::UniquePointer RobustAutomaticThreshold::clone() const
+IFilter::UniquePointer RobustAutomaticThresholdFilter::clone() const
 {
-  return std::make_unique<RobustAutomaticThreshold>();
+  return std::make_unique<RobustAutomaticThresholdFilter>();
 }
 
-IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath_Key);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath_Key);
@@ -190,8 +190,8 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
   return {std::move(actions)};
 }
 
-Result<> RobustAutomaticThreshold::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel) const
 {
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath_Key);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath_Key);
@@ -216,9 +216,9 @@ constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> RobustAutomaticThreshold::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> RobustAutomaticThresholdFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = RobustAutomaticThreshold().getDefaultArguments();
+  Arguments args = RobustAutomaticThresholdFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -296,7 +296,7 @@ and then print the name, tuple_dimensions and component_dims of the created DatA
   .. code:: python
 
    data_structure = nx.DataStructure()
-   result = nx.CreateDataArray.execute(data_structure=data_structure, 
+   result = nx.CreateDataArrayFilter.execute(data_structure=data_structure, 
                                         component_count=3, 
                                         data_format="", 
                                         initialization_value="0", 
@@ -328,7 +328,7 @@ The DataStore is the C++ object that actually allocates the memory necessary to 
 data in simplnx/DREAM3D. The Python API is intentially limited to getting a Numpy.View()
 so that python developers can have a consistent well known interace to the DataArray_. The
 programmer will never need to create from scratch a **DataStore** object. They should be fetched
-from a created DataArray_ by executing the :ref:`Create Data Array <CreateDataArray>` filter.
+from a created DataArray_ by executing the :ref:`Create Data Array <CreateDataArrayFilter>` filter.
 
 
 .. py:class:: DataStore

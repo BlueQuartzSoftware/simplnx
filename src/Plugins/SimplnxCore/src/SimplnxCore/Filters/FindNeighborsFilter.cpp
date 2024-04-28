@@ -1,4 +1,4 @@
-#include "FindNeighbors.hpp"
+#include "FindNeighborsFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -20,37 +20,37 @@
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindNeighbors::name() const
+std::string FindNeighborsFilter::name() const
 {
-  return FilterTraits<FindNeighbors>::name;
+  return FilterTraits<FindNeighborsFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighbors::className() const
+std::string FindNeighborsFilter::className() const
 {
-  return FilterTraits<FindNeighbors>::className;
+  return FilterTraits<FindNeighborsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindNeighbors::uuid() const
+Uuid FindNeighborsFilter::uuid() const
 {
-  return FilterTraits<FindNeighbors>::uuid;
+  return FilterTraits<FindNeighborsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighbors::humanName() const
+std::string FindNeighborsFilter::humanName() const
 {
   return "Find Feature Neighbors";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindNeighbors::defaultTags() const
+std::vector<std::string> FindNeighborsFilter::defaultTags() const
 {
   return {className(), "Statistics", "Neighbors", "Features"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindNeighbors::parameters() const
+Parameters FindNeighborsFilter::parameters() const
 {
   Parameters params;
 
@@ -88,13 +88,13 @@ Parameters FindNeighbors::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindNeighbors::clone() const
+IFilter::UniquePointer FindNeighborsFilter::clone() const
 {
-  return std::make_unique<FindNeighbors>();
+  return std::make_unique<FindNeighborsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
@@ -164,7 +164,8 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
 }
 
 //------------------------------------------------------------------------------
-Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> FindNeighborsFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
@@ -433,9 +434,9 @@ constexpr StringLiteral k_SurfaceFeaturesArrayNameKey = "SurfaceFeaturesArrayNam
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindNeighbors::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> FindNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindNeighbors().getDefaultArguments();
+  Arguments args = FindNeighborsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

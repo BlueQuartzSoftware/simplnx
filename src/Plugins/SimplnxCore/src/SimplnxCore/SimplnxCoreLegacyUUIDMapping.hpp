@@ -23,11 +23,11 @@
 #include "SimplnxCore/Filters/ConvertColorToGrayScaleFilter.hpp"
 #include "SimplnxCore/Filters/ConvertDataFilter.hpp"
 #include "SimplnxCore/Filters/CopyDataObjectFilter.hpp"
-#include "SimplnxCore/Filters/CopyFeatureArrayToElementArray.hpp"
+#include "SimplnxCore/Filters/CopyFeatureArrayToElementArrayFilter.hpp"
 #include "SimplnxCore/Filters/CreateAttributeMatrixFilter.hpp"
-#include "SimplnxCore/Filters/CreateDataArray.hpp"
+#include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
 #include "SimplnxCore/Filters/CreateDataGroupFilter.hpp"
-#include "SimplnxCore/Filters/CreateFeatureArrayFromElementArray.hpp"
+#include "SimplnxCore/Filters/CreateFeatureArrayFromElementArrayFilter.hpp"
 #include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CropVertexGeometryFilter.hpp"
@@ -50,8 +50,8 @@
 #include "SimplnxCore/Filters/FindFeaturePhasesFilter.hpp"
 #include "SimplnxCore/Filters/FindFeaturePhasesBinaryFilter.hpp"
 #include "SimplnxCore/Filters/FindNeighborhoodsFilter.hpp"
-#include "SimplnxCore/Filters/FindNeighborListStatistics.hpp"
-#include "SimplnxCore/Filters/FindNeighbors.hpp"
+#include "SimplnxCore/Filters/FindNeighborListStatisticsFilter.hpp"
+#include "SimplnxCore/Filters/FindNeighborsFilter.hpp"
 #include "SimplnxCore/Filters/FindNumFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/FindSurfaceAreaToVolumeFilter.hpp"
 #include "SimplnxCore/Filters/FindSurfaceFeaturesFilter.hpp"
@@ -62,7 +62,7 @@
 #include "SimplnxCore/Filters/ReadCSVFileFilter.hpp"
 #include "SimplnxCore/Filters/ReadDeformKeyFileV12Filter.hpp"
 #include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
-#include "SimplnxCore/Filters/ReadHDF5Dataset.hpp"
+#include "SimplnxCore/Filters/ReadHDF5DatasetFilter.hpp"
 #include "SimplnxCore/Filters/ReadTextDataArrayFilter.hpp"
 #include "SimplnxCore/Filters/ReadVolumeGraphicsFileFilter.hpp"
 #include "SimplnxCore/Filters/InitializeImageGeomCellDataFilter.hpp"
@@ -71,17 +71,17 @@
 #include "SimplnxCore/Filters/LaplacianSmoothingFilter.hpp"
 #include "SimplnxCore/Filters/MapPointCloudToRegularGridFilter.hpp"
 #include "SimplnxCore/Filters/MinNeighborsFilter.hpp"
-#include "SimplnxCore/Filters/MoveData.hpp"
+#include "SimplnxCore/Filters/MoveDataFilter.hpp"
 #include "SimplnxCore/Filters/MultiThresholdObjectsFilter.hpp"
 #include "SimplnxCore/Filters/PointSampleTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/ReadRawBinaryFilter.hpp"
-#include "SimplnxCore/Filters/RemoveFlaggedVertices.hpp"
+#include "SimplnxCore/Filters/RemoveFlaggedVerticesFilter.hpp"
 #include "SimplnxCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp"
-#include "SimplnxCore/Filters/RenameDataObject.hpp"
+#include "SimplnxCore/Filters/RenameDataObjectFilter.hpp"
 #include "SimplnxCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
 #include "SimplnxCore/Filters/ResampleImageGeomFilter.hpp"
-#include "SimplnxCore/Filters/RobustAutomaticThreshold.hpp"
+#include "SimplnxCore/Filters/RobustAutomaticThresholdFilter.hpp"
 #include "SimplnxCore/Filters/RotateSampleRefFrameFilter.hpp"
 #include "SimplnxCore/Filters/ScalarSegmentFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/SetImageGeomOriginScalingFilter.hpp"
@@ -144,11 +144,11 @@ namespace nx::core
     {nx::core::Uuid::FromString("eb5a89c4-4e71-59b1-9719-d10a652d961e").value(), {nx::core::FilterTraits<ConvertColorToGrayScaleFilter>::uuid, &ConvertColorToGrayScaleFilter::FromSIMPLJson}}, // ConvertColorToGrayScale
     {nx::core::Uuid::FromString("f4ba5fa4-bb5c-5dd1-9429-0dd86d0ecb37").value(), {nx::core::FilterTraits<ConvertDataFilter>::uuid, &ConvertDataFilter::FromSIMPLJson}}, // ConvertData
     {nx::core::Uuid::FromString("a37f2e24-7400-5005-b9a7-b2224570cbe9").value(), {nx::core::FilterTraits<ConditionalSetValueFilter>::uuid, &ConditionalSetValueFilter::FromSIMPLJson}}, // ReplaceValueInArray
-    {nx::core::Uuid::FromString("99836b75-144b-5126-b261-b411133b5e8a").value(), {nx::core::FilterTraits<CopyFeatureArrayToElementArray>::uuid, &CopyFeatureArrayToElementArray::FromSIMPLJson}}, // CopyFeatureArrayToElementArray
+    {nx::core::Uuid::FromString("99836b75-144b-5126-b261-b411133b5e8a").value(), {nx::core::FilterTraits<CopyFeatureArrayToElementArrayFilter>::uuid, &CopyFeatureArrayToElementArrayFilter::FromSIMPLJson}}, // CopyFeatureArrayToElementArrayFilter
     {nx::core::Uuid::FromString("93375ef0-7367-5372-addc-baa019b1b341").value(), {nx::core::FilterTraits<CreateAttributeMatrixFilter>::uuid, &CreateAttributeMatrixFilter::FromSIMPLJson}}, // CreateAttributeMatrix
-    {nx::core::Uuid::FromString("77f392fb-c1eb-57da-a1b1-e7acf9239fb8").value(), {nx::core::FilterTraits<CreateDataArray>::uuid, &CreateDataArray::FromSIMPLJson}}, // CreateDataArray
+    {nx::core::Uuid::FromString("77f392fb-c1eb-57da-a1b1-e7acf9239fb8").value(), {nx::core::FilterTraits<CreateDataArrayFilter>::uuid, &CreateDataArrayFilter::FromSIMPLJson}}, // CreateDataArrayFilter
     {nx::core::Uuid::FromString("816fbe6b-7c38-581b-b149-3f839fb65b93").value(), {nx::core::FilterTraits<CreateDataGroupFilter>::uuid, &CreateDataGroupFilter::FromSIMPLJson}}, // CreateDataContainer
-    {nx::core::Uuid::FromString("94438019-21bb-5b61-a7c3-66974b9a34dc").value(), {nx::core::FilterTraits<CreateFeatureArrayFromElementArray>::uuid, &CreateFeatureArrayFromElementArray::FromSIMPLJson}}, // CreateFeatureArrayFromElementArray
+    {nx::core::Uuid::FromString("94438019-21bb-5b61-a7c3-66974b9a34dc").value(), {nx::core::FilterTraits<CreateFeatureArrayFromElementArrayFilter>::uuid, &CreateFeatureArrayFromElementArrayFilter::FromSIMPLJson}}, // CreateFeatureArrayFromElementArrayFilter
     {nx::core::Uuid::FromString("f2132744-3abb-5d66-9cd9-c9a233b5c4aa").value(), {nx::core::FilterTraits<CreateImageGeometryFilter>::uuid, &CreateImageGeometryFilter::FromSIMPLJson}}, // CreateImageGeometryFilter
     {nx::core::Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf").value(), {nx::core::FilterTraits<CropImageGeometryFilter>::uuid, &CropImageGeometryFilter::FromSIMPLJson}}, // CropImageGeometryFilter
     {nx::core::Uuid::FromString("f28cbf07-f15a-53ca-8c7f-b41a11dae6cc").value(), {nx::core::FilterTraits<CropVertexGeometryFilter>::uuid, &CropVertexGeometryFilter::FromSIMPLJson}}, // CropVertexGeometryFilter
@@ -165,8 +165,8 @@ namespace nx::core
     {nx::core::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), {nx::core::FilterTraits<FindFeaturePhasesFilter>::uuid, &FindFeaturePhasesFilter::FromSIMPLJson}}, // FindFeaturePhases
     {nx::core::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), {nx::core::FilterTraits<FindFeaturePhasesBinaryFilter>::uuid, &FindFeaturePhasesBinaryFilter::FromSIMPLJson}}, // FindFeaturePhasesBinary
     {nx::core::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), {nx::core::FilterTraits<FindNeighborhoodsFilter>::uuid, &FindNeighborhoodsFilter::FromSIMPLJson}}, // FindNeighborhoods
-    {nx::core::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {nx::core::FilterTraits<FindNeighborListStatistics>::uuid, &FindNeighborListStatistics::FromSIMPLJson}}, // FindNeighborListStatistics
-    {nx::core::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {nx::core::FilterTraits<FindNeighbors>::uuid, &FindNeighbors::FromSIMPLJson}}, // FindNeighbors
+    {nx::core::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {nx::core::FilterTraits<FindNeighborListStatisticsFilter>::uuid, &FindNeighborListStatisticsFilter::FromSIMPLJson}}, // FindNeighborListStatisticsFilter
+    {nx::core::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {nx::core::FilterTraits<FindNeighborsFilter>::uuid, &FindNeighborsFilter::FromSIMPLJson}}, // FindNeighborsFilter
     {nx::core::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), {nx::core::FilterTraits<FindNumFeaturesFilter>::uuid, &FindNumFeaturesFilter::FromSIMPLJson}}, // FindNumFeatures
     {nx::core::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {nx::core::FilterTraits<FindSurfaceAreaToVolumeFilter>::uuid, &FindSurfaceAreaToVolumeFilter::FromSIMPLJson}}, // FindSurfaceAreaToVolume
     {nx::core::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), {nx::core::FilterTraits<FindSurfaceFeaturesFilter>::uuid, &FindSurfaceFeaturesFilter::FromSIMPLJson}}, // FindSurfaceFeaturesFilter
@@ -176,7 +176,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), {nx::core::FilterTraits<ReadBinaryCTNorthstarFilter>::uuid, &ReadBinaryCTNorthstarFilter::FromSIMPLJson}}, // ImportBinaryCTNorthstarFilter
     {nx::core::Uuid::FromString("bdb978bc-96bf-5498-972c-b509c38b8d50").value(), {nx::core::FilterTraits<ReadCSVFileFilter>::uuid, &ReadCSVFileFilter::FromSIMPLJson}}, // ReadASCIIData
     {nx::core::Uuid::FromString("043cbde5-3878-5718-958f-ae75714df0df").value(), {nx::core::FilterTraits<ReadDREAM3DFilter>::uuid, &ReadDREAM3DFilter::FromSIMPLJson}}, // DataContainerReader
-    {nx::core::Uuid::FromString("9e98c3b0-5707-5a3b-b8b5-23ef83b02896").value(), {nx::core::FilterTraits<ReadHDF5Dataset>::uuid, &ReadHDF5Dataset::FromSIMPLJson}}, // ImportHDF5Dataset
+    {nx::core::Uuid::FromString("9e98c3b0-5707-5a3b-b8b5-23ef83b02896").value(), {nx::core::FilterTraits<ReadHDF5DatasetFilter>::uuid, &ReadHDF5DatasetFilter::FromSIMPLJson}}, // ImportHDF5Dataset
     {nx::core::Uuid::FromString("a7007472-29e5-5d0a-89a6-1aed11b603f8").value(), {nx::core::FilterTraits<ReadTextDataArrayFilter>::uuid, &ReadTextDataArrayFilter::FromSIMPLJson}}, // ImportAsciDataArray
     {nx::core::Uuid::FromString("5fa10d81-94b4-582b-833f-8eabe659069e").value(), {nx::core::FilterTraits<ReadVolumeGraphicsFileFilter>::uuid, &ReadVolumeGraphicsFileFilter::FromSIMPLJson}}, // ImportVolumeGraphicsFileFilter
     {nx::core::Uuid::FromString("dfab9921-fea3-521c-99ba-48db98e43ff8").value(), {nx::core::FilterTraits<InitializeImageGeomCellDataFilter>::uuid, &InitializeImageGeomCellDataFilter::FromSIMPLJson}}, // InitializeDataFilter
@@ -185,18 +185,18 @@ namespace nx::core
     {nx::core::Uuid::FromString("601c4885-c218-5da6-9fc7-519d85d241ad").value(), {nx::core::FilterTraits<LaplacianSmoothingFilter>::uuid, &LaplacianSmoothingFilter::FromSIMPLJson}}, // LaplacianSmoothing
     {nx::core::Uuid::FromString("9fe34deb-99e1-5f3a-a9cc-e90c655b47ee").value(), {nx::core::FilterTraits<MapPointCloudToRegularGridFilter>::uuid, &MapPointCloudToRegularGridFilter::FromSIMPLJson}}, // MapPointCloudToRegularGrid
     {nx::core::Uuid::FromString("dab5de3c-5f81-5bb5-8490-73521e1183ea").value(), {nx::core::FilterTraits<MinNeighborsFilter>::uuid, &MinNeighborsFilter::FromSIMPLJson}}, // MinNeighborsFilter
-    {nx::core::Uuid::FromString("fe2cbe09-8ae1-5bea-9397-fd5741091fdb").value(), {nx::core::FilterTraits<MoveData>::uuid, &MoveData::FromSIMPLJson}}, // MoveData
+    {nx::core::Uuid::FromString("fe2cbe09-8ae1-5bea-9397-fd5741091fdb").value(), {nx::core::FilterTraits<MoveDataFilter>::uuid, &MoveDataFilter::FromSIMPLJson}}, // MoveDataFilter
     {nx::core::Uuid::FromString("014b7300-cf36-5ede-a751-5faf9b119dae").value(), {nx::core::FilterTraits<MultiThresholdObjectsFilter>::uuid, &MultiThresholdObjectsFilter::FromSIMPLJson}}, // MultiThresholdObjects
     {nx::core::Uuid::FromString("686d5393-2b02-5c86-b887-dd81a8ae80f2").value(), {nx::core::FilterTraits<MultiThresholdObjectsFilter>::uuid, &MultiThresholdObjectsFilter::FromSIMPLJson}}, // MultiThresholdObjects2
     {nx::core::Uuid::FromString("119861c5-e303-537e-b210-2e62936222e9").value(), {nx::core::FilterTraits<PointSampleTriangleGeometryFilter>::uuid, &PointSampleTriangleGeometryFilter::FromSIMPLJson}}, // PointSampleTriangleGeometry
     {nx::core::Uuid::FromString("07b49e30-3900-5c34-862a-f1fb48bad568").value(), {nx::core::FilterTraits<QuickSurfaceMeshFilter>::uuid, &QuickSurfaceMeshFilter::FromSIMPLJson}}, // QuickSurfaceMesh
     {nx::core::Uuid::FromString("0791f556-3d73-5b1e-b275-db3f7bb6850d").value(), {nx::core::FilterTraits<ReadRawBinaryFilter>::uuid, &ReadRawBinaryFilter::FromSIMPLJson}}, // RawBinaryReader
-    {nx::core::Uuid::FromString("379ccc67-16dd-530a-984f-177db2314bac").value(), {nx::core::FilterTraits<RemoveFlaggedVertices>::uuid, &RemoveFlaggedVertices::FromSIMPLJson}}, // RemoveFlaggedVertices
+    {nx::core::Uuid::FromString("379ccc67-16dd-530a-984f-177db2314bac").value(), {nx::core::FilterTraits<RemoveFlaggedVerticesFilter>::uuid, &RemoveFlaggedVerticesFilter::FromSIMPLJson}}, // RemoveFlaggedVerticesFilter
     {nx::core::Uuid::FromString("53ac1638-8934-57b8-b8e5-4b91cdda23ec").value(), {nx::core::FilterTraits<RemoveMinimumSizeFeaturesFilter>::uuid, &RemoveMinimumSizeFeaturesFilter::FromSIMPLJson}}, // MinSize
-    {nx::core::Uuid::FromString("53a5f731-2858-5e3e-bd43-8f2cf45d90ec").value(), {nx::core::FilterTraits<RenameDataObject>::uuid, &RenameDataObject::FromSIMPLJson}}, // RenameAttributeArray
-    {nx::core::Uuid::FromString("ee29e6d6-1f59-551b-9350-a696523261d5").value(), {nx::core::FilterTraits<RenameDataObject>::uuid, &RenameDataObject::FromSIMPLJson}}, // RenameAttributeMatrix
-    {nx::core::Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6").value(), {nx::core::FilterTraits<RenameDataObject>::uuid, &RenameDataObject::FromSIMPLJson}}, // RenameDataContainer
-    {nx::core::Uuid::FromString("3062fc2c-76b2-5c50-92b7-edbbb424c41d").value(), {nx::core::FilterTraits<RobustAutomaticThreshold>::uuid, &RobustAutomaticThreshold::FromSIMPLJson}}, // RobustAutomaticThreshold
+    {nx::core::Uuid::FromString("53a5f731-2858-5e3e-bd43-8f2cf45d90ec").value(), {nx::core::FilterTraits<RenameDataObjectFilter>::uuid, &RenameDataObjectFilter::FromSIMPLJson}}, // RenameAttributeArray
+    {nx::core::Uuid::FromString("ee29e6d6-1f59-551b-9350-a696523261d5").value(), {nx::core::FilterTraits<RenameDataObjectFilter>::uuid, &RenameDataObjectFilter::FromSIMPLJson}}, // RenameAttributeMatrix
+    {nx::core::Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6").value(), {nx::core::FilterTraits<RenameDataObjectFilter>::uuid, &RenameDataObjectFilter::FromSIMPLJson}}, // RenameDataContainer
+    {nx::core::Uuid::FromString("3062fc2c-76b2-5c50-92b7-edbbb424c41d").value(), {nx::core::FilterTraits<RobustAutomaticThresholdFilter>::uuid, &RobustAutomaticThresholdFilter::FromSIMPLJson}}, // RobustAutomaticThresholdFilter
     {nx::core::Uuid::FromString("2c5edebf-95d8-511f-b787-90ee2adf485c").value(), {nx::core::FilterTraits<ScalarSegmentFeaturesFilter>::uuid, &ScalarSegmentFeaturesFilter::FromSIMPLJson}}, // ScalarSegmentFeatures
     {nx::core::Uuid::FromString("6d3a3852-6251-5d2e-b749-6257fd0d8951").value(), {nx::core::FilterTraits<SetImageGeomOriginScalingFilter>::uuid, &SetImageGeomOriginScalingFilter::FromSIMPLJson}}, // SetOriginResolutionImageGeom
     {nx::core::Uuid::FromString("5ecf77f4-a38a-52ab-b4f6-0fb8a9c5cb9c").value(), {nx::core::FilterTraits<SplitAttributeArrayFilter>::uuid, &SplitAttributeArrayFilter::FromSIMPLJson}}, // SplitAttributeArray

@@ -576,7 +576,7 @@
                                                       },
                                                       "comments": "",
                                                       "filter": {
-                                                        "name": "simplnx::FindNeighbors",
+                                                        "name": "simplnx::FindNeighborsFilter",
                                                         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
                                                       },
                                                       "isDisabled": false
@@ -653,7 +653,7 @@
                                                       },
                                                       "comments": "",
                                                       "filter": {
-                                                        "name": "simplnx::FindNeighbors",
+                                                        "name": "simplnx::FindNeighborsFilter",
                                                         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
                                                       },
                                                       "isDisabled": false
@@ -836,7 +836,7 @@
                                               },
                                               "comments": "",
                                               "filter": {
-                                                "name": "simplnx::FindNeighbors",
+                                                "name": "simplnx::FindNeighborsFilter",
                                                 "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
                                               },
                                               "isDisabled": false
@@ -1094,7 +1094,7 @@
                               },
                               "comments": "",
                               "filter": {
-                                "name": "simplnx::MoveData",
+                                "name": "simplnx::MoveDataFilter",
                                 "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
                               },
                               "isDisabled": false

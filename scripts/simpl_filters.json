@@ -1135,7 +1135,7 @@
                     "uuid": "{6cc3148c-0bad-53b4-9568-ee1971cadb00}"
                 },
                 {
-                    "name": "FindNeighborListStatistics",
+                    "name": "FindNeighborListStatisticsFilter",
                     "parameters": [
                         {
                             "name": "FindLength",
@@ -2371,7 +2371,7 @@
                     "uuid": "{5a2b714e-bae9-5213-8171-d1e190609e2d}"
                 },
                 {
-                    "name": "RemoveFlaggedVertices",
+                    "name": "RemoveFlaggedVerticesFilter",
                     "parameters": [
                         {
                             "name": "VertexGeometry",
@@ -2389,7 +2389,7 @@
                     "uuid": "{379ccc67-16dd-530a-984f-177db2314bac}"
                 },
                 {
-                    "name": "RobustAutomaticThreshold",
+                    "name": "RobustAutomaticThresholdFilter",
                     "parameters": [
                         {
                             "name": "InputArrayPath",
@@ -8983,7 +8983,7 @@
                     "uuid": "{697ed3de-db33-5dd1-a64b-04fb71e7d63e}"
                 },
                 {
-                    "name": "FindNeighbors",
+                    "name": "FindNeighborsFilter",
                     "parameters": [
                         {
                             "name": "StoreBoundaryCells",
@@ -11707,7 +11707,7 @@
                     "uuid": "{f4ba5fa4-bb5c-5dd1-9429-0dd86d0ecb37}"
                 },
                 {
-                    "name": "CopyFeatureArrayToElementArray",
+                    "name": "CopyFeatureArrayToElementArrayFilter",
                     "parameters": [
                         {
                             "name": "",
@@ -11781,7 +11781,7 @@
                     "uuid": "{93375ef0-7367-5372-addc-baa019b1b341}"
                 },
                 {
-                    "name": "CreateDataArray",
+                    "name": "CreateDataArrayFilter",
                     "parameters": [
                         {
                             "name": "ScalarType",
@@ -11825,7 +11825,7 @@
                     "uuid": "{816fbe6b-7c38-581b-b149-3f839fb65b93}"
                 },
                 {
-                    "name": "CreateFeatureArrayFromElementArray",
+                    "name": "CreateFeatureArrayFromElementArrayFilter",
                     "parameters": [
                         {
                             "name": "",
@@ -12491,7 +12491,7 @@
                     "uuid": "{34a19028-c50b-5dea-af0e-e06c798d3686}"
                 },
                 {
-                    "name": "MoveData",
+                    "name": "MoveDataFilter",
                     "parameters": [
                         {
                             "name": "WhatToMove",

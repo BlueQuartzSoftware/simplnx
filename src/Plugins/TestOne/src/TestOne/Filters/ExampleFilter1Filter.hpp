@@ -7,17 +7,23 @@
 
 namespace nx::core
 {
-class TESTONE_EXPORT DynamicTableExample : public IFilter
+class TESTONE_EXPORT ExampleFilter1Filter : public IFilter
 {
 public:
-  DynamicTableExample() = default;
-  ~DynamicTableExample() noexcept override = default;
+  ExampleFilter1Filter() = default;
+  ~ExampleFilter1Filter() noexcept override = default;
 
-  DynamicTableExample(const DynamicTableExample&) = delete;
-  DynamicTableExample(DynamicTableExample&&) noexcept = delete;
+  ExampleFilter1Filter(const ExampleFilter1Filter&) = delete;
+  ExampleFilter1Filter(ExampleFilter1Filter&&) noexcept = delete;
 
-  DynamicTableExample& operator=(const DynamicTableExample&) = delete;
-  DynamicTableExample& operator=(DynamicTableExample&&) noexcept = delete;
+  ExampleFilter1Filter& operator=(const ExampleFilter1Filter&) = delete;
+  ExampleFilter1Filter& operator=(ExampleFilter1Filter&&) noexcept = delete;
+
+  // Parameter Keys
+  static inline constexpr StringLiteral k_InputDir_Key = "input_dir";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_OutputDir_Key = "output_dir";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
 
   /**
    * @brief
@@ -83,4 +89,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, DynamicTableExample, "1307bbbc-112E-4aaa-941f-682637F7b17e");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ExampleFilter1Filter, "dd92896b-26ec-4419-b905-567e93e8f39d");

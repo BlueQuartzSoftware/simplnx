@@ -16,7 +16,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArray",
+        "name": "simplnx::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
@@ -35,7 +35,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArray",
+        "name": "simplnx::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
@@ -54,7 +54,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArray",
+        "name": "simplnx::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false

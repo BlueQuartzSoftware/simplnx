@@ -106,7 +106,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MoveData",
+        "name": "simplnx::MoveDataFilter",
         "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
       },
       "isDisabled": true

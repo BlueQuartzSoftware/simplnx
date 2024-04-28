@@ -1,4 +1,4 @@
-#include "ExampleFilter1.hpp"
+#include "ExampleFilter1Filter.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Parameters/ArrayThresholdsParameter.hpp"
@@ -35,37 +35,37 @@ constexpr StringLiteral k_Param10 = "param10";
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ExampleFilter1::name() const
+std::string ExampleFilter1Filter::name() const
 {
-  return FilterTraits<ExampleFilter1>::name;
+  return FilterTraits<ExampleFilter1Filter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string ExampleFilter1::className() const
+std::string ExampleFilter1Filter::className() const
 {
-  return FilterTraits<ExampleFilter1>::className;
+  return FilterTraits<ExampleFilter1Filter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ExampleFilter1::uuid() const
+Uuid ExampleFilter1Filter::uuid() const
 {
-  return FilterTraits<ExampleFilter1>::uuid;
+  return FilterTraits<ExampleFilter1Filter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ExampleFilter1::humanName() const
+std::string ExampleFilter1Filter::humanName() const
 {
   return "Example Filter 1";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ExampleFilter1::defaultTags() const
+std::vector<std::string> ExampleFilter1Filter::defaultTags() const
 {
   return {className(), "Example", "Test"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ExampleFilter1::parameters() const
+Parameters ExampleFilter1Filter::parameters() const
 {
   Parameters params;
   params.insertSeparator({"FileSystem Selections"});
@@ -113,23 +113,23 @@ Parameters ExampleFilter1::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExampleFilter1::clone() const
+IFilter::UniquePointer ExampleFilter1Filter::clone() const
 {
-  return std::make_unique<ExampleFilter1>();
+  return std::make_unique<ExampleFilter1Filter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ExampleFilter1Filter::preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   //  auto inputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputDir_Key);
-  //  std::cout << "[ExampleFilter1::PreflightImpl] inputDir=" << inputDir << std::endl;
+  //  std::cout << "[ExampleFilter1Filter::PreflightImpl] inputDir=" << inputDir << std::endl;
   //  auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  //  std::cout << "[ExampleFilter1::PreflightImpl] inputFile=" << inputFile << std::endl;
+  //  std::cout << "[ExampleFilter1Filter::PreflightImpl] inputFile=" << inputFile << std::endl;
 
   //  auto outputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputDir_Key);
-  //  std::cout << "[ExampleFilter1::PreflightImpl] outputDir=" << outputDir << std::endl;
+  //  std::cout << "[ExampleFilter1Filter::PreflightImpl] outputDir=" << outputDir << std::endl;
   //  auto outputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
-  //  std::cout << "[ExampleFilter1::PreflightImpl] outputFile=" << outputFile << std::endl;
+  //  std::cout << "[ExampleFilter1Filter::PreflightImpl] outputFile=" << outputFile << std::endl;
 
   //  auto vec2 = filterArgs.value<VectorInt32Parameter::ValueType>("Vec2_Key");
   //  auto vec3 = filterArgs.value<VectorInt32Parameter::ValueType>("Vec3_Key");
@@ -172,7 +172,8 @@ IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> ExampleFilter1::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ExampleFilter1Filter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel) const
 {
   return MakeWarningVoidResult(-100, "Example Warning from within an execute message");
 }

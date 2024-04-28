@@ -1,4 +1,4 @@
-#include "DynamicTableExample.hpp"
+#include "DynamicTableExampleFilter.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
@@ -17,37 +17,37 @@ namespace nx::core
 {
 
 //------------------------------------------------------------------------------
-std::string DynamicTableExample::name() const
+std::string DynamicTableExampleFilter::name() const
 {
-  return FilterTraits<DynamicTableExample>::name;
+  return FilterTraits<DynamicTableExampleFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string DynamicTableExample::className() const
+std::string DynamicTableExampleFilter::className() const
 {
-  return FilterTraits<DynamicTableExample>::className;
+  return FilterTraits<DynamicTableExampleFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid DynamicTableExample::uuid() const
+Uuid DynamicTableExampleFilter::uuid() const
 {
-  return FilterTraits<DynamicTableExample>::uuid;
+  return FilterTraits<DynamicTableExampleFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string DynamicTableExample::humanName() const
+std::string DynamicTableExampleFilter::humanName() const
 {
   return "Dynamic Table Examples";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> DynamicTableExample::defaultTags() const
+std::vector<std::string> DynamicTableExampleFilter::defaultTags() const
 {
   return {className(), "Example", "Test"};
 }
 
 //------------------------------------------------------------------------------
-Parameters DynamicTableExample::parameters() const
+Parameters DynamicTableExampleFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator({"Fixed Columns - Fixed Rows"});
@@ -88,20 +88,20 @@ Parameters DynamicTableExample::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer DynamicTableExample::clone() const
+IFilter::UniquePointer DynamicTableExampleFilter::clone() const
 {
-  return std::make_unique<DynamicTableExample>();
+  return std::make_unique<DynamicTableExampleFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult DynamicTableExample::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult DynamicTableExampleFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> DynamicTableExample::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+Result<> DynamicTableExampleFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   return {};
 }

@@ -56,7 +56,7 @@ data_structure = nx.DataStructure()
 
 
 array_path = nx.DataPath(['data'])
-assert nx.CreateDataArray.execute(data_structure, 
+assert nx.CreateDataArrayFilter.execute(data_structure, 
                                   numeric_type_index=nx.NumericType.float32, 
                                   component_count=1, 
                                   tuple_dimensions=[[3, 2]], 

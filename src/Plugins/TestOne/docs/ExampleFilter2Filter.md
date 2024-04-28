@@ -1,4 +1,4 @@
-# ExampleFilter2
+# ExampleFilter2Filter
 
 ## Group (Subgroup)
 

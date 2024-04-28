@@ -76,7 +76,7 @@ const FilterHandle k_ReadTextDataArrayFilterHandle(k_ReadTextDataArrayFilterId, 
 // Make sure we can instantiate the Read DREAM3D Data File
 const Uuid k_ReadDREAM3DFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
 const FilterHandle k_ReadDREAM3DFilterHandle(k_ReadDREAM3DFilterId, k_SimplnxCorePluginId);
-// Make sure we can instantiate the Read RenameDataObject
+// Make sure we can instantiate the Read RenameDataObjectFilter
 const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("911a3aa9-d3c2-4f66-9451-8861c4b726d5");
 const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_SimplnxCorePluginId);
 // Make sure we can instantiate the Crop Image Geometry

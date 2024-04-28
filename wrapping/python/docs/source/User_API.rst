@@ -511,7 +511,7 @@ General Parameters
 .. _ReadHDF5DatasetParameter:
 .. py:class:: ReadHDF5DatasetParameter
 
-   This parameter is used for the :ref:`simplnx.ReadHDF5Dataset<ReadHDF5Dataset>` and holds the information
+   This parameter is used for the :ref:`simplnx.ReadHDF5DatasetFilter<ReadHDF5DatasetFilter>` and holds the information
    to import specific data sets from within the HDF5 file into DREAM3D/simplnx
 
    .. py:class:: ReadHDF5DatasetParameter.ValueType
@@ -547,7 +547,7 @@ General Parameters
       import_hdf5_param.input_file = "SmallIN100_Final.dream3d"
       import_hdf5_param.datasets = [dataset1, dataset2]
       # import_hdf5_param.parent = nx.DataPath(["Imported Data"])
-      result = nx.ReadHDF5Dataset.execute(data_structure=data_structure,
+      result = nx.ReadHDF5DatasetFilter.execute(data_structure=data_structure,
                                           import_hd_f5_file=import_hdf5_param
                                           )
 

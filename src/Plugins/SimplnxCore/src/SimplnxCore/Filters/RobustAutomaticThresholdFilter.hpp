@@ -7,17 +7,17 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT RobustAutomaticThreshold : public IFilter
+class SIMPLNXCORE_EXPORT RobustAutomaticThresholdFilter : public IFilter
 {
 public:
-  RobustAutomaticThreshold() = default;
-  ~RobustAutomaticThreshold() noexcept override = default;
+  RobustAutomaticThresholdFilter() = default;
+  ~RobustAutomaticThresholdFilter() noexcept override = default;
 
-  RobustAutomaticThreshold(const RobustAutomaticThreshold&) = delete;
-  RobustAutomaticThreshold(RobustAutomaticThreshold&&) noexcept = delete;
+  RobustAutomaticThresholdFilter(const RobustAutomaticThresholdFilter&) = delete;
+  RobustAutomaticThresholdFilter(RobustAutomaticThresholdFilter&&) noexcept = delete;
 
-  RobustAutomaticThreshold& operator=(const RobustAutomaticThreshold&) = delete;
-  RobustAutomaticThreshold& operator=(RobustAutomaticThreshold&&) noexcept = delete;
+  RobustAutomaticThresholdFilter& operator=(const RobustAutomaticThresholdFilter&) = delete;
+  RobustAutomaticThresholdFilter& operator=(RobustAutomaticThresholdFilter&&) noexcept = delete;
 
   static inline constexpr StringLiteral k_InputArrayPath_Key = "input_array_path";
   static inline constexpr StringLiteral k_GradientMagnitudePath_Key = "gradient_array_path";
@@ -94,4 +94,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, RobustAutomaticThreshold, "ade392e6-f0da-4cf3-bf11-dfe69e200b49");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, RobustAutomaticThresholdFilter, "ade392e6-f0da-4cf3-bf11-dfe69e200b49");

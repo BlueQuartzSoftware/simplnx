@@ -1,4 +1,4 @@
-#include "FindNeighborListStatistics.hpp"
+#include "FindNeighborListStatisticsFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
@@ -58,37 +58,37 @@ public:
     auto* array0 = dynamic_cast<DataArray<uint64_t>*>(m_Arrays[0]);
     if(m_Length && array0 == nullptr)
     {
-      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
+      throw std::invalid_argument("FindNeighborListStatisticsFilter::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
     }
     auto* array1 = dynamic_cast<DataArrayType*>(m_Arrays[1]);
     if(m_Min && array1 == nullptr)
     {
-      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
+      throw std::invalid_argument("FindNeighborListStatisticsFilter::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
     }
     auto* array2 = dynamic_cast<DataArrayType*>(m_Arrays[2]);
     if(m_Max && array2 == nullptr)
     {
-      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
+      throw std::invalid_argument("FindNeighborListStatisticsFilter::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
     }
     auto* array3 = dynamic_cast<Float32Array*>(m_Arrays[3]);
     if(m_Mean && array3 == nullptr)
     {
-      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
+      throw std::invalid_argument("FindNeighborListStatisticsFilter::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
     }
     auto* array4 = dynamic_cast<Float32Array*>(m_Arrays[4]);
     if(m_Median && array4 == nullptr)
     {
-      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Median' array to needed type. Check input array selection.");
+      throw std::invalid_argument("FindNeighborListStatisticsFilter::compute() could not dynamic_cast 'Median' array to needed type. Check input array selection.");
     }
     auto* array5 = dynamic_cast<Float32Array*>(m_Arrays[5]);
     if(m_StdDeviation && array5 == nullptr)
     {
-      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
+      throw std::invalid_argument("FindNeighborListStatisticsFilter::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
     }
     auto* array6 = dynamic_cast<Float32Array*>(m_Arrays[6]);
     if(m_Summation && array6 == nullptr)
     {
-      throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
+      throw std::invalid_argument("FindNeighborListStatisticsFilter::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
     }
 
     NeighborListType& sourceList = dynamic_cast<NeighborListType&>(m_Source);
@@ -156,7 +156,7 @@ private:
 } // namespace
 
 //------------------------------------------------------------------------------
-OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStructure& data, const Arguments& args) const
+OutputActions FindNeighborListStatisticsFilter::createCompatibleArrays(const DataStructure& data, const Arguments& args) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
   auto findMin = args.value<bool>(k_FindMinimum_Key);
@@ -220,37 +220,37 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighborListStatistics::name() const
+std::string FindNeighborListStatisticsFilter::name() const
 {
-  return FilterTraits<FindNeighborListStatistics>::name;
+  return FilterTraits<FindNeighborListStatisticsFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighborListStatistics::className() const
+std::string FindNeighborListStatisticsFilter::className() const
 {
-  return FilterTraits<FindNeighborListStatistics>::className;
+  return FilterTraits<FindNeighborListStatisticsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindNeighborListStatistics::uuid() const
+Uuid FindNeighborListStatisticsFilter::uuid() const
 {
-  return FilterTraits<FindNeighborListStatistics>::uuid;
+  return FilterTraits<FindNeighborListStatisticsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighborListStatistics::humanName() const
+std::string FindNeighborListStatisticsFilter::humanName() const
 {
   return "Find Neighbor List Statistics";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindNeighborListStatistics::defaultTags() const
+std::vector<std::string> FindNeighborListStatisticsFilter::defaultTags() const
 {
   return {className(), "NeighborList", "Statistics", "Analytics"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindNeighborListStatistics::parameters() const
+Parameters FindNeighborListStatisticsFilter::parameters() const
 {
   Parameters params;
 
@@ -280,13 +280,14 @@ Parameters FindNeighborListStatistics::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindNeighborListStatistics::clone() const
+IFilter::UniquePointer FindNeighborListStatisticsFilter::clone() const
 {
-  return std::make_unique<FindNeighborListStatistics>();
+  return std::make_unique<FindNeighborListStatisticsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindNeighborListStatisticsFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+                                                                         const std::atomic_bool& shouldCancel) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
   auto findMin = args.value<bool>(k_FindMinimum_Key);
@@ -320,8 +321,8 @@ IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel) const
+Result<> FindNeighborListStatisticsFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
   auto findMin = args.value<bool>(k_FindMinimum_Key);
@@ -381,14 +382,14 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
   DataType type = inputArray.getDataType();
   if(type == DataType::boolean)
   {
-    std::string ss = fmt::format("FindNeighborListStatistics::NeighborList {} was of type boolean, and thus cannot be processed", inputArray.getName());
+    std::string ss = fmt::format("FindNeighborListStatisticsFilter::NeighborList {} was of type boolean, and thus cannot be processed", inputArray.getName());
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_BoolTypeNeighborList, ss}})};
   }
 
   usize numTuples = inputArray.getNumberOfTuples();
   if(numTuples == 0)
   {
-    std::string ss = fmt::format("FindNeighborListStatistics::NeighborList {} was empty", inputArray.getName());
+    std::string ss = fmt::format("FindNeighborListStatisticsFilter::NeighborList {} was empty", inputArray.getName());
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyNeighborList, ss}})};
   }
 
@@ -423,9 +424,9 @@ constexpr StringLiteral k_SummationArrayNameKey = "SummationArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindNeighborListStatistics::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> FindNeighborListStatisticsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindNeighborListStatistics().getDefaultArguments();
+  Arguments args = FindNeighborListStatisticsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -8,25 +8,26 @@
 
 namespace nx::core
 {
-/**
- * @class RenameDataObject
- * @brief RenameDataObject class is used to rename any DataObject.
- */
-class SIMPLNXCORE_EXPORT RenameDataObject : public IFilter
+class SIMPLNXCORE_EXPORT CreateDataArrayFilter : public IFilter
 {
 public:
-  RenameDataObject() = default;
-  ~RenameDataObject() noexcept override = default;
+  CreateDataArrayFilter() = default;
+  ~CreateDataArrayFilter() noexcept override = default;
 
-  RenameDataObject(const RenameDataObject&) = delete;
-  RenameDataObject(RenameDataObject&&) noexcept = delete;
+  CreateDataArrayFilter(const CreateDataArrayFilter&) = delete;
+  CreateDataArrayFilter(CreateDataArrayFilter&&) noexcept = delete;
 
-  RenameDataObject& operator=(const RenameDataObject&) = delete;
-  RenameDataObject& operator=(RenameDataObject&&) noexcept = delete;
+  CreateDataArrayFilter& operator=(const CreateDataArrayFilter&) = delete;
+  CreateDataArrayFilter& operator=(CreateDataArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SourceDataObjectPath_Key = "source_data_object_path";
-  static inline constexpr StringLiteral k_NewName_Key = "new_name";
+  static inline constexpr StringLiteral k_NumericType_Key = "numeric_type_index";
+  static inline constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
+  static inline constexpr StringLiteral k_NumComps_Key = "component_count";
+  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+  static inline constexpr StringLiteral k_DataPath_Key = "output_array_path";
+  static inline constexpr StringLiteral k_InitializationValue_Key = "initialization_value_str";
+  static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -36,7 +37,7 @@ public:
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
   /**
-   * @brief
+   * @brief Returns the filter's name.
    * @return std::string
    */
   std::string name() const override;
@@ -48,13 +49,13 @@ public:
   std::string className() const override;
 
   /**
-   * @brief
+   * @brief Returns the filter's UUID.
    * @return Uuid
    */
   Uuid uuid() const override;
 
   /**
-   * @brief
+   * @brief Returns the filter name as a human-readable string.
    * @return std::string
    */
   std::string humanName() const override;
@@ -66,13 +67,13 @@ public:
   std::vector<std::string> defaultTags() const override;
 
   /**
-   * @brief
+   * @brief Returns a collection of parameters required to execute the filter.
    * @return Parameters
    */
   Parameters parameters() const override;
 
   /**
-   * @brief
+   * @brief Creates and returns a copy of the filter.
    * @return UniquePointer
    */
   UniquePointer clone() const override;
@@ -83,7 +84,6 @@ protected:
    * @param data
    * @param filterArgs
    * @param messageHandler
-   * @param shouldCancel
    * @return Result<OutputActions>
    */
   PreflightResult preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
@@ -94,7 +94,6 @@ protected:
    * @param args
    * @param pipelineNode
    * @param messageHandler
-   * @param shouldCancel
    * @return Result<>
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
@@ -102,4 +101,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, RenameDataObject, "911a3aa9-d3c2-4f66-9451-8861c4b726d5");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreateDataArrayFilter, "67041f9b-bdc6-4122-acc6-c9fe9280e90d");

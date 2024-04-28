@@ -10,20 +10,20 @@
 namespace nx::core
 {
 /**
- * @class ReadHDF5Dataset
+ * @class ReadHDF5DatasetFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT ReadHDF5Dataset : public IFilter
+class SIMPLNXCORE_EXPORT ReadHDF5DatasetFilter : public IFilter
 {
 public:
-  ReadHDF5Dataset() = default;
-  ~ReadHDF5Dataset() noexcept override = default;
+  ReadHDF5DatasetFilter() = default;
+  ~ReadHDF5DatasetFilter() noexcept override = default;
 
-  ReadHDF5Dataset(const ReadHDF5Dataset&) = delete;
-  ReadHDF5Dataset(ReadHDF5Dataset&&) noexcept = delete;
+  ReadHDF5DatasetFilter(const ReadHDF5DatasetFilter&) = delete;
+  ReadHDF5DatasetFilter(ReadHDF5DatasetFilter&&) noexcept = delete;
 
-  ReadHDF5Dataset& operator=(const ReadHDF5Dataset&) = delete;
-  ReadHDF5Dataset& operator=(ReadHDF5Dataset&&) noexcept = delete;
+  ReadHDF5DatasetFilter& operator=(const ReadHDF5DatasetFilter&) = delete;
+  ReadHDF5DatasetFilter& operator=(ReadHDF5DatasetFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ImportHDF5File_Key = "import_hd_f5_file";
@@ -101,4 +101,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ReadHDF5Dataset, "8027f145-c7d5-4589-900e-b909fb3a059c");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ReadHDF5DatasetFilter, "8027f145-c7d5-4589-900e-b909fb3a059c");

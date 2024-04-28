@@ -1,45 +1,57 @@
 #pragma once
 
+#include "SimplnxCore/SimplnxCore_export.hpp"
+
+#include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-#include "TestOne/TestOne_export.hpp"
-
 namespace nx::core
 {
-class TESTONE_EXPORT ExampleFilter2 : public IFilter
+class SIMPLNXCORE_EXPORT MoveDataFilter : public IFilter
 {
 public:
-  ExampleFilter2() = default;
-  ~ExampleFilter2() noexcept override = default;
+  MoveDataFilter() = default;
+  ~MoveDataFilter() noexcept override = default;
 
-  ExampleFilter2(const ExampleFilter2&) = delete;
-  ExampleFilter2(ExampleFilter2&&) noexcept = delete;
+  MoveDataFilter(const MoveDataFilter&) = delete;
+  MoveDataFilter(MoveDataFilter&&) noexcept = delete;
 
-  ExampleFilter2& operator=(const ExampleFilter2&) = delete;
-  ExampleFilter2& operator=(ExampleFilter2&&) noexcept = delete;
+  MoveDataFilter& operator=(const MoveDataFilter&) = delete;
+  MoveDataFilter& operator=(MoveDataFilter&&) noexcept = delete;
+
+  // Parameter Keys
+  static inline constexpr StringLiteral k_SourceDataPaths_Key = "source_data_paths";
+  static inline constexpr StringLiteral k_DestinationParentPath_Key = "destination_parent_path";
+
+  /**
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
   /**
    * @brief
-   * @return
+   * @return std::name
    */
   std::string name() const override;
 
   /**
    * @brief Returns the C++ classname of this filter.
-   * @return
+   * @return std::string
    */
   std::string className() const override;
 
   /**
    * @brief
-   * @return
+   * @return Uuid
    */
   Uuid uuid() const override;
 
   /**
    * @brief
-   * @return
+   * @return std::string
    */
   std::string humanName() const override;
 
@@ -51,13 +63,13 @@ public:
 
   /**
    * @brief
-   * @return
+   * @return Parameters
    */
   Parameters parameters() const override;
 
   /**
    * @brief
-   * @return
+   * @return IFilter::UniquePointer
    */
   UniquePointer clone() const override;
 
@@ -67,7 +79,7 @@ protected:
    * @param data
    * @param args
    * @param messageHandler
-   * @return Result<OutputActions>
+   * @return PreflightResult
    */
   PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
@@ -83,4 +95,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ExampleFilter2, "1307bbbc-112d-4aaa-941f-58253787b17e");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, MoveDataFilter, "651e5894-ab7c-4176-b7f0-ea466c521753");

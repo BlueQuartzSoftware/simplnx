@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/RenameDataObject.hpp"
+#include "SimplnxCore/Filters/RenameDataObjectFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -12,12 +12,12 @@ TEST_CASE("SimplnxCore::RenameDataAction(Instantiate)", "[SimplnxCore][RenameDat
   static constexpr StringLiteral k_NewName = "Bar";
   const DataPath k_DataPath({Constants::k_SmallIN100});
 
-  RenameDataObject filter;
+  RenameDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
-  args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_NewName));
+  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
@@ -28,12 +28,12 @@ TEST_CASE("SimplnxCore::RenameDataAction(Invalid Parameters)", "[SimplnxCore][Re
   static constexpr StringLiteral k_NewName = Constants::k_ConfidenceIndex;
   static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
-  RenameDataObject filter;
+  RenameDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
-  args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_NewName));
+  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -47,12 +47,12 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][Rena
   static constexpr StringLiteral k_NewName = "Foo";
   static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
-  RenameDataObject filter;
+  RenameDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
-  args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
-  args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_NewName));
+  args.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

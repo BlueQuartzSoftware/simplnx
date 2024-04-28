@@ -9,20 +9,20 @@
 namespace nx::core
 {
 /**
- * @class FindNeighborListStatistics
+ * @class FindNeighborListStatisticsFilter
  * @brief
  */
-class SIMPLNXCORE_EXPORT FindNeighborListStatistics : public IFilter
+class SIMPLNXCORE_EXPORT FindNeighborListStatisticsFilter : public IFilter
 {
 public:
-  FindNeighborListStatistics() = default;
-  ~FindNeighborListStatistics() noexcept override = default;
+  FindNeighborListStatisticsFilter() = default;
+  ~FindNeighborListStatisticsFilter() noexcept override = default;
 
-  FindNeighborListStatistics(const FindNeighborListStatistics&) = delete;
-  FindNeighborListStatistics(FindNeighborListStatistics&&) noexcept = delete;
+  FindNeighborListStatisticsFilter(const FindNeighborListStatisticsFilter&) = delete;
+  FindNeighborListStatisticsFilter(FindNeighborListStatisticsFilter&&) noexcept = delete;
 
-  FindNeighborListStatistics& operator=(const FindNeighborListStatistics&) = delete;
-  FindNeighborListStatistics& operator=(FindNeighborListStatistics&&) noexcept = delete;
+  FindNeighborListStatisticsFilter& operator=(const FindNeighborListStatisticsFilter&) = delete;
+  FindNeighborListStatisticsFilter& operator=(FindNeighborListStatisticsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FindLength_Key = "find_length";
@@ -114,4 +114,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindNeighborListStatistics, "270a824e-414b-455e-bb7e-b38a0848990d");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindNeighborListStatisticsFilter, "270a824e-414b-455e-bb7e-b38a0848990d");

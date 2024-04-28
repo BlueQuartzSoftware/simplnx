@@ -1,4 +1,4 @@
-#include "CreateDataArray.hpp"
+#include "CreateDataArrayFilter.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -34,37 +34,37 @@ void CreateAndInitArray(DataStructure& data, const DataPath& path, const std::st
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string CreateDataArray::name() const
+std::string CreateDataArrayFilter::name() const
 {
-  return FilterTraits<CreateDataArray>::name;
+  return FilterTraits<CreateDataArrayFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string CreateDataArray::className() const
+std::string CreateDataArrayFilter::className() const
 {
-  return FilterTraits<CreateDataArray>::className;
+  return FilterTraits<CreateDataArrayFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid CreateDataArray::uuid() const
+Uuid CreateDataArrayFilter::uuid() const
 {
-  return FilterTraits<CreateDataArray>::uuid;
+  return FilterTraits<CreateDataArrayFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string CreateDataArray::humanName() const
+std::string CreateDataArrayFilter::humanName() const
 {
   return "Create Data Array";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CreateDataArray::defaultTags() const
+std::vector<std::string> CreateDataArrayFilter::defaultTags() const
 {
   return {className(), "Create", "Data Structure", "Data Array", "Initialize", "Make"};
 }
 
 //------------------------------------------------------------------------------
-Parameters CreateDataArray::parameters() const
+Parameters CreateDataArrayFilter::parameters() const
 {
   Parameters params;
 
@@ -96,14 +96,14 @@ Parameters CreateDataArray::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateDataArray::clone() const
+IFilter::UniquePointer CreateDataArrayFilter::clone() const
 {
-  return std::make_unique<CreateDataArray>();
+  return std::make_unique<CreateDataArrayFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
   auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
@@ -172,7 +172,8 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> CreateDataArrayFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   auto numericType = args.value<NumericType>(k_NumericType_Key);
   auto path = args.value<DataPath>(k_DataPath_Key);
@@ -241,9 +242,9 @@ constexpr StringLiteral k_NewArrayKey = "NewArray";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CreateDataArray::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> CreateDataArrayFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = CreateDataArray().getDefaultArguments();
+  Arguments args = CreateDataArrayFilter().getDefaultArguments();
 
   args.insertOrAssign(k_AdvancedOptions_Key, false);
 

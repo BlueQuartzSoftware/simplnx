@@ -122,11 +122,11 @@ print(f'The path "/Some/Path/To/NonExistantGroup" exists: {value} ')
 #------------------------------------------------------------------------------
 # Create 1D Array 
 #------------------------------------------------------------------------------
-# Create the Input Parameters to the CreateDataArray filter
+# Create the Input Parameters to the CreateDataArrayFilter filter
 output_array_path = nx.DataPath(["Group", "1D Array"])
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result  = create_array_nx_filter.execute(data_structure=data_structure, 
                                           component_count=1, 
                                           data_format="", 
@@ -134,7 +134,7 @@ result  = create_array_nx_filter.execute(data_structure=data_structure,
                                           numeric_type_index=array_type, 
                                           output_array_path=output_array_path, 
                                           tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 # We can check the output of the filter by simply printing the array
@@ -149,7 +149,7 @@ print(npdata)
 # Example, and Image where 5 wide x 2 High
 output_array_path = nx.DataPath(["2D Array"])
 tuple_dims = [[2,5]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result  = create_array_nx_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
@@ -157,7 +157,7 @@ result  = create_array_nx_filter.execute(data_structure=data_structure,
                                         numeric_type_index=array_type, 
                                         output_array_path=output_array_path, 
                                         tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 data_array = data_structure[output_array_path]
@@ -178,7 +178,7 @@ print(npdata)
 # Example, and Image where 5 wide x 2 High
 output_array_path = nx.DataPath(["3D Array"])
 tuple_dims = [[3, 2, 5]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result = create_array_nx_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
@@ -186,7 +186,7 @@ result = create_array_nx_filter.execute(data_structure=data_structure,
                                         numeric_type_index=array_type, 
                                         output_array_path=output_array_path, 
                                         tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 npdata = data_structure[output_array_path].npview()

@@ -1350,7 +1350,7 @@ General Parameters
 
    Description
    ~~~~~~~~~~~
-   This parameter is used for the :ref:`simplnx.ReadHDF5Dataset<ReadHDF5Dataset>` and holds the information to import specific data sets from within the HDF5 file into DREAM3D/simplnx
+   This parameter is used for the :ref:`simplnx.ReadHDF5DatasetFilter<ReadHDF5DatasetFilter>` and holds the information to import specific data sets from within the HDF5 file into DREAM3D/simplnx
 
    Inputs
    ~~~~~~

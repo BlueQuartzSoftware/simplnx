@@ -40,7 +40,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-#nx_filter = nx.MoveData()
+#nx_filter = nx.MoveDataFilter()
 # Execute Filter with Parameters
 #result = nx_filter.execute(
 #    data_structure=data_structure,

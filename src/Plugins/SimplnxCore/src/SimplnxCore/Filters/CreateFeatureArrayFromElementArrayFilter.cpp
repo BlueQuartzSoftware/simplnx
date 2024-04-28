@@ -1,4 +1,4 @@
-#include "CreateFeatureArrayFromElementArray.hpp"
+#include "CreateFeatureArrayFromElementArrayFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -80,37 +80,37 @@ struct CopyCellDataFunctor
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string CreateFeatureArrayFromElementArray::name() const
+std::string CreateFeatureArrayFromElementArrayFilter::name() const
 {
-  return FilterTraits<CreateFeatureArrayFromElementArray>::name.str();
+  return FilterTraits<CreateFeatureArrayFromElementArrayFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string CreateFeatureArrayFromElementArray::className() const
+std::string CreateFeatureArrayFromElementArrayFilter::className() const
 {
-  return FilterTraits<CreateFeatureArrayFromElementArray>::className;
+  return FilterTraits<CreateFeatureArrayFromElementArrayFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid CreateFeatureArrayFromElementArray::uuid() const
+Uuid CreateFeatureArrayFromElementArrayFilter::uuid() const
 {
-  return FilterTraits<CreateFeatureArrayFromElementArray>::uuid;
+  return FilterTraits<CreateFeatureArrayFromElementArrayFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string CreateFeatureArrayFromElementArray::humanName() const
+std::string CreateFeatureArrayFromElementArrayFilter::humanName() const
 {
   return "Create Feature Array from Element Array";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CreateFeatureArrayFromElementArray::defaultTags() const
+std::vector<std::string> CreateFeatureArrayFromElementArrayFilter::defaultTags() const
 {
   return {className(), "Core", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------
-Parameters CreateFeatureArrayFromElementArray::parameters() const
+Parameters CreateFeatureArrayFromElementArrayFilter::parameters() const
 {
   Parameters params;
 
@@ -131,14 +131,14 @@ Parameters CreateFeatureArrayFromElementArray::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateFeatureArrayFromElementArray::clone() const
+IFilter::UniquePointer CreateFeatureArrayFromElementArrayFilter::clone() const
 {
-  return std::make_unique<CreateFeatureArrayFromElementArray>();
+  return std::make_unique<CreateFeatureArrayFromElementArrayFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -172,8 +172,8 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel) const
+Result<> CreateFeatureArrayFromElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -209,9 +209,9 @@ constexpr StringLiteral k_CreatedArrayNameKey = "CreatedArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CreateFeatureArrayFromElementArray::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> CreateFeatureArrayFromElementArrayFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = CreateFeatureArrayFromElementArray().getDefaultArguments();
+  Arguments args = CreateFeatureArrayFromElementArrayFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

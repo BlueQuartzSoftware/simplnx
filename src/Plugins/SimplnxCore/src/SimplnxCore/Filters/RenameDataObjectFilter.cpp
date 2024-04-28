@@ -1,4 +1,4 @@
-#include "RenameDataObject.hpp"
+#include "RenameDataObjectFilter.hpp"
 
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
@@ -21,37 +21,37 @@ namespace nx::core
 {
 
 //------------------------------------------------------------------------------
-std::string RenameDataObject::name() const
+std::string RenameDataObjectFilter::name() const
 {
-  return FilterTraits<RenameDataObject>::name;
+  return FilterTraits<RenameDataObjectFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string RenameDataObject::className() const
+std::string RenameDataObjectFilter::className() const
 {
-  return FilterTraits<RenameDataObject>::className;
+  return FilterTraits<RenameDataObjectFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid RenameDataObject::uuid() const
+Uuid RenameDataObjectFilter::uuid() const
 {
-  return FilterTraits<RenameDataObject>::uuid;
+  return FilterTraits<RenameDataObjectFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string RenameDataObject::humanName() const
+std::string RenameDataObjectFilter::humanName() const
 {
   return "Rename DataObject";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> RenameDataObject::defaultTags() const
+std::vector<std::string> RenameDataObjectFilter::defaultTags() const
 {
   return {className(), "Data Management", "Rename", "Data Structure", "Data Object"};
 }
 
 //------------------------------------------------------------------------------
-Parameters RenameDataObject::parameters() const
+Parameters RenameDataObjectFilter::parameters() const
 {
   Parameters params;
 
@@ -62,14 +62,14 @@ Parameters RenameDataObject::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RenameDataObject::clone() const
+IFilter::UniquePointer RenameDataObjectFilter::clone() const
 {
-  return std::make_unique<RenameDataObject>();
+  return std::make_unique<RenameDataObjectFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RenameDataObject::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                               const std::atomic_bool& shouldCancel) const
 {
   auto dataGroupPath = filterArgs.value<DataPath>(k_SourceDataObjectPath_Key);
   auto newName = filterArgs.value<std::string>(k_NewName_Key);
@@ -82,7 +82,8 @@ IFilter::PreflightResult RenameDataObject::preflightImpl(const DataStructure& da
 }
 
 //------------------------------------------------------------------------------
-Result<> RenameDataObject::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> RenameDataObjectFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
@@ -100,9 +101,9 @@ constexpr StringLiteral k_NewArrayNameKey = "NewArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> RenameDataObject::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> RenameDataObjectFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = RenameDataObject().getDefaultArguments();
+  Arguments args = RenameDataObjectFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

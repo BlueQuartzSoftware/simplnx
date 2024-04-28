@@ -1,4 +1,4 @@
-#include "RemoveFlaggedVertices.hpp"
+#include "RemoveFlaggedVerticesFilter.hpp"
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
@@ -60,32 +60,32 @@ struct RemoveFlaggedVerticesFunctor
 namespace nx::core
 {
 
-std::string RemoveFlaggedVertices::name() const
+std::string RemoveFlaggedVerticesFilter::name() const
 {
-  return FilterTraits<RemoveFlaggedVertices>::name;
+  return FilterTraits<RemoveFlaggedVerticesFilter>::name;
 }
 
-std::string RemoveFlaggedVertices::className() const
+std::string RemoveFlaggedVerticesFilter::className() const
 {
-  return FilterTraits<RemoveFlaggedVertices>::className;
+  return FilterTraits<RemoveFlaggedVerticesFilter>::className;
 }
 
-Uuid RemoveFlaggedVertices::uuid() const
+Uuid RemoveFlaggedVerticesFilter::uuid() const
 {
-  return FilterTraits<RemoveFlaggedVertices>::uuid;
+  return FilterTraits<RemoveFlaggedVerticesFilter>::uuid;
 }
 
-std::string RemoveFlaggedVertices::humanName() const
+std::string RemoveFlaggedVerticesFilter::humanName() const
 {
   return "Remove Flagged Vertices";
 }
 
-std::vector<std::string> RemoveFlaggedVertices::defaultTags() const
+std::vector<std::string> RemoveFlaggedVerticesFilter::defaultTags() const
 {
   return {className(), "Remove", "Memory Management", "Vertex Geometry", "Delete", "Reduce"};
 }
 
-Parameters RemoveFlaggedVertices::parameters() const
+Parameters RemoveFlaggedVerticesFilter::parameters() const
 {
   Parameters params;
 
@@ -100,13 +100,13 @@ Parameters RemoveFlaggedVertices::parameters() const
   return params;
 }
 
-IFilter::UniquePointer RemoveFlaggedVertices::clone() const
+IFilter::UniquePointer RemoveFlaggedVerticesFilter::clone() const
 {
-  return std::make_unique<RemoveFlaggedVertices>();
+  return std::make_unique<RemoveFlaggedVerticesFilter>();
 }
 
-IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto maskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
@@ -212,8 +212,8 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);
@@ -279,9 +279,9 @@ constexpr StringLiteral k_ReducedVertexGeometryKey = "ReducedVertexGeometry";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> RemoveFlaggedVertices::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> RemoveFlaggedVerticesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = RemoveFlaggedVertices().getDefaultArguments();
+  Arguments args = RemoveFlaggedVerticesFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

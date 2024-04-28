@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/RemoveFlaggedVertices.hpp"
+#include "SimplnxCore/Filters/RemoveFlaggedVerticesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -9,24 +9,24 @@
 
 using namespace nx::core;
 
-TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Instantiate", "[SimplnxCore][RemoveFlaggedVertices]")
+TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Instantiate", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
 {
-  RemoveFlaggedVertices filter;
+  RemoveFlaggedVerticesFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  args.insertOrAssign(RemoveFlaggedVertices::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_InputMaskPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>());
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>());
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_InputMaskPath_Key, std::make_any<DataPath>());
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>());
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 }
 
-TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Test Algorithm", "[SimplnxCore][RemoveFlaggedVertices]")
+TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
 {
-  RemoveFlaggedVertices filter;
+  RemoveFlaggedVerticesFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -68,9 +68,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Test Algorithm", "[SimplnxCore][R
   DataPath reducedVertexPath({Constants::k_SmallIN100, Constants::k_ReducedGeometry});
   DataPath reducedVertexAMPath = reducedVertexPath.createChildPath(Constants::k_VertexDataGroupName);
 
-  args.insertOrAssign(RemoveFlaggedVertices::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(vertexGeomPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_InputMaskPath_Key, std::make_any<DataPath>(maskPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(reducedVertexPath));
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(vertexGeomPath));
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_InputMaskPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(RemoveFlaggedVerticesFilter::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(reducedVertexPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -103,7 +103,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Test Algorithm", "[SimplnxCore][R
   }
 
   // Write out the DataStructure for later viewing/debugging
-  std::string filePath = fmt::format("{}/RemoveFlaggedVertices.dream3d", unit_test::k_BinaryTestOutputDir);
+  std::string filePath = fmt::format("{}/RemoveFlaggedVerticesFilter.dream3d", unit_test::k_BinaryTestOutputDir);
   // std::cout << "Writing file to: " << filePath << std::endl;
   Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePath);
   nx::core::HDF5::FileWriter fileWriter = std::move(result.value());

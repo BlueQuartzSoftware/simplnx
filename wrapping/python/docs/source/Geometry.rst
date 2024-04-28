@@ -86,7 +86,7 @@ in each array is +1 from the dimension size.
 
     # This code snippet assumes the developer has already generated the
     # needed DataArrays and added them to the DataStructure through the proper
-    # CreateDataArray filters (or any other way)
+    # CreateDataArrayFilter filters (or any other way)
     result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
         array_handling= 1,  # Move the arrays from their original location.
         cell_attribute_matrix_name="Cell Data",

@@ -84,8 +84,8 @@ import_hdf5_param.input_file = str(nxtest.get_test_temp_directory() / "basic_ebs
 import_hdf5_param.datasets = [dataset1, dataset2]
 # import_hdf5_param.parent = nx.DataPath(["Imported Data"])
 
-result = nx.ReadHDF5Dataset.execute(data_structure=data_structure,
+result = nx.ReadHDF5DatasetFilter.execute(data_structure=data_structure,
                                       import_hd_f5_file=import_hdf5_param
                                       )
-nxtest.check_filter_result(nx.ReadHDF5Dataset, result)
+nxtest.check_filter_result(nx.ReadHDF5DatasetFilter, result)
 

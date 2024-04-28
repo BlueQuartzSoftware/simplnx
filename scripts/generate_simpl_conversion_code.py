@@ -46,7 +46,7 @@ def create_filter_conversion(simpl_filter: SIMPLFilterInfo, complex_filter_name:
   converter_code.append('\n')
   converter_code.append(f'Result<Arguments> {complex_filter_name}::FromSIMPLJson(const nlohmann::json& json)\n')
   converter_code.append('{\n')
-  converter_code.append('  Arguments args = CreateDataArray().getDefaultArguments();\n')
+  converter_code.append('  Arguments args = CreateDataArrayFilter().getDefaultArguments();\n')
   converter_code.append('\n')
   converter_code.append('  std::vector<Result<>> results;\n')
   converter_code.append('\n')

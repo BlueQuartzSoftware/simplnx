@@ -126,7 +126,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "complex::CreateDataArray",
+        "name": "complex::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false

@@ -8,26 +8,25 @@
 namespace nx::core
 {
 /**
- * @class CreateFeatureArrayFromElementArray
- * @brief This filter will ....
+ * @class RemoveFlaggedVerticesFilter
+ * @brief This filter will remove specified vertices from the specified geometry.
  */
-class SIMPLNXCORE_EXPORT CreateFeatureArrayFromElementArray : public IFilter
+class SIMPLNXCORE_EXPORT RemoveFlaggedVerticesFilter : public IFilter
 {
 public:
-  CreateFeatureArrayFromElementArray() = default;
-  ~CreateFeatureArrayFromElementArray() noexcept override = default;
+  RemoveFlaggedVerticesFilter() = default;
+  ~RemoveFlaggedVerticesFilter() noexcept override = default;
 
-  CreateFeatureArrayFromElementArray(const CreateFeatureArrayFromElementArray&) = delete;
-  CreateFeatureArrayFromElementArray(CreateFeatureArrayFromElementArray&&) noexcept = delete;
+  RemoveFlaggedVerticesFilter(const RemoveFlaggedVerticesFilter&) = delete;
+  RemoveFlaggedVerticesFilter(RemoveFlaggedVerticesFilter&&) noexcept = delete;
 
-  CreateFeatureArrayFromElementArray& operator=(const CreateFeatureArrayFromElementArray&) = delete;
-  CreateFeatureArrayFromElementArray& operator=(CreateFeatureArrayFromElementArray&&) noexcept = delete;
+  RemoveFlaggedVerticesFilter& operator=(const RemoveFlaggedVerticesFilter&) = delete;
+  RemoveFlaggedVerticesFilter& operator=(RemoveFlaggedVerticesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_CreatedArrayName_Key = "created_array_name";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static inline constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
+  static inline constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -38,43 +37,43 @@ public:
 
   /**
    * @brief Returns the name of the filter.
-   * @return
+   * @return std::string
    */
   std::string name() const override;
 
   /**
    * @brief Returns the C++ classname of this filter.
-   * @return
+   * @return std::string
    */
   std::string className() const override;
 
   /**
    * @brief Returns the uuid of the filter.
-   * @return
+   * @return Uuid
    */
   Uuid uuid() const override;
 
   /**
    * @brief Returns the human readable name of the filter.
-   * @return
+   * @return std::string
    */
   std::string humanName() const override;
 
   /**
    * @brief Returns the default tags for this filter.
-   * @return
+   * @return std::vector<std::string>
    */
   std::vector<std::string> defaultTags() const override;
 
   /**
    * @brief Returns the parameters of the filter (i.e. its inputs)
-   * @return
+   * @return Parameters
    */
   Parameters parameters() const override;
 
   /**
    * @brief Returns a copy of the filter.
-   * @return
+   * @return UniquePointer
    */
   UniquePointer clone() const override;
 
@@ -102,4 +101,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreateFeatureArrayFromElementArray, "50e1be47-b027-4f40-8f70-1283682ee3e7");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, RemoveFlaggedVerticesFilter, "46099b4c-ef90-4fb3-b5e9-6c8c543c5be1");

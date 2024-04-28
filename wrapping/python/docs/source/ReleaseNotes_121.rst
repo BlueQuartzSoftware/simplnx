@@ -48,7 +48,7 @@ API Additions 1.2.1
     output_array_path = nx.DataPath(["3D Array"])
     tuple_dims = [[3, 2, 5]]
     array_type = nx.NumericType.float32
-    create_array_filter = nx.CreateDataArray()
+    create_array_filter = nx.CreateDataArrayFilter()
     result  = create_array_filter.execute(data_structure=data_structure, 
                                           component_count=1, 
                                           data_format="", 

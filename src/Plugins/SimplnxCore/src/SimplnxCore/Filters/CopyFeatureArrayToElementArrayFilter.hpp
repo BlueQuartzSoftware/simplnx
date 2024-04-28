@@ -8,23 +8,23 @@
 namespace nx::core
 {
 /**
- * @class CopyFeatureArrayToElementArray
+ * @class CopyFeatureArrayToElementArrayFilter
  * @brief This Filter copies the values associated with a Feature to all the Elements
  * that belong to that Feature. Xmdf visualization files write only the Element attributes,
  * so if the user wants to display a spatial map of a Feature level attribute,
  * this Filter will transfer that information down to the Element level.
  */
-class SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArray : public IFilter
+class SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArrayFilter : public IFilter
 {
 public:
-  CopyFeatureArrayToElementArray() = default;
-  ~CopyFeatureArrayToElementArray() noexcept override = default;
+  CopyFeatureArrayToElementArrayFilter() = default;
+  ~CopyFeatureArrayToElementArrayFilter() noexcept override = default;
 
-  CopyFeatureArrayToElementArray(const CopyFeatureArrayToElementArray&) = delete;
-  CopyFeatureArrayToElementArray(CopyFeatureArrayToElementArray&&) noexcept = delete;
+  CopyFeatureArrayToElementArrayFilter(const CopyFeatureArrayToElementArrayFilter&) = delete;
+  CopyFeatureArrayToElementArrayFilter(CopyFeatureArrayToElementArrayFilter&&) noexcept = delete;
 
-  CopyFeatureArrayToElementArray& operator=(const CopyFeatureArrayToElementArray&) = delete;
-  CopyFeatureArrayToElementArray& operator=(CopyFeatureArrayToElementArray&&) noexcept = delete;
+  CopyFeatureArrayToElementArrayFilter& operator=(const CopyFeatureArrayToElementArrayFilter&) = delete;
+  CopyFeatureArrayToElementArrayFilter& operator=(CopyFeatureArrayToElementArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "selected_feature_array_paths";
@@ -104,4 +104,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, CopyFeatureArrayToElementArray, "4c8c976a-993d-438b-bd8e-99f71114b9a1");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CopyFeatureArrayToElementArrayFilter, "4c8c976a-993d-438b-bd8e-99f71114b9a1");
