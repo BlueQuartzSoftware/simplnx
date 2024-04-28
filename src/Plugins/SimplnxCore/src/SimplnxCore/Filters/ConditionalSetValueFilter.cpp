@@ -1,4 +1,4 @@
-#include "ConditionalSetValue.hpp"
+#include "ConditionalSetValueFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -60,32 +60,32 @@ struct ReplaceValueInArrayFunctor
 namespace nx::core
 {
 
-std::string ConditionalSetValue::name() const
+std::string ConditionalSetValueFilter::name() const
 {
-  return FilterTraits<ConditionalSetValue>::name.str();
+  return FilterTraits<ConditionalSetValueFilter>::name.str();
 }
 
-std::string ConditionalSetValue::className() const
+std::string ConditionalSetValueFilter::className() const
 {
-  return FilterTraits<ConditionalSetValue>::className;
+  return FilterTraits<ConditionalSetValueFilter>::className;
 }
 
-Uuid ConditionalSetValue::uuid() const
+Uuid ConditionalSetValueFilter::uuid() const
 {
-  return FilterTraits<ConditionalSetValue>::uuid;
+  return FilterTraits<ConditionalSetValueFilter>::uuid;
 }
 
-std::string ConditionalSetValue::humanName() const
+std::string ConditionalSetValueFilter::humanName() const
 {
   return "Replace Value in Array (Conditional)";
 }
 //------------------------------------------------------------------------------
-std::vector<std::string> ConditionalSetValue::defaultTags() const
+std::vector<std::string> ConditionalSetValueFilter::defaultTags() const
 {
   return {className(), "Core", "Processing", "DataArray"};
 }
 
-Parameters ConditionalSetValue::parameters() const
+Parameters ConditionalSetValueFilter::parameters() const
 {
   Parameters params;
 
@@ -111,13 +111,13 @@ Parameters ConditionalSetValue::parameters() const
   return params;
 }
 
-IFilter::UniquePointer ConditionalSetValue::clone() const
+IFilter::UniquePointer ConditionalSetValueFilter::clone() const
 {
-  return std::make_unique<ConditionalSetValue>();
+  return std::make_unique<ConditionalSetValueFilter>();
 }
 
-IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto useConditionalValue = filterArgs.value<bool>(k_UseConditional_Key);
   auto removeValueString = filterArgs.value<std::string>(k_RemoveValue_Key);
@@ -169,8 +169,8 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
   return {ConvertResultTo<OutputActions>(std::move(result), {})};
 }
 
-Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   auto useConditionalValue = filterArgs.value<bool>(k_UseConditional_Key);
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
@@ -209,9 +209,9 @@ constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ConditionalSetValue::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ConditionalSetValueFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ConditionalSetValue().getDefaultArguments();
+  Arguments args = ConditionalSetValueFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

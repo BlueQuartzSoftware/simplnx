@@ -8,7 +8,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
   AddBadDataFilter
-  AlignGeometries
+  AlignGeometriesFilter
   AlignSectionsFeatureCentroidFilter
   AlignSectionsListFilter
   AppendImageGeometryZSliceFilter
@@ -23,26 +23,26 @@ set(FilterList
   CombineStlFilesFilter
   ComputeFeatureRectFilter
   ComputeMomentInvariants2DFilter
-  ConditionalSetValue
+  ConditionalSetValueFilter
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
   CopyDataObjectFilter
   CopyFeatureArrayToElementArray
   CreateAttributeMatrixFilter
   CreateDataArray
-  CreateDataGroup
+  CreateDataGroupFilter
   CreateFeatureArrayFromElementArray
   CreateGeometryFilter
-  CreateImageGeometry
-  CropImageGeometry
-  CropVertexGeometry
-  DeleteData
+  CreateImageGeometryFilter
+  CropImageGeometryFilter
+  CropVertexGeometryFilter
+  DeleteDataFilter
   ErodeDilateBadDataFilter
   ErodeDilateCoordinationNumberFilter
   ErodeDilateMaskFilter
   ExecuteProcessFilter
   ExtractComponentAsArrayFilter
-  ExtractInternalSurfacesFromTriangleGeometry
+  ExtractInternalSurfacesFromTriangleGeometryFilter
   ExtractPipelineToFileFilter
   ExtractVertexGeometryFilter
   FeatureFaceCurvatureFilter
@@ -51,7 +51,7 @@ set(FilterList
   FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindBoundaryElementFractionsFilter
-  FindDifferencesMap
+  FindDifferencesMapFilter
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
   FindFeatureClusteringFilter
@@ -63,7 +63,7 @@ set(FilterList
   FindNeighbors
   FindNumFeaturesFilter
   FindSurfaceAreaToVolumeFilter
-  FindSurfaceFeatures
+  FindSurfaceFeaturesFilter
   FindTriangleGeomCentroidsFilter
   FindTriangleGeomSizesFilter
   FindVertexToTriangleDistancesFilter
@@ -72,9 +72,9 @@ set(FilterList
   GenerateColorTableFilter
   GeneratePythonSkeletonFilter
   GenerateVectorColorsFilter
-  IdentifySample
-  InitializeData
-  InitializeImageGeomCellData
+  IdentifySampleFilter
+  InitializeDataFilter
+  InitializeImageGeomCellDataFilter
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
   KMeansFilter
@@ -82,9 +82,9 @@ set(FilterList
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
-  MinNeighbors
+  MinNeighborsFilter
   MoveData
-  MultiThresholdObjects
+  MultiThresholdObjectsFilter
   NearestPointFuseRegularGridsFilter
   PartitionGeometryFilter
   PointSampleTriangleGeometryFilter

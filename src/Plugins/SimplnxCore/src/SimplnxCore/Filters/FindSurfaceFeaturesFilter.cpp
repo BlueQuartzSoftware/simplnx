@@ -1,4 +1,4 @@
-#include "FindSurfaceFeatures.hpp"
+#include "FindSurfaceFeaturesFilter.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -194,37 +194,37 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindSurfaceFeatures::name() const
+std::string FindSurfaceFeaturesFilter::name() const
 {
-  return FilterTraits<FindSurfaceFeatures>::name.str();
+  return FilterTraits<FindSurfaceFeaturesFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string FindSurfaceFeatures::className() const
+std::string FindSurfaceFeaturesFilter::className() const
 {
-  return FilterTraits<FindSurfaceFeatures>::className;
+  return FilterTraits<FindSurfaceFeaturesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindSurfaceFeatures::uuid() const
+Uuid FindSurfaceFeaturesFilter::uuid() const
 {
-  return FilterTraits<FindSurfaceFeatures>::uuid;
+  return FilterTraits<FindSurfaceFeaturesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindSurfaceFeatures::humanName() const
+std::string FindSurfaceFeaturesFilter::humanName() const
 {
   return "Find Surface Features";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindSurfaceFeatures::defaultTags() const
+std::vector<std::string> FindSurfaceFeaturesFilter::defaultTags() const
 {
   return {className(), "Generic", "Spatial"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindSurfaceFeatures::parameters() const
+Parameters FindSurfaceFeaturesFilter::parameters() const
 {
   Parameters params;
 
@@ -250,14 +250,14 @@ Parameters FindSurfaceFeatures::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindSurfaceFeatures::clone() const
+IFilter::UniquePointer FindSurfaceFeaturesFilter::clone() const
 {
-  return std::make_unique<FindSurfaceFeatures>();
+  return std::make_unique<FindSurfaceFeaturesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindSurfaceFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
   auto pCellFeaturesAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
@@ -287,8 +287,8 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+Result<> FindSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   const auto pMarkFeature0NeighborsValue = filterArgs.value<bool>(k_MarkFeature0Neighbors);
   const auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
@@ -340,9 +340,9 @@ constexpr StringLiteral k_SurfaceFeaturesArrayPathKey = "SurfaceFeaturesArrayPat
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindSurfaceFeatures::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> FindSurfaceFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindSurfaceFeatures().getDefaultArguments();
+  Arguments args = FindSurfaceFeaturesFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

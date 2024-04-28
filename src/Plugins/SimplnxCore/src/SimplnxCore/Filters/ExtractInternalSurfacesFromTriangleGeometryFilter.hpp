@@ -8,17 +8,17 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT ExtractInternalSurfacesFromTriangleGeometry : public IFilter
+class SIMPLNXCORE_EXPORT ExtractInternalSurfacesFromTriangleGeometryFilter : public IFilter
 {
 public:
-  ExtractInternalSurfacesFromTriangleGeometry() = default;
-  ~ExtractInternalSurfacesFromTriangleGeometry() noexcept override = default;
+  ExtractInternalSurfacesFromTriangleGeometryFilter() = default;
+  ~ExtractInternalSurfacesFromTriangleGeometryFilter() noexcept override = default;
 
-  ExtractInternalSurfacesFromTriangleGeometry(const ExtractInternalSurfacesFromTriangleGeometry&) = delete;
-  ExtractInternalSurfacesFromTriangleGeometry(ExtractInternalSurfacesFromTriangleGeometry&&) noexcept = delete;
+  ExtractInternalSurfacesFromTriangleGeometryFilter(const ExtractInternalSurfacesFromTriangleGeometryFilter&) = delete;
+  ExtractInternalSurfacesFromTriangleGeometryFilter(ExtractInternalSurfacesFromTriangleGeometryFilter&&) noexcept = delete;
 
-  ExtractInternalSurfacesFromTriangleGeometry& operator=(const ExtractInternalSurfacesFromTriangleGeometry&) = delete;
-  ExtractInternalSurfacesFromTriangleGeometry& operator=(ExtractInternalSurfacesFromTriangleGeometry&&) noexcept = delete;
+  ExtractInternalSurfacesFromTriangleGeometryFilter& operator=(const ExtractInternalSurfacesFromTriangleGeometryFilter&) = delete;
+  ExtractInternalSurfacesFromTriangleGeometryFilter& operator=(ExtractInternalSurfacesFromTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
@@ -104,4 +104,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ExtractInternalSurfacesFromTriangleGeometry, "e020f76f-a77f-4999-8bf1-9b7529f06d0a");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ExtractInternalSurfacesFromTriangleGeometryFilter, "e020f76f-a77f-4999-8bf1-9b7529f06d0a");

@@ -8,22 +8,36 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT AlignGeometries : public IFilter
+class SIMPLNXCORE_EXPORT InitializeImageGeomCellDataFilter : public IFilter
 {
 public:
-  AlignGeometries() = default;
-  ~AlignGeometries() noexcept override = default;
+  InitializeImageGeomCellDataFilter() = default;
+  ~InitializeImageGeomCellDataFilter() noexcept override = default;
 
-  AlignGeometries(const AlignGeometries&) = delete;
-  AlignGeometries(AlignGeometries&&) noexcept = delete;
+  InitializeImageGeomCellDataFilter(const InitializeImageGeomCellDataFilter&) = delete;
+  InitializeImageGeomCellDataFilter(InitializeImageGeomCellDataFilter&&) noexcept = delete;
 
-  AlignGeometries& operator=(const AlignGeometries&) = delete;
-  AlignGeometries& operator=(AlignGeometries&&) noexcept = delete;
+  InitializeImageGeomCellDataFilter& operator=(const InitializeImageGeomCellDataFilter&) = delete;
+  InitializeImageGeomCellDataFilter& operator=(InitializeImageGeomCellDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MovingGeometry_Key = "input_moving_geometry_path";
-  static inline constexpr StringLiteral k_TargetGeometry_Key = "input_target_geometry_path";
-  static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type_index";
+  static inline constexpr StringLiteral k_CellArrayPaths_Key = "cell_arrays";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_MinPoint_Key = "min_point";
+  static inline constexpr StringLiteral k_MaxPoint_Key = "max_point";
+  static inline constexpr StringLiteral k_InitType_Key = "init_type_index";
+  static inline constexpr StringLiteral k_InitValue_Key = "init_value";
+  static inline constexpr StringLiteral k_InitRange_Key = "init_range";
+  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
+
+  enum class InitType : uint64
+  {
+    Manual = 0,
+    Random,
+    RandomWithRange
+  };
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -78,22 +92,27 @@ protected:
   /**
    * @brief
    * @param data
-   * @param filterArgs
+   * @param args
    * @param messageHandler
-   * @return Result<OutputActions>
+   * @param shouldCancel
+   * @return PreflightResult
    */
   PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief
-   * @param dataStructure
+   * @param data
    * @param args
    * @param pipelineNode
    * @param messageHandler
+   * @param shouldCancel
    * @return Result<>
    */
   Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+
+private:
+  uint64 m_Seed = 0;
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, AlignGeometries, "87fa9e07-6c66-45b0-80a0-cf80cc0def5d");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, InitializeImageGeomCellDataFilter, "447b8909-661f-446a-8c1f-72e0cb568fcf");

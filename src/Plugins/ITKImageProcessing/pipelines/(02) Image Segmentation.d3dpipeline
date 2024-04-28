@@ -146,7 +146,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ConditionalSetValue",
+        "name": "simplnx::ConditionalSetValueFilter",
         "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
       },
       "isDisabled": false

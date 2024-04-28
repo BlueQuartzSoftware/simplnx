@@ -8,28 +8,25 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT MinNeighbors : public IFilter
+class SIMPLNXCORE_EXPORT CropVertexGeometryFilter : public IFilter
 {
 public:
-  MinNeighbors() = default;
-  ~MinNeighbors() noexcept override = default;
+  CropVertexGeometryFilter() = default;
+  ~CropVertexGeometryFilter() noexcept override = default;
 
-  MinNeighbors(const MinNeighbors&) = delete;
-  MinNeighbors(MinNeighbors&&) noexcept = delete;
+  CropVertexGeometryFilter(const CropVertexGeometryFilter&) = delete;
+  CropVertexGeometryFilter(CropVertexGeometryFilter&&) noexcept = delete;
 
-  MinNeighbors& operator=(const MinNeighbors&) = delete;
-  MinNeighbors& operator=(MinNeighbors&&) noexcept = delete;
+  CropVertexGeometryFilter& operator=(const CropVertexGeometryFilter&) = delete;
+  CropVertexGeometryFilter& operator=(CropVertexGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_ApplyToSinglePhase_Key = "apply_to_single_phase";
-  static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
-  static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
-  static inline constexpr StringLiteral k_NumNeighborsPath_Key = "num_neighbors_path";
-  static inline constexpr StringLiteral k_MinNumNeighbors_Key = "min_num_neighbors";
-  static inline constexpr StringLiteral k_IgnoredVoxelArrays_Key = "ignored_voxel_arrays";
-  static inline constexpr StringLiteral k_CellDataAttributeMatrixPath_Key = "cell_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static inline constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
+  static inline constexpr StringLiteral k_MinPos_Key = "min_pos";
+  static inline constexpr StringLiteral k_MaxPos_Key = "max_pos";
+  static inline constexpr StringLiteral k_TargetArrayPaths_Key = "target_array_paths";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -40,7 +37,7 @@ public:
 
   /**
    * @brief
-   * @return std::name
+   * @return std::string
    */
   std::string name() const override;
 
@@ -76,14 +73,14 @@ public:
 
   /**
    * @brief
-   * @return IFilter::UniquePointer
+   * @return UniquePointer
    */
   UniquePointer clone() const override;
 
 protected:
   /**
    * @brief
-   * @param dataStructure
+   * @param data
    * @param args
    * @param messageHandler
    * @return PreflightResult
@@ -98,8 +95,9 @@ protected:
    * @param messageHandler
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, MinNeighbors, "4ab5153f-6014-4e6d-bbd6-194068620389");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CropVertexGeometryFilter, "8b16452f-f75e-4918-9460-d3914fdc0d08");

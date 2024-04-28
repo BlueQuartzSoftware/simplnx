@@ -195,7 +195,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::IdentifySample",
+                        "name": "simplnx::IdentifySampleFilter",
                         "uuid": "94d47495-5a89-4c7f-a0ee-5ff20e6bd273"
                       },
                       "isDisabled": false
@@ -416,7 +416,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::MinNeighbors",
+                        "name": "simplnx::MinNeighborsFilter",
                         "uuid": "4ab5153f-6014-4e6d-bbd6-194068620389"
                       },
                       "isDisabled": false
@@ -667,7 +667,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::DeleteData",
+        "name": "simplnx::DeleteDataFilter",
         "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
       },
       "isDisabled": true

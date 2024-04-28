@@ -2,31 +2,28 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/Parameters.hpp"
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT CropVertexGeometry : public IFilter
+class SIMPLNXCORE_EXPORT CreateDataGroupFilter : public IFilter
 {
 public:
-  CropVertexGeometry() = default;
-  ~CropVertexGeometry() noexcept override = default;
+  CreateDataGroupFilter() = default;
+  ~CreateDataGroupFilter() noexcept override = default;
 
-  CropVertexGeometry(const CropVertexGeometry&) = delete;
-  CropVertexGeometry(CropVertexGeometry&&) noexcept = delete;
+  CreateDataGroupFilter(const CreateDataGroupFilter&) = delete;
+  CreateDataGroupFilter(CreateDataGroupFilter&&) noexcept = delete;
 
-  CropVertexGeometry& operator=(const CropVertexGeometry&) = delete;
-  CropVertexGeometry& operator=(CropVertexGeometry&&) noexcept = delete;
+  CreateDataGroupFilter& operator=(const CreateDataGroupFilter&) = delete;
+  CreateDataGroupFilter& operator=(CreateDataGroupFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
-  static inline constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
-  static inline constexpr StringLiteral k_MinPos_Key = "min_pos";
-  static inline constexpr StringLiteral k_MaxPos_Key = "max_pos";
-  static inline constexpr StringLiteral k_TargetArrayPaths_Key = "target_array_paths";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_DataObjectPath = "data_object_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -36,26 +33,26 @@ public:
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
   /**
-   * @brief
-   * @return std::string
+   * @brief Returns the name of the filter.
+   * @return
    */
   std::string name() const override;
 
   /**
    * @brief Returns the C++ classname of this filter.
-   * @return std::string
+   * @return
    */
   std::string className() const override;
 
   /**
-   * @brief
-   * @return Uuid
+   * @brief Returns the uuid of the filter.
+   * @return
    */
   Uuid uuid() const override;
 
   /**
-   * @brief
-   * @return std::string
+   * @brief Returns the human readable name of the filter.
+   * @return
    */
   std::string humanName() const override;
 
@@ -66,29 +63,31 @@ public:
   std::vector<std::string> defaultTags() const override;
 
   /**
-   * @brief
-   * @return Parameters
+   * @brief Returns the parameters of the filter (i.e. its inputs)
+   * @return
    */
   Parameters parameters() const override;
 
   /**
-   * @brief
-   * @return UniquePointer
+   * @brief Returns a copy of the filter.
+   * @return
    */
   UniquePointer clone() const override;
 
 protected:
   /**
-   * @brief
+   * @brief Classes that implement IFilter must provide this function for preflight.
+   * Runs after the filter runs the checks in its parameters.
    * @param data
    * @param args
    * @param messageHandler
-   * @return PreflightResult
+   * @return Result<OutputActions>
    */
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
-   * @brief
+   * @brief Classes that implement IFilter must provide this function for execute.
+   * Runs after the filter applies the OutputActions from preflight.
    * @param data
    * @param args
    * @param pipelineNode
@@ -100,4 +99,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, CropVertexGeometry, "8b16452f-f75e-4918-9460-d3914fdc0d08");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreateDataGroupFilter, "e7d2f9b8-4131-4b28-a843-ea3c6950f101");

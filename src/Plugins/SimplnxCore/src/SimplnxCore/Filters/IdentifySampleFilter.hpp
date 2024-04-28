@@ -8,17 +8,17 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT IdentifySample : public IFilter
+class SIMPLNXCORE_EXPORT IdentifySampleFilter : public IFilter
 {
 public:
-  IdentifySample() = default;
-  ~IdentifySample() noexcept override = default;
+  IdentifySampleFilter() = default;
+  ~IdentifySampleFilter() noexcept override = default;
 
-  IdentifySample(const IdentifySample&) = delete;
-  IdentifySample(IdentifySample&&) noexcept = delete;
+  IdentifySampleFilter(const IdentifySampleFilter&) = delete;
+  IdentifySampleFilter(IdentifySampleFilter&&) noexcept = delete;
 
-  IdentifySample& operator=(const IdentifySample&) = delete;
-  IdentifySample& operator=(IdentifySample&&) noexcept = delete;
+  IdentifySampleFilter& operator=(const IdentifySampleFilter&) = delete;
+  IdentifySampleFilter& operator=(IdentifySampleFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FillHoles_Key = "fill_holes";
@@ -96,4 +96,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, IdentifySample, "94d47495-5a89-4c7f-a0ee-5ff20e6bd273");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, IdentifySampleFilter, "94d47495-5a89-4c7f-a0ee-5ff20e6bd273");

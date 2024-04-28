@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/DeleteData.hpp"
+#include "SimplnxCore/Filters/DeleteDataFilter.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
@@ -18,7 +18,7 @@ const fs::path k_DataDir = "test/data";
 const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 } // namespace CreateImageGeometryUnitTest
 
-TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteData]")
+TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -35,10 +35,10 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteData]"
   Arguments args;
 
   // Create default Parameters for the filter.
-  // args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteDataObject)));
-  args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({selectedDataPath1, selectedDataPath2}));
+  // args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteDataObject)));
+  args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({selectedDataPath1, selectedDataPath2}));
 
-  DeleteData filter;
+  DeleteDataFilter filter;
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -53,7 +53,7 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteData]"
   REQUIRE(dataStructure.getData(selectedDataPath2) == nullptr);
 }
 
-TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][DeleteData]")
+TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][DeleteDataFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -67,12 +67,12 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 
   DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne});
 
-  DeleteData filter;
+  DeleteDataFilter filter;
   Arguments args;
 
   // Create default Parameters for the filter.
-  // args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteDataObject)));
-  args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({selectedDataGroupPath}));
+  // args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteDataObject)));
+  args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({selectedDataGroupPath}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -92,7 +92,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
  * functional but will likely need review upon time of implementation.
  */
 
-// TEST_CASE("SimplnxCore::Delete Shared Node (Node removal)", "[SimplnxCore][DeleteData]")
+// TEST_CASE("SimplnxCore::Delete Shared Node (Node removal)", "[SimplnxCore][DeleteDataFilter]")
 //{
 //   // For this test case the goal will be to completely wipe node (DataObject) C out of the
 //   // graph completely. Ie clear all edges (parent and child) to node C, call the destructor
@@ -120,12 +120,12 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //   std::weak_ptr<DataObject> objectCPtr = dataStructure.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
 //   auto groupCId = dataStructure.getId(selectedDataGroupPath).value();
 //
-//   DeleteData filter;
+//   DeleteDataFilter filter;
 //   Arguments args;
 //
 //   // Create default Parameters for the filter.
-//   args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteDataObject)));
-//   args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
+//   args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteDataObject)));
+//   args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //   // Preflight the filter and check result
 //   auto preflightResult = filter.preflight(dataStructure, args);
@@ -152,7 +152,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //   REQUIRE(objectCPtr.expired());
 // }
 //
-// TEST_CASE("SimplnxCore::Delete DataPath to Object (Edge removal)", "[SimplnxCore][DeleteData]")
+// TEST_CASE("SimplnxCore::Delete DataPath to Object (Edge removal)", "[SimplnxCore][DeleteDataFilter]")
 //{
 //   // For this test case the goal will be to remove the edge between Top Level Group A and
 //   // subgroup C. The nuance to this is that the data graph uses a doubly-linked list structure
@@ -175,12 +175,12 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //   }
 //   REQUIRE(found);
 //
-//   DeleteData filter;
+//   DeleteDataFilter filter;
 //   Arguments args;
 //
 //   // Create default Parameters for the filter.
-//   args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteDataObject)));
-//   args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
+//   args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteDataObject)));
+//   args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //   // Preflight the filter and check result
 //   auto preflightResult = filter.preflight(dataStructure, args);
@@ -197,7 +197,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //   }
 // }
 //
-// TEST_CASE("SimplnxCore::Orphaning A Child Node to Top Level", "[SimplnxCore][DeleteData]")
+// TEST_CASE("SimplnxCore::Orphaning A Child Node to Top Level", "[SimplnxCore][DeleteDataFilter]")
 //{
 //   // For this test case the goal will be to remove Group D node and check that the Array I node
 //   // has been moved to the top level. This could also occur if the edge between Group D node and
@@ -226,12 +226,12 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //     std::weak_ptr<DataObject> objectDPtr = dataStructure.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
 //     auto groupDId = dataStructure.getId(selectedDataGroupPath).value();
 //
-//     DeleteData filter;
+//     DeleteDataFilter filter;
 //     Arguments args;
 //
 //     // Create default Parameters for the filter.
-//     args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteDataObject)));
-//     args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
+//     args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteDataObject)));
+//     args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //     // Preflight the filter and check result
 //     auto preflightResult = filter.preflight(dataStructure, args);
@@ -293,12 +293,12 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //     }
 //     REQUIRE(found);
 //
-//     DeleteData filter;
+//     DeleteDataFilter filter;
 //     Arguments args;
 //
 //     // Create default Parameters for the filter.
-//     args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteDataPath)));
-//     args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
+//     args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteDataPath)));
+//     args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //     // Preflight the filter and check result
 //     auto preflightResult = filter.preflight(dataStructure, args);
@@ -330,7 +330,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //   }
 // }
 //
-// TEST_CASE("SimplnxCore::Attempt Delete Shared Node", "[SimplnxCore][DeleteData]")
+// TEST_CASE("SimplnxCore::Attempt Delete Shared Node", "[SimplnxCore][DeleteDataFilter]")
 //{
 //   // The goal of this test is to attempt to delete a shared node using the delete
 //   // unshared children. Expected behaviour: the node is untouched (and in actual execution
@@ -361,12 +361,12 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //   }
 //   REQUIRE(found);
 //
-//   DeleteData filter;
+//   DeleteDataFilter filter;
 //   Arguments args;
 //
 //   // Create default Parameters for the filter.
-//   args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteUnsharedChildren)));
-//   args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
+//   args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteUnsharedChildren)));
+//   args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //   // Preflight the filter and check result
 //   auto preflightResult = filter.preflight(dataStructure, args);
@@ -392,7 +392,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //   REQUIRE(secondGroupECount == firstGroupECount);
 // }
 //
-// TEST_CASE("SimplnxCore::Delete Node with Multi-Parented Children", "[SimplnxCore][DeleteData]")
+// TEST_CASE("SimplnxCore::Delete Node with Multi-Parented Children", "[SimplnxCore][DeleteDataFilter]")
 //{
 //   // For this test case the goal is to pass in a top level object [group B] with multi-nested children and verify
 //   // the results throughout the four levels according to the respective deletion type.
@@ -427,12 +427,12 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //     std::weak_ptr<DataObject> objectKPtr = dataStructure.getSharedData(arrayKPath); // convert the shared ptr to a weak ptr
 //     auto arrayKId = dataStructure.getId(arrayKPath).value();
 //
-//     DeleteData filter;
+//     DeleteDataFilter filter;
 //     Arguments args;
 //
 //     // Create default Parameters for the filter.
-//     args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteUnsharedChildren)));
-//     args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(groupBPath));
+//     args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteUnsharedChildren)));
+//     args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<DataPath>(groupBPath));
 //
 //     // Preflight the filter and check result
 //     auto preflightResult = filter.preflight(dataStructure, args);
@@ -479,12 +479,12 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //       removedValues.emplace(dataStructure.getId(path).value(), dataStructure.getSharedData(path));
 //     }
 //
-//     DeleteData filter;
+//     DeleteDataFilter filter;
 //     Arguments args;
 //
 //     // Create default Parameters for the filter.
-//     args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteChildren)));
-//     args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(groupBPath));
+//     args.insertOrAssign(DeleteDataFilter::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteDataFilter::DeletionType::DeleteChildren)));
+//     args.insertOrAssign(DeleteDataFilter::k_DataPath_Key, std::make_any<DataPath>(groupBPath));
 //
 //     // Preflight the filter and check result
 //     auto preflightResult = filter.preflight(dataStructure, args);

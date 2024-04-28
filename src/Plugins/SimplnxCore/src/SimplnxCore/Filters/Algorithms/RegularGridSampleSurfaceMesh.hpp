@@ -25,7 +25,7 @@ struct SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
 };
 
 /**
- * @class ConditionalSetValue
+ * @class ConditionalSetValueFilter
 
  */
 class SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMesh : public SampleSurfaceMesh

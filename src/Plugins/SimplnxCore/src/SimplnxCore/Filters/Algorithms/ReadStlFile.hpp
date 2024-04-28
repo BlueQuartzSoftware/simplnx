@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 /**
- * @class ConditionalSetValue
+ * @class ConditionalSetValueFilter
 
  */
 class SIMPLNXCORE_EXPORT ReadStlFile

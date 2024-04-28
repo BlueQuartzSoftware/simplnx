@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/InitializeData.hpp"
+#include "SimplnxCore/Filters/InitializeDataFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -56,7 +56,7 @@ void BoundsCheck(const DataArray<T>& dataArray, const std::vector<T>& compBounds
 
 } // namespace
 
-TEST_CASE("SimplnxCore::InitializeData 1: Single Component Fill Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 1: Single Component Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -64,13 +64,13 @@ TEST_CASE("SimplnxCore::InitializeData 1: Single Component Fill Initialization",
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("-3.14"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("-3.14"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -84,7 +84,7 @@ TEST_CASE("SimplnxCore::InitializeData 1: Single Component Fill Initialization",
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 2: Multi Component Single-Value Fill Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 2: Multi Component Single-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -92,13 +92,13 @@ TEST_CASE("SimplnxCore::InitializeData 2: Multi Component Single-Value Fill Init
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("53"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("53"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -112,7 +112,7 @@ TEST_CASE("SimplnxCore::InitializeData 2: Multi Component Single-Value Fill Init
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 3: Multi Component Multi-Value Fill Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 3: Multi Component Multi-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -120,13 +120,13 @@ TEST_CASE("SimplnxCore::InitializeData 3: Multi Component Multi-Value Fill Initi
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("123;0;-38"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("123;0;-38"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -140,7 +140,7 @@ TEST_CASE("SimplnxCore::InitializeData 3: Multi Component Multi-Value Fill Initi
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 4: Single Component Incremental-Addition Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 4: Single Component Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -148,15 +148,15 @@ TEST_CASE("SimplnxCore::InitializeData 4: Single Component Incremental-Addition 
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("-2.09"));
-    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("10.67"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("-2.09"));
+    args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("10.67"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -170,7 +170,7 @@ TEST_CASE("SimplnxCore::InitializeData 4: Single Component Incremental-Addition 
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 5: Multi Component Single-Value Incremental-Addition Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 5: Multi Component Single-Value Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -178,15 +178,15 @@ TEST_CASE("SimplnxCore::InitializeData 5: Multi Component Single-Value Increment
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("-126"));
-    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("43"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("-126"));
+    args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("43"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -200,7 +200,7 @@ TEST_CASE("SimplnxCore::InitializeData 5: Multi Component Single-Value Increment
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 6: Multi Component Multi-Value Incremental-Addition Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 6: Multi Component Multi-Value Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -208,15 +208,15 @@ TEST_CASE("SimplnxCore::InitializeData 6: Multi Component Multi-Value Incrementa
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("34;0;-71"));
-    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("-3;0;7"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("34;0;-71"));
+    args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("-3;0;7"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -230,7 +230,7 @@ TEST_CASE("SimplnxCore::InitializeData 6: Multi Component Multi-Value Incrementa
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 7: Single Component Incremental-Subtraction Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 7: Single Component Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -238,15 +238,15 @@ TEST_CASE("SimplnxCore::InitializeData 7: Single Component Incremental-Subtracti
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("0.567"));
-    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1.43"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("0.567"));
+    args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("1.43"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -260,7 +260,7 @@ TEST_CASE("SimplnxCore::InitializeData 7: Single Component Incremental-Subtracti
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 8: Multi Component Single-Value Incremental-Subtraction Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 8: Multi Component Single-Value Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -268,15 +268,15 @@ TEST_CASE("SimplnxCore::InitializeData 8: Multi Component Single-Value Increment
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("7"));
-    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("-1"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("7"));
+    args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("-1"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -290,7 +290,7 @@ TEST_CASE("SimplnxCore::InitializeData 8: Multi Component Single-Value Increment
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 9: Multi Component Multi-Value Incremental-Subtraction Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 9: Multi Component Multi-Value Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -298,15 +298,15 @@ TEST_CASE("SimplnxCore::InitializeData 9: Multi Component Multi-Value Incrementa
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("100;0;-1"));
-    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("2;16;-10"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("100;0;-1"));
+    args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("2;16;-10"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -320,7 +320,7 @@ TEST_CASE("SimplnxCore::InitializeData 9: Multi Component Multi-Value Incrementa
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 10: Single Component Random-With-Range Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 10: Single Component Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -328,18 +328,18 @@ TEST_CASE("SimplnxCore::InitializeData 10: Single Component Random-With-Range In
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
-    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("2.62"));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("6666.66"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
+    args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("2.62"));
+    args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("6666.66"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -353,7 +353,7 @@ TEST_CASE("SimplnxCore::InitializeData 10: Single Component Random-With-Range In
   ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {2.62f, 6666.66f});
 }
 
-TEST_CASE("SimplnxCore::InitializeData 11: Multi Component Single-Value Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 11: Multi Component Single-Value Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -361,18 +361,18 @@ TEST_CASE("SimplnxCore::InitializeData 11: Multi Component Single-Value Standard
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
-    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-6.283185")); // -2 pi
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("6.283185"));    // 2 pi
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
+    args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("-6.283185")); // -2 pi
+    args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("6.283185"));    // 2 pi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -386,7 +386,7 @@ TEST_CASE("SimplnxCore::InitializeData 11: Multi Component Single-Value Standard
   ::BoundsCheck<float32, true>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {-6.283185f, 6.283185f, -6.28318f, 6.283185f, -6.28318f, 6.283185f});
 }
 
-TEST_CASE("SimplnxCore::InitializeData 12: Multi Component Single-Value Non-Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 12: Multi Component Single-Value Non-Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -394,18 +394,18 @@ TEST_CASE("SimplnxCore::InitializeData 12: Multi Component Single-Value Non-Stan
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
-    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-1000"));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("1000"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
+    args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("-1000"));
+    args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("1000"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -419,7 +419,7 @@ TEST_CASE("SimplnxCore::InitializeData 12: Multi Component Single-Value Non-Stan
   ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-1000, 1000, -1000, 1000, -1000, 1000});
 }
 
-TEST_CASE("SimplnxCore::InitializeData 13: Multi Component Multi-Value Non-Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 13: Multi Component Multi-Value Non-Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -427,18 +427,18 @@ TEST_CASE("SimplnxCore::InitializeData 13: Multi Component Multi-Value Non-Stand
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
-    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("-500;0;19"));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("-1;0;1000"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
+    args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("-500;0;19"));
+    args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("-1;0;1000"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -452,7 +452,7 @@ TEST_CASE("SimplnxCore::InitializeData 13: Multi Component Multi-Value Non-Stand
   ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-500, -1, 0, 0, 19, 1000});
 }
 
-TEST_CASE("SimplnxCore::InitializeData 14: Boolean Multi Component Single-Value Fill Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 14: Boolean Multi Component Single-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -460,13 +460,13 @@ TEST_CASE("SimplnxCore::InitializeData 14: Boolean Multi Component Single-Value 
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("False"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("False"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -480,7 +480,7 @@ TEST_CASE("SimplnxCore::InitializeData 14: Boolean Multi Component Single-Value 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 15: Boolean Multi Component Incremental-Addition Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 15: Boolean Multi Component Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -488,15 +488,15 @@ TEST_CASE("SimplnxCore::InitializeData 15: Boolean Multi Component Incremental-A
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("1;0;0"));
-    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("1;0;0"));
+    args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -510,7 +510,7 @@ TEST_CASE("SimplnxCore::InitializeData 15: Boolean Multi Component Incremental-A
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 16: Boolean Multi Component Incremental-Subtraction Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 16: Boolean Multi Component Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -518,15 +518,15 @@ TEST_CASE("SimplnxCore::InitializeData 16: Boolean Multi Component Incremental-S
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StartingFillValue_Key, std::make_any<std::string>("0;1;1"));
-    args.insertOrAssign(InitializeData::k_StepOperation_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(InitializeData::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StartingFillValue_Key, std::make_any<std::string>("0;1;1"));
+    args.insertOrAssign(InitializeDataFilter::k_StepOperation_Key, std::make_any<uint64>(1));
+    args.insertOrAssign(InitializeDataFilter::k_StepValue_Key, std::make_any<std::string>("1;0;1"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -540,7 +540,7 @@ TEST_CASE("SimplnxCore::InitializeData 16: Boolean Multi Component Incremental-S
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
 }
 
-TEST_CASE("SimplnxCore::InitializeData 17: Boolean Multi Component Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 17: Boolean Multi Component Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -548,18 +548,18 @@ TEST_CASE("SimplnxCore::InitializeData 17: Boolean Multi Component Standardized 
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(3));
-    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_InitStartRange_Key, std::make_any<std::string>("0"));
-    args.insertOrAssign(InitializeData::k_InitEndRange_Key, std::make_any<std::string>("1;0;1"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
+    args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_InitStartRange_Key, std::make_any<std::string>("0"));
+    args.insertOrAssign(InitializeDataFilter::k_InitEndRange_Key, std::make_any<std::string>("1;0;1"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -573,7 +573,7 @@ TEST_CASE("SimplnxCore::InitializeData 17: Boolean Multi Component Standardized 
   ::BoundsCheck<bool, true>(dataStructure.getDataRefAs<BoolArray>(::k_BaselinePath), {false, true, false, false, false, true});
 }
 
-TEST_CASE("SimplnxCore::InitializeData 18: Single Component Random Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 18: Single Component Random Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -581,16 +581,16 @@ TEST_CASE("SimplnxCore::InitializeData 18: Single Component Random Initializatio
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
-    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(2));
+    args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
+    args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -604,7 +604,7 @@ TEST_CASE("SimplnxCore::InitializeData 18: Single Component Random Initializatio
   ::BoundsCheck<uint8, false>(dataStructure.getDataRefAs<UInt8Array>(::k_BaselinePath), {std::numeric_limits<uint8>::min(), std::numeric_limits<uint8>::max()});
 }
 
-TEST_CASE("SimplnxCore::InitializeData 19: Multi Component Standardized-Random Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Random Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -612,16 +612,16 @@ TEST_CASE("SimplnxCore::InitializeData 19: Multi Component Standardized-Random I
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
-    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(2));
+    args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
+    args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -636,7 +636,7 @@ TEST_CASE("SimplnxCore::InitializeData 19: Multi Component Standardized-Random I
                                                                                           std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max()});
 }
 
-TEST_CASE("SimplnxCore::InitializeData 20: Multi Component Non-Standardized-Random Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 20: Multi Component Non-Standardized-Random Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -644,16 +644,16 @@ TEST_CASE("SimplnxCore::InitializeData 20: Multi Component Non-Standardized-Rand
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(2));
-    args.insertOrAssign(InitializeData::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(InitializeData::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(InitializeData::k_SeedArrayName_Key, std::make_any<std::string>("InitializeData SeedValue Test"));
-    args.insertOrAssign(InitializeData::k_StandardizeSeed_Key, std::make_any<bool>(false));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(2));
+    args.insertOrAssign(InitializeDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(InitializeDataFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(InitializeDataFilter::k_SeedArrayName_Key, std::make_any<std::string>("InitializeDataFilter SeedValue Test"));
+    args.insertOrAssign(InitializeDataFilter::k_StandardizeSeed_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -669,7 +669,7 @@ TEST_CASE("SimplnxCore::InitializeData 20: Multi Component Non-Standardized-Rand
                                  std::numeric_limits<float32>::max(), (-1 * (std::numeric_limits<float32>::max() - 1)), std::numeric_limits<float32>::max()});
 }
 
-TEST_CASE("SimplnxCore::InitializeData 21: Boolean Single Component Fill Initialization", "[SimplnxCore][InitializeData]")
+TEST_CASE("SimplnxCore::InitializeDataFilter 21: Boolean Single Component Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
@@ -677,13 +677,13 @@ TEST_CASE("SimplnxCore::InitializeData 21: Boolean Single Component Fill Initial
 
   {
     // Instantiate the filter and an Arguments Object
-    InitializeData filter;
+    InitializeDataFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(InitializeData::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
-    args.insertOrAssign(InitializeData::k_InitType_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(InitializeData::k_InitValue_Key, std::make_any<std::string>("False"));
+    args.insertOrAssign(InitializeDataFilter::k_ArrayPath_Key, std::make_any<DataPath>(::k_BaselinePath));
+    args.insertOrAssign(InitializeDataFilter::k_InitType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(InitializeDataFilter::k_InitValue_Key, std::make_any<std::string>("False"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

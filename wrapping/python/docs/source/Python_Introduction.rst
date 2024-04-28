@@ -111,12 +111,12 @@ In this way, developers can execute Python filters from Python.  This can be use
 Creating a DataGroup
 --------------------
 
-A :ref:`DataGroup` can be created with the :ref:`simplnx.CreateDataGroup.Execute() <CreateDataGroup>` method.
+A :ref:`DataGroup` can be created with the :ref:`simplnx.CreateDataGroupFilter.Execute() <CreateDataGroupFilter>` method.
 
 .. code:: python
 
     # Create a top level group: (Not needed)
-    result = nx.CreateDataGroup.execute(data_structure=data_structure,
+    result = nx.CreateDataGroupFilter.execute(data_structure=data_structure,
                                         Data_Object_Path=nx.DataPath(['Group']))
 
 Creating a DataArray

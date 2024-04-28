@@ -8,42 +8,27 @@
 namespace nx::core
 {
 /**
- * @class FindSurfaceFeatures
- * @brief This Filter determines whether a Feature touches an outer surface of the sample.
- * This is accomplished by simply querying the Feature owners of the Cells that sit at either.
- * Any Feature that owns one of those Cells is said to touch an outer surface and all other
- * Features are said to not touch an outer surface of the sample.
- *
- * This Filter determines whether a Feature touches an outer Surface of the sample volume. A
- * Feature is considered touching the Surface of the sample if either of the following conditions
- * are met:
- * Any cell location is xmin, xmax, ymin, ymax, zmin or zmax.
- * Any cell has Feature ID = 0 as a neighbor.
- *
- * The output of this filter is a Feature level array of booleans where 0=Interior/Not touching
- * and 1=Surface/Touching.
- *
- * Note: If there are voxels within the volume that have Feature ID=0 then any feature touching
- * those voxels will be considered a Surface feature.
+ * @class CreateImageGeometryFilter
+ * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT FindSurfaceFeatures : public IFilter
+class SIMPLNXCORE_EXPORT CreateImageGeometryFilter : public IFilter
 {
 public:
-  FindSurfaceFeatures() = default;
-  ~FindSurfaceFeatures() noexcept override = default;
+  CreateImageGeometryFilter() = default;
+  ~CreateImageGeometryFilter() noexcept override = default;
 
-  FindSurfaceFeatures(const FindSurfaceFeatures&) = delete;
-  FindSurfaceFeatures(FindSurfaceFeatures&&) noexcept = delete;
+  CreateImageGeometryFilter(const CreateImageGeometryFilter&) = delete;
+  CreateImageGeometryFilter(CreateImageGeometryFilter&&) noexcept = delete;
 
-  FindSurfaceFeatures& operator=(const FindSurfaceFeatures&) = delete;
-  FindSurfaceFeatures& operator=(FindSurfaceFeatures&&) noexcept = delete;
+  CreateImageGeometryFilter& operator=(const CreateImageGeometryFilter&) = delete;
+  CreateImageGeometryFilter& operator=(CreateImageGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MarkFeature0Neighbors = "mark_feature_0_neighbors";
-  static inline constexpr StringLiteral k_FeatureGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
-  static inline constexpr StringLiteral k_SurfaceFeaturesArrayName_Key = "surface_features_array_name";
+  static inline constexpr StringLiteral k_GeometryDataPath_Key = "output_image_geometry_path";
+  static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -118,4 +103,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindSurfaceFeatures, "0893e490-5d24-4c21-95e7-e8372baa8948");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreateImageGeometryFilter, "c4320659-1a84-461d-939e-c7c10229a504");

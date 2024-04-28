@@ -100,14 +100,14 @@ data_structure = nx.DataStructure()
 #------------------------------------------------------------------------------
 # Create a top level group: (Not needed)
 #------------------------------------------------------------------------------
-result = nx.CreateDataGroup.execute(data_structure=data_structure,
+result = nx.CreateDataGroupFilter.execute(data_structure=data_structure,
                                     data_object_path=nx.DataPath(['Group']))
-nxtest.check_filter_result(nx.CreateDataGroup, result)
+nxtest.check_filter_result(nx.CreateDataGroupFilter, result)
 
 
-result = nx.CreateDataGroup.execute(data_structure=data_structure, 
+result = nx.CreateDataGroupFilter.execute(data_structure=data_structure, 
                                     data_object_path=nx.DataPath("/Some/Path/To/Group"))
-nxtest.check_filter_result(nx.CreateDataGroup, result)
+nxtest.check_filter_result(nx.CreateDataGroupFilter, result)
 
 
 #------------------------------------------------------------------------------
@@ -234,7 +234,7 @@ print(children_paths)
 print(f'data_structure.size: {data_structure.size}')
 
 print(f'Removing Data Array')
-result = nx.DeleteData.execute(data_structure=data_structure,
+result = nx.DeleteDataFilter.execute(data_structure=data_structure,
                                removed_data_path=[nx.DataPath("Group/1D Array")])
 nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)
 # This will generate the hierarchy as an ASCI Formatted string.

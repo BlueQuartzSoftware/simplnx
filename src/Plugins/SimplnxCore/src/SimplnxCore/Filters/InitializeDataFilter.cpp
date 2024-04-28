@@ -1,4 +1,4 @@
-#include "InitializeData.hpp"
+#include "InitializeDataFilter.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -394,37 +394,37 @@ struct ValidateMultiInputFunctor
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string InitializeData::name() const
+std::string InitializeDataFilter::name() const
 {
-  return FilterTraits<InitializeData>::name;
+  return FilterTraits<InitializeDataFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string InitializeData::className() const
+std::string InitializeDataFilter::className() const
 {
-  return FilterTraits<InitializeData>::className;
+  return FilterTraits<InitializeDataFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid InitializeData::uuid() const
+Uuid InitializeDataFilter::uuid() const
 {
-  return FilterTraits<InitializeData>::uuid;
+  return FilterTraits<InitializeDataFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string InitializeData::humanName() const
+std::string InitializeDataFilter::humanName() const
 {
   return "Initialize Data";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> InitializeData::defaultTags() const
+std::vector<std::string> InitializeDataFilter::defaultTags() const
 {
   return {className(), "Memory Management", "Initialize", "Create", "Generate", "Data"};
 }
 
 //------------------------------------------------------------------------------
-Parameters InitializeData::parameters() const
+Parameters InitializeDataFilter::parameters() const
 {
   Parameters params;
 
@@ -446,7 +446,7 @@ Parameters InitializeData::parameters() const
 
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeData SeedValue"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeDataFilter SeedValue"));
   params.insert(std::make_unique<BoolParameter>(k_StandardizeSeed_Key, "Use the Same Seed for Each Component",
                                                 "When true the same seed will be used for each component's generator in a multi-component array", false));
 
@@ -481,13 +481,13 @@ Parameters InitializeData::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer InitializeData::clone() const
+IFilter::UniquePointer InitializeDataFilter::clone() const
 {
-  return std::make_unique<InitializeData>();
+  return std::make_unique<InitializeDataFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto seedArrayNameValue = args.value<std::string>(k_SeedArrayName_Key);
   auto initializeTypeValue = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
@@ -663,7 +663,8 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> InitializeDataFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel) const
 {
   auto initType = static_cast<InitializeType>(args.value<uint64>(k_InitType_Key));
 

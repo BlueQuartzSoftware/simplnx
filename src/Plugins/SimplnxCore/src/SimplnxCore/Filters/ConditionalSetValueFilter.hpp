@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class ConditionalSetValue
+ * @class ConditionalSetValueFilter
 
  */
-class SIMPLNXCORE_EXPORT ConditionalSetValue : public IFilter
+class SIMPLNXCORE_EXPORT ConditionalSetValueFilter : public IFilter
 {
 public:
-  ConditionalSetValue() = default;
-  ~ConditionalSetValue() noexcept override = default;
+  ConditionalSetValueFilter() = default;
+  ~ConditionalSetValueFilter() noexcept override = default;
 
-  ConditionalSetValue(const ConditionalSetValue&) = delete;
-  ConditionalSetValue(ConditionalSetValue&&) noexcept = delete;
+  ConditionalSetValueFilter(const ConditionalSetValueFilter&) = delete;
+  ConditionalSetValueFilter(ConditionalSetValueFilter&&) noexcept = delete;
 
-  ConditionalSetValue& operator=(const ConditionalSetValue&) = delete;
-  ConditionalSetValue& operator=(ConditionalSetValue&&) noexcept = delete;
+  ConditionalSetValueFilter& operator=(const ConditionalSetValueFilter&) = delete;
+  ConditionalSetValueFilter& operator=(ConditionalSetValueFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_UseConditional_Key = "use_conditional";
@@ -106,4 +106,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ConditionalSetValue, "bad9b7bd-1dc9-4f21-a889-6520e7a41881");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ConditionalSetValueFilter, "bad9b7bd-1dc9-4f21-a889-6520e7a41881");

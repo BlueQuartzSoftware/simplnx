@@ -1,4 +1,4 @@
-#include "CreateDataGroup.hpp"
+#include "CreateDataGroupFilter.hpp"
 
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
@@ -8,33 +8,33 @@
 
 namespace nx::core
 {
-std::string CreateDataGroup::name() const
+std::string CreateDataGroupFilter::name() const
 {
-  return FilterTraits<CreateDataGroup>::name;
+  return FilterTraits<CreateDataGroupFilter>::name;
 }
 
-std::string CreateDataGroup::className() const
+std::string CreateDataGroupFilter::className() const
 {
-  return FilterTraits<CreateDataGroup>::className;
+  return FilterTraits<CreateDataGroupFilter>::className;
 }
 
-Uuid CreateDataGroup::uuid() const
+Uuid CreateDataGroupFilter::uuid() const
 {
-  return FilterTraits<CreateDataGroup>::uuid;
+  return FilterTraits<CreateDataGroupFilter>::uuid;
 }
 
-std::string CreateDataGroup::humanName() const
+std::string CreateDataGroupFilter::humanName() const
 {
   return "Create Data Group";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CreateDataGroup::defaultTags() const
+std::vector<std::string> CreateDataGroupFilter::defaultTags() const
 {
   return {className(), "Core", "Generation", "DataGroup", "Create"};
 }
 
-Parameters CreateDataGroup::parameters() const
+Parameters CreateDataGroupFilter::parameters() const
 {
   Parameters params;
 
@@ -43,12 +43,13 @@ Parameters CreateDataGroup::parameters() const
   return params;
 }
 
-IFilter::UniquePointer CreateDataGroup::clone() const
+IFilter::UniquePointer CreateDataGroupFilter::clone() const
 {
-  return std::make_unique<CreateDataGroup>();
+  return std::make_unique<CreateDataGroupFilter>();
 }
 
-IFilter::PreflightResult CreateDataGroup::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CreateDataGroupFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
   DataPath dataObjectPath = args.value<DataPath>(k_DataObjectPath);
 
@@ -60,8 +61,8 @@ IFilter::PreflightResult CreateDataGroup::preflightImpl(const DataStructure& dat
   return {std::move(actions)};
 }
 
-Result<> CreateDataGroup::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                      const std::atomic_bool& shouldCancel) const
+Result<> CreateDataGroupFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
@@ -74,7 +75,7 @@ constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CreateDataGroup::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> CreateDataGroupFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args;
 

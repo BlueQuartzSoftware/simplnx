@@ -1,4 +1,4 @@
-#include "ExtractInternalSurfacesFromTriangleGeometry.hpp"
+#include "ExtractInternalSurfacesFromTriangleGeometryFilter.hpp"
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -95,37 +95,37 @@ namespace nx::core
 {
 
 //------------------------------------------------------------------------------
-std::string ExtractInternalSurfacesFromTriangleGeometry::name() const
+std::string ExtractInternalSurfacesFromTriangleGeometryFilter::name() const
 {
-  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::name;
+  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometryFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string ExtractInternalSurfacesFromTriangleGeometry::className() const
+std::string ExtractInternalSurfacesFromTriangleGeometryFilter::className() const
 {
-  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::className;
+  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometryFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ExtractInternalSurfacesFromTriangleGeometry::uuid() const
+Uuid ExtractInternalSurfacesFromTriangleGeometryFilter::uuid() const
 {
-  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid;
+  return FilterTraits<ExtractInternalSurfacesFromTriangleGeometryFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
+std::string ExtractInternalSurfacesFromTriangleGeometryFilter::humanName() const
 {
   return "Extract Internal Surfaces From Triangle Geometry";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ExtractInternalSurfacesFromTriangleGeometry::defaultTags() const
+std::vector<std::string> ExtractInternalSurfacesFromTriangleGeometryFilter::defaultTags() const
 {
   return {className(), "Geometry", "Triangle Geometry", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
+Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
 {
   Parameters params;
 
@@ -154,14 +154,14 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometry::clone() const
+IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometryFilter::clone() const
 {
-  return std::make_unique<ExtractInternalSurfacesFromTriangleGeometry>();
+  return std::make_unique<ExtractInternalSurfacesFromTriangleGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                    const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                                          const std::atomic_bool& shouldCancel) const
 {
   auto triangleGeomPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   auto internalTrianglesGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
@@ -256,8 +256,8 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                                        const std::atomic_bool& shouldCancel) const
 {
   auto nodeTypesArrayPath = args.value<DataPath>(k_NodeTypesPath_Key);
   auto triangleGeomPath = args.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
@@ -414,9 +414,9 @@ constexpr StringLiteral k_InternalTrianglesNameKey = "InternalTrianglesName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ExtractInternalSurfacesFromTriangleGeometry::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ExtractInternalSurfacesFromTriangleGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ExtractInternalSurfacesFromTriangleGeometry().getDefaultArguments();
+  Arguments args = ExtractInternalSurfacesFromTriangleGeometryFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

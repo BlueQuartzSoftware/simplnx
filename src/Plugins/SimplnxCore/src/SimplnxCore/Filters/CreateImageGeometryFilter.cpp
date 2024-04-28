@@ -1,4 +1,4 @@
-#include "CreateImageGeometry.hpp"
+#include "CreateImageGeometryFilter.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -20,31 +20,31 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string CreateImageGeometry::name() const
+std::string CreateImageGeometryFilter::name() const
 {
-  return FilterTraits<CreateImageGeometry>::name.str();
+  return FilterTraits<CreateImageGeometryFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string CreateImageGeometry::className() const
+std::string CreateImageGeometryFilter::className() const
 {
-  return FilterTraits<CreateImageGeometry>::className;
+  return FilterTraits<CreateImageGeometryFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid CreateImageGeometry::uuid() const
+Uuid CreateImageGeometryFilter::uuid() const
 {
-  return FilterTraits<CreateImageGeometry>::uuid;
+  return FilterTraits<CreateImageGeometryFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string CreateImageGeometry::humanName() const
+std::string CreateImageGeometryFilter::humanName() const
 {
   return "Create Geometry (Image)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CreateImageGeometry::defaultTags() const
+std::vector<std::string> CreateImageGeometryFilter::defaultTags() const
 {
   return {className(), "Core", "Generation",
           "ImageGeometry"
@@ -52,7 +52,7 @@ std::vector<std::string> CreateImageGeometry::defaultTags() const
 }
 
 //------------------------------------------------------------------------------
-Parameters CreateImageGeometry::parameters() const
+Parameters CreateImageGeometryFilter::parameters() const
 {
   Parameters params;
 
@@ -71,14 +71,14 @@ Parameters CreateImageGeometry::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateImageGeometry::clone() const
+IFilter::UniquePointer CreateImageGeometryFilter::clone() const
 {
-  return std::make_unique<CreateImageGeometry>();
+  return std::make_unique<CreateImageGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   /**
    * These are the values that were gathered from the UI or the pipeline file or
@@ -126,8 +126,8 @@ IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateImageGeometry::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+Result<> CreateImageGeometryFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
@@ -156,9 +156,9 @@ constexpr StringLiteral k_BoxDimensionsKey = "BoxDimensions";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CreateImageGeometry::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> CreateImageGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = CreateImageGeometry().getDefaultArguments();
+  Arguments args = CreateImageGeometryFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

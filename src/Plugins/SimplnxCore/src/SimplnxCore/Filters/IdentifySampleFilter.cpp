@@ -1,4 +1,4 @@
-#include "IdentifySample.hpp"
+#include "IdentifySampleFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -229,37 +229,37 @@ struct IdentifySampleFunctor
 } // namespace
 
 //------------------------------------------------------------------------------
-std::string IdentifySample::name() const
+std::string IdentifySampleFilter::name() const
 {
-  return FilterTraits<IdentifySample>::name;
+  return FilterTraits<IdentifySampleFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string IdentifySample::className() const
+std::string IdentifySampleFilter::className() const
 {
-  return FilterTraits<IdentifySample>::className;
+  return FilterTraits<IdentifySampleFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid IdentifySample::uuid() const
+Uuid IdentifySampleFilter::uuid() const
 {
-  return FilterTraits<IdentifySample>::uuid;
+  return FilterTraits<IdentifySampleFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string IdentifySample::humanName() const
+std::string IdentifySampleFilter::humanName() const
 {
   return "Isolate Largest Feature (Identify Sample)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> IdentifySample::defaultTags() const
+std::vector<std::string> IdentifySampleFilter::defaultTags() const
 {
   return {className(), "Core", "Identify Sample"};
 }
 
 //------------------------------------------------------------------------------
-Parameters IdentifySample::parameters() const
+Parameters IdentifySampleFilter::parameters() const
 {
   Parameters params;
 
@@ -274,13 +274,13 @@ Parameters IdentifySample::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer IdentifySample::clone() const
+IFilter::UniquePointer IdentifySampleFilter::clone() const
 {
-  return std::make_unique<IdentifySample>();
+  return std::make_unique<IdentifySampleFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IdentifySample::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   const auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
@@ -298,7 +298,8 @@ IFilter::PreflightResult IdentifySample::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> IdentifySample::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> IdentifySampleFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel) const
 {
   const auto fillHoles = args.value<bool>(k_FillHoles_Key);
   const auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
@@ -321,9 +322,9 @@ constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> IdentifySample::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> IdentifySampleFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = IdentifySample().getDefaultArguments();
+  Arguments args = IdentifySampleFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

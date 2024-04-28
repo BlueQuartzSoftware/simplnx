@@ -11,7 +11,7 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-nx_filter = nx.CreateImageGeometry()
+nx_filter = nx.CreateImageGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -96,7 +96,7 @@ result = nx_filter.execute(
 nxtest.check_filter_result(nx_filter, result)
 # Filter 6
 # Instantiate Filter
-nx_filter = nx.CropImageGeometry()
+nx_filter = nx.CropImageGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -115,7 +115,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = nx.CropImageGeometry()
+nx_filter = nx.CropImageGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

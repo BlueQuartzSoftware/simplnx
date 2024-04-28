@@ -1,4 +1,4 @@
-#include "FindDifferencesMap.hpp"
+#include "FindDifferencesMapFilter.hpp"
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -133,37 +133,37 @@ struct ExecuteFindDifferenceMapFunctor
 } // namespace
 
 //------------------------------------------------------------------------------
-std::string FindDifferencesMap::name() const
+std::string FindDifferencesMapFilter::name() const
 {
-  return FilterTraits<FindDifferencesMap>::name;
+  return FilterTraits<FindDifferencesMapFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string FindDifferencesMap::className() const
+std::string FindDifferencesMapFilter::className() const
 {
-  return FilterTraits<FindDifferencesMap>::className;
+  return FilterTraits<FindDifferencesMapFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindDifferencesMap::uuid() const
+Uuid FindDifferencesMapFilter::uuid() const
 {
-  return FilterTraits<FindDifferencesMap>::uuid;
+  return FilterTraits<FindDifferencesMapFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindDifferencesMap::humanName() const
+std::string FindDifferencesMapFilter::humanName() const
 {
   return "Find Differences Map";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindDifferencesMap::defaultTags() const
+std::vector<std::string> FindDifferencesMapFilter::defaultTags() const
 {
   return {className(), "Statistics", "SimplnxCore"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindDifferencesMap::parameters() const
+Parameters FindDifferencesMapFilter::parameters() const
 {
   Parameters params;
 
@@ -175,13 +175,14 @@ Parameters FindDifferencesMap::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindDifferencesMap::clone() const
+IFilter::UniquePointer FindDifferencesMapFilter::clone() const
 {
-  return std::make_unique<FindDifferencesMap>();
+  return std::make_unique<FindDifferencesMapFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindDifferencesMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
   auto secondInputArrayPath = args.value<DataPath>(k_SecondInputArrayPath_Key);
@@ -251,8 +252,8 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> FindDifferencesMap::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel) const
+Result<> FindDifferencesMapFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArray = data.getDataAs<IDataArray>(args.value<DataPath>(k_FirstInputArrayPath_Key));
   auto secondInputArray = data.getDataAs<IDataArray>(args.value<DataPath>(k_SecondInputArrayPath_Key));
@@ -274,9 +275,9 @@ constexpr StringLiteral k_DifferenceMapArrayPathKey = "DifferenceMapArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindDifferencesMap::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> FindDifferencesMapFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindDifferencesMap().getDefaultArguments();
+  Arguments args = FindDifferencesMapFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

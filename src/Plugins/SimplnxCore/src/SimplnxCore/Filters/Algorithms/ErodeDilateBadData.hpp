@@ -38,7 +38,7 @@ struct SIMPLNXCORE_EXPORT ErodeDilateBadDataInputValues
 };
 
 /**
- * @class ConditionalSetValue
+ * @class ConditionalSetValueFilter
 
  */
 class SIMPLNXCORE_EXPORT ErodeDilateBadData

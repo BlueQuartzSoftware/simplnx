@@ -236,12 +236,12 @@ DataGroup
 The DataStructure_ is a flexible heirarchy that stores all **simplnx** :ref:`DataObjects <DataObject>`
 that are created. A basic :ref:`DataObject` that can be created is a :ref:`DataGroup` which is a 
 simple grouping mechanism that can be thought of as similar in concept to a folder or directory that 
-is created on the file system. The programmer can use the :ref:`CreateDataGroup<CreateDataGroup>` filter to create
+is created on the file system. The programmer can use the :ref:`CreateDataGroupFilter<CreateDataGroupFilter>` filter to create
 any needed DataGroups.
 
 .. code:: python
 
-   result = nx.CreateDataGroup.execute(data_structure=data_structure,
+   result = nx.CreateDataGroupFilter.execute(data_structure=data_structure,
                                     Data_Object_Path=nx.DataPath(['Group']))
 
 

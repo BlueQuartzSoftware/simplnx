@@ -1,4 +1,4 @@
-#include "CropImageGeometry.hpp"
+#include "CropImageGeometryFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -135,50 +135,50 @@ private:
 } // namespace
 
 //------------------------------------------------------------------------------
-CropImageGeometry::CropImageGeometry()
+CropImageGeometryFilter::CropImageGeometryFilter()
 : m_InstanceId(s_InstanceId.fetch_add(1))
 {
   s_HeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
-CropImageGeometry::~CropImageGeometry() noexcept
+CropImageGeometryFilter::~CropImageGeometryFilter() noexcept
 {
   s_HeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
-std::string CropImageGeometry::name() const
+std::string CropImageGeometryFilter::name() const
 {
-  return FilterTraits<CropImageGeometry>::name;
+  return FilterTraits<CropImageGeometryFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string CropImageGeometry::className() const
+std::string CropImageGeometryFilter::className() const
 {
-  return FilterTraits<CropImageGeometry>::className;
+  return FilterTraits<CropImageGeometryFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid CropImageGeometry::uuid() const
+Uuid CropImageGeometryFilter::uuid() const
 {
-  return FilterTraits<CropImageGeometry>::uuid;
+  return FilterTraits<CropImageGeometryFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string CropImageGeometry::humanName() const
+std::string CropImageGeometryFilter::humanName() const
 {
   return "Crop Geometry (Image)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CropImageGeometry::defaultTags() const
+std::vector<std::string> CropImageGeometryFilter::defaultTags() const
 {
   return {className(), "Core", "Crop Image Geometry", "Image Geometry", "Conversion"};
 }
 
 //------------------------------------------------------------------------------
-Parameters CropImageGeometry::parameters() const
+Parameters CropImageGeometryFilter::parameters() const
 {
   Parameters params;
 
@@ -223,13 +223,13 @@ Parameters CropImageGeometry::parameters() const
   return params;
 }
 
-IFilter::UniquePointer CropImageGeometry::clone() const
+IFilter::UniquePointer CropImageGeometryFilter::clone() const
 {
-  return std::make_unique<CropImageGeometry>();
+  return std::make_unique<CropImageGeometryFilter>();
 }
 
-IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                const std::atomic_bool& shouldCancel) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -526,8 +526,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel) const
+Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -703,9 +703,9 @@ constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttrib
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CropImageGeometry::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> CropImageGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = CropImageGeometry().getDefaultArguments();
+  Arguments args = CropImageGeometryFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

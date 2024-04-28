@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/CreateDataGroup.hpp"
+#include "SimplnxCore/Filters/CreateDataGroupFilter.hpp"
 #include "SimplnxCore/Filters/ReadCSVFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 

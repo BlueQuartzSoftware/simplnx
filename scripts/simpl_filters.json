@@ -165,7 +165,7 @@
                     "uuid": "{738c8da9-45d0-53dd-aa54-3f3a337b70d7}"
                 },
                 {
-                    "name": "AlignGeometries",
+                    "name": "AlignGeometriesFilter",
                     "parameters": [
                         {
                             "name": "AlignmentType",
@@ -747,7 +747,7 @@
                     "uuid": "{351c38c9-330d-599c-8632-19d74868be86}"
                 },
                 {
-                    "name": "ExtractInternalSurfacesFromTriangleGeometry",
+                    "name": "ExtractInternalSurfacesFromTriangleGeometryFilter",
                     "parameters": [
                         {
                             "name": "TriangleDataContainerName",
@@ -9402,7 +9402,7 @@
                     "uuid": "{52b2918a-4fb5-57aa-97d4-ccc084b89572}"
                 },
                 {
-                    "name": "CropImageGeometry",
+                    "name": "CropImageGeometryFilter",
                     "parameters": [
                         {
                             "name": "XMin",
@@ -11083,7 +11083,7 @@
                     "uuid": "{64d20c7b-697c-5ff1-9d1d-8a27b071f363}"
                 },
                 {
-                    "name": "FindSurfaceFeatures",
+                    "name": "FindSurfaceFeaturesFilter",
                     "parameters": [
                         {
                             "name": "",
@@ -11414,7 +11414,7 @@
                     "uuid": "{801008ce-1dcb-5604-8f16-a86526e28cf9}"
                 },
                 {
-                    "name": "IdentifySample",
+                    "name": "IdentifySampleFilter",
                     "parameters": [
                         {
                             "name": "FillHoles",
@@ -11432,7 +11432,7 @@
                     "uuid": "{0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a}"
                 },
                 {
-                    "name": "MinNeighbors",
+                    "name": "MinNeighborsFilter",
                     "parameters": [
                         {
                             "name": "MinNumNeighbors",
@@ -11637,7 +11637,7 @@
                     "uuid": "{334034e9-405f-51a3-9c3c-8d9c955835d9}"
                 },
                 {
-                    "name": "ConditionalSetValue",
+                    "name": "ConditionalSetValueFilter",
                     "parameters": [
                         {
                             "name": "ReplaceValue",
@@ -12007,7 +12007,7 @@
                     "uuid": "{c5bb92df-c1bb-5e57-a2bf-280303a81935}"
                 },
                 {
-                    "name": "CreateImageGeometry",
+                    "name": "CreateImageGeometryFilter",
                     "parameters": [
                         {
                             "name": "SelectedDataContainer",
@@ -12047,7 +12047,7 @@
                     "uuid": "{e6b9a566-c5eb-5e3a-87de-7fe65d1d12b6}"
                 },
                 {
-                    "name": "CropVertexGeometry",
+                    "name": "CropVertexGeometryFilter",
                     "parameters": [
                         {
                             "name": "DataContainerName",
@@ -12405,7 +12405,7 @@
                     "uuid": "{9e98c3b0-5707-5a3b-b8b5-23ef83b02896}"
                 },
                 {
-                    "name": "InitializeData",
+                    "name": "InitializeDataFilter",
                     "parameters": [
                         {
                             "name": "",

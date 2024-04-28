@@ -1,4 +1,4 @@
-#include "CropVertexGeometry.hpp"
+#include "CropVertexGeometryFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
@@ -44,37 +44,37 @@ struct CopyDataToCroppedGeometryFunctor
 } // namespace
 
 //------------------------------------------------------------------------------
-std::string CropVertexGeometry::name() const
+std::string CropVertexGeometryFilter::name() const
 {
-  return FilterTraits<CropVertexGeometry>::name;
+  return FilterTraits<CropVertexGeometryFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string CropVertexGeometry::className() const
+std::string CropVertexGeometryFilter::className() const
 {
-  return FilterTraits<CropVertexGeometry>::className;
+  return FilterTraits<CropVertexGeometryFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid CropVertexGeometry::uuid() const
+Uuid CropVertexGeometryFilter::uuid() const
 {
-  return FilterTraits<CropVertexGeometry>::uuid;
+  return FilterTraits<CropVertexGeometryFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string CropVertexGeometry::humanName() const
+std::string CropVertexGeometryFilter::humanName() const
 {
   return "Crop Geometry (Vertex)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CropVertexGeometry::defaultTags() const
+std::vector<std::string> CropVertexGeometryFilter::defaultTags() const
 {
   return {className(), "Crop", "Vertex Geometry", "Geometry", "Memory Management", "Cut"};
 }
 
 //------------------------------------------------------------------------------
-Parameters CropVertexGeometry::parameters() const
+Parameters CropVertexGeometryFilter::parameters() const
 {
   Parameters params;
 
@@ -91,13 +91,14 @@ Parameters CropVertexGeometry::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CropVertexGeometry::clone() const
+IFilter::UniquePointer CropVertexGeometryFilter::clone() const
 {
-  return std::make_unique<CropVertexGeometry>();
+  return std::make_unique<CropVertexGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto croppedGeomPath = args.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -195,8 +196,8 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel) const
+Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto croppedGeomPath = args.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -280,9 +281,9 @@ constexpr StringLiteral k_CroppedDataContainerNameKey = "CroppedDataContainerNam
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CropVertexGeometry::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = CropVertexGeometry().getDefaultArguments();
+  Arguments args = CropVertexGeometryFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

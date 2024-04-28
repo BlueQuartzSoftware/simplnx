@@ -9,20 +9,20 @@
 namespace nx::core
 {
 /**
- * @class FindDifferencesMap
+ * @class FindDifferencesMapFilter
  * @brief
  */
-class SIMPLNXCORE_EXPORT FindDifferencesMap : public IFilter
+class SIMPLNXCORE_EXPORT FindDifferencesMapFilter : public IFilter
 {
 public:
-  FindDifferencesMap() = default;
-  ~FindDifferencesMap() noexcept override = default;
+  FindDifferencesMapFilter() = default;
+  ~FindDifferencesMapFilter() noexcept override = default;
 
-  FindDifferencesMap(const FindDifferencesMap&) = delete;
-  FindDifferencesMap(FindDifferencesMap&&) noexcept = delete;
+  FindDifferencesMapFilter(const FindDifferencesMapFilter&) = delete;
+  FindDifferencesMapFilter(FindDifferencesMapFilter&&) noexcept = delete;
 
-  FindDifferencesMap& operator=(const FindDifferencesMap&) = delete;
-  FindDifferencesMap& operator=(FindDifferencesMap&&) noexcept = delete;
+  FindDifferencesMapFilter& operator=(const FindDifferencesMapFilter&) = delete;
+  FindDifferencesMapFilter& operator=(FindDifferencesMapFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FirstInputArrayPath_Key = "first_input_array_path";
@@ -100,4 +100,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindDifferencesMap, "5a0ee5b5-c135-4535-85d0-9c2058943099");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindDifferencesMapFilter, "5a0ee5b5-c135-4535-85d0-9c2058943099");

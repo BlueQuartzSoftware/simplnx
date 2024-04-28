@@ -65,7 +65,7 @@ class InitializeDataPythonFilter:
     return params
 
   def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
-    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Preflighting InitializeData'))
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Preflighting InitializeDataFilter'))
 
     cell_array_paths: List[nx.DataPath] = args[InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY]
     input_image_geometry_path: nx.DataPath = args[InitializeDataPythonFilter.IMAGE_GEOMETRY_PATH_KEY]
@@ -142,7 +142,7 @@ class InitializeDataPythonFilter:
     return nx.IFilter.PreflightResult()
 
   def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
-    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Executing InitializeData'))
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Executing InitializeDataFilter'))
 
     cell_array_paths: List[nx.DataPath] = args[InitializeDataPythonFilter.CELL_ARRAY_PATHS_KEY]
     min_point: List[int] = args[InitializeDataPythonFilter.MIN_POINT_KEY]

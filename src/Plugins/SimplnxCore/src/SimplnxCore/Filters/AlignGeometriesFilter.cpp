@@ -1,4 +1,4 @@
-#include "AlignGeometries.hpp"
+#include "AlignGeometriesFilter.hpp"
 
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
@@ -372,37 +372,37 @@ namespace nx::core
 {
 
 //------------------------------------------------------------------------------
-std::string AlignGeometries::name() const
+std::string AlignGeometriesFilter::name() const
 {
-  return FilterTraits<AlignGeometries>::name;
+  return FilterTraits<AlignGeometriesFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string AlignGeometries::className() const
+std::string AlignGeometriesFilter::className() const
 {
-  return FilterTraits<AlignGeometries>::className;
+  return FilterTraits<AlignGeometriesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid AlignGeometries::uuid() const
+Uuid AlignGeometriesFilter::uuid() const
 {
-  return FilterTraits<AlignGeometries>::uuid;
+  return FilterTraits<AlignGeometriesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string AlignGeometries::humanName() const
+std::string AlignGeometriesFilter::humanName() const
 {
   return "Align Geometries";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> AlignGeometries::defaultTags() const
+std::vector<std::string> AlignGeometriesFilter::defaultTags() const
 {
   return {className(), "Match", "Align", "Geometry", "Move"};
 }
 
 //------------------------------------------------------------------------------
-Parameters AlignGeometries::parameters() const
+Parameters AlignGeometriesFilter::parameters() const
 {
   GeometrySelectionParameter::AllowedTypes geomTypes = IGeometry::GetAllGeomTypes();
 
@@ -416,14 +416,14 @@ Parameters AlignGeometries::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AlignGeometries::clone() const
+IFilter::UniquePointer AlignGeometriesFilter::clone() const
 {
-  return std::make_unique<AlignGeometries>();
+  return std::make_unique<AlignGeometriesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignGeometries::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
   auto movingGeometryPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
   auto targetGeometryPath = filterArgs.value<DataPath>(k_TargetGeometry_Key);
@@ -443,7 +443,8 @@ IFilter::PreflightResult AlignGeometries::preflightImpl(const DataStructure& dat
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignGeometries::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> AlignGeometriesFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   auto movingGeometryPath = args.value<DataPath>(k_MovingGeometry_Key);
   auto targetGeometryPath = args.value<DataPath>(k_TargetGeometry_Key);
@@ -487,9 +488,9 @@ constexpr StringLiteral k_TargetGeometryKey = "TargetGeometry";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> AlignGeometries::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> AlignGeometriesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = AlignGeometries().getDefaultArguments();
+  Arguments args = AlignGeometriesFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

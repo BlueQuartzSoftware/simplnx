@@ -19,7 +19,7 @@ struct SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesInputValues
 };
 
 /**
- * @class ConditionalSetValue
+ * @class ConditionalSetValueFilter
 
  */
 class SIMPLNXCORE_EXPORT RemoveFlaggedTriangles

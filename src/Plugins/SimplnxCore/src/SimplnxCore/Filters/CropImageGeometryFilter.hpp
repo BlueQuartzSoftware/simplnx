@@ -8,17 +8,17 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT CropImageGeometry : public IFilter
+class SIMPLNXCORE_EXPORT CropImageGeometryFilter : public IFilter
 {
 public:
-  CropImageGeometry();
-  ~CropImageGeometry() noexcept override;
+  CropImageGeometryFilter();
+  ~CropImageGeometryFilter() noexcept override;
 
-  CropImageGeometry(const CropImageGeometry&) = delete;
-  CropImageGeometry(CropImageGeometry&&) noexcept = delete;
+  CropImageGeometryFilter(const CropImageGeometryFilter&) = delete;
+  CropImageGeometryFilter(CropImageGeometryFilter&&) noexcept = delete;
 
-  CropImageGeometry& operator=(const CropImageGeometry&) = delete;
-  CropImageGeometry& operator=(CropImageGeometry&&) noexcept = delete;
+  CropImageGeometryFilter& operator=(const CropImageGeometryFilter&) = delete;
+  CropImageGeometryFilter& operator=(CropImageGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_UsePhysicalBounds_Key = "use_physical_bounds";
@@ -111,4 +111,4 @@ private:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, CropImageGeometry, "e6476737-4aa7-48ba-a702-3dfab82c96e2");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CropImageGeometryFilter, "e6476737-4aa7-48ba-a702-3dfab82c96e2");

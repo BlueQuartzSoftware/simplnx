@@ -1,4 +1,4 @@
-#include "DeleteData.hpp"
+#include "DeleteDataFilter.hpp"
 
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -23,33 +23,33 @@ namespace
 {
 } // namespace
 
-std::string DeleteData::name() const
+std::string DeleteDataFilter::name() const
 {
-  return FilterTraits<DeleteData>::name;
+  return FilterTraits<DeleteDataFilter>::name;
 }
 
-std::string DeleteData::className() const
+std::string DeleteDataFilter::className() const
 {
-  return FilterTraits<DeleteData>::className;
+  return FilterTraits<DeleteDataFilter>::className;
 }
 
-Uuid DeleteData::uuid() const
+Uuid DeleteDataFilter::uuid() const
 {
-  return FilterTraits<DeleteData>::uuid;
+  return FilterTraits<DeleteDataFilter>::uuid;
 }
 
-std::string DeleteData::humanName() const
+std::string DeleteDataFilter::humanName() const
 {
   return "Delete Data";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> DeleteData::defaultTags() const
+std::vector<std::string> DeleteDataFilter::defaultTags() const
 {
   return {className(), "Core", "Memory Management", "Remove Data", "Delete Data"};
 }
 
-Parameters DeleteData::parameters() const
+Parameters DeleteDataFilter::parameters() const
 {
   Parameters params;
 
@@ -64,12 +64,12 @@ Parameters DeleteData::parameters() const
   return params;
 }
 
-IFilter::UniquePointer DeleteData::clone() const
+IFilter::UniquePointer DeleteDataFilter::clone() const
 {
-  return std::make_unique<DeleteData>();
+  return std::make_unique<DeleteDataFilter>();
 }
 
-IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   // auto deletionType = static_cast<DeletionType>(args.value<ChoicesParameter::ValueType>(k_DeletionType_Key));
   const auto dataObjectPaths = args.value<MultiPathSelectionParameter::ValueType>(k_DataPath_Key);
@@ -193,7 +193,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStru
   return {std::move(deleteActions)};
 }
 
-Result<> DeleteData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> DeleteDataFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
@@ -206,9 +206,9 @@ constexpr StringLiteral k_DataArraysToRemoveKey = "DataArraysToRemove";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> DeleteData::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> DeleteDataFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = DeleteData().getDefaultArguments();
+  Arguments args = DeleteDataFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

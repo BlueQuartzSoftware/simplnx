@@ -8,17 +8,17 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT InitializeData : public IFilter
+class SIMPLNXCORE_EXPORT InitializeDataFilter : public IFilter
 {
 public:
-  InitializeData() = default;
-  ~InitializeData() noexcept override = default;
+  InitializeDataFilter() = default;
+  ~InitializeDataFilter() noexcept override = default;
 
-  InitializeData(const InitializeData&) = delete;
-  InitializeData(InitializeData&&) noexcept = delete;
+  InitializeDataFilter(const InitializeDataFilter&) = delete;
+  InitializeDataFilter(InitializeDataFilter&&) noexcept = delete;
 
-  InitializeData& operator=(const InitializeData&) = delete;
-  InitializeData& operator=(InitializeData&&) noexcept = delete;
+  InitializeDataFilter& operator=(const InitializeDataFilter&) = delete;
+  InitializeDataFilter& operator=(InitializeDataFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ArrayPath_Key = "array_path";
@@ -103,4 +103,4 @@ private:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, InitializeData, "01c82d15-ba52-4ffa-a7a5-487ee5a613f5");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, InitializeDataFilter, "01c82d15-ba52-4ffa-a7a5-487ee5a613f5");

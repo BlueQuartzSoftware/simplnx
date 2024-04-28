@@ -8,17 +8,17 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT DeleteData : public IFilter
+class SIMPLNXCORE_EXPORT DeleteDataFilter : public IFilter
 {
 public:
-  DeleteData() = default;
-  ~DeleteData() noexcept override = default;
+  DeleteDataFilter() = default;
+  ~DeleteDataFilter() noexcept override = default;
 
-  DeleteData(const DeleteData&) = delete;
-  DeleteData(DeleteData&&) noexcept = delete;
+  DeleteDataFilter(const DeleteDataFilter&) = delete;
+  DeleteDataFilter(DeleteDataFilter&&) noexcept = delete;
 
-  DeleteData& operator=(const DeleteData&) = delete;
-  DeleteData& operator=(DeleteData&&) noexcept = delete;
+  DeleteDataFilter& operator=(const DeleteDataFilter&) = delete;
+  DeleteDataFilter& operator=(DeleteDataFilter&&) noexcept = delete;
 
   // enum class DeletionType : uint64
   //{
@@ -104,4 +104,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, DeleteData, "bf286740-e987-49fe-a7c8-6e566e3a0606");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, DeleteDataFilter, "bf286740-e987-49fe-a7c8-6e566e3a0606");

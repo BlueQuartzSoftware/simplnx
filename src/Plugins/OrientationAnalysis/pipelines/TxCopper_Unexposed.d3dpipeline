@@ -79,7 +79,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CropImageGeometry",
+        "name": "simplnx::CropImageGeometryFilter",
         "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
       },
       "isDisabled": false

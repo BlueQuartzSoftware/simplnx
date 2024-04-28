@@ -99,7 +99,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindSurfaceFeatures",
+        "name": "simplnx::FindSurfaceFeaturesFilter",
         "uuid": "0893e490-5d24-4c21-95e7-e8372baa8948"
       },
       "isDisabled": false

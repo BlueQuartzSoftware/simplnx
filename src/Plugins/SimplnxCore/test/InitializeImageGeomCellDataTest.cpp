@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/InitializeImageGeomCellData.hpp"
+#include "SimplnxCore/Filters/InitializeImageGeomCellDataFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
@@ -24,17 +24,17 @@ const std::vector<usize> k_ArrayDims(k_ImageDims.crbegin(), k_ImageDims.crend())
 const std::vector<usize> k_ComponentDims = {3};
 
 Arguments CreateArgs(std::vector<DataPath> cellArrayPaths, DataPath imageGeomPath, uint64 xMin, uint64 yMin, uint64 zMin, uint64 xMax, uint64 yMax, uint64 zMax,
-                     InitializeImageGeomCellData::InitType initType, float64 initValue, std::pair<float64, float64> initRange)
+                     InitializeImageGeomCellDataFilter::InitType initType, float64 initValue, std::pair<float64, float64> initRange)
 {
   Arguments args;
 
-  args.insert(InitializeImageGeomCellData::k_CellArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::move(cellArrayPaths)));
-  args.insert(InitializeImageGeomCellData::k_ImageGeometryPath_Key, std::make_any<DataPath>(std::move(imageGeomPath)));
-  args.insert(InitializeImageGeomCellData::k_MinPoint_Key, std::make_any<std::vector<uint64>>({xMin, yMin, zMin}));
-  args.insert(InitializeImageGeomCellData::k_MaxPoint_Key, std::make_any<std::vector<uint64>>({xMax, yMax, zMax}));
-  args.insert(InitializeImageGeomCellData::k_InitType_Key, std::make_any<uint64>(to_underlying(initType)));
-  args.insert(InitializeImageGeomCellData::k_InitValue_Key, std::make_any<float64>(initValue));
-  args.insert(InitializeImageGeomCellData::k_InitRange_Key, std::make_any<std::vector<float64>>({initRange.first, initRange.second}));
+  args.insert(InitializeImageGeomCellDataFilter::k_CellArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::move(cellArrayPaths)));
+  args.insert(InitializeImageGeomCellDataFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(std::move(imageGeomPath)));
+  args.insert(InitializeImageGeomCellDataFilter::k_MinPoint_Key, std::make_any<std::vector<uint64>>({xMin, yMin, zMin}));
+  args.insert(InitializeImageGeomCellDataFilter::k_MaxPoint_Key, std::make_any<std::vector<uint64>>({xMax, yMax, zMax}));
+  args.insert(InitializeImageGeomCellDataFilter::k_InitType_Key, std::make_any<uint64>(to_underlying(initType)));
+  args.insert(InitializeImageGeomCellDataFilter::k_InitValue_Key, std::make_any<float64>(initValue));
+  args.insert(InitializeImageGeomCellDataFilter::k_InitRange_Key, std::make_any<std::vector<float64>>({initRange.first, initRange.second}));
 
   return args;
 }
@@ -110,9 +110,9 @@ struct IsDataWithinInclusiveRangeFunctor
 };
 } // namespace
 
-TEST_CASE("SimplnxCore::InitializeImageGeomCellData(Manual)", "[SimplnxCore][InitializeImageGeomCellData]")
+TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Manual)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
-  InitializeImageGeomCellData filter;
+  InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 
   constexpr uint64 xMin = 3;
@@ -123,7 +123,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellData(Manual)", "[SimplnxCore][Ini
   constexpr uint64 zMax = 24;
   constexpr float64 initValue = 42.0;
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellData::InitType::Manual, initValue, {0.0, 0.0});
+  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Manual, initValue, {0.0, 0.0});
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -145,9 +145,9 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellData(Manual)", "[SimplnxCore][Ini
   }
 }
 
-TEST_CASE("SimplnxCore::InitializeImageGeomCellData(Random)", "[SimplnxCore][InitializeImageGeomCellData]")
+TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Random)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
-  InitializeImageGeomCellData filter;
+  InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 
   constexpr uint64 xMin = 3;
@@ -157,7 +157,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellData(Random)", "[SimplnxCore][Ini
   constexpr uint64 yMax = 14;
   constexpr uint64 zMax = 24;
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellData::InitType::Random, 0.0, {0.0, 0.0});
+  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0});
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -179,9 +179,9 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellData(Random)", "[SimplnxCore][Ini
   }
 }
 
-TEST_CASE("SimplnxCore::InitializeImageGeomCellData(RandomWithRange)", "[SimplnxCore][InitializeImageGeomCellData]")
+TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
-  InitializeImageGeomCellData filter;
+  InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 
   constexpr uint64 xMin = 3;
@@ -192,7 +192,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellData(RandomWithRange)", "[Simplnx
   constexpr uint64 zMax = 24;
   constexpr std::pair<float64, float64> initRange = {1.0, 25.0};
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellData::InitType::RandomWithRange, 0.0, initRange);
+  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::RandomWithRange, 0.0, initRange);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

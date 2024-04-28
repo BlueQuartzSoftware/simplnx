@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/AlignGeometries.hpp"
+#include "SimplnxCore/Filters/AlignGeometriesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -29,9 +29,9 @@ DataStructure createTestData()
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::AlignGeometries: Instantiate Filter", "[AlignGeometries]")
+TEST_CASE("SimplnxCore::AlignGeometriesFilter: Instantiate Filter", "[AlignGeometriesFilter]")
 {
-  AlignGeometries filter;
+  AlignGeometriesFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;
 
@@ -39,9 +39,9 @@ TEST_CASE("SimplnxCore::AlignGeometries: Instantiate Filter", "[AlignGeometries]
   DataPath targetGeomPath = DataPath({"Invalid"});
   uint64 alignmentType = 0;
 
-  args.insertOrAssign(AlignGeometries::k_MovingGeometry_Key, std::make_any<DataPath>(movingGeomPath));
-  args.insertOrAssign(AlignGeometries::k_TargetGeometry_Key, std::make_any<DataPath>(targetGeomPath));
-  args.insertOrAssign(AlignGeometries::k_AlignmentType_Key, std::make_any<uint64>(alignmentType));
+  args.insertOrAssign(AlignGeometriesFilter::k_MovingGeometry_Key, std::make_any<DataPath>(movingGeomPath));
+  args.insertOrAssign(AlignGeometriesFilter::k_TargetGeometry_Key, std::make_any<DataPath>(targetGeomPath));
+  args.insertOrAssign(AlignGeometriesFilter::k_AlignmentType_Key, std::make_any<uint64>(alignmentType));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -52,9 +52,9 @@ TEST_CASE("SimplnxCore::AlignGeometries: Instantiate Filter", "[AlignGeometries]
   REQUIRE(!executeResult.result.valid());
 }
 
-TEST_CASE("SimplnxCore::AlignGeometries: Bad Alignment Type", "[AlignGeometries]")
+TEST_CASE("SimplnxCore::AlignGeometriesFilter: Bad Alignment Type", "[AlignGeometriesFilter]")
 {
-  AlignGeometries filter;
+  AlignGeometriesFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;
 
@@ -62,9 +62,9 @@ TEST_CASE("SimplnxCore::AlignGeometries: Bad Alignment Type", "[AlignGeometries]
   DataPath targetGeomPath = DataPath({"Target Geometry"});
   uint64 alignmentType = 3;
 
-  args.insertOrAssign(AlignGeometries::k_MovingGeometry_Key, std::make_any<DataPath>(movingGeomPath));
-  args.insertOrAssign(AlignGeometries::k_TargetGeometry_Key, std::make_any<DataPath>(targetGeomPath));
-  args.insertOrAssign(AlignGeometries::k_AlignmentType_Key, std::make_any<uint64>(alignmentType));
+  args.insertOrAssign(AlignGeometriesFilter::k_MovingGeometry_Key, std::make_any<DataPath>(movingGeomPath));
+  args.insertOrAssign(AlignGeometriesFilter::k_TargetGeometry_Key, std::make_any<DataPath>(targetGeomPath));
+  args.insertOrAssign(AlignGeometriesFilter::k_AlignmentType_Key, std::make_any<uint64>(alignmentType));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -75,9 +75,9 @@ TEST_CASE("SimplnxCore::AlignGeometries: Bad Alignment Type", "[AlignGeometries]
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
-TEST_CASE("SimplnxCore::AlignGeometries: Valid Arguments", "[AlignGeometries]")
+TEST_CASE("SimplnxCore::AlignGeometriesFilter: Valid Arguments", "[AlignGeometriesFilter]")
 {
-  AlignGeometries filter;
+  AlignGeometriesFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;
 
@@ -85,9 +85,9 @@ TEST_CASE("SimplnxCore::AlignGeometries: Valid Arguments", "[AlignGeometries]")
   DataPath targetGeomPath = DataPath({"Target Geometry"});
   uint64 alignmentType = 0;
 
-  args.insertOrAssign(AlignGeometries::k_MovingGeometry_Key, std::make_any<DataPath>(movingGeomPath));
-  args.insertOrAssign(AlignGeometries::k_TargetGeometry_Key, std::make_any<DataPath>(targetGeomPath));
-  args.insertOrAssign(AlignGeometries::k_AlignmentType_Key, std::make_any<uint64>(alignmentType));
+  args.insertOrAssign(AlignGeometriesFilter::k_MovingGeometry_Key, std::make_any<DataPath>(movingGeomPath));
+  args.insertOrAssign(AlignGeometriesFilter::k_TargetGeometry_Key, std::make_any<DataPath>(targetGeomPath));
+  args.insertOrAssign(AlignGeometriesFilter::k_AlignmentType_Key, std::make_any<uint64>(alignmentType));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

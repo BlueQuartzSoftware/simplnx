@@ -93,13 +93,13 @@ nxtest.check_filter_result(nx.CreateDataArray, result)
 # Lets try a Rectilinear Grid Geometry
 # We will need 3 arrays for the X, Y, Z created in the group RectGridCoords
 # ------------------------------------------------------------------------------
-result = nx.CreateDataGroup.execute(data_structure=data_structure,
+result = nx.CreateDataGroupFilter.execute(data_structure=data_structure,
                                     data_object_path=nx.DataPath('RectGridCoords'))
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
-    print("No errors running the CreateDataGroup filter")
+    print("No errors running the CreateDataGroupFilter filter")
 
 output_array_path = nx.DataPath("RectGridCoords/X Coords")
 array_type = nx.NumericType.float32

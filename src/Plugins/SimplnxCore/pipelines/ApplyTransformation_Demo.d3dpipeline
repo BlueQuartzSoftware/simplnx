@@ -9,7 +9,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataGroup",
+        "name": "simplnx::CreateDataGroupFilter",
         "uuid": "e7d2f9b8-4131-4b28-a843-ea3c6950f101"
       },
       "isDisabled": false
@@ -20,7 +20,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataGroup",
+        "name": "simplnx::CreateDataGroupFilter",
         "uuid": "e7d2f9b8-4131-4b28-a843-ea3c6950f101"
       },
       "isDisabled": false
