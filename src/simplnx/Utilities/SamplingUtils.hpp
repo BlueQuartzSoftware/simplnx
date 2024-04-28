@@ -12,7 +12,7 @@ namespace nx::core
 namespace Sampling
 {
 inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& newGeomPath, const DataPath& destCellFeatAttributeMatrixPath, const DataPath& featureIdsArrayPath,
-                                 const DataPath& destFeatureIdsArrayPath, const std::atomic_bool& shouldCancel = false)
+                                 const DataPath& destFeatureIdsArrayPath, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel = false)
 {
   auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(newGeomPath);
   // This just sanity checks to make sure there were existing features before the cropping
@@ -58,7 +58,7 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
     }
   }
 
-  if(!RemoveInactiveObjects(dataStructure, destCellFeatAttributeMatrixPath, activeObjects, destFeatureIdsRef, totalFeatures))
+  if(!RemoveInactiveObjects(dataStructure, destCellFeatAttributeMatrixPath, activeObjects, destFeatureIdsRef, totalFeatures, messageHandler))
   {
     std::string ss = fmt::format("An error occurred while trying to remove the inactive objects from Attribute Matrix '{}'", destCellFeatAttributeMatrixPath.toString());
     return MakeErrorResult(-606, ss);

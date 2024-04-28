@@ -8,6 +8,10 @@ Sampling (Resample)
 
 This **Filter** changes the **Cell** spacing/resolution based on inputs from the user. There are several resampling modes:
 
+## WARNING: NeighborList Removal
+
+If the option to "Renumber Features" is turn ON and the Cell Feature AttributeMatrix contains any *NeighborList* data arrays, those arrays will be **REMOVED** because those lists are now invalid. Re-run the *Find Neighbors* filter to re-create the lists.
+
 ### Spacing
 
 The values entered are the desired new spacings (not multiples of the current resolution).  The number of **Cells** in the volume will change when the spacing values are changed and thus the user should be cautious of generating "too many" **Cells** by entering very small values (i.e., very high resolution).

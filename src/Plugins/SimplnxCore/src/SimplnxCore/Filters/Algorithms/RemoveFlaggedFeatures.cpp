@@ -429,7 +429,7 @@ Result<> RemoveFlaggedFeatures::operator()()
 
     m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
     DataPath featureGroupPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();
-    if(!RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures->getNumberOfTuples()))
+    if(!RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures->getNumberOfTuples(), m_MessageHandler))
     {
       return MakeErrorResult(-45434, "The removal has failed!");
     }

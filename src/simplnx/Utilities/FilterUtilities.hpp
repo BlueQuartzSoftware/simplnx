@@ -3,8 +3,8 @@
 #include "ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Output.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <filesystem>
@@ -206,4 +206,15 @@ SIMPLNX_EXPORT std::vector<char> CreateDelimitersVector(bool tabAsDelimiter, boo
  */
 SIMPLNX_EXPORT void AppendDataObjectModifications(const DataStructure& dataStructure, std::vector<DataObjectModification>& modifiedActions, const DataPath& parentPath,
                                                   const std::vector<DataPath>& ignoredDataPaths);
+
+/**
+ * @brief This will create warnings about the removal of NeighborLists
+ * @param dataStructure The DataStructure object
+ * @param featureIdsPath The DataPath to the "FeatureIds" Array
+ * @param numNeighborsPath The DataPath to the "NumberNeighbors" Array
+ * @param resultOutputActions Reference to the OutputActions that needs to be updated.
+ */
+SIMPLNX_EXPORT IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& dataStructure, const DataPath& featureIdsPath, const DataPath& numNeighborsPath,
+                                                                         nx::core::Result<OutputActions>& resultOutputActions);
+
 } // namespace nx::core

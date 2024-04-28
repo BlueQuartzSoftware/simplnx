@@ -13,11 +13,9 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -171,6 +169,13 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), {});
     // Feature Data is going to be modified
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFlaggedFeaturesArrayPathValue.getParent(), {});
+
+    // This section will warn the user about the removal of NeighborLists
+    auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, pFeatureIdsArrayPathValue, pFlaggedFeaturesArrayPathValue, resultOutputActions);
+    if(result.outputActions.invalid())
+    {
+      return result;
+    }
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

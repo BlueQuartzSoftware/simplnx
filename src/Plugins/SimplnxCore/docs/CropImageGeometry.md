@@ -4,6 +4,12 @@
 
 This **Filter** allows the user to crop a region of interest (ROI) from an **Image Geometry**.  The input parameters are in units of voxels or physical coordinates.  
 
+
+## WARNING: NeighborList Removal
+
+If the option to "Renumber Features" is turn ON and the Cell Feature AttributeMatrix contains any *NeighborList* data arrays, those arrays will be **REMOVED** because those lists are now invalid. Re-run the *Find Neighbors* filter to re-create the lists.
+
+
 ## Examples
 
 In the following examples, the following image is being used.
