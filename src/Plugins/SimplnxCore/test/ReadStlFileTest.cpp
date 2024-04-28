@@ -16,8 +16,10 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-TEST_CASE("SimplnxCore::ReadStlFileFilter", "[SimplnxCore][ReadStlFileFilter]")
+TEST_CASE("SimplnxCore::ReadStlFileFilter:Valid_File", "[SimplnxCore][ReadStlFileFilter]")
 {
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
   Arguments args;
@@ -25,7 +27,7 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter", "[SimplnxCore][ReadStlFileFilter]")
 
   DataPath triangleGeomDataPath({"[Triangle Geometry]"});
 
-  std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_ComplexTestDataSourceDir.view());
+  std::string inputFile = fmt::format("{}/ReadSTLFileTest/ASTMD638_specimen.stl", unit_test::k_TestFilesDir);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
@@ -47,4 +49,88 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter", "[SimplnxCore][ReadStlFileFilter]")
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/StlFileReaderTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+}
+
+TEST_CASE("SimplnxCore::ReadStlFileFilter:STLParseError", "[SimplnxCore][ReadStlFileFilter]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  DataStructure dataStructure;
+  Arguments args;
+  ReadStlFileFilter filter;
+
+  DataPath triangleGeomDataPath({"[Triangle Geometry]"});
+
+  std::string inputFile = fmt::format("{}/ReadSTLFileTest/stl_test_wrong_num_triangles.stl", unit_test::k_TestFilesDir);
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
+  args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+
+  REQUIRE(executeResult.result.errors().front().code == -1108);
+}
+
+TEST_CASE("SimplnxCore::ReadStlFileFilter:TriangleParseError", "[SimplnxCore][ReadStlFileFilter]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  DataStructure dataStructure;
+  Arguments args;
+  ReadStlFileFilter filter;
+
+  DataPath triangleGeomDataPath({"[Triangle Geometry]"});
+
+  std::string inputFile = fmt::format("{}/ReadSTLFileTest/stl_test_2_TriangleParseError.stl", unit_test::k_TestFilesDir);
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
+  args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+
+  REQUIRE(executeResult.result.errors().front().code == -1106);
+}
+
+TEST_CASE("SimplnxCore::ReadStlFileFilter:AttributeParseError", "[SimplnxCore][ReadStlFileFilter]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  DataStructure dataStructure;
+  Arguments args;
+  ReadStlFileFilter filter;
+
+  DataPath triangleGeomDataPath({"[Triangle Geometry]"});
+
+  std::string inputFile = fmt::format("{}/ReadSTLFileTest/stl_test_2_AttributeParseError.stl", unit_test::k_TestFilesDir);
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
+  args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+
+  REQUIRE(executeResult.result.errors().front().code == -1107);
 }

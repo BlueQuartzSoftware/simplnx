@@ -220,8 +220,9 @@ Result<> ReadStlFile::operator()()
     fgetpos(f, &pos);
     if(pos >= stlFileSize)
     {
-      std::string msg =
-          fmt::format("Trying to read at file position {} >= file size {}. The STL File is probably corrupt or not written properly.\n The file header was '{}'", pos, stlFileSize, stlHeaderStr);
+      std::string msg = fmt::format(
+          "Trying to read at file position {} >= file size {}.\n  File Header: '{}'\n  Header Triangle Count: {}  Current Triangle: {}\n  The STL File does not conform to the STL file specification.",
+          pos, stlFileSize, stlHeaderStr, triCount, t);
       return MakeErrorResult(nx::core::StlConstants::k_StlFileLengthError, msg);
     }
 
