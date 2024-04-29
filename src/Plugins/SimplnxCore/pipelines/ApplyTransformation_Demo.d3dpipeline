@@ -4,64 +4,6 @@
   "pipeline": [
     {
       "args": {
-        "cell_attribute_matrix_path": "Geometry/Cell Data",
-        "computed_transformation_matrix_path": "",
-        "input_image_geometry_path": "Geometry",
-        "interpolation_type_index": 0,
-        "manual_transformation_matrix": [
-          [
-            1.0,
-            0.0,
-            0.0,
-            0.0
-          ],
-          [
-            0.0,
-            1.0,
-            0.0,
-            0.0
-          ],
-          [
-            0.0,
-            0.0,
-            1.0,
-            0.0
-          ],
-          [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ]
-        ],
-        "rotation": [
-          0.0,
-          0.0,
-          1.0,
-          45.0
-        ],
-        "scale": [
-          2.0,
-          2.0,
-          2.0
-        ],
-        "transformation_type_index": 3,
-        "translate_geometry_to_global_origin": false,
-        "translation": [
-          0.0,
-          0.0,
-          0.0
-        ]
-      },
-      "comments": "",
-      "filter": {
-        "name": "nx::core::ApplyTransformationToGeometryFilter",
-        "uuid": "f5bbc16b-3426-4ae0-b27b-ba7862dc40fe"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
         "array_handling_index": 0,
         "cell_attribute_matrix_name": "Cell Data",
         "dimensions": [
@@ -123,6 +65,64 @@
       "filter": {
         "name": "nx::core::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_path": "Geometry/Cell Data",
+        "computed_transformation_matrix_path": "",
+        "input_image_geometry_path": "Geometry",
+        "interpolation_type_index": 0,
+        "manual_transformation_matrix": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          1.0,
+          45.0
+        ],
+        "scale": [
+          2.0,
+          2.0,
+          2.0
+        ],
+        "transformation_type_index": 3,
+        "translate_geometry_to_global_origin": false,
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ApplyTransformationToGeometryFilter",
+        "uuid": "f5bbc16b-3426-4ae0-b27b-ba7862dc40fe"
       },
       "isDisabled": false
     }
