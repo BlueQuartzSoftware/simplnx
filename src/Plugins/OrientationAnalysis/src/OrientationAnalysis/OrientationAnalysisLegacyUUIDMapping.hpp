@@ -34,7 +34,7 @@
 #include "OrientationAnalysis/Filters/AlignSectionsMutualInformationFilter.hpp"
 #include "OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.hpp"
 #include "OrientationAnalysis/Filters/CAxisSegmentFeaturesFilter.hpp"
-#include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
+#include "OrientationAnalysis/Filters/ConvertOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/ConvertQuaternionFilter.hpp"
 #include "OrientationAnalysis/Filters/CreateEnsembleInfoFilter.hpp"
 #include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
@@ -52,7 +52,7 @@
 #include "OrientationAnalysis/Filters/FindShapesFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateFaceIPFColoringFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateFeatureFaceMisorientationFilter.hpp"
-#include "OrientationAnalysis/Filters/GenerateFZQuaternions.hpp"
+#include "OrientationAnalysis/Filters/GenerateFZQuaternionsFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateGBCDPoleFigureFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateQuaternionConjugateFilter.hpp"
@@ -104,7 +104,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("85900eba-3da9-5985-ac71-1d9d290a5d31").value(), {nx::core::FilterTraits<GenerateGBCDPoleFigureFilter>::uuid, &GenerateGBCDPoleFigureFilter::FromSIMPLJson}}, // VisualizeGBCDPoleFigureFilter
     {nx::core::Uuid::FromString("88d332c1-cf6c-52d3-a38d-22f6eae19fa6").value(), {nx::core::FilterTraits<FindKernelAvgMisorientationsFilter>::uuid, &FindKernelAvgMisorientationsFilter::FromSIMPLJson}}, // FindKernelAvgMisorientations
     {nx::core::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), {nx::core::FilterTraits<ReadH5EspritDataFilter>::uuid, &ReadH5EspritDataFilter::FromSIMPLJson}}, // ImportH5EspritData
-    {nx::core::Uuid::FromString("9a6677a6-b9e5-5fee-afa2-27e868cab8ca").value(), {nx::core::FilterTraits<GenerateFZQuaternions>::uuid, &GenerateFZQuaternions::FromSIMPLJson}}, // GenerateFZQuaternions
+    {nx::core::Uuid::FromString("9a6677a6-b9e5-5fee-afa2-27e868cab8ca").value(), {nx::core::FilterTraits<GenerateFZQuaternionsFilter>::uuid, &GenerateFZQuaternionsFilter::FromSIMPLJson}}, // GenerateFZQuaternions
     {nx::core::Uuid::FromString("a10bb78e-fcff-553d-97d6-830a43c85385").value(), {nx::core::FilterTraits<WritePoleFigureFilter>::uuid, &WritePoleFigureFilter::FromSIMPLJson}}, // WritePoleFigure
     {nx::core::Uuid::FromString("a2b62395-1a7d-5058-a840-752d8f8e2430").value(), {nx::core::FilterTraits<RodriguesConvertorFilter>::uuid, &RodriguesConvertorFilter::FromSIMPLJson}}, // RodriguesConvertor
     {nx::core::Uuid::FromString("a50e6532-8075-5de5-ab63-945feb0de7f7").value(), {nx::core::FilterTraits<GenerateIPFColorsFilter>::uuid, &GenerateIPFColorsFilter::FromSIMPLJson}}, // GenerateIPFColors
@@ -114,7 +114,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value(), {nx::core::FilterTraits<FindAvgCAxesFilter>::uuid, &FindAvgCAxesFilter::FromSIMPLJson}}, // FindAvgCAxes
     {nx::core::Uuid::FromString("c9af506e-9ea1-5ff5-a882-fa561def5f52").value(), {nx::core::FilterTraits<MergeTwinsFilter>::uuid, &MergeTwinsFilter::FromSIMPLJson}}, // MergeTwins
     {nx::core::Uuid::FromString("d1df969c-0428-53c3-b61d-99ea2bb6da28").value(), {nx::core::FilterTraits<ReadCtfDataFilter>::uuid, &ReadCtfDataFilter::FromSIMPLJson}}, // ReadCtfData
-    {nx::core::Uuid::FromString("e5629880-98c4-5656-82b8-c9fe2b9744de").value(), {nx::core::FilterTraits<ConvertOrientations>::uuid, &ConvertOrientations::FromSIMPLJson}}, // ConvertOrientations
+    {nx::core::Uuid::FromString("e5629880-98c4-5656-82b8-c9fe2b9744de").value(), {nx::core::FilterTraits<ConvertOrientationsFilter>::uuid, &ConvertOrientationsFilter::FromSIMPLJson}}, // ConvertOrientations
     {nx::core::Uuid::FromString("e67ca06a-176f-58fc-a676-d6ee5553511a").value(), {nx::core::FilterTraits<FindSchmidsFilter>::uuid, &FindSchmidsFilter::FromSIMPLJson}}, // FindSchmids
     {nx::core::Uuid::FromString("ef9420b2-8c46-55f3-8ae4-f53790639de4").value(), {nx::core::FilterTraits<RotateEulerRefFrameFilter>::uuid, &RotateEulerRefFrameFilter::FromSIMPLJson}}, // RotateEulerRefFrame
     {nx::core::Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value(), {nx::core::FilterTraits<BadDataNeighborOrientationCheckFilter>::uuid, &BadDataNeighborOrientationCheckFilter::FromSIMPLJson}}, // BadDataNeighborOrientationCheck

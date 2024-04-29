@@ -108,7 +108,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CopyFeatureArrayToElementArray",
+        "name": "simplnx::CopyFeatureArrayToElementArrayFilter",
         "uuid": "4c8c976a-993d-438b-bd8e-99f71114b9a1"
       },
       "isDisabled": false
@@ -131,7 +131,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArray",
+        "name": "simplnx::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
@@ -146,7 +146,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ConditionalSetValue",
+        "name": "simplnx::ConditionalSetValueFilter",
         "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
       },
       "isDisabled": false

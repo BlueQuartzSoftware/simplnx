@@ -100,14 +100,14 @@ data_structure = nx.DataStructure()
 #------------------------------------------------------------------------------
 # Create a top level group: (Not needed)
 #------------------------------------------------------------------------------
-result = nx.CreateDataGroup.execute(data_structure=data_structure,
+result = nx.CreateDataGroupFilter.execute(data_structure=data_structure,
                                     data_object_path=nx.DataPath(['Group']))
-nxtest.check_filter_result(nx.CreateDataGroup, result)
+nxtest.check_filter_result(nx.CreateDataGroupFilter, result)
 
 
-result = nx.CreateDataGroup.execute(data_structure=data_structure, 
+result = nx.CreateDataGroupFilter.execute(data_structure=data_structure, 
                                     data_object_path=nx.DataPath("/Some/Path/To/Group"))
-nxtest.check_filter_result(nx.CreateDataGroup, result)
+nxtest.check_filter_result(nx.CreateDataGroupFilter, result)
 
 
 #------------------------------------------------------------------------------
@@ -122,11 +122,11 @@ print(f'The path "/Some/Path/To/NonExistantGroup" exists: {value} ')
 #------------------------------------------------------------------------------
 # Create 1D Array 
 #------------------------------------------------------------------------------
-# Create the Input Parameters to the CreateDataArray filter
+# Create the Input Parameters to the CreateDataArrayFilter filter
 output_array_path = nx.DataPath(["Group", "1D Array"])
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result  = create_array_nx_filter.execute(data_structure=data_structure, 
                                           component_count=1, 
                                           data_format="", 
@@ -134,7 +134,7 @@ result  = create_array_nx_filter.execute(data_structure=data_structure,
                                           numeric_type_index=array_type, 
                                           output_array_path=output_array_path, 
                                           tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 # We can check the output of the filter by simply printing the array
@@ -149,7 +149,7 @@ print(npdata)
 # Example, and Image where 5 wide x 2 High
 output_array_path = nx.DataPath(["2D Array"])
 tuple_dims = [[2,5]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result  = create_array_nx_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
@@ -157,7 +157,7 @@ result  = create_array_nx_filter.execute(data_structure=data_structure,
                                         numeric_type_index=array_type, 
                                         output_array_path=output_array_path, 
                                         tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 data_array = data_structure[output_array_path]
@@ -178,7 +178,7 @@ print(npdata)
 # Example, and Image where 5 wide x 2 High
 output_array_path = nx.DataPath(["3D Array"])
 tuple_dims = [[3, 2, 5]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result = create_array_nx_filter.execute(data_structure=data_structure, 
                                       component_count=1, 
                                       data_format="", 
@@ -186,7 +186,7 @@ result = create_array_nx_filter.execute(data_structure=data_structure,
                                         numeric_type_index=array_type, 
                                         output_array_path=output_array_path, 
                                         tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 npdata = data_structure[output_array_path].npview()
@@ -234,7 +234,7 @@ print(children_paths)
 print(f'data_structure.size: {data_structure.size}')
 
 print(f'Removing Data Array')
-result = nx.DeleteData.execute(data_structure=data_structure,
+result = nx.DeleteDataFilter.execute(data_structure=data_structure,
                                removed_data_path=[nx.DataPath("Group/1D Array")])
 nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)
 # This will generate the hierarchy as an ASCI Formatted string.

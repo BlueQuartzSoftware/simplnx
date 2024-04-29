@@ -1,7 +1,7 @@
 #include "ITKTestBase.hpp"
 
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
-#include "ITKImageProcessing/Filters/ITKImageWriter.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
+#include "ITKImageProcessing/Filters/ITKImageWriterFilter.hpp"
 #include "MD5.hpp"
 
 #include <itkImportImageFilter.h>
@@ -167,14 +167,14 @@ std::string ComputeMd5Hash(DataStructure& dataStructure, const DataPath& outputD
 //------------------------------------------------------------------------------
 Result<> ReadImage(DataStructure& dataStructure, const fs::path& filePath, const DataPath& geometryPath, const std::string& cellAttrMatName, const std::string& imageArrayName)
 {
-  ITKImageReader filter;
+  ITKImageReaderFilter filter;
   Arguments args;
-  args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
-  args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geometryPath);
-  args.insertOrAssign(ITKImageReader::k_CellDataName_Key, cellAttrMatName);
-  args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imageArrayName);
-  args.insertOrAssign(ITKImageReader::k_ChangeOrigin_Key, false);
-  args.insertOrAssign(ITKImageReader::k_ChangeSpacing_Key, false);
+  args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, filePath);
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, geometryPath);
+  args.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, cellAttrMatName);
+  args.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, imageArrayName);
+  args.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key, false);
+  args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, false);
   auto executeResult = filter.execute(dataStructure, args);
   return executeResult.result;
 }
@@ -182,14 +182,14 @@ Result<> ReadImage(DataStructure& dataStructure, const fs::path& filePath, const
 //------------------------------------------------------------------------------
 Result<> WriteImage(DataStructure& dataStructure, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
 {
-  ITKImageWriter filter;
+  ITKImageWriterFilter filter;
   Arguments args;
 
-  args.insertOrAssign(ITKImageWriter::k_ImageGeomPath_Key, std::make_any<DataPath>(geometryPath));
-  args.insertOrAssign(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(imagePath));
-  args.insertOrAssign(ITKImageWriter::k_FileName_Key, std::make_any<fs::path>(filePath));
-  args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<uint64>(0));
-  args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XYPlane));
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(imagePath));
+  args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(filePath));
+  args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<uint64>(ITKImageWriterFilter::k_XYPlane));
 
   auto executeResult = filter.execute(dataStructure, args);
 

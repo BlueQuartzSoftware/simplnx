@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKHMaximaImage.hpp"
+#include "ITKImageProcessing/Filters/ITKHMaximaImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKHMaximaImageFilter(HMaxima)", "[ITKImageProcessing][ITKHMaximaImage][HMaxima]")
 {
   DataStructure dataStructure;
-  const ITKHMaximaImage filter;
+  const ITKHMaximaImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,10 +33,10 @@ TEST_CASE("ITKImageProcessing::ITKHMaximaImageFilter(HMaxima)", "[ITKImageProces
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKHMaximaImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKHMaximaImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKHMaximaImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKHMaximaImage::k_Height_Key, std::make_any<Float64Parameter::ValueType>(2000));
+  args.insertOrAssign(ITKHMaximaImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKHMaximaImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKHMaximaImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKHMaximaImageFilter::k_Height_Key, std::make_any<Float64Parameter::ValueType>(2000));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

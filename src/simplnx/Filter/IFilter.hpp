@@ -206,7 +206,7 @@ protected:
    * @param shouldCancel
    * @return PreflightResult
    */
-  virtual PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const = 0;
+  virtual PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const = 0;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.
@@ -218,7 +218,8 @@ protected:
    * @param shouldCancel
    * @return Result<>
    */
-  virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const = 0;
+  virtual Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                               const std::atomic_bool& shouldCancel) const = 0;
 };
 
 using FilterCreationFunc = std::function<IFilter::UniquePointer()>;

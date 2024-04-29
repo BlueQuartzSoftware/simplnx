@@ -8,41 +8,41 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
   AddBadDataFilter
-  AlignGeometries
+  AlignGeometriesFilter
   AlignSectionsFeatureCentroidFilter
   AlignSectionsListFilter
   AppendImageGeometryZSliceFilter
   ApplyTransformationToGeometryFilter
-  ApproximatePointCloudHull
+  ApproximatePointCloudHullFilter
   ArrayCalculatorFilter
   CalculateArrayHistogramFilter
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
-  ChangeAngleRepresentation
+  ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter
   CombineStlFilesFilter
   ComputeFeatureRectFilter
   ComputeMomentInvariants2DFilter
-  ConditionalSetValue
+  ConditionalSetValueFilter
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
   CopyDataObjectFilter
-  CopyFeatureArrayToElementArray
+  CopyFeatureArrayToElementArrayFilter
   CreateAttributeMatrixFilter
-  CreateDataArray
-  CreateDataGroup
-  CreateFeatureArrayFromElementArray
+  CreateDataArrayFilter
+  CreateDataGroupFilter
+  CreateFeatureArrayFromElementArrayFilter
   CreateGeometryFilter
-  CreateImageGeometry
-  CropImageGeometry
-  CropVertexGeometry
-  DeleteData
+  CreateImageGeometryFilter
+  CropImageGeometryFilter
+  CropVertexGeometryFilter
+  DeleteDataFilter
   ErodeDilateBadDataFilter
   ErodeDilateCoordinationNumberFilter
   ErodeDilateMaskFilter
   ExecuteProcessFilter
   ExtractComponentAsArrayFilter
-  ExtractInternalSurfacesFromTriangleGeometry
+  ExtractInternalSurfacesFromTriangleGeometryFilter
   ExtractPipelineToFileFilter
   ExtractVertexGeometryFilter
   FeatureFaceCurvatureFilter
@@ -51,7 +51,7 @@ set(FilterList
   FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindBoundaryElementFractionsFilter
-  FindDifferencesMap
+  FindDifferencesMapFilter
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
   FindFeatureClusteringFilter
@@ -59,11 +59,11 @@ set(FilterList
   FindFeaturePhasesFilter
   FindLargestCrossSectionsFilter
   FindNeighborhoodsFilter
-  FindNeighborListStatistics
-  FindNeighbors
+  FindNeighborListStatisticsFilter
+  FindNeighborsFilter
   FindNumFeaturesFilter
   FindSurfaceAreaToVolumeFilter
-  FindSurfaceFeatures
+  FindSurfaceFeaturesFilter
   FindTriangleGeomCentroidsFilter
   FindTriangleGeomSizesFilter
   FindVertexToTriangleDistancesFilter
@@ -72,9 +72,9 @@ set(FilterList
   GenerateColorTableFilter
   GeneratePythonSkeletonFilter
   GenerateVectorColorsFilter
-  IdentifySample
-  InitializeData
-  InitializeImageGeomCellData
+  IdentifySampleFilter
+  InitializeDataFilter
+  InitializeImageGeomCellDataFilter
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
   KMeansFilter
@@ -82,9 +82,9 @@ set(FilterList
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
-  MinNeighbors
-  MoveData
-  MultiThresholdObjects
+  MinNeighborsFilter
+  MoveDataFilter
+  MultiThresholdObjectsFilter
   NearestPointFuseRegularGridsFilter
   PartitionGeometryFilter
   PointSampleTriangleGeometryFilter
@@ -93,7 +93,7 @@ set(FilterList
   ReadCSVFileFilter
   ReadDeformKeyFileV12Filter
   ReadDREAM3DFilter
-  ReadHDF5Dataset
+  ReadHDF5DatasetFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
   ReadTextDataArrayFilter
@@ -101,14 +101,14 @@ set(FilterList
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedTrianglesFilter
-  RemoveFlaggedVertices
+  RemoveFlaggedVerticesFilter
   RemoveMinimumSizeFeaturesFilter
-  RenameDataObject
+  RenameDataObjectFilter
   ReplaceElementAttributesWithNeighborValuesFilter
   ResampleImageGeomFilter
   ResampleRectGridToImageGeomFilter
   ReverseTriangleWindingFilter
-  RobustAutomaticThreshold
+  RobustAutomaticThresholdFilter
   RotateSampleRefFrameFilter
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter

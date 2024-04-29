@@ -1,7 +1,7 @@
 #include "RemoveFlaggedFeatures.hpp"
 
 #include "SimplnxCore/Filters/ComputeFeatureRectFilter.hpp"
-#include "SimplnxCore/Filters/CropImageGeometry.hpp"
+#include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -206,17 +206,17 @@ public:
 
   void operator()() const
   {
-    CropImageGeometry filter;
+    CropImageGeometryFilter filter;
 
     Arguments args;
 
-    args.insertOrAssign(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
-    args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_ImageGeometryPath));
-    args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_ImageGeometryPath));
+    args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
 
-    args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(m_MinVoxelVector));
-    args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(m_MaxVoxelVector));
-    args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(m_CreatedImgGeomPath));
+    args.insertOrAssign(CropImageGeometryFilter::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(m_MinVoxelVector));
+    args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(m_MaxVoxelVector));
+    args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(m_CreatedImgGeomPath));
 
     auto preflightResult = filter.preflight(m_DataStructure, args);
     if(preflightResult.outputActions.invalid())

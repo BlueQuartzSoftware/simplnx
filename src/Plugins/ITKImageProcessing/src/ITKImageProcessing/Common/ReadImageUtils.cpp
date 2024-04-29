@@ -1,6 +1,6 @@
 #include "ReadImageUtils.hpp"
 
-namespace cxItkImageReader
+namespace cxItkImageReaderFilter
 {
 
 //------------------------------------------------------------------------------
@@ -83,4 +83,4 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
   return {std::move(actions)};
 }
-} // namespace cxItkImageReader
+} // namespace cxItkImageReaderFilter

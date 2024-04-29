@@ -82,29 +82,29 @@ else:
 # AttributeMatrix that we generated in the last filter.
 output_array_path = nx.DataPath("Image Geometry/Cell Data/Float Cell Data")
 array_type = nx.NumericType.float32
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result = create_array_nx_filter.execute(data_structure=data_structure, component_count=1, data_format="",
                                      initialization_value_str="10",
                                      numeric_type_index=array_type, output_array_path=output_array_path)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 # ------------------------------------------------------------------------------
 # Lets try a Rectilinear Grid Geometry
 # We will need 3 arrays for the X, Y, Z created in the group RectGridCoords
 # ------------------------------------------------------------------------------
-result = nx.CreateDataGroup.execute(data_structure=data_structure,
+result = nx.CreateDataGroupFilter.execute(data_structure=data_structure,
                                     data_object_path=nx.DataPath('RectGridCoords'))
 if len(result.errors) != 0:
     print('Errors: {}', result.errors)
     print('Warnings: {}', result.warnings)
 else:
-    print("No errors running the CreateDataGroup filter")
+    print("No errors running the CreateDataGroupFilter filter")
 
 output_array_path = nx.DataPath("RectGridCoords/X Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
@@ -112,7 +112,7 @@ result = create_array_nx_filter.execute(data_structure=data_structure,
                                      numeric_type_index=array_type,
                                      output_array_path=output_array_path,
                                      tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 x_coords = data_structure[output_array_path].npview()
@@ -122,7 +122,7 @@ x_coords[:] = np.arange(0, 10, 1)
 output_array_path = nx.DataPath("RectGridCoords/Y Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
@@ -130,7 +130,7 @@ result = create_array_nx_filter.execute(data_structure=data_structure,
                                      numeric_type_index=array_type,
                                      output_array_path=output_array_path,
                                      tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 y_coords = data_structure[output_array_path].npview()
@@ -140,7 +140,7 @@ y_coords[:] = np.arange(10, 20, 1)
 output_array_path = nx.DataPath("RectGridCoords/Z Coords")
 array_type = nx.NumericType.float32
 tuple_dims = [[10]]
-create_array_nx_filter = nx.CreateDataArray()
+create_array_nx_filter = nx.CreateDataArrayFilter()
 result = create_array_nx_filter.execute(data_structure=data_structure,
                                      component_count=1,
                                      data_format="",
@@ -148,7 +148,7 @@ result = create_array_nx_filter.execute(data_structure=data_structure,
                                      numeric_type_index=array_type,
                                      output_array_path=output_array_path,
                                      tuple_dimensions=tuple_dims)
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 z_coords = data_structure[output_array_path].npview()
@@ -180,13 +180,13 @@ print(f'name: {rect_grid_geom.name}')
 # For this we need the vertex data and the Triangle connectivity data
 # ------------------------------------------------------------------------------
 array_path = nx.DataPath('Vertices')
-result = nx.CreateDataArray.execute(data_structure,
+result = nx.CreateDataArrayFilter.execute(data_structure,
                                     numeric_type_index=nx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[144]],
                                     output_array_path=array_path,
                                     initialization_value_str='0')
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 # Read the CSV file into the DataArray using the numpy view
@@ -195,13 +195,13 @@ file_path = nxtest.get_simplnx_source_dir() / 'test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 array_path = nx.DataPath('Triangles')
-result = nx.CreateDataArray.execute(data_structure,
+result = nx.CreateDataArrayFilter.execute(data_structure,
                                     numeric_type_index=nx.NumericType.uint64,
                                     component_count=3,
                                     tuple_dimensions=[[242]],
                                     output_array_path=array_path,
                                     initialization_value_str='0')
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 # Read the CSV file into the DataArray using the numpy view
 triangles = data_structure[array_path].npview()
@@ -226,13 +226,13 @@ nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 # For this we need the vertex data and the Edge connectivity data
 # ------------------------------------------------------------------------------
 array_path = nx.DataPath('Vertices')
-result = nx.CreateDataArray.execute(data_structure,
+result = nx.CreateDataArrayFilter.execute(data_structure,
                                     numeric_type_index=nx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[144]],
                                     output_array_path=array_path,
                                     initialization_value_str='0')
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 # Read the CSV file into the DataArray using the numpy view
@@ -241,13 +241,13 @@ file_path = nxtest.get_simplnx_source_dir() / 'test/Data/VertexCoordinates.csv'
 vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
 
 array_path = nx.DataPath('Edges')
-result = nx.CreateDataArray.execute(data_structure,
+result = nx.CreateDataArrayFilter.execute(data_structure,
                                     numeric_type_index=nx.NumericType.uint64,
                                     component_count=2,
                                     tuple_dimensions=[[264]],
                                     output_array_path=array_path,
                                     initialization_value_str='0')
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 # Read the CSV file into the DataArray using the numpy view

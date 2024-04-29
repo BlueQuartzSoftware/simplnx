@@ -32,7 +32,7 @@ struct IsIntegerType
   }
 };
 
-OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins, std::vector<usize> tupleDims)
+OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& args, usize numBins, std::vector<usize> tupleDims)
 {
   auto findLength = args.value<bool>(FindArrayStatisticsFilter::k_FindLength_Key);
   auto findMin = args.value<bool>(FindArrayStatisticsFilter::k_FindMin_Key);
@@ -48,7 +48,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& data, const Arguments&
   auto computeByIndexValue = args.value<bool>(FindArrayStatisticsFilter::k_ComputeByIndex_Key);
   auto standardizeDataValue = args.value<bool>(FindArrayStatisticsFilter::k_StandardizeData_Key);
   auto inputArrayPath = args.value<DataPath>(FindArrayStatisticsFilter::k_SelectedArrayPath_Key);
-  auto* inputArray = data.getDataAs<IDataArray>(inputArrayPath);
+  auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
   auto destinationAttributeMatrixValue = args.value<DataPath>(FindArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
   DataType dataType = inputArray->getDataType();
 

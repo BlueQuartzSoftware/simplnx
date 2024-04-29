@@ -13,7 +13,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
-#include "ITKImageProcessing/Filters/ITKAdaptiveHistogramEqualizationImage.hpp"
+#include "ITKImageProcessing/Filters/ITKAdaptiveHistogramEqualizationImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -70,7 +70,7 @@ DataPath ConvertColorToGrayScale(DataStructure& dataStructure, const DataPath& i
 
 } // namespace ITKImageProcessingUnitTest
 
-TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defaults)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImage][defaults]")
+TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defaults)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImageFilter][defaults]")
 {
   ITKImageProcessingUnitTest::InitApplicationAndPlugins();
 
@@ -94,15 +94,15 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defau
 
   // Run the ITK Filter that is being tested.
   {
-    const ITKAdaptiveHistogramEqualizationImage filter;
+    const ITKAdaptiveHistogramEqualizationImageFilter filter;
 
     Arguments args;
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Alpha_Key, std::make_any<Float32Parameter::ValueType>(0.5f));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Beta_Key, std::make_any<Float32Parameter::ValueType>(0.5f));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{10, 19, 10}));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_Alpha_Key, std::make_any<Float32Parameter::ValueType>(0.5f));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_Beta_Key, std::make_any<Float32Parameter::ValueType>(0.5f));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{10, 19, 10}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -120,7 +120,7 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defau
   }
 }
 
-TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImage][histo]")
+TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImageFilter][histo]")
 {
   ITKImageProcessingUnitTest::InitApplicationAndPlugins();
 
@@ -142,15 +142,15 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo
 
   // Run the ITK Filter that is being tested.
   {
-    ITKAdaptiveHistogramEqualizationImage filter;
+    ITKAdaptiveHistogramEqualizationImageFilter filter;
 
     Arguments args;
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Alpha_Key, std::make_any<Float32Parameter::ValueType>(1.0f));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Beta_Key, std::make_any<Float32Parameter::ValueType>(0.25f));
-    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{10, 10, 10}));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_Alpha_Key, std::make_any<Float32Parameter::ValueType>(1.0f));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_Beta_Key, std::make_any<Float32Parameter::ValueType>(0.25f));
+    args.insertOrAssign(ITKAdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{10, 10, 10}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

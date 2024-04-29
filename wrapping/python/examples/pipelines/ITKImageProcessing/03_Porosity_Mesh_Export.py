@@ -11,7 +11,7 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-nx_filter = cxitk.ITKImportImageStack()
+nx_filter = cxitk.ITKImportImageStackFilter()
 
 generated_file_list_value = nx.GeneratedFileListParameter.ValueType()
 generated_file_list_value.input_path = str(nxtest.get_data_directory() / "Porosity_Image/")
@@ -51,7 +51,7 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean
 
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -151,7 +151,7 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean  # This line specifies the DataType for the threshold
 
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -178,7 +178,7 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean  # This line specifies the DataType for the threshold
 
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -194,7 +194,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
 # Instantiate Filter
-nx_filter = nx.ConditionalSetValue()
+nx_filter = nx.ConditionalSetValueFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -210,7 +210,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 10
 # Instantiate Filter
-nx_filter = nx.ConditionalSetValue()
+nx_filter = nx.ConditionalSetValueFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

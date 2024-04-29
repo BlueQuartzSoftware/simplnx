@@ -122,9 +122,9 @@ bool IsVxElementsFile(const std::string& stlHeader)
 
 } // End anonymous namespace
 
-ReadStlFile::ReadStlFile(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
+ReadStlFile::ReadStlFile(DataStructure& dataStructure, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
                          float32 scaleFactor, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
-: m_DataStructure(data)
+: m_DataStructure(dataStructure)
 , m_FilePath(std::move(stlFilePath))
 , m_GeometryDataPath(geometryPath)
 , m_FaceGroupPath(faceGroupPath)

@@ -66,13 +66,14 @@ nx::core::IFilter::UniquePointer TestFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-nx::core::IFilter::PreflightResult TestFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+nx::core::IFilter::PreflightResult TestFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-nx::core::Result<> TestFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+nx::core::Result<> TestFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
   return {};

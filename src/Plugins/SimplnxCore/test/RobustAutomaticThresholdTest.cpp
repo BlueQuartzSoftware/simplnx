@@ -1,5 +1,5 @@
 
-#include "SimplnxCore/Filters/RobustAutomaticThreshold.hpp"
+#include "SimplnxCore/Filters/RobustAutomaticThresholdFilter.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -10,9 +10,9 @@
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-TEST_CASE("SimplnxCore::RobustAutomaticThreshold: Missing/Empty DataPaths", "[RobustAutomaticThreshold]")
+TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Missing/Empty DataPaths", "[RobustAutomaticThresholdFilter]")
 {
-  RobustAutomaticThreshold filter;
+  RobustAutomaticThresholdFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
@@ -24,14 +24,14 @@ TEST_CASE("SimplnxCore::RobustAutomaticThreshold: Missing/Empty DataPaths", "[Ro
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
-  args.insertOrAssign(RobustAutomaticThreshold::k_InputArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(RobustAutomaticThresholdFilter::k_InputArrayPath_Key, std::make_any<DataPath>(inputPath));
 
   // Preflight the filter and check result
   {
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
-  args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudePath_Key, std::make_any<DataPath>(gradientMagnitudePath));
+  args.insertOrAssign(RobustAutomaticThresholdFilter::k_GradientMagnitudePath_Key, std::make_any<DataPath>(gradientMagnitudePath));
 
   // Preflight the filter and check result
   {
@@ -40,18 +40,18 @@ TEST_CASE("SimplnxCore::RobustAutomaticThreshold: Missing/Empty DataPaths", "[Ro
   }
 }
 
-TEST_CASE("SimplnxCore::RobustAutomaticThreshold: Test Algorithm", "[RobustAutomaticThreshold]")
+TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Test Algorithm", "[RobustAutomaticThresholdFilter]")
 {
-  RobustAutomaticThreshold filter;
+  RobustAutomaticThresholdFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   DataPath inputPath({k_SmallIN100, k_EbsdScanData, "Phases"});
   DataPath gradientMagnitudePath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
-  args.insertOrAssign(RobustAutomaticThreshold::k_InputArrayPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudePath_Key, std::make_any<DataPath>(gradientMagnitudePath));
-  args.insertOrAssign(RobustAutomaticThreshold::k_ArrayCreationName_Key, std::make_any<std::string>("Created Array"));
+  args.insertOrAssign(RobustAutomaticThresholdFilter::k_InputArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(RobustAutomaticThresholdFilter::k_GradientMagnitudePath_Key, std::make_any<DataPath>(gradientMagnitudePath));
+  args.insertOrAssign(RobustAutomaticThresholdFilter::k_ArrayCreationName_Key, std::make_any<std::string>("Created Array"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

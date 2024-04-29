@@ -5,8 +5,8 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-SegmentFeatures::SegmentFeatures(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
-: m_DataStructure(data)
+SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
+: m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {

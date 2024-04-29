@@ -591,7 +591,7 @@ public:
   }
 
 protected:
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
   {
     try
     {
@@ -599,8 +599,9 @@ protected:
       Parameters params = parameters();
       auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
       auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-      auto result = m_Object.attr("preflight_impl")(py::cast(data, py::return_value_policy::reference), ConvertArgsToDict(Internals::Instance(), params, args), messageHandler, shouldCancelProxy)
-                        .cast<PreflightResult>();
+      auto result =
+          m_Object.attr("preflight_impl")(py::cast(dataStructure, py::return_value_policy::reference), ConvertArgsToDict(Internals::Instance(), params, args), messageHandler, shouldCancelProxy)
+              .cast<PreflightResult>();
       return result;
     } catch(const py::error_already_set& pyException)
     {
@@ -611,7 +612,8 @@ protected:
     }
   }
 
-  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override
   {
     try
     {
@@ -619,10 +621,10 @@ protected:
       Parameters params = parameters();
       auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
       auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-      auto result =
-          m_Object
-              .attr("execute_impl")(py::cast(data, py::return_value_policy::reference), ConvertArgsToDict(Internals::Instance(), params, args), /* pipelineNode,*/ messageHandler, shouldCancelProxy)
-              .cast<Result<>>();
+      auto result = m_Object
+                        .attr("execute_impl")(py::cast(dataStructure, py::return_value_policy::reference), ConvertArgsToDict(Internals::Instance(), params, args), /* pipelineNode,*/ messageHandler,
+                                              shouldCancelProxy)
+                        .cast<Result<>>();
       return result;
     } catch(const py::error_already_set& pyException)
     {

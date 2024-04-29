@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKImageWriter.hpp"
-#include "ITKImageProcessing/Filters/ITKImportImageStack.hpp"
+#include "ITKImageProcessing/Filters/ITKImageWriterFilter.hpp"
+#include "ITKImageProcessing/Filters/ITKImportImageStackFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -72,12 +72,12 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
 
 } // namespace
 
-TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessing][ITKImageWriter]")
+TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImageProcessing][ITKImageWriterFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   DataStructure dataStructure;
   {
-    ITKImportImageStack filter;
+    ITKImportImageStackFilter filter;
     Arguments args;
 
     GeneratedFileListParameter::ValueType fileListInfo;
@@ -94,10 +94,10 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
     std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
     std::vector<float32> spacing = {0.3f, 1.2f, 0.9f};
 
-    args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-    args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-    args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
-    args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+    args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
+    args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -107,7 +107,7 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
   }
 
   {
-    ITKImageWriter filter;
+    ITKImageWriterFilter filter;
 
     const std::string tempDirName = CreateRandomDirName();
     const std::string tempDirPath = fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir.view(), tempDirName);
@@ -117,11 +117,11 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
 
     Arguments args;
     const uint64 offset = 100;
-    args.insertOrAssign(ITKImageWriter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-    args.insertOrAssign(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
-    args.insertOrAssign(ITKImageWriter::k_FileName_Key, std::make_any<fs::path>(outputPath));
-    args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<uint64>(offset));
-    args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XYPlane));
+    args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
+    args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<uint64>(ITKImageWriterFilter::k_XYPlane));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -136,7 +136,7 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
   }
 
   {
-    ITKImageWriter filter;
+    ITKImageWriterFilter filter;
 
     const std::string tempDirName = CreateRandomDirName();
     const std::string tempDirPath = fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir.view(), tempDirName);
@@ -146,11 +146,11 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
 
     Arguments args;
     const uint64 offset = 100;
-    args.insertOrAssign(ITKImageWriter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-    args.insertOrAssign(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
-    args.insertOrAssign(ITKImageWriter::k_FileName_Key, std::make_any<fs::path>(outputPath));
-    args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<uint64>(offset));
-    args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XZPlane));
+    args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
+    args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<uint64>(ITKImageWriterFilter::k_XZPlane));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -165,7 +165,7 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
   }
 
   {
-    ITKImageWriter filter;
+    ITKImageWriterFilter filter;
 
     const std::string tempDirName = CreateRandomDirName();
     const std::string tempDirPath = fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir.view(), tempDirName);
@@ -175,11 +175,11 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
 
     Arguments args;
     const uint64 offset = 100;
-    args.insertOrAssign(ITKImageWriter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-    args.insertOrAssign(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
-    args.insertOrAssign(ITKImageWriter::k_FileName_Key, std::make_any<fs::path>(outputPath));
-    args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<uint64>(offset));
-    args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_YZPlane));
+    args.insertOrAssign(ITKImageWriterFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
+    args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
+    args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<uint64>(ITKImageWriterFilter::k_YZPlane));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

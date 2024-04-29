@@ -40,7 +40,7 @@ threshold_set.thresholds = [threshold_1, threshold_2]
 dt = nx.DataType.boolean
 
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Execute filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -93,7 +93,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = nx.CropImageGeometry()
+nx_filter = nx.CropImageGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

@@ -11,7 +11,7 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-nx_filter = nx.CreateDataArray()
+nx_filter = nx.CreateDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -28,7 +28,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-nx_filter = nx.CreateDataArray()
+nx_filter = nx.CreateDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -44,7 +44,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = nx.CreateDataArray()
+nx_filter = nx.CreateDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

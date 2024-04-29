@@ -113,7 +113,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::IdentifySample",
+        "name": "simplnx::IdentifySampleFilter",
         "uuid": "94d47495-5a89-4c7f-a0ee-5ff20e6bd273"
       },
       "isDisabled": false
@@ -238,7 +238,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindNeighbors",
+        "name": "simplnx::FindNeighborsFilter",
         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
       },
       "isDisabled": false
@@ -331,7 +331,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindNeighbors",
+        "name": "simplnx::FindNeighborsFilter",
         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
       },
       "isDisabled": false
@@ -350,7 +350,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::MinNeighbors",
+        "name": "simplnx::MinNeighborsFilter",
         "uuid": "4ab5153f-6014-4e6d-bbd6-194068620389"
       },
       "isDisabled": false

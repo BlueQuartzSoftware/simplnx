@@ -70,7 +70,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindNeighbors",
+        "name": "simplnx::FindNeighborsFilter",
         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
       },
       "isDisabled": false
@@ -99,7 +99,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindSurfaceFeatures",
+        "name": "simplnx::FindSurfaceFeaturesFilter",
         "uuid": "0893e490-5d24-4c21-95e7-e8372baa8948"
       },
       "isDisabled": false

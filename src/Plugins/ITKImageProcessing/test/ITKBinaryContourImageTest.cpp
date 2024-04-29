@@ -1,28 +1,26 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKBinaryContourImage.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+#include "ITKImageProcessing/Filters/ITKBinaryContourImageFilter.hpp"
+#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
+#include "ITKTestBase.hpp"
 
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
-#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
-#include "ITKTestBase.hpp"
-
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
-
 namespace fs = std::filesystem;
 
 using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(default)", "[ITKImageProcessing][ITKBinaryContourImage][default]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-
   DataStructure dataStructure;
-  ITKBinaryContourImage filter;
+  const ITKBinaryContourImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -36,10 +34,10 @@ TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(default)", "[ITKImage
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryContourImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryContourImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryContourImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKBinaryContourImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255.0));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255.0));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -53,10 +51,8 @@ TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(default)", "[ITKImage
 
 TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(custom)", "[ITKImageProcessing][ITKBinaryContourImage][custom]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-
   DataStructure dataStructure;
-  ITKBinaryContourImage filter;
+  const ITKBinaryContourImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -70,11 +66,11 @@ TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(custom)", "[ITKImageP
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryContourImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryContourImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryContourImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKBinaryContourImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(100));
-  args.insertOrAssign(ITKBinaryContourImage::k_FullyConnected_Key, std::make_any<BoolParameter::ValueType>(true));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(100));
+  args.insertOrAssign(ITKBinaryContourImageFilter::k_FullyConnected_Key, std::make_any<BoolParameter::ValueType>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

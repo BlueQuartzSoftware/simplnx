@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/FindNeighborListStatistics.hpp"
+#include "SimplnxCore/Filters/FindNeighborListStatisticsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -10,7 +10,7 @@
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-TEST_CASE("SimplnxCore::FindNeighborListStatistics: Test Algorithm", "[FindNeighborListStatistics]")
+TEST_CASE("SimplnxCore::FindNeighborListStatisticsFilter: Test Algorithm", "[FindNeighborListStatisticsFilter]")
 {
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -41,25 +41,25 @@ TEST_CASE("SimplnxCore::FindNeighborListStatistics: Test Algorithm", "[FindNeigh
   neighborList->setList(1, std::make_shared<std::vector<float32>>(list2));
   neighborList->setList(2, std::make_shared<std::vector<float32>>(list3));
 
-  FindNeighborListStatistics filter;
+  FindNeighborListStatisticsFilter filter;
   Arguments args;
 
-  args.insertOrAssign(FindNeighborListStatistics::k_FindLength_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMinimum_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMaximum_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMean_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMedian_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindStandardDeviation_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindMinimum_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindMaximum_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindStandardDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
 
-  args.insertOrAssign(FindNeighborListStatistics::k_InputNeighborListPath_Key, std::make_any<DataPath>(inputArrayPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_LengthName_Key, std::make_any<std::string>(length));
-  args.insertOrAssign(FindNeighborListStatistics::k_MinimumName_Key, std::make_any<std::string>(minimum));
-  args.insertOrAssign(FindNeighborListStatistics::k_MaximumName_Key, std::make_any<std::string>(maximum));
-  args.insertOrAssign(FindNeighborListStatistics::k_MeanName_Key, std::make_any<std::string>(mean));
-  args.insertOrAssign(FindNeighborListStatistics::k_MedianName_Key, std::make_any<std::string>(median));
-  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviationName_Key, std::make_any<std::string>(stdDev));
-  args.insertOrAssign(FindNeighborListStatistics::k_SummationName_Key, std::make_any<std::string>(summation));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_InputNeighborListPath_Key, std::make_any<DataPath>(inputArrayPath));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_LengthName_Key, std::make_any<std::string>(length));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_MinimumName_Key, std::make_any<std::string>(minimum));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_MaximumName_Key, std::make_any<std::string>(maximum));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_MeanName_Key, std::make_any<std::string>(mean));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_MedianName_Key, std::make_any<std::string>(median));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_StandardDeviationName_Key, std::make_any<std::string>(stdDev));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_SummationName_Key, std::make_any<std::string>(summation));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -142,7 +142,7 @@ TEST_CASE("SimplnxCore::FindNeighborListStatistics: Test Algorithm", "[FindNeigh
   REQUIRE(sumVal3 == 22391.0f);
 }
 
-TEST_CASE("SimplnxCore::FindNeighborListStatistics: Invalid Input Array", "[FindNeighborListStatistics]")
+TEST_CASE("SimplnxCore::FindNeighborListStatisticsFilter: Invalid Input Array", "[FindNeighborListStatisticsFilter]")
 {
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -167,25 +167,25 @@ TEST_CASE("SimplnxCore::FindNeighborListStatistics: Invalid Input Array", "[Find
   auto* dataArray = DataArray<float32>::Create(dataStructure, "Data Array", std::move(dataStore), topLevelGroup->getId());
   dataArray->fill(10.0f);
 
-  FindNeighborListStatistics filter;
+  FindNeighborListStatisticsFilter filter;
   Arguments args;
 
-  args.insertOrAssign(FindNeighborListStatistics::k_FindLength_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMinimum_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMaximum_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMean_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMedian_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindStandardDeviation_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindMinimum_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindMaximum_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindStandardDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
 
-  args.insertOrAssign(FindNeighborListStatistics::k_InputNeighborListPath_Key, std::make_any<DataPath>(inputArrayPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_LengthName_Key, std::make_any<std::string>(length));
-  args.insertOrAssign(FindNeighborListStatistics::k_MinimumName_Key, std::make_any<std::string>(minimum));
-  args.insertOrAssign(FindNeighborListStatistics::k_MaximumName_Key, std::make_any<std::string>(maximum));
-  args.insertOrAssign(FindNeighborListStatistics::k_MeanName_Key, std::make_any<std::string>(mean));
-  args.insertOrAssign(FindNeighborListStatistics::k_MedianName_Key, std::make_any<std::string>(median));
-  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviationName_Key, std::make_any<std::string>(stdDev));
-  args.insertOrAssign(FindNeighborListStatistics::k_SummationName_Key, std::make_any<std::string>(summation));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_InputNeighborListPath_Key, std::make_any<DataPath>(inputArrayPath));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_LengthName_Key, std::make_any<std::string>(length));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_MinimumName_Key, std::make_any<std::string>(minimum));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_MaximumName_Key, std::make_any<std::string>(maximum));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_MeanName_Key, std::make_any<std::string>(mean));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_MedianName_Key, std::make_any<std::string>(median));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_StandardDeviationName_Key, std::make_any<std::string>(stdDev));
+  args.insertOrAssign(FindNeighborListStatisticsFilter::k_SummationName_Key, std::make_any<std::string>(summation));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

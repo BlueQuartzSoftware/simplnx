@@ -56,7 +56,7 @@ pipeline.to_file( "test pipeline", nxtest.get_test_temp_directory() / "python_pi
 
 
 
-# pipeline.append(nx.CreateDataArray(), {'numeric_type_index': nx.NumericType.int32})
+# pipeline.append(nx.CreateDataArrayFilter(), {'numeric_type_index': nx.NumericType.int32})
 # pipeline[0].set_args({'numeric_type_index': nx.NumericType.int32})
 
 # did_execute = pipeline.execute(data_structure)

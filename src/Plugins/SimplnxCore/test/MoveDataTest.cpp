@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/MoveData.hpp"
+#include "SimplnxCore/Filters/MoveDataFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -41,9 +41,9 @@ DataStructure createDataStructure()
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::MoveData Successful", "[Simplnx::Core][MoveData]")
+TEST_CASE("SimplnxCore::MoveDataFilter Successful", "[Simplnx::Core][MoveDataFilter]")
 {
-  MoveData filter;
+  MoveDataFilter filter;
   Arguments args;
   DataStructure dataStructure = createDataStructure();
 
@@ -51,8 +51,8 @@ TEST_CASE("SimplnxCore::MoveData Successful", "[Simplnx::Core][MoveData]")
   const DataPath k_Group3Path({k_Group2Name, k_Group3Name});
   const DataPath k_Group4Path({k_Group2Name, k_Group4Name});
 
-  args.insertOrAssign(MoveData::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_Group3Path, k_Group4Path}));
-  args.insertOrAssign(MoveData::k_DestinationParentPath_Key, std::make_any<DataPath>(k_Group1Path));
+  args.insertOrAssign(MoveDataFilter::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_Group3Path, k_Group4Path}));
+  args.insertOrAssign(MoveDataFilter::k_DestinationParentPath_Key, std::make_any<DataPath>(k_Group1Path));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -79,9 +79,9 @@ TEST_CASE("SimplnxCore::MoveData Successful", "[Simplnx::Core][MoveData]")
   REQUIRE(dataStructure.getDataAs<DataGroup>(newGroup4Path) != nullptr);
 }
 
-TEST_CASE("SimplnxCore::MoveData Unsuccessful", "[Simplnx::Core][MoveData]")
+TEST_CASE("SimplnxCore::MoveDataFilter Unsuccessful", "[Simplnx::Core][MoveDataFilter]")
 {
-  MoveData filter;
+  MoveDataFilter filter;
   Arguments args;
   DataStructure dataStructure = createDataStructure();
 
@@ -90,8 +90,8 @@ TEST_CASE("SimplnxCore::MoveData Unsuccessful", "[Simplnx::Core][MoveData]")
 
   SECTION("Object already exists in new data path")
   {
-    args.insertOrAssign(MoveData::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_Group3Path}));
-    args.insertOrAssign(MoveData::k_DestinationParentPath_Key, std::make_any<DataPath>(k_Group2Path));
+    args.insertOrAssign(MoveDataFilter::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_Group3Path}));
+    args.insertOrAssign(MoveDataFilter::k_DestinationParentPath_Key, std::make_any<DataPath>(k_Group2Path));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -99,8 +99,8 @@ TEST_CASE("SimplnxCore::MoveData Unsuccessful", "[Simplnx::Core][MoveData]")
   }
   SECTION("Cannot reparent object to itself")
   {
-    args.insertOrAssign(MoveData::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_Group3Path}));
-    args.insertOrAssign(MoveData::k_DestinationParentPath_Key, std::make_any<DataPath>(k_Group3Path));
+    args.insertOrAssign(MoveDataFilter::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_Group3Path}));
+    args.insertOrAssign(MoveDataFilter::k_DestinationParentPath_Key, std::make_any<DataPath>(k_Group3Path));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -108,8 +108,8 @@ TEST_CASE("SimplnxCore::MoveData Unsuccessful", "[Simplnx::Core][MoveData]")
   }
   SECTION("Cannot reparent object to a child object")
   {
-    args.insertOrAssign(MoveData::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_Group2Path}));
-    args.insertOrAssign(MoveData::k_DestinationParentPath_Key, std::make_any<DataPath>(k_Group3Path));
+    args.insertOrAssign(MoveDataFilter::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_Group2Path}));
+    args.insertOrAssign(MoveDataFilter::k_DestinationParentPath_Key, std::make_any<DataPath>(k_Group3Path));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -117,17 +117,17 @@ TEST_CASE("SimplnxCore::MoveData Unsuccessful", "[Simplnx::Core][MoveData]")
   }
 }
 
-TEST_CASE("SimplnxCore::MoveData Tuple Size Mismatches Warning and Failure", "[Simplnx::Core][MoveData]")
+TEST_CASE("SimplnxCore::MoveDataFilter Tuple Size Mismatches Warning and Failure", "[Simplnx::Core][MoveDataFilter]")
 {
-  MoveData filter;
+  MoveDataFilter filter;
   Arguments args;
   DataStructure dataStructure = createDataStructure();
 
   const DataPath k_DataArrayPath({k_DataArray1Name});
   const DataPath k_AMPath({k_AM1Name});
 
-  args.insertOrAssign(MoveData::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_DataArrayPath}));
-  args.insertOrAssign(MoveData::k_DestinationParentPath_Key, std::make_any<DataPath>(k_AMPath));
+  args.insertOrAssign(MoveDataFilter::k_SourceDataPaths_Key, std::make_any<std::vector<DataPath>>({k_DataArrayPath}));
+  args.insertOrAssign(MoveDataFilter::k_DestinationParentPath_Key, std::make_any<DataPath>(k_AMPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

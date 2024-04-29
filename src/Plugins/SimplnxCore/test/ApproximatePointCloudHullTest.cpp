@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/ApproximatePointCloudHull.hpp"
+#include "SimplnxCore/Filters/ApproximatePointCloudHullFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -35,7 +35,7 @@ static const std::vector<float> s_Vertices = {
     0.0F,      19.0F,      3.2F,           40.35763F, 19.0F,      3.2F,           139.6424F, 19.0F,      3.2F,           180.0F,    19.0F,      3.2};
 }
 
-TEST_CASE("SimplnxCore::ApproximatePointCloudHull: Instantiate Filter", "[ApproximatePointCloudHull]")
+TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[ApproximatePointCloudHullFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "FaceData";
@@ -87,16 +87,16 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
       (*vertices)[eIdx] = (*triangleVertices)[eIdx];
     }
 
-    ApproximatePointCloudHull filter;
+    ApproximatePointCloudHullFilter filter;
     Arguments args;
 
     std::vector<float32> gridResolution = {1.0F, 1.0F, 1.0F};
     uint64 minEmptyNeighbors = 1;
 
-    args.insertOrAssign(ApproximatePointCloudHull::k_GridResolution_Key, std::make_any<std::vector<float32>>(gridResolution));
-    args.insertOrAssign(ApproximatePointCloudHull::k_MinEmptyNeighbors_Key, std::make_any<uint64>(minEmptyNeighbors));
-    args.insertOrAssign(ApproximatePointCloudHull::k_VertexGeomPath_Key, std::make_any<DataPath>(vertexGeomPath));
-    args.insertOrAssign(ApproximatePointCloudHull::k_HullVertexGeomPath_Key, std::make_any<DataPath>(hullVertexGeomPath));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::make_any<std::vector<float32>>(gridResolution));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, std::make_any<uint64>(minEmptyNeighbors));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key, std::make_any<DataPath>(vertexGeomPath));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, std::make_any<DataPath>(hullVertexGeomPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -125,6 +125,6 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
 
   // Write out the DataStructure
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/ApproximatePointCloudHull.dream3d", unit_test::k_BinaryTestOutputDir));
+  WriteTestDataStructure(dataStructure, fmt::format("{}/ApproximatePointCloudHullFilter.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 }

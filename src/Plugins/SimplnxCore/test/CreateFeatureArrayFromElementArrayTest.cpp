@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/CreateFeatureArrayFromElementArray.hpp"
+#include "SimplnxCore/Filters/CreateFeatureArrayFromElementArrayFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -36,14 +36,14 @@ void testElementArray(const DataPath& cellDataPath)
   DataPath computedFeatureArrayPath = computedFeatureGroupPath.createChildPath(cellDataPath.getTargetName());
 
   {
-    CreateFeatureArrayFromElementArray filter;
+    CreateFeatureArrayFromElementArrayFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(cellDataPath));
-    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
-    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(computedFeatureGroupPath));
-    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<std::string>(cellDataPath.getTargetName()));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(cellDataPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(computedFeatureGroupPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(cellDataPath.getTargetName()));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -73,7 +73,7 @@ void testElementArray(const DataPath& cellDataPath)
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArray: Valid filter execution - 1 Component")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Valid filter execution - 1 Component")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -82,7 +82,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArray: Valid filter executi
   testElementArray<float32>(cellDataPath);
 }
 
-TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArray: Valid filter execution - 3 Component")
+TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Valid filter execution - 3 Component")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 

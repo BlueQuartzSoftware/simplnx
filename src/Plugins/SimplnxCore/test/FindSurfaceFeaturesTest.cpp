@@ -1,5 +1,5 @@
-#include "SimplnxCore/Filters/FindSurfaceFeatures.hpp"
-#include "SimplnxCore/Filters/CreateImageGeometry.hpp"
+#include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
+#include "SimplnxCore/Filters/FindSurfaceFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/ReadRawBinaryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -29,13 +29,13 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz", "FindSurfaceFeaturesTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindSurfaceFeatures filter;
+  FindSurfaceFeaturesFilter filter;
   DataStructure dataStructure;
   Arguments cigArgs;
 
-  CreateImageGeometry cigFilter;
-  cigArgs.insertOrAssign(CreateImageGeometry::k_GeometryDataPath_Key, std::make_any<DataPath>(k_FeatureGeometryPath));
-  cigArgs.insertOrAssign(CreateImageGeometry::k_Dimensions_Key, geometryDims);
+  CreateImageGeometryFilter cigFilter;
+  cigArgs.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(k_FeatureGeometryPath));
+  cigArgs.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, geometryDims);
   auto result = cigFilter.execute(dataStructure, cigArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
@@ -72,10 +72,10 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
   // Create default Parameters for the filter.
   Arguments args;
-  args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(k_FeatureGeometryPath));
-  args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
-  args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
-  args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayName_Key, std::make_any<std::string>(k_SurfaceFeaturesArrayPath.getTargetName()));
+  args.insertOrAssign(FindSurfaceFeaturesFilter::k_FeatureGeometryPath_Key, std::make_any<DataPath>(k_FeatureGeometryPath));
+  args.insertOrAssign(FindSurfaceFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
+  args.insertOrAssign(FindSurfaceFeaturesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
+  args.insertOrAssign(FindSurfaceFeaturesFilter::k_SurfaceFeaturesArrayName_Key, std::make_any<std::string>(k_SurfaceFeaturesArrayPath.getTargetName()));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -105,7 +105,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::FindSurfaceFeatures: Valid filter execution in 3D", "[SimplnxCore][FindSurfaceFeatures]")
+TEST_CASE("SimplnxCore::FindSurfaceFeaturesFilter: Valid filter execution in 3D", "[SimplnxCore][FindSurfaceFeaturesFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1");
@@ -118,13 +118,13 @@ TEST_CASE("SimplnxCore::FindSurfaceFeatures: Valid filter execution in 3D", "[Si
   DataPath computedSurfaceFeaturesPath = Constants::k_CellFeatureDataPath.createChildPath(k_SurfaceFeatures);
 
   {
-    FindSurfaceFeatures filter;
+    FindSurfaceFeaturesFilter filter;
     Arguments args;
 
-    args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-    args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Constants::k_FeatureIdsArrayPath));
-    args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellFeatureDataPath));
-    args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayName_Key, std::make_any<std::string>(k_SurfaceFeatures));
+    args.insertOrAssign(FindSurfaceFeaturesFilter::k_FeatureGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(FindSurfaceFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Constants::k_FeatureIdsArrayPath));
+    args.insertOrAssign(FindSurfaceFeaturesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellFeatureDataPath));
+    args.insertOrAssign(FindSurfaceFeaturesFilter::k_SurfaceFeaturesArrayName_Key, std::make_any<std::string>(k_SurfaceFeatures));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -151,17 +151,17 @@ TEST_CASE("SimplnxCore::FindSurfaceFeatures: Valid filter execution in 3D", "[Si
   }
 }
 
-TEST_CASE("SimplnxCore::FindSurfaceFeatures: Valid filter execution in 2D - XY Plane", "[SimplnxCore][FindSurfaceFeatures]")
+TEST_CASE("SimplnxCore::FindSurfaceFeaturesFilter: Valid filter execution in 2D - XY Plane", "[SimplnxCore][FindSurfaceFeaturesFilter]")
 {
   test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("SimplnxCore::FindSurfaceFeatures: Valid filter execution in 2D - XZ Plane", "[SimplnxCore][FindSurfaceFeatures]")
+TEST_CASE("SimplnxCore::FindSurfaceFeaturesFilter: Valid filter execution in 2D - XZ Plane", "[SimplnxCore][FindSurfaceFeaturesFilter]")
 {
   test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("SimplnxCore::FindSurfaceFeatures: Valid filter execution in 2D - YZ Plane", "[SimplnxCore][FindSurfaceFeatures]")
+TEST_CASE("SimplnxCore::FindSurfaceFeaturesFilter: Valid filter execution in 2D - YZ Plane", "[SimplnxCore][FindSurfaceFeaturesFilter]")
 {
   test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }

@@ -22,7 +22,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-nx_filter = nx.DeleteData()
+nx_filter = nx.DeleteDataFilter()
 # Execute Filter With Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -35,7 +35,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Filter 3
 # Instantiate and Execute Filter
 # Note: This filter might need additional parameters depending on the intended data removal.
-nx_filter = nx.DeleteData()
+nx_filter = nx.DeleteDataFilter()
 result = nx_filter.execute(
     data_structure=data_structure
     # removed_data_path: List[DataPath] = ...  # Not currently part of the code

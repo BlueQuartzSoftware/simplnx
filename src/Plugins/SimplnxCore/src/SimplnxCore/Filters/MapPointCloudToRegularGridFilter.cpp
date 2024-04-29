@@ -26,7 +26,7 @@ constexpr int64 k_BadGridDimensions = -2601;
 constexpr int64 k_InvalidVertexGeometry = -2602;
 constexpr int64 k_IncompatibleMaskVoxelArrays = -2603;
 
-void createRegularGrid(DataStructure& data, const Arguments& args)
+void createRegularGrid(DataStructure& dataStructure, const Arguments& args)
 {
   const auto samplingGridType = args.value<uint64>(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key);
   const auto vertexGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key);
@@ -39,13 +39,13 @@ void createRegularGrid(DataStructure& data, const Arguments& args)
     return;
   }
 
-  const auto* pointCloud = data.getDataAs<VertexGeom>(vertexGeomPath);
-  auto* image = data.getDataAs<ImageGeom>(newImageGeomPath);
+  const auto* pointCloud = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
+  auto* image = dataStructure.getDataAs<ImageGeom>(newImageGeomPath);
 
   int64 numVerts = pointCloud->getNumberOfVertices();
   auto* vertex = pointCloud->getVertices();
 
-  const auto* mask = data.getDataAs<BoolArray>(maskArrayPath);
+  const auto* mask = dataStructure.getDataAs<BoolArray>(maskArrayPath);
 
   // Find the largest/smallest (x,y,z) dimensions of the incoming data to be used to define the maximum dimensions for the regular grid
   std::vector<float32> meshMaxExtents;
@@ -256,7 +256,7 @@ IFilter::UniquePointer MapPointCloudToRegularGridFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                          const std::atomic_bool& shouldCancel) const
 {
   auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
@@ -286,7 +286,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
     actions.appendAction(std::move(imageAction));
   }
 
-  const auto& vertexGeom = data.getDataRefAs<VertexGeom>(vertexGeomPath);
+  const auto& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
   const AttributeMatrix* vertexData = vertexGeom.getVertexAttributeMatrix();
   if(vertexData == nullptr)
   {
@@ -298,7 +298,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   if(useMask)
   {
     auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);
-    const auto numMaskTuples = data.getDataRefAs<BoolArray>(maskArrayPath).getNumberOfTuples();
+    const auto numMaskTuples = dataStructure.getDataRefAs<BoolArray>(maskArrayPath).getNumberOfTuples();
     const auto numVoxelTuples = vertexData->getNumTuples();
     if(numMaskTuples != numVoxelTuples)
     {
@@ -315,7 +315,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel) const
 {
   const auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
@@ -329,18 +329,18 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   {
     // Create the regular grid
     messageHandler("Creating Regular Grid");
-    createRegularGrid(data, args);
-    image = data.getDataAs<ImageGeom>(args.value<DataPath>(k_CreatedImageGeometryPath_Key));
+    createRegularGrid(dataStructure, args);
+    image = dataStructure.getDataAs<ImageGeom>(args.value<DataPath>(k_CreatedImageGeometryPath_Key));
   }
   else if(samplingGridType == 1)
   {
-    image = data.getDataAs<ImageGeom>(args.value<DataPath>(k_SelectedImageGeometryPath_Key));
+    image = dataStructure.getDataAs<ImageGeom>(args.value<DataPath>(k_SelectedImageGeometryPath_Key));
   }
 
-  const auto& vertices = data.getDataRefAs<VertexGeom>(vertexGeomPath);
+  const auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
   const DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertices.getVertexAttributeMatrix()->getName()).createChildPath(voxelIndicesName);
-  auto& voxelIndices = data.getDataRefAs<UInt64Array>(voxelIndicesPath);
-  const auto* mask = data.getDataAs<BoolArray>(maskArrayPath);
+  auto& voxelIndices = dataStructure.getDataRefAs<UInt64Array>(voxelIndicesPath);
+  const auto* mask = dataStructure.getDataAs<BoolArray>(maskArrayPath);
 
   int64 numVerts = vertices.getNumberOfVertices();
   SizeVec3 dims = image->getDimensions();

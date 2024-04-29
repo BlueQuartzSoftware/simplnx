@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKIntensityWindowingImage.hpp"
+#include "ITKImageProcessing/Filters/ITKIntensityWindowingImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -19,7 +19,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImageFilter(2d)", "[ITKImageProcessing][ITKIntensityWindowingImage][2d]")
 {
   DataStructure dataStructure;
-  const ITKIntensityWindowingImage filter;
+  const ITKIntensityWindowingImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImageFilter(2d)", "[ITKImage
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKIntensityWindowingImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKIntensityWindowingImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKIntensityWindowingImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -50,7 +50,7 @@ TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImageFilter(2d)", "[ITKImage
 TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImageFilter(3dFloat)", "[ITKImageProcessing][ITKIntensityWindowingImage][3dFloat]")
 {
   DataStructure dataStructure;
-  const ITKIntensityWindowingImage filter;
+  const ITKIntensityWindowingImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -64,9 +64,9 @@ TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImageFilter(3dFloat)", "[ITK
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKIntensityWindowingImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKIntensityWindowingImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKIntensityWindowingImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -81,7 +81,7 @@ TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImageFilter(3dFloat)", "[ITK
 TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImageFilter(3dShort)", "[ITKImageProcessing][ITKIntensityWindowingImage][3dShort]")
 {
   DataStructure dataStructure;
-  const ITKIntensityWindowingImage filter;
+  const ITKIntensityWindowingImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -95,9 +95,9 @@ TEST_CASE("ITKImageProcessing::ITKIntensityWindowingImageFilter(3dShort)", "[ITK
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKIntensityWindowingImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKIntensityWindowingImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKIntensityWindowingImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKIntensityWindowingImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

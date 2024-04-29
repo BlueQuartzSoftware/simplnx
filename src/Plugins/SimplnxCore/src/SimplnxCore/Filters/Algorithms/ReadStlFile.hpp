@@ -15,15 +15,14 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 /**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
+ * @class ConditionalSetValueFilter
+
  */
 class SIMPLNXCORE_EXPORT ReadStlFile
 {
 public:
-  ReadStlFile(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput, float32 scaleFactor,
-              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  ReadStlFile(DataStructure& dataStructure, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
+              float32 scaleFactor, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~ReadStlFile() noexcept;
 
   ReadStlFile(const ReadStlFile&) = delete;

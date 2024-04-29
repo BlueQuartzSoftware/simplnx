@@ -23,7 +23,7 @@ If the user does not want the **Read H5Ebsd** filter to perform any transformati
 
 + {ref}`Rotate Euler Reference Frame <OrientationAnalysis/RotateEulerRefFrameFilter:Description>`
 + {ref}`Rotate Sample Reference Frame <SimplnxCore/RotateSampleRefFrameFilter:Description>`
-+ {ref}`Convert Angles to Degrees or Radians <SimplnxCore/ChangeAngleRepresentation:Description>`
++ {ref}`Convert Angles to Degrees or Radians <SimplnxCore/ChangeAngleRepresentationFilter:Description>`
 
 An excellant reference for this is the following PDF file:
 [http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf](http://pajarito.materials.cmu.edu/rollett/27750/L17-EBSD-analysis-31Mar16.pdf)

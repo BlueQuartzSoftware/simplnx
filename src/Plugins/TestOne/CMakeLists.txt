@@ -8,11 +8,11 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
   ErrorWarningFilter
-  ExampleFilter1
-  ExampleFilter2
+  ExampleFilter1Filter
+  ExampleFilter2Filter
   # CreateOutOfCoreArray
   TestFilter
-  DynamicTableExample
+  DynamicTableExampleFilter
 )
 
 create_simplnx_plugin(NAME ${PLUGIN_NAME}

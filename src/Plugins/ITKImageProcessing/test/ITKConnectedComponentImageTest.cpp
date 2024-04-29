@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKConnectedComponentImage.hpp"
+#include "ITKImageProcessing/Filters/ITKConnectedComponentImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -16,10 +16,10 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(default)", "[ITKImageProcessing][ITKConnectedComponentImage][default]")
+TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(default)", "[ITKImageProcessing][ITKConnectedComponentImageFilter][default]")
 {
   DataStructure dataStructure;
-  const ITKConnectedComponentImage filter;
+  const ITKConnectedComponentImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(default)", "[ITK
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -47,10 +47,10 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(default)", "[ITK
   REQUIRE(md5Hash == "548f5184428db10d93e3bf377dee5253");
 }
 
-TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(mask)", "[ITKImageProcessing][ITKConnectedComponentImage][mask]")
+TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(mask)", "[ITKImageProcessing][ITKConnectedComponentImageFilter][mask]")
 {
   DataStructure dataStructure;
-  const ITKConnectedComponentImage filter;
+  const ITKConnectedComponentImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -64,9 +64,9 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(mask)", "[ITKIma
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -78,10 +78,10 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(mask)", "[ITKIma
   REQUIRE(md5Hash == "769315132e427a391edd779191db446d");
 }
 
-TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(fullyconnected)", "[ITKImageProcessing][ITKConnectedComponentImage][fullyconnected]")
+TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(fullyconnected)", "[ITKImageProcessing][ITKConnectedComponentImageFilter][fullyconnected]")
 {
   DataStructure dataStructure;
-  const ITKConnectedComponentImage filter;
+  const ITKConnectedComponentImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -95,10 +95,10 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(fullyconnected)"
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKConnectedComponentImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKConnectedComponentImage::k_FullyConnected_Key, std::make_any<BoolParameter::ValueType>(true));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKConnectedComponentImageFilter::k_FullyConnected_Key, std::make_any<BoolParameter::ValueType>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

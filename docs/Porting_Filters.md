@@ -154,7 +154,7 @@ of how to perform this transfer of data.
 There are several classes that can be used to help the developer write parallel algorithms.
 
 `simplnx/Utilities/ParallelAlgorithm` and `simplnx/Utilities/ParallelTaskAlgorithm` are the two main classes depending
-on the situation. `AlignSections.cpp` and `CropImageGeometry.cpp` both use a task based
+on the situation. `AlignSections.cpp` and `CropImageGeometryFilter.cpp` both use a task based
 parallelism. `RotateSampleRefFrameFilter.cpp` shows an example
 of using ParallelData3DAlgorithm.
 
@@ -258,4 +258,4 @@ these should be used as needed by the filter.
 
 ## Processing a Geometry In Place
 
-Sometimes a filter needs allow the user to process it's geometry "in place" in order to ease the number of filters that are needed to remove temporary DataObjects. If your filter needs this kind of capability, then take a look at the "CropImageGeometry" or "RotateSampleRefFrame" filters.
+Sometimes a filter needs allow the user to process it's geometry "in place" in order to ease the number of filters that are needed to remove temporary DataObjects. If your filter needs this kind of capability, then take a look at the "CropImageGeometryFilter" or "RotateSampleRefFrame" filters.

@@ -24,7 +24,7 @@ generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 2
 
 # Instantiate Filter
-nx_filter = cxitk.ITKImportImageStack()
+nx_filter = cxitk.ITKImportImageStackFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -50,7 +50,7 @@ threshold_set.thresholds = [threshold_1]
 dt = nx.DataType.boolean  # This line specifies the DataType for the threshold
 
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -101,7 +101,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = nx.CopyFeatureArrayToElementArray()
+nx_filter = nx.CopyFeatureArrayToElementArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -113,7 +113,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = nx.CreateDataArray()
+nx_filter = nx.CreateDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -129,7 +129,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = nx.ConditionalSetValue()
+nx_filter = nx.ConditionalSetValueFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

@@ -1,4 +1,4 @@
-#include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
+#include "OrientationAnalysis/Filters/ConvertOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateFeatureFaceMisorientationFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
@@ -44,14 +44,14 @@ TEST_CASE("OrientationAnalysis::GenerateFeatureFaceMisorientationFilter: Valid f
   // Convert the AvgEulerAngles array to AvgQuats for use in GenerateFeatureFaceMisorientationFilter input
   {
     // Instantiate the filter, and an Arguments Object
-    ConvertOrientations filter;
+    ConvertOrientationsFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<uint64>(2));
-    args.insertOrAssign(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
-    args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(k_AvgQuats));
+    args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<uint64>(2));
+    args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
+    args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(k_AvgQuats));
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -105,14 +105,14 @@ TEST_CASE("OrientationAnalysis::GenerateFeatureFaceMisorientationFilter: Invalid
     // Convert the AvgEulerAngles array to AvgQuats for use in GenerateFeatureFaceMisorientationFilter input
     {
       // Instantiate the filter, and an Arguments Object
-      ConvertOrientations convertOrientationsFilter;
+      ConvertOrientationsFilter convertOrientationsFilter;
       Arguments convertOrientationsArgs;
 
       // Create default Parameters for the filter.
-      convertOrientationsArgs.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<uint64>(0));
-      convertOrientationsArgs.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<uint64>(2));
-      convertOrientationsArgs.insertOrAssign(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
-      convertOrientationsArgs.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(k_AvgQuats));
+      convertOrientationsArgs.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<uint64>(0));
+      convertOrientationsArgs.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<uint64>(2));
+      convertOrientationsArgs.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
+      convertOrientationsArgs.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(k_AvgQuats));
 
       // Execute the filter and check the result
       auto convertOrientationsResult = convertOrientationsFilter.execute(dataStructure, convertOrientationsArgs);

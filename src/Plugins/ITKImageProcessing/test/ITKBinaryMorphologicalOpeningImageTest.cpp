@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKBinaryMorphologicalOpeningImage.hpp"
+#include "ITKImageProcessing/Filters/ITKBinaryMorphologicalOpeningImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -21,7 +21,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalOpeningImageFilter(BinaryMorphologicalOpening)", "[ITKImageProcessing][ITKBinaryMorphologicalOpeningImage][BinaryMorphologicalOpening]")
 {
   DataStructure dataStructure;
-  const ITKBinaryMorphologicalOpeningImage filter;
+  const ITKBinaryMorphologicalOpeningImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -35,12 +35,12 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalOpeningImageFilter(BinaryMo
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
-  args.insertOrAssign(ITKBinaryMorphologicalOpeningImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImageFilter::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
+  args.insertOrAssign(ITKBinaryMorphologicalOpeningImageFilter::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

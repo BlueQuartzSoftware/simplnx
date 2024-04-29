@@ -66,13 +66,13 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 option(ITKIMAGEPROCESSING_LEAN_AND_MEAN "Only compile the Reader and Writers, All other filters are disabled" OFF)
 
 set(FilterList
-  ITKDiscreteGaussianImage
-  ITKImageReader
-  ITKImageWriter
-  ITKImportImageStack
-  ITKMedianImage
-  ITKMhaFileReader
-  ITKRescaleIntensityImage
+  ITKDiscreteGaussianImageFilter
+  ITKImageReaderFilter
+  ITKImageWriterFilter
+  ITKImportImageStackFilter
+  ITKMedianImageFilter
+  ITKMhaFileReaderFilter
+  ITKRescaleIntensityImageFilter
   )
     
 set(AlgorithmList
@@ -82,21 +82,21 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN
    # AND NOT SIMPLNX_CONDA_BUILD
 )
   list(APPEND FilterList
-    ITKBinaryContourImage
-    ITKBinaryOpeningByReconstructionImage
-    ITKClosingByReconstructionImage
-    ITKGrayscaleFillholeImage
-    ITKGrayscaleGrindPeakImage
-    ITKHConvexImage
-    ITKHMaximaImage
-    ITKHMinimaImage
-    ITKLabelContourImage
-    ITKMorphologicalGradientImage
-    ITKMorphologicalWatershedImage
-    ITKOpeningByReconstructionImage
-    ITKSignedMaurerDistanceMapImage
-    ITKValuedRegionalMaximaImage
-    ITKValuedRegionalMinimaImage
+    ITKBinaryContourImageFilter
+    ITKBinaryOpeningByReconstructionImageFilter
+    ITKClosingByReconstructionImageFilter
+    ITKGrayscaleFillholeImageFilter
+    ITKGrayscaleGrindPeakImageFilter
+    ITKHConvexImageFilter
+    ITKHMaximaImageFilter
+    ITKHMinimaImageFilter
+    ITKLabelContourImageFilter
+    ITKMorphologicalGradientImageFilter
+    ITKMorphologicalWatershedImageFilter
+    ITKOpeningByReconstructionImageFilter
+    ITKSignedMaurerDistanceMapImageFilter
+    ITKValuedRegionalMaximaImageFilter
+    ITKValuedRegionalMinimaImageFilter
   )
 endif()
 
@@ -106,62 +106,62 @@ endif()
 #
 if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND FilterList
-    ITKAbsImage
-    ITKAcosImage
-    ITKAdaptiveHistogramEqualizationImage
-    ITKApproximateSignedDistanceMapImage
-    ITKAsinImage
-    ITKAtanImage
-    ITKBinaryDilateImage
-    ITKBinaryErodeImage
-    ITKBinaryMorphologicalClosingImage
-    ITKBinaryMorphologicalOpeningImage
-    ITKBinaryProjectionImage
-    ITKBinaryThinningImage
-    ITKBinaryThresholdImage
-    ITKBlackTopHatImage
-    ITKConnectedComponentImage
-    ITKCosImage
-    ITKCurvatureAnisotropicDiffusionImage
-    ITKCurvatureFlowImage
-    ITKDanielssonDistanceMapImage
-    ITKDilateObjectMorphologyImage
-    ITKDoubleThresholdImage
-    ITKErodeObjectMorphologyImage
-    ITKExpImage
-    ITKExpNegativeImage
-    ITKGradientAnisotropicDiffusionImage
-    ITKGradientMagnitudeImage
-    ITKGradientMagnitudeRecursiveGaussianImage
-    ITKGrayscaleDilateImage
-    ITKGrayscaleErodeImage
-    ITKGrayscaleMorphologicalClosingImage
-    ITKGrayscaleMorphologicalOpeningImage
+    ITKAbsImageFilter
+    ITKAcosImageFilter
+    ITKAdaptiveHistogramEqualizationImageFilter
+    ITKApproximateSignedDistanceMapImageFilter
+    ITKAsinImageFilter
+    ITKAtanImageFilter
+    ITKBinaryDilateImageFilter
+    ITKBinaryErodeImageFilter
+    ITKBinaryMorphologicalClosingImageFilter
+    ITKBinaryMorphologicalOpeningImageFilter
+    ITKBinaryProjectionImageFilter
+    ITKBinaryThinningImageFilter
+    ITKBinaryThresholdImageFilter
+    ITKBlackTopHatImageFilter
+    ITKConnectedComponentImageFilter
+    ITKCosImageFilter
+    ITKCurvatureAnisotropicDiffusionImageFilter
+    ITKCurvatureFlowImageFilter
+    ITKDanielssonDistanceMapImageFilter
+    ITKDilateObjectMorphologyImageFilter
+    ITKDoubleThresholdImageFilter
+    ITKErodeObjectMorphologyImageFilter
+    ITKExpImageFilter
+    ITKExpNegativeImageFilter
+    ITKGradientAnisotropicDiffusionImageFilter
+    ITKGradientMagnitudeImageFilter
+    ITKGradientMagnitudeRecursiveGaussianImageFilter
+    ITKGrayscaleDilateImageFilter
+    ITKGrayscaleErodeImageFilter
+    ITKGrayscaleMorphologicalClosingImageFilter
+    ITKGrayscaleMorphologicalOpeningImageFilter
     ITKImportFijiMontageFilter
-    ITKIntensityWindowingImage
-    ITKInvertIntensityImage
-    ITKIsoContourDistanceImage
-    ITKLaplacianRecursiveGaussianImage
-    ITKLog10Image
-    ITKLogImage
-    ITKMaskImage
-    ITKMinMaxCurvatureFlowImage
-    ITKNormalizeImage
-    ITKNotImage
-    ITKOtsuMultipleThresholdsImage
-    ITKRegionalMaximaImage
-    ITKRegionalMinimaImage
-    ITKRelabelComponentImage
-    ITKSigmoidImage
-    ITKSignedDanielssonDistanceMapImage
-    ITKSinImage
-    ITKSqrtImage
-    ITKSquareImage
-    ITKTanImage
-    ITKThresholdImage
-    ITKThresholdMaximumConnectedComponentsImage
-    ITKWhiteTopHatImage
-    ITKZeroCrossingImage
+    ITKIntensityWindowingImageFilter
+    ITKInvertIntensityImageFilter
+    ITKIsoContourDistanceImageFilter
+    ITKLaplacianRecursiveGaussianImageFilter
+    ITKLog10ImageFilter
+    ITKLogImageFilter
+    ITKMaskImageFilter
+    ITKMinMaxCurvatureFlowImageFilter
+    ITKNormalizeImageFilter
+    ITKNotImageFilter
+    ITKOtsuMultipleThresholdsImageFilter
+    ITKRegionalMaximaImageFilter
+    ITKRegionalMinimaImageFilter
+    ITKRelabelComponentImageFilter
+    ITKSigmoidImageFilter
+    ITKSignedDanielssonDistanceMapImageFilter
+    ITKSinImageFilter
+    ITKSqrtImageFilter
+    ITKSquareImageFilter
+    ITKTanImageFilter
+    ITKThresholdImageFilter
+    ITKThresholdMaximumConnectedComponentsImageFilter
+    ITKWhiteTopHatImageFilter
+    ITKZeroCrossingImageFilter
 
     # -----------------------------------------------------------------------------
     # These filters only work on Scalar inputs

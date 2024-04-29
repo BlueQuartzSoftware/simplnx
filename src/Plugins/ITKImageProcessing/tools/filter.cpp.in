@@ -1,55 +1,56 @@
-#include "${FILTER_NAME}.hpp"
+#include "${FILTER_NAME}Filter.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-
 ${PARAMETER_INCLUDES}
+
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 ${ITK_FILTER_INCLUDE}
 
 using namespace nx::core;
 
-namespace cx${FILTER_NAME}
+namespace cx${FILTER_NAME}Filter
 {
 using ArrayOptionsType = ${ARRAY_OPTIONS};
 ${OUTPUT_TYPEDEF}
 ${ITK_FILTER_STRUCT}
-} // namespace cx${FILTER_NAME}
+} // namespace cx${FILTER_NAME}Filter
 
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ${FILTER_NAME}::name() const
+std::string ${FILTER_NAME}Filter::name() const
 {
-  return FilterTraits<${FILTER_NAME}>::name;
+  return FilterTraits<${FILTER_NAME}Filter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string ${FILTER_NAME}::className() const
+std::string ${FILTER_NAME}Filter::className() const
 {
-  return FilterTraits<${FILTER_NAME}>::className;
+  return FilterTraits<${FILTER_NAME}Filter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ${FILTER_NAME}::uuid() const
+Uuid ${FILTER_NAME}Filter::uuid() const
 {
-  return FilterTraits<${FILTER_NAME}>::uuid;
+  return FilterTraits<${FILTER_NAME}Filter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ${FILTER_NAME}::humanName() const
+std::string ${FILTER_NAME}Filter::humanName() const
 {
   return "${FILTER_HUMAN_NAME}";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ${FILTER_NAME}::defaultTags() const
+std::vector<std::string> ${FILTER_NAME}Filter::defaultTags() const
 {
   return {className(), ${DEFAULT_TAGS}};
 }
 
 //------------------------------------------------------------------------------
-Parameters ${FILTER_NAME}::parameters() const
+Parameters ${FILTER_NAME}Filter::parameters() const
 {
   Parameters params;
 ${PARAMETER_DEFS}
@@ -64,18 +65,18 @@ ${PARAMETER_DEFS}
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ${FILTER_NAME}::clone() const
+IFilter::UniquePointer ${FILTER_NAME}Filter::clone() const
 {
-  return std::make_unique<${FILTER_NAME}>();
+  return std::make_unique<${FILTER_NAME}Filter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ${FILTER_NAME}::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult ${FILTER_NAME}Filter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                              const std::atomic_bool& shouldCancel) const
 {
-  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);${PREFLIGHT_DEFS}
+  auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);${PREFLIGHT_DEFS}
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ${DATA_CHECK_DECL};
@@ -84,12 +85,12 @@ IFilter::PreflightResult ${FILTER_NAME}::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> ${FILTER_NAME}::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ${FILTER_NAME}Filter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
-  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
-  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   ${PREFLIGHT_DEFS}

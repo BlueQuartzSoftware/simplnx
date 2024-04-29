@@ -365,7 +365,7 @@ def write_filter_header(filter_data: FilterData, template: Template, output_dir:
 
     output = template.substitute(substitutions)
 
-    with open(f'{output_dir}/{filter_data.filter_name}.hpp', 'w') as output_file:
+    with open(f'{output_dir}/{filter_data.filter_name}Filter.hpp', 'w') as output_file:
         output_file.write(output)
 
 def make_include_str(param_name: str) -> str:
@@ -735,7 +735,7 @@ def get_preflight_defs(filter_data: FilterData) -> List[str]:
 
 def get_execute_decl(filter_data: FilterData) -> str:
     output_type_str = f', cx{filter_data.filter_name}::FilterOutputType' if filter_data.output_pixel_type else ''
-    return f'ITK::Execute<cx{filter_data.filter_name}::ArrayOptionsType{output_type_str}>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel)'
+    return f'ITK::Execute<cx{filter_data.filter_name}Filter::ArrayOptionsType{output_type_str}>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel)'
 
 PIXEL_TYPES: Dict[str, str] = {
     'BasicPixelIDTypeList': 'ScalarPixelIdTypeList',
@@ -781,7 +781,7 @@ def get_link_ouput_array(filter_data: FilterData) -> str:
 def get_data_check_decl(filter_data: FilterData) -> str:
     filter_data.filter_name
     output_type_str = f', cx{filter_data.filter_name}::FilterOutputType' if filter_data.output_pixel_type else ''
-    return f'ITK::DataCheck<cx{filter_data.filter_name}::ArrayOptionsType{output_type_str}>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath)'
+    return f'ITK::DataCheck<cx{filter_data.filter_name}Filter::ArrayOptionsType{output_type_str}>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath)'
 
 def get_output_typedef(filter_data: FilterData) -> str:
     output_type = fixup_type(filter_data.output_pixel_type)
@@ -853,7 +853,7 @@ def write_filter_source(filter_data: FilterData, template: Template, output_dir:
 
     output = template.substitute(substitutions)
 
-    with open(f'{output_dir}/{filter_data.filter_name}.cpp', 'w') as output_file:
+    with open(f'{output_dir}/{filter_data.filter_name}Filter.cpp', 'w') as output_file:
         output_file.write(output)
 
 def get_test_case(filter_data: FilterData, test: TestData) -> List[str]:
@@ -862,7 +862,7 @@ def get_test_case(filter_data: FilterData, test: TestData) -> List[str]:
     lines.append(f'TEST_CASE(\"ITKImageProcessing::{filter_data.filter_name}Filter({test.tag})\", \"[{PLUGIN_NAME}][{filter_data.filter_name}][{test.tag}]\")\n')
     lines.append('{\n')
     lines.append('  DataStructure dataStructure;\n')
-    lines.append(f'  const {filter_data.filter_name} filter;\n\n')
+    lines.append(f'  const {filter_data.filter_name}Filter filter;\n\n')
     lines.append('  const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});\n')
     lines.append('  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);\n')
     lines.append('  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataName);\n')
@@ -876,13 +876,13 @@ def get_test_case(filter_data: FilterData, test: TestData) -> List[str]:
         lines.append('  } // End Image Comparison Scope\n\n')
 
     lines.append('  Arguments args;\n')
-    lines.append(f'  args.insertOrAssign({filter_data.filter_name}::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));\n')
-    lines.append(f'  args.insertOrAssign({filter_data.filter_name}::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));\n')
-    lines.append(f'  args.insertOrAssign({filter_data.filter_name}::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));\n')
+    lines.append(f'  args.insertOrAssign({filter_data.filter_name}Filter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));\n')
+    lines.append(f'  args.insertOrAssign({filter_data.filter_name}Filter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));\n')
+    lines.append(f'  args.insertOrAssign({filter_data.filter_name}Filter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));\n')
 
     for setting in test.settings:
         param: Parameter = get_parameter_from_name(filter_data, setting.parameter)
-        lines.append(f'  args.insertOrAssign({filter_data.filter_name}::{generate_key_var(setting.parameter, False)}, std::make_any<{param.get_type()}>({param.get_test_value_str(setting)}));\n')
+        lines.append(f'  args.insertOrAssign({filter_data.filter_name}Filter::{generate_key_var(setting.parameter, False)}, std::make_any<{param.get_type()}>({param.get_test_value_str(setting)}));\n')
 
     lines.append('\n')
     lines.append('  auto preflightResult = filter.preflight(dataStructure, args);\n')
@@ -972,7 +972,7 @@ def write_filter_test(filter_data: FilterData, output_dir: Path):
 
     output_lines.append('#include <catch2/catch.hpp>\n')
     output_lines.append('\n')
-    output_lines.append(f'#include \"{PLUGIN_NAME}/Filters/{filter_data.filter_name}.hpp\"')
+    output_lines.append(f'#include \"{PLUGIN_NAME}/Filters/{filter_data.filter_name}Filter.hpp\"')
     output_lines.append('\n')
     output_lines.append('#include \"ITKImageProcessing/Common/sitkCommon.hpp\"')
     output_lines.append('\n')
@@ -1014,13 +1014,13 @@ def write_filter_test(filter_data: FilterData, output_dir: Path):
 def write_filter(filter_name: str, json_dir: Path, output_dir: Path, test_output_dir: Path, header_template: Template, source_template: Template, docs_output_dir: Path) -> None:
     filter_data = read_filter_json(json_dir, filter_name)
 
-    # write_filter_header(filter_data, header_template, output_dir)
+    #write_filter_header(filter_data, header_template, output_dir)
 
-    # write_filter_source(filter_data, source_template, output_dir)
+    #write_filter_source(filter_data, source_template, output_dir)
 
-    # write_filter_test(filter_data, test_output_dir)
+    write_filter_test(filter_data, test_output_dir)
 
-    write_filter_doc(filter_data, docs_output_dir)
+    # write_filter_doc(filter_data, docs_output_dir)
 
 def main(input_args: Optional[List[str]] = None) -> None:
     parser = argparse.ArgumentParser()
