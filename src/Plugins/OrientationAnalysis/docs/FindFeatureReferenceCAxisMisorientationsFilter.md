@@ -14,7 +14,7 @@ This filter requires at least one Hexagonal crystal structure phase (Hexagonal-L
 
 ## Example Pipelines
 
-Combo-EBSD-osc_r0c0
+EBSD_Hexagonal_Data_Analysis
 
 ## License & Copyright
 

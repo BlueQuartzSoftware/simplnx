@@ -21,7 +21,7 @@ set(SIMPLNX_PYTHON_TESTS
   CombineSTLFiles
   EnsembleInfoReader
   Import_ASCII
-  Import_CSV_Data
+  Import_CSV_File
   Import_STL_Model
   ReplaceElementAttributesWithNeighbor
   ResamplePorosityImage

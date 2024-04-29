@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Import_CSV_Data.d3dpipeline",
+  "name": "Import Text Data Files",
   "pinnedParams": [],
   "pipeline": [
     {

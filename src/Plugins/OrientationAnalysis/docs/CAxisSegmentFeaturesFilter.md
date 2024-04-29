@@ -22,7 +22,7 @@ After all the **Features** have been identified, a **Feature Attribute Matrix** 
 
 ## Example Pipelines
 
-Combo-EBSD-osc_r0c0
+EBSD_Hexagonal_Data_Analysis
 
 ## License & Copyright
 
