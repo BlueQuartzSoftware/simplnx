@@ -21,7 +21,7 @@ try:
 except ImportError:
   pass
 try:
-  from ExamplePlugin.InitializeData import InitializeDataPythonFilter
+  from ExamplePlugin.InitializeDataFilter import InitializeDataPythonFilter
   _filters.append(InitializeDataPythonFilter)
 except ImportError:
   pass

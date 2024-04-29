@@ -22,7 +22,7 @@ struct SIMPLNX_EXPORT SampleSurfaceMeshInputValues
 class SIMPLNX_EXPORT SampleSurfaceMesh
 {
 public:
-  SampleSurfaceMesh(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  SampleSurfaceMesh(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   virtual ~SampleSurfaceMesh() noexcept;
 
   SampleSurfaceMesh(const SampleSurfaceMesh&) = delete;            // Copy Constructor Not Implemented

@@ -1,4 +1,4 @@
-#include "OrientationAnalysis/Filters/GenerateFZQuaternions.hpp"
+#include "OrientationAnalysis/Filters/GenerateFZQuaternionsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -66,20 +66,20 @@ TEST_CASE("OrientationAnalysis::GenerateFZQuaternions", "[OrientationAnalysis][G
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  GenerateFZQuaternions filter;
+  GenerateFZQuaternionsFilter filter;
   DataStructure dataStructure = CreateDataStructure();
   Arguments args;
 
   DataPath scanDataPath = DataPath({nx::core::Constants::k_SmallIN100, nx::core::Constants::k_EbsdScanData});
   // Create default Parameters for the filter.
 
-  args.insertOrAssign(GenerateFZQuaternions::k_QuatsArrayPath_Key, std::make_any<DataPath>(scanDataPath.createChildPath(k_Quats)));
-  args.insertOrAssign(GenerateFZQuaternions::k_FZQuatsArrayName_Key, std::make_any<std::string>(k_FZQuats));
-  args.insertOrAssign(GenerateFZQuaternions::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(scanDataPath.createChildPath(k_Phases)));
-  args.insertOrAssign(GenerateFZQuaternions::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_PhaseData, k_LaueClass})));
+  args.insertOrAssign(GenerateFZQuaternionsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(scanDataPath.createChildPath(k_Quats)));
+  args.insertOrAssign(GenerateFZQuaternionsFilter::k_FZQuatsArrayName_Key, std::make_any<std::string>(k_FZQuats));
+  args.insertOrAssign(GenerateFZQuaternionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(scanDataPath.createChildPath(k_Phases)));
+  args.insertOrAssign(GenerateFZQuaternionsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_PhaseData, k_LaueClass})));
 
-  args.insertOrAssign(GenerateFZQuaternions::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(GenerateFZQuaternions::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateFZQuaternionsFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(GenerateFZQuaternionsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

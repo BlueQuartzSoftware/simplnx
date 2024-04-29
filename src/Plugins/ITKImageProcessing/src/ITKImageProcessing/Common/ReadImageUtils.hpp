@@ -10,7 +10,7 @@
 
 using namespace nx::core;
 
-namespace cxItkImageReader
+namespace cxItkImageReaderFilter
 {
 // This functor is a dummy that will return a valid Result<> if the ImageIOBase is a supported type, dimension, etc.
 struct PreflightFunctor
@@ -188,4 +188,4 @@ struct ImageReaderOptions
 Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, const std::string& cellDataName, const std::string& arrayName,
                                          const ImageReaderOptions& imageReaderOptions);
 
-} // namespace cxItkImageReader
+} // namespace cxItkImageReaderFilter

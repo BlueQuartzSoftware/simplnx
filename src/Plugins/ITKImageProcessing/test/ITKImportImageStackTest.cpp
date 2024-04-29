@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
-#include "ITKImageProcessing/Filters/ITKImportImageStack.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
+#include "ITKImageProcessing/Filters/ITKImportImageStackFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -41,7 +41,7 @@ const DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(Co
 // Make sure we can instantiate the ITK Import Image Stack Filter
 // ITK Image Processing Plugin Uuid
 constexpr AbstractPlugin::IdType k_ITKImageProcessingID = *Uuid::FromString("115b0d10-ab97-5a18-88e8-80d35056a28e");
-const FilterHandle k_ImportImageStackFilterHandle(nx::core::FilterTraits<ITKImportImageStack>::uuid, k_ITKImageProcessingID);
+const FilterHandle k_ImportImageStackFilterHandle(nx::core::FilterTraits<ITKImportImageStackFilter>::uuid, k_ITKImageProcessingID);
 
 void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& filePrefix)
 {
@@ -75,11 +75,11 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
 
     Arguments args;
 
-    args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-    args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-    args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-    args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
-    args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+    args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+    args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
+    args.insertOrAssign(ITKImportImageStackFilter::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
 
     auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -95,11 +95,11 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
 
     Arguments args;
 
-    args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-    args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
-    args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
-    args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
-    args.insertOrAssign(ITKImportImageStack::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+    args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+    args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
+    args.insertOrAssign(ITKImportImageStackFilter::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
 
     auto preflightResult = importImageStackFilter->preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -112,13 +112,13 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
 void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& filePrefix)
 {
   {
-    ITKImageReader filter;
+    ITKImageReaderFilter filter;
     Arguments args;
 
     fs::path filePath = k_ImageFlipStackDir / (filePrefix + "flip_x.tiff");
-    args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
-    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_XFlipImageGeomPath);
-    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_ImageDataName);
+    args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, filePath);
+    args.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, ::k_XFlipImageGeomPath);
+    args.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, ::k_ImageDataName);
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -127,13 +127,13 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
   {
-    ITKImageReader filter;
+    ITKImageReaderFilter filter;
     Arguments args;
 
     fs::path filePath = k_ImageFlipStackDir / (filePrefix + "flip_y.tiff");
-    args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
-    args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, ::k_YFlipImageGeomPath);
-    args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, ::k_ImageDataName);
+    args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, filePath);
+    args.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, ::k_YFlipImageGeomPath);
+    args.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, ::k_ImageDataName);
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -163,9 +163,9 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
 }
 } // namespace
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoInput", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoInput", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  ITKImportImageStack filter;
+  ITKImportImageStackFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -173,9 +173,9 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoInput", "[ITKImageProcessi
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoImageGeometry", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoImageGeometry", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  ITKImportImageStack filter;
+  ITKImportImageStackFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -183,15 +183,15 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoImageGeometry", "[ITKImage
 
   fileListInfo.inputPath = k_ImageStackDir;
 
-  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoFiles", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoFiles", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  ITKImportImageStack filter;
+  ITKImportImageStackFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -204,18 +204,18 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoFiles", "[ITKImageProcessi
   fileListInfo.fileSuffix = "";
   fileListInfo.paddingDigits = 4;
 
-  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(3));
-  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
-  args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: FileDoesNotExist", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: FileDoesNotExist", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  ITKImportImageStack filter;
+  ITKImportImageStackFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -228,21 +228,21 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: FileDoesNotExist", "[ITKImag
   fileListInfo.fileSuffix = "";
   fileListInfo.paddingDigits = 4;
 
-  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(3));
-  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
-  args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: CompareImage", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   app->loadPlugins(unit_test::k_BuildDir.view());
 
-  ITKImportImageStack filter;
+  ITKImportImageStackFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -260,10 +260,10 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImagePro
   std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
   std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
 
-  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
-  args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -299,7 +299,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImagePro
   REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Even X/Y", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Even X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
@@ -307,7 +307,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Even X/Y"
 
   DataStructure dataStructure;
 
-  // Generate XY Image Geometries with ITKImportImageStack
+  // Generate XY Image Geometries with ITKImportImageStackFilter
   ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
 
   // Read in exemplars
@@ -321,7 +321,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Even X/Y"
   ::CompareXYFlippedGeometries(dataStructure);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Odd X/Y", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Odd X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
@@ -329,7 +329,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Odd X/Y",
 
   DataStructure dataStructure;
 
-  // Generate XY Image Geometries with ITKImportImageStack
+  // Generate XY Image Geometries with ITKImportImageStackFilter
   ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
 
   // Read in exemplars
@@ -343,7 +343,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Even-Odd X/Y",
   ::CompareXYFlippedGeometries(dataStructure);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Even X/Y", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Even X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
@@ -351,7 +351,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Even X/Y",
 
   DataStructure dataStructure;
 
-  // Generate XY Image Geometries with ITKImportImageStack
+  // Generate XY Image Geometries with ITKImportImageStackFilter
   ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
 
   // Read in exemplars
@@ -365,7 +365,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Even X/Y",
   ::CompareXYFlippedGeometries(dataStructure);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Odd X/Y", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
@@ -373,7 +373,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Odd X/Y", 
 
   DataStructure dataStructure;
 
-  // Generate XY Image Geometries with ITKImportImageStack
+  // Generate XY Image Geometries with ITKImportImageStackFilter
   ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
 
   // Read in exemplars
@@ -387,12 +387,12 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: Flipped Image Odd-Odd X/Y", 
   ::CompareXYFlippedGeometries(dataStructure);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: RGB_To_Grayscale", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB_To_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   app->loadPlugins(unit_test::k_BuildDir.view());
 
-  ITKImportImageStack filter;
+  ITKImportImageStackFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -410,11 +410,11 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: RGB_To_Grayscale", "[ITKImag
   std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
   std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
 
-  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
-  args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStack::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(true));
+  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -450,12 +450,12 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: RGB_To_Grayscale", "[ITKImag
   REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStack: RGB", "[ITKImageProcessing][ITKImportImageStack]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   app->loadPlugins(unit_test::k_BuildDir.view());
 
-  ITKImportImageStack filter;
+  ITKImportImageStackFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -473,11 +473,11 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: RGB", "[ITKImageProcessing][
   std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
   std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
 
-  args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-  args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
-  args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStack::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(false));
+  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(false));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

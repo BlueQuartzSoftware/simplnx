@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKGradientMagnitudeRecursiveGaussianImage.hpp"
+#include "ITKImageProcessing/Filters/ITKGradientMagnitudeRecursiveGaussianImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -20,7 +20,7 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKGradientMagnitudeRecursiveGaussianImageFilter(default)", "[ITKImageProcessing][ITKGradientMagnitudeRecursiveGaussianImage][default]")
 {
   DataStructure dataStructure;
-  const ITKGradientMagnitudeRecursiveGaussianImage filter;
+  const ITKGradientMagnitudeRecursiveGaussianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -34,9 +34,9 @@ TEST_CASE("ITKImageProcessing::ITKGradientMagnitudeRecursiveGaussianImageFilter(
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKGradientMagnitudeRecursiveGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

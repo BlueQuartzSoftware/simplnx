@@ -42,7 +42,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Set Threshold Conditions
 threshold_1 = nx.ArrayThreshold()
 threshold_1.array_path = nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/Error")
@@ -64,7 +64,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.ConvertOrientations()
+nx_filter = cxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -106,7 +106,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriter()
+nx_filter = cxitk.ITKImageWriterFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -136,7 +136,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriter()
+nx_filter = cxitk.ITKImageWriterFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -165,7 +165,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 11
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriter()
+nx_filter = cxitk.ITKImageWriterFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

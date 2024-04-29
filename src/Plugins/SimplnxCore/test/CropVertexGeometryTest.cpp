@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/CropVertexGeometry.hpp"
+#include "SimplnxCore/Filters/CropVertexGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -41,41 +41,41 @@ DataStructure createTestData()
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::CropVertexGeometry(Instantiate)", "[SimplnxCore][CropVertexGeometry]")
+TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Instantiate)", "[SimplnxCore][CropVertexGeometryFilter]")
 {
   static const std::vector<float32> k_MinPos{0, 0, 0};
   static const std::vector<float32> k_MaxPos{5, 6, 7};
 
-  CropVertexGeometry filter;
+  CropVertexGeometryFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;
 
-  args.insert(CropVertexGeometry::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
-  args.insert(CropVertexGeometry::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(k_CroppedGeomPath));
-  args.insert(CropVertexGeometry::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(k_VertexDataName));
-  args.insert(CropVertexGeometry::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
-  args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
-  args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
+  args.insert(CropVertexGeometryFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
+  args.insert(CropVertexGeometryFilter::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(k_CroppedGeomPath));
+  args.insert(CropVertexGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(k_VertexDataName));
+  args.insert(CropVertexGeometryFilter::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
+  args.insert(CropVertexGeometryFilter::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
+  args.insert(CropVertexGeometryFilter::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 }
 
-TEST_CASE("SimplnxCore::CropVertexGeometry(Data)", "[SimplnxCore][CropVertexGeometry]")
+TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Data)", "[SimplnxCore][CropVertexGeometryFilter]")
 {
   static const std::vector<float32> k_MinPos{0, 0, 0};
   static const std::vector<float32> k_MaxPos{5, 6, 7};
 
-  CropVertexGeometry filter;
+  CropVertexGeometryFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;
 
-  args.insert(CropVertexGeometry::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
-  args.insert(CropVertexGeometry::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(k_CroppedGeomPath));
-  args.insert(CropVertexGeometry::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(k_VertexDataName));
-  args.insert(CropVertexGeometry::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
-  args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
-  args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
+  args.insert(CropVertexGeometryFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
+  args.insert(CropVertexGeometryFilter::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(k_CroppedGeomPath));
+  args.insert(CropVertexGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(k_VertexDataName));
+  args.insert(CropVertexGeometryFilter::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
+  args.insert(CropVertexGeometryFilter::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
+  args.insert(CropVertexGeometryFilter::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);

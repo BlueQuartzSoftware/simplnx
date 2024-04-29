@@ -32,7 +32,7 @@ set(FilterList
   BadDataNeighborOrientationCheckFilter
   CAxisSegmentFeaturesFilter
   ConvertHexGridToSquareGridFilter
-  ConvertOrientations
+  ConvertOrientationsFilter
   ConvertQuaternionFilter
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
@@ -55,7 +55,7 @@ set(FilterList
   FindTriangleGeomShapesFilter
   GenerateFaceIPFColoringFilter
   GenerateFeatureFaceMisorientationFilter
-  GenerateFZQuaternions
+  GenerateFZQuaternionsFilter
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
   GenerateQuaternionConjugateFilter

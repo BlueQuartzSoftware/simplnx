@@ -23,11 +23,8 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateGBCDPoleFigureInputValues
 };
 
 /**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
+ * @class
  */
-
 class ORIENTATIONANALYSIS_EXPORT GenerateGBCDPoleFigure
 {
 public:

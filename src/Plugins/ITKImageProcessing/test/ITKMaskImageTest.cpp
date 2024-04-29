@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKMaskImage.hpp"
+#include "ITKImageProcessing/Filters/ITKMaskImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -14,10 +14,10 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(2d)", "[ITKImageProcessing][ITKMaskImage][2d]")
+TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(2d)", "[ITKImageProcessing][ITKMaskImageFilter][2d]")
 {
   DataStructure dataStructure;
-  ITKMaskImage filter;
+  ITKMaskImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -42,10 +42,10 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(2d)", "[ITKImageProcessing][IT
   REQUIRE(inputGeom.getDimensions() == maskGeom.getDimensions());
 
   Arguments args;
-  args.insertOrAssign(ITKMaskImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMaskImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMaskImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKMaskImage::k_MaskImageDataPath_Key, std::make_any<DataPath>(maskDataPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMaskImageFilter::k_MaskImageDataPath_Key, std::make_any<DataPath>(maskDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -57,10 +57,10 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(2d)", "[ITKImageProcessing][IT
   REQUIRE(md5Hash == "c57d7fda3e42374881c3c3181d15bf90");
 }
 
-TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(cthead1)", "[ITKImageProcessing][ITKMaskImage][cthead1]")
+TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(cthead1)", "[ITKImageProcessing][ITKMaskImageFilter][cthead1]")
 {
   DataStructure dataStructure;
-  ITKMaskImage filter;
+  ITKMaskImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -85,10 +85,10 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(cthead1)", "[ITKImageProcessin
   REQUIRE(inputGeom.getDimensions() == maskGeom.getDimensions());
 
   Arguments args;
-  args.insertOrAssign(ITKMaskImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMaskImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMaskImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKMaskImage::k_MaskImageDataPath_Key, std::make_any<DataPath>(maskDataPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMaskImageFilter::k_MaskImageDataPath_Key, std::make_any<DataPath>(maskDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -100,10 +100,10 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(cthead1)", "[ITKImageProcessin
   REQUIRE(md5Hash == "0ef8943803bb4a21b2015b53f0164f1c");
 }
 
-TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(rgb)", "[ITKImageProcessing][ITKMaskImage][rgb]")
+TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(rgb)", "[ITKImageProcessing][ITKMaskImageFilter][rgb]")
 {
   DataStructure dataStructure;
-  ITKMaskImage filter;
+  ITKMaskImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -128,11 +128,11 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(rgb)", "[ITKImageProcessing][I
   REQUIRE(inputGeom.getDimensions() == maskGeom.getDimensions());
 
   Arguments args;
-  args.insertOrAssign(ITKMaskImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMaskImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMaskImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKMaskImage::k_MaskImageDataPath_Key, std::make_any<DataPath>(maskDataPath));
-  args.insertOrAssign(ITKMaskImage::k_OutsideValue_Key, std::make_any<Float64Parameter::ValueType>(10.0));
+  args.insertOrAssign(ITKMaskImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMaskImageFilter::k_OutsideValue_Key, std::make_any<Float64Parameter::ValueType>(10.0));
+  args.insertOrAssign(ITKMaskImageFilter::k_MaskImageDataPath_Key, std::make_any<DataPath>(maskDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -146,10 +146,10 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(rgb)", "[ITKImageProcessing][I
 
 // Disabled this test because requires masking value which doesn't exist in the original
 #if 0
-TEST_CASE("ITKMaskImageFilter(cthead1_maskvalue)", "[ITKImageProcessing][ITKMaskImage][cthead1_maskvalue]")
+TEST_CASE("ITKMaskImageFilter(cthead1_maskvalue)", "[ITKImageProcessing][ITKMaskImageFilter][cthead1_maskvalue]")
 {
   DataStructure dataStructure;
-  ITKMaskImage filter;
+  ITKMaskImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataName);
@@ -173,11 +173,11 @@ TEST_CASE("ITKMaskImageFilter(cthead1_maskvalue)", "[ITKImageProcessing][ITKMask
   REQUIRE(inputGeom.getDimensions() == maskGeom.getDimensions());
 
   Arguments args;
-  args.insertOrAssign(ITKMaskImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMaskImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMaskImage::k_OutputImageArrayName_Key, std::make_any<DataPath>(outputDataPath));
-  args.insertOrAssign(ITKMaskImage::k_MaskImageDataPath_Key, std::make_any<DataPath>(maskDataPath));
-  args.insertOrAssign(ITKMaskImage::k_MaskingValue_Key, std::make_any<Float64Parameter::ValueType>(100.0));
+  args.insertOrAssign(ITKMaskImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_OutputImageArrayName_Key, std::make_any<DataPath>(outputDataPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_MaskImageDataPath_Key, std::make_any<DataPath>(maskDataPath));
+  args.insertOrAssign(ITKMaskImageFilter::k_MaskingValue_Key, std::make_any<Float64Parameter::ValueType>(100.0));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

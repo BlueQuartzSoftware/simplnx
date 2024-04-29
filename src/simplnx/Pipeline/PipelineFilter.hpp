@@ -125,7 +125,7 @@ public:
    * @param renamedPaths Collection of renamed output paths.
    * @return bool
    */
-  bool preflight(DataStructure& data, const std::atomic_bool& shouldCancel) override;
+  bool preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Attempts to preflight the node using the provided DataStructure.
@@ -134,7 +134,7 @@ public:
    * @param renamedPaths Collection of renamed output paths.
    * @return bool
    */
-  bool preflight(DataStructure& data, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
+  bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -142,7 +142,7 @@ public:
    * @param data
    * @return bool
    */
-  bool execute(DataStructure& data, const std::atomic_bool& shouldCancel) override;
+  bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Returns a vector of DataPaths created when preflighting the node.

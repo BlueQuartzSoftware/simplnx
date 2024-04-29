@@ -25,7 +25,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateImageGeometry",
+        "name": "simplnx::CreateImageGeometryFilter",
         "uuid": "c4320659-1a84-461d-939e-c7c10229a504"
       },
       "isDisabled": false
@@ -136,7 +136,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CropImageGeometry",
+        "name": "simplnx::CropImageGeometryFilter",
         "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
       },
       "isDisabled": false
@@ -163,7 +163,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CropImageGeometry",
+        "name": "simplnx::CropImageGeometryFilter",
         "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
       },
       "isDisabled": false

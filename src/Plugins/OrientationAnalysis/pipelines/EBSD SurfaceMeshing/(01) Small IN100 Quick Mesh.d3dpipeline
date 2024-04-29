@@ -94,7 +94,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CropImageGeometry",
+        "name": "simplnx::CropImageGeometryFilter",
         "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
       },
       "isDisabled": false
@@ -106,7 +106,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MoveData",
+        "name": "simplnx::MoveDataFilter",
         "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
       },
       "isDisabled": true

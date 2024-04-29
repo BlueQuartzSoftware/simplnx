@@ -165,7 +165,7 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadStlFileFilter::executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel) const
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
@@ -182,7 +182,7 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& data, const Arguments& fi
   auto scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
 
   // The actual STL File Reading is placed in a separate class `ReadStlFile`
-  Result<> result = ReadStlFile(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel, messageHandler)();
+  Result<> result = ReadStlFile(dataStructure, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel, messageHandler)();
   return result;
 }
 

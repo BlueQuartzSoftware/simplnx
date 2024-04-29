@@ -19,7 +19,7 @@
  * from the TEST_CASE macro. This will enable this unit test to be run by default
  * and report errors.
  */
-#include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
+#include "OrientationAnalysis/Filters/ConvertOrientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
@@ -94,7 +94,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
   //----------------------------
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ConvertOrientations filter;
+  ConvertOrientationsFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -104,10 +104,10 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
   std::vector<size_t> tupleShape = {10};
   std::vector<size_t> componentShape = {3};
 
-  args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
-  args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
   // Create default Parameters for the filter.
   {
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -121,8 +121,8 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
 
   // Create default Parameters for the filter.
   {
-    args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(8));
-    args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
+    args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(8));
+    args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
     auto preflightResult = filter.preflight(dataStructure, args);
     const std::vector<Error>& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
@@ -131,8 +131,8 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
   }
 
   {
-    args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
-    args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(8));
+    args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
+    args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(8));
     auto preflightResult = filter.preflight(dataStructure, args);
     auto& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
@@ -179,7 +179,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
       std::vector<float> outputValues = k_InitValues[o];
 
       // Instantiate the filter, a DataStructure object and an Arguments Object
-      ConvertOrientations filter;
+      ConvertOrientationsFilter filter;
       DataStructure dataStructure;
       Arguments args;
 
@@ -197,10 +197,11 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
       }
 
       // Create default Parameters for the filter.
-      args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(i));
-      args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(o));
-      args.insertOrAssign(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
-      args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
+      args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(i));
+      args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(o));
+      args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key,
+                          std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
+      args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);

@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKInvertIntensityImage.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+#include "ITKImageProcessing/Filters/ITKInvertIntensityImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -9,15 +10,16 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
-
 namespace fs = std::filesystem;
 
 using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKInvertIntensityImageFilter(3d)", "[ITKImageProcessing][ITKInvertIntensityImage][3d]")
 {
   DataStructure dataStructure;
-  ITKInvertIntensityImage filter;
+  const ITKInvertIntensityImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -31,9 +33,9 @@ TEST_CASE("ITKImageProcessing::ITKInvertIntensityImageFilter(3d)", "[ITKImagePro
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKInvertIntensityImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKInvertIntensityImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKInvertIntensityImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKInvertIntensityImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKInvertIntensityImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKInvertIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

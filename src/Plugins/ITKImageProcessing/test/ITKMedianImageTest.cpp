@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKMedianImage.hpp"
+#include "ITKImageProcessing/Filters/ITKMedianImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -21,10 +21,10 @@ using namespace nx::core;
  * images which we currently don't handle.
  */
 
-TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProcessing][ITKMedianImage][defaults]")
+TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProcessing][ITKMedianImageFilter][defaults]")
 {
   DataStructure dataStructure;
-  ITKMedianImage filter;
+  ITKMedianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -37,9 +37,9 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProces
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKMedianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMedianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMedianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMedianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMedianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMedianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -52,10 +52,10 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProces
   REQUIRE(md5Hash == "cbc59611297961dea9f872282534f3df");
 }
 
-TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing][ITKMedianImage][by23]")
+TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing][ITKMedianImageFilter][by23]")
 {
   DataStructure dataStructure;
-  ITKMedianImage filter;
+  ITKMedianImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -68,11 +68,11 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKMedianImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMedianImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMedianImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMedianImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMedianImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMedianImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
   // 0 should be unused
-  args.insertOrAssign(ITKMedianImage::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{2, 3, 0}));
+  args.insertOrAssign(ITKMedianImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(VectorUInt32Parameter::ValueType{2, 3, 0}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

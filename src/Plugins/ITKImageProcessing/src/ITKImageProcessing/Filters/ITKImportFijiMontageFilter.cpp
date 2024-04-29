@@ -2,7 +2,7 @@
 
 #include "Algorithms/ITKImportFijiMontage.hpp"
 
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -158,7 +158,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   auto* filterListPtr = Application::Instance()->getFilterList();
   for(const auto& bound : s_HeaderCache[m_InstanceId].bounds)
   {
-    auto imageImportFilter = ITKImageReader();
+    auto imageImportFilter = ITKImageReaderFilter();
 
     DataPath imageDataProxy = {};
     if(pParentDataGroupValue)
@@ -171,10 +171,10 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     }
 
     Arguments imageImportArgs;
-    imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
-    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageDataProxy.getParent().getParent()));
-    imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
-    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<std::string>(imageDataProxy.getTargetName()));
+    imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
+    imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageDataProxy.getParent().getParent()));
+    imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
+    imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, std::make_any<std::string>(imageDataProxy.getTargetName()));
 
     auto result = imageImportFilter.preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
     if(result.outputActions.invalid())

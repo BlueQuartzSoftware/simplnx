@@ -120,19 +120,20 @@ IFilter::UniquePointer IterativeClosestPointFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto movingVertexPath = args.value<DataPath>(k_MovingVertexPath_Key);
   auto targetVertexPath = args.value<DataPath>(k_TargetVertexPath_Key);
   auto numIterations = args.value<uint64>(k_NumIterations_Key);
   auto transformArrayPath = args.value<DataPath>(k_TransformArrayPath_Key);
 
-  if(data.getDataAs<VertexGeom>(movingVertexPath) == nullptr)
+  if(dataStructure.getDataAs<VertexGeom>(movingVertexPath) == nullptr)
   {
     auto ss = fmt::format("Moving Vertex Geometry not found at path: {}", movingVertexPath.toString());
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingMovingVertex, ss}})};
   }
-  if(data.getDataAs<VertexGeom>(targetVertexPath) == nullptr)
+  if(dataStructure.getDataAs<VertexGeom>(targetVertexPath) == nullptr)
   {
     auto ss = fmt::format("Target Vertex Geometry not found at path: {}", targetVertexPath.toString());
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingTargetVertex, ss}})};
@@ -154,7 +155,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
   auto movingVertexPath = args.value<DataPath>(k_MovingVertexPath_Key);
@@ -163,8 +164,8 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
   auto applyTransformation = args.value<bool>(k_ApplyTransformation_Key);
   auto transformArrayPath = args.value<DataPath>(k_TransformArrayPath_Key);
 
-  auto movingVertexGeom = data.getDataAs<VertexGeom>(movingVertexPath);
-  auto targetVertexGeom = data.getDataAs<VertexGeom>(targetVertexPath);
+  auto movingVertexGeom = dataStructure.getDataAs<VertexGeom>(movingVertexPath);
+  auto targetVertexGeom = dataStructure.getDataAs<VertexGeom>(targetVertexPath);
 
   if(movingVertexGeom == nullptr)
   {
@@ -275,7 +276,7 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
     counter++;
   }
 
-  auto* transformPtr = data.getDataAs<Float32Array>(transformArrayPath)->getDataStore();
+  auto* transformPtr = dataStructure.getDataAs<Float32Array>(transformArrayPath)->getDataStore();
 
   if(applyTransformation)
   {

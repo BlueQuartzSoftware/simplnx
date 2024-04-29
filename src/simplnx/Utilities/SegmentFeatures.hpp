@@ -22,7 +22,7 @@ public:
   using SeedGenerator = std::mt19937_64;
   using Int64Distribution = std::uniform_int_distribution<int64>;
 
-  SegmentFeatures(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
   virtual ~SegmentFeatures();
 

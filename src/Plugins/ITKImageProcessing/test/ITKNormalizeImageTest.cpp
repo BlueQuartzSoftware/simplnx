@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Filters/ITKNormalizeImage.hpp"
+#include "ITKImageProcessing/Filters/ITKNormalizeImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -13,10 +13,10 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-TEST_CASE("ITKImageProcessing::ITKNormalizeImageFilter(defaults)", "[ITKImageProcessing][ITKNormalizeImage][defaults]")
+TEST_CASE("ITKImageProcessing::ITKNormalizeImageFilter(defaults)", "[ITKImageProcessing][ITKNormalizeImageFilter][defaults]")
 {
   DataStructure dataStructure;
-  ITKNormalizeImage filter;
+  ITKNormalizeImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -28,9 +28,9 @@ TEST_CASE("ITKImageProcessing::ITKNormalizeImageFilter(defaults)", "[ITKImagePro
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKNormalizeImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKNormalizeImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKNormalizeImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKNormalizeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKNormalizeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKNormalizeImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -51,10 +51,10 @@ TEST_CASE("ITKImageProcessing::ITKNormalizeImageFilter(defaults)", "[ITKImagePro
 // This test fails because the filter needs a scalar image.
 // SimpleITK does an extra conversion step automatically that we don't do.
 // In the original ITKImageProcessing, there were no test cases at all.
-TEST_CASE("ITKImageProcessing::ITKNormalizeImageFilter(vector)", "[.][ITKImageProcessing][ITKNormalizeImage][vector]")
+TEST_CASE("ITKImageProcessing::ITKNormalizeImageFilter(vector)", "[.][ITKImageProcessing][ITKNormalizeImageFilter][vector]")
 {
   DataStructure dataStructure;
-  ITKNormalizeImage filter;
+  ITKNormalizeImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -66,9 +66,9 @@ TEST_CASE("ITKImageProcessing::ITKNormalizeImageFilter(vector)", "[.][ITKImagePr
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
-  args.insertOrAssign(ITKNormalizeImage::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKNormalizeImage::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKNormalizeImage::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKNormalizeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKNormalizeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKNormalizeImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

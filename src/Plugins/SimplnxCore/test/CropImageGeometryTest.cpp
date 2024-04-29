@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/CropImageGeometry.hpp"
+#include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
@@ -49,7 +49,7 @@ DataStructure CreateDataStructure()
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::CropImageGeometry(Instantiate)", "[SimplnxCore][CropImageGeometry]")
+TEST_CASE("SimplnxCore::CropImageGeometryFilter(Instantiate)", "[SimplnxCore][CropImageGeometryFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -62,18 +62,18 @@ TEST_CASE("SimplnxCore::CropImageGeometry(Instantiate)", "[SimplnxCore][CropImag
   static constexpr bool k_RenumberFeatures = false;
   const DataPath k_FeatureIdsPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds});
 
-  CropImageGeometry filter;
+  CropImageGeometryFilter filter;
   DataStructure dataStructure = CreateDataStructure();
   Arguments args;
 
-  args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
-  args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
-  // args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
-  args.insert(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insert(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
-  args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
-  args.insert(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+  args.insert(CropImageGeometryFilter::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
+  args.insert(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
+  // args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
+  args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
+  args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -83,7 +83,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry(Instantiate)", "[SimplnxCore][CropImag
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 }
 
-TEST_CASE("SimplnxCore::CropImageGeometry Invalid Params", "[SimplnxCore][CropImageGeometry]")
+TEST_CASE("SimplnxCore::CropImageGeometryFilter Invalid Params", "[SimplnxCore][CropImageGeometryFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -97,17 +97,17 @@ TEST_CASE("SimplnxCore::CropImageGeometry Invalid Params", "[SimplnxCore][CropIm
   const DataPath k_FeatureIdsPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds});
   DataStructure dataStructure = CreateDataStructure();
 
-  CropImageGeometry filter;
+  CropImageGeometryFilter filter;
   Arguments args;
 
-  args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
-  args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
-  // args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
-  args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
-  args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
-  args.insertOrAssign(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insertOrAssign(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CropImageGeometryFilter::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
+  // args.insertOrAssign(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
+  args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insertOrAssign(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
+  args.insertOrAssign(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -116,7 +116,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry Invalid Params", "[SimplnxCore][CropIm
   REQUIRE(preflightErrors[0].code == -5553);
 
   k_MaxVector = {20, 500, 0};
-  args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   // Preflight the filter and check result
   preflightResult = filter.preflight(dataStructure, args);
   preflightErrors = preflightResult.outputActions.errors();
@@ -124,7 +124,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry Invalid Params", "[SimplnxCore][CropIm
   REQUIRE(preflightErrors[0].code == -5554);
 
   k_MaxVector = {1, 1, 500};
-  args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   // Preflight the filter and check result
   preflightResult = filter.preflight(dataStructure, args);
   preflightErrors = preflightResult.outputActions.errors();
@@ -133,8 +133,8 @@ TEST_CASE("SimplnxCore::CropImageGeometry Invalid Params", "[SimplnxCore][CropIm
 
   k_MinVector = {10, 10, 10};
   k_MaxVector = {1, 20, 20};
-  args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
-  args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   // Preflight the filter and check result
   preflightResult = filter.preflight(dataStructure, args);
   preflightErrors = preflightResult.outputActions.errors();
@@ -143,8 +143,8 @@ TEST_CASE("SimplnxCore::CropImageGeometry Invalid Params", "[SimplnxCore][CropIm
 
   k_MinVector = {10, 10, 10};
   k_MaxVector = {20, 1, 20};
-  args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
-  args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   // Preflight the filter and check result
   preflightResult = filter.preflight(dataStructure, args);
   preflightErrors = preflightResult.outputActions.errors();
@@ -153,8 +153,8 @@ TEST_CASE("SimplnxCore::CropImageGeometry Invalid Params", "[SimplnxCore][CropIm
 
   k_MinVector = {10, 10, 10};
   k_MaxVector = {20, 20, 1};
-  args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
-  args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
+  args.insertOrAssign(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   // Preflight the filter and check result
   preflightResult = filter.preflight(dataStructure, args);
   preflightErrors = preflightResult.outputActions.errors();
@@ -162,7 +162,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry Invalid Params", "[SimplnxCore][CropIm
   REQUIRE(preflightErrors[0].code == -5552);
 }
 
-TEST_CASE("SimplnxCore::CropImageGeometry(Execute_Filter)", "[SimplnxCore][CropImageGeometry]")
+TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter)", "[SimplnxCore][CropImageGeometryFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -180,21 +180,21 @@ TEST_CASE("SimplnxCore::CropImageGeometry(Execute_Filter)", "[SimplnxCore][CropI
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1");
 
-  CropImageGeometry filter;
+  CropImageGeometryFilter filter;
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1/6_5_test_data_1.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   Arguments args;
 
-  args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
-  args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
-  //  args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
-  args.insert(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insert(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
-  args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
-  args.insert(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insert(CropImageGeometry::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
-  args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insert(CropImageGeometryFilter::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
+  args.insert(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
+  //  args.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
+  args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
+  args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
+  args.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -243,7 +243,7 @@ TEST_CASE("SimplnxCore::CropImageGeometry(Execute_Filter)", "[SimplnxCore][CropI
   }
 }
 
-TEST_CASE("SimplnxCore::CropImageGeometry: Crop Physical Bounds", "[SimplnxCore][CropImageGeometry]")
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Physical Bounds", "[SimplnxCore][CropImageGeometryFilter]")
 {
   const std::vector<float64> k_MinVector{10, 15, 0};
   const std::vector<float64> k_MaxVector{60, 40, 50};
@@ -258,21 +258,21 @@ TEST_CASE("SimplnxCore::CropImageGeometry: Crop Physical Bounds", "[SimplnxCore]
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1");
 
-  CropImageGeometry filter;
+  CropImageGeometryFilter filter;
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1/6_5_test_data_1.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   Arguments args;
 
-  args.insert(CropImageGeometry::k_UsePhysicalBounds_Key, std::make_any<bool>(true));
-  args.insert(CropImageGeometry::k_MinCoord_Key, std::make_any<std::vector<float64>>(k_MinVector));
-  args.insert(CropImageGeometry::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
-  args.insert(CropImageGeometry::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insert(CropImageGeometry::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
-  args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
-  args.insert(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insert(CropImageGeometry::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
-  args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insert(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(true));
+  args.insert(CropImageGeometryFilter::k_MinCoord_Key, std::make_any<std::vector<float64>>(k_MinVector));
+  args.insert(CropImageGeometryFilter::k_MaxCoord_Key, std::make_any<std::vector<float64>>(k_MaxVector));
+  args.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
+  args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insert(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
+  args.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
 
   //    const auto oldDimensions = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions();
   //    const auto oldOrigin = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getOrigin();

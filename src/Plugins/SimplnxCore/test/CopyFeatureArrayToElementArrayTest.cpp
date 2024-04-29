@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/CopyFeatureArrayToElementArray.hpp"
+#include "SimplnxCore/Filters/CopyFeatureArrayToElementArrayFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -19,17 +19,17 @@ const DataPath k_CellTempArrayPath({k_FeatureTemperatureName + k_CellTempArraySu
 const DataPath k_CellFeatureArrayPath({k_FeatureDataArrayName + k_CellTempArraySuffix});
 } // namespace
 
-TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArray: Parameter Check", "[Core][CopyFeatureArrayToElementArray]")
+TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Parameter Check", "[Core][CopyFeatureArrayToElementArrayFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  CopyFeatureArrayToElementArray filter;
+  CopyFeatureArrayToElementArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_SelectedFeatureArrayPath_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_CreatedArraySuffix_Key, std::make_any<StringParameter::ValueType>(""));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_SelectedFeatureArrayPath_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key, std::make_any<StringParameter::ValueType>(""));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -51,7 +51,7 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArray: Parameter Check", "[Core
 }
 
 using ListOfTypes = std::tuple<int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64>;
-TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArray: Valid filter execution", "[Core][CopyFeatureArrayToElementArray]", ListOfTypes)
+TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Valid filter execution", "[Core][CopyFeatureArrayToElementArrayFilter]", ListOfTypes)
 {
   DataStructure dataStructure;
 
@@ -83,13 +83,13 @@ TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArray: Valid filt
   }
 
   // Create filter and set arguments
-  CopyFeatureArrayToElementArray filter;
+  CopyFeatureArrayToElementArrayFilter filter;
   Arguments args;
 
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_SelectedFeatureArrayPath_Key,
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_SelectedFeatureArrayPath_Key,
                       std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({k_FeatureTemperatureName}), DataPath({k_FeatureDataArrayName})}));
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_CellFeatureIdsArrayName})));
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_CreatedArraySuffix_Key, std::make_any<StringParameter::ValueType>(k_CellTempArraySuffix));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_CellFeatureIdsArrayName})));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key, std::make_any<StringParameter::ValueType>(k_CellTempArraySuffix));
 
   // Preflight the filter
   auto preflightResult = filter.preflight(dataStructure, args);

@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/FindDifferencesMap.hpp"
+#include "SimplnxCore/Filters/FindDifferencesMapFilter.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -9,9 +9,9 @@
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-TEST_CASE("SimplnxCore::FindDifferencesMap: Instantiate Filter", "[FindDifferencesMap]")
+TEST_CASE("SimplnxCore::FindDifferencesMapFilter: Instantiate Filter", "[FindDifferencesMapFilter]")
 {
-  FindDifferencesMap filter;
+  FindDifferencesMapFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -19,9 +19,9 @@ TEST_CASE("SimplnxCore::FindDifferencesMap: Instantiate Filter", "[FindDifferenc
   DataPath secondInputPath;
   DataPath createdArrayPath;
 
-  args.insertOrAssign(FindDifferencesMap::k_FirstInputArrayPath_Key, std::make_any<DataPath>(firstInputPath));
-  args.insertOrAssign(FindDifferencesMap::k_SecondInputArrayPath_Key, std::make_any<DataPath>(secondInputPath));
-  args.insertOrAssign(FindDifferencesMap::k_DifferenceMapArrayPath_Key, std::make_any<DataPath>(createdArrayPath));
+  args.insertOrAssign(FindDifferencesMapFilter::k_FirstInputArrayPath_Key, std::make_any<DataPath>(firstInputPath));
+  args.insertOrAssign(FindDifferencesMapFilter::k_SecondInputArrayPath_Key, std::make_any<DataPath>(secondInputPath));
+  args.insertOrAssign(FindDifferencesMapFilter::k_DifferenceMapArrayPath_Key, std::make_any<DataPath>(createdArrayPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -32,9 +32,9 @@ TEST_CASE("SimplnxCore::FindDifferencesMap: Instantiate Filter", "[FindDifferenc
   REQUIRE(!executeResult.result.valid());
 }
 
-TEST_CASE("SimplnxCore::FindDifferencesMap: Test Algorithm", "[FindDifferencesMap]")
+TEST_CASE("SimplnxCore::FindDifferencesMapFilter: Test Algorithm", "[FindDifferencesMapFilter]")
 {
-  FindDifferencesMap filter;
+  FindDifferencesMapFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
@@ -42,21 +42,21 @@ TEST_CASE("SimplnxCore::FindDifferencesMap: Test Algorithm", "[FindDifferencesMa
   DataPath secondInputPath({k_SmallIN100, k_EbsdScanData, "FeatureIds"});
   DataPath createdArrayPath({k_SmallIN100, k_EbsdScanData, "Created Array"});
 
-  args.insertOrAssign(FindDifferencesMap::k_FirstInputArrayPath_Key, std::make_any<DataPath>(firstInputPath));
+  args.insertOrAssign(FindDifferencesMapFilter::k_FirstInputArrayPath_Key, std::make_any<DataPath>(firstInputPath));
   {
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
-  args.insertOrAssign(FindDifferencesMap::k_SecondInputArrayPath_Key, std::make_any<DataPath>(secondInputPath));
+  args.insertOrAssign(FindDifferencesMapFilter::k_SecondInputArrayPath_Key, std::make_any<DataPath>(secondInputPath));
   // Preflight the filter and check result
   {
     auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
-  args.insertOrAssign(FindDifferencesMap::k_DifferenceMapArrayPath_Key, std::make_any<DataPath>(createdArrayPath));
+  args.insertOrAssign(FindDifferencesMapFilter::k_DifferenceMapArrayPath_Key, std::make_any<DataPath>(createdArrayPath));
   {
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

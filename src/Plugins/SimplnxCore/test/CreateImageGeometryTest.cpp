@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/CreateImageGeometry.hpp"
+#include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -19,7 +19,7 @@ const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 
 } // namespace CreateImageGeometryUnitTest
 
-TEST_CASE("SimplnxCore::CreateImageGeometry", "[SimplnxCore]")
+TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -36,12 +36,12 @@ TEST_CASE("SimplnxCore::CreateImageGeometry", "[SimplnxCore]")
   DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne, k_ImageGeometryName});
   Arguments args;
   // Create default Parameters for the filter.
-  args.insertOrAssign(CreateImageGeometry::k_GeometryDataPath_Key, std::make_any<DataPath>(selectedDataGroupPath));
-  args.insertOrAssign(CreateImageGeometry::k_Dimensions_Key, std::make_any<std::vector<uint64_t>>(inputDims));
-  args.insertOrAssign(CreateImageGeometry::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageOrigin));
-  args.insertOrAssign(CreateImageGeometry::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageSpacing));
+  args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(selectedDataGroupPath));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, std::make_any<std::vector<uint64_t>>(inputDims));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageOrigin));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageSpacing));
 
-  CreateImageGeometry filter;
+  CreateImageGeometryFilter filter;
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

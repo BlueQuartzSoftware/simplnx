@@ -56,13 +56,13 @@ nxtest.print_all_paths()
 data_structure = nx.DataStructure()
 # Create a DataArray to copy the Euler Angles into 
 array_path = nx.DataPath(['Euler Angles'])
-result = nx.CreateDataArray.execute(data_structure=data_structure,
+result = nx.CreateDataArrayFilter.execute(data_structure=data_structure,
                                     numeric_type_index=nx.NumericType.float32,
                                     component_count=3,
                                     tuple_dimensions=[[99]],
                                     output_array_path=array_path,
                                     initialization_value_str='0')
-nxtest.check_filter_result(nx.CreateDataArray, result)
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 
 # Get a numpy.view into the newly created DataArray
@@ -80,12 +80,12 @@ npdata[:] = np.loadtxt(file_path, delimiter=',')
 # Run the ConvertOrientation Filter to convert the Eulers to Quaternions
 # ------------------------------------------------------------------------------
 quat_path = nx.DataPath(['Quaternions'])
-result = nxor.ConvertOrientations.execute(data_structure=data_structure,
+result = nxor.ConvertOrientationsFilter.execute(data_structure=data_structure,
                                           input_orientation_array_path=array_path,
                                           input_representation_index=0,
                                           output_orientation_array_name='Quaternions',
                                           output_representation_index=2)
-nxtest.check_filter_result(nxor.ConvertOrientations, result)
+nxtest.check_filter_result(nxor.ConvertOrientationsFilter, result)
 
 
 # Get the Quaternions and print them out.

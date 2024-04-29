@@ -27,15 +27,12 @@ struct SIMPLNXCORE_EXPORT LaplacianSmoothingInputValues
 };
 
 /**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
+ * @class
  */
-
 class SIMPLNXCORE_EXPORT LaplacianSmoothing
 {
 public:
-  LaplacianSmoothing(DataStructure& data, LaplacianSmoothingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  LaplacianSmoothing(DataStructure& dataStructure, LaplacianSmoothingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~LaplacianSmoothing() noexcept;
 
   LaplacianSmoothing(const LaplacianSmoothing&) = delete;

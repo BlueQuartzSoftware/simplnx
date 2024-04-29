@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/ConditionalSetValue.hpp"
+#include "SimplnxCore/Filters/ConditionalSetValueFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -17,13 +17,13 @@ namespace
 template <typename T>
 void ConditionalSetValueOverFlowTest(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& conditionalPath, const std::string& value)
 {
-  ConditionalSetValue filter;
+  ConditionalSetValueFilter filter;
   Arguments args;
   // Replace every value with a zero
-  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(value));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(conditionalPath));
-  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(selectedDataPath));
+  args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>(value));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(conditionalPath));
+  args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(selectedDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -46,43 +46,43 @@ bool RequireDataArrayEqualZero(const DataArray<T>& data)
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::ConditionalSetValue: Missing/Empty DataPaths", "[ConditionalSetValue]")
+TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Missing/Empty DataPaths", "[ConditionalSetValueFilter]")
 {
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
-  ConditionalSetValue filter;
+  ConditionalSetValueFilter filter;
 
-  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
 
   // Preflight the filter and check result with empty values
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(""));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>(""));
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Invalid numeric value
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("asfasdf"));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("asfasdf"));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Valid numeric value, but the boolean array and the input array are not set, should fail
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("5.0"));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("5.0"));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Set the mask array but should still fail
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Set the input array, now should pass preflight.
-  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid() == true);
 }
 
-TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
+TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[ConditionalSetValueFilter]")
 {
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
@@ -103,13 +103,13 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
-  ConditionalSetValue filter;
+  ConditionalSetValueFilter filter;
   Arguments args;
   // Replace every value with a zero
-  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
-  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
+  args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -127,7 +127,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
 #endif
 }
 
-TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
+TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm UInt8", "[ConditionalSetValueFilter]")
 {
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
@@ -145,13 +145,13 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm UInt8", "[Conditiona
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
-  ConditionalSetValue filter;
+  ConditionalSetValueFilter filter;
   Arguments args;
   // Replace every value with a zero
-  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
-  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
+  args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -164,7 +164,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm UInt8", "[Conditiona
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));
 }
 
-TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
+TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Int8", "[ConditionalSetValueFilter]")
 {
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
@@ -182,13 +182,13 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm Int8", "[Conditional
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
-  ConditionalSetValue filter;
+  ConditionalSetValueFilter filter;
   Arguments args;
   // Replace every value with a zero
-  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
-  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
+  args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -201,7 +201,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: Test Algorithm Int8", "[Conditional
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));
 }
 
-TEST_CASE("SimplnxCore::ConditionalSetValue: Overflow/Underflow", "[ConditionalSetValue]")
+TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[ConditionalSetValueFilter]")
 {
   std::vector<size_t> imageDims = {40, 60, 80};
   FloatVec3 imageSpacing = {0.10F, 2.0F, 33.0F};
@@ -276,9 +276,9 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: Overflow/Underflow", "[ConditionalS
   ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // overflow
 }
 
-TEST_CASE("SimplnxCore::ConditionalSetValue: No Conditional", "[ConditionalSetValue]")
+TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[ConditionalSetValueFilter]")
 {
-  ConditionalSetValue filter;
+  ConditionalSetValueFilter filter;
   Arguments args;
 
   DataStructure dataStructure = UnitTest::CreateDataStructure();
@@ -297,10 +297,10 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: No Conditional", "[ConditionalSetVa
   const std::string removeStr = "10.0";
   const auto removeVal = static_cast<float32>(ConvertTo<float32>::convert(removeStr).value());
 
-  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ConditionalSetValue::k_RemoveValue_Key, std::make_any<std::string>(removeStr));
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ConditionalSetValueFilter::k_RemoveValue_Key, std::make_any<std::string>(removeStr));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -318,7 +318,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: No Conditional", "[ConditionalSetVa
   }
 }
 
-TEST_CASE("SimplnxCore::ConditionalSetValue: Test Inverted Mask Algorithm Bool", "[ConditionalSetValue]")
+TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Inverted Mask Algorithm Bool", "[ConditionalSetValueFilter]")
 {
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
@@ -336,14 +336,14 @@ TEST_CASE("SimplnxCore::ConditionalSetValue: Test Inverted Mask Algorithm Bool",
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(false);
 
-  ConditionalSetValue filter;
+  ConditionalSetValueFilter filter;
   Arguments args;
   // Replace every value with a zero
-  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ConditionalSetValue::k_InvertMask_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
-  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+  args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValueFilter::k_InvertMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValueFilter::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
+  args.insertOrAssign(ConditionalSetValueFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

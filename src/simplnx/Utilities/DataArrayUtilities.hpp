@@ -581,9 +581,9 @@ DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
  * @return
  */
 template <class T>
-DataArray<T>& ArrayRefFromPath(DataStructure& data, const DataPath& path)
+DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& path)
 {
-  DataObject* object = data.getData(path);
+  DataObject* object = dataStructure.getData(path);
   auto* dataArray = dynamic_cast<DataArray<T>*>(object);
   if(dataArray == nullptr)
   {

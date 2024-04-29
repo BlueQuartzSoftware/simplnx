@@ -50,7 +50,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = nx.MultiThresholdObjects()
+nx_filter = nx.MultiThresholdObjectsFilter()
 # Set Threshold Conditions
 threshold_1 = nx.ArrayThreshold()
 threshold_1.array_path = nx.DataPath("DataContainer/Cell Data/Confidence Index")
@@ -72,7 +72,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = nx.ConditionalSetValue()
+nx_filter = nx.ConditionalSetValueFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

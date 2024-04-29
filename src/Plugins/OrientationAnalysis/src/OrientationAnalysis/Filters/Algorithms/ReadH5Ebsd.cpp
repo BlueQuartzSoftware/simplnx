@@ -42,13 +42,13 @@ enum class RotationRepresentation : uint64_t
 
 } // namespace RotateSampleRefFrame
 
-namespace RenameDataObject
+namespace RenameDataObjectFilter
 {
 static inline constexpr nx::core::StringLiteral k_DataObject_Key = "data_object";
 static inline constexpr nx::core::StringLiteral k_NewName_Key = "new_name";
-} // namespace RenameDataObject
+} // namespace RenameDataObjectFilter
 
-namespace DeleteData
+namespace DeleteDataFilter
 {
 static inline constexpr nx::core::StringLiteral k_DataPath_Key = "removed_data_path";
 }

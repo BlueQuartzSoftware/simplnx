@@ -8,7 +8,7 @@
 namespace nx::core
 {
 /**
- * @class ${FILTER_NAME}
+ * @class ${FILTER_NAME}Filter
  * @brief ${BRIEF_DESCRIPTION}
  *
  * ${DETAILED_DESCRIPTION}
@@ -16,22 +16,29 @@ namespace nx::core
  * ITK Module: ${ITK_MODULE}
  * ITK Group: ${ITK_GROUP}
  */
-class ${PLUGIN_NAME_UPPER}_EXPORT ${FILTER_NAME} : public IFilter
+class ${PLUGIN_NAME_UPPER}_EXPORT ${FILTER_NAME}Filter : public IFilter
 {
 public:
-  ${FILTER_NAME}() = default;
-  ~${FILTER_NAME}() noexcept override = default;
+  ${FILTER_NAME}Filter() = default;
+  ~${FILTER_NAME}Filter() noexcept override = default;
 
-  ${FILTER_NAME}(const ${FILTER_NAME}&) = delete;
-  ${FILTER_NAME}(${FILTER_NAME}&&) noexcept = delete;
+  ${FILTER_NAME}Filter(const ${FILTER_NAME}Filter&) = delete;
+  ${FILTER_NAME}Filter(${FILTER_NAME}Filter&&) noexcept = delete;
 
-  ${FILTER_NAME}& operator=(const ${FILTER_NAME}&) = delete;
-  ${FILTER_NAME}& operator=(${FILTER_NAME}&&) noexcept = delete;
+  ${FILTER_NAME}Filter& operator=(const ${FILTER_NAME}Filter&) = delete;
+  ${FILTER_NAME}Filter& operator=(${FILTER_NAME}Filter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";${PARAMETER_KEYS}
+  /**
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
   /**
    * @brief Returns the name of the filter.
    * @return
@@ -96,8 +103,9 @@ protected:
    * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ${FILTER_NAME}, "${UUID}");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ${FILTER_NAME}Filter, "${UUID}");
