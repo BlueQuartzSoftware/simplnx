@@ -196,7 +196,7 @@ int32 skipVolume(std::istream& in, bool binary, usize numElements)
     std::vector<char> buffer(BUFFER_SIZE + 1, 0);
     while(foundItems < numElements)
     {
-      memset(buffer.data(), 0, BUFFER_SIZE + 1);                 // Splat Zeros across everything
+      std::fill(buffer.begin(), buffer.end(), '\0'); // Splat Zeros across everything
       err = CsvParser::ReadLine(in, buffer.data(), BUFFER_SIZE); // Read BUFFER_SIZE worth of data.
       foundItems += count_tokens(buffer.data(), ' ', false, BUFFER_SIZE + 1);
     }
