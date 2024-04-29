@@ -106,7 +106,7 @@ result = nx.MultiThresholdObjectsFilter.execute(data_structure=data_structure,
                                         array_thresholds_object=threshold_set, 
                                         output_data_array_name="Mask",
                                         created_mask_type=nx.DataType.boolean)
-nxtest.check_filter_result(nx.MultiThresholdObjects, result)
+nxtest.check_filter_result(nx.MultiThresholdObjectsFilter, result)
 
 
 #------------------------------------------------------------------------------
@@ -128,13 +128,13 @@ nxtest.check_filter_result(nxor.GenerateIPFColorsFilter, result)
 #------------------------------------------------------------------------------
 # Write the IPF colors to a PNG file
 #------------------------------------------------------------------------------
-result = nxitk.ITKImageWriter.execute(data_structure=data_structure, 
+result = nxitk.ITKImageWriterFilter.execute(data_structure=data_structure, 
                                       file_name=nxtest.get_test_temp_directory() / "Small_IN100_IPF_Z.png", 
                                       image_array_path=nx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
                                       input_image_geometry_path=nx.DataPath(["Small IN100"]),
                                       index_offset=0,
                                       plane_index=0)
-nxtest.check_filter_result(nxitk.ITKImageWriter, result)
+nxtest.check_filter_result(nxitk.ITKImageWriterFilter, result)
 
 # #------------------------------------------------------------------------------
 # # Show the IPFColors using MatPlotLib

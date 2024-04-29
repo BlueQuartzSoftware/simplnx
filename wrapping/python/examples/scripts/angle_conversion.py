@@ -80,12 +80,12 @@ npdata[:] = np.loadtxt(file_path, delimiter=',')
 # Run the ConvertOrientation Filter to convert the Eulers to Quaternions
 # ------------------------------------------------------------------------------
 quat_path = nx.DataPath(['Quaternions'])
-result = nxor.ConvertOrientations.execute(data_structure=data_structure,
+result = nxor.ConvertOrientationsFilter.execute(data_structure=data_structure,
                                           input_orientation_array_path=array_path,
                                           input_representation_index=0,
                                           output_orientation_array_name='Quaternions',
                                           output_representation_index=2)
-nxtest.check_filter_result(nxor.ConvertOrientations, result)
+nxtest.check_filter_result(nxor.ConvertOrientationsFilter, result)
 
 
 # Get the Quaternions and print them out.
