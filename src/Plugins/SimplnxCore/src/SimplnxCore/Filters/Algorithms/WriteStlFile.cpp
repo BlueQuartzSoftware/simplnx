@@ -264,12 +264,12 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::None)
   {
-    AtomicFile atomicFile(m_InputValues->OutputStlFile.string());
-    auto creationResult = atomicFile.getResult();
-    if(creationResult.invalid())
+    auto atomicFileResult = AtomicFile::Create(m_InputValues->OutputStlFile);
+    if(atomicFileResult.invalid())
     {
-      return creationResult;
+      return ConvertResult(std::move(atomicFileResult));
     }
+    AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     {                                                             // Scoped to ensure file lock is released and header string is untouched since it is invalid after move
       std::string header = "DREAM3D Generated For Triangle Geom"; // Char count: 35
@@ -287,9 +287,10 @@ Result<> WriteStlFile::operator()()
       }
     }
 
-    if(!atomicFile.commit())
+    Result<> commitResult = atomicFile.commit();
+    if(commitResult.invalid())
     {
-      return atomicFile.getResult();
+      return commitResult;
     }
     return {};
   }
@@ -306,7 +307,7 @@ Result<> WriteStlFile::operator()()
   }
 
   // Store a list of Atomic Files, so we can clean up or finish depending on the outcome of all the writes
-  std::vector<std::unique_ptr<AtomicFile>> fileList = {};
+  std::vector<Result<AtomicFile>> fileList;
 
   { // Scope to cut overhead and ensure file lock is released on windows
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
@@ -322,18 +323,16 @@ Result<> WriteStlFile::operator()()
       for(const auto featureId : uniqueGrainIds)
       {
         // Generate the output file
-        fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputStlDirectory.string() + "/" + m_InputValues->OutputStlPrefix + "Feature_" + StringUtilities::number(featureId) + ".stl"));
-
-        auto creationResult = fileList[fileIndex]->getResult();
-        if(creationResult.invalid())
+        fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}Feature_{}.stl", m_InputValues->OutputStlPrefix, featureId)));
+        if(fileList[fileIndex].invalid())
         {
-          return creationResult;
+          return ConvertResult(std::move(fileList[fileIndex]));
         }
 
         m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
 
-        auto result =
-            ::MultiWriteOutStl(fileList[fileIndex]->tempFilePath(), nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices, featureIds, featureId);
+        auto result = ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices,
+                                         featureIds, featureId);
         // if valid Loop over all the triangles for this spin
         if(result.invalid())
         {
@@ -359,20 +358,18 @@ Result<> WriteStlFile::operator()()
       for(const auto& [featureId, value] : uniqueGrainIdToPhase)
       {
         // Generate the output file
-        fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputStlDirectory.string() + "/" + m_InputValues->OutputStlPrefix + "Ensemble_" + StringUtilities::number(value) + "_" +
-                                                        "Feature_" + StringUtilities::number(featureId) + ".stl"));
+        fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->OutputStlPrefix, value, featureId)));
 
-        auto creationResult = fileList[fileIndex]->getResult();
-        if(creationResult.invalid())
+        if(fileList[fileIndex].invalid())
         {
-          return creationResult;
+          return ConvertResult(std::move(fileList[fileIndex]));
         }
 
         m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
 
         auto result =
-            ::MultiWriteOutStl(fileList[fileIndex]->tempFilePath(), nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)},
-                               triangles, vertices, featureIds, featureId);
+            ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles,
+                               {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)}, triangles, vertices, featureIds, featureId);
         // if valid loop over all the triangles for this spin
         if(result.invalid())
         {
@@ -384,11 +381,12 @@ Result<> WriteStlFile::operator()()
     }
   }
 
-  for(const auto& atomicFile : fileList)
+  for(auto& atomicFile : fileList)
   {
-    if(!atomicFile->commit())
+    Result<> commitResult = atomicFile.value().commit();
+    if(commitResult.invalid())
     {
-      return atomicFile->getResult();
+      return commitResult;
     }
   }
 

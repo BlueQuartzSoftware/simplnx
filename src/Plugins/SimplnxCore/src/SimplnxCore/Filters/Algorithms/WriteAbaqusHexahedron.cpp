@@ -96,7 +96,7 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
           int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
           if(milliDiff > 1000)
           {
-            std::string percentage = "Writing Nodes (File 1/5) " + StringUtilities::number(static_cast<int32>((float32)(nodeIndex) / (float32)(totalPoints)*100)) + "% Completed ";
+            std::string percentage = "Writing Nodes (File 1/5) " + StringUtilities::number(static_cast<int32>((float32)(nodeIndex) / (float32)(totalPoints) * 100)) + "% Completed ";
             float32 timeDiff = ((float32)nodeIndex / (float32)(milliDiff));
             int64 estimatedTime = (float32)(totalPoints - nodeIndex) / timeDiff;
             std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
@@ -160,7 +160,7 @@ int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, con
           int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
           if(milliDiff > 1000)
           {
-            std::string percentage = "Writing Elements (File 2/5) " + StringUtilities::number(static_cast<int32>((float32)(index) / (float32)(totalPoints)*100)) + "% Completed ";
+            std::string percentage = "Writing Elements (File 2/5) " + StringUtilities::number(static_cast<int32>((float32)(index) / (float32)(totalPoints) * 100)) + "% Completed ";
             float32 timeDiff = ((float32)index / (float32)(milliDiff));
             int64 estimatedTime = (float32)(totalPoints - index) / timeDiff;
             std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
@@ -240,7 +240,7 @@ int32 writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, siz
       int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
       if(milliDiff > 1000)
       {
-        std::string percentage = "Writing Element Sets (File 4/5) " + StringUtilities::number(static_cast<int>((float32)(voxelId) / (float32)(maxGrainId)*100)) + "% Completed ";
+        std::string percentage = "Writing Element Sets (File 4/5) " + StringUtilities::number(static_cast<int>((float32)(voxelId) / (float32)(maxGrainId) * 100)) + "% Completed ";
         float32 timeDiff = ((float32)voxelId / (float32)(milliDiff));
         auto estimatedTime = static_cast<int64>((float32)(maxGrainId - voxelId) / timeDiff);
         std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
@@ -317,11 +317,14 @@ int32 writeSects(const std::string& file, const Int32Array& featureIds, int32 ho
   return err;
 }
 
-void deleteFile(const std::vector<std::unique_ptr<AtomicFile>>& fileList)
+void DeleteFiles(const std::vector<Result<AtomicFile>>& fileList)
 {
   for(const auto& atomicFile : fileList)
   {
-    atomicFile->removeTempFile();
+    if(atomicFile.valid())
+    {
+      atomicFile.value().removeTempFile();
+    }
   }
 }
 } // namespace
@@ -363,87 +366,87 @@ Result<> WriteAbaqusHexahedron::operator()()
   usize totalPoints = imageGeom.getNumberOfCells();
 
   // Create file names
-  std::vector<std::unique_ptr<AtomicFile>> fileList = {};
-  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_nodes.inp"));
-  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_elems.inp"));
-  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_sects.inp"));
-  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + "_elset.inp"));
-  fileList.push_back(std::make_unique<AtomicFile>(m_InputValues->OutputPath.string() + "/" + m_InputValues->FilePrefix + ".inp"));
+  std::vector<Result<AtomicFile>> fileList;
+  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_nodes.inp", m_InputValues->FilePrefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_elems.inp", m_InputValues->FilePrefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_sects.inp", m_InputValues->FilePrefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_elset.inp", m_InputValues->FilePrefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}.inp", m_InputValues->FilePrefix)));
 
   for(auto& file : fileList)
   {
-    auto creationResult = file->getResult();
-    if(creationResult.invalid())
+    if(file.invalid())
     {
-      return creationResult;
+      return ConvertResult(std::move(file));
     }
   }
 
-  int32 err = writeNodes(this, fileList[0]->tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel()); // Nodes file
+  int32 err = writeNodes(this, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel()); // Nodes file
   if(err < 0)
   {
-    return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0]->tempFilePath().string()));
+    return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0].value().tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
-    deleteFile(fileList); // delete files
+    DeleteFiles(fileList); // delete files
     return {};
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 1/5) Complete");
 
-  err = writeElems(this, fileList[1]->tempFilePath().string(), cDims.data(), pDims, getCancel()); // Elements file
+  err = writeElems(this, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel()); // Elements file
   if(err < 0)
   {
-    return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1]->tempFilePath().string()));
+    return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].value().tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
-    deleteFile(fileList); // delete files
+    DeleteFiles(fileList); // delete files
     return {};
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 2/5) Complete");
 
-  err = writeSects(fileList[2]->tempFilePath().string(), featureIds, m_InputValues->HourglassStiffness); // Sections file
+  err = writeSects(fileList[2].value().tempFilePath().string(), featureIds, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
   {
-    return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2]->tempFilePath().string()));
+    return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].value().tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
-    deleteFile(fileList); // delete files
+    DeleteFiles(fileList); // delete files
     return {};
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 3/5) Complete");
 
-  err = writeElset(this, fileList[3]->tempFilePath().string(), totalPoints, featureIds, getCancel()); // Element set file
+  err = writeElset(this, fileList[3].value().tempFilePath().string(), totalPoints, featureIds, getCancel()); // Element set file
   if(err < 0)
   {
-    return MakeErrorResult(-1116, fmt::format("Error writing output elset file '{}'", fileList[3]->tempFilePath().string()));
+    return MakeErrorResult(-1116, fmt::format("Error writing output elset file '{}'", fileList[3].value().tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
-    deleteFile(fileList); // delete files
+    DeleteFiles(fileList); // delete files
     return {};
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 4/5) Complete");
 
-  err = writeMaster(fileList[4]->tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix); // Master file
+  err = writeMaster(fileList[4].value().tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix); // Master file
   if(err < 0)
   {
-    return MakeErrorResult(-1117, fmt::format("Error writing output master file '{}'", fileList[4]->tempFilePath().string()));
+    return MakeErrorResult(-1117, fmt::format("Error writing output master file '{}'", fileList[4].value().tempFilePath().string()));
   }
   if(getCancel()) // Filter has been cancelled
   {
-    deleteFile(fileList); // delete files
+    DeleteFiles(fileList); // delete files
     return {};
   }
   m_MessageHandler(IFilter::Message::Type::Info, "Writing Sections (File 5/5) Complete");
 
   for(auto& file : fileList)
   {
-    if(!file->commit())
+    Result<> commitResult = file.value().commit();
+    if(commitResult.invalid())
     {
-      return file->getResult();
+      return commitResult;
     }
   }
 
