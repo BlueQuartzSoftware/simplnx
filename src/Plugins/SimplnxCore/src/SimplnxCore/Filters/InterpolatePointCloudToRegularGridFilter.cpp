@@ -204,7 +204,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_InterpolatedGroupName_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", "InterpolatedData"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_KernelDistancesArrayName_Key, "Kernel Distances Group", "DataPath to created DataGroup for kernel distances data", "KernelDistances"));
 

@@ -220,7 +220,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Calculated Output Arrays"});
+  params.insertSeparator(Parameters::Separator{"Created Output Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureHasDataArrayName_Key, "Feature-Has-Data Array Name",
                                                           "The name of the boolean array that indicates whether or not each feature contains any data.  This array is especially useful to help "
                                                           "determine whether or not the outputted statistics are actually valid or not for a given feature.",

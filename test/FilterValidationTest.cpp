@@ -5,6 +5,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
+#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
@@ -33,6 +34,7 @@ std::map<nx::core::Uuid, std::string> s_ParameterMap;
 void GenerateParameterList()
 {
   ::s_ParameterMap.clear();
+  ADD_PARAMETER_TRAIT(simplnx.SeparatorParameter, "e6936d18-7476-4855-9e13-e795d717c50f")
   ADD_PARAMETER_TRAIT(simplnx.OEMEbsdScanSelectionParameter, "3935c833-aa51-4a58-81e9-3a51972c05ea")
   ADD_PARAMETER_TRAIT(simplnx.ReadH5EbsdFileParameter, "FAC15aa6-b367-508e-bf73-94ab6be0058b")
   ADD_PARAMETER_TRAIT(simplnx.NumericTypeParameter, "a8ff9dbd-45e7-4ed6-8537-12dd53069bce")
@@ -114,8 +116,23 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
     {
       const std::string filterClassName = filterHandle.getClassName();
       IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
-
       const auto& parameters = filter->parameters();
+      auto layoutVector = parameters.getLayout();
+      for(const auto& param : layoutVector)
+      {
+        try
+        {
+          auto sep = std::get<nx::core::Parameters::Separator>(param);
+          std::cout << "- " << sep.name << "\n";
+        }
+        catch (const std::bad_variant_access& ex)
+        {
+
+        }
+
+      }
+
+
       // Loop over each Parameter
       for(const auto& parameter : parameters)
       {

@@ -60,7 +60,7 @@ Parameters FindBoundaryElementFractionsFilter::parameters() const
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureDataAMPath_Key, "Feature Data", "Parent Attribute Matrix for the Surface Element Fractions Array to be created in", DataPath{}));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Object"});
+  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_BoundaryCellFractionsArrayName_Key, "Surface Element Fractions",
                                                           "Name of created Data Array containing fraction of Elements belonging to the Feature that are \"surface\" Elements",
                                                           "Surface Element Fractions"));

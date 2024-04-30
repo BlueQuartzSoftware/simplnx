@@ -62,7 +62,7 @@ Parameters FindAvgCAxesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Cell Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_AvgCAxesArrayName_Key, "Average C-Axes", "The output average C-Axis values for each feature", "AvgCAxes"));
 
   return params;

@@ -59,7 +59,7 @@ Parameters FindFeaturePhasesBinaryFilter::parameters() const
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellDataAMPath_Key, "Cell Data Attribute Matrix",
                                                                     "The Cell Data Attribute Matrix within the Image Geometry where the Binary Phases Array will be created", DataPath{}));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeaturePhasesArrayName_Key, "Binary Feature Phases Array Name", "Created Data Array name to specify to which Ensemble each Feature belongs",
                                                           "Binary Phases Array"));
 

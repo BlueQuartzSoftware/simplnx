@@ -63,7 +63,7 @@ Parameters ReadH5EbsdFilter::parameters() const
   params.insert(std::make_unique<ReadH5EbsdFileParameter>(k_ReadH5EbsdParameter_Key, "Import H5Ebsd File", "Object that holds all relevant information to import data from the file.",
                                                           ReadH5EbsdFileParameter::ValueType{}));
 
-  params.insertSeparator(Parameters::Separator{"Create Image Geometry"});
+  params.insertSeparator(Parameters::Separator{"Created Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the created cell attribute matrix associated with the imported geometry",

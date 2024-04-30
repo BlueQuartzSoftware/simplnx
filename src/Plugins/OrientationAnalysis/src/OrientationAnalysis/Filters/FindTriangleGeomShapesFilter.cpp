@@ -63,7 +63,7 @@ Parameters FindTriangleGeomShapesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_VolumesArrayPath_Key, "Face Feature Volumes", "Input DataPath to the **Feature Volumes** for the face data",
                                                           DataPath({"FaceFeatureData", "Volumes"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
-  params.insertSeparator(Parameters::Separator{"Created Face Feature Data Arrays"});
+  params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s", "The name of the DataArray that holds the calculated Omega3 values", "Omega3s"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AxisLengthsArrayName_Key, "Axis Lengths", "The name of the DataArray that holds the calculated Axis Lengths values", "AxisLengths"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AxisEulerAnglesArrayName_Key, "Axis Euler Angles", "The name of the DataArray that holds the calculated Axis Euler Angles values",

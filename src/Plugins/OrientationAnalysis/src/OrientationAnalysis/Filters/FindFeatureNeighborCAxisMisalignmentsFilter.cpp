@@ -66,7 +66,7 @@ Parameters FindFeatureNeighborCAxisMisalignmentsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Cell Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CAxisMisalignmentListArrayName_Key, "C-Axis Misalignment List",
                                                           "List of the C-axis misalignment angles (in degrees) with the contiguous neighboring Features for a given Feature", "CAxisMisalignmentList"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AvgCAxisMisalignmentsArrayName_Key, "Average C-Axis Misalignments",

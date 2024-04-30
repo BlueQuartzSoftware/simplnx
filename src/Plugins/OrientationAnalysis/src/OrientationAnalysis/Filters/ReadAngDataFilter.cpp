@@ -62,7 +62,7 @@ Parameters ReadAngDataFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The input .ang file path", fs::path("input.ang"), FileSystemPathParameter::ExtensionsType{".ang"},
                                                           FileSystemPathParameter::PathType::InputFile));
-  params.insertSeparator(Parameters::Separator{"Create Image Geometry"});
+  params.insertSeparator(Parameters::Separator{"Created Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
 

@@ -86,7 +86,7 @@ Parameters ITKImportFijiMontageFilter::parameters() const
                                                          std::vector<std::string>(3)));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ParentDataGroup_Key, "Parent Imported Images Under a DataGroup", "Create a new DataGroup to hold the  imported images", true));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
   params.insert(std::make_unique<StringParameter>(k_DataGroupName_Key, "Name of Created DataGroup", "Name of the overarching parent DataGroup", "Zen DataGroup"));
   params.insert(std::make_unique<StringParameter>(k_DataContainerPath_Key, "Image Geometry Prefix", "A prefix that can be used for each Image Geometry", "Mosaic-"));
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "The name of the Cell Attribute Matrix", "Tile Data"));

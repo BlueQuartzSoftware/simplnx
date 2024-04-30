@@ -58,7 +58,7 @@ Parameters SharedFeatureFaceFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}));
 
-  params.insertSeparator(Parameters::Separator{"Created Face Data Arrays"});
+  params.insertSeparator(Parameters::Separator{"Created Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureFaceIdsArrayName_Key, "Feature Face Ids", "The name of the calculated Feature Face Ids DataArray", "SharedFeatureFaceId"));
 
   params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});

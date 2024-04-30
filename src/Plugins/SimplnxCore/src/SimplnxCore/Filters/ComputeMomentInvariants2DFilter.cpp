@@ -62,7 +62,7 @@ Parameters ComputeMomentInvariants2DFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureRectArrayPath_Key, "Feature Rect", "Array holding the min xy and max xy pixel coordinates of each feature id", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{6}}));
   params.insert(std::make_unique<BoolParameter>(k_NormalizeMomentInvariants_Key, "Normalize Moment Invariants", "Should the algorithm normalize the results to unit circle.", true));
-  params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix",
                                                                     "The path to the cell feature attribute matrix where the created data arrays will be stored", DataPath{}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega1ArrayName_Key, "Omega 1", "Omega1 value", "Omega1"));

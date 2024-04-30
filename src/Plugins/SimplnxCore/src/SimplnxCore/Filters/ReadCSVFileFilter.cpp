@@ -369,7 +369,7 @@ Parameters ReadCSVFileFilter::parameters() const
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "Value {}"));
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Dim 0"}));
 
-  params.insertSeparator(Parameters::Separator{"Existing Attribute Matrix"});
+  params.insertSeparator(Parameters::Separator{"Input Attribute Matrix"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Attribute Matrix", "Store the imported CSV data arrays in an existing attribute matrix.", false));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedAttributeMatrixPath_Key, "Existing Attribute Matrix",

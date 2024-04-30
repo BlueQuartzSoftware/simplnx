@@ -56,7 +56,7 @@ Parameters ComputeFeatureRectFilter::parameters() const
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureDataAttributeMatrixPath_Key, "Feature Data Attribute Matrix",
                                                               "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureRectArrayName_Key, "Feature Rect", "The feature rect calculated from the feature ids", "FeatureRect"));
 
   return params;

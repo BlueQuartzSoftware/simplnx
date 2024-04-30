@@ -65,7 +65,7 @@ Parameters FlyingEdges3DFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array to Contour", "This is the data that will be checked for the contouring iso value", DataPath{},
                                                           GetAllDataTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Name of Output Triangle Geometry", "This is where the contouring line will be stored",
                                                              DataPath({"Contouring Geometry"})));
 

@@ -62,7 +62,7 @@ Parameters ReadTextDataArrayFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoice_Key, "Delimiter", "Delimiter for values on a line", 0,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
 
-  params.insertSeparator(Parameters::Separator{"Created DataArray"});
+  params.insertSeparator(Parameters::Separator{"Created Data Array"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayPath_Key, "Created Array Path", "DataPath or Name for the underlying Data Array", DataPath{}));
   params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
                                                            "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));

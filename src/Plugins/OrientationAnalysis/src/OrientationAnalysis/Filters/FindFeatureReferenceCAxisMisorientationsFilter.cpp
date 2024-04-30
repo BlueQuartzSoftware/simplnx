@@ -69,7 +69,7 @@ Parameters FindFeatureReferenceCAxisMisorientationsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureReferenceCAxisMisorientationsArrayName_Key, "Feature Reference C-Axis Misorientations",
                                                           "Misorientation angle (in degrees) between Cell's C-axis and the C-axis of the Feature that owns that Cell",
                                                           "FeatureRefCAxisMisorientation"));
-  params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureAvgCAxisMisorientationsArrayName_Key, "Average C-Axis Misorientations",
                                                           "Average of the Feature Reference CAxis Misorientation values for all of the Cells that belong to the Feature", "AvgCAxisMisorientation"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureStdevCAxisMisorientationsArrayName_Key, "Feature Stdev C-Axis Misorientations",
