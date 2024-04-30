@@ -52,7 +52,7 @@ public:
    * @brief Returns the overwrite value
    * @return
    */
-   bool overwrite() const;
+  bool overwrite() const;
 
 private:
   std::string m_NewName;
