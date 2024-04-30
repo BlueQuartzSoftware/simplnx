@@ -286,7 +286,7 @@ inline Result<T> MergeResults(Result<T> first, Result<T> second)
     }
   }
 
-  Result<T> result = errors.empty() ? Result<T>{} : Result<T>{nonstd::make_unexpected(std::move(errors))};
+  Result<T> result = errors.empty() ? Result<T>{} : Result<T>{{nonstd::make_unexpected(std::move(errors))}};
 
   result.m_Warnings.reserve(first.warnings().size() + second.warnings().size());
   for(auto&& warning : first.warnings())

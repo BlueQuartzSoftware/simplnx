@@ -23,12 +23,16 @@ Result<> TerminateNodesRecursively(DataStructure& dataStructure, DataObject::IdT
     }
   }
 
-  auto childIds = dataStructure.getDataRefAs<BaseGroup>(id).GetChildrenIds();
-  if(!childIds.empty())
+  auto* baseGroup = dataStructure.getDataAs<BaseGroup>(id);
+  if(baseGroup != nullptr)
   {
-    for(const auto& childId : childIds)
+    auto childIds = baseGroup->GetChildrenIds();
+    if(!childIds.empty())
     {
-      result = MergeResults(result, std::move(TerminateNodesRecursively(dataStructure, childId, mode, checkDependence)));
+      for(const auto& childId : childIds)
+      {
+        result = MergeResults(result, std::move(TerminateNodesRecursively(dataStructure, childId, mode, checkDependence)));
+      }
     }
   }
 

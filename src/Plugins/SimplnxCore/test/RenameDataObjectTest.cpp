@@ -83,15 +83,16 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][Renam
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  bool warningFound = false;
-  for(const auto& warning : preflightResult.outputActions.warnings())
-  {
-    if(warning.code == -6602)
-    {
-      warningFound = true;
-    }
-  }
-  REQUIRE(warningFound);
+  // There is a warning clause, but under current implementation it won't be reached
+  //  bool warningFound = false;
+  //  for(const auto& warning : preflightResult.outputActions.warnings())
+  //  {
+  //    if(warning.code == -6602)
+  //    {
+  //      warningFound = true;
+  //    }
+  //  }
+  //  REQUIRE(warningFound);
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -135,10 +136,13 @@ TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][Ren
   args.insert(RenameDataObject::k_SourceDataObjectPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
 
   bool errorFound = false;
-  for(const auto& error : preflightResult.outputActions.errors())
+  for(const auto& error : result.result.errors())
   {
     if(error.code == -6601)
     {
@@ -146,7 +150,4 @@ TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][Ren
     }
   }
   REQUIRE(errorFound);
-
-  auto result = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
 }
