@@ -109,26 +109,12 @@ void ReadCtfData::copyRawEbsdData(CtfReader* reader) const
   // Prepare the Cell Attribute Matrix with the correct number of tuples based on the total Cells being read from the file.
   std::vector<size_t> tDims = {imageGeom.getNumXCells(), imageGeom.getNumYCells(), imageGeom.getNumZCells()};
 
-  // Adjust the values of the 'phase' data to correct for invalid values and assign the read Phase Data into the actual DataArray
+  // Copy the Phase Array
   {
-    /* Take from H5CtfVolumeReader.cpp
-     * For HKL OIM Files if there is a single phase then the value of the phase
-     * data is one (1). If there are 2 or more phases, the lowest value
-     * of phase is also one (1). However, if there are "zero solutions" in the data
-     * then those Cells are assigned a phase of zero.  Since those Cells can be identified
-     * by other methods, the phase of these Cells should be changed to one since in the rest
-     * of the reconstruction code we follow the convention that the lowest value is One (1)
-     * even if there is only a single phase. The next if statement converts all zeros to ones
-     * if there is a single phase in the OIM data.
-     */
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::Phases));
     int* phasePtr = reinterpret_cast<int32_t*>(reader->getPointerByName(EbsdLib::Ctf::Phase));
     for(size_t i = 0; i < totalCells; i++)
     {
-      if(phasePtr[i] < 1)
-      {
-        phasePtr[i] = 1;
-      }
       targetArray[i] = phasePtr[i];
     }
   }
