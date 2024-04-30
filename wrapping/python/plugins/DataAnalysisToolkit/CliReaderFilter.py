@@ -127,9 +127,12 @@ class CliReaderFilter:
       bounding_box_coords = min_max_x_coords+min_max_y_coords+min_max_z_coords
 
     try:
-      layer_features, layer_heights, hatch_labels = parse_file(Path(cli_file_path), bounding_box=bounding_box_coords)
+      result = parse_file(Path(cli_file_path), bounding_box=bounding_box_coords)
+      if result.invalid():
+        return nx.Result(errors=result.errors)
+      layer_features, layer_heights, hatch_labels = result.value
     except Exception as e:
-      return nx.Result([nx.Error(-1000, f"An error occurred while parsing the CLI file '{cli_file_path}': {e}")])
+      return nx.Result([nx.Error(-2010, f"An error occurred while parsing the CLI file '{cli_file_path}': {e}")])
 
     start_vertices = []
     end_vertices = []
