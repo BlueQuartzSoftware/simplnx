@@ -24,6 +24,7 @@ namespace
 {
 // Error Code constants
 constexpr nx::core::int32 k_UnmatchingTupleCountError = -51001;
+constexpr nx::core::int32 k_NoArraySelections = -51002;
 } // namespace
 
 namespace nx::core
@@ -118,6 +119,10 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(pOutputStyleValue) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
     auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+    if(pSelectedDataArrayPathsValue.empty())
+    {
+      return MakePreflightErrorResult(k_NoArraySelections, "At least 1 data array must be selected");
+    }
 
     if(!CheckArraysHaveSameTupleCount(dataStructure, pSelectedDataArrayPathsValue))
     {
