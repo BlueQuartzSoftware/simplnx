@@ -18,10 +18,10 @@ TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnal
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_read_ctf_data.tar.gz", "6_6_read_ctf_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_read_ctf_data_2.tar.gz", "6_6_read_ctf_data_2");
 
   // Read Exemplar DREAM3D File
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ctf_data/6_6_read_ctf_data.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ctf_data_2/6_6_read_ctf_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -29,7 +29,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnal
   DataStructure dataStructure;
   Arguments args;
 
-  const fs::path inputCtfFile(fmt::format("{}/6_6_read_ctf_data/Cugrid_after 2nd_15kv_2kx_2.ctf", unit_test::k_TestFilesDir));
+  const fs::path inputCtfFile(fmt::format("{}/6_6_read_ctf_data_2/Cugrid_after 2nd_15kv_2kx_2.ctf", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadCtfDataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(inputCtfFile));
