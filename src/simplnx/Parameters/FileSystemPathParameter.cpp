@@ -52,6 +52,11 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 //-----------------------------------------------------------------------------
 Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 {
+  if(fs::exists(path) && fs::is_directory(path))
+  {
+    return MakeErrorResult(-8, fmt::format("File System Path '{}' exists AND is a directory. The Parameter is set to save a file.", path.string()));
+  }
+
   auto result = FileUtilities::ValidateDirectoryWritePermission(path, true);
   if(result.invalid())
   {
