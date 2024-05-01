@@ -205,7 +205,7 @@ public:
    * @brief Checks and returns if the DataObject can be renamed to the provided
    * value.
    * @param name
-   * @return int: 0 = false, 1 = true, 2 = duplicate object found
+   * @return bool
    */
   bool canRename(const std::string& name) const;
 
