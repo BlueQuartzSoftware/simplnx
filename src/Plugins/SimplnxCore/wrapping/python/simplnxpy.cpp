@@ -1404,6 +1404,7 @@ PYBIND11_MODULE(simplnx, mod)
         return filter->humanName();
       },
       "Returns the human facing name of the filter");
+  pipelineFilter.def_property("comments", &PipelineFilter::getComments, &PipelineFilter::setComments);
 
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
