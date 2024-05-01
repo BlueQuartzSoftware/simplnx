@@ -127,4 +127,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKHMaximaImageFilter, "82de0221-e3f5-4160-8a9b-8a94295c1df2");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKHMaximaImageFilter, "40039f72-30b0-4a3f-8ea4-2f76c5f65bc1");

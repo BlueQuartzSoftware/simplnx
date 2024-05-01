@@ -125,4 +125,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGrayscaleFillholeImageFilter, "d4a65e20-9ff8-4f8b-9112-12db2f6541de");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKGrayscaleFillholeImageFilter, "1f1dd9e4-d361-432b-a22b-5535664ee545");

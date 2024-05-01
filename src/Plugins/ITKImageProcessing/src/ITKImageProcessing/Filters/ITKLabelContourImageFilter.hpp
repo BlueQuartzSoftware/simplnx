@@ -121,4 +121,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKLabelContourImageFilter, "08f247eb-d06f-4858-96e0-efd7fb6f16a7");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKLabelContourImageFilter, "b64ff45d-3661-4926-9e87-5dd7b379b261");
