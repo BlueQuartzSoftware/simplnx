@@ -1341,13 +1341,21 @@ PYBIND11_MODULE(simplnx, mod)
       "path"_a);
   pipeline.def(
       "to_file",
-      [](Pipeline& self, const std::string& name, const std::filesystem::path& path) {
+      [](const Pipeline& self, const std::filesystem::path& path) {
         nlohmann::json pipelineJson = self.toJson();
-        pipelineJson["name"] = name;
-        std::ofstream file(path, std::ios_base::binary);
-        file << pipelineJson;
+        std::ofstream file(path);
+        if(!file.is_open())
+        {
+          throw std::runtime_error(fmt::format("Failed to open '{}'", path.string()));
+        }
+        file << pipelineJson.dump(2) << "\n";
+        file.flush();
+        if(!file)
+        {
+          throw std::runtime_error(fmt::format("Failed to write pipeline json to '{}'", path.string()));
+        }
       },
-      "name"_a, "path"_a);
+      "path"_a);
   pipeline.def("execute", &ExecutePipeline);
   pipeline.def(
       "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
