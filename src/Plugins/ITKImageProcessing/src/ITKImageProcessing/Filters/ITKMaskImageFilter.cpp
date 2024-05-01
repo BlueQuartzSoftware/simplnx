@@ -151,12 +151,12 @@ Parameters ITKMaskImageFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(
-      std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, nx::core::GetAllDataTypes()));
+      std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskImageDataPath_Key, "MaskImage", "The path to the image data to be used as the mask (should be the same size as the input image)",
                                                           DataPath{}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Array Name",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
                                                           "The result of the processing will be stored in this Data Array inside the same group as the input data.", "Output Image Data"));
 
   return params;
