@@ -493,6 +493,7 @@ PYBIND11_MODULE(simplnx, mod)
   });
 
   py::class_<AbstractPipelineNode, std::shared_ptr<AbstractPipelineNode>> abstractPipelineNode(mod, "AbstractPipelineNode");
+  abstractPipelineNode.def("to_json_str", [](const AbstractPipelineNode& self) { return self.toJson().dump(); });
   py::class_<PipelineFilter, AbstractPipelineNode, std::shared_ptr<PipelineFilter>> pipelineFilter(mod, "PipelineFilter");
 
   py::class_<IParameter> parameter(mod, "IParameter");
