@@ -234,25 +234,6 @@ public:
     return addPlugin(std::make_shared<T>());
   }
 
-  void registerPluginPyFilters(const AbstractPlugin& plugin)
-  {
-    // Must be called after all types are registered
-    std::vector<py::type> list;
-    for(auto handle : plugin.getFilterHandles())
-    {
-      py::object filter = py::cast(plugin.createFilter(handle.getFilterId()));
-      py::type filterType = py::type::of(filter);
-      list.push_back(filterType);
-    }
-
-    m_PluginFilterMap.insert({plugin.getId(), list});
-  }
-
-  const std::vector<py::type>& getPluginPyFilters(const Uuid& pluginUuid)
-  {
-    return m_PluginFilterMap.at(pluginUuid);
-  }
-
   void loadPythonPlugin(py::module_& mod);
 
   PythonPlugin* getPythonPlugin(const Uuid& id)
@@ -281,7 +262,6 @@ public:
 
 private:
   std::unordered_map<Uuid, PyParameterInfo> m_ParameterConversionMap;
-  std::unordered_map<Uuid, std::vector<py::type>> m_PluginFilterMap;
   std::unordered_map<Uuid, std::shared_ptr<PythonPlugin>> m_PythonPlugins;
   std::shared_ptr<Application> m_App;
 };

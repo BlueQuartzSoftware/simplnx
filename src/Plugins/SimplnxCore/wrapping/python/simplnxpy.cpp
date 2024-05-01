@@ -1462,13 +1462,21 @@ PYBIND11_MODULE(simplnx, mod)
 
   SimplnxCore::BindFilters(mod, *internals);
 
-  internals->registerPluginPyFilters(*corePlugin);
-
   mod.def("get_all_data_types", &GetAllDataTypes);
 
   mod.def("convert_numeric_type_to_data_type", &ConvertNumericTypeToDataType);
 
-  mod.def("get_filters", [internals, corePlugin]() { return internals->getPluginPyFilters(corePlugin->getId()); });
+  mod.def("get_filters", [corePlugin]() {
+    auto filterHandles = corePlugin->getFilterHandles();
+    std::vector<py::type> filterList;
+    for(const auto& handle : filterHandles)
+    {
+      py::object filter = py::cast(corePlugin->createFilter(handle.getFilterId()));
+      py::type filterType = py::type::of(filter);
+      filterList.push_back(filterType);
+    }
+    return filterList;
+  });
 
   mod.def("test_filter", [](const IFilter& filter) { return py::make_tuple(filter.uuid(), filter.name(), filter.humanName(), filter.className(), filter.defaultTags()); });
 
