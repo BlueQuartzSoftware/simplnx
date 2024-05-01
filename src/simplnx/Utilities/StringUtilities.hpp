@@ -53,7 +53,9 @@
  * '\r'(0x0d)carriage return (CR)
  */
 
-namespace
+namespace nx::core::StringUtilities
+{
+namespace detail
 {
 template <bool ProcessEmptyV, class InputIt, class ForwardIt, typename TokenT>
 void tokenize(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, std::vector<TokenT>& tokens)
@@ -158,10 +160,8 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
 
   return tokens;
 }
-} // namespace
+} // namespace detail
 
-namespace nx::core::StringUtilities
-{
 inline constexpr StringLiteral k_Whitespaces = " \t\f\v\n\r";
 
 /**
@@ -283,17 +283,17 @@ inline std::vector<std::string> specific_split(std::string_view str, nonstd::spa
   switch(splitType)
   {
   case IgnoreEmpty:
-    return optimized_split<::SplitIgnoreEmpty>(str, delimiters);
+    return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
   case AllowAll:
-    return optimized_split<::SplitAllowAll>(str, delimiters);
+    return detail::optimized_split<detail::SplitAllowAll>(str, delimiters);
   case NoStripIgnoreConsecutive:
-    return optimized_split<::SplitNoStripIgnoreConsecutive>(str, delimiters);
+    return detail::optimized_split<detail::SplitNoStripIgnoreConsecutive>(str, delimiters);
   case OnlyConsecutive:
-    return optimized_split<::SplitOnlyConsecutive>(str, delimiters);
+    return detail::optimized_split<detail::SplitOnlyConsecutive>(str, delimiters);
   case AllowEmptyLeftAnalyze:
-    return optimized_split<::SplitAllowEmptyLeftAnalyze>(str, delimiters);
+    return detail::optimized_split<detail::SplitAllowEmptyLeftAnalyze>(str, delimiters);
   case AllowEmptyRightAnalyze:
-    return optimized_split<::SplitAllowEmptyRightAnalyze>(str, delimiters);
+    return detail::optimized_split<detail::SplitAllowEmptyRightAnalyze>(str, delimiters);
   }
 
   return {};
@@ -304,18 +304,18 @@ inline std::vector<std::string> split(std::string_view str, nonstd::span<const c
   if(consecutiveDelimiters)
   {
     // Split Allow All was selected to match QString's base split functionality
-    return optimized_split<::SplitAllowAll>(str, delimiters);
+    return detail::optimized_split<detail::SplitAllowAll>(str, delimiters);
   }
   else
   {
-    return optimized_split<::SplitIgnoreEmpty>(str, delimiters);
+    return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
   }
 }
 
 inline std::vector<std::string> split(std::string_view str, char delim)
 {
   std::array<char, 1> delimiters = {delim};
-  return optimized_split<::SplitIgnoreEmpty>(str, delimiters);
+  return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
 }
 
 inline std::string join(nonstd::span<std::string_view> vec, std::string_view delim)
