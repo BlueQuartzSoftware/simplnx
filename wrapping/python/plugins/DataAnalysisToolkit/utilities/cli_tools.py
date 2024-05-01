@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Tuple
 from ..common.Result import Result, make_error_result
 import copy
+import re
 
 def read_poly_line(line: str) -> Tuple[int, int, int, np.ndarray]:
     vals = line.split(",")
@@ -94,7 +95,7 @@ def parse_geometry_array_names(full_path: Path):
         record = False
         num_of_labels = 0
         for line in file:
-            line = line.strip()
+            line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
             if not line:
                 continue
 
@@ -126,7 +127,8 @@ def parse_geometry(file, units, bounding_box: list = None) -> Result:
     data = {}
     
     #parse file lines
-    line: str = file.readline().strip()
+    line: str = file.readline()
+    line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
     while not line.startswith("$$GEOMETRYEND"):
         if not line:
             # Do nothing, read the next line
@@ -181,7 +183,8 @@ def parse_geometry(file, units, bounding_box: list = None) -> Result:
             key = key.replace('$', '')
             key = key.capitalize()
             data[key] = val
-        line = file.readline().strip()
+        line = file.readline()
+        line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
     
     #convert heights into an array, and scale by the units value
     layer_heights = units * np.array(layer_heights)
@@ -201,17 +204,17 @@ def parse_file(full_path: Path, bounding_box: list = None) -> Result:
     with open(str(full_path), 'r') as file:
         line = file.readline().strip()
         while line:
-            if not line:
-                pass
-            elif line.startswith("$$HEADERSTART"):
-                units, hatch_labels = parse_header(file)
-            elif line.startswith("$$GEOMETRYSTART"):
-                if units is None:
-                    raise Exception("No $$HEADERSTART tag was found!") 
-                result = parse_geometry(file, units, bounding_box)
-                if result.invalid():
-                    return Result(errors=result.errors)
-                layer_features, layer_heights = result.value
+            if line:
+                line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
+                if line.startswith("$$HEADERSTART"):
+                    units, hatch_labels = parse_header(file)
+                if line.startswith("$$GEOMETRYSTART"):
+                    if units is None:
+                        raise Exception("No $$HEADERSTART tag was found!") 
+                    result = parse_geometry(file, units, bounding_box)
+                    if result.invalid():
+                        return Result(errors=result.errors)
+                    layer_features, layer_heights = result.value
             line = file.readline().strip()
     
     return Result(value=(layer_features, layer_heights, hatch_labels))
