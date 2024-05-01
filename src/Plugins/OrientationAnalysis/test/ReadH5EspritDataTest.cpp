@@ -47,7 +47,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Valid Filter Execution",
   args.insertOrAssign(ReadH5EspritDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0f)));
   args.insertOrAssign(ReadH5EspritDataFilter::k_DegreesToRadians_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadH5EspritDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ReadH5EspritDataFilter::k_ImageGeometryName_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
@@ -93,7 +93,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
   Arguments args;
   args.insertOrAssign(ReadH5EspritDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0f)));
   args.insertOrAssign(ReadH5EspritDataFilter::k_DegreesToRadians_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadH5EspritDataFilter::k_ImageGeometryName_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 

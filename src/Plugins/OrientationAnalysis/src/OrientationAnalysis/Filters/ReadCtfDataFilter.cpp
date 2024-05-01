@@ -69,13 +69,16 @@ Parameters ReadCtfDataFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_EdaxHexagonalAlignment_Key, "Convert Hexagonal X-Axis to EDAX Standard",
                                                 "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", false));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The complete path to the Geometry being created.", DataPath({"DataContainer"})));
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Created Cell Attribute Matrix", "The Attribute Matrix where the scan data is stored.", ImageGeom::k_CellDataName));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Created Cell Ensemble Attribute Matrix",
-                                                          "The Attribute Matrix where the phase information is stored.", "CellEnsembleData"));
+  params.insertSeparator(Parameters::Separator{"Create Image Geometry"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data attribute matrix for the created Image Geometry",
+                                                          ImageGeom::k_CellDataName));
+  params.insertSeparator(Parameters::Separator{"Created Ensemble Data"});
+
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "The Attribute Matrix where the phase information is stored.",
+                                                          "Cell Ensemble Data"));
 
   return params;
 }

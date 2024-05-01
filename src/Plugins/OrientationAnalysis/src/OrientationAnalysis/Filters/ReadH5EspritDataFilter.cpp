@@ -66,7 +66,7 @@ Parameters ReadH5EspritDataFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5 file. Esprit can store multiple scans in a single file",
+  params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan(s) in the .h5 file. Esprit can store multiple scans in a single file",
                                                                 OEMEbsdScanSelectionParameter::ValueType{},
                                                                 /* OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::Bruker, EbsdLib::OEM::DREAM3D},*/
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5", ".hdf5"}));
@@ -74,13 +74,14 @@ Parameters ReadH5EspritDataFilter::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "Whether or not to convert the euler angles to radians", true));
   params.insert(std::make_unique<BoolParameter>(k_ReadPatternData_Key, "Import Pattern Data", "Whether or not to import the pattern data", false));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryName_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Create Image Geometry"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data attribute matrix for the created Image Geometry",
                                                           ImageGeom::k_CellDataName));
-  params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Cell Ensemble Attribute Matrix",
-                                                          "The name of the cell ensemble data attribute matrix for the created Image Geometry", "Cell Ensemble Data"));
+  params.insertSeparator(Parameters::Separator{"Created Ensemble Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "The Attribute Matrix where the phase information is stored.",
+                                                          "Cell Ensemble Data"));
 
   return params;
 }
@@ -100,7 +101,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pDegreesToRadiansValue = filterArgs.value<bool>(k_DegreesToRadians_Key);
   auto pReadPatternDataValue = filterArgs.value<bool>(k_ReadPatternData_Key);
-  auto pImageGeometryNameValue = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
+  auto pImageGeometryNameValue = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
 
@@ -213,7 +214,7 @@ Result<> ReadH5EspritDataFilter::executeImpl(DataStructure& dataStructure, const
 
   inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
+  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   inputValues.CellEnsembleAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
   inputValues.CellAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
   espritInputValues.DegreesToRadians = filterArgs.value<bool>(k_DegreesToRadians_Key);
@@ -251,7 +252,7 @@ Result<Arguments> ReadH5EspritDataFilter::FromSIMPLJson(const nlohmann::json& js
   // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CombineEulerAnglesKey, ));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DegreesToRadiansKey, k_DegreesToRadians_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ReadPatternDataKey, k_ReadPatternData_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeometryName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));

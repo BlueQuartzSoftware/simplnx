@@ -4,6 +4,7 @@
 #include "OrientationAnalysis/Parameters/ReadH5EbsdFileParameter.h"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -62,15 +63,14 @@ Parameters ReadH5EbsdFilter::parameters() const
   params.insert(std::make_unique<ReadH5EbsdFileParameter>(k_ReadH5EbsdParameter_Key, "Import H5Ebsd File", "Object that holds all relevant information to import data from the file.",
                                                           ReadH5EbsdFileParameter::ValueType{}));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));
-  // params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Created Cell Attribute Matrix",
-                                                          "The name of the created cell attribute matrix associated with the imported geometry", "CellData"));
-  // params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Created Cell Ensemble Attribute Matrix",
-                                                          "The name of the created cell ensemble attribute matrix associated with the imported geometry", "CellEnsembleData"));
+  params.insertSeparator(Parameters::Separator{"Create Image Geometry"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the created cell attribute matrix associated with the imported geometry",
+                                                          ImageGeom::k_CellDataName));
+  params.insertSeparator(Parameters::Separator{"Created Ensemble Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "The Attribute Matrix where the phase information is stored.",
+                                                          "Cell Ensemble Data"));
 
   return params;
 }
