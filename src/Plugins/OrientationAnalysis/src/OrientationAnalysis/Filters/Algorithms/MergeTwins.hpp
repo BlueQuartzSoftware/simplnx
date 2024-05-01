@@ -12,8 +12,6 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
 {
-  bool UseNonContiguousNeighbors;
-  DataPath NonContiguousNeighborListArrayPath;
   DataPath ContiguousNeighborListArrayPath;
   float32 AxisTolerance;
   float32 AngleTolerance;
@@ -48,7 +46,6 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void characterize_twins();
   int getSeed(int32 newFid) override;
   bool determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid) override;
 

@@ -79,8 +79,6 @@ Parameters MergeTwinsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.",
                                                                  DataPath({"NeighborList2"}), NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<NeighborListSelectionParameter>(k_NonContiguousNeighborListArrayPath_Key, "Non-Contiguous Neighbor List", "List of non-contiguous neighbors for each Feature.",
-                                                                 DataPath{}, NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
   params.linkParameters(k_UseNonContiguousNeighbors_Key, k_ContiguousNeighborListArrayPath_Key, false);
   params.linkParameters(k_UseNonContiguousNeighbors_Key, k_NonContiguousNeighborListArrayPath_Key, true);
 
@@ -141,14 +139,14 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<size_t> cDims(1, 1);
-  const NeighborList<int32>* contiguousNeighborList = dataStructure.getDataAs<NeighborList<int32>>(pContiguousNeighborListArrayPathValue);
+  const auto* contiguousNeighborList = dataStructure.getDataAs<NeighborList<int32>>(pContiguousNeighborListArrayPathValue);
   if(contiguousNeighborList == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-6874600, fmt::format("Could not find contiguous neighbor list of type Int32 at path '{}' ", pContiguousNeighborListArrayPathValue.toString())), {}};
   }
   if(pUseNonContiguousNeighborsValue)
   {
-    const NeighborList<int32>* nonContiguousNeighborList = dataStructure.getDataAs<NeighborList<int32>>(pNonContiguousNeighborListArrayPathValue);
+    const auto* nonContiguousNeighborList = dataStructure.getDataAs<NeighborList<int32>>(pNonContiguousNeighborListArrayPathValue);
     if(nonContiguousNeighborList == nullptr)
     {
       return {MakeErrorResult<OutputActions>(-6874601, fmt::format("Could not find non contiguous neighbor list of type Int32 at path '{}' ", pNonContiguousNeighborListArrayPathValue.toString())),
@@ -163,7 +161,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   std::vector<DataPath> dataArrayPaths;
 
   // Cell Data
-  const Int32Array* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
   if(nullptr == featureIds)
   {
     return {MakeErrorResult<OutputActions>(-6874602, fmt::format("Could not find feature ids array of type Int32 at path '{}' ", pFeatureIdsArrayPathValue.toString())), {}};
@@ -172,7 +170,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   resultOutputActions.value().appendAction(std::move(cellParentIdsAction));
 
   // Feature Data
-  const Int32Array* phases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);
+  const auto* phases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);
   if(nullptr == phases)
   {
     return {MakeErrorResult<OutputActions>(-6874603, fmt::format("Could not find phases array of type Int32 at path '{}' ", pFeaturePhasesArrayPathValue.toString())), {}};
@@ -183,7 +181,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   resultOutputActions.value().appendAction(std::move(featureParentIdsAction));
 
   cDims[0] = 4;
-  const Float32Array* avgQuats = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
+  const auto* avgQuats = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
   if(nullptr == avgQuats)
   {
     return {MakeErrorResult<OutputActions>(-6874602, fmt::format("Could not find average quaternions array of type Float32 at path '{}' ", pAvgQuatsArrayPathValue.toString())), {}};
@@ -196,7 +194,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   resultOutputActions.value().appendAction(std::move(activeAction));
 
   // Ensemble Data
-  const UInt32Array* crystalStructures = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);
+  const auto* crystalStructures = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);
   if(nullptr == crystalStructures)
   {
     return {MakeErrorResult<OutputActions>(-6874602, fmt::format("Could not find crystal structures array of type UInt32 at path '{}' ", pCrystalStructuresArrayPathValue.toString())), {}};

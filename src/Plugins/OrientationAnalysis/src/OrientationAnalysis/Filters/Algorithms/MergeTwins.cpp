@@ -27,52 +27,42 @@ MergeTwins::MergeTwins(DataStructure& dataStructure, const IFilter::MessageHandl
 MergeTwins::~MergeTwins() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void MergeTwins::characterize_twins()
-{
-}
-
-// -----------------------------------------------------------------------------
 int MergeTwins::getSeed(int32 newFid)
 {
-  Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  Int32Array& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayName);
-  AttributeMatrix& cellFeaturesAttMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->NewCellFeatureAttributeMatrixName);
-  BoolArray& active = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->ActiveArrayName);
+  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayName);
+  auto& cellFeaturesAttMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->NewCellFeatureAttributeMatrixName);
+  auto& active = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->ActiveArrayName);
 
-  int32 numfeatures = static_cast<int32>(phases.getNumberOfTuples());
+  auto numfeatures = static_cast<int32>(phases.getNumberOfTuples());
 
   int32 seed = -1;
-  int32 randfeature = 0;
 
   // Precalculate some constants
   int32 totalFMinus1 = numfeatures - 1;
 
-  size_t counter = 0;
-  double rangeMin = 0;
-  double rangeMax = 1;
-  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  generator.seed(m_InputValues->Seed);
-  std::uniform_real_distribution<> distribution(rangeMin, rangeMax);
-  randfeature = int32(float(distribution(generator)) * float(totalFMinus1));
+  usize counter = 0;
+  std::mt19937_64 generator(m_InputValues->Seed); // Standard mersenne_twister_engine seeded
+  std::uniform_real_distribution<> distribution(0, 1);
+  auto randFeature = static_cast<int32>(float(distribution(generator)) * float(totalFMinus1));
   while(seed == -1 && counter < numfeatures)
   {
-    if(randfeature > totalFMinus1)
+    if(randFeature > totalFMinus1)
     {
-      randfeature = randfeature - numfeatures;
+      randFeature = randFeature - numfeatures;
     }
-    if(featureParentIds[randfeature] == -1)
+    if(featureParentIds[randFeature] == -1)
     {
-      seed = randfeature;
+      seed = randFeature;
     }
-    randfeature++;
+    randFeature++;
     counter++;
   }
   if(seed >= 0)
   {
     featureParentIds[seed] = newFid;
-    std::vector<size_t> tDims(1, newFid + 1);
+    std::vector<usize> tDims(1, newFid + 1);
     cellFeaturesAttMatrix.resizeTuples(tDims); // this will resize the active array as well
   }
   return seed;
@@ -81,10 +71,10 @@ int MergeTwins::getSeed(int32 newFid)
 // -----------------------------------------------------------------------------
 bool MergeTwins::determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid)
 {
-  Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  Int32Array& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayName);
-  UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  Float32Array& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
+  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
+  auto& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayName);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
   auto axisToleranceRad = m_InputValues->AxisTolerance * numbers::pi_v<float32> / 180.0f;
 
   // float w = 0.0f;
@@ -94,17 +84,17 @@ bool MergeTwins::determineGrouping(int32 referenceFeature, int32 neighborFeature
 
   if(featureParentIds[neighborFeature] == -1 && phases[referenceFeature] > 0 && phases[neighborFeature] > 0)
   {
-    uint32_t phase1 = crystalStructures[phases[referenceFeature]];
+    uint32 phase1 = crystalStructures[phases[referenceFeature]];
 
     QuatF q1(avgQuats[referenceFeature * 4], avgQuats[referenceFeature * 4 + 1], avgQuats[referenceFeature * 4 + 2], avgQuats[referenceFeature * 4 + 3]);
     QuatF q2(avgQuats[neighborFeature * 4], avgQuats[neighborFeature * 4 + 1], avgQuats[neighborFeature * 4 + 2], avgQuats[neighborFeature * 4 + 3]);
 
-    uint32_t phase2 = crystalStructures[phases[neighborFeature]];
+    uint32 phase2 = crystalStructures[phases[neighborFeature]];
     if(phase1 == phase2 && (phase1 == EbsdLib::CrystalStructure::Cubic_High))
     {
       OrientationD axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
       double w = axisAngle[3];
-      w = w * (180.0f / numbers::pi);
+      w *= (180.0f / numbers::pi);
       double axisdiff111 = acosf(fabs(axisAngle[0]) * 0.57735f + fabs(axisAngle[1]) * 0.57735f + fabs(axisAngle[2]) * 0.57735f);
       double angdiff60 = fabs(w - 60.0f);
       if(axisdiff111 < axisToleranceRad && angdiff60 < m_InputValues->AngleTolerance)
@@ -128,16 +118,16 @@ Result<> MergeTwins::operator()()
   /* Sanity check that each phase is Cubic High (m3m) Laue class. If not then warn the user.
    * There is code later on to ensure that only m3m Laue class is used.
    */
-  UInt32Array& laueClasses = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  Int32Array& cellParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellParentIdsArrayName);
+  auto& laueClasses = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& cellParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellParentIdsArrayName);
   cellParentIds.fill(-1);
-  Int32Array& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayName);
+  auto& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayName);
   featureParentIds.fill(-1);
-  BoolArray& active = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->ActiveArrayName);
+  auto& active = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->ActiveArrayName);
   active.fill(true);
 
-  for(size_t i = 1; i < laueClasses.getSize(); i++)
+  for(usize i = 1; i < laueClasses.getSize(); i++)
   {
     if(laueClasses[i] != EbsdLib::CrystalStructure::Cubic_High)
     {
@@ -150,7 +140,7 @@ Result<> MergeTwins::operator()()
 
   GroupFeatures::execute();
 
-  size_t totalFeatures = active.getNumberOfTuples();
+  usize totalFeatures = active.getNumberOfTuples();
   if(totalFeatures < 2)
   {
     return MergeResults(
@@ -158,21 +148,17 @@ Result<> MergeTwins::operator()()
   }
 
   int32 numParents = 0;
-  size_t totalPoints = featureIds.getNumberOfTuples();
-  for(size_t k = 0; k < totalPoints; k++)
+  usize totalPoints = featureIds.getNumberOfTuples();
+  for(usize k = 0; k < totalPoints; k++)
   {
-    int32_t featurename = featureIds[k];
-    cellParentIds[k] = featureParentIds[featurename];
-    if(featureParentIds[featurename] > numParents)
+    int32 featureName = featureIds[k];
+    cellParentIds[k] = featureParentIds[featureName];
+    if(featureParentIds[featureName] > numParents)
     {
-      numParents = featureParentIds[featurename];
+      numParents = featureParentIds[featureName];
     }
   }
   numParents += 1;
-
-  m_MessageHandler({IFilter::Message::Type::Info, "Characterizing Twins Starting"});
-  characterize_twins();
-  m_MessageHandler({IFilter::Message::Type::Info, "Characterizing Twins Complete"});
 
   if(m_InputValues->RandomizeParentIds)
   {
@@ -181,13 +167,13 @@ Result<> MergeTwins::operator()()
     const int32 rangeMin = 1;
     const int32 rangeMax = numParents - 1;
     std::mt19937_64 generator(std::mt19937_64::default_seed); // Standard mersenne_twister_engine seeded with milliseconds
-    std::uniform_int_distribution<int32_t> distribution(rangeMin, rangeMax);
+    std::uniform_int_distribution<int32> distribution(rangeMin, rangeMax);
 
-    size_t nParents = static_cast<size_t>(numParents);
+    auto nParents = static_cast<usize>(numParents);
 
     DataStructure tmpStructure;
     Int32Array* rndNumbers = Int32Array::CreateWithStore<Int32DataStore>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewParentIds"), std::vector<usize>{nParents}, std::vector<usize>{1});
-    Int32DataStore* rndStore = dynamic_cast<Int32DataStore*>(rndNumbers->getDataStore());
+    auto* rndStore = dynamic_cast<Int32DataStore*>(rndNumbers->getDataStore());
     int32* pid = rndStore->data();
     pid[0] = 0;
     std::set<int32> parentIdSet;
@@ -200,9 +186,9 @@ Result<> MergeTwins::operator()()
 
     m_MessageHandler({IFilter::Message::Type::Info, "Shuffle elements ...."});
     //--- Shuffle elements by randomly exchanging each with one other.
-    for(size_t i = 1; i < nParents; i++)
+    for(usize i = 1; i < nParents; i++)
     {
-      size_t r = static_cast<size_t>(distribution(generator)); // Random remaining position.
+      auto r = static_cast<usize>(distribution(generator)); // Random remaining position.
       int32 pid_i = rndStore->getValue(i);
       if(r >= numParents)
       {
@@ -215,7 +201,7 @@ Result<> MergeTwins::operator()()
 
     m_MessageHandler({IFilter::Message::Type::Info, "Adjusting Feature Ids Array...."});
     // Now adjust all the Feature Id values for each Voxel
-    for(size_t i = 0; i < totalPoints; ++i) // TODO : easily parallelized
+    for(usize i = 0; i < totalPoints; ++i) // TODO : easily parallelized
     {
       cellParentIds[i] = pid[cellParentIds[i]];
       featureParentIds[featureIds[i]] = cellParentIds[i];
