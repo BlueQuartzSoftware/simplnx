@@ -38,7 +38,7 @@ Parameters CreateDataGroupFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataObjectPath, "DataObject Path", "The complete path to the DataObject being created", DataPath{}));
   return params;
 }

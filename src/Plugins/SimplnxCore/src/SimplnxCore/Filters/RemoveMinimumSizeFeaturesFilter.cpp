@@ -289,19 +289,19 @@ Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<NumberParameter<int64>>(k_MinAllowedFeaturesSize_Key, "Minimum Allowed Features Size", "Minimum allowed features size", 0));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySinglePhase_Key, "Apply to Single Phase", "Apply to Single Phase", false));
   params.insert(std::make_unique<NumberParameter<int64>>(k_PhaseNumber_Key, "Phase Index", "Target phase to remove", 0));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Input Image Geometry", "The input image geometry (cell)", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath({"FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "Num Cells Array", "DataPath to NumCells DataArray", DataPath({"NumElements"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Phases Array", "DataPath to Feature Phases DataArray", DataPath{},

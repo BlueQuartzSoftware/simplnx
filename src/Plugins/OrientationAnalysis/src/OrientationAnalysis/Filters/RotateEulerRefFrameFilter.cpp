@@ -49,7 +49,7 @@ Parameters RotateEulerRefFrameFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxisAngle_Key, "Rotation Axis-Angle [<ijk>w]", "Axis-Angle in sample reference frame to rotate about.",
                                                          VectorFloat32Parameter::ValueType{0.0f, 0.0f, 0.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
 

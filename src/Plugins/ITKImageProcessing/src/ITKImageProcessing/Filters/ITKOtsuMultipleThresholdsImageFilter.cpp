@@ -80,7 +80,7 @@ std::vector<std::string> ITKOtsuMultipleThresholdsImageFilter::defaultTags() con
 Parameters ITKOtsuMultipleThresholdsImageFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<UInt8Parameter>(k_NumberOfThresholds_Key, "NumberOfThresholds", "Set/Get the number of thresholds. Default is 1.", 1u));
   params.insert(std::make_unique<UInt8Parameter>(k_LabelOffset_Key, "LabelOffset", "Set/Get the offset which labels have to start from. Default is 0.", 0u));
   params.insert(std::make_unique<UInt32Parameter>(k_NumberOfHistogramBins_Key, "NumberOfHistogramBins", "Set/Get the number of histogram bins. Default is 128.", 128u));
@@ -88,13 +88,13 @@ Parameters ITKOtsuMultipleThresholdsImageFilter::parameters() const
   params.insert(
       std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum.", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ITK::GetScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Array Name",
                                                           "The result of the processing will be stored in this Data Array inside the same group as the input data.", "Output Image Data"));
 

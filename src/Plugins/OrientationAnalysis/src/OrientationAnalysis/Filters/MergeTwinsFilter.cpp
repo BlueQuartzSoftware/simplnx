@@ -58,12 +58,12 @@ Parameters MergeTwinsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Seeded Randomness"});
+  params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "MergeTwins SeedValue"));
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNonContiguousNeighbors_Key, "Use Non-Contiguous Neighbors",
                                                                  "Whether to use a list of non-contiguous or contiguous neighbors for each feature when merging", false));
 
@@ -72,11 +72,11 @@ Parameters MergeTwinsFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_AngleTolerance_Key, "Angle Tolerance (Degrees)",
                                                    "Tolerance allowed when comparing the angle part of the axis-angle representation of the misorientation", 2.0F));
 
-  params.insertSeparator(Parameters::Separator{"Required Element Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Required Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.",
                                                                  DataPath({"NeighborList2"}), NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NonContiguousNeighborListArrayPath_Key, "Non-Contiguous Neighbor List", "List of non-contiguous neighbors for each Feature.",
@@ -89,15 +89,15 @@ Parameters MergeTwinsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of each Feature in quaternion representation",
                                                           DataPath({"Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
 
-  params.insertSeparator(Parameters::Separator{"Required Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Element Data"});
+  params.insertSeparator(Parameters::Separator{"Output Element Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellParentIdsArrayName_Key, "Parent Ids", "The name of the array specifying to which parent each cell belongs", "ParentIds"));
 
-  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_CreatedFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created cell feature attribute matrix", "NewGrain Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureParentIdsArrayName_Key, "Parent Ids", "The name of the array specifying to which parent each Feature belongs", "ParentIds"));

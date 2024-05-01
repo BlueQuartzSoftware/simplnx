@@ -253,7 +253,7 @@ Parameters PartitionGeometryFilter::parameters() const
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_InputGeometryCellAttributeMatrixPath_Key, "Input Geometry Cell Attribute Matrix ",
                                                                     "The attribute matrix that represents the cell data for the geometry.(Vertex=>Node Geometry, Cell=>Image/Rectilinear)",
                                                                     DataPath{}));
-  params.insertSeparator(Parameters::Separator{"Created Partition Grid Parameters"});
+  params.insertSeparator(Parameters::Separator{"Output Partition Grid Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_PartitioningMode_Key, "Select the partitioning mode",
                                                                     "Mode can be 'Basic (0)', 'Advanced (1)', 'Bounding Box (2)', 'Existing Partition Grid (3)'", 0, ::k_Choices));
   params.insert(std::make_unique<Int32Parameter>(k_StartingFeatureID_Key, "Starting Feature ID", "The value to start the partition grid's feature ids at.", 1));
@@ -280,13 +280,13 @@ Parameters PartitionGeometryFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexMaskPath_Key, "Vertex Mask", "The complete path to the vertex mask array.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Input Geometry Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Output Geometry Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureAttrMatrixName_Key, "Feature Attribute Matrix",
                                                           "The name of the feature attribute matrix that will be created as a child of the input geometry.", "Feature Data"));
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_PartitionIdsArrayName_Key, "Partition Ids", "The name of the partition ids output array stored in the input cell attribute matrix", "Partition Ids"));
 
-  params.insertSeparator(Parameters::Separator{"Created Partition Grid Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Output Partition Grid Data Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_PartitionGridGeometry_Key, "Partition Grid Geometry", "The complete path to the created partition grid geometry",
                                                              DataPath({"Partition Grid Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_PartitionGridCellAMName_Key, "Cell Attribute Matrix",

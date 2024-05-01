@@ -52,9 +52,10 @@ Parameters FindGBCDFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32Parameter>(k_GBCDRes_Key, "GBCD Spacing (Degrees)", "The resolution in degrees for the GBCD calculation", 9.0f));
-  params.insertSeparator(Parameters::Separator{"Face Data"});
+
+  params.insertSeparator(Parameters::Separator{"Input Triangle Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Triangle Geometry", "Path to the triangle geometry for which to calculate the GBCD", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Array specifying which Features are on either side of each Face", DataPath{},
@@ -63,17 +64,20 @@ Parameters FindGBCDFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceAreasArrayPath_Key, "Face Areas", "Array specifying the area of each Face", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+
+  params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles",
                                                           "Array specifying three angles defining the orientation of the Feature in Bunge convention (Z-X-Z)", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which phase each Feature belongs", DataPath({"CellFeatureData", "Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insertSeparator(Parameters::Separator{"Created Face Ensemble Data"});
+
+  params.insertSeparator(Parameters::Separator{"Output Face Ensemble Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_FaceEnsembleAttributeMatrixName_Key, "Face Ensemble Attribute Matrix", "The name of the created face ensemble attribute matrix", "FaceEnsembleData"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_GBCDArrayName_Key, "GBCD",

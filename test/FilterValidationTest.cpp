@@ -5,11 +5,12 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
-#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
+#include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -103,6 +104,8 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
   const auto pluginListPtr = Application::Instance()->getPluginList();
 
   std::stringstream output;
+  std::ofstream logFile("/tmp/separator_names.log", std::ios_base::trunc | std::ios_base::binary);
+  std::set<std::string> uniqueSepNames;
 
   // Loop on each Plugin
   for(const auto& plugin : pluginListPtr)
@@ -123,15 +126,11 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
         try
         {
           auto sep = std::get<nx::core::Parameters::Separator>(param);
-          std::cout << "- " << sep.name << "\n";
-        }
-        catch (const std::bad_variant_access& ex)
+          uniqueSepNames.insert(sep.name);
+        } catch(const std::bad_variant_access& ex)
         {
-
         }
-
       }
-
 
       // Loop over each Parameter
       for(const auto& parameter : parameters)
@@ -171,6 +170,11 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
         }
       }
     }
+  }
+
+  for(const auto& name : uniqueSepNames)
+  {
+    logFile << "- " << name << "\n";
   }
 
   Application::DeleteInstance();

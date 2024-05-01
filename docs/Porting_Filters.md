@@ -243,15 +243,15 @@ Use proper grouping in the parameters to help the User Interface.
 There are potentially 3 sections of parameters:
 
 ```cpp
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 ```
 
 ```cpp
-  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
 ```
 
 ```cpp
-  params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Output Output Data Objects"});
 ```
 
 these should be used as needed by the filter.

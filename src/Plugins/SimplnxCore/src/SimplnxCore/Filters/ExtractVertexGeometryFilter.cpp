@@ -66,7 +66,7 @@ Parameters ExtractVertexGeometryFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Move or [1] Copy input data arrays", 0,
                                                    ChoicesParameter::Choices{"Move Attribute Arrays", "Copy Attribute Arrays"}));
 

@@ -54,12 +54,12 @@ Parameters ConvertDataFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_ScalarType_Key, "Scalar Type", "Convert to this data type", 0, GetAllDataTypesAsStrings()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayToConvertPath_Key, "Data Array to Convert", "The complete path to the Data Array to Convert", DataPath{}, GetAllDataTypes()));
   params.insert(std::make_unique<BoolParameter>(k_DeleteOriginal_Key, "Remove Original Array", "Whether or not to remove the original array after conversion", false));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_ConvertedArrayName_Key, "Converted Data Array", "The name of the converted Data Array", "Converted_"));
 
   return params;

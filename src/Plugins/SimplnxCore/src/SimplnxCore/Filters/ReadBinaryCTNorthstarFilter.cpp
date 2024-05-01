@@ -367,7 +367,7 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputHeaderFile_Key, "Input Header File", "The path to the .nsihdr file", fs::path("DefaultInputFileName"),
                                                           FileSystemPathParameter::ExtensionsType{".nsihdr"}, FileSystemPathParameter::PathType::InputFile));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ImportSubvolume_Key, "Import Subvolume", "Import a subvolume instead of the entire volume", false));
@@ -378,7 +378,7 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
 
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Image Geometry Path", "The path that will be used to create the Image Geometry.", DataPath{{"CT Image Geometry"}}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "The name used to create the Cell Attribute Matrix.", "CT Scan Data"));

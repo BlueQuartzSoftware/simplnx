@@ -55,12 +55,12 @@ Parameters GenerateGBCDPoleFigureFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32Parameter>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MisorientationRotation_Key, "Misorientation Angle-Axis", "Angle-Axis values for drawing GBCD", std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F},
                                                          std::vector<std::string>{"Angle (Deg)", "h", "k", "l"}));
   params.insert(std::make_unique<Int32Parameter>(k_OutputImageDimension_Key, "Output Image Dimension", "The value to use for the dimensions for the image geometry", 100));
-  params.insertSeparator(Parameters::Separator{"Required Face Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Input Triangle Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBCDArrayPath_Key, "Input GBCD",
                                                           "5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere",
                                                           DataPath({"FaceEnsembleData", "GBCD"}), ArraySelectionParameter::AllowedTypes{DataType::float64}));

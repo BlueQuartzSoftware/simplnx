@@ -58,7 +58,7 @@ Parameters ITKImageReaderFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry",
                                                    to_underlying(IGeometry::LengthUnit::Micrometer), IGeometry::GetAllLengthUnitStrings()));
@@ -81,7 +81,7 @@ Parameters ITKImageReaderFilter::parameters() const
                                                           FileSystemPathParameter::ExtensionsType{{".png"}, {".tiff"}, {".tif"}, {".bmp"}, {".jpeg"}, {".jpg"}, {".nrrd"}, {".mha"}},
                                                           FileSystemPathParameter::PathType::InputFile, false));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Created Cell Attribute Matrix", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ImageDataArrayPath_Key, "Created Cell Data",

@@ -79,7 +79,7 @@ std::vector<std::string> ITKDiscreteGaussianImageFilter::defaultTags() const
 Parameters ITKDiscreteGaussianImageFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat64Parameter>(
       k_Variance_Key, "Variance",
       "The variance for the discrete Gaussian kernel. Sets the variance independently for each dimension, but see also SetVariance(const double v) . The default is 0.0 in each dimension. If "
@@ -99,13 +99,13 @@ Parameters ITKDiscreteGaussianImageFilter::parameters() const
                                       "specify the Gaussian variance in real world units; use Off to ignore the image spacing and to specify the Gaussian variance in voxel units. Default is On.",
                                       true));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ITK::GetScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Array Name",
                                                           "The result of the processing will be stored in this Data Array inside the same group as the input data.", "Output Image Data"));
 

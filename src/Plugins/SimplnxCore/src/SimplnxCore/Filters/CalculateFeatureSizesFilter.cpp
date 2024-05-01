@@ -55,11 +55,11 @@ Parameters CalculateFeatureSizesFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_SaveElementSizes_Key, "Generate Missing Element Sizes",
                                                 "If checked this will generate and store the element sizes ONLY if the geometry does not already contain them.", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Input Image Geometry", "DataPath to input Image Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
@@ -68,7 +68,7 @@ Parameters CalculateFeatureSizesFilter::parameters() const
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "Feature Attribute Matrix of the selected Feature Ids",
                                                                     DataPath({"CellFeatureData"})));
 
-  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_EquivalentDiametersName_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", "EquivalentDiameters"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_NumElementsName_Key, "Number of Elements", "DataPath to Num Elements array", "NumElements"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesName_Key, "Volumes", "DataPath to volumes array", "Volumes"));

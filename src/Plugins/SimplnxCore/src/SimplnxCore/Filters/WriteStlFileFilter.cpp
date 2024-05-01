@@ -56,7 +56,7 @@ Parameters WriteStlFileFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", to_underlying(GroupingType::Features),
                                                                     ChoicesParameter::Choices{"Features", "Phases and Features", "None [Single File]"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
@@ -67,7 +67,7 @@ Parameters WriteStlFileFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlFile_Key, "Output STL File", "STL File to dump the Triangle Geometry to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{".stl"}, FileSystemPathParameter::PathType::OutputFile, false));
 
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Selected Triangle Geometry", "The geometry to print", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{},

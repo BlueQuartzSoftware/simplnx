@@ -189,7 +189,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Required Input Data"});
+  params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
                                                           nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(
@@ -220,7 +220,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Output Arrays"});
+  params.insertSeparator(Parameters::Separator{"Output Output Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureHasDataArrayName_Key, "Feature-Has-Data Array Name",
                                                           "The name of the boolean array that indicates whether or not each feature contains any data.  This array is especially useful to help "
                                                           "determine whether or not the outputted statistics are actually valid or not for a given feature.",

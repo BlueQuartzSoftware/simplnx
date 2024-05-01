@@ -57,7 +57,7 @@ Parameters CombineStlFilesFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilesPath_Key, "Path to STL Files", "The path to the folder containing all the STL files to be combined", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputDir));
 
@@ -69,15 +69,15 @@ Parameters CombineStlFilesFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexLabelName_Key, "Created Vertex Labels", "The name of the vertex labels data array", "FileIndex"));
   params.linkParameters(k_LabelVertices_Key, k_VertexLabelName_Key, true);
 
-  params.insertSeparator(Parameters::Separator{"Created Data"});
+  params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The path to the triangle geometry to be created from the combined STL files",
                                                              DataPath({"TriangleGeometry"})));
-  params.insertSeparator(Parameters::Separator{"Created Face Data"});
+  params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrixName_Key, "Face Attribute Matrix", "The name of the face level attribute matrix to be created with the geometry",
                                                           TriangleGeom::k_FaceDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsArrayName_Key, "Face Normals", "The name of the data array in which to store the face normals for the created triangle geometry",
                                                           "FaceNormals"));
-  params.insertSeparator(Parameters::Separator{"Created Vertex Data"});
+  params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex level attribute matrix to be created with the geometry",
                                                           TriangleGeom::k_VertexDataName));
 

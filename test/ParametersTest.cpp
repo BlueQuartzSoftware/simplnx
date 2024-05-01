@@ -20,7 +20,7 @@ TEST_CASE("ParametersTest")
 {
   Parameters params;
   params.insert(std::make_unique<Int32Parameter>(k_FooParamKey, "Foo", "Test parameter", 42));
-  params.insertSeparator({"Separator Name"});
+  params.insertSeparator(Parameters::Separator{"Separator Name"});
 
   REQUIRE_FALSE(params.containsGroup(k_BarParamKey));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BarParamKey, "Bar", "Test parameter", false));

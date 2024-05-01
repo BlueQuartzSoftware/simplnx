@@ -50,7 +50,7 @@ std::vector<std::string> DynamicTableExampleFilter::defaultTags() const
 Parameters DynamicTableExampleFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator({"Fixed Columns - Fixed Rows"});
+  params.insertSeparator(Parameters::Separator{"Fixed Columns - Fixed Rows"});
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Col 1", "Col 2"}));
@@ -58,7 +58,7 @@ Parameters DynamicTableExampleFilter::parameters() const
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
     params.insert(std::make_unique<DynamicTableParameter>(k_Param1, "Fixed Columns - Fixed Rows", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
-  params.insertSeparator({"Fixed Column - Dynamic Row"});
+  params.insertSeparator(Parameters::Separator{"Fixed Column - Dynamic Row"});
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Col 1", "Col 2"}));
@@ -67,7 +67,7 @@ Parameters DynamicTableExampleFilter::parameters() const
     params.insert(std::make_unique<DynamicTableParameter>(k_Param2, "Fixed Columns - Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
 
-  params.insertSeparator({"Dynamic Column - Fixed Row"});
+  params.insertSeparator(Parameters::Separator{"Dynamic Column - Fixed Row"});
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));
@@ -76,7 +76,7 @@ Parameters DynamicTableExampleFilter::parameters() const
     params.insert(std::make_unique<DynamicTableParameter>(k_Param3, "Dynamic Columns - Fixed Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
 
-  params.insertSeparator({"Dynamic Column - Dynamic Row"});
+  params.insertSeparator(Parameters::Separator{"Dynamic Column - Dynamic Row"});
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));

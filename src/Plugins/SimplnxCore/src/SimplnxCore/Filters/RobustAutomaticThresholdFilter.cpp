@@ -128,7 +128,7 @@ Parameters RobustAutomaticThresholdFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   // Input cannot be bool array
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Input Array", "DataArray to Threshold", DataPath(), nx::core::GetAllNumericTypes(),
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));

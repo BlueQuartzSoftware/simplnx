@@ -51,15 +51,17 @@ Parameters FindFeaturePhasesBinaryFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}));
+
+  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Data Array that specifies if the Cell is to be counted in the algorithm", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellDataAMPath_Key, "Cell Data Attribute Matrix",
                                                                     "The Cell Data Attribute Matrix within the Image Geometry where the Binary Phases Array will be created", DataPath{}));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeaturePhasesArrayName_Key, "Binary Feature Phases Array Name", "Created Data Array name to specify to which Ensemble each Feature belongs",
                                                           "Binary Phases Array"));
 

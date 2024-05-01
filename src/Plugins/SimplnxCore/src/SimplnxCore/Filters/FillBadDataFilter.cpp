@@ -53,12 +53,12 @@ Parameters FillBadDataFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32Parameter>(k_MinAllowedDefectSize_Key, "Minimum Allowed Defect Size", "The size at which a group of bad Cells are left unfilled as a 'defect'", 1));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_StoreAsNewPhase_Key, "Store Defects as New Phase", "Whether to change the phase of 'defect' larger than the minimum allowed size above", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   //  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Attribute Matrix", "Cell data Attribute Matrix", DataPath{}));

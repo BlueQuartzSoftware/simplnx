@@ -50,11 +50,11 @@ Parameters FindTriangleGeomShapesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insertSeparator(Parameters::Separator{"Required Face Data"});
+  params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}));
 
-  params.insertSeparator(Parameters::Separator{"Required Face Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
                                                               "The DataPath to the AttributeMatrix that holds feature data for the faces", DataPath({"TriangleDataContainer", "FaceFeatureData"}),
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
@@ -63,7 +63,7 @@ Parameters FindTriangleGeomShapesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_VolumesArrayPath_Key, "Face Feature Volumes", "Input DataPath to the **Feature Volumes** for the face data",
                                                           DataPath({"FaceFeatureData", "Volumes"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
-  params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s", "The name of the DataArray that holds the calculated Omega3 values", "Omega3s"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AxisLengthsArrayName_Key, "Axis Lengths", "The name of the DataArray that holds the calculated Axis Lengths values", "AxisLengths"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AxisEulerAnglesArrayName_Key, "Axis Euler Angles", "The name of the DataArray that holds the calculated Axis Euler Angles values",

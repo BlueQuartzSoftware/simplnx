@@ -55,17 +55,17 @@ Parameters ExtractComponentAsArrayFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32Parameter>(k_CompNumber_Key, "Component Index to Extract", "The index of the component in each tuple to be removed", 0));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_MoveComponentsToNewArray_Key, "Move Extracted Components to New Array", "If true the extracted components will be placed in a new array", false));
   params.insert(std::make_unique<BoolParameter>(k_RemoveComponentsFromArray_Key, "Remove Extracted Components from Old Array", "If true the extracted components will be deleted", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Input DataArray"});
+  params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multicomponent Attribute Array", "The array to extract componenets from", DataPath{}, nx::core::GetAllNumericTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Array"});
+  params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NewArrayName_Key, "Scalar Attribute Array", "The DataArray to store the extracted components", "Extracted Component"));
 
   params.linkParameters(k_MoveComponentsToNewArray_Key, k_NewArrayName_Key, true);

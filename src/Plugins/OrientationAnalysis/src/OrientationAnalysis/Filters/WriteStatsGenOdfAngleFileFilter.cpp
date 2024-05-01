@@ -55,7 +55,7 @@ Parameters WriteStatsGenOdfAngleFileFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "The output angles file path", fs::path("Data/Output/StatsGenODF.txt"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<Float32Parameter>(k_Weight_Key, "Default Weight", "This value will be used for the Weight column", 1.0f));
@@ -72,7 +72,7 @@ Parameters WriteStatsGenOdfAngleFileFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Used to define Elements as good or bad. Only required if Only Write Good Elements is checked", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Required Element Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Element belongs", DataPath{},

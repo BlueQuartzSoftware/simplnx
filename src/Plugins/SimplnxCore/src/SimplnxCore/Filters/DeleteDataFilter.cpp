@@ -53,12 +53,12 @@ Parameters DeleteDataFilter::parameters() const
 {
   Parameters params;
 
-  // params.insertSeparator(Parameters::Separator{"Required Parameters"});
+  // params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   // params.insert(std::make_unique<ChoicesParameter>(k_DeletionType_Key, "Deletion Type", "", to_underlying(DeletionType::DeleteDataPath),
   //                                                  ChoicesParameter::Choices{"Delete DataObject", "Delete Path to DataObject", "Delete DataObject and Unshared Child Objects",
   //                                                                            "Delete DataObject and All Child Objects"})); // sequence dependent DO NOT REORDER
 
-  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiPathSelectionParameter>(k_DataPath_Key, "DataPaths to remove", "The complete path to the DataObjects to be removed", MultiPathSelectionParameter::ValueType{}));
 
   return params;

@@ -52,11 +52,11 @@ Parameters CreateEnsembleInfoFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<EnsembleInfoParameter>(
       k_Ensemble_Key, "Created Ensemble Info", "The values with which to populate the crystal structures, phase types, and phase names data arrays. Each row corresponds to an ensemble phase.",
       EnsembleInfoParameter::ValueType{}));
-  params.insertSeparator(Parameters::Separator{"Created Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Output Ensemble Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
                                                              "The complete path to the attribute matrix in which to store the ensemble phase data arrays", DataPath({"EnsembleAttributeMatrix"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CrystalStructuresArrayName_Key, "Crystal Structures", "The name of the data array representing the crystal structure for each Ensemble",

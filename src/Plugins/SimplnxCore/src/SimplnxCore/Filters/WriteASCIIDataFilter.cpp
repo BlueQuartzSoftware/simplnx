@@ -65,7 +65,7 @@ Parameters WriteASCIIDataFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputStyle_Key, "Output File Generation",
                                                                     "Whether to output a folder of files or a single file with all the data in column form", to_underlying(OutputStyle::SingleFile),
                                                                     ChoicesParameter::Choices{"Multiple Files", "Single File"})); // sequence dependent DO NOT REORDER
@@ -79,7 +79,7 @@ Parameters WriteASCIIDataFilter::parameters() const
                                                    ChoicesParameter::Choices{"Space", "Semicolon", "Comma", "Colon", "Tab"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<ChoicesParameter>(k_Includes_Key, "Header and Index Options", "Default Include is Headers only", to_underlying(Includes::Headers),
                                                    ChoicesParameter::Choices{"Neither", "Headers", "Index", "Both"})); // sequence dependent DO NOT REORDER
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "Data Arrays to be written to disk",
                                                                MultiArraySelectionParameter::ValueType{},
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray}, nx::core::GetAllDataTypes()));

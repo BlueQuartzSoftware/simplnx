@@ -78,7 +78,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_TransformationType_Key, "Transformation Type", "The type of transformation to perform.", k_RotationIdx, k_TransformationChoices));
 
@@ -102,7 +102,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
                                                 "Specifies whether to translate the geometry to (0, 0, 0), apply the transformation, and then translate the geometry back to its original origin.",
                                                 false));
 
-  params.insertSeparator({"Input Geometry"});
+  params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Geometry", "The target geometry on which to perform the transformation", DataPath{},
                                                              IGeometry::GetAllGeomTypes()));
 

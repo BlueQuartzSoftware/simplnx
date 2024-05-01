@@ -178,7 +178,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreKernelDistances_Key, "Store Kernel Distances", "Specifies whether or not to store kernel distances", false));
   params.insertLinkableParameter(
@@ -188,7 +188,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{1.0f, 1.0f, 1.0f},
                                                          std::vector<std::string>{"x", "y", "z"}));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry to Interpolate", "DataPath to geometry to interpolate", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},
@@ -204,7 +204,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_InterpolatedGroupName_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", "InterpolatedData"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_KernelDistancesArrayName_Key, "Kernel Distances Group", "DataPath to created DataGroup for kernel distances data", "KernelDistances"));
 

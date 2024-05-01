@@ -53,7 +53,7 @@ Parameters ReadTextDataArrayFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "File path that points to the imported file", fs::path("<file to import goes here>"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Input Numeric Type", "Data Type to interpret and store data into.", NumericType::int8));
@@ -62,7 +62,7 @@ Parameters ReadTextDataArrayFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoice_Key, "Delimiter", "Delimiter for values on a line", 0,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Array"});
+  params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayPath_Key, "Created Array Path", "DataPath or Name for the underlying Data Array", DataPath{}));
   params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
                                                            "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));

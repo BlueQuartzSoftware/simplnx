@@ -50,13 +50,13 @@ Parameters ComputeFeatureRectFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{{"FeatureIds"}},
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{{"FeatureIds"}},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureDataAttributeMatrixPath_Key, "Feature Data Attribute Matrix",
                                                               "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
-  params.insertSeparator(Parameters::Separator{"Created Data Object(s)"});
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureRectArrayName_Key, "Feature Rect", "The feature rect calculated from the feature ids", "FeatureRect"));
 
   return params;

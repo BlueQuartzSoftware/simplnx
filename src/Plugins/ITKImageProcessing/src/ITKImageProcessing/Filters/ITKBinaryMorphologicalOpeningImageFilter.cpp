@@ -77,7 +77,7 @@ std::vector<std::string> ITKBinaryMorphologicalOpeningImageFilter::defaultTags()
 Parameters ITKBinaryMorphologicalOpeningImageFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorParameter<uint32>>(k_KernelRadius_Key, "KernelRadius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
                                                           std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "Set the kernel or structuring element used for the morphology.", static_cast<uint64>(itk::simple::sitkBall),
@@ -85,13 +85,13 @@ Parameters ITKBinaryMorphologicalOpeningImageFilter::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set the value in eroded part of the image. Defaults to zero", 0.0));
   params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "Set the value in the image to consider as 'foreground'. Defaults to maximum value of PixelType.", 1.0));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ITK::GetIntegerScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Array Name",
                                                           "The result of the processing will be stored in this Data Array inside the same group as the input data.", "Output Image Data"));
 

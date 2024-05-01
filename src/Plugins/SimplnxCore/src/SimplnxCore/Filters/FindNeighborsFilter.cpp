@@ -54,12 +54,12 @@ Parameters FindNeighborsFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreBoundary_Key, "Store Boundary Cells Array", "Whether to store the boundary Cells array", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "Whether to store the surface Features array", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "The geometry in which to identify feature neighbors", DataPath({"DataContainer"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
@@ -67,12 +67,12 @@ Parameters FindNeighborsFilter::parameters() const
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesPath_Key, "Cell Feature AttributeMatrix", "Feature Attribute Matrix of the selected Feature Ids",
                                                                     DataPath({"DataContainer", "CellFeatureData"})));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(
       k_BoundaryCellsName_Key, "Boundary Cells",
       "The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6. Only created if Store Boundary Cells Array is checked",
       "BoundaryCells"));
-  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NumNeighborsName_Key, "Number of Neighbors", "Number of contiguous neighboring Features for a given Feature", "NumNeighbors"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborListName_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", "NeighborList"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SharedSurfaceAreaName_Key, "Shared Surface Area List",

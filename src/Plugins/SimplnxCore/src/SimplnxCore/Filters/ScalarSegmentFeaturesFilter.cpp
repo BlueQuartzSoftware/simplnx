@@ -67,7 +67,7 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Segmentation Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<NumberParameter<int>>(k_ScalarToleranceKey, "Scalar Tolerance", "Tolerance for segmenting input Cell Data", 1));
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatures_Key, "Randomize Feature IDs", "Specifies if feature IDs should be randomized during calculations", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
@@ -75,16 +75,16 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, std::make_any<bool>(true));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeomPath_Key, "Input Image Geometry", "DataPath to input Image Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPathKey, "Scalar Array to Segment", "Path to the DataArray to segment", DataPath(), nx::core::GetIntegerDataTypes(),
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsName_Key, "Cell Feature IDs", "Path to the created Feature IDs path", "FeatureIds"));
 
-  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureName_Key, "Cell Feature Attribute Matrix", "Created Cell Feature Attribute Matrix", "CellFeatureData"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayName_Key, "Active", "Created array", "Active"));
 

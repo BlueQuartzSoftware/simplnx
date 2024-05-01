@@ -69,11 +69,11 @@ std::vector<std::string> ExampleFilter2Filter::defaultTags() const
 Parameters ExampleFilter2Filter::parameters() const
 {
   Parameters params;
-  params.insertSeparator({"1rst Group of Parameters"});
+  params.insertSeparator(Parameters::Separator{"1rst Group of Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param7, "Bool Parameter", "Example bool help text", true));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param3, "ChoicesParameter", "Example choices help text", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
 
-  params.insertSeparator({"2nd Group of Parameters"});
+  params.insertSeparator(Parameters::Separator{"2nd Group of Parameters"});
   DynamicTableInfo tableInfo;
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));
   tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(0, "Row {}"));

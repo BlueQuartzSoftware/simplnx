@@ -182,7 +182,7 @@ Parameters CropImageGeometryFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UsePhysicalBounds_Key, "Use Physical Units For Bounds", "If true define physical coordinates for bounds, If false define voxel indices for bounds", false));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "Lower bound of voxels of the volume to crop out", std::vector<uint64>{0, 0, 0},
@@ -195,18 +195,18 @@ Parameters CropImageGeometryFilter::parameters() const
                                                          std::vector<float64>{0.0, 0.0, 0.0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
-  params.insertSeparator({"Input Geometry and Data"});
+  params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "DataPath to the source Image Geometry", DataPath(), std::set{IGeometry::Type::Image}));
 
-  params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Optional Renumber Features"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature IDs", "DataPath to Cell Feature IDs array", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "DataPath to the feature Attribute Matrix",
                                                                     DataPath({"CellFeatureData"})));
 
-  params.insertSeparator({"Output Image Geometry"});
+  params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The DataPath to store the created Image Geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
