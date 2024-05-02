@@ -123,4 +123,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKBinaryMorphologicalClosingImageFilter, "296e8830-4e1c-485b-9b0c-c29cc33db467");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKBinaryMorphologicalClosingImageFilter, "abb27e0c-b049-4f60-8355-178d86bb1de4");

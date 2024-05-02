@@ -122,4 +122,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKErodeObjectMorphologyImageFilter, "1e047c6e-da5b-4a11-8800-adb8a191feac");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKErodeObjectMorphologyImageFilter, "db3fe379-6ce4-4be3-baca-1cbff00aca6a");

@@ -27,7 +27,7 @@ namespace
 
 std::map<nx::core::Uuid, std::string> s_ParameterMap;
 
-const std::string k_WebServerAddress = "http://www.dream3d.io/nx_reference_manual";
+const std::string k_WebServerAddress = "https://www.dream3d.io/nx_reference_manual";
 const std::string k_WebServerFilterFolder = "html";
 } // namespace
 
