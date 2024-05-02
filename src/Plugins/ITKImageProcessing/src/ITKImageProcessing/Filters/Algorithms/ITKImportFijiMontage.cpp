@@ -269,7 +269,7 @@ private:
         // rename grayscale array to reflect original
         {
           auto& gray = m_DataStructure.getDataRefAs<IDataArray>(imageDataPath.replaceName("gray" + imageDataPath.getTargetName()));
-          if(!gray.canRename(imageDataPath.getTargetName()))
+          if(gray.canRename(imageDataPath.getTargetName()) == false)
           {
             return MakeErrorResult(-18543, fmt::format("Unable to rename the grayscale array to {}", imageDataPath.getTargetName()));
           }
