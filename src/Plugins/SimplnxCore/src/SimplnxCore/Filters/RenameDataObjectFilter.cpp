@@ -56,6 +56,8 @@ Parameters RenameDataObjectFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<BoolParameter>(k_AllowOverwrite_Key, "Allow Overwrite",
+                                                "If true existing object with `New Name` and all of its nested objects will be removed to free up the name for the target DataObject", false));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_SourceDataObjectPath_Key, "DataObject to Rename", "DataPath pointing to the target DataObject", DataPath()));
   params.insert(std::make_unique<StringParameter>(k_NewName_Key, "New Name", "Target DataObject name", ""));
   return params;
@@ -71,10 +73,11 @@ IFilter::UniquePointer RenameDataObjectFilter::clone() const
 IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel) const
 {
+  auto allowOverwrite = filterArgs.value<bool>(k_AllowOverwrite_Key);
   auto dataGroupPath = filterArgs.value<DataPath>(k_SourceDataObjectPath_Key);
   auto newName = filterArgs.value<std::string>(k_NewName_Key);
 
-  auto action = std::make_unique<RenameDataAction>(dataGroupPath, newName);
+  auto action = std::make_unique<RenameDataAction>(dataGroupPath, newName, allowOverwrite);
 
   OutputActions actions;
   actions.appendAction(std::move(action));

@@ -25,6 +25,7 @@ public:
   RenameDataObjectFilter& operator=(RenameDataObjectFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_AllowOverwrite_Key = "allow_overwrite";
   static inline constexpr StringLiteral k_SourceDataObjectPath_Key = "source_data_object_path";
   static inline constexpr StringLiteral k_NewName_Key = "new_name";
 

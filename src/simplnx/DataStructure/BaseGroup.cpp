@@ -246,3 +246,8 @@ void BaseGroup::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>
 {
   m_DataMap.updateIds(updatedIds);
 }
+
+std::vector<DataObject::IdType> BaseGroup::GetChildrenIds()
+{
+  return m_DataMap.getKeys();
+}
