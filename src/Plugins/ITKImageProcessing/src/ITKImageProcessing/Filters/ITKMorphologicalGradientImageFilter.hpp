@@ -113,4 +113,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKMorphologicalGradientImageFilter, "7efbdf0f-65d2-4aed-8db7-476a0649adb6");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKMorphologicalGradientImageFilter, "9103009a-8884-4097-8c34-aec7019589ea");
