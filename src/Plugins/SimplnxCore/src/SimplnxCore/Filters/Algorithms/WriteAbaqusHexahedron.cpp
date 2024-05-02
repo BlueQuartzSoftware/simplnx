@@ -96,7 +96,8 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
           int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
           if(milliDiff > 1000)
           {
-            std::string percentage = "Writing Nodes (File 1/5) " + StringUtilities::number(static_cast<int32>((float32)(nodeIndex) / (float32)(totalPoints) * 100)) + "% Completed ";
+            std::string percentage =
+                "Writing Nodes (File 1/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(nodeIndex) / static_cast<float32>(totalPoints) * 100.0f)) + "% Completed ";
             float32 timeDiff = ((float32)nodeIndex / (float32)(milliDiff));
             int64 estimatedTime = (float32)(totalPoints - nodeIndex) / timeDiff;
             std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
@@ -160,7 +161,8 @@ int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, con
           int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
           if(milliDiff > 1000)
           {
-            std::string percentage = "Writing Elements (File 2/5) " + StringUtilities::number(static_cast<int32>((float32)(index) / (float32)(totalPoints) * 100)) + "% Completed ";
+            std::string percentage =
+                "Writing Elements (File 2/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(index) / static_cast<float32>(totalPoints) * 100.0f)) + "% Completed ";
             float32 timeDiff = ((float32)index / (float32)(milliDiff));
             int64 estimatedTime = (float32)(totalPoints - index) / timeDiff;
             std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
@@ -240,7 +242,8 @@ int32 writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, siz
       int64 milliDiff = std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count();
       if(milliDiff > 1000)
       {
-        std::string percentage = "Writing Element Sets (File 4/5) " + StringUtilities::number(static_cast<int>((float32)(voxelId) / (float32)(maxGrainId) * 100)) + "% Completed ";
+        std::string percentage =
+            "Writing Element Sets (File 4/5) " + StringUtilities::number(static_cast<int32>(static_cast<float32>(voxelId) / static_cast<float32>(maxGrainId) * 100.0f)) + "% Completed ";
         float32 timeDiff = ((float32)voxelId / (float32)(milliDiff));
         auto estimatedTime = static_cast<int64>((float32)(maxGrainId - voxelId) / timeDiff);
         std::string timeRemaining = " || Est. Time Remain: " + format_duration(std::chrono::milliseconds(estimatedTime));
