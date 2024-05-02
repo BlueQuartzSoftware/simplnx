@@ -545,9 +545,9 @@ Point3D<float64> RectGridGeom::getPlaneCoords(usize idx) const
 
 std::pair<Point3Df, Point3Df> RectGridGeom::getCellBounds(usize x, usize y, usize z) const
 {
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  const auto& xBnds = getXBoundsRef();
+  const auto& yBnds = getYBoundsRef();
+  const auto& zBnds = getZBoundsRef();
 
   Point3Df minCoords;
   minCoords[0] = static_cast<float32>((*xBnds)[x]);
