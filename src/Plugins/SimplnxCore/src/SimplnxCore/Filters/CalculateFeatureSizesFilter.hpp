@@ -33,6 +33,7 @@ public:
   static inline constexpr StringLiteral k_VolumesName_Key = "volumes_name";
   static inline constexpr StringLiteral k_EquivalentDiametersName_Key = "equivalent_diameters_name";
   static inline constexpr StringLiteral k_NumElementsName_Key = "num_elements_name";
+  static inline constexpr StringLiteral k_FeretDiameterName_Key = "feret_diameter_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -306,6 +306,15 @@ public:
   Point3D<float64> getPlaneCoords(usize idx) const override;
 
   /**
+   * @brief Returns the min and max coordinates of the cell specified by the the X, Y, Z index
+   * @param x
+   * @param y
+   * @param z
+   * @return
+   */
+  std::pair<Point3Df, Point3Df> getCellBounds(usize x, usize y, usize z) const override;
+
+  /**
    * @brief
    * @param idx
    * @return Point3D<float32>

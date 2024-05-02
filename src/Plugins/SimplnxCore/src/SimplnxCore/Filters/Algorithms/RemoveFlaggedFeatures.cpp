@@ -1,6 +1,6 @@
 #include "RemoveFlaggedFeatures.hpp"
 
-#include "SimplnxCore/Filters/ComputeFeatureRectFilter.hpp"
+#include "SimplnxCore/Filters/CalculateFeatureBoundingBoxesFilter.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -314,12 +314,12 @@ Result<> RemoveFlaggedFeatures::operator()()
     m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Extraction")});
 
     {
-      ComputeFeatureRectFilter filter;
+      CalculateFeatureBoundingBoxesFilter filter;
       Arguments args;
 
-      args.insert(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(m_InputValues->FeatureIdsArrayPath));
-      args.insert(ComputeFeatureRectFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(m_InputValues->TempBoundsPath.getParent()));
-      args.insert(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(m_InputValues->TempBoundsPath.getTargetName()));
+      args.insert(CalculateFeatureBoundingBoxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(m_InputValues->FeatureIdsArrayPath));
+      args.insert(CalculateFeatureBoundingBoxesFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(m_InputValues->TempBoundsPath.getParent()));
+      args.insert(CalculateFeatureBoundingBoxesFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(m_InputValues->TempBoundsPath.getTargetName()));
 
       auto preflightResult = filter.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())

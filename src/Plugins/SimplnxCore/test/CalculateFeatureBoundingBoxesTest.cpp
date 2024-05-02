@@ -1,7 +1,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "SimplnxCore/Filters/ComputeFeatureRectFilter.hpp"
+#include "SimplnxCore/Filters/CalculateFeatureBoundingBoxesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
@@ -97,18 +97,18 @@ DataStructure CreateTestData()
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: Valid filter execution", "[SimplnxCore][ComputeFeatureRectFilter]")
+TEST_CASE("SimplnxCore::CalculateFeatureBoundingBoxesFilter: Valid filter execution", "[SimplnxCore][CalculateFeatureBoundingBoxesFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ComputeFeatureRectFilter filter;
+  CalculateFeatureBoundingBoxesFilter filter;
   DataStructure dataStructure = CreateTestData();
   Arguments args;
 
-  args.insertOrAssign(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName, k_CellAttrMatrixName, k_FeatureIdsArrayName}}));
-  args.insertOrAssign(ComputeFeatureRectFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName, k_FeatureAttrMatrixName}}));
-  args.insertOrAssign(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(k_RectCoordsArrayName));
+  args.insertOrAssign(CalculateFeatureBoundingBoxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName, k_CellAttrMatrixName, k_FeatureIdsArrayName}}));
+  args.insertOrAssign(CalculateFeatureBoundingBoxesFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName, k_FeatureAttrMatrixName}}));
+  args.insertOrAssign(CalculateFeatureBoundingBoxesFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(k_RectCoordsArrayName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

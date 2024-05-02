@@ -96,7 +96,7 @@
 #include "SimplnxCore/Filters/ExecuteProcessFilter.hpp"
 #include "SimplnxCore/Filters/FindVertexToTriangleDistancesFilter.hpp"
 #include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
-#include "SimplnxCore/Filters/ComputeFeatureRectFilter.hpp"
+#include "SimplnxCore/Filters/CalculateFeatureBoundingBoxesFilter.hpp"
 #include "SimplnxCore/Filters/FindLargestCrossSectionsFilter.hpp"
 #include "SimplnxCore/Filters/WriteStlFileFilter.hpp"
 #include "SimplnxCore/Filters/AddBadDataFilter.hpp"
@@ -222,7 +222,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("27a132b2-a592-519a-8cb7-38599a7f28ec").value(), {nx::core::FilterTraits<ComputeMomentInvariants2DFilter>::uuid, &ComputeMomentInvariants2DFilter::FromSIMPLJson}}, // ComputeMomentInvariants2D
     {nx::core::Uuid::FromString("fcdde553-36b4-5731-bc88-fc499806cb4e").value(), {nx::core::FilterTraits<FindVertexToTriangleDistancesFilter>::uuid, &FindVertexToTriangleDistancesFilter::FromSIMPLJson}}, // FindVertexToTriangleDistances
     {nx::core::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), {nx::core::FilterTraits<ApplyTransformationToGeometryFilter>::uuid, {}}}, // ApplyTransformationToGeometry
-    {nx::core::Uuid::FromString("6eda8dbf-dbd8-562a-ae1a-f2904157c189").value(), {nx::core::FilterTraits<ComputeFeatureRectFilter>::uuid, &ComputeFeatureRectFilter::FromSIMPLJson}}, // ComputeFeatureRect
+    {nx::core::Uuid::FromString("6eda8dbf-dbd8-562a-ae1a-f2904157c189").value(), {nx::core::FilterTraits<CalculateFeatureBoundingBoxesFilter>::uuid, &CalculateFeatureBoundingBoxesFilter::FromSIMPLJson}}, // ComputeFeatureRect
     {nx::core::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), {nx::core::FilterTraits<FindLargestCrossSectionsFilter>::uuid, &FindLargestCrossSectionsFilter::FromSIMPLJson}}, // FindLargestCrossSections
     {nx::core::Uuid::FromString("b9134758-d5e5-59dd-9907-28d23e0e0143").value(), {nx::core::FilterTraits<WriteStlFileFilter>::uuid, &WriteStlFileFilter::FromSIMPLJson}}, // WriteStlFile
     {nx::core::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), {nx::core::FilterTraits<AddBadDataFilter>::uuid, &AddBadDataFilter::FromSIMPLJson}}, // AddBadData

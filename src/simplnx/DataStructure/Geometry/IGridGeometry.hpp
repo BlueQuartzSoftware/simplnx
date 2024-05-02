@@ -117,6 +117,15 @@ public:
   virtual Point3D<float32> getCoordsf(usize x, usize y, usize z) const = 0;
 
   /**
+   * @brief Returns the min and max coordinates of the cell specified by the the X, Y, Z index
+   * @param x
+   * @param y
+   * @param z
+   * @return
+   */
+  virtual std::pair<Point3Df, Point3Df> getCellBounds(usize x, usize y, usize z) const = 0;
+
+  /**
    * @brief
    * @param idx
    * @return

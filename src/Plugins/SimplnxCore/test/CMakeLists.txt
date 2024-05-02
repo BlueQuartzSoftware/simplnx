@@ -20,7 +20,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   CombineStlFilesTest.cpp
-  ComputeFeatureRectTest.cpp
+  CalculateFeatureBoundingBoxesTest.cpp
   ComputeMomentInvariants2DTest.cpp
   ConditionalSetValueTest.cpp
   ConvertColorToGrayScaleTest.cpp

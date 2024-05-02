@@ -9,8 +9,9 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include "SimplnxCore/Filters/Algorithms/CalculateFeatureBoundingBoxes.hpp"
 
 #include <cmath>
 
@@ -23,6 +24,7 @@ constexpr nx::core::int32 k_MissingFeatureIds = -74789;
 constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -74769;
 constexpr nx::core::int32 k_BadFeatureCount = -78231;
 constexpr nx::core::float32 k_PI = numbers::pi_v<nx::core::float32>;
+
 } // namespace
 
 std::string CalculateFeatureSizesFilter::name() const
@@ -73,6 +75,7 @@ Parameters CalculateFeatureSizesFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_EquivalentDiametersName_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", "EquivalentDiameters"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_NumElementsName_Key, "Number of Elements", "DataPath to Num Elements array", "NumElements"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesName_Key, "Volumes", "DataPath to volumes array", "Volumes"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeretDiameterName_Key, "Feret Diameter (Caliper Diameter)", "Output Feret diameter array name", "Feret Diameter"));
 
   return params;
 }
@@ -92,9 +95,12 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   auto volumesName = args.value<std::string>(k_VolumesName_Key);
   auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersName_Key);
   auto numElementsName = args.value<std::string>(k_NumElementsName_Key);
+  auto feretName = args.value<std::string>(k_FeretDiameterName_Key);
+
   DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
   DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
   DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
+  DataPath feretDiameterPath = featureAttributeMatrixPath.createChildPath(feretName);
 
   const auto* featureIdsArray = dataStructure.getDataAs<Int32Array>(featureIdsPath);
 
@@ -125,11 +131,13 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath, arrayDataFormat);
   auto createEquivalentDiametersAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, equivalentDiametersPath, arrayDataFormat);
   auto createNumElementsAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDimensions, std::vector<usize>{numberOfComponents}, numElementsPath, arrayDataFormat);
+  auto createFeretDiametersAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{7}, feretDiameterPath, arrayDataFormat);
 
   OutputActions actions;
   actions.appendAction(std::move(createVolumesAction));
   actions.appendAction(std::move(createEquivalentDiametersAction));
   actions.appendAction(std::move(createNumElementsAction));
+  actions.appendAction(std::move(createFeretDiametersAction));
 
   return {std::move(actions)};
 }
@@ -142,26 +150,31 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& dataStructure, 
   const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   const auto& featureIds = featureIdsArray.getDataStoreRef();
 
+  auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  auto volumesName = args.value<std::string>(k_VolumesName_Key);
+  auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersName_Key);
+  auto numElementsName = args.value<std::string>(k_NumElementsName_Key);
+  auto feretDiamName = args.value<std::string>(k_FeretDiameterName_Key);
+
+  DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
+  DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
+  DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
+  DataPath feretDiamPath = featureAttributeMatrixPath.createChildPath(feretDiamName);
+
+  auto& volumes = dataStructure.getDataRefAs<Float32Array>(volumesPath);
+  auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(equivalentDiametersPath);
+  auto& numElements = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
+  auto& feretDiameters = dataStructure.getDataRefAs<Float32Array>(feretDiamPath);
+
   usize totalPoints = featureIdsArray.getNumberOfTuples();
 
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
-  auto* geom = dataStructure.getDataAs<IGeometry>(geomPath);
+  auto* geom = dataStructure.getDataAs<IGridGeometry>(geomPath);
 
   // If the geometry is an ImageGeometry or a RectilinearGeometry
   auto* imageGeom = dynamic_cast<ImageGeom*>(geom);
-  if(nullptr != imageGeom)
+  if(nullptr != imageGeom) // Image Geometry
   {
-    auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-    auto volumesName = args.value<std::string>(k_VolumesName_Key);
-    auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersName_Key);
-    auto numElementsName = args.value<std::string>(k_NumElementsName_Key);
-
-    DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
-    DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
-    DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
-    auto& volumes = dataStructure.getDataRefAs<Float32Array>(volumesPath);
-    auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(equivalentDiametersPath);
-    auto& numElements = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
 
     usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
     usize maxValue = featureIds[featureIdsMaxIdx];
@@ -177,7 +190,7 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& dataStructure, 
     }
 
     FloatVec3 spacing = imageGeom->getSpacing();
-
+    // 2D Case
     if(imageGeom->getNumXCells() == 1 || imageGeom->getNumYCells() == 1 || imageGeom->getNumZCells() == 1)
     {
       float res_scalar = 0.0f;
@@ -243,16 +256,8 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& dataStructure, 
       }
     }
   }
-  else
+  else // Rectilinear Grid
   {
-    auto volumesPath = args.value<DataPath>(k_VolumesName_Key);
-    auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersName_Key);
-    auto numElementsPath = args.value<DataPath>(k_NumElementsName_Key);
-
-    auto& volumes = dataStructure.getDataRefAs<Float32Array>(volumesPath);
-    auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(equivalentDiametersPath);
-    auto& numElements = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
-
     usize numfeatures = volumes.getNumberOfTuples();
 
     if(!geom->getElementSizes())
@@ -289,6 +294,101 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& dataStructure, 
     if(!saveElementSizes)
     {
       geom->deleteElementSizes();
+    }
+  }
+
+  // Calculate the Feret Diameters (Caliper diameters)
+  {
+    auto featureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(featureAttributeMatrixPath);
+    auto numFeatures = featureAttrMat.getNumTuples();
+
+    std::vector<uint32> corners(numFeatures * 6);
+    // Create corners array, which stores pixel coordinates for the top-left and bottom-right coordinates of each feature object
+    for(usize i = 0; i < numFeatures; i++)
+    {
+      corners[i * 6 + 0] = std::numeric_limits<uint32>::max();
+      corners[i * 6 + 1] = std::numeric_limits<uint32>::max();
+      corners[i * 6 + 2] = std::numeric_limits<uint32>::max();
+      corners[i * 6 + 3] = std::numeric_limits<uint32>::min();
+      corners[i * 6 + 4] = std::numeric_limits<uint32>::min();
+      corners[i * 6 + 5] = std::numeric_limits<uint32>::min();
+    }
+    auto imageDims = geom->getDimensions();
+
+    const usize xDim = imageDims[0];
+    const usize yDim = imageDims[1];
+    const usize zDim = imageDims[2];
+
+    usize index = 0;
+    // Store the coordinates in the corners array
+    for(uint32 z = 0; z < zDim; z++)
+    {
+      if(shouldCancel)
+      {
+        return {};
+      }
+
+      for(uint32 y = 0; y < yDim; y++)
+      {
+        for(uint32 x = 0; x < xDim; x++)
+        {
+          index = (imageDims[1] * imageDims[0] * z) + (imageDims[0] * y) + x; // Index into featureIds array
+
+          const int32 featureId = featureIds[index];
+          if(featureId == 0)
+          {
+            continue;
+          }
+
+          if(featureId >= numFeatures)
+          {
+            return MakeErrorResult(
+                -31000, fmt::format("The largest featureId is '{}' but the Feature Attribute Matrix '{}' only allows '{}' features.", featureId, featureAttributeMatrixPath.toString(), numFeatures));
+          }
+
+          const uint32 indices[3] = {x, y, z}; // Sequence dependent DO NOT REORDER
+          const int32 featureShift = featureId * 6;
+          for(uint8 l = 0; l < 6; l++) // unsigned is faster with modulo
+          {
+            if(l > 2)
+            {
+              corners[featureShift + l] = std::max(corners[featureShift + l], indices[l - 3]);
+            }
+            else
+            {
+              corners[featureShift + l] = std::min(corners[featureShift + l], indices[l]);
+            }
+          }
+        }
+      }
+    }
+
+    for(size_t featureIdx = 1; featureIdx < numFeatures; featureIdx++)
+    {
+      auto cellBounds = geom->getCellBounds(static_cast<usize>(corners[featureIdx * 6 + 0]), static_cast<usize>(corners[featureIdx * 6 + 1]), static_cast<usize>(corners[featureIdx * 6 + 2]));
+      Point3Df minCoord = cellBounds.first;
+      cellBounds = geom->getCellBounds(static_cast<usize>(corners[featureIdx * 6 + 3]), static_cast<usize>(corners[featureIdx * 6 + 4]), static_cast<usize>(corners[featureIdx * 6 + 5]));
+      Point3Df maxCoord = cellBounds.second;
+
+      float xDist = maxCoord[0] - minCoord[0];
+      float yDist = maxCoord[1] - minCoord[1];
+      float zDist = maxCoord[2] - minCoord[2];
+
+      float xyDist = (Point3Df(maxCoord[0], maxCoord[1], minCoord[2]) - Point3Df(minCoord[0], minCoord[1], minCoord[2])).magnitude();
+      float xzDist = (Point3Df(maxCoord[0], minCoord[1], maxCoord[2]) - Point3Df(minCoord[0], minCoord[1], minCoord[2])).magnitude();
+      float yzDist = (Point3Df(minCoord[0], maxCoord[1], maxCoord[2]) - Point3Df(minCoord[0], minCoord[1], minCoord[2])).magnitude();
+
+      float spaceDiag = (Point3Df(maxCoord[0], maxCoord[1], maxCoord[2]) - Point3Df(minCoord[0], minCoord[1], minCoord[2])).magnitude();
+
+      feretDiameters.setComponent(featureIdx, 0, xDist);
+      feretDiameters.setComponent(featureIdx, 1, yDist);
+      feretDiameters.setComponent(featureIdx, 2, zDist);
+
+      feretDiameters.setComponent(featureIdx, 3, xyDist);
+      feretDiameters.setComponent(featureIdx, 4, xzDist);
+      feretDiameters.setComponent(featureIdx, 5, yzDist);
+
+      feretDiameters.setComponent(featureIdx, 6, spaceDiag);
     }
   }
 

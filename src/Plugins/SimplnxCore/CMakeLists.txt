@@ -21,7 +21,7 @@ set(FilterList
   ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter
   CombineStlFilesFilter
-  ComputeFeatureRectFilter
+  CalculateFeatureBoundingBoxesFilter
   ComputeMomentInvariants2DFilter
   ConditionalSetValueFilter
   ConvertColorToGrayScaleFilter
@@ -148,7 +148,7 @@ set(AlgorithmList
   CalculateTriangleGroupCurvatures
   CombineAttributeArrays
   CombineStlFiles
-  ComputeFeatureRect
+    CalculateFeatureBoundingBoxes
   ComputeMomentInvariants2D
   ConvertColorToGrayScale
   ConvertData

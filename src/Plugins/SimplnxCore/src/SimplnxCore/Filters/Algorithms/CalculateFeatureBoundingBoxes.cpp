@@ -1,4 +1,4 @@
-#include "ComputeFeatureRect.hpp"
+#include "CalculateFeatureBoundingBoxes.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 
@@ -14,7 +14,8 @@ usize IndexFromCoord(const std::vector<usize>& tDims, usize x, usize y, usize z)
 } // namespace
 
 // -----------------------------------------------------------------------------
-ComputeFeatureRect::ComputeFeatureRect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeFeatureRectInputValues* inputValues)
+CalculateFeatureBoundingBoxes::CalculateFeatureBoundingBoxes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                             CalculateFeatureBoundingBoxesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -23,16 +24,16 @@ ComputeFeatureRect::ComputeFeatureRect(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-ComputeFeatureRect::~ComputeFeatureRect() noexcept = default;
+CalculateFeatureBoundingBoxes::~CalculateFeatureBoundingBoxes() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeFeatureRect::getCancel()
+const std::atomic_bool& CalculateFeatureBoundingBoxes::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ComputeFeatureRect::operator()()
+Result<> CalculateFeatureBoundingBoxes::operator()()
 {
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto& corners = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FeatureRectArrayPath);

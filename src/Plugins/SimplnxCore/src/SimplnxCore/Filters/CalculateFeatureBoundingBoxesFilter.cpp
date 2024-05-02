@@ -1,6 +1,6 @@
-#include "ComputeFeatureRectFilter.hpp"
+#include "CalculateFeatureBoundingBoxesFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/ComputeFeatureRect.hpp"
+#include "SimplnxCore/Filters/Algorithms/CalculateFeatureBoundingBoxes.hpp"
 
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -16,37 +16,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ComputeFeatureRectFilter::name() const
+std::string CalculateFeatureBoundingBoxesFilter::name() const
 {
-  return FilterTraits<ComputeFeatureRectFilter>::name.str();
+  return FilterTraits<CalculateFeatureBoundingBoxesFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeFeatureRectFilter::className() const
+std::string CalculateFeatureBoundingBoxesFilter::className() const
 {
-  return FilterTraits<ComputeFeatureRectFilter>::className;
+  return FilterTraits<CalculateFeatureBoundingBoxesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ComputeFeatureRectFilter::uuid() const
+Uuid CalculateFeatureBoundingBoxesFilter::uuid() const
 {
-  return FilterTraits<ComputeFeatureRectFilter>::uuid;
+  return FilterTraits<CalculateFeatureBoundingBoxesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeFeatureRectFilter::humanName() const
+std::string CalculateFeatureBoundingBoxesFilter::humanName() const
 {
-  return "Compute Feature Corners";
+  return "Calculate Feature Bounding Box";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ComputeFeatureRectFilter::defaultTags() const
+std::vector<std::string> CalculateFeatureBoundingBoxesFilter::defaultTags() const
 {
-  return {className(), "#Statistics", "#Reconstruction", "#Rect", "#Calculate"};
+  return {className(), "Statistics", "Reconstruction", "Rect", "Calculate", "Find", "Bounding Box"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ComputeFeatureRectFilter::parameters() const
+Parameters CalculateFeatureBoundingBoxesFilter::parameters() const
 {
   Parameters params;
 
@@ -63,14 +63,14 @@ Parameters ComputeFeatureRectFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeFeatureRectFilter::clone() const
+IFilter::UniquePointer CalculateFeatureBoundingBoxesFilter::clone() const
 {
-  return std::make_unique<ComputeFeatureRectFilter>();
+  return std::make_unique<CalculateFeatureBoundingBoxesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CalculateFeatureBoundingBoxesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                            const std::atomic_bool& shouldCancel) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pFeatureDataAttributeMatrixPathValue = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
@@ -106,16 +106,16 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+Result<> CalculateFeatureBoundingBoxesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                          const std::atomic_bool& shouldCancel) const
 {
-  ComputeFeatureRectInputValues inputValues;
+  CalculateFeatureBoundingBoxesInputValues inputValues;
 
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.FeatureDataAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
   inputValues.FeatureRectArrayPath = inputValues.FeatureDataAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_FeatureRectArrayName_Key));
 
-  return ComputeFeatureRect(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return CalculateFeatureBoundingBoxes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -127,9 +127,9 @@ constexpr StringLiteral k_FeatureRectArrayPathKey = "FeatureRectArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ComputeFeatureRectFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> CalculateFeatureBoundingBoxesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ComputeFeatureRectFilter().getDefaultArguments();
+  Arguments args = CalculateFeatureBoundingBoxesFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -8,26 +8,26 @@
 namespace nx::core
 {
 /**
- * @class ComputeFeatureRectFilter
+ * @class CalculateFeatureBoundingBoxesFilter
  * @brief This filter computes the XYZ minimum and maximum coordinates for each Feature in a segmentation.
  * This data can be important for finding the smallest encompassing volume. The values are given in pixel
  * coordinates.
  */
-class SIMPLNXCORE_EXPORT ComputeFeatureRectFilter : public IFilter
+class SIMPLNXCORE_EXPORT CalculateFeatureBoundingBoxesFilter : public IFilter
 {
 public:
-  ComputeFeatureRectFilter() = default;
-  ~ComputeFeatureRectFilter() noexcept override = default;
+  CalculateFeatureBoundingBoxesFilter() = default;
+  ~CalculateFeatureBoundingBoxesFilter() noexcept override = default;
 
-  ComputeFeatureRectFilter(const ComputeFeatureRectFilter&) = delete;
-  ComputeFeatureRectFilter(ComputeFeatureRectFilter&&) noexcept = delete;
+  CalculateFeatureBoundingBoxesFilter(const CalculateFeatureBoundingBoxesFilter&) = delete;
+  CalculateFeatureBoundingBoxesFilter(CalculateFeatureBoundingBoxesFilter&&) noexcept = delete;
 
-  ComputeFeatureRectFilter& operator=(const ComputeFeatureRectFilter&) = delete;
-  ComputeFeatureRectFilter& operator=(ComputeFeatureRectFilter&&) noexcept = delete;
+  CalculateFeatureBoundingBoxesFilter& operator=(const CalculateFeatureBoundingBoxesFilter&) = delete;
+  CalculateFeatureBoundingBoxesFilter& operator=(CalculateFeatureBoundingBoxesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_FeatureRectArrayName_Key = "feature_rect_array_name";
+  static inline constexpr StringLiteral k_FeatureRectArrayName_Key = "output_bounding_box_array_name";
   static inline constexpr StringLiteral k_FeatureDataAttributeMatrixPath_Key = "feature_data_attribute_matrix_path";
 
   /**
@@ -104,5 +104,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeFeatureRectFilter, "bf947c45-8610-44c9-917a-405e88f73fe7");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CalculateFeatureBoundingBoxesFilter, "bf947c45-8610-44c9-917a-405e88f73fe7");
 /* LEGACY UUID FOR THIS FILTER 6eda8dbf-dbd8-562a-ae1a-f2904157c189 */

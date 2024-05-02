@@ -1,4 +1,4 @@
-# Compute Feature Corners
+# Calculate Feature Bounding Box
 
 ## Group (Subgroup)
 

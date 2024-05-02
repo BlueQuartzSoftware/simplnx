@@ -2,10 +2,7 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
-
-#include <stdexcept>
 
 using namespace nx::core;
 
@@ -167,13 +164,9 @@ Point3D<float64> ImageGeom::getParametricCenter() const
 
 void ImageGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const
 {
-  float64 rm = 0.0;
-  float64 sm = 0.0;
-  float64 tm = 0.0;
-
-  rm = 1.0 - pCoords[0];
-  sm = 1.0 - pCoords[1];
-  tm = 1.0 - pCoords[2];
+  float64 rm = 1.0 - pCoords[0];
+  float64 sm = 1.0 - pCoords[1];
+  float64 tm = 1.0 - pCoords[2];
 
   // r derivatives
   shape[0] = -sm * tm;
@@ -309,6 +302,20 @@ Point3D<float64> ImageGeom::getPlaneCoords(usize idx) const
   coords[1] = static_cast<float64>(row) * m_Spacing[1] + m_Origin[1];
   coords[2] = static_cast<float64>(plane) * m_Spacing[2] + m_Origin[2];
   return coords;
+}
+
+std::pair<Point3Df, Point3Df> ImageGeom::getCellBounds(usize x, usize y, usize z) const
+{
+  Point3Df minCoords;
+  minCoords[0] = x * m_Spacing[0] + m_Origin[0];
+  minCoords[1] = y * m_Spacing[1] + m_Origin[1];
+  minCoords[2] = z * m_Spacing[2] + m_Origin[2];
+
+  Point3Df maxCoords;
+  maxCoords[0] = x * m_Spacing[0] + m_Origin[0] + m_Spacing[0];
+  maxCoords[1] = y * m_Spacing[1] + m_Origin[1] + m_Spacing[1];
+  maxCoords[2] = z * m_Spacing[2] + m_Origin[2] + m_Spacing[2];
+  return {minCoords, maxCoords};
 }
 
 Point3D<float32> ImageGeom::getCoordsf(usize idx[3]) const

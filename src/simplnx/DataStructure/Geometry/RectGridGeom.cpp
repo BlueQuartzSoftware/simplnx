@@ -3,7 +3,6 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/DataObjectUtilities.hpp"
-#include "simplnx/Utilities/GeometryHelpers.hpp"
 
 #include <iterator>
 #include <stdexcept>
@@ -542,6 +541,24 @@ Point3D<float64> RectGridGeom::getPlaneCoords(usize idx) const
   coords[1] = static_cast<float64>((*yBnds)[row]);
   coords[2] = static_cast<float64>((*zBnds)[plane]);
   return coords;
+}
+
+std::pair<Point3Df, Point3Df> RectGridGeom::getCellBounds(usize x, usize y, usize z) const
+{
+  auto xBnds = getXBounds();
+  auto yBnds = getYBounds();
+  auto zBnds = getZBounds();
+
+  Point3Df minCoords;
+  minCoords[0] = static_cast<float32>((*xBnds)[x]);
+  minCoords[1] = static_cast<float32>((*yBnds)[y]);
+  minCoords[2] = static_cast<float32>((*zBnds)[z]);
+
+  Point3Df maxCoords;
+  maxCoords[0] = (*xBnds)[x + 1];
+  maxCoords[1] = (*yBnds)[y + 1];
+  maxCoords[2] = (*zBnds)[z + 1];
+  return {minCoords, maxCoords};
 }
 
 Point3D<float32> RectGridGeom::getCoordsf(usize idx[3]) const
