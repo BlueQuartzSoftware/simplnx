@@ -550,9 +550,9 @@ std::pair<Point3Df, Point3Df> RectGridGeom::getCellBounds(usize x, usize y, usiz
   const auto& zBnds = getZBoundsRef();
 
   Point3Df minCoords;
-  minCoords[0] = static_cast<float32>((*xBnds)[x]);
-  minCoords[1] = static_cast<float32>((*yBnds)[y]);
-  minCoords[2] = static_cast<float32>((*zBnds)[z]);
+  minCoords[0] = static_cast<float32>(xBnds[x]);
+  minCoords[1] = static_cast<float32>(yBnds[y]);
+  minCoords[2] = static_cast<float32>(zBnds[z]);
 
   Point3Df maxCoords;
   maxCoords[0] = (*xBnds)[x + 1];
