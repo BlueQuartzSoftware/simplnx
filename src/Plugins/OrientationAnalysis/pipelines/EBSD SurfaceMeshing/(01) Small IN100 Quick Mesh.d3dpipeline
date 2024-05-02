@@ -90,7 +90,7 @@
         "remove_original_geometry": true,
         "renumber_features": true,
         "input_image_geometry_path": "DataContainer",
-        "update_origin": true
+        "use_physical_bounds": false
       },
       "comments": "",
       "filter": {
@@ -101,8 +101,8 @@
     },
     {
       "args": {
-        "data": ["DataContainer/CellEnsembleData"],
-        "new_parent": "DataContainer"
+        "source_data_paths": ["DataContainer/CellEnsembleData"],
+        "destination_parent_path": "DataContainer"
       },
       "comments": "",
       "filter": {

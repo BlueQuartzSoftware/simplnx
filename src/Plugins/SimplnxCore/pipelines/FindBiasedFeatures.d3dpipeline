@@ -95,7 +95,7 @@
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "mark_feature_0_neighbors": true,
         "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-        "surface_features_array_path": "SurfaceFeatures"
+        "surface_features_array_name": "SurfaceFeatures"
       },
       "comments": "",
       "filter": {

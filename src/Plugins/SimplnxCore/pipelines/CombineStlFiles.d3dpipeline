@@ -8,7 +8,7 @@
         "face_attribute_matrix_name": "Face Data",
         "face_normals_array_name": "FaceNormals",
         "stl_files_path": "Data/STL_Models",
-        "triangle_data_container_name": "TriangleGeometry",
+        "output_triangle_geometry_path": "TriangleGeometry",
         "vertex_attribute_matrix_name": "Vertex Data"
       },
       "comments": "",

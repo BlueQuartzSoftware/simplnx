@@ -33,7 +33,7 @@
       "args": {
         "component_count": 1,
         "initialization_value_str": "0",
-        "numeric_type": 8,
+        "numeric_type_index": 8,
         "output_array_path": "[Triangle Geometry]/Vertex Data/Node Type",
         "tuple_dimensions": [
           [

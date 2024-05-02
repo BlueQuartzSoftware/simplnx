@@ -47,7 +47,7 @@
             0.0
           ]
         ],
-        "rotation_representation": 0,
+        "rotation_representation_index": 0,
         "input_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2"
       },
       "comments": "",
@@ -59,9 +59,9 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix": "CellFeatureData",
+        "cell_feature_attribute_matrix_path": "CellFeatureData",
         "output_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2",
-        "feature_ids": "",
+        "feature_ids_path": "",
         "max_voxel": [
           549,
           399,
@@ -75,7 +75,7 @@
         "remove_original_geometry": true,
         "renumber_features": false,
         "input_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2",
-        "update_origin": true
+        "use_physical_bounds": false
       },
       "comments": "",
       "filter": {
@@ -137,7 +137,7 @@
         "image_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/IPF_Unexposed_001",
         "input_image_geometry_path": "Cugrid_after 2nd_15kv_2kx_2",
         "index_offset": 0,
-        "plane": 0
+        "plane_index": 0
       },
       "comments": "",
       "filter": {
@@ -151,10 +151,10 @@
         "cell_euler_angles_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles",
         "cell_phases_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases",
         "crystal_structures_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures",
-        "generation_algorithm": 0,
+        "generation_algorithm_index": 0,
         "mask_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",
         "output_image_geometry_path": "PoleFigure",
-        "image_layout": 2,
+        "image_layout_index": 2,
         "image_prefix": "Cugrid_after 2nd_15kv_2kx_2_Unexposed_",
         "image_size": 1024,
         "lambert_size": 64,

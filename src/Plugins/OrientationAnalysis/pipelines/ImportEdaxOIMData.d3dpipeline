@@ -6,7 +6,7 @@
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
-        "image_geometry_name": "ImageGeom",
+        "output_image_geometry_path": "ImageGeom",
         "origin": [
           0.0,
           0.0,
@@ -91,7 +91,7 @@
             1.0
           ]
         ],
-        "rotation_representation": 0,
+        "rotation_representation_index": 0,
         "input_image_geometry_path": "ImageGeom"
       },
       "comments": "",

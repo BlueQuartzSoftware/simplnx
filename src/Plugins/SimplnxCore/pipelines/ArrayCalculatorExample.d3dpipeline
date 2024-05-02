@@ -6,7 +6,7 @@
       "args": {
         "component_count": 1,
         "initialization_value_str": "2",
-        "numeric_type": 4,
+        "numeric_type_index": 4,
         "output_array_path": "TestArray",
         "tuple_dimensions": [
           [
@@ -25,7 +25,7 @@
       "args": {
         "component_count": 1,
         "initialization_value_str": "1.23878",
-        "numeric_type": 8,
+        "numeric_type_index": 8,
         "output_array_path": "Confidence Index",
         "tuple_dimensions": [
           [
@@ -44,7 +44,7 @@
       "args": {
         "component_count": 3,
         "initialization_value_str": "1.23878",
-        "numeric_type": 8,
+        "numeric_type_index": 8,
         "output_array_path": "EulerAngles",
         "tuple_dimensions": [
           [

@@ -8,7 +8,7 @@
         "cell_attribute_matrix_name": "Optical Data",
         "image_data_array_name": "ImageData",
         "output_image_geometry_path": "RoboMet.3D Image Stack",
-        "image_transform_choice": 0,
+        "image_transform_index": 0,
         "input_file_list_object": {
           "end_index": 174,
           "file_extension": ".tif",
@@ -73,7 +73,7 @@
       "args": {
         "active_array_name": "Active",
         "cell_feature_group_name": "Pore Data",
-        "feature_ids_path": "FeatureIds",
+        "feature_ids_name": "FeatureIds",
         "input_image_geometry_path": "RoboMet.3D Image Stack",
         "input_array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
         "mask_path": "RoboMet.3D Image Stack/Optical Data/Mask",

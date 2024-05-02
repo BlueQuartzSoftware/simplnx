@@ -56,7 +56,7 @@
             1.0
           ]
         ],
-        "rotation_representation": 0,
+        "rotation_representation_index": 0,
         "input_image_geometry_path": "fw-ar-IF1-aptr12-corr"
       },
       "comments": "",
@@ -111,7 +111,7 @@
         "comparison_data_path": "fw-ar-IF1-aptr12-corr/Cell Data/Error",
         "loop": true,
         "min_confidence": 0.0,
-        "selected_comparison": 0,
+        "comparison_index": 0,
         "input_image_geometry_path": "fw-ar-IF1-aptr12-corr"
       },
       "comments": "",
@@ -148,7 +148,7 @@
         "image_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/IPF_001",
         "input_image_geometry_path": "fw-ar-IF1-aptr12-corr",
         "index_offset": 0,
-        "plane": 0
+        "plane_index": 0
       },
       "comments": "",
       "filter": {
@@ -184,7 +184,7 @@
         "image_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/IPF_010",
         "input_image_geometry_path": "fw-ar-IF1-aptr12-corr",
         "index_offset": 0,
-        "plane": 0
+        "plane_index": 0
       },
       "comments": "",
       "filter": {
@@ -220,7 +220,7 @@
         "image_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/IPF_100",
         "input_image_geometry_path": "fw-ar-IF1-aptr12-corr",
         "index_offset": 0,
-        "plane": 0
+        "plane_index": 0
       },
       "comments": "",
       "filter": {
@@ -382,9 +382,9 @@
         "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
         "feature_ids_path": "fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds",
         "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
-        "g_beuclidean_distances_array_path": "CellData/GBEuclideanDistances",
+        "gb_euclidean_distances_array_path": "CellData/GBEuclideanDistances",
         "quats_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Quats",
-        "reference_orientation": 0
+        "reference_orientation_index": 0
       },
       "comments": "",
       "filter": {
@@ -396,7 +396,7 @@
     {
       "args": {
         "cell_feature_attribute_matrix_path": "fw-ar-IF1-aptr12-corr/CellFeatureData",
-        "delimiter_choice_int": 2,
+        "delimiter_index": 2,
         "feature_data_file": "Data/Output/fw-ar-IF1-aptr12-corr/FeatureData.csv",
         "write_neighborlist_data": false,
         "write_num_features_line": true
@@ -431,11 +431,11 @@
     {
       "args": {
         "output_path": "Data/Output/fw-ar-IF1-aptr12-corr/EqDiamHistogram.csv",
-        "delimiter": 2,
+        "delimiter_index": 2,
         "file_extension": ".csv",
-        "includes": 1,
+        "header_option_index": 1,
         "max_val_per_line": 0,
-        "output_style": 1,
+        "output_style_index": 1,
         "input_data_array_paths": [
           "fw-ar-IF1-aptr12-corr/Histograms/EquivalentDiameters Histogram"
         ]

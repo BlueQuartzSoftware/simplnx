@@ -1006,9 +1006,9 @@
                                         "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
                                         "feature_ids_path": "DataContainer/CellData/FeatureIds",
                                         "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
-                                        "g_beuclidean_distances_array_path": "CellData/GBEuclideanDistances",
+                                        "gb_euclidean_distances_array_path": "CellData/GBEuclideanDistances",
                                         "quats_array_path": "DataContainer/CellData/Quats",
-                                        "reference_orientation": 0
+                                        "reference_orientation_index": 0
                                       },
                                       "comments": "",
                                       "filter": {
@@ -1078,7 +1078,7 @@
                                 "remove_original_geometry": true,
                                 "renumber_features": true,
                                 "input_image_geometry_path": "DataContainer",
-                                "update_origin": true
+                                "use_physical_bounds": false
                               },
                               "comments": "",
                               "filter": {
@@ -1292,7 +1292,7 @@
     },
     {
       "args": {
-        "chosen_limit_dists": 2,
+        "chosen_limit_dists_index": 2,
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "dist_output_file": "Data/Output/Examples/gbcd_distribution.dat",
         "err_output_file": "Data/Output/Examples/gbcd_distribution_errors.dat",
