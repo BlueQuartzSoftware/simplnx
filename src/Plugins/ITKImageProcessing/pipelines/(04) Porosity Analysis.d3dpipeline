@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "(04) Porosity Analysis",
   "pipeline": [
     {
       "args": {
@@ -192,48 +192,24 @@
     },
     {
       "args": {
-        "cell_ensemble_attribute_matrix_path": "RoboMet.3D Image Stack/EnsembleAttributeMatrix",
-        "crystal_structures_array_name": "CrystalStructures",
-        "ensemble": [
+        "data_object_path": "RoboMet.3D Image Stack/Ensemble Data",
+        "tuple_dimensions": [
           [
-            "Cubic-High m-3m",
-            "Matrix",
-            "Matrix"
-          ],
-          [
-            "Cubic-High m-3m",
-            "Precipitate",
-            "Pores"
+            3.0
           ]
-        ],
-        "phase_names_array_name": "PhaseNames",
-        "phase_types_array_name": "PhaseTypes"
-      },
-      "comments": "",
-      "filter": {
-        "name": "nx::core::CreateEnsembleInfoFilter",
-        "uuid": "8ce3d70c-49fe-4812-a1eb-7ce4c962a59d"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
-        "removed_data_path": [
-          "RoboMet.3D Image Stack/EnsembleAttributeMatrix/CrystalStructures",
-          "RoboMet.3D Image Stack/EnsembleAttributeMatrix/PhaseTypes"
         ]
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::DeleteDataFilter",
-        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
+        "name": "nx::core::CreateAttributeMatrixFilter",
+        "uuid": "a6a28355-ee69-4874-bcac-76ed427423ed"
       },
       "isDisabled": false
     },
     {
       "args": {
         "biased_features_array_path": "",
-        "cell_ensemble_attribute_matrix_path": "RoboMet.3D Image Stack/EnsembleAttributeMatrix",
+        "cell_ensemble_attribute_matrix_path": "RoboMet.3D Image Stack/Ensemble Data",
         "centroids_array_path": "RoboMet.3D Image Stack/Pore Data/Centroids",
         "clustering_list_array_name": "ClusteringList",
         "equivalent_diameters_array_path": "RoboMet.3D Image Stack/Pore Data/EquivalentDiameters",
