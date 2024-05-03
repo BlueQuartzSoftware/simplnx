@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/FindNeighborsFilter.hpp"
+#include "SimplnxCore/Filters/FindFeatureNeighborsFilter.hpp"
 #include "SimplnxCore/Filters/MinNeighborsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -70,22 +70,22 @@ TEST_CASE("SimplnxCore::MinNeighborsFilter", "[SimplnxCore][MinNeighborsFilter]"
   DataPath surfaceFeaturesPath = cellFeatureAttributeMatrixPath.createChildPath(surfaceFeaturesName);
 
   {
-    FindNeighborsFilter filter;
+    FindFeatureNeighborsFilter filter;
     Arguments args;
 
-    args.insertOrAssign(FindNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insertOrAssign(FindNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
-    args.insertOrAssign(FindNeighborsFilter::k_CellFeaturesPath_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_CellFeaturesPath_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
 
-    args.insertOrAssign(FindNeighborsFilter::k_StoreBoundary_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighborsFilter::k_BoundaryCellsName_Key, std::make_any<std::string>(boundaryCellsName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_StoreBoundary_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_BoundaryCellsName_Key, std::make_any<std::string>(boundaryCellsName));
 
-    args.insertOrAssign(FindNeighborsFilter::k_StoreSurface_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighborsFilter::k_SurfaceFeaturesName_Key, std::make_any<std::string>(surfaceFeaturesName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_StoreSurface_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_SurfaceFeaturesName_Key, std::make_any<std::string>(surfaceFeaturesName));
 
-    args.insertOrAssign(FindNeighborsFilter::k_NumNeighborsName_Key, std::make_any<std::string>(numNeighborName));
-    args.insertOrAssign(FindNeighborsFilter::k_NeighborListName_Key, std::make_any<std::string>(neighborListName));
-    args.insertOrAssign(FindNeighborsFilter::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_NumNeighborsName_Key, std::make_any<std::string>(numNeighborName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_NeighborListName_Key, std::make_any<std::string>(neighborListName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

@@ -1,4 +1,4 @@
-#include "FindNeighborsFilter.hpp"
+#include "FindFeatureNeighborsFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -20,37 +20,37 @@
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindNeighborsFilter::name() const
+std::string FindFeatureNeighborsFilter::name() const
 {
-  return FilterTraits<FindNeighborsFilter>::name;
+  return FilterTraits<FindFeatureNeighborsFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighborsFilter::className() const
+std::string FindFeatureNeighborsFilter::className() const
 {
-  return FilterTraits<FindNeighborsFilter>::className;
+  return FilterTraits<FindFeatureNeighborsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindNeighborsFilter::uuid() const
+Uuid FindFeatureNeighborsFilter::uuid() const
 {
-  return FilterTraits<FindNeighborsFilter>::uuid;
+  return FilterTraits<FindFeatureNeighborsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighborsFilter::humanName() const
+std::string FindFeatureNeighborsFilter::humanName() const
 {
   return "Find Feature Neighbors";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindNeighborsFilter::defaultTags() const
+std::vector<std::string> FindFeatureNeighborsFilter::defaultTags() const
 {
   return {className(), "Statistics", "Neighbors", "Features"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindNeighborsFilter::parameters() const
+Parameters FindFeatureNeighborsFilter::parameters() const
 {
   Parameters params;
 
@@ -88,13 +88,13 @@ Parameters FindNeighborsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindNeighborsFilter::clone() const
+IFilter::UniquePointer FindFeatureNeighborsFilter::clone() const
 {
-  return std::make_unique<FindNeighborsFilter>();
+  return std::make_unique<FindFeatureNeighborsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindFeatureNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
@@ -164,7 +164,7 @@ IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> FindNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> FindFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
@@ -434,9 +434,9 @@ constexpr StringLiteral k_SurfaceFeaturesArrayNameKey = "SurfaceFeaturesArrayNam
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> FindFeatureNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindNeighborsFilter().getDefaultArguments();
+  Arguments args = FindFeatureNeighborsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

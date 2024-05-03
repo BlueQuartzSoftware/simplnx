@@ -60,7 +60,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindLargestCrossSectionsTest.cpp
   FindNeighborhoodsTest.cpp
   FindNeighborListStatisticsTest.cpp
-  FindNeighborsTest.cpp
+  FindFeatureNeighborsTest.cpp
   FindNumFeaturesTest.cpp
   FindSurfaceAreaToVolumeTest.cpp
   FindSurfaceFeaturesTest.cpp
