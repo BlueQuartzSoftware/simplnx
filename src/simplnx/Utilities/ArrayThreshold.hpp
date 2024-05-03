@@ -65,7 +65,7 @@ public:
   ArrayThreshold();
   ArrayThreshold(const ArrayThreshold& other);
   ArrayThreshold(ArrayThreshold&& other) noexcept;
-  virtual ~ArrayThreshold();
+  ~ArrayThreshold() override;
 
   ArrayThreshold& operator=(const ArrayThreshold& other);
   ArrayThreshold& operator=(ArrayThreshold&& other) noexcept;
@@ -101,7 +101,7 @@ public:
   ArrayThresholdSet();
   ArrayThresholdSet(const ArrayThresholdSet& other);
   ArrayThresholdSet(ArrayThresholdSet&& other) noexcept;
-  virtual ~ArrayThresholdSet();
+  ~ArrayThresholdSet() override;
 
   ArrayThresholdSet& operator=(const ArrayThresholdSet& other);
   ArrayThresholdSet& operator=(ArrayThresholdSet&& other) noexcept;

@@ -14,7 +14,7 @@ public:
   using data_type = ImageGeom;
 
   ImageGeomIO();
-  virtual ~ImageGeomIO() noexcept;
+  ~ImageGeomIO() noexcept override;
 
   /**
    * @brief Attempts to read the ImageGeom from HDF5.

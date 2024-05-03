@@ -14,7 +14,7 @@ public:
   using data_type = RectGridGeom;
 
   RectGridGeomIO();
-  virtual ~RectGridGeomIO() noexcept;
+  ~RectGridGeomIO() noexcept override;
 
   /**
    * @brief Attempts to read the RectGridGeom from HDF5.

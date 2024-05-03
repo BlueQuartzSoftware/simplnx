@@ -14,7 +14,7 @@ public:
   using data_type = TetrahedralGeom;
 
   TetrahedralGeomIO();
-  virtual ~TetrahedralGeomIO() noexcept;
+  ~TetrahedralGeomIO() noexcept override;
 
   /**
    * @brief Attempts to read the TetrahedralGeom from HDF5.

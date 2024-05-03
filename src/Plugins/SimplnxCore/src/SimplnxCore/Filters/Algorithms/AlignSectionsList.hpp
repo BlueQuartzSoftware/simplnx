@@ -27,7 +27,7 @@ class SIMPLNXCORE_EXPORT AlignSectionsList : public AlignSections
 {
 public:
   AlignSectionsList(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AlignSectionsListInputValues* inputValues);
-  ~AlignSectionsList() noexcept;
+  ~AlignSectionsList() noexcept override;
 
   AlignSectionsList(const AlignSectionsList&) = delete;
   AlignSectionsList(AlignSectionsList&&) noexcept = delete;

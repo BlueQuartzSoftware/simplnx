@@ -14,7 +14,7 @@ public:
   using data_type = HexahedralGeom;
 
   HexahedralGeomIO();
-  virtual ~HexahedralGeomIO() noexcept;
+  ~HexahedralGeomIO() noexcept override;
 
   /**
    * @brief Attempts to read the HexahedralGeom from HDF5.

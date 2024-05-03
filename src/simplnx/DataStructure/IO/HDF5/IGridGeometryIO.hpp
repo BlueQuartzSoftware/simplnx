@@ -13,7 +13,7 @@ class SIMPLNX_EXPORT IGridGeometryIO : public IGeometryIO
 {
 public:
   IGridGeometryIO();
-  virtual ~IGridGeometryIO() noexcept;
+  ~IGridGeometryIO() noexcept override;
 
   IGridGeometryIO(const IGridGeometryIO& other) = delete;
   IGridGeometryIO(IGridGeometryIO&& other) = delete;

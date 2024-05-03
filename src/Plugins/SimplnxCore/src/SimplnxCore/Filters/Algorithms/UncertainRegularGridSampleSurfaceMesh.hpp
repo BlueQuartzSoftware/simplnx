@@ -35,7 +35,7 @@ class SIMPLNXCORE_EXPORT UncertainRegularGridSampleSurfaceMesh : public SampleSu
 public:
   UncertainRegularGridSampleSurfaceMesh(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                         UncertainRegularGridSampleSurfaceMeshInputValues* inputValues);
-  ~UncertainRegularGridSampleSurfaceMesh() noexcept;
+  ~UncertainRegularGridSampleSurfaceMesh() noexcept override;
 
   UncertainRegularGridSampleSurfaceMesh(const UncertainRegularGridSampleSurfaceMesh&) = delete;
   UncertainRegularGridSampleSurfaceMesh(UncertainRegularGridSampleSurfaceMesh&&) noexcept = delete;

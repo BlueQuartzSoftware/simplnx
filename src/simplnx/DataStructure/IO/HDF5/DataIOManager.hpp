@@ -14,7 +14,7 @@ public:
    * @brief Constructs a DattaIOManager and adds core IO classes.
    */
   DataIOManager();
-  virtual ~DataIOManager() noexcept;
+  ~DataIOManager() noexcept override;
 
   /**
    * @brief Returns the format name for the IDataIOManager as a string.

@@ -44,7 +44,7 @@ public:
   using FeatureIdsArrayType = Int32Array;
 
   EBSDSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EBSDSegmentFeaturesInputValues* inputValues);
-  ~EBSDSegmentFeatures() noexcept;
+  ~EBSDSegmentFeatures() noexcept override;
 
   EBSDSegmentFeatures(const EBSDSegmentFeatures&) = delete;            // Copy Constructor Not Implemented
   EBSDSegmentFeatures(EBSDSegmentFeatures&&) = delete;                 // Move Constructor Not Implemented

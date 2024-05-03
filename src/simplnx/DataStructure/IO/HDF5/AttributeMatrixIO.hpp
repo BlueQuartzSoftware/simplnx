@@ -17,7 +17,7 @@ public:
   using data_type = AttributeMatrix;
 
   AttributeMatrixIO();
-  virtual ~AttributeMatrixIO() noexcept;
+  ~AttributeMatrixIO() noexcept override;
 
   AttributeMatrixIO(const AttributeMatrixIO& other) = delete;
   AttributeMatrixIO(AttributeMatrixIO&& other) = delete;

@@ -40,7 +40,7 @@ public:
   using GoodVoxelsArrayType = BoolArray;
 
   ScalarSegmentFeatures(DataStructure& dataStructure, ScalarSegmentFeaturesInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~ScalarSegmentFeatures() noexcept;
+  ~ScalarSegmentFeatures() noexcept override;
 
   ScalarSegmentFeatures(const ScalarSegmentFeatures&) = delete;
   ScalarSegmentFeatures(ScalarSegmentFeatures&&) noexcept = delete;

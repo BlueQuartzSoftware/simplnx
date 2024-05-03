@@ -13,7 +13,7 @@ class SIMPLNX_EXPORT INodeGeom1dIO : public INodeGeom0dIO
 {
 public:
   INodeGeom1dIO();
-  virtual ~INodeGeom1dIO() noexcept;
+  ~INodeGeom1dIO() noexcept override;
 
   INodeGeom1dIO(const INodeGeom1dIO& other) = delete;
   INodeGeom1dIO(INodeGeom1dIO&& other) = delete;
