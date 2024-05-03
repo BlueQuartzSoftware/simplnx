@@ -71,22 +71,20 @@ public:
       }
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
-      m_AtomicFiles.emplace_back(std::make_unique<AtomicFile>((fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string()))));
-      auto creationResult = m_AtomicFiles[m_Index]->getResult();
-      if(creationResult.invalid())
+      m_AtomicFiles.push_back(AtomicFile::Create(fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())));
+      if(m_AtomicFiles[m_Index].invalid())
       {
-        return creationResult;
+        return ConvertResult(std::move(m_AtomicFiles[m_Index]));
       }
-      fs::path outPath = m_AtomicFiles[m_Index]->tempFilePath();
+      fs::path outPath = m_AtomicFiles[m_Index].value().tempFilePath();
 
       // Ensure the output path exists by creating it if necessary
       if(!fs::exists(m_OutputPath))
       {
-        auto result = m_AtomicFiles[m_Index]->getResult();
-        if(result.invalid())
+        if(m_AtomicFiles[m_Index].invalid())
         {
           m_Valid = false;
-          return result;
+          return ConvertResult(std::move(m_AtomicFiles[m_Index]));
         }
       }
 
@@ -223,11 +221,12 @@ public:
   {
     if(m_Valid)
     {
-      for(const auto& atomicFile : m_AtomicFiles)
+      for(auto& atomicFile : m_AtomicFiles)
       {
-        if(!atomicFile->commit())
+        Result<> commitResult = atomicFile.value().commit();
+        if(commitResult.invalid())
         {
-          return atomicFile->getResult();
+          return commitResult;
         }
       }
     }
@@ -243,7 +242,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const fs::path& m_OutputPath;
   const std::string& m_FilePrefix;
-  std::vector<std::unique_ptr<AtomicFile>> m_AtomicFiles = {};
+  std::vector<Result<AtomicFile>> m_AtomicFiles;
   usize m_Index = 0;
   bool m_Valid = true;
 

@@ -50,8 +50,13 @@ bool Is2DFormat(const fs::path& fileName)
 template <typename PixelT, uint32 Dimensions>
 Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& filePath /*, const IFilter::MessageHandler& messanger*/)
 {
-  AtomicFile atomicFile(filePath.string());
-  auto tempPath = atomicFile.tempFilePath();
+  auto atomicFileResult = AtomicFile::Create(filePath);
+  if(atomicFileResult.invalid())
+  {
+    return ConvertResult(std::move(atomicFileResult));
+  }
+  AtomicFile atomicFile = std::move(atomicFileResult.value());
+  std::string tempPath = atomicFile.tempFilePath().string();
   try
   {
     using ImageType = itk::Image<PixelT, Dimensions>;
@@ -61,7 +66,7 @@ Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& f
     // messanger(fmt::format("Saving {}", fileName));
 
     writer->SetInput(&image);
-    writer->SetFileName(tempPath.string());
+    writer->SetFileName(tempPath);
     writer->UseCompressionOn();
     writer->Update();
   } catch(const itk::ExceptionObject& err)
@@ -69,9 +74,10 @@ Result<> WriteAsOneFile(itk::Image<PixelT, Dimensions>& image, const fs::path& f
     return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
   }
 
-  if(!atomicFile.commit())
+  Result<> commitResult = atomicFile.commit();
+  if(commitResult.invalid())
   {
-    return atomicFile.getResult();
+    return commitResult;
   }
   return {};
 }
@@ -80,42 +86,42 @@ template <typename PixelT, uint32 Dimensions>
 Result<> WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const fs::path& filePath, uint64 indexOffset)
 {
   // Create list of AtomicFiles
-  std::vector<std::unique_ptr<AtomicFile>> atomicFiles = {};
+  std::vector<Result<AtomicFile>> atomicFiles;
+  std::vector<std::string> fileNames;
 
   for(uint64 index = indexOffset; index < (z_size - 1); index++)
   {
-    atomicFiles.emplace_back(
-        std::make_unique<AtomicFile>((fs::absolute(fmt::format("{}/{}{:03d}{}", filePath.parent_path().string(), filePath.stem().string(), index, filePath.extension().string())))));
-  }
-  {
-    std::vector<std::string> fileNames = {};
-    for(const auto& atomicFile : atomicFiles)
+    atomicFiles.push_back(AtomicFile::Create(fs::absolute(fmt::format("{}/{}{:03d}{}", filePath.parent_path().string(), filePath.stem().string(), index, filePath.extension().string()))));
+    auto& atomicFileResult = atomicFiles.back();
+    if(atomicFileResult.invalid())
     {
-      fileNames.emplace_back(atomicFile->tempFilePath().string());
+      return ConvertResult(std::move(atomicFileResult));
     }
-
-    // generate all the files in that new directory
-    try
-    {
-      using InputImageType = itk::Image<PixelT, Dimensions>;
-      using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
-      using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
-      auto writer = SeriesWriterType::New();
-      writer->SetInput(&image);
-      writer->SetFileNames(fileNames);
-      writer->UseCompressionOn();
-      writer->Update();
-    } catch(const itk::ExceptionObject& err)
-    {
-      return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
-    }
+    fileNames.push_back(atomicFileResult.value().tempFilePath().string());
   }
 
-  for(const auto& atomicFile : atomicFiles)
+  // generate all the files in that new directory
+  try
   {
-    if(!atomicFile->commit())
+    using InputImageType = itk::Image<PixelT, Dimensions>;
+    using OutputImageType = itk::Image<PixelT, Dimensions - 1>;
+    using SeriesWriterType = itk::ImageSeriesWriter<InputImageType, OutputImageType>;
+    auto writer = SeriesWriterType::New();
+    writer->SetInput(&image);
+    writer->SetFileNames(fileNames);
+    writer->UseCompressionOn();
+    writer->Update();
+  } catch(const itk::ExceptionObject& err)
+  {
+    return MakeErrorResult(-21011, fmt::format("ITK exception was thrown while writing output file: {}", err.GetDescription()));
+  }
+
+  for(auto& atomicFile : atomicFiles)
+  {
+    Result<> commitResult = atomicFile.value().commit();
+    if(commitResult.invalid())
     {
-      return atomicFile->getResult();
+      return commitResult;
     }
   }
 
