@@ -104,30 +104,30 @@ Result<> ReadPeregrineHDF5File::readSliceDatasets(nx::core::HDF5::FileReader& h5
     }
   }
 
-  // Read the camera data
-  if(m_InputValues->readCameraData)
-  {
-    {
-      m_MessageHandler("Reading Camera Dataset 0...");
-      DataPath cameraData0Path = m_InputValues->sliceDataImageGeomPath.createChildPath(m_InputValues->sliceDataCellAttrMatName).createChildPath(m_InputValues->cameraData0ArrayName);
-      nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(k_CameraData0H5Path);
-      Result<> fillArrayResults = HDF5::Support::FillDataArray<float32>(m_DataStructure, cameraData0Path, datasetReader, start, count);
-      if(fillArrayResults.invalid())
-      {
-        return fillArrayResults;
-      }
-    }
-    {
-      m_MessageHandler("Reading Camera Dataset 1...");
-      DataPath cameraData1Path = m_InputValues->sliceDataImageGeomPath.createChildPath(m_InputValues->sliceDataCellAttrMatName).createChildPath(m_InputValues->cameraData1ArrayName);
-      nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(k_CameraData1H5Path);
-      Result<> fillArrayResults = HDF5::Support::FillDataArray<float32>(m_DataStructure, cameraData1Path, datasetReader, start, count);
-      if(fillArrayResults.invalid())
-      {
-        return fillArrayResults;
-      }
-    }
-  }
+  //  // Read the camera data
+  //  if(m_InputValues->readCameraData)
+  //  {
+  //    {
+  //      m_MessageHandler("Reading Camera Dataset 0...");
+  //      DataPath cameraData0Path = m_InputValues->sliceDataImageGeomPath.createChildPath(m_InputValues->sliceDataCellAttrMatName).createChildPath(m_InputValues->cameraData0ArrayName);
+  //      nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(k_CameraData0H5Path);
+  //      Result<> fillArrayResults = HDF5::Support::FillDataArray<float32>(m_DataStructure, cameraData0Path, datasetReader, start, count);
+  //      if(fillArrayResults.invalid())
+  //      {
+  //        return fillArrayResults;
+  //      }
+  //    }
+  //    {
+  //      m_MessageHandler("Reading Camera Dataset 1...");
+  //      DataPath cameraData1Path = m_InputValues->sliceDataImageGeomPath.createChildPath(m_InputValues->sliceDataCellAttrMatName).createChildPath(m_InputValues->cameraData1ArrayName);
+  //      nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(k_CameraData1H5Path);
+  //      Result<> fillArrayResults = HDF5::Support::FillDataArray<float32>(m_DataStructure, cameraData1Path, datasetReader, start, count);
+  //      if(fillArrayResults.invalid())
+  //      {
+  //        return fillArrayResults;
+  //      }
+  //    }
+  //  }
 
   // Read the part ids
   if(m_InputValues->readPartIds)
@@ -173,31 +173,32 @@ Result<> ReadPeregrineHDF5File::readRegisteredDatasets(HDF5::FileReader& h5FileR
     };
   }
 
-  // Read the anomaly detection dataset
-  if(m_InputValues->readAnomalyDetection)
-  {
-    m_MessageHandler("Reading Anomaly Detection...");
-    DataPath anomalyDetectionPath = m_InputValues->registeredDataImageGeomPath.createChildPath(m_InputValues->registeredDataCellAttrMatName).createChildPath(m_InputValues->anomalyDetectionArrayName);
-    nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(k_RegisteredAnomalyDetectionH5Path);
-    Result<> fillArrayResults = HDF5::Support::FillDataArray<uint8>(m_DataStructure, anomalyDetectionPath, datasetReader, start, count);
-    if(fillArrayResults.invalid())
-    {
-      return fillArrayResults;
-    }
-  }
-
-  // Read the x-ray CT dataset
-  if(m_InputValues->readXRayCT)
-  {
-    m_MessageHandler("Reading X-Ray CT...");
-    DataPath xRayCTPath = m_InputValues->registeredDataImageGeomPath.createChildPath(m_InputValues->registeredDataCellAttrMatName).createChildPath(m_InputValues->xRayCTArrayName);
-    nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(k_RegisteredXRayCtH5Path);
-    Result<> fillArrayResults = HDF5::Support::FillDataArray<uint8>(m_DataStructure, xRayCTPath, datasetReader, start, count);
-    if(fillArrayResults.invalid())
-    {
-      return fillArrayResults;
-    }
-  }
+  //  // Read the anomaly detection dataset
+  //  if(m_InputValues->readAnomalyDetection)
+  //  {
+  //    m_MessageHandler("Reading Anomaly Detection...");
+  //    DataPath anomalyDetectionPath =
+  //    m_InputValues->registeredDataImageGeomPath.createChildPath(m_InputValues->registeredDataCellAttrMatName).createChildPath(m_InputValues->anomalyDetectionArrayName);
+  //    nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(k_RegisteredAnomalyDetectionH5Path);
+  //    Result<> fillArrayResults = HDF5::Support::FillDataArray<uint8>(m_DataStructure, anomalyDetectionPath, datasetReader, start, count);
+  //    if(fillArrayResults.invalid())
+  //    {
+  //      return fillArrayResults;
+  //    }
+  //  }
+  //
+  //  // Read the x-ray CT dataset
+  //  if(m_InputValues->readXRayCT)
+  //  {
+  //    m_MessageHandler("Reading X-Ray CT...");
+  //    DataPath xRayCTPath = m_InputValues->registeredDataImageGeomPath.createChildPath(m_InputValues->registeredDataCellAttrMatName).createChildPath(m_InputValues->xRayCTArrayName);
+  //    nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(k_RegisteredXRayCtH5Path);
+  //    Result<> fillArrayResults = HDF5::Support::FillDataArray<uint8>(m_DataStructure, xRayCTPath, datasetReader, start, count);
+  //    if(fillArrayResults.invalid())
+  //    {
+  //      return fillArrayResults;
+  //    }
+  //  }
 
   return {};
 }

@@ -18,7 +18,7 @@ struct SIMPLNXCORE_EXPORT ReadPeregrineHDF5FileInputValues
 {
   fs::path inputFilePath;
   std::string segmentationResultsStr;
-  bool readCameraData;
+  //  bool readCameraData;
   bool readPartIds;
   bool readSampleIds;
   bool readSlicesSubvolume;
@@ -27,8 +27,8 @@ struct SIMPLNXCORE_EXPORT ReadPeregrineHDF5FileInputValues
   std::vector<uint64> slicesSubvolumeMinMaxZ;
   DataPath sliceDataImageGeomPath;
   std::string sliceDataCellAttrMatName;
-  std::string cameraData0ArrayName;
-  std::string cameraData1ArrayName;
+  //  std::string cameraData0ArrayName;
+  //  std::string cameraData1ArrayName;
   std::string partIdsArrayName;
   std::string sampleIdsArrayName;
   DataPath registeredDataImageGeomPath;
@@ -37,10 +37,10 @@ struct SIMPLNXCORE_EXPORT ReadPeregrineHDF5FileInputValues
   std::vector<uint64> registeredDataSubvolumeMinMaxX;
   std::vector<uint64> registeredDataSubvolumeMinMaxY;
   std::vector<uint64> registeredDataSubvolumeMinMaxZ;
-  bool readAnomalyDetection;
-  std::string anomalyDetectionArrayName;
-  bool readXRayCT;
-  std::string xRayCTArrayName;
+  //  bool readAnomalyDetection;
+  //  std::string anomalyDetectionArrayName;
+  //  bool readXRayCT;
+  //  std::string xRayCTArrayName;
   bool readScanDataSubvolume;
   std::vector<uint64> scanDataSubvolumeMinMax;
   DataPath scanDataEdgeGeomPath;
