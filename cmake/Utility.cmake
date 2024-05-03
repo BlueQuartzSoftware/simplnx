@@ -76,6 +76,7 @@ function(simplnx_enable_warnings)
     if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
       set(CLANG_WARNINGS
         -Werror=implicit-exception-spec-mismatch # Wimplicit-exception-spec-mismatch: function previously declared with an explicit/implicit exception specification redeclared with an implicit/explicit exception specification
+        -Werror=inconsistent-missing-override
       )
     endif()
 
