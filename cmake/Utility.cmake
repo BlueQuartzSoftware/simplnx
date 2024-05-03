@@ -62,6 +62,8 @@ function(simplnx_enable_warnings)
         /we4457 # C4457: declaration of 'identifier' hides function parameter
         /we4458 # C4458: declaration of 'identifier' hides class member
         /we4459 # C4459: declaration of 'identifier' hides global declaration
+        /we4263 # C4263: 'function' : member function does not override any base class virtual member function
+        /we4266 # C4266: 'function' : no override available for virtual member function from base 'type'; function is hidden
 
         /permissive- # Standards compliance
     )
