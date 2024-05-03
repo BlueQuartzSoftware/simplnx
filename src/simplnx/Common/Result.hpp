@@ -175,8 +175,7 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
 template <class ToT, class FromT>
 Result<ToT> ConvertInvalidResult(Result<FromT>&& result)
 {
-  Result<ToT> convertedResult;
-  convertedResult.m_Expected = nonstd::make_unexpected(std::move(result.errors()));
+  Result<ToT> convertedResult{std::move(nonstd::make_unexpected(std::move(result.errors())))};
   convertedResult.warnings() = std::move(result.warnings());
 
   return convertedResult;

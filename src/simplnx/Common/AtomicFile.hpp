@@ -9,8 +9,6 @@
 
 namespace nx::core
 {
-namespace fs = std::filesystem;
-
 /**
  * @class AtomicFile
  * @brief The AtomicFile class accepts a filepath which it stores and
@@ -22,52 +20,40 @@ namespace fs = std::filesystem;
 class SIMPLNX_EXPORT AtomicFile
 {
 public:
-  /**
-   * @brief Constructs the object and stores errors !!!CHECK getResult()!!!
-   */
-  explicit AtomicFile(const std::string& filename);
-  /**
-   * @brief Constructs the object and stores errors !!!CHECK getResult()!!!
-   */
-  explicit AtomicFile(fs::path&& filename);
+  ~AtomicFile() noexcept;
 
-  ~AtomicFile();
+  AtomicFile(const AtomicFile&) = delete;
+  AtomicFile(AtomicFile&&) noexcept = default;
+
+  AtomicFile& operator=(const AtomicFile&) = delete;
+  AtomicFile& operator=(AtomicFile&&) noexcept = default;
+
+  static Result<AtomicFile> Create(std::filesystem::path filename);
 
   /**
    * @brief Fetches the file path object to work from
    * @return fs::path the working file path modifications should be made to
    */
-  [[nodiscard]] fs::path tempFilePath() const;
+  [[nodiscard]] std::filesystem::path tempFilePath() const;
 
   /**
-   * @brief Attempts to move the temp file to its final path !!!CHECK getResult() IF FALSE!!!
-   * @return bool - if false you MUST call getResult() to error codes
+   * @brief Attempts to move the temp file to its final path
+   * @return Result<>
    */
-  [[nodiscard]] bool commit();
+  [[nodiscard]] Result<> commit();
 
   /**
    * @brief Purges the temporary file
    */
   void removeTempFile() const;
 
-  /**
-   * @brief Fetch for amalgamated error codes !!!call clearResult() To Reset Errors/Warnings!!!
-   * @return Result<> The result object containing all collected errors
-   */
-  [[nodiscard]] Result<> getResult() const;
-
-  /**
-   * @brief Empties the result container
-   */
-  void clearResult();
-
 private:
-  void updateResult(Result<>&& result);
-  void initialize();
-  fs::path m_FilePath;
-  fs::path m_TempFilePath;
-  Result<> m_Result;
+  /**
+   * @brief Constructs the object.
+   */
+  explicit AtomicFile(std::filesystem::path filename);
 
-  Result<> createOutputDirectories();
+  std::filesystem::path m_FilePath;
+  std::filesystem::path m_TempFilePath;
 };
 } // namespace nx::core

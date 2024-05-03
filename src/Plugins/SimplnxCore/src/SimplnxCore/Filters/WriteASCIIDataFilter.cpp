@@ -179,12 +179,12 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
 
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
-    AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key));
-    auto creationResult = atomicFile.getResult();
-    if(creationResult.invalid())
+    auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key));
+    if(atomicFileResult.invalid())
     {
-      return creationResult;
+      return ConvertResult(std::move(atomicFileResult));
     }
+    AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     auto outputPath = atomicFile.tempFilePath();
     // Make sure any directory path is also available as the user may have just typed
@@ -207,9 +207,10 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
       OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
     }
 
-    if(!atomicFile.commit())
+    Result<> commitResult = atomicFile.commit();
+    if(commitResult.invalid())
     {
-      return atomicFile.getResult();
+      return commitResult;
     }
   }
 

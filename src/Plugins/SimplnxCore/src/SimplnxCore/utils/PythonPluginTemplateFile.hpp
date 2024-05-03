@@ -167,12 +167,13 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& pluginPat
 {
   std::string content = GeneratePythonFilter(filterName, filterName, Uuid::GenerateV4().str());
   fs::path outputPath = pluginPath / fmt::format("{}.py", filterName);
-  AtomicFile tempFile(outputPath.string());
-  auto creationResult = tempFile.getResult();
-  if(creationResult.invalid())
+  auto atomicFileResult = AtomicFile::Create(outputPath);
+  if(atomicFileResult.invalid())
   {
-    return creationResult;
+    return ConvertResult(std::move(atomicFileResult));
   }
+
+  AtomicFile tempFile = std::move(atomicFileResult.value());
   {
     // Scope this so that the file closes first before we then 'commit' with the atomic file
     std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -184,9 +185,10 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& pluginPat
     fout << content;
   }
 
-  if(!tempFile.commit())
+  Result<> commitResult = tempFile.commit();
+  if(commitResult.invalid())
   {
-    return tempFile.getResult();
+    return commitResult;
   }
 
   return InsertFilterNameInPluginFiles(pluginPath, filterName);
@@ -229,13 +231,13 @@ inline Result<> WritePythonFilterToFile(const std::filesystem::path& outputPath,
 {
 
   std::string content = GeneratePythonFilter(filterName, humanName, uuidString);
-  auto outputFilePath = fmt::format("{}{}{}.py", outputPath.string(), std::string{std::filesystem::path::preferred_separator}, filterName);
-  AtomicFile tempFile(outputFilePath);
-  auto creationResult = tempFile.getResult();
-  if(creationResult.invalid())
+  fs::path outputFilePath = outputPath / fmt::format("{}.py", filterName);
+  auto atomicFileResult = AtomicFile::Create(outputFilePath);
+  if(atomicFileResult.invalid())
   {
-    return creationResult;
+    return ConvertResult(std::move(atomicFileResult));
   }
+  AtomicFile tempFile = std::move(atomicFileResult.value());
   {
     // Scope this so that the file closes first before we then 'commit' with the atomic file
     std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -247,9 +249,10 @@ inline Result<> WritePythonFilterToFile(const std::filesystem::path& outputPath,
     fout << content;
   }
 
-  if(!tempFile.commit())
+  Result<> commitResult = tempFile.commit();
+  if(commitResult.invalid())
   {
-    return tempFile.getResult();
+    return commitResult;
   }
 
   return {};
@@ -315,12 +318,12 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
   }
   auto outputPath = pluginRootPath / "Plugin.py";
   {
-    AtomicFile tempFile(outputPath.string());
-    auto creationResult = tempFile.getResult();
-    if(creationResult.invalid())
+    auto atomicFileResult = AtomicFile::Create(outputPath);
+    if(atomicFileResult.invalid())
     {
-      return creationResult;
+      return ConvertResult(std::move(atomicFileResult));
     }
+    AtomicFile tempFile = std::move(atomicFileResult.value());
     {
       // Scope this so that the file closes first before we then 'commit' with the atomic file
       std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -333,21 +336,22 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
 
       fout << content;
     }
-    if(!tempFile.commit())
+    Result<> commitResult = tempFile.commit();
+    if(commitResult.invalid())
     {
-      return tempFile.getResult();
+      return commitResult;
     }
   }
 
   // Write the __init__.py file
   outputPath = pluginRootPath / "__init__.py";
   {
-    AtomicFile initTempFile(outputPath.string());
-    auto creationResult = initTempFile.getResult();
-    if(creationResult.invalid())
+    auto atomicFileResult = AtomicFile::Create(outputPath);
+    if(atomicFileResult.invalid())
     {
-      return creationResult;
+      return ConvertResult(std::move(atomicFileResult));
     }
+    AtomicFile initTempFile = std::move(atomicFileResult.value());
     {
       // Scope this so that the file closes first before we then 'commit' with the atomic file
       std::ofstream fout(initTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
@@ -387,9 +391,10 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
 
       fout << content;
     }
-    if(!initTempFile.commit())
+    Result<> commitResult = initTempFile.commit();
+    if(commitResult.invalid())
     {
-      return initTempFile.getResult();
+      return commitResult;
     }
   }
   // Now loop over each Filter and generate the skeleton files

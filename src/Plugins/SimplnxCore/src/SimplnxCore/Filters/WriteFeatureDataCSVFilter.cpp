@@ -95,12 +95,12 @@ IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStru
 Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
-  AtomicFile atomicFile(filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key));
-  auto creationResult = atomicFile.getResult();
-  if(creationResult.invalid())
+  auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key));
+  if(atomicFileResult.invalid())
   {
-    return creationResult;
+    return ConvertResult(std::move(atomicFileResult));
   }
+  AtomicFile atomicFile = std::move(atomicFileResult.value());
 
   auto pOutputFilePath = atomicFile.tempFilePath();
   auto pWriteNeighborListDataValue = filterArgs.value<bool>(k_WriteNeighborListData_Key);
@@ -160,9 +160,10 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
     OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
   }
 
-  if(!atomicFile.commit())
+  Result<> commitResult = atomicFile.commit();
+  if(commitResult.invalid())
   {
-    return atomicFile.getResult();
+    return commitResult;
   }
   return {};
 }

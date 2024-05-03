@@ -387,12 +387,13 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
 
   for(const auto& dataPath : objectPaths)
   {
-    AtomicFile atomicFile(fmt::format("{}/{}{}", directoryPath, dataPath.getTargetName(), fileExtension));
-    auto creationResult = atomicFile.getResult();
-    if(creationResult.invalid())
+    auto atomicFileResult = AtomicFile::Create(fmt::format("{}/{}{}", directoryPath, dataPath.getTargetName(), fileExtension));
+    if(atomicFileResult.invalid())
     {
-      return creationResult;
+      return ConvertResult(std::move(atomicFileResult));
     }
+
+    AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     auto outputFilePath = atomicFile.tempFilePath().string();
     mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
@@ -438,9 +439,10 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
     {
       return {};
     }
-    if(!atomicFile.commit())
+    Result<> commitResult = atomicFile.commit();
+    if(commitResult.invalid())
     {
-      return atomicFile.getResult();
+      return commitResult;
     }
   }
 

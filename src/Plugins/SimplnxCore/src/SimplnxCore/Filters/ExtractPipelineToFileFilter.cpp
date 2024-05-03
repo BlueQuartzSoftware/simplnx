@@ -11,6 +11,8 @@
 
 #include <nlohmann/json.hpp>
 
+namespace fs = std::filesystem;
+
 namespace
 {
 constexpr nx::core::StringLiteral k_ImportedPipeline = "Imported Pipeline";
@@ -129,12 +131,12 @@ Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, 
   {
     outputFile.replace_extension(extension);
   }
-  AtomicFile atomicFile(outputFile.string());
-  auto creationResult = atomicFile.getResult();
-  if(creationResult.invalid())
+  auto atomicFileResult = AtomicFile::Create(outputFile);
+  if(atomicFileResult.invalid())
   {
-    return creationResult;
+    return ConvertResult(std::move(atomicFileResult));
   }
+  AtomicFile atomicFile = std::move(atomicFileResult.value());
   {
     const fs::path exportFilePath = atomicFile.tempFilePath();
     std::ofstream fOut(exportFilePath.string(), std::ofstream::out); // test name resolution and create file
@@ -145,9 +147,10 @@ Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, 
 
     fOut << pipelineJson.dump(2);
   }
-  if(!atomicFile.commit())
+  Result<> commitResult = atomicFile.commit();
+  if(commitResult.invalid())
   {
-    return atomicFile.getResult();
+    return commitResult;
   }
 
   return {};
