@@ -372,7 +372,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
                     ARCHIVE_NAME 6_6_caxis_data.tar.gz 
                     SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293
-                    INSTALL)
+                    )
   add_custom_target(Copy_${PLUGIN_NAME}_CAxis_Data ALL
                   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data.tar.gz" 
                   COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/Combo-EBSD-120130.osc_r0c0.ang" "${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
@@ -382,6 +382,10 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
                   DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
                   COMMAND_EXPAND_LISTS
                   VERBATIM
+                )
+  install(FILES "${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
+                DESTINATION Data/${PLUGIN_NAME}
+                COMPONENT Applications
                 )
   set_target_properties(Copy_${PLUGIN_NAME}_CAxis_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 
