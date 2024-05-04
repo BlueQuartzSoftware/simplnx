@@ -6,7 +6,7 @@
 namespace nx::core
 {
 bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount,
-                           const IFilter::MessageHandler& messageHandler)
+                           const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   bool acceptableMatrix = true;
 
@@ -64,6 +64,10 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
     {
       for(const auto& dataArray : matchingDataArrayPtrs)
       {
+        if(shouldCancel)
+        {
+          return false;
+        }
         // Do the update "in place". This works because the keepList _should_ be sorted lowest to
         // highest. So we are constantly grabbing values from further in the array and copying
         // them to location to the front of the array.
@@ -87,6 +91,10 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
         {
           featureIds[i] = static_cast<int32_t>(newNames[featureIds[i]]);
           featureIdsChanged = true;
+        }
+        if(shouldCancel)
+        {
+          return false;
         }
       }
 

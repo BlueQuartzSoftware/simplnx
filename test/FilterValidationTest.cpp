@@ -104,7 +104,7 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
   const auto pluginListPtr = Application::Instance()->getPluginList();
 
   std::stringstream output;
-  std::ofstream logFile("/tmp/separator_names.log", std::ios_base::trunc | std::ios_base::binary);
+  std::ofstream logFile(fmt::format("{}/separator_names.log", unit_test::k_BinaryDir.view()), std::ios_base::trunc | std::ios_base::binary);
   std::set<std::string> uniqueSepNames;
 
   // Loop on each Plugin

@@ -94,7 +94,8 @@ IFilter::UniquePointer FindFeatureNeighborsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindFeatureNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindFeatureNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
@@ -165,7 +166,7 @@ IFilter::PreflightResult FindFeatureNeighborsFilter::preflightImpl(const DataStr
 
 //------------------------------------------------------------------------------
 Result<> FindFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);

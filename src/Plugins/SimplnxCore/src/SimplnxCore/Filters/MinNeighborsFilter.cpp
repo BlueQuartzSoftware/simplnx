@@ -22,17 +22,16 @@ constexpr int64 k_MissingFeaturePhasesError = -251;
 constexpr int32 k_InconsistentTupleCount = -252;
 constexpr int32 k_FetchChildArrayError = -5559;
 
-void assignBadPoints(DataStructure& dataStructure, const Arguments& args, const std::atomic_bool& shouldCancel)
+Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighborsFilter::k_SelectedImageGeometryPath_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
   auto numNeighborsPath = args.value<DataPath>(MinNeighborsFilter::k_NumNeighborsPath_Key);
   auto ignoredVoxelArrayPaths = args.value<std::vector<DataPath>>(MinNeighborsFilter::k_IgnoredVoxelArrays_Key);
-  auto cellDataAttrMatrix = args.value<DataPath>(MinNeighborsFilter::k_CellDataAttributeMatrixPath_Key);
+  auto cellDataAttrMatrix = featureIdsPath.getParent();
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
-
   auto& featureIds = featureIdsArray.getDataStoreRef();
 
   auto applyToSinglePhase = args.value<bool>(MinNeighborsFilter::k_ApplyToSinglePhase_Key);
@@ -62,52 +61,67 @@ void assignBadPoints(DataStructure& dataStructure, const Arguments& args, const 
   int32 good = 1;
   int32 current = 0;
   int32 most = 0;
-  int64 neighpoint = 0;
-  usize numfeatures = numNeighborsArray.getNumberOfTuples();
+  int64 neighborPoint = 0;
+  usize numFeatures = numNeighborsArray.getNumberOfTuples();
 
-  int64 neighpoints[6] = {0, 0, 0, 0, 0, 0};
-  neighpoints[0] = -dims[0] * dims[1];
-  neighpoints[1] = -dims[0];
-  neighpoints[2] = -1;
-  neighpoints[3] = 1;
-  neighpoints[4] = dims[0];
-  neighpoints[5] = dims[0] * dims[1];
+  int64 neighborPointIdx[6] = {0, 0, 0, 0, 0, 0};
+  neighborPointIdx[0] = -dims[0] * dims[1];
+  neighborPointIdx[1] = -dims[0];
+  neighborPointIdx[2] = -1;
+  neighborPointIdx[3] = 1;
+  neighborPointIdx[4] = dims[0];
+  neighborPointIdx[5] = dims[0] * dims[1];
 
   usize counter = 1;
-  int64 count = 0;
-  int64 kstride = 0, jstride = 0;
-  int32 featurename = 0, feature = 0;
+  int64 voxelIndex = 0;
+  int64 kStride = 0;
+  int64 jStride = 0;
+  int32 featureName = 0;
+  int32 feature = 0;
   int32 neighbor = 0;
-  std::vector<int32> n(numfeatures + 1, 0);
+  std::vector<int32> n(numFeatures + 1, 0);
   std::vector<size_t> badFeatureIdIndexes;
+
+  int32_t progInt = 0;
+  auto start = std::chrono::steady_clock::now();
+
   while(counter != 0)
   {
+    auto now = std::chrono::steady_clock::now();
+    // Only send updates every 1 second
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    {
+      std::string message = fmt::format("Finding voxels to be assigned Counter = {}", counter);
+      messageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
+      start = now;
+    }
+
     if(shouldCancel)
     {
-      return;
+      return {};
     }
     counter = 0;
     badFeatureIdIndexes.clear();
     for(int64 k = 0; k < dims[2]; k++)
     {
-      kstride = dims[0] * dims[1] * k;
+      kStride = dims[0] * dims[1] * k;
       for(int64 j = 0; j < dims[1]; j++)
       {
-        jstride = dims[0] * j;
+        jStride = dims[0] * j;
         for(int64 i = 0; i < dims[0]; i++)
         {
-          count = kstride + jstride + i;
-          featurename = featureIds[count];
-          if(featurename < 0)
+          voxelIndex = kStride + jStride + i;
+          featureName = featureIds[voxelIndex];
+          if(featureName < 0)
           {
-            badFeatureIdIndexes.push_back(count);
+            badFeatureIdIndexes.push_back(voxelIndex);
             counter++;
             current = 0;
             most = 0;
             for(int32 l = 0; l < 6; l++)
             {
               good = 1;
-              neighpoint = count + neighpoints[l];
+              neighborPoint = voxelIndex + neighborPointIdx[l];
               if(l == 0 && k == 0)
               {
                 good = 0;
@@ -134,7 +148,7 @@ void assignBadPoints(DataStructure& dataStructure, const Arguments& args, const 
               }
               if(good == 1)
               {
-                feature = featureIds[neighpoint];
+                feature = featureIds[neighborPoint];
                 if(feature >= 0)
                 {
                   n[feature]++;
@@ -142,7 +156,7 @@ void assignBadPoints(DataStructure& dataStructure, const Arguments& args, const 
                   if(current > most)
                   {
                     most = current;
-                    neighbors[count] = neighpoint;
+                    neighbors[voxelIndex] = neighborPoint;
                   }
                 }
               }
@@ -150,7 +164,7 @@ void assignBadPoints(DataStructure& dataStructure, const Arguments& args, const 
             for(int32 l = 0; l < 6; l++)
             {
               good = 1;
-              neighpoint = count + neighpoints[l];
+              neighborPoint = voxelIndex + neighborPointIdx[l];
               if(l == 0 && k == 0)
               {
                 good = 0;
@@ -177,7 +191,7 @@ void assignBadPoints(DataStructure& dataStructure, const Arguments& args, const 
               }
               if(good == 1)
               {
-                feature = featureIds[neighpoint];
+                feature = featureIds[neighborPoint];
                 if(feature >= 0)
                 {
                   n[feature] = 0;
@@ -185,26 +199,46 @@ void assignBadPoints(DataStructure& dataStructure, const Arguments& args, const 
               }
             }
           }
+          else if(featureName >= numFeatures)
+          {
+            std::string message = fmt::format("Error: Found a feature Id '{}' that is >= the number of features '{}' at voxel index X={},Y={},Z={}.", featureName, numFeatures, i, j, k);
+            messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+            return MakeErrorResult(-55567, message);
+          }
         }
       }
     }
 
     // TODO This can be parallelized much like NeighborOrientationCorrelation
     // Only iterate over the cell data with a featureId = -1;
-    for(const auto& featureIdIndex : badFeatureIdIndexes)
+    for(const auto& cellArrayPath : cellDataArrayPaths)
     {
-      featurename = featureIds[featureIdIndex];
-      neighbor = neighbors[featureIdIndex];
-      if(featurename < 0 && neighbor >= 0 && featureIds[neighbor] >= 0)
+      if(shouldCancel)
       {
-        for(const auto& cellArrayPath : cellDataArrayPaths)
+        return {};
+      }
+      auto* voxelArray = dataStructure.getDataAs<IDataArray>(cellArrayPath);
+      size_t arraySize = voxelArray->size();
+      for(const auto& featureIdIndex : badFeatureIdIndexes)
+      {
+        featureName = featureIds[featureIdIndex];
+        neighbor = neighbors[featureIdIndex];
+        if((neighbor >= arraySize || featureIdIndex >= arraySize) && (featureName < 0 && neighbor >= 0 && featureIds[neighbor] >= 0))
         {
-          auto* voxelArray = dataStructure.getDataAs<IDataArray>(cellArrayPath);
-          dynamic_cast<IDataArray*>(voxelArray)->copyTuple(neighbor, featureIdIndex);
+          std::string message =
+              fmt::format("Out of range: While trying to copy a tuple from index {} to index {}\n  Array Name: {}\n  Num. Tuples: {}", neighbor, featureIdIndex, cellArrayPath.toString(), arraySize);
+          messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+          return MakeErrorResult(-55568, message);
+        }
+
+        if(featureName < 0 && neighbor >= 0 && featureIds[neighbor] >= 0)
+        {
+          voxelArray->copyTuple(neighbor, featureIdIndex);
         }
       }
     }
   }
+  return {};
 }
 
 nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& dataStructure, const Arguments& args, const std::atomic_bool& shouldCancel)
@@ -324,10 +358,8 @@ Parameters MinNeighborsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellDataAttributeMatrixPath_Key, "Cell Attribute Matrix",
-                                                                    "The cell data attribute matrix in which to apply the minimum neighbors algorithm", DataPath({"Data Container", "CellData"})));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "Specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
@@ -453,17 +485,23 @@ Result<> MinNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arg
     return {nonstd::make_unexpected(std::vector<Error>{activeObjectsResult.error()})};
   }
 
-  auto cellDataAttrMatrix = args.value<DataPath>(MinNeighborsFilter::k_CellDataAttributeMatrixPath_Key);
-  auto result = nx::core::GetAllChildDataPaths(dataStructure, cellDataAttrMatrix, DataObject::Type::DataArray);
+  auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
+
+  // The Cell Attribute Matrix is the parent of the "Feature Ids" array. Always.
+  auto cellDataAttrMatrixPath = featureIdsPath.getParent();
+  auto result = nx::core::GetAllChildDataPaths(dataStructure, cellDataAttrMatrixPath, DataObject::Type::DataArray);
   if(!result.has_value())
   {
-    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Group '{}'", cellDataAttrMatrix.toString()));
+    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Attribute Matrix '{}'", cellDataAttrMatrixPath.toString()));
   }
 
   // Run the algorithm.
-  assignBadPoints(dataStructure, args, shouldCancel);
+  auto assignBadPointsResult = assignBadPoints(dataStructure, args, messageHandler, shouldCancel);
+  if(assignBadPointsResult.invalid())
+  {
+    return assignBadPointsResult;
+  }
 
-  auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
   auto numNeighborsPath = args.value<DataPath>(MinNeighborsFilter::k_NumNeighborsPath_Key);
@@ -481,7 +519,7 @@ Result<> MinNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arg
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
   messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
 
-  nx::core::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArray, currentFeatureCount, messageHandler);
+  nx::core::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArray, currentFeatureCount, messageHandler, shouldCancel);
 
   return {};
 }
@@ -510,8 +548,7 @@ Result<Arguments> MinNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ApplyToSinglePhaseKey, k_ApplyToSinglePhase_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_PhaseNumberKey, k_PhaseNumber_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellDataAttributeMatrixPath_Key));
+
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NumNeighborsArrayPathKey, k_NumNeighborsPath_Key));
