@@ -17,7 +17,7 @@ public:
   using data_type = GridMontage;
 
   GridMontageIO();
-  virtual ~GridMontageIO() noexcept;
+  ~GridMontageIO() noexcept override;
 
   /**
    * @brief Attempts to read the GridMontage from HDF5.

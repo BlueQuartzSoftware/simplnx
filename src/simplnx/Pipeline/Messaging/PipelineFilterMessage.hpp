@@ -22,7 +22,7 @@ public:
    */
   PipelineFilterMessage(PipelineFilter* filter, const IFilter::Message& filterMessage);
 
-  virtual ~PipelineFilterMessage();
+  ~PipelineFilterMessage() override;
 
   /**
    * @brief Returns the IFilter::Message

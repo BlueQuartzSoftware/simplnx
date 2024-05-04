@@ -73,7 +73,7 @@ public:
    */
   GridMontage(GridMontage&& other);
 
-  virtual ~GridMontage();
+  ~GridMontage() override;
 
   /**
    * @brief Returns the typename of the DataObject as a std::string.

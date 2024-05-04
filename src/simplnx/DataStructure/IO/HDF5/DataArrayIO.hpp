@@ -25,7 +25,7 @@ public:
   using store_type = AbstractDataStore<T>;
 
   DataArrayIO() = default;
-  virtual ~DataArrayIO() noexcept = default;
+  ~DataArrayIO() noexcept override = default;
 
   /**
    * @brief Creates and imports a DataArray based on the provided DatasetReader

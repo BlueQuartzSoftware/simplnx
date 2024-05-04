@@ -17,7 +17,7 @@ public:
   using data_type = DataGroup;
 
   DataGroupIO();
-  virtual ~DataGroupIO() noexcept;
+  ~DataGroupIO() noexcept override;
 
   DataGroupIO(const DataGroupIO& other) = delete;
   DataGroupIO(DataGroupIO&& other) = delete;

@@ -25,7 +25,7 @@ public:
    */
   NodeMovedMessage(Pipeline* pipeline, usize fromIndex, usize toIndex);
 
-  virtual ~NodeMovedMessage();
+  ~NodeMovedMessage() override;
 
   /**
    * @brief Returns the node's new pipeline index.

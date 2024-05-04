@@ -631,7 +631,7 @@ public:
   // End std::iterator support //
   ///////////////////////////////
 
-  virtual ~AbstractDataStore() = default;
+  ~AbstractDataStore() override = default;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.

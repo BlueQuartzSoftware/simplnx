@@ -21,7 +21,7 @@ public:
   using object_writer_type = nx::core::HDF5::ObjectWriter;
   using object_reader_type = nx::core::HDF5::ObjectReader;
 
-  virtual ~IDataIO() noexcept;
+  ~IDataIO() noexcept override;
 
   /**
    * @brief Attempts to read the DataObject from HDF5.
