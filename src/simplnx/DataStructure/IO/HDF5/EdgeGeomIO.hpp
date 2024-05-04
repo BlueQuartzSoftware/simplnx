@@ -18,7 +18,7 @@ public:
   using data_type = EdgeGeom;
 
   EdgeGeomIO();
-  virtual ~EdgeGeomIO() noexcept;
+  ~EdgeGeomIO() noexcept override;
 
   /**
    * @brief Attempts to read an EdgeGeom from HDF5.

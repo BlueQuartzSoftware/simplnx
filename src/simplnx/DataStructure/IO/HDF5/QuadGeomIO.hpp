@@ -14,7 +14,7 @@ public:
   using data_type = QuadGeom;
 
   QuadGeomIO();
-  virtual ~QuadGeomIO() noexcept;
+  ~QuadGeomIO() noexcept override;
 
   /**
    * @brief Attempts to read the QuadGeom from HDF5.

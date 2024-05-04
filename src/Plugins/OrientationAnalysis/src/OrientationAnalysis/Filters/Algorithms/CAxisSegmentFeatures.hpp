@@ -35,7 +35,7 @@ class ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeatures : public SegmentFeatures
 {
 public:
   CAxisSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CAxisSegmentFeaturesInputValues* inputValues);
-  ~CAxisSegmentFeatures() noexcept;
+  ~CAxisSegmentFeatures() noexcept override;
 
   CAxisSegmentFeatures(const CAxisSegmentFeatures&) = delete;
   CAxisSegmentFeatures(CAxisSegmentFeatures&&) noexcept = delete;

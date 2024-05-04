@@ -42,7 +42,7 @@ public:
    */
   DataReparentedMessage(DataReparentedMessage&& other) noexcept;
 
-  virtual ~DataReparentedMessage();
+  ~DataReparentedMessage() override;
 
   /**
    * @brief Returns the AbsractDataStructureMessage type.

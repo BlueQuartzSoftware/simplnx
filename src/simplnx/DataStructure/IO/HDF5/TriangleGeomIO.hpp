@@ -14,7 +14,7 @@ public:
   using data_type = TriangleGeom;
 
   TriangleGeomIO();
-  virtual ~TriangleGeomIO() noexcept;
+  ~TriangleGeomIO() noexcept override;
 
   /**
    * @brief Attempts to read the TriangleGeom from HDF5.

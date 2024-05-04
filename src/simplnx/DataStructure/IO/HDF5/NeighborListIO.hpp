@@ -22,7 +22,7 @@ public:
   using shared_vector_type = typename data_type::SharedVectorType;
 
   NeighborListIO() = default;
-  virtual ~NeighborListIO() noexcept = default;
+  ~NeighborListIO() noexcept override = default;
 
   /**
    * @brief Attempts to read the NeighborList<T> data from HDF5.

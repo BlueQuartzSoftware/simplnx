@@ -43,7 +43,7 @@ public:
    */
   DataRemovedMessage(DataRemovedMessage&& other) noexcept;
 
-  virtual ~DataRemovedMessage();
+  ~DataRemovedMessage() override;
 
   /**
    * @brief Returns the AbsractDataStructureMessage type.

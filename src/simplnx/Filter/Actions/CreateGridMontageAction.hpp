@@ -28,7 +28,7 @@ public:
    */
   CreateGridMontageAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing);
 
-  ~CreateGridMontageAction() noexcept = default;
+  ~CreateGridMontageAction() noexcept override = default;
 
   CreateGridMontageAction(const CreateGridMontageAction&) = delete;
   CreateGridMontageAction(CreateGridMontageAction&&) noexcept = delete;

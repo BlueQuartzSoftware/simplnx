@@ -60,7 +60,7 @@ public:
   {
   }
 
-  ~CreateVertexGeometryAction() noexcept = default;
+  ~CreateVertexGeometryAction() noexcept override = default;
 
   CreateVertexGeometryAction(const CreateVertexGeometryAction&) = delete;
   CreateVertexGeometryAction(CreateVertexGeometryAction&&) noexcept = delete;

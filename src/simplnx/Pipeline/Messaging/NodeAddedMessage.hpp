@@ -25,7 +25,7 @@ public:
    */
   NodeAddedMessage(Pipeline* pipeline, AbstractPipelineNode* newNode, usize index);
 
-  virtual ~NodeAddedMessage();
+  ~NodeAddedMessage() override;
 
   /**
    * @brief Returns a pointer to the new pipeline node.

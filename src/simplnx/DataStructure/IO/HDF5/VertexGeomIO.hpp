@@ -14,7 +14,7 @@ public:
   using data_type = VertexGeom;
 
   VertexGeomIO();
-  virtual ~VertexGeomIO() noexcept;
+  ~VertexGeomIO() noexcept override;
 
   /**
    * @brief Attempts to read the VertexGeom from HDF5.

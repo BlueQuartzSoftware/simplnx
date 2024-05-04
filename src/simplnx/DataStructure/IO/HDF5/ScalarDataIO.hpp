@@ -12,7 +12,7 @@ public:
   using data_type = ScalarData<T>;
 
   ScalarDataIO() = default;
-  virtual ~ScalarDataIO() noexcept = default;
+  ~ScalarDataIO() noexcept override = default;
 
   /**
    * @brief Attempts to read the ScalarData from HDF5.
