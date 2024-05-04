@@ -291,7 +291,7 @@ Parameters PartitionGeometryFilter::parameters() const
                                                              DataPath({"Partition Grid Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_PartitionGridCellAMName_Key, "Cell Attribute Matrix",
                                                           "The name of the cell attribute matrix that will contain the partition grid's cell data arrays.", "Cell Data"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_PartitionGridFeatureIDsName_Key, "Feature Ids",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_PartitionGridFeatureIDsName_Key, "Cell Feature Ids",
                                                           "The name of the feature ids array that will contain the feature ids of the generated partition grid.", "Feature Ids"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control

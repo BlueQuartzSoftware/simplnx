@@ -43,7 +43,7 @@ Uuid ReadDREAM3DFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ReadDREAM3DFilter::humanName() const
 {
-  return "Read DREAM.3D File";
+  return "Read DREAM3D-NX File";
 }
 
 //------------------------------------------------------------------------------

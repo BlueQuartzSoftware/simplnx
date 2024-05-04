@@ -102,10 +102,7 @@ TEST_CASE("SimplnxCore::MinNeighborsFilter", "[SimplnxCore][MinNeighborsFilter]"
 
     args.insertOrAssign(MinNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(3));
     args.insertOrAssign(MinNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
-    // args.insertOrAssign(MinNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
-    // args.insertOrAssign(MinNeighborsFilter::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
     args.insertOrAssign(MinNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insertOrAssign(MinNeighborsFilter::k_CellDataAttributeMatrixPath_Key, std::make_any<DataPath>(cellDataAttributeMatrix));
     args.insertOrAssign(MinNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
     args.insertOrAssign(MinNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(numNeighborPath));
     // args.insertOrAssign(MinNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
@@ -131,6 +128,7 @@ TEST_CASE("SimplnxCore::MinNeighborsFilter", "[SimplnxCore][MinNeighborsFilter]"
     }
   }
 
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   {
     // Write out the DataStructure for later viewing/debugging
     Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -138,6 +136,7 @@ TEST_CASE("SimplnxCore::MinNeighborsFilter", "[SimplnxCore][MinNeighborsFilter]"
     auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
+#endif
 }
 
 #if 0
