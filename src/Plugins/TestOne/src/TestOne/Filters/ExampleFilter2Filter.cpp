@@ -71,22 +71,23 @@ Parameters ExampleFilter2Filter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"1rst Group of Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param7, "Bool Parameter", "Example bool help text", true));
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param3, "ChoicesParameter", "Example choices help text", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param3, "Choices Parameter", "Example choices help text", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
 
   params.insertSeparator(Parameters::Separator{"2nd Group of Parameters"});
   DynamicTableInfo tableInfo;
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));
   tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(0, "Row {}"));
   DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
-  params.insert(std::make_unique<DynamicTableParameter>(k_Param13, "DynamicTableParameter", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
+  params.insert(std::make_unique<DynamicTableParameter>(k_Param13, "Dynamic Table Parameter", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
 
   // These should show up under the "Required Objects" Section in the GUI
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroupSelectionParameter", "Example data group selection help text", DataPath{},
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroup Selection Parameter", "Example data group selection help text", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPathSelectionParameter", "Example data path selection help text", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPath Selection Parameter", "Example data path selection help text", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "Example array selection help text", ArraySelectionParameter::ValueType{}, nx::core::GetAllDataTypes()));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArraySelectionParameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{},
+  params.insert(
+      std::make_unique<GeometrySelectionParameter>(k_Param11, "Geometry Selection Parameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArray Selection Parameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{},
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
 
   params.linkParameters(k_Param7, k_Param9, std::make_any<BoolParameter::ValueType>(true));
@@ -96,7 +97,7 @@ Parameters ExampleFilter2Filter::parameters() const
   params.linkParameters(k_Param3, k_Param11, std::make_any<ChoicesParameter::ValueType>(2));
 
   // These should show up under the "Created Objects" section in the GUI
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroupCreationParameter", "Example data group creation help text", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroup Creation Parameter", "Example data group creation help text", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "Example array creation help text", ArrayCreationParameter::ValueType{}));
 
   return params;

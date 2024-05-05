@@ -75,12 +75,12 @@ Parameters ITKBinaryContourImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected",
+  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set/Get the background value used to mark the pixels not on the border of the objects.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "Set/Get the foreground value used to identify the objects in the input and output images.", 1.0));
+  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value", "Set/Get the background value used to mark the pixels not on the border of the objects.", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "Foreground Value", "Set/Get the foreground value used to identify the objects in the input and output images.", 1.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

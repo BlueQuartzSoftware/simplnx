@@ -85,7 +85,7 @@ Parameters ITKRegionalMinimaImageFilter::parameters() const
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));
-  params.insert(std::make_unique<BoolParameter>(k_FlatIsMinima_Key, "FlatIsMinima", "Set/Get whether a flat image must be considered as a minima or not. Defaults to true.", true));
+  params.insert(std::make_unique<BoolParameter>(k_FlatIsMinima_Key, "Flat Is Minima", "Set/Get whether a flat image must be considered as a minima or not. Defaults to true.", true));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

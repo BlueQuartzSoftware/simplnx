@@ -77,7 +77,7 @@ Parameters ITKHConvexImageFilter::parameters() const
                                                    "Set/Get the height that a local maximum must be above the local background (local contrast) in order to survive the processing. Local maxima below "
                                                    "this value are replaced with an estimate of the local background.",
                                                    2.0));
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected",
+  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));

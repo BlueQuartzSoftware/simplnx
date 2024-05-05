@@ -76,7 +76,7 @@ Parameters ITKThresholdImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64Parameter>(k_Lower_Key, "Lower", "Set/Get methods to set the lower threshold.", 0.0));
   params.insert(std::make_unique<Float64Parameter>(k_Upper_Key, "Upper", "Set/Get methods to set the upper threshold.", 1.0));
-  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "OutsideValue",
+  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "Outside Value",
                                                    "The pixel type must support comparison operators. Set the 'outside' pixel value. The default value NumericTraits<PixelType>::ZeroValue() .", 0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});

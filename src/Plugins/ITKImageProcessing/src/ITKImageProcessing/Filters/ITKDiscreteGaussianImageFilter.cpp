@@ -94,7 +94,7 @@ Parameters ITKDiscreteGaussianImageFilter::parameters() const
       std::vector<double>(3, 0.01), std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(
-      std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing",
+      std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "Use Image Spacing",
                                       "Set/Get whether or not the filter will use the spacing of the input image in its calculations. Use On to take the image spacing information into account and to "
                                       "specify the Gaussian variance in real world units; use Off to ignore the image spacing and to specify the Gaussian variance in voxel units. Default is On.",
                                       true));

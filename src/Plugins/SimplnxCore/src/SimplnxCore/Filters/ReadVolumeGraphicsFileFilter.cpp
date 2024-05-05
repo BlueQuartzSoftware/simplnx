@@ -390,7 +390,7 @@ Parameters ReadVolumeGraphicsFileFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "VolumeGraphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"),
+  params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "Volume Graphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"),
                                                           FileSystemPathParameter::ExtensionsType{".vgi"}, FileSystemPathParameter::PathType::InputFile));
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"VolumeGraphics"})));

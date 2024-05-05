@@ -72,8 +72,8 @@ Parameters ITKApproximateSignedDistanceMapImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_InsideValue_Key, "InsideValue", "Set/Get intensity value representing the interior of objects in the mask.", 1u));
-  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "OutsideValue", "Set/Get intensity value representing non-objects in the mask.", 0u));
+  params.insert(std::make_unique<Float64Parameter>(k_InsideValue_Key, "Inside Value", "Set/Get intensity value representing the interior of objects in the mask.", 1u));
+  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "Outside Value", "Set/Get intensity value representing non-objects in the mask.", 0u));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

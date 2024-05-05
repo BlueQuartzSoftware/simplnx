@@ -104,8 +104,8 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
   const auto pluginListPtr = Application::Instance()->getPluginList();
 
   std::stringstream output;
-  std::ofstream logFile(fmt::format("{}/separator_names.log", unit_test::k_BinaryDir.view()), std::ios_base::trunc | std::ios_base::binary);
-  std::set<std::string> uniqueSepNames;
+  //  std::ofstream logFile(fmt::format("{}/human_names.log", unit_test::k_BinaryDir.view()), std::ios_base::trunc | std::ios_base::binary);
+  //  std::set<std::string> uniqueSepNames;
 
   // Loop on each Plugin
   for(const auto& plugin : pluginListPtr)
@@ -120,17 +120,6 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
       const std::string filterClassName = filterHandle.getClassName();
       IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
       const auto& parameters = filter->parameters();
-      auto layoutVector = parameters.getLayout();
-      for(const auto& param : layoutVector)
-      {
-        try
-        {
-          auto sep = std::get<nx::core::Parameters::Separator>(param);
-          uniqueSepNames.insert(sep.name);
-        } catch(const std::bad_variant_access& ex)
-        {
-        }
-      }
 
       // Loop over each Parameter
       for(const auto& parameter : parameters)
@@ -172,10 +161,10 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
     }
   }
 
-  for(const auto& name : uniqueSepNames)
-  {
-    logFile << "- " << name << "\n";
-  }
+  //  for(const auto& name : uniqueSepNames)
+  //  {
+  //    logFile << "- " << name << "\n";
+  //  }
 
   Application::DeleteInstance();
   REQUIRE(Application::Instance() == nullptr);

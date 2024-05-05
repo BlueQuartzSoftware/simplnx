@@ -75,7 +75,7 @@ Parameters FindNeighborhoodsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods",
                                                           "Number of Features that have their centroid within the user specified multiple of equivalent sphere diameters from each Feature",
                                                           "Neighborhoods"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodListArrayName_Key, "NeighborhoodList",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodListArrayName_Key, "Neighborhood List",
                                                           "List of the Features whose centroids are within the user specified multiple of equivalent sphere diameter from each Feature",
                                                           "NeighborhoodList"));
 

@@ -81,7 +81,7 @@ Parameters ITKMorphologicalWatershedImageFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(
       k_MarkWatershedLine_Key, "MarkWatershedLine",
       "Set/Get whether the watershed pixel must be marked or not. Default is true. Set it to false do not only avoid writing watershed pixels, it also decrease algorithm complexity.", true));
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected",
+  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));

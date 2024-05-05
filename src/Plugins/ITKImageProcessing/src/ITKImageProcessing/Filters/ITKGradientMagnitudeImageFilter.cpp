@@ -72,7 +72,7 @@ Parameters ITKGradientMagnitudeImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing",
+  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "Use Image Spacing",
                                                 "Set/Get whether or not the filter will use the spacing of the input image in the computation of the derivatives. Use On to compute the gradient in "
                                                 "physical space; use Off to ignore image spacing and to compute the gradient in isotropic voxel space. Default is On.",
                                                 true));

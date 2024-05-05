@@ -81,10 +81,10 @@ Parameters ITKOtsuMultipleThresholdsImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<UInt8Parameter>(k_NumberOfThresholds_Key, "NumberOfThresholds", "Set/Get the number of thresholds. Default is 1.", 1u));
-  params.insert(std::make_unique<UInt8Parameter>(k_LabelOffset_Key, "LabelOffset", "Set/Get the offset which labels have to start from. Default is 0.", 0u));
-  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfHistogramBins_Key, "NumberOfHistogramBins", "Set/Get the number of histogram bins. Default is 128.", 128u));
-  params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "ValleyEmphasis", "Set/Get the use of valley emphasis. Default is false.", false));
+  params.insert(std::make_unique<UInt8Parameter>(k_NumberOfThresholds_Key, "Number Of Thresholds", "Set/Get the number of thresholds. Default is 1.", 1u));
+  params.insert(std::make_unique<UInt8Parameter>(k_LabelOffset_Key, "Label Offset", "Set/Get the offset which labels have to start from. Default is 0.", 0u));
+  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfHistogramBins_Key, "Number Of Histogram Bins", "Set/Get the number of histogram bins. Default is 128.", 128u));
+  params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "Valley Emphasis", "Set/Get the use of valley emphasis. Default is false.", false));
   params.insert(
       std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum.", false));
 

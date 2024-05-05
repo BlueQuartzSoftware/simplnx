@@ -77,7 +77,7 @@ Parameters ITKThresholdMaximumConnectedComponentsImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<UInt32Parameter>(
-      k_MinimumObjectSizeInPixels_Key, "MinimumObjectSizeInPixels",
+      k_MinimumObjectSizeInPixels_Key, "Minimum Object Size In Pixels",
       "The pixel type must support comparison operators. Set the minimum pixel area used to count objects on the image. Thus, only objects that have a pixel area greater than the minimum pixel area "
       "will be counted as an object in the optimization portion of this filter. Essentially, it eliminates noise from being counted as an object. The default value is zero.",
       0u));
