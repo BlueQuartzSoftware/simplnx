@@ -304,7 +304,6 @@ nx_filter = nx.MinNeighborsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     apply_to_single_phase=False,
-    cell_attribute_matrix_path=nx.DataPath("DataContainer/CellData"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     min_num_neighbors=2,
