@@ -2044,6 +2044,7 @@ Actions
    Inputs
    ~~~~~~
    First Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the edge geometry will be created.
       - **Type**: nx.DataPath
@@ -2067,6 +2068,7 @@ Actions
       - **Type**: str
 
    Second Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the edge geometry will be created.
       - **Type**: nx.DataPath
@@ -2119,6 +2121,7 @@ Actions
    Inputs
    ~~~~~~
    First Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the hexahedral geometry will be created.
       - **Type**: nx.DataPath
@@ -2142,6 +2145,7 @@ Actions
       - **Type**: str
 
    Second Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the hexahedral geometry will be created.
       - **Type**: nx.DataPath
@@ -2258,7 +2262,7 @@ Actions
       import simplnx as nx
 
       # Create a neighbor list for integer data type with 100 tuples at /Data/Neighbors
-      data_type = nx.DataType.Int
+      data_type = nx.DataType.int32
       tuple_count = 100
       path = nx.DataPath(['Data', 'Neighbors'])
 
@@ -2282,6 +2286,7 @@ Actions
    Inputs
    ~~~~~~
    First Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the quad geometry will be created.
       - **Type**: DataPath
@@ -2305,6 +2310,7 @@ Actions
       - **Type**: str
 
    Second Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the quad geometry will be created.
       - **Type**: DataPath
@@ -2358,6 +2364,7 @@ Actions
    Inputs
    ~~~~~~
    First Constructor:
+
    - ``path``
       - **Description**: The path where the rectilinear grid geometry will be created.
       - **Type**: DataPath
@@ -2384,6 +2391,7 @@ Actions
       - **Type**: str
 
    Second Constructor:
+
    - ``path``
       - **Description**: The path where the rectilinear grid geometry will be created.
       - **Type**: DataPath
@@ -2473,6 +2481,7 @@ Actions
    Inputs
    ~~~~~~
    First Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the tetrahedral geometry will be created.
       - **Type**: DataPath
@@ -2496,6 +2505,7 @@ Actions
       - **Type**: str
 
    Second Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the tetrahedral geometry will be created.
       - **Type**: DataPath
@@ -2548,6 +2558,7 @@ Actions
    Inputs
    ~~~~~~
    First Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the triangular geometry will be created.
       - **Type**: nx.DataPath
@@ -2571,6 +2582,7 @@ Actions
       - **Type**: str
 
    Second Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the triangular geometry will be created.
       - **Type**: nx.DataPath
@@ -2623,6 +2635,7 @@ Actions
    Inputs
    ~~~~~~
    First Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the vertex geometry will be created.
       - **Type**: nx.DataPath
@@ -2637,6 +2650,7 @@ Actions
       - **Type**: str
 
    Second Constructor:
+
    - ``geometry_path``
       - **Description**: The path where the vertex geometry will be created.
       - **Type**: nx.DataPath
@@ -2689,7 +2703,7 @@ Actions
 
    Nested Class: DeleteType
    ~~~~~~~~~~~~~~~~~~~~~~~~
-   The ``DeleteType`` is used to determine the type of deletion to perform.  Currently, only the "JustObject" type is available, which deletes the specified object and all children.
+   The ``DeleteType`` is used to determine the type of deletion to perform.  Currently, only the ``JustObject`` type is available, which deletes the specified object and all children.
 
    Usage
    ~~~~~
