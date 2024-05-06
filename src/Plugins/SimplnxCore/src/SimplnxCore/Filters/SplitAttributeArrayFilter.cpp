@@ -54,8 +54,8 @@ Parameters SplitAttributeArrayFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MultiCompArrayPath_Key, "Multicomponent Attribute Array", "The multicomponent Attribute Array to split", DataPath{}, GetAllDataTypes()));
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MultiCompArrayPath_Key, "Multi-Component Attribute Array", "The multicomponent Attribute Array to split", DataPath{}, GetAllDataTypes()));
   params.insert(std::make_unique<StringParameter>(k_Postfix_Key, "Postfix", "Postfix to add to the end of the split Attribute Arrays", "_Component"));
   params.insert(std::make_unique<BoolParameter>(k_DeleteOriginal_Key, "Remove Original Array", "Whether or not to remove the original multicomponent array after splitting", false));
 

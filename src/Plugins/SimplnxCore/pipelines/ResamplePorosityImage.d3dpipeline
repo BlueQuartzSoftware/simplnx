@@ -8,7 +8,7 @@
         "cell_attribute_matrix_name": "Cell Data",
         "image_data_array_name": "ImageData",
         "output_image_geometry_path": "Porosity_Image",
-        "image_transform_choice": 0,
+        "image_transform_index": 0,
         "input_file_list_object": {
           "end_index": 174,
           "file_extension": ".tif",
@@ -50,7 +50,7 @@
         "new_data_container_path": "Porosity_Image_Resampled_Spacing",
         "remove_original_geometry": false,
         "renumber_features": false,
-        "resampling_mode": 0,
+        "resampling_mode_index": 0,
         "scaling": [
           120.4000015258789,
           50.7400016784668,
@@ -82,7 +82,7 @@
         "new_data_container_path": "Porosity_Image_Resampled_Scaled",
         "remove_original_geometry": false,
         "renumber_features": false,
-        "resampling_mode": 1,
+        "resampling_mode_index": 1,
         "scaling": [
           50.0,
           50.0,
@@ -114,7 +114,7 @@
         "new_data_container_path": "Porosity_Image_Resampled_Exact_Dims",
         "remove_original_geometry": false,
         "renumber_features": false,
-        "resampling_mode": 2,
+        "resampling_mode_index": 2,
         "scaling": [
           120.4000015258789,
           50.7400016784668,

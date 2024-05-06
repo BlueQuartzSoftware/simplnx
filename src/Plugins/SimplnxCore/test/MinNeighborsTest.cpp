@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/FindNeighborsFilter.hpp"
+#include "SimplnxCore/Filters/FindFeatureNeighborsFilter.hpp"
 #include "SimplnxCore/Filters/MinNeighborsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -70,22 +70,22 @@ TEST_CASE("SimplnxCore::MinNeighborsFilter", "[SimplnxCore][MinNeighborsFilter]"
   DataPath surfaceFeaturesPath = cellFeatureAttributeMatrixPath.createChildPath(surfaceFeaturesName);
 
   {
-    FindNeighborsFilter filter;
+    FindFeatureNeighborsFilter filter;
     Arguments args;
 
-    args.insertOrAssign(FindNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insertOrAssign(FindNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
-    args.insertOrAssign(FindNeighborsFilter::k_CellFeaturesPath_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_CellFeaturesPath_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
 
-    args.insertOrAssign(FindNeighborsFilter::k_StoreBoundary_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighborsFilter::k_BoundaryCellsName_Key, std::make_any<std::string>(boundaryCellsName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_StoreBoundary_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_BoundaryCellsName_Key, std::make_any<std::string>(boundaryCellsName));
 
-    args.insertOrAssign(FindNeighborsFilter::k_StoreSurface_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighborsFilter::k_SurfaceFeaturesName_Key, std::make_any<std::string>(surfaceFeaturesName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_StoreSurface_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_SurfaceFeaturesName_Key, std::make_any<std::string>(surfaceFeaturesName));
 
-    args.insertOrAssign(FindNeighborsFilter::k_NumNeighborsName_Key, std::make_any<std::string>(numNeighborName));
-    args.insertOrAssign(FindNeighborsFilter::k_NeighborListName_Key, std::make_any<std::string>(neighborListName));
-    args.insertOrAssign(FindNeighborsFilter::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_NumNeighborsName_Key, std::make_any<std::string>(numNeighborName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_NeighborListName_Key, std::make_any<std::string>(neighborListName));
+    args.insertOrAssign(FindFeatureNeighborsFilter::k_SharedSurfaceAreaName_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -102,10 +102,7 @@ TEST_CASE("SimplnxCore::MinNeighborsFilter", "[SimplnxCore][MinNeighborsFilter]"
 
     args.insertOrAssign(MinNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(3));
     args.insertOrAssign(MinNeighborsFilter::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
-    // args.insertOrAssign(MinNeighborsFilter::k_PhaseNumber_Key, std::make_any<uint64>(0));
-    // args.insertOrAssign(MinNeighborsFilter::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
     args.insertOrAssign(MinNeighborsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insertOrAssign(MinNeighborsFilter::k_CellDataAttributeMatrixPath_Key, std::make_any<DataPath>(cellDataAttributeMatrix));
     args.insertOrAssign(MinNeighborsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(featureIdsDataPath));
     args.insertOrAssign(MinNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(numNeighborPath));
     // args.insertOrAssign(MinNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
@@ -131,6 +128,7 @@ TEST_CASE("SimplnxCore::MinNeighborsFilter", "[SimplnxCore][MinNeighborsFilter]"
     }
   }
 
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   {
     // Write out the DataStructure for later viewing/debugging
     Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -138,6 +136,7 @@ TEST_CASE("SimplnxCore::MinNeighborsFilter", "[SimplnxCore][MinNeighborsFilter]"
     auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
+#endif
 }
 
 #if 0

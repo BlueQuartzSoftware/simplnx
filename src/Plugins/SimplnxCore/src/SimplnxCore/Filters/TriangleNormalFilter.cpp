@@ -108,10 +108,10 @@ Parameters TriangleNormalFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insertSeparator(Parameters::Separator{"Created Face Data"});
+  params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_SurfaceMeshTriangleNormalsArrayName_Key, "Created Face Normals", "The complete path to the array storing the calculated normals", "Face Normals"));
 

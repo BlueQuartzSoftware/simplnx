@@ -1,14 +1,18 @@
 {
   "isDisabled": false,
-  "name": "(02) Image Segmentation.d3dpipeline",
-  "pinnedParams": [],
+  "name": "(04) Porosity Analysis",
   "pipeline": [
     {
       "args": {
         "cell_attribute_matrix_name": "Optical Data",
+        "color_weights": [
+          0.21250000596046448,
+          0.715399980545044,
+          0.07209999859333038
+        ],
+        "convert_to_gray_scale": false,
         "image_data_array_name": "ImageData",
-        "output_image_geometry_path": "RoboMet.3D Image Stack",
-        "image_transform_choice": 0,
+        "image_transform_index": 0,
         "input_file_list_object": {
           "end_index": 174,
           "file_extension": ".tif",
@@ -25,15 +29,16 @@
           0.0,
           0.0
         ],
+        "output_image_geometry_path": "RoboMet.3D Image Stack",
         "spacing": [
           1.0,
           1.0,
           1.0
         ]
       },
-      "comments": "This example pipeline shows how to read in a 3D stack of images, segment them and perform some basic size statistics on the segmented features. Since this data set is from an image there is no phase data which is created in a filter and phase data is also generated during the pipeline. Note the technique for accomplishing this as it is handy to do for other pipelines.",
+      "comments": "",
       "filter": {
-        "name": "simplnx::ITKImportImageStack",
+        "name": "nx::core::ITKImportImageStackFilter",
         "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
       },
       "isDisabled": false
@@ -55,11 +60,16 @@
           "type": "collection",
           "union": 0
         },
-        "output_data_array_name": "Mask"
+        "created_mask_type": 10,
+        "custom_false_value": 0.0,
+        "custom_true_value": 1.0,
+        "output_data_array_name": "Mask",
+        "use_custom_false_value": false,
+        "use_custom_true_value": false
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MultiThresholdObjects",
+        "name": "nx::core::MultiThresholdObjectsFilter",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
@@ -68,9 +78,9 @@
       "args": {
         "active_array_name": "Active",
         "cell_feature_group_name": "Pore Data",
-        "feature_ids_path": "FeatureIds",
-        "input_image_geometry_path": "RoboMet.3D Image Stack",
+        "feature_ids_name": "FeatureIds",
         "input_array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
+        "input_image_geometry_path": "RoboMet.3D Image Stack",
         "mask_path": "RoboMet.3D Image Stack/Optical Data/Mask",
         "randomize_features": true,
         "scalar_tolerance": 0,
@@ -78,7 +88,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ScalarSegmentFeaturesFilter",
+        "name": "nx::core::ScalarSegmentFeaturesFilter",
         "uuid": "e067cd97-9bbf-4c92-89a6-3cb4fdb76c93"
       },
       "isDisabled": false
@@ -95,7 +105,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CalculateFeatureSizesFilter",
+        "name": "nx::core::CalculateFeatureSizesFilter",
         "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
       },
       "isDisabled": false
@@ -104,23 +114,25 @@
       "args": {
         "created_array_suffix": "",
         "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
-        "selected_feature_array_paths": ["RoboMet.3D Image Stack/Pore Data/EquivalentDiameters"]
+        "selected_feature_array_paths": [
+          "RoboMet.3D Image Stack/Pore Data/EquivalentDiameters"
+        ]
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CopyFeatureArrayToElementArrayFilter",
+        "name": "nx::core::CopyFeatureArrayToElementArrayFilter",
         "uuid": "4c8c976a-993d-438b-bd8e-99f71114b9a1"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "set_tuple_dimensions": false,
         "component_count": 1,
         "data_format": "",
         "initialization_value_str": "1",
-        "numeric_type": 4,
+        "numeric_type_index": 4,
         "output_array_path": "RoboMet.3D Image Stack/Optical Data/Phases",
+        "set_tuple_dimensions": false,
         "tuple_dimensions": [
           [
             0.0
@@ -129,7 +141,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArrayFilter",
+        "name": "nx::core::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
@@ -137,6 +149,7 @@
     {
       "args": {
         "conditional_array_path": "RoboMet.3D Image Stack/Optical Data/Mask",
+        "invert_mask": false,
         "remove_value": "0",
         "replace_value": "2",
         "selected_array_path": "RoboMet.3D Image Stack/Optical Data/Phases",
@@ -144,7 +157,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ConditionalSetValueFilter",
+        "name": "nx::core::ConditionalSetValueFilter",
         "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
       },
       "isDisabled": false
@@ -158,7 +171,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeaturePhasesFilter",
+        "name": "nx::core::FindFeaturePhasesFilter",
         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
       },
       "isDisabled": false
@@ -172,71 +185,48 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureCentroidsFilter",
+        "name": "nx::core::FindFeatureCentroidsFilter",
         "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "cell_ensemble_attribute_matrix_name": "RoboMet.3D Image Stack/EnsembleAttributeMatrix",
-        "crystal_structures_array_name": "CrystalStructures",
-        "ensemble": [
+        "data_object_path": "RoboMet.3D Image Stack/Ensemble Data",
+        "tuple_dimensions": [
           [
-            "Cubic-High m-3m",
-            "Matrix",
-            "Matrix"
-          ],
-          [
-            "Cubic-High m-3m",
-            "Precipitate",
-            "Pores"
+            3.0
           ]
-        ],
-        "phase_names_array_name": "PhaseNames",
-        "phase_types_array_name": "PhaseTypes"
-      },
-      "comments": "We only need the phase names array for this ensemble data so we will be immediately deleting the crystal structures and phase types arrays after this filter.",
-      "filter": {
-        "name": "simplnx::CreateEnsembleInfoFilter",
-        "uuid": "8ce3d70c-49fe-4812-a1eb-7ce4c962a59d"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
-        "removed_data_path": [
-          "RoboMet.3D Image Stack/EnsembleAttributeMatrix/CrystalStructures",
-          "RoboMet.3D Image Stack/EnsembleAttributeMatrix/PhaseTypes"
         ]
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::DeleteDataFilter",
-        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
+        "name": "nx::core::CreateAttributeMatrixFilter",
+        "uuid": "a6a28355-ee69-4874-bcac-76ed427423ed"
       },
       "isDisabled": false
     },
     {
       "args": {
         "biased_features_array_path": "",
-        "cell_ensemble_attribute_matrix_name": "RoboMet.3D Image Stack/EnsembleAttributeMatrix",
+        "cell_ensemble_attribute_matrix_path": "RoboMet.3D Image Stack/Ensemble Data",
         "centroids_array_path": "RoboMet.3D Image Stack/Pore Data/Centroids",
         "clustering_list_array_name": "ClusteringList",
         "equivalent_diameters_array_path": "RoboMet.3D Image Stack/Pore Data/EquivalentDiameters",
         "feature_phases_array_path": "RoboMet.3D Image Stack/Pore Data/Phases",
+        "input_image_geometry_path": "RoboMet.3D Image Stack",
         "max_min_array_name": "RDFMaxMinDistances",
         "number_of_bins": 10,
         "phase_number": 2,
         "rdf_array_name": "RDF",
         "remove_biased_features": false,
+        "seed_array_name": "FindFeatureClustering SeedValue",
         "seed_value": 5489,
-        "input_image_geometry_path": "RoboMet.3D Image Stack",
         "set_random_seed": false
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureClusteringFilter",
+        "name": "nx::core::FindFeatureClusteringFilter",
         "uuid": "d6e01678-3a03-433f-89ad-4e9adf1f9a45"
       },
       "isDisabled": false
@@ -248,11 +238,11 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

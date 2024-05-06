@@ -6,9 +6,11 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
+#include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -33,6 +35,7 @@ std::map<nx::core::Uuid, std::string> s_ParameterMap;
 void GenerateParameterList()
 {
   ::s_ParameterMap.clear();
+  ADD_PARAMETER_TRAIT(simplnx.SeparatorParameter, "e6936d18-7476-4855-9e13-e795d717c50f")
   ADD_PARAMETER_TRAIT(simplnx.OEMEbsdScanSelectionParameter, "3935c833-aa51-4a58-81e9-3a51972c05ea")
   ADD_PARAMETER_TRAIT(simplnx.ReadH5EbsdFileParameter, "FAC15aa6-b367-508e-bf73-94ab6be0058b")
   ADD_PARAMETER_TRAIT(simplnx.NumericTypeParameter, "a8ff9dbd-45e7-4ed6-8537-12dd53069bce")
@@ -101,6 +104,8 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
   const auto pluginListPtr = Application::Instance()->getPluginList();
 
   std::stringstream output;
+  //  std::ofstream logFile(fmt::format("{}/human_names.log", unit_test::k_BinaryDir.view()), std::ios_base::trunc | std::ios_base::binary);
+  //  std::set<std::string> uniqueSepNames;
 
   // Loop on each Plugin
   for(const auto& plugin : pluginListPtr)
@@ -114,8 +119,8 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
     {
       const std::string filterClassName = filterHandle.getClassName();
       IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
-
       const auto& parameters = filter->parameters();
+
       // Loop over each Parameter
       for(const auto& parameter : parameters)
       {
@@ -155,6 +160,11 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
       }
     }
   }
+
+  //  for(const auto& name : uniqueSepNames)
+  //  {
+  //    logFile << "- " << name << "\n";
+  //  }
 
   Application::DeleteInstance();
   REQUIRE(Application::Instance() == nullptr);

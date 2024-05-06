@@ -60,7 +60,7 @@ set(FilterList
   FindLargestCrossSectionsFilter
   FindNeighborhoodsFilter
   FindNeighborListStatisticsFilter
-  FindNeighborsFilter
+  FindFeatureNeighborsFilter
   FindNumFeaturesFilter
   FindSurfaceAreaToVolumeFilter
   FindSurfaceFeaturesFilter

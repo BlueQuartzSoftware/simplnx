@@ -77,23 +77,23 @@ std::vector<std::string> ITKBinaryThresholdImageFilter::defaultTags() const
 Parameters ITKBinaryThresholdImageFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_LowerThreshold_Key, "LowerThreshold", "The lower threshold that a pixel value could be and still be considered 'Inside Value'", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_UpperThreshold_Key, "UpperThreshold",
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insert(std::make_unique<Float64Parameter>(k_LowerThreshold_Key, "Lower Threshold", "The lower threshold that a pixel value could be and still be considered 'Inside Value'", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_UpperThreshold_Key, "Upper Threshold",
                                                    "Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is "
                                                    "NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.",
                                                    255.0));
-  params.insert(std::make_unique<UInt8Parameter>(k_InsideValue_Key, "InsideValue", "Set the 'inside' pixel value. The default value NumericTraits<OutputPixelType>::max()", 1u));
-  params.insert(std::make_unique<UInt8Parameter>(k_OutsideValue_Key, "OutsideValue", "Set the 'outside' pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() .", 0u));
+  params.insert(std::make_unique<UInt8Parameter>(k_InsideValue_Key, "Inside Value", "Set the 'inside' pixel value. The default value NumericTraits<OutputPixelType>::max()", 1u));
+  params.insert(std::make_unique<UInt8Parameter>(k_OutsideValue_Key, "Outside Value", "Set the 'outside' pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() .", 0u));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ITK::GetScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Array Name",
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
                                                           "The result of the processing will be stored in this Data Array inside the same group as the input data.", "Output Image Data"));
 
   return params;

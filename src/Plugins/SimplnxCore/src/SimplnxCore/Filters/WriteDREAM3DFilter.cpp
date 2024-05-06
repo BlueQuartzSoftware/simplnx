@@ -56,7 +56,7 @@ Parameters WriteDREAM3DFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_ExportFilePath, "Output File Path", "The file path the DataStructure should be written to as an HDF5 file.", "Untitled.dream3d",
                                                           FileSystemPathParameter::ExtensionsType{".dream3d"}, FileSystemPathParameter::PathType::OutputFile, false));
   params.insert(std::make_unique<BoolParameter>(k_WriteXdmf, "Write Xdmf File", "Whether or not to write the data out an XDMF file", true));

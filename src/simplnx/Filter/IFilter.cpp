@@ -299,12 +299,13 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   auto bestMatches = StringUtilities::FindBestMatches(jsonKeyNotFound, paramKeyNotFound);
   for(const auto& match : bestMatches)
   {
-    if(!match.first.empty() && !match.second.empty())
+    if(!std::get<0>(match).empty() && !std::get<1>(match).empty())
     {
-      warnings.push_back(
-          Warning{-5434, fmt::format("Filter '{}': JSON Parameter Warning\n    JSON Parameter Key '{}' is not an accepted Parameter Key for the filter. Closest match is "
-                                     "'{}'\n    Suggested change is '{}' ==> '{}' (This is *ONLY* a suggestion.)\n    Open the JSON file in a text editor and make the suggested changes.",
-                                     className(), match.first, match.second, match.first, match.second)});
+      warnings.push_back(Warning{
+          -5434, fmt::format(
+                     "Filter '{}': JSON Parameter Warning\n    JSON Parameter Key '{}' is not an accepted Parameter Key for the filter. Closest match is "
+                     "'{}' with a match distance of {}.\n    Suggested change is '{}' ==> '{}' (This is *ONLY* a suggestion.)\n    Open the JSON file in a text editor and make the suggested changes.",
+                     className(), std::get<0>(match), std::get<1>(match), std::get<2>(match), std::get<0>(match), std::get<1>(match))});
     }
   }
 

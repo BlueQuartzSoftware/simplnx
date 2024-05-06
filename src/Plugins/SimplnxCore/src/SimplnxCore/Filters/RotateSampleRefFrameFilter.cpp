@@ -325,7 +325,7 @@ Parameters RotateSampleRefFrameFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator({"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_RotateSliceBySlice_Key, "Perform Slice By Slice Transform", "This option is specific to EBSD Data and is not generally used.", false));
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentation_Key, "Rotation Representation", "Which form used to represent rotation (axis angle or rotation matrix)",
@@ -343,11 +343,11 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   params.linkParameters(k_RotationRepresentation_Key, k_RotationAxisAngle_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
   params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));
 
-  params.insertSeparator({"Input Geometry and Data"});
+  params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the rotation", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
-  params.insertSeparator({"Output Geometry and Data"});
+  params.insertSeparator(Parameters::Separator{"Output Geometry and Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The location of the rotated geometry", DataPath{}));
 
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometryPath_Key, false);

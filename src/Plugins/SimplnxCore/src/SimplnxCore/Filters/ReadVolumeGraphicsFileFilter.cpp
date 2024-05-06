@@ -390,11 +390,13 @@ Parameters ReadVolumeGraphicsFileFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "VolumeGraphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"),
+  params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "Volume Graphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"),
                                                           FileSystemPathParameter::ExtensionsType{".vgi"}, FileSystemPathParameter::PathType::InputFile));
-  params.insertSeparator(Parameters::Separator{"Created Data"});
+  params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"VolumeGraphics"})));
+  params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The attribute matrix created as a child of the image geometry", "CT Data"));
+  params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_DensityArrayName_Key, "Density", "The data array created as a child of the attribute matrix", "Density"));
 
   return params;

@@ -109,9 +109,11 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     REQUIRE(executeResult.result.valid());
   }
 
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(fmt::format("{}/LaplacianSmoothing.dream3d", unit_test::k_BinaryTestOutputDir));
   nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
 
   auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+#endif
 }

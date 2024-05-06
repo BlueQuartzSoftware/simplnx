@@ -52,7 +52,7 @@ Parameters FindSchmidsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_LoadingDirection_Key, "Loading Direction", "The loading axis for the sample", std::vector<float32>({1.0F, 1.0F, 1.0F}),
                                                          std::vector<std::string>({"X", "Y", "Z"})));
@@ -65,18 +65,18 @@ Parameters FindSchmidsFilter::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipDirection_Key, "Slip Direction", "Vector defining the slip direction.", std::vector<float32>({1.0F, 0.0F, 0.0F}),
                                                          std::vector<std::string>({"X", "Y", "Z"})));
 
-  params.insertSeparator(Parameters::Separator{"Required Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath({"CellFeatureData", "Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orienation of each Feature in quaternion representation",
                                                           DataPath({"CellFeatureData", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
-  params.insertSeparator(Parameters::Separator{"Required Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(
       k_SchmidsArrayName_Key, "Schmids", "The name of the array containing the value of the Schmid factor for the most favorably oriented slip system (i.e., the one with the highest Schmid factor)",
       "Schmids"));

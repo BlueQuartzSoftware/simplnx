@@ -892,42 +892,18 @@ set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipeli
 set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
 
 if(SIMPLNX_DOWNLOAD_TEST_FILES AND TARGET SimplnxCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
-  add_custom_target(Copy_PorosityAnalysis_Pipelines ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${simplnx_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/Examples/PorosityAnalysis.d3dpipeline"
-    COMMENT "Copying Example Pipelines into Binary Directory"
-    COMMAND_EXPAND_LISTS
-    VERBATIM
-  )
-  set_target_properties(Copy_PorosityAnalysis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
 
-  add_custom_target(Copy_CAxis_Pipelines ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${simplnx_SOURCE_DIR}/pipelines/Combo-EBSD-osc_r0c0.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/Examples/Combo-EBSD-osc_r0c0.d3dpipeline"
-    COMMENT "Copying Example Pipelines into Binary Directory"
-    COMMAND_EXPAND_LISTS
-    VERBATIM
+set(PREBUILT_PIPELINE_NAMES
   )
-  set_target_properties(Copy_CAxis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
-
   # Install the pipeline files
   install(FILES
-    "${simplnx_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline"
-    "${simplnx_SOURCE_DIR}/pipelines/Combo-EBSD-osc_r0c0.d3dpipeline"
+    ${PREBUILT_PIPELINE_NAMES}
     DESTINATION "pipelines/Examples"
     COMPONENT Applications
   )
 
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293)
-  add_custom_target(Copy_CAxis_Data ALL
-    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data.tar.gz" 
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/Combo-EBSD-120130.osc_r0c0.ang" "${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data"
-    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
-    COMMENT "[DATA EXTRACT/COPY] 6_6_caxis_data into Binary Directory"
-    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
-    COMMAND_EXPAND_LISTS
-    VERBATIM
-  )
-  set_target_properties(Copy_CAxis_Data PROPERTIES FOLDER ZZ_COPY_FILES)
+  create_pipeline_tests(PLUGIN_NAME OrientationAnalysis PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
+
 endif()
 
 if(SIMPLNX_ENABLE_INSTALL)

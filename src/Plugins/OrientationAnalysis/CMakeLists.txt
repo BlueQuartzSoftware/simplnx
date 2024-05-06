@@ -324,8 +324,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
                    ARCHIVE_NAME T12-MAI-2010.tar.gz
                    SHA512 e33f224d19ad774604aa28a3263a00221a3a5909040685a3d14b6cba78e36d174b045223c28b462ab3eaea0fbc1c9f0657b1bd791a947799b9f088b13d777568
-                   INSTALL
-                   )
+                   INSTALL)
   add_custom_target(Copy_${PLUGIN_NAME}_T12-MAI-2010 ALL
                    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/T12-MAI-2010.tar.gz" 
                    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/T12-MAI-2010" "${DATA_DEST_DIR}/T12-MAI-2010"
@@ -341,8 +340,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
                     ARCHIVE_NAME Textured_Copper.tar.gz 
                     SHA512 cb231a13abbc21fe2046fc0fc7be9753ea51440bce1827bd20ee225499cd38be07d67955ff8c09d15ad91c4c1934e2a0e34406a703e7e49fbe53068b29ef440e
-                   INSTALL
-                   )
+                    INSTALL)
   add_custom_target(Copy_${PLUGIN_NAME}_Textured_Copper ALL
                    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/Textured_Copper.tar.gz" 
                    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/Textured_Copper" "${DATA_DEST_DIR}/Textured_Copper"
@@ -370,6 +368,26 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
                    VERBATIM
                  )
   set_target_properties(Copy_${PLUGIN_NAME}_Small_IN100 PROPERTIES FOLDER ZZ_COPY_FILES)
+
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
+                    ARCHIVE_NAME 6_6_caxis_data.tar.gz 
+                    SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293
+                    )
+  add_custom_target(Copy_${PLUGIN_NAME}_CAxis_Data ALL
+                  COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data.tar.gz" 
+                  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/Combo-EBSD-120130.osc_r0c0.ang" "${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
+                  COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data"
+                  WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
+                  COMMENT "Copying ${PLUGIN_NAME}/6_6_caxis_data data into Binary Directory"
+                  DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+                  COMMAND_EXPAND_LISTS
+                  VERBATIM
+                )
+  install(FILES "${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
+                DESTINATION Data/${PLUGIN_NAME}
+                COMPONENT Applications
+                )
+  set_target_properties(Copy_${PLUGIN_NAME}_CAxis_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
     ARCHIVE_NAME 6_6_ImportH5Data.tar.gz

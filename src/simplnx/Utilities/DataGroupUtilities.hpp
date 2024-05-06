@@ -23,10 +23,11 @@ namespace nx::core
  * @param activeObjects
  * @param cellFeatureIds
  * @param messageHandler
+ * @param shouldCancel
  * @return
  */
 SIMPLNX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds,
-                                          size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler);
+                                          size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
 
 /**
  * @brief This function will gather all of the sibling DataArrays to the input DataPath, then filter out all the 'IgnoredDataPaths`

@@ -408,7 +408,7 @@ Parameters MultiThresholdObjectsFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ArrayThresholdsParameter>(k_ArrayThresholdsObject_Key, "Data Thresholds", "DataArray thresholds to mask", ArrayThresholdSet{},
                                                            ArrayThresholdsParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<DataTypeParameter>(k_CreatedMaskType_Key, "Mask Type", "DataType used for the created Mask Array", DataType::boolean));

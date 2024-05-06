@@ -59,18 +59,18 @@ Parameters ReadVtkStructuredPointsFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input VTK File", "The path to the input file", fs::path("data.vtk"), FileSystemPathParameter::ExtensionsType{".vtk"},
                                                           FileSystemPathParameter::PathType::InputFile));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadPointData_Key, "Read Point Data", "Determines whether or not the Point Data will be read.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadCellData_Key, "Read Cell Data", "Determines whether or not the Cell Data will be read.", false));
 
-  params.insertSeparator(Parameters::Separator{"Created Point Data"});
+  params.insertSeparator(Parameters::Separator{"Output Point Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Data Container [Point Data]", "The data container for the Point Data.", DataPath({"VTK Point Data"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Attribute Matrix Name [Point Data]", "The attribute matrix for the Point Data.", "Vertex Data"));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Data Container [Cell Data]", "The data container for the Cell Data.", DataPath({"VTK Cell Data"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Attribute Matrix Name [Cell Data]", "The attribute matrix for the Cell Data.", "Cell Data"));
 

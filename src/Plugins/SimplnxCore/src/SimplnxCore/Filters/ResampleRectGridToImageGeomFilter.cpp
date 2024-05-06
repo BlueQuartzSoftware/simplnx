@@ -67,7 +67,7 @@ Parameters ResampleRectGridToImageGeomFilter::parameters() const
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedDataArrayPaths_Key, "Attribute Arrays to Copy", "Rectilinear Grid Cell Data to possibly copy", MultiArraySelectionParameter::ValueType{},
       MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray, IArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
-  params.insertSeparator(Parameters::Separator{"Output Image Geometry Parameters"});
+  params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<VectorInt32Parameter>(k_Dimensions_Key, "Dimensions (Voxels)", "The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry",
                                                        std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "Path to the created Image Geometry", DataPath({"Image Geometry"})));

@@ -57,18 +57,18 @@ Parameters NearestPointFuseRegularGridsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Required Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseFill_Key, "Use Custom Fill Value", "If false all copied arrays will be filled with 0 by default", false));
   params.insert(std::make_unique<NumberParameter<float64>>(k_FillValue_Key, "Fill Value", "This is the value that will appear in the arrays outside the overlap", 0.0));
 
-  params.insertSeparator(Parameters::Separator{"Required Sampling Data"});
+  params.insertSeparator(Parameters::Separator{"Input Sampling Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SamplingGeometryPath_Key, "Sampling Image Geometry",
                                                              "This is the geometry that will be copied into the reference geometry at the overlap", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SamplingCellAttributeMatrixPath_Key, "Sampling Cell Attribute Matrix", "The attribute matrix for the sampling geometry", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
 
-  params.insertSeparator(Parameters::Separator{"Required Reference Data"});
+  params.insertSeparator(Parameters::Separator{"Input Reference Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ReferenceGeometryPath_Key, "Reference Image Geometry", "This is the geometry that will store the values from the overlap", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_ReferenceCellAttributeMatrixPath_Key, "Reference Cell Attribute Matrix", "The attribute matrix for the reference geometry", DataPath{},

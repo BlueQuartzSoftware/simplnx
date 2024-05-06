@@ -11,7 +11,7 @@
           100,
           2
         ],
-        "geometry_data_path": "[Image Geometry]",
+        "output_image_geometry_path": "[Image Geometry]",
         "origin": [
           0.0,
           0.0,
@@ -71,7 +71,7 @@
       "args": {
         "component_count": 1,
         "initialization_value_str": "1",
-        "numeric_type": 4,
+        "numeric_type_index": 4,
         "output_array_path": "[Image Geometry]/Cell Data/Phases",
         "tuple_dimensions": [
           [

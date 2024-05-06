@@ -11,7 +11,7 @@
           100,
           100
         ],
-        "geometry_data_path": "[Image Geometry]",
+        "output_image_geometry_path": "[Image Geometry]",
         "origin": [
           0.0,
           0.0,
@@ -59,7 +59,7 @@
       "filterIndex": 0,
       "filterUuid": "c4320659-1a84-461d-939e-c7c10229a504",
       "paramUuid": "bff2d4ac-04a6-5251-b188-4f83f7865074",
-      "paramName": "geometry_data_path"
+      "paramName": "output_image_geometry_path"
     },
     {
       "filterIndex": 1,

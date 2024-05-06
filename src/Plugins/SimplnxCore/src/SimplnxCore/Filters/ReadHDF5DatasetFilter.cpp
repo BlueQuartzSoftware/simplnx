@@ -135,7 +135,7 @@ Parameters ReadHDF5DatasetFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ReadHDF5DatasetParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "The HDF5 file data to import", ReadHDF5DatasetParameter::ValueType{}));
 
   return params;

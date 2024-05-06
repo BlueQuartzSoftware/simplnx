@@ -62,7 +62,7 @@
             0.0
           ]
         ],
-        "rotation_representation": 0,
+        "rotation_representation_index": 0,
         "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
@@ -125,7 +125,7 @@
         "image_array_path": "DataContainer/Cell Data/IPFColors",
         "input_image_geometry_path": "DataContainer",
         "index_offset": 0,
-        "plane": 0
+        "plane_index": 0
       },
       "comments": "",
       "filter": {

@@ -51,11 +51,11 @@ Parameters LabelTriangleGeometryFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Triangle Geometry", "The CAD Geometry to be labeled (TriangleGeom)", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType::Triangle}));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedRegionIdsPath_Key, "Region Ids", "The triangle id array for indexing into triangle groupings", DataPath({"Region Ids"})));
 
   params.insert(std::make_unique<DataObjectNameParameter>(k_TriangleAttributeMatrixName_Key, "Cell Feature Attribute Matrix Name",

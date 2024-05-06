@@ -428,10 +428,8 @@ Parameters InitializeDataFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayPath_Key, "Any Component Array", "The data array in which to initialize the data", DataPath{}, nx::core::GetAllDataTypes()));
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insertSeparator(Parameters::Separator{"Data Initialization"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to",
                                                                     static_cast<ChoicesParameter::ValueType>(0),
                                                                     ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
@@ -453,6 +451,9 @@ Parameters InitializeDataFilter::parameters() const
   params.insert(
       std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
   params.insert(std::make_unique<StringParameter>(k_InitEndRange_Key, "Initialization End Range [Seperated with ;]", "[Inclusive]  The upper bound initialization range for random values", "1;1;1"));
+
+  params.insertSeparator(Parameters::Separator{"Input Data Array"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayPath_Key, "Any Component Array", "The data array in which to initialize the data", DataPath{}, nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   /* Using Fill Value */

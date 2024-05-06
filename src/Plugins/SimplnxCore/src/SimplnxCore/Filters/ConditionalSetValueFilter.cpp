@@ -89,7 +89,7 @@ Parameters ConditionalSetValueFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<StringParameter>(k_ReplaceValue_Key, "New Value", "The value that will be used as the replacement value", "0"));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
@@ -100,7 +100,7 @@ Parameters ConditionalSetValueFilter::parameters() const
       ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<StringParameter>(k_RemoveValue_Key, "Value To Replace", "The numerical value that will be replaced in the array", "0"));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Data"});
+  params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array", "The complete path to array that will have values replaced", DataPath{}, nx::core::GetAllDataTypes()));
 

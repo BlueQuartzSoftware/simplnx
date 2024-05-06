@@ -34,8 +34,8 @@
     {
       "args": {
         "cell_attribute_matrix_path": "",
-        "computed_transformation_matrix": "",
-        "interpolation_type": 0,
+        "computed_transformation_matrix_path": "",
+        "interpolation_type_index": 2,
         "manual_transformation_matrix": [
           [
             1.0,
@@ -74,7 +74,7 @@
           1.0
         ],
         "input_image_geometry_path": "Blade [Rotation]",
-        "transformation_type": 3,
+        "transformation_type_index": 3,
         "translation": [
           0.0,
           0.0,
@@ -105,8 +105,8 @@
     {
       "args": {
         "cell_attribute_matrix_path": "",
-        "computed_transformation_matrix": "",
-        "interpolation_type": 0,
+        "computed_transformation_matrix_path": "",
+        "interpolation_type_index": 2,
         "manual_transformation_matrix": [
           [
             1.0,
@@ -145,7 +145,7 @@
           1.0
         ],
         "input_image_geometry_path": "Blade [Translation]",
-        "transformation_type": 4,
+        "transformation_type_index": 4,
         "translation": [
           10.0,
           10.0,
@@ -176,8 +176,8 @@
     {
       "args": {
         "cell_attribute_matrix_path": "",
-        "computed_transformation_matrix": "",
-        "interpolation_type": 0,
+        "computed_transformation_matrix_path": "",
+        "interpolation_type_index": 2,
         "manual_transformation_matrix": [
           [
             1.0,
@@ -216,7 +216,7 @@
           1.0
         ],
         "input_image_geometry_path": "Blade [Scale]",
-        "transformation_type": 5,
+        "transformation_type_index": 5,
         "translation": [
           10.0,
           10.0,

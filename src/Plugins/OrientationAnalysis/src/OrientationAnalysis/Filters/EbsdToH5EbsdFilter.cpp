@@ -51,7 +51,7 @@ std::vector<std::string> EbsdToH5EbsdFilter::defaultTags() const
 Parameters EbsdToH5EbsdFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Conversion Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing between each slice of data", 1.0F));
   params.insert(std::make_unique<ChoicesParameter>(k_StackingOrder_Key, "Stacking Order", "The order the files should be placed into the ", EbsdToH5EbsdInputConstants::k_LowToHigh,
                                                    EbsdToH5EbsdInputConstants::k_StackingChoices));
@@ -59,11 +59,11 @@ Parameters EbsdToH5EbsdFilter::parameters() const
                                                    "The reference frame transformation. 0=EDAX(.ang), 1=Oxford(.ctf), 2=No/Unknown Transformation, 3=HEDM-IceNine", EbsdToH5EbsdInputConstants::k_Edax,
                                                    EbsdToH5EbsdInputConstants::k_TransformChoices));
 
-  params.insertSeparator(Parameters::Separator{"Output Parameters"});
+  params.insertSeparator(Parameters::Separator{"Output File"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output H5Ebsd File", "The path to the generated .h5ebsd file", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{".h5ebsd"}, FileSystemPathParameter::PathType::OutputFile, true));
 
-  params.insertSeparator(Parameters::Separator{"Orientation Source Data"});
+  params.insertSeparator(Parameters::Separator{"Input Data Files"});
   params.insert(std::make_unique<GeneratedFileListParameter>(k_InputFileListInfo_Key, "Input File List",
                                                              "The values that are used to generate the input file list. See GeneratedFileListParameter for more information.",
                                                              GeneratedFileListParameter::ValueType{}));

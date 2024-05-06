@@ -54,14 +54,14 @@ Parameters FindNeighborhoodsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<Float32Parameter>(k_MultiplesOfAverage_Key, "Multiples of Average Diameter", "Defines the search radius to use when looking for 'neighboring' Features", 1.0F));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath({"Data Container"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
-  params.insertSeparator(Parameters::Separator{"Required Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters", "Path to the array specifying the diameter of a sphere with the same volume as the Feature",
       DataPath({"CellFeatureData", "EquivalentDiameters"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -71,11 +71,11 @@ Parameters FindNeighborhoodsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "Path to the array specifying the X, Y, Z coordinates of Feature center of mass",
                                                           DataPath({"CellFeatureData", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{3}}));
-  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods",
                                                           "Number of Features that have their centroid within the user specified multiple of equivalent sphere diameters from each Feature",
                                                           "Neighborhoods"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodListArrayName_Key, "NeighborhoodList",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodListArrayName_Key, "Neighborhood List",
                                                           "List of the Features whose centroids are within the user specified multiple of equivalent sphere diameter from each Feature",
                                                           "NeighborhoodList"));
 

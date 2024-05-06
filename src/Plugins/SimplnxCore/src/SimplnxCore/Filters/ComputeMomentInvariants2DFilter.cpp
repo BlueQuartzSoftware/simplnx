@@ -54,16 +54,16 @@ Parameters ComputeMomentInvariants2DFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Required Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "2D Image Geometry", "The path to the 2D image geometry to be used as input", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureRectArrayPath_Key, "Feature Rect", "Array holding the min xy and max xy pixel coordinates of each feature id", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{6}}));
   params.insert(std::make_unique<BoolParameter>(k_NormalizeMomentInvariants_Key, "Normalize Moment Invariants", "Should the algorithm normalize the results to unit circle.", true));
-  params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix",
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix",
                                                                     "The path to the cell feature attribute matrix where the created data arrays will be stored", DataPath{}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega1ArrayName_Key, "Omega 1", "Omega1 value", "Omega1"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega2ArrayName_Key, "Omega 2", "Omega2 value", "Omega2"));

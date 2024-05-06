@@ -16,7 +16,7 @@ This **Filter** determines, for each **Feature**, the C-axis misalignments with 
 
 ## Example Pipelines
 
-Combo-EBSD-osc_r0c0
+EBSD_Hexagonal_Data_Analysis
 
 ## License & Copyright
 

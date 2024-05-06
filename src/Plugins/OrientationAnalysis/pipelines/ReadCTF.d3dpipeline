@@ -55,7 +55,7 @@
             1.0
           ]
         ],
-        "rotation_representation": 0,
+        "rotation_representation_index": 0,
         "input_image_geometry_path": "DataContainer"
       },
       "comments": "",

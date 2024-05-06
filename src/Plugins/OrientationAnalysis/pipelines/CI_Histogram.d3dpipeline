@@ -62,7 +62,7 @@
             0.0
           ]
         ],
-        "rotation_representation": 0,
+        "rotation_representation_index": 0,
         "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
@@ -137,13 +137,13 @@
     },
     {
       "args": {
-        "delimiter": 2,
+        "delimiter_index": 2,
         "file_extension": ".csv",
-        "includes": 1,
+        "header_option_index": 1,
         "max_val_per_line": 0,
         "output_dir": "Data/Output/OrientationAnalysis/",
         "output_path": "Data/Output/OrientationAnalysis/Test/CI_Histogram.csv",
-        "output_style": 1,
+        "output_style_index": 1,
         "input_data_array_paths": [
           "DataContainer/Statistics/Confidence Index Histogram"
         ]

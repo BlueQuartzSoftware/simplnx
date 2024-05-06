@@ -54,7 +54,7 @@ std::vector<std::string> ExtractPipelineToFileFilter::defaultTags() const
 Parameters ExtractPipelineToFileFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_ImportFileData, "Input DREAM3D File Path", "The file path to the .dream3d that holds the pipeline to be extracted.",
                                                           FileSystemPathParameter::ValueType{}, FileSystemPathParameter::ExtensionsType{".dream3d"}, FileSystemPathParameter::PathType::InputFile));
   params.insertSeparator(Parameters::Separator{"Output Parameters"});

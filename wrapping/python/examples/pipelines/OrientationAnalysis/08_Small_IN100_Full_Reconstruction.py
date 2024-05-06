@@ -205,7 +205,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 12
 # Instantiate Filter
-nx_filter = nx.FindNeighborsFilter()
+nx_filter = nx.FindFeatureNeighborsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -280,7 +280,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 16
 # Instantiate Filter
-nx_filter = nx.FindNeighborsFilter()
+nx_filter = nx.FindFeatureNeighborsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -304,7 +304,6 @@ nx_filter = nx.MinNeighborsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     apply_to_single_phase=False,
-    cell_attribute_matrix_path=nx.DataPath("DataContainer/CellData"),
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     min_num_neighbors=2,

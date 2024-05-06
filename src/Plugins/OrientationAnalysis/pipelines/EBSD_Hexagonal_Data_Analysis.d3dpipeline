@@ -1,24 +1,24 @@
 {
   "isDisabled": false,
-  "name": "Combo-EBSD-osc_r0c0.d3dpipeline",
-  "pinnedParams": [],
+  "name": "EBSD Hexagonal Data Analysis",
   "pipeline": [
     {
       "args": {
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
-        "output_image_geometry_path": "DataContainer",
-        "input_file": "Data/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
+        "input_file": "Data/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang",
+        "output_image_geometry_path": "DataContainer"
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadAngDataFilter",
+        "name": "nx::core::ReadAngDataFilter",
         "uuid": "5b062816-79ac-47ce-93cb-e7966896bcbd"
       },
       "isDisabled": false
     },
     {
       "args": {
+        "input_image_geometry_path": "DataContainer",
         "output_image_geometry_path": "",
         "remove_original_geometry": true,
         "rotate_slice_by_slice": false,
@@ -54,12 +54,11 @@
             1.0
           ]
         ],
-        "rotation_representation": 0,
-        "input_image_geometry_path": "DataContainer"
+        "rotation_representation_index": 0
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::RotateSampleRefFrameFilter",
+        "name": "nx::core::RotateSampleRefFrameFilter",
         "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
       },
       "isDisabled": false
@@ -76,7 +75,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::RotateEulerRefFrameFilter",
+        "name": "nx::core::RotateEulerRefFrameFilter",
         "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
       },
       "isDisabled": false
@@ -98,11 +97,16 @@
           "type": "collection",
           "union": 0
         },
-        "output_data_array_name": "Mask"
+        "created_mask_type": 10,
+        "custom_false_value": 0.0,
+        "custom_true_value": 1.0,
+        "output_data_array_name": "Mask",
+        "use_custom_false_value": false,
+        "use_custom_true_value": false
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MultiThresholdObjects",
+        "name": "nx::core::MultiThresholdObjectsFilter",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
@@ -123,7 +127,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateIPFColorsFilter",
+        "name": "nx::core::GenerateIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false
@@ -132,13 +136,13 @@
       "args": {
         "file_name": "Data/Output/Examples/Combo-EBSD-osc_r0c0.png",
         "image_array_path": "DataContainer/CellData/IPFColors",
-        "input_image_geometry_path": "DataContainer",
         "index_offset": 0,
-        "plane": 0
+        "input_image_geometry_path": "DataContainer",
+        "plane_index": 0
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ITKImageWriter",
+        "name": "nx::core::ITKImageWriterFilter",
         "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
       },
       "isDisabled": false
@@ -152,7 +156,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ConvertOrientations",
+        "name": "nx::core::ConvertOrientationsFilter",
         "uuid": "501e54e6-a66f-4eeb-ae37-00e649c00d4b"
       },
       "isDisabled": false
@@ -164,8 +168,8 @@
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
-        "mask_array_path": "DataContainer/CellData/Mask",
         "input_image_geometry_path": "DataContainer",
+        "mask_array_path": "DataContainer/CellData/Mask",
         "misorientation_tolerance": 5.0,
         "quats_array_path": "DataContainer/CellData/Quats",
         "randomize_feature_ids": true,
@@ -173,14 +177,14 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CAxisSegmentFeaturesFilter",
+        "name": "nx::core::CAxisSegmentFeaturesFilter",
         "uuid": "9fe07e17-aef1-4bf1-834c-d3a73dafc27d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "avg_c_axes_array_path": "AvgCAxes",
+        "avg_c_axes_array_name": "AvgCAxes",
         "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
         "cell_phases_array_path": "DataContainer/CellData/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
@@ -189,7 +193,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindAvgCAxesFilter",
+        "name": "nx::core::FindAvgCAxesFilter",
         "uuid": "453cdb58-7bbb-4576-ad5e-f75a1c54d348"
       },
       "isDisabled": false
@@ -208,7 +212,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureReferenceCAxisMisorientationsFilter",
+        "name": "nx::core::FindFeatureReferenceCAxisMisorientationsFilter",
         "uuid": "16c487d2-8f99-4fb5-a4df-d3f70a8e6b25"
       },
       "isDisabled": false
@@ -222,22 +226,8 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindCAxisLocationsFilter",
+        "name": "nx::core::FindCAxisLocationsFilter",
         "uuid": "a51c257a-ddc1-499a-9b21-f2d25a19d098"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
-        "output_rgb_array_name": "Feature Ids (Color)",
-        "input_data_array_path": "DataContainer/CellData/FeatureIds",
-        "selected_preset": "hsv",
-        "use_mask": false
-      },
-      "comments": "",
-      "filter": {
-        "name": "simplnx::GenerateColorTableFilter",
-        "uuid": "d1731177-4d70-41c0-9334-566a0b482796"
       },
       "isDisabled": false
     },
@@ -258,28 +248,37 @@
           "type": "collection",
           "union": 0
         },
-        "output_data_array_name": "Mask Inverse"
+        "created_mask_type": 10,
+        "custom_false_value": 0.0,
+        "custom_true_value": 1.0,
+        "output_data_array_name": "Mask Inverse",
+        "use_custom_false_value": false,
+        "use_custom_true_value": false
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MultiThresholdObjects",
+        "name": "nx::core::MultiThresholdObjectsFilter",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "conditional_array_path": "DataContainer/CellData/Mask Inverse",
-        "invert_mask": false,
-        "remove_value": "0",
-        "replace_value": "0",
-        "selected_array_path": "DataContainer/CellData/Feature Ids (Color)",
-        "use_conditional": true
+        "input_data_array_path": "DataContainer/CellData/FeatureIds",
+        "invalid_color_value": [
+          0,
+          0,
+          0
+        ],
+        "mask_array_path": "DataContainer/CellData/Mask Inverse",
+        "output_rgb_array_name": "Feature Ids (Color)",
+        "selected_preset": "hsv",
+        "use_mask": true
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ConditionalSetValueFilter",
-        "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
+        "name": "nx::core::GenerateColorTableFilter",
+        "uuid": "d1731177-4d70-41c0-9334-566a0b482796"
       },
       "isDisabled": false
     },
@@ -287,13 +286,13 @@
       "args": {
         "file_name": "Data/Output/Examples/Combo-EBSD-osc_r0c0._feature_ids.png",
         "image_array_path": "DataContainer/CellData/Feature Ids (Color)",
-        "input_image_geometry_path": "DataContainer",
         "index_offset": 0,
-        "plane": 0
+        "input_image_geometry_path": "DataContainer",
+        "plane_index": 0
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ITKImageWriter",
+        "name": "nx::core::ITKImageWriterFilter",
         "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
       },
       "isDisabled": false
@@ -307,7 +306,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeaturePhasesFilter",
+        "name": "nx::core::FindFeaturePhasesFilter",
         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
       },
       "isDisabled": false
@@ -324,7 +323,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindAvgOrientationsFilter",
+        "name": "nx::core::FindAvgOrientationsFilter",
         "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
       },
       "isDisabled": false
@@ -344,7 +343,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindNeighborsFilter",
+        "name": "nx::core::FindNeighborsFilter",
         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
       },
       "isDisabled": false
@@ -361,7 +360,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureNeighborCAxisMisalignmentsFilter",
+        "name": "nx::core::FindFeatureNeighborCAxisMisalignmentsFilter",
         "uuid": "636ee030-9f07-4f16-a4f3-592eff8ef1ee"
       },
       "isDisabled": false
@@ -373,11 +372,11 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

@@ -226,16 +226,16 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Existing Image Geometry", "Path to the existing Image Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
-  params.insertSeparator(Parameters::Separator{"Input Vertex Geometry Information"});
+  params.insertSeparator(Parameters::Separator{"Input Vertex Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
 
-  params.insertSeparator(Parameters::Separator{"Input Vertex Mask Selection"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", false));
+  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VoxelIndicesName_Key, "Created Voxel Indices", "Path to the created Voxel Indices array", "Voxel Indices"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Created Cell Data Name", "The name of the cell data attribute matrix to be created within the created Image Geometry",
                                                           ImageGeom::k_CellDataName));
