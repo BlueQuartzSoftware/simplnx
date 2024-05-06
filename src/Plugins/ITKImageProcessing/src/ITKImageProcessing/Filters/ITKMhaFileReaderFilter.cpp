@@ -266,7 +266,7 @@ Parameters ITKMhaFileReaderFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(ITKImageReaderFilter::k_FileName_Key, "Input MHA File", "The input .mha file that will be read.", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{{".mha"}}, FileSystemPathParameter::PathType::InputFile, false));
 
@@ -275,7 +275,7 @@ Parameters ITKMhaFileReaderFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_InterpolationTypeKey, "Interpolation Type", "The type of interpolation algorithm that is used. 0=NearestNeighbor, 1=Linear",
                                                    k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
 
-  params.insertSeparator(Parameters::Separator{"Transformation Matrix Options"});
+  params.insertSeparator(Parameters::Separator{"Optional Transformation Matrix Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_TransposeTransformMatrix, "Transpose Stored Transformation Matrix",
                                                 "When true, the transformation matrix found in the image's header metadata will be transposed before use.", false));
   params.insertLinkableParameter(
@@ -284,12 +284,13 @@ Parameters ITKMhaFileReaderFilter::parameters() const
   params.insert(std::make_unique<ArrayCreationParameter>(k_TransformationMatrixDataArrayPathKey, "Transformation Matrix", "The path to the transformation matrix data array",
                                                          DataPath({"ImageDataContainer", "TransformationMatrix"})));
 
-  params.insertSeparator(Parameters::Separator{"Created Image Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Output Image Data Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(ITKImageReaderFilter::k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry",
                                                              DataPath({"ImageDataContainer"})));
-
+  params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(ITKImageReaderFilter::k_CellDataName_Key, "Created Cell Attribute Matrix", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(ITKImageReaderFilter::k_ImageDataArrayPath_Key, "Created Cell Data",
                                                           "The name of the created image data array. Will be stored in the created Cell Attribute Matrix", "ImageData"));
 

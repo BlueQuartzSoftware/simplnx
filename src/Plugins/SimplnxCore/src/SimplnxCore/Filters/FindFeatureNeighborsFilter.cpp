@@ -1,4 +1,4 @@
-#include "FindNeighborsFilter.hpp"
+#include "FindFeatureNeighborsFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -20,59 +20,60 @@
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindNeighborsFilter::name() const
+std::string FindFeatureNeighborsFilter::name() const
 {
-  return FilterTraits<FindNeighborsFilter>::name;
+  return FilterTraits<FindFeatureNeighborsFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighborsFilter::className() const
+std::string FindFeatureNeighborsFilter::className() const
 {
-  return FilterTraits<FindNeighborsFilter>::className;
+  return FilterTraits<FindFeatureNeighborsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindNeighborsFilter::uuid() const
+Uuid FindFeatureNeighborsFilter::uuid() const
 {
-  return FilterTraits<FindNeighborsFilter>::uuid;
+  return FilterTraits<FindFeatureNeighborsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindNeighborsFilter::humanName() const
+std::string FindFeatureNeighborsFilter::humanName() const
 {
   return "Find Feature Neighbors";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindNeighborsFilter::defaultTags() const
+std::vector<std::string> FindFeatureNeighborsFilter::defaultTags() const
 {
   return {className(), "Statistics", "Neighbors", "Features"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindNeighborsFilter::parameters() const
+Parameters FindFeatureNeighborsFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreBoundary_Key, "Store Boundary Cells Array", "Whether to store the boundary Cells array", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "Whether to store the surface Features array", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "The geometry in which to identify feature neighbors", DataPath({"DataContainer"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesPath_Key, "Cell Feature AttributeMatrix", "Feature Attribute Matrix of the selected Feature Ids",
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesPath_Key, "Feature Attribute Matrix", "Feature Attribute Matrix of the selected Feature Ids",
                                                                     DataPath({"DataContainer", "CellFeatureData"})));
 
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(
       k_BoundaryCellsName_Key, "Boundary Cells",
       "The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6. Only created if Store Boundary Cells Array is checked",
       "BoundaryCells"));
-  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NumNeighborsName_Key, "Number of Neighbors", "Number of contiguous neighboring Features for a given Feature", "NumNeighbors"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborListName_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", "NeighborList"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SharedSurfaceAreaName_Key, "Shared Surface Area List",
@@ -88,13 +89,14 @@ Parameters FindNeighborsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindNeighborsFilter::clone() const
+IFilter::UniquePointer FindFeatureNeighborsFilter::clone() const
 {
-  return std::make_unique<FindNeighborsFilter>();
+  return std::make_unique<FindFeatureNeighborsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindFeatureNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
@@ -164,8 +166,8 @@ IFilter::PreflightResult FindNeighborsFilter::preflightImpl(const DataStructure&
 }
 
 //------------------------------------------------------------------------------
-Result<> FindNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+Result<> FindFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
   auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
@@ -434,9 +436,9 @@ constexpr StringLiteral k_SurfaceFeaturesArrayNameKey = "SurfaceFeaturesArrayNam
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> FindFeatureNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindNeighborsFilter().getDefaultArguments();
+  Arguments args = FindFeatureNeighborsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

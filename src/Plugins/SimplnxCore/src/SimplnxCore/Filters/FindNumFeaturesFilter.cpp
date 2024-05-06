@@ -50,16 +50,16 @@ Parameters FindNumFeaturesFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Required Objects: Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Array specifying which Ensemble each Feature belongs",
                                                           DataPath({"DataContainer", "FeatureData", "Phases"}), nx::core::GetAllDataTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Required Objects: Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_EnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
                                                               "The path to the ensemble attribute matrix where the number of features array will be stored",
                                                               DataPath({"DataContainer", "EnsembleData"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
 
-  params.insertSeparator(Parameters::Separator{"Created Objects: Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Output Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NumFeaturesArrayName_Key, "Number of Features", "The number of Features that belong to each Ensemble", "Number of Features"));
 
   return params;

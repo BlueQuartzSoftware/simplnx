@@ -8,7 +8,7 @@
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
         "degrees_to_radians": true,
-        "image_geometry_name": "ImageGeom",
+        "output_image_geometry_path": "ImageGeom",
         "origin": [
           0.0,
           0.0,

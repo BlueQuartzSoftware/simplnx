@@ -52,7 +52,7 @@ Parameters ExecuteProcessFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<StringParameter>(k_Arguments_Key, "Command Line Arguments", "The complete command to execute.", "SomeString"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Blocking_Key, "Should Block", "Whether to block the process while the command executes or not", false));
   params.insert(std::make_unique<Int32Parameter>(k_Timeout_Key, "Timeout (ms)", "The amount of time to wait for the command to start/finish when blocking is selected", 30000));

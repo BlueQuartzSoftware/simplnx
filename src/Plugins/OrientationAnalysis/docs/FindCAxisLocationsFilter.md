@@ -14,7 +14,7 @@ This **Filter** determines the direction <u,v,w> of the C-axis for each **Elemen
 
 ## Example Pipelines
 
-Combo-EBSD-osc_r0c0
+EBSD_Hexagonal_Data_Analysis
 
 ## License & Copyright
 

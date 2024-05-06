@@ -59,16 +59,16 @@ Parameters ReadH5EbsdFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ReadH5EbsdFileParameter>(k_ReadH5EbsdParameter_Key, "Import H5Ebsd File", "Object that holds all relevant information to import data from the file.",
                                                           ReadH5EbsdFileParameter::ValueType{}));
 
-  params.insertSeparator(Parameters::Separator{"Create Image Geometry"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the created cell attribute matrix associated with the imported geometry",
+  params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
+  params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data attribute matrix for the created Image Geometry",
                                                           ImageGeom::k_CellDataName));
-  params.insertSeparator(Parameters::Separator{"Created Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Output Ensemble Attribute Matrix"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "The Attribute Matrix where the phase information is stored.",
                                                           "Cell Ensemble Data"));
 

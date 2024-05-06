@@ -52,14 +52,14 @@ Parameters FindTriangleGeomSizesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insertSeparator(Parameters::Separator{"Required Face Data"});
+  params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}));
-  params.insertSeparator(Parameters::Separator{"Required Face Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
                                                               "The DataPath to the AttributeMatrix that holds feature data for the faces", DataPath({"TriangleDataContainer", "FaceFeatureData"}),
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
-  params.insertSeparator(Parameters::Separator{"Created Face Feature Data Arrays"});
+  params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesArrayName_Key, "Calculated Volumes", "Calculated volumes data created in the Face Feature Data Attribute Matrix", "Volumes"));
 
   return params;

@@ -408,7 +408,7 @@ Parameters AlignGeometriesFilter::parameters() const
 
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_MovingGeometry_Key, "Moving Geometry", "The geometry that will be moved.", DataPath(), geomTypes));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TargetGeometry_Key, "Fixed Geometry", "The geometry that does *not* move.", DataPath(), geomTypes));
   params.insert(std::make_unique<ChoicesParameter>(k_AlignmentType_Key, "Alignment Type", "The type of alignment to perform (Origin or Centroid.", 0, std::vector<std::string>{"Origin", "Centroid"}));

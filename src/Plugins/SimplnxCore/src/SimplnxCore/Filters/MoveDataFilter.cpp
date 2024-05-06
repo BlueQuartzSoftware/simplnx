@@ -46,7 +46,7 @@ Parameters MoveDataFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<MultiPathSelectionParameter>(k_SourceDataPaths_Key, "Data to Move", "The complete paths to the data object(s) to be moved", MultiPathSelectionParameter::ValueType{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DestinationParentPath_Key, "New Parent", "The complete path to the parent data object to which the data will be moved", DataPath(),
                                                               BaseGroup::GetAllGroupTypes()));

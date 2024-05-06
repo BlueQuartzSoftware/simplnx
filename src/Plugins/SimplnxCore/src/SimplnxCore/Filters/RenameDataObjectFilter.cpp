@@ -55,7 +55,7 @@ Parameters RenameDataObjectFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_AllowOverwrite_Key, "Allow Overwrite",
                                                 "If true existing object with `New Name` and all of its nested objects will be removed to free up the name for the target DataObject", false));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_SourceDataObjectPath_Key, "DataObject to Rename", "DataPath pointing to the target DataObject", DataPath()));

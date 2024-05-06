@@ -43,7 +43,7 @@ Uuid ReadDREAM3DFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ReadDREAM3DFilter::humanName() const
 {
-  return "Read DREAM.3D File";
+  return "Read DREAM3D-NX File";
 }
 
 //------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ std::vector<std::string> ReadDREAM3DFilter::defaultTags() const
 Parameters ReadDREAM3DFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData()));
   return params;
 }

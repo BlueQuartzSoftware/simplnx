@@ -52,17 +52,17 @@ Parameters CalculateArrayHistogramFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfBins_Key, "Number of Bins", "Specifies number of histogram bins (greater than zero)", 1));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UserDefinedRange_Key, "Use Custom Min & Max Range", "Whether the user can set the min and max values to consider for the histogram", false));
   params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Min Value", "Specifies the lower bound of the histogram.", 0.0));
   params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Max Value", "Specifies the upper bound of the histogram.", 1.0));
-  params.insertSeparator(Parameters::Separator{"Input Arrays"});
+  params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllNumericTypes()));
-  params.insertSeparator(Parameters::Separator{"Output Set Up"});
+  params.insertSeparator(Parameters::Separator{"Output parameters"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_CreateNewDataGroup_Key, "Create New DataGroup for Histograms", "Whether or not to store the calculated histogram(s) in a new DataGroup", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupPath_Key, "New DataGroup Path", "The path to the new DataGroup in which to store the calculated histogram(s)", DataPath{}));

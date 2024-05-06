@@ -52,7 +52,7 @@ Parameters ErodeDilateMaskFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<ChoicesParameter>(k_Operation_Key, "Operation", "Whether to dilate (0) or erode (1)", 0ULL, ::k_OperationChoices));
@@ -61,7 +61,7 @@ Parameters ErodeDilateMaskFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_YDirOn_Key, "Y Direction", "Whether to erode/dilate in the Y direction", true));
   params.insert(std::make_unique<BoolParameter>(k_ZDirOn_Key, "Z Direction", "Whether to erode/dilate in the Z direction", true));
 
-  params.insertSeparator(Parameters::Separator{"Required Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array Path", "Boolean array where true voxels are used. False voxels are ignored.", DataPath{},

@@ -22,7 +22,7 @@ This filter will error out if **ALL** phases are non-hexagonal. Any non-hexagona
 
 ## Example Pipelines
 
-Combo-EBSD-osc_r0c0
+EBSD_Hexagonal_Data_Analysis
 
 ## License & Copyright
 

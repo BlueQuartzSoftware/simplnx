@@ -60,7 +60,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindLargestCrossSectionsTest.cpp
   FindNeighborhoodsTest.cpp
   FindNeighborListStatisticsTest.cpp
-  FindNeighborsTest.cpp
+  FindFeatureNeighborsTest.cpp
   FindNumFeaturesTest.cpp
   FindSurfaceAreaToVolumeTest.cpp
   FindSurfaceFeaturesTest.cpp
@@ -242,14 +242,14 @@ include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 set(PREBUILT_PIPELINE_NAMES
   # Example or other test pipelines
   
-  # Currently Broken; Waiting on another PR. https://github.com/bluequartzsoftware/simplnx/pull/472
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Demo.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Image.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Node.d3dpipeline"
+
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Demo.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Image.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Node.d3dpipeline"
 
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ArrayCalculatorExample.d3dpipeline"
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ExecuteProcess.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_CSV_Data.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_CSV_File.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_STL_Model.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Triangle_Face_Data_Demo.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Remove_Triangles.d3dpipeline"
@@ -260,7 +260,7 @@ set(PREBUILT_PIPELINE_NAMES
   # These depend on files that are output from OrientationAnalysis Plugin
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBiasedFeatures.d3dpipeline"
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBoundaryCells.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_Text_Data.d3dpipeline"
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReplaceElementAttributesWithNeighbor.d3dpipeline"
 
 )

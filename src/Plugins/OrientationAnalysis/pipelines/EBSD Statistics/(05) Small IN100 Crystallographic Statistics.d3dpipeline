@@ -750,9 +750,9 @@
         "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
         "feature_ids_path": "DataContainer/CellData/FeatureIds",
         "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
-        "g_beuclidean_distances_array_path": "CellData/GBEuclideanDistances",
+        "gb_euclidean_distances_array_path": "CellData/GBEuclideanDistances",
         "quats_array_path": "DataContainer/CellData/Quats",
-        "reference_orientation": 0
+        "reference_orientation_index": 0
       },
       "comments": "",
       "filter": {

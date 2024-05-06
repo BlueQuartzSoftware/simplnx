@@ -112,6 +112,7 @@ set(PREBUILT_PIPELINE_NAMES
   # Example or other test pipelines
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(03) Porosity Mesh Export.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(04) Porosity Analysis.d3dpipeline"
 )
 
 # -----------------------------------------------------------------------------

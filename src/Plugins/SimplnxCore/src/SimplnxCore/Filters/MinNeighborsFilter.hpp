@@ -29,7 +29,6 @@ public:
   static inline constexpr StringLiteral k_NumNeighborsPath_Key = "num_neighbors_path";
   static inline constexpr StringLiteral k_MinNumNeighbors_Key = "min_num_neighbors";
   static inline constexpr StringLiteral k_IgnoredVoxelArrays_Key = "ignored_voxel_arrays";
-  static inline constexpr StringLiteral k_CellDataAttributeMatrixPath_Key = "cell_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

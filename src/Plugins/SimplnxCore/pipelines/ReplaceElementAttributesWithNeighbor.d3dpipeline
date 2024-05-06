@@ -92,7 +92,7 @@
             0.0
           ]
         ],
-        "rotation_representation": 0,
+        "rotation_representation_index": 0,
         "input_image_geometry_path": "DataContainer"
       },
       "comments": "",
@@ -123,7 +123,7 @@
       "args": {
         "change_origin": true,
         "change_spacing": true,
-        "image_geom": "DataContainer",
+        "input_image_geometry_path": "DataContainer",
         "origin": [
           0.0,
           0.0,
@@ -144,9 +144,9 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix": "CellFeatureData",
+        "cell_feature_attribute_matrix_path": "CellFeatureData",
         "output_image_geometry_path": "",
-        "feature_ids": "",
+        "feature_ids_path": "",
         "max_voxel": [
           160,
           175,
@@ -160,7 +160,7 @@
         "remove_original_geometry": true,
         "renumber_features": false,
         "input_image_geometry_path": "DataContainer",
-        "update_origin": false
+        "use_physical_bounds": false
       },
       "comments": "",
       "filter": {
@@ -195,7 +195,7 @@
         "comparison_data_path": "DataContainer/Cell Data/Confidence Index",
         "loop": true,
         "min_confidence": 0.10000000149011612,
-        "selected_comparison": 0,
+        "comparison_index": 0,
         "input_image_geometry_path": "DataContainer"
       },
       "comments": "",

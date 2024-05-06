@@ -53,10 +53,10 @@ Parameters ArrayCalculatorFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(
       std::make_unique<CalculatorParameter>(k_CalculatorParameter_Key, "Infix Expression", "The mathematical expression used to calculate the output array", CalculatorParameter::ValueType{}));
-  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Output Numeric Type", "The data type of the calculated array", NumericType::float64));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CalculatedArray_Key, "Output Calculated Array", "The path to the calculated array", DataPath{}));
 

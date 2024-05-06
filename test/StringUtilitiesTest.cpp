@@ -7,7 +7,7 @@
 
 using namespace nx::core;
 
-TEST_CASE("Empty Input Utility Function Test: split(str, char), split(str, char, bool), specific_split(str, char, StringUtilities::SplitType)")
+TEST_CASE("Simplnx::StringUtilities::Split Test", "[Simplnx][StringUtilities]")
 {
   std::string emptyInput = "";
   std::string noDelimiterInput = "ThisIsABaselineTest";
@@ -70,7 +70,7 @@ TEST_CASE("Empty Input Utility Function Test: split(str, char), split(str, char,
   REQUIRE(result == std::vector<std::string>{noDelimiterInput});
 }
 
-TEST_CASE("Utility Function Test: split(str, char)")
+TEST_CASE("Simplnx::StringUtilities Utility Function Test1", "[Simplnx][StringUtilities]")
 {
   // Case 1
   std::string inputStr = "This|Is|A|Baseline|Test";
@@ -94,7 +94,7 @@ TEST_CASE("Utility Function Test: split(str, char)")
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 }
 
-TEST_CASE("Utility Function Test: split(str, char, bool)")
+TEST_CASE("Simplnx::StringUtilities Utility Function Test2", "[Simplnx][StringUtilities]")
 {
   std::array<char, 1> k_Delimiter = {'|'};
   // Case 1
@@ -140,7 +140,7 @@ TEST_CASE("Utility Function Test: split(str, char, bool)")
   REQUIRE(result == std::vector<std::string>{"", "", "This", "Is", "", "A", "", "Baseline", "Test", "", ""});
 }
 
-TEST_CASE("Utility Function Test: specific_split(str, char, StringUtilities::SplitType)")
+TEST_CASE("Simplnx::StringUtilities Utility Function Test3", "[Simplnx][StringUtilities]")
 {
   std::array<char, 1> k_Delimiter = {'|'};
   std::string inputStr = "||This|Is||A||Baseline|Test||";

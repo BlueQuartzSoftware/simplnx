@@ -5,8 +5,8 @@
   "pipeline": [
     {
       "args": {
-        "created_data_group": "Bounds",
-        "read_csv_data": {
+        "created_data_group_path": "Bounds",
+        "read_csv_data_object": {
           "Consecutive Delimiters": false,
           "Custom Headers": null,
           "Data Types": [
@@ -30,7 +30,7 @@
             14
           ]
         },
-        "selected_data_group": "",
+        "created_data_group_path": "",
         "use_existing_group": false
       },
       "comments": "",
@@ -50,31 +50,31 @@
           200
         ],
         "edge_attribute_matrix_name": "Edge Data",
-        "edge_list_name": "",
+        "edge_list_path": "",
         "face_attribute_matrix_name": "Face Data",
-        "geometry_name": "RectGridGeometry",
-        "geometry_type": 1,
-        "hexahedral_list_name": "",
+        "geometry_type_index": "RectGridGeometry",
+        "geometry_type_index": 1,
+        "hexahedral_list_path": "",
         "length_unit_index": 7,
         "origin": [
           0.0,
           0.0,
           0.0
         ],
-        "quadrilateral_list_name": "",
+        "quadrilateral_list_path": "",
         "spacing": [
           1.0,
           1.0,
           1.0
         ],
-        "tetrahedral_list_name": "",
-        "triangle_list_name": "",
+        "tetrahedral_list_path": "",
+        "triangle_list_path": "",
         "vertex_attribute_matrix_name": "Vertex Data",
-        "vertex_list_name": "",
+        "vertex_list_path": "",
         "warnings_as_errors": false,
-        "x_bounds": "Bounds/x",
-        "y_bounds": "Bounds/y",
-        "z_bounds": "Bounds/z"
+        "x_bounds_path": "Bounds/x",
+        "y_bounds_path": "Bounds/y",
+        "z_bounds_path": "Bounds/z"
       },
       "comments": "",
       "filter": {
@@ -228,7 +228,7 @@
           20,
           20
         ],
-        "image_geom_cell_attribute_matrix": "CellData",
+        "image_geom_cell_attribute_matrix_name": "CellData",
         "input_image_geometry_path": "Image Geometry",
         "rectilinear_grid_path": "RectGridGeometry",
         "input_data_array_paths": [

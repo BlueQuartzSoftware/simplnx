@@ -34,8 +34,8 @@
     {
       "args": {
         "cell_attribute_matrix_path": "Transform [Rotate]/Cell Data",
-        "computed_transformation_matrix": "",
-        "interpolation_type": 1,
+        "computed_transformation_matrix_path": "",
+        "interpolation_type_index": 1,
         "manual_transformation_matrix": [
           [
             1.0,
@@ -74,7 +74,7 @@
           1.0
         ],
         "input_image_geometry_path": "Transform [Rotate]",
-        "transformation_type": 3,
+        "transformation_type_index": 3,
         "translation": [
           10.0,
           10.0,
@@ -105,8 +105,8 @@
     {
       "args": {
         "cell_attribute_matrix_path": "Transform [Scale]/Cell Data",
-        "computed_transformation_matrix": "",
-        "interpolation_type": 1,
+        "computed_transformation_matrix_path": "",
+        "interpolation_type_index": 1,
         "manual_transformation_matrix": [
           [
             1.0,
@@ -145,7 +145,7 @@
           1.0
         ],
         "input_image_geometry_path": "Transform [Scale]",
-        "transformation_type": 5,
+        "transformation_type_index": 5,
         "translation": [
           10.0,
           10.0,
@@ -176,8 +176,8 @@
     {
       "args": {
         "cell_attribute_matrix_path": "Transform [Translate]/Cell Data",
-        "computed_transformation_matrix": "",
-        "interpolation_type": 1,
+        "computed_transformation_matrix_path": "",
+        "interpolation_type_index": 1,
         "manual_transformation_matrix": [
           [
             1.0,
@@ -216,7 +216,7 @@
           1.0
         ],
         "input_image_geometry_path": "Transform [Translate]",
-        "transformation_type": 4,
+        "transformation_type_index": 4,
         "translation": [
           50.0,
           0.0,
@@ -247,8 +247,8 @@
     {
       "args": {
         "cell_attribute_matrix_path": "Transform [Rotation-Interpolation]/Cell Data",
-        "computed_transformation_matrix": "",
-        "interpolation_type": 2,
+        "computed_transformation_matrix_path": "",
+        "interpolation_type_index": 1,
         "manual_transformation_matrix": [
           [
             222.0,
@@ -287,7 +287,7 @@
           1.0
         ],
         "input_image_geometry_path": "Transform [Rotation-Interpolation]",
-        "transformation_type": 3,
+        "transformation_type_index": 3,
         "translation": [
           10.0,
           10.0,
@@ -318,8 +318,8 @@
     {
       "args": {
         "cell_attribute_matrix_path": "Transform [Scale-Interpolation]/Cell Data",
-        "computed_transformation_matrix": "",
-        "interpolation_type": 2,
+        "computed_transformation_matrix_path": "",
+        "interpolation_type_index": 1,
         "manual_transformation_matrix": [
           [
             222.0,
@@ -358,7 +358,7 @@
           1.0
         ],
         "input_image_geometry_path": "Transform [Scale-Interpolation]",
-        "transformation_type": 5,
+        "transformation_type_index": 5,
         "translation": [
           10.0,
           10.0,

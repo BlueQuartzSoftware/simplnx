@@ -476,14 +476,18 @@ inline uint32 CalculateLevenshteinDistance(const std::string& s1, const std::str
   return d[len1][len2];
 }
 
+using BestMatchType = std::tuple<std::string, std::string, uint32_t>;
+
 /**
  * @brief Finds the best matches between two lists of strings using the Levenshtein distance.
  * @param vec1
  * @param vec2
  * @return std::vector<std::pair<std::string, std::string>>
  */
-inline std::vector<std::pair<std::string, std::string>> FindBestMatches(const std::vector<std::string>& vec1, const std::vector<std::string>& vec2)
+inline std::vector<BestMatchType> FindBestMatches(const std::vector<std::string>& vec1, const std::vector<std::string>& vec2)
 {
+
+  std::vector<BestMatchType> bestMatches;
   std::vector<std::pair<std::string, std::string>> bestPairs;
   for(const auto& word1 : vec1)
   {
@@ -499,7 +503,9 @@ inline std::vector<std::pair<std::string, std::string>> FindBestMatches(const st
       }
     }
     bestPairs.emplace_back(word1, bestMatch);
+    bestMatches.emplace_back(word1, bestMatch, bestDistance);
   }
-  return bestPairs;
+  // return bestPairs;
+  return bestMatches;
 }
 } // namespace nx::core::StringUtilities

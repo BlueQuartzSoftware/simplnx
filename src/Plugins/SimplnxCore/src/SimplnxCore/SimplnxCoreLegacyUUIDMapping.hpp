@@ -51,7 +51,7 @@
 #include "SimplnxCore/Filters/FindFeaturePhasesBinaryFilter.hpp"
 #include "SimplnxCore/Filters/FindNeighborhoodsFilter.hpp"
 #include "SimplnxCore/Filters/FindNeighborListStatisticsFilter.hpp"
-#include "SimplnxCore/Filters/FindNeighborsFilter.hpp"
+#include "SimplnxCore/Filters/FindFeatureNeighborsFilter.hpp"
 #include "SimplnxCore/Filters/FindNumFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/FindSurfaceAreaToVolumeFilter.hpp"
 #include "SimplnxCore/Filters/FindSurfaceFeaturesFilter.hpp"
@@ -166,7 +166,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), {nx::core::FilterTraits<FindFeaturePhasesBinaryFilter>::uuid, &FindFeaturePhasesBinaryFilter::FromSIMPLJson}}, // FindFeaturePhasesBinary
     {nx::core::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), {nx::core::FilterTraits<FindNeighborhoodsFilter>::uuid, &FindNeighborhoodsFilter::FromSIMPLJson}}, // FindNeighborhoods
     {nx::core::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {nx::core::FilterTraits<FindNeighborListStatisticsFilter>::uuid, &FindNeighborListStatisticsFilter::FromSIMPLJson}}, // FindNeighborListStatisticsFilter
-    {nx::core::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {nx::core::FilterTraits<FindNeighborsFilter>::uuid, &FindNeighborsFilter::FromSIMPLJson}}, // FindNeighborsFilter
+    {nx::core::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {nx::core::FilterTraits<FindFeatureNeighborsFilter>::uuid, &FindFeatureNeighborsFilter::FromSIMPLJson}}, // FindNeighborsFilter
     {nx::core::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), {nx::core::FilterTraits<FindNumFeaturesFilter>::uuid, &FindNumFeaturesFilter::FromSIMPLJson}}, // FindNumFeatures
     {nx::core::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {nx::core::FilterTraits<FindSurfaceAreaToVolumeFilter>::uuid, &FindSurfaceAreaToVolumeFilter::FromSIMPLJson}}, // FindSurfaceAreaToVolume
     {nx::core::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), {nx::core::FilterTraits<FindSurfaceFeaturesFilter>::uuid, &FindSurfaceFeaturesFilter::FromSIMPLJson}}, // FindSurfaceFeaturesFilter

@@ -56,17 +56,17 @@ Parameters CombineAttributeArraysFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<BoolParameter>(k_NormalizeData_Key, "Normalize Data", "Whether to normalize the combine data on the interval [0, 1]", false));
   params.insert(std::make_unique<BoolParameter>(k_MoveValues_Key, "Move Data", "Whether to remove the original arrays after combining the data", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Combine", "The complete path to each of the Attribute Arrays to combine",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{}));
 
-  params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_StackedDataArrayName_Key, "Created Data Array", "This is the name of the created output array of the combined attribute arrays.",
                                                           "Combined DataArray"));
 

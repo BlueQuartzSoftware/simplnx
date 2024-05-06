@@ -806,7 +806,7 @@ def write_filter_source(filter_data: FilterData, template: Template, output_dir:
 
     parameter_defs = get_parameter_defs(filter_data)
     if parameter_defs:
-        parameter_defs.insert(0, '  params.insertSeparator(Parameters::Separator{"Input Parameters"});')
+        parameter_defs.insert(0, '  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});')
  
     parameter_defs_str = '\n'.join(parameter_defs)
     if parameter_defs:

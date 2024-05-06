@@ -361,7 +361,7 @@ Parameters ReadCSVFileFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<ReadCSVFileParameter>(k_ReadCSVData_Key, "CSV Importer Data", "Holds all relevant csv file data collected from the custom interface", ReadCSVData()));
 
@@ -369,13 +369,11 @@ Parameters ReadCSVFileFilter::parameters() const
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "Value {}"));
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Dim 0"}));
 
-  params.insertSeparator(Parameters::Separator{"Existing Attribute Matrix"});
+  params.insertSeparator(Parameters::Separator{"Attribute Matrix Options"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Attribute Matrix", "Store the imported CSV data arrays in an existing attribute matrix.", false));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedAttributeMatrixPath_Key, "Existing Attribute Matrix",
                                                                     "Store the imported CSV data arrays in this existing attribute matrix.", DataPath{}));
-
-  params.insertSeparator(Parameters::Separator{"Created AttributeMatrix"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDataGroup_Key, "New Attribute Matrix", "Store the imported CSV data arrays in a newly created attribute matrix.",
                                                              DataPath{{"Imported Data"}}));
 

@@ -55,14 +55,14 @@ Parameters ReadEnsembleInfoFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input Ensemble Info File", "The path to the ini formatted input file", fs::path("DefaultInputFileName"),
                                                           FileSystemPathParameter::ExtensionsType{".ini", ".txt"}, FileSystemPathParameter::PathType::InputFile));
   DataGroupSelectionParameter::AllowedTypes allowedGroupTypes = BaseGroup::GetAllGeometryGroupTypes();
   allowedGroupTypes.insert(BaseGroup::GroupType::DataGroup);
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_ParentGroupPath_Key, "Data Container", "The path to the data object in which the ensemble information will be stored", DataPath{},
                                                               allowedGroupTypes));
-  params.insertSeparator(Parameters::Separator{"Created Ensemble Data"});
+  params.insertSeparator(Parameters::Separator{"Output Ensemble Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "The name of the created Ensemble Attribute Matrix", "EnsembleAttributeMatrix"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CrystalStructuresArrayName_Key, "Crystal Structures", "The name of the created array representing the crystal structure for each Ensemble",

@@ -24,7 +24,7 @@ bool CompareFromStringToExemplar(const std::string& input, const DataPath& exemp
 }
 } // namespace
 
-TEST_CASE("Valid DataPath Creation")
+TEST_CASE("Simplnx::Valid DataPath Creation", "[Simplnx][DataPath]")
 {
   DataPath commonExemplar1 = DataPath({"Path1"}).createChildPath("Path2");
   REQUIRE(CompareFromStringToExemplar(k_CommonStringsVec[0], commonExemplar1));
@@ -51,7 +51,7 @@ TEST_CASE("Valid DataPath Creation")
   REQUIRE(CompareFromStringToExemplar(k_EdgeCaseStringsVec[3], edgeExemplar4));
 }
 
-TEST_CASE("Invalid DataPath Creation")
+TEST_CASE("Simplnx::Invalid DataPath Creation", "[Simplnx][DataPath]")
 {
   DataPath invalidExemplar1 = DataPath{};
   REQUIRE(!CompareFromStringToExemplar(k_InvalidStringsVec[0], invalidExemplar1));

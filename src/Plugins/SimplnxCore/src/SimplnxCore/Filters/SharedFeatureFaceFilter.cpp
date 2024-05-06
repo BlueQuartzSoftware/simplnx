@@ -49,19 +49,19 @@ Parameters SharedFeatureFaceFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatures_Key, "Randomize Face IDs", "Specifies if feature IDs should be randomized. Can be helpful when visualizing the faces.", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Input Data"});
+  params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}));
 
-  params.insertSeparator(Parameters::Separator{"Created Face Data Arrays"});
+  params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureFaceIdsArrayName_Key, "Feature Face Ids", "The name of the calculated Feature Face Ids DataArray", "SharedFeatureFaceId"));
 
-  params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_GrainBoundaryAttributeMatrixName_Key, "Face Feature Attribute Matrix",
                                                           "The name of the AttributeMatrix that holds the **Feature Face** data", "SharedFeatureFace"));
   params.insert(
