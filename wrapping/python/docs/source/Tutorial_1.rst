@@ -1,3 +1,4 @@
+
 .. _Tutorial_1:
 
 =====================================
@@ -5,15 +6,21 @@ Tutorial 1: Basic Python Integration
 =====================================
 
 This tutorial is meant to be a very basic introduction to interacting with the DREAM3D-NX underlying library called 'simplnx'. This
-tutorial will cover environment setup, minimal import statements and executing a few basic filters. Once you understand how to
-execute a filter, all filters are generally setup the same way. Use the search feature on the web site to find the filter 
+tutorial will cover the following topics:
+
+- Environment setup
+- Minimal import statements
+- Executing a few basic filters
+- Accessing your data through a Numpy View
+
+Once you understand how to execute a filter, all filters are generally setup the same way. Use the search feature on the web site to find the filter 
 that you are interested in running.
 
 .. _Tutorial_1_Setup:
 
-###################################
-Anaconda Virtual Environment Setup
-###################################
+#########################################
+1.1 Anaconda Virtual Environment Setup
+#########################################
 
 .. code:: shell
 
@@ -24,14 +31,14 @@ Anaconda Virtual Environment Setup
   
 
 ###################################
-Introduction
+1.2 Introduction
 ###################################
 
 Setup your virtual environment following the directions from above. Then create a Tutorial_1.py file anywhere that you want and open that up in your Editor/IDE.
 
 
 ###################################
-Necessary Import Statements
+1.3 Necessary Import Statements
 ###################################
 
 Just about every python source code that is written will need the following import Statements:
@@ -49,9 +56,9 @@ If you will be using filters from DREAM3D-NX's other plugins, then you may addit
     import orientationanalysis as nxor
 
 
-###################################
-Creating the DataStructure Object
-###################################
+#########################################
+1.4 Creating the DataStructure Object
+#########################################
 
 If you will be interacting with data stored in DREAM3D-NX, you will need to instantiate a :ref:`DataStructure` object. This is 
 simply done with the following line of code:
@@ -66,16 +73,16 @@ A few caveats to take note of:
 2. Only a **single** :ref:`DataStructure` object can be stored in a .dream3d file. 
 
 
-################################################
-First Steps: Create a Group in the DataStructure
-################################################
+######################################################
+1.5 First Steps: Create a Group in the DataStructure
+######################################################
 
 As in the user interface of DREAM3D-NX, you as the developer can execute any of the filters from DREAM3D-NX using only Python codes. This is performed
 by instantiating the filter and then calling the `execute()` method with the appropriate parameters used in the call. With the current API, we are tending to
 inline instantiate the filter and execute it all in the same line. Some things to note with this small piece of code:
 
 - There will **always** be a required :ref:`DataStructure` object. All arguments in the `execute()` method are named arguments. None are positional. This means that each argument must be in the form of 'name=value'.
-- The 2nd argument shows an use of the :ref:`DataPath` object. Lots of filters will require a :ref:`DataPath` object so this is a common use.
+- The 2nd argument shows a use of the :ref:`DataPath` object. Lots of filters will require a :ref:`DataPath` object so this is a common use.
 - There is a method called `hierarchy_to_str()` that is a part of the :ref:`DataStructure` class which will print the heirarchy of the DataStructure.
 
 
@@ -91,6 +98,10 @@ If we were to run this code we would get the following:
 
     |--Top Level Group
 
+
+****************************************
+1.5.1 Adding Multiple Groups (Optional)
+****************************************
 
 Let's try to add a bunch of groups to the :ref:`DataStructure` object by using a loop:
 
@@ -116,7 +127,7 @@ And the output would look like the following:
   
 
 ################################################
-Result Objects
+1.6 Result Objects
 ################################################
 
 Each time a filter is executed, it will return a :ref:`nx.IFilter.ExecuteResult <result>` object. This 
@@ -154,23 +165,23 @@ If you were to integrate this into your own code, then we would get the followin
 
 
 ################################################
-Creating a DataArray Object
+1.7 Creating a DataArray Object
 ################################################
 
 Raw data is stored in a :ref:`DataArray` object within the :ref:`DataStructure`. The DREAM3D-NX python bindings only expose a subset of functionality
 from the :ref:`DataArray`, enough to get the name, tuple shape and component shape. **ALL** interactions to modify a :ref:`DataArray` are done via a 
 `numpy view <https://numpy.org/doc/stable/user/basics.copies.html>`_. Let us first create a :ref:`DataArray` object within the :ref:`DataStructure` by using the
-:ref:`CreateDataArray <CreateDataArray>` filter. Adding into the current python source file... 
+:ref:`CreateDataArrayFilter <CreateDataArrayFilter>` filter. Adding into the current python source file... 
 
 .. code:: python
 
-    result = nx.CreateDataArray().execute(data_structure=data_structure, 
+    result = nx.CreateDataArrayFilter().execute(data_structure=data_structure, 
                                             component_count=1, 
                                             initialization_value_str="0", 
                                             numeric_type_index=nx.NumericType.float32, 
                                             output_array_path=nx.DataPath("Top Level Group/2D Array"), 
                                             tuple_dimensions=[[5,4]])
-    nxutility.check_filter_result( nx.CreateDataArray(), result)
+    nxutility.check_filter_result( nx.CreateDataArrayFilter(), result)
     print(f'{data_structure.hierarchy_to_str()}')
 
 Note how we are creating the array inside the very first :ref:`DataGroup` that we created. If we run the file from start to finish we now get the following output:
@@ -188,7 +199,7 @@ Note how we are creating the array inside the very first :ref:`DataGroup` that w
 As you can see we have successfully created an array that can hold some data. The next step is to interact with that :ref:`DataArray` and use numpy to modify the array in place.
 
 ################################################
-Modifying the DataArray Object using Numpy
+1.8 Modifying the DataArray Object using Numpy
 ################################################
 
 The method from :ref:`DataStructure` that we will be using is item selection using the '[]' operator paired with an 
@@ -252,7 +263,7 @@ And if you wanted to use `matplotlib <https://matplotlib.org/>`_ to view the dat
 
 
 ################################################
-Saving your Data to a .dream3d file
+1.9 Saving your Data to a .dream3d file
 ################################################
 
 Most pipelines would want to save any modified data to a .dream3d file (if you are wanting the easiest compatibility with DREAM3D-NX). In order
@@ -269,7 +280,7 @@ to do this one would run the :ref:`WriteDREAM3DFilter <WriteDREAM3DFilter>`. App
 
 
 ################################################
-Complete Source Code
+1.10 Complete Source Code
 ################################################
 
 .. code:: python

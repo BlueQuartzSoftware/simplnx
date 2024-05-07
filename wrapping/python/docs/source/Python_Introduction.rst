@@ -156,7 +156,7 @@ external data sources into the DataArray.
     npdata[:] = np.loadtxt(file_path, delimiter=',')
 
 Within the **simplnx** code repository, there are example python files that can be used 
-as a starting point. `GitHub.com <https://github.com/bluequartzsoftware/simplnx/tree/develop/wrapping/python/examples>`_
+as a starting point. `GitHub.com <https://github.com/BlueQuartzSoftware/simplnx/tree/develop/wrapping/python/examples/scripts>`_
 
 Importing a .dream3d File
 -------------------------
@@ -245,7 +245,7 @@ of the list of vertex values (XYZ as 32 bit floating point values) and the conne
 list for the 1D, 2D and 3D geometries. :ref:`Please see the appropriate sections in the 
 manual for detailed descriptions. <Geometry Descriptions>`
 
-There are working examples within the python file <https://www.github.com/bluequartzsoftware/simplnx/wrapping/python/examples/geometry_examples.py>. 
+There are working examples within the python file <https://github.com/BlueQuartzSoftware/simplnx/blob/develop/wrapping/python/examples/scripts/geometry_examples.py>. 
 The below code will create a TriangleGeometry by importing the vertices and triangle
 connectivity from a sample file.
 
@@ -321,7 +321,7 @@ DataArray through the following:
 The following code examples show how to create a simplnx DataArray and then use that array 
 as a numpy view.
 
-The next code section was take from `basic_arrays.py <https://github.com/bluequartzsoftware/simplnx/tree/develop/wrapping/python/examples/basic_arrays.py>`__
+The next code section was take from `basic_arrays.py <https://github.com/BlueQuartzSoftware/simplnx/blob/develop/wrapping/python/examples/scripts/basic_arrays.py>`__
 
 .. code:: python
 
@@ -346,7 +346,7 @@ The next code section was take from `basic_arrays.py <https://github.com/bluequa
     # Get the raw data as an Numpy View
     npdata = data_structure[output_array_path].npview()
 
-The next code section was take from `basic_arrays.py <https://github.com/bluequartzsoftware/simplnx/tree/develop/wrapping/python/examples/angle_conversion.py>`__
+The next code section was take from `basic_arrays.py <https://github.com/BlueQuartzSoftware/simplnx/blob/develop/wrapping/python/examples/scripts/angle_conversion.py>`__
 
 .. code:: python
 

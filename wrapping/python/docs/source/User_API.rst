@@ -279,9 +279,8 @@ General Parameters
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
 
-   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjectsFilter>` filter.
+   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`simplnx.MultiThresholdObjectsFilter() <MultiThresholdObjectsFilter>` filter.
    This parameter should not be directly invoked but instead it's ArrayThresholdSet_ is invoked and used.
-
  
 .. _ArrayThresholdSet:
 .. py:class:: ArrayThresholdSet
@@ -293,7 +292,7 @@ General Parameters
 .. _ArrayThreshold:
 .. py:class:: ArrayThresholdSet.ArrayThreshold
 
-  This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjectsFilter>` filter.
+  This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjectsFilter() <MultiThresholdObjectsFilter>` filter.
 
   :ivar array_path: The :ref:`DataPath <DataPath>` to the array to use for this ArrayThreshold
   :ivar comparison: Int. The comparison operator to use. 0=">", 1="<", 2="=", 3="!="
@@ -318,7 +317,7 @@ General Parameters
    threshold_set = nx.ArrayThresholdSet()
    threshold_set.thresholds = [threshold_1, threshold_2]
    threshold_set.union_op = nx.IArrayThreshold.UnionOperator.And
-   result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
+   result = nx.MultiThresholdObjectsFilter.execute(data_structure=data_structure,
                                        array_thresholds=threshold_set, 
                                        created_data_path="Mask",
                                        created_mask_type=nx.DataType.boolean)

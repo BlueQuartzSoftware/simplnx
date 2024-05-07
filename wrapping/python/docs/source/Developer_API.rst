@@ -112,7 +112,7 @@ General Parameters
    ~~~~~~~~~~~
    The ``ArrayThresholdsParameter`` is used to specify thresholds for an array, allowing for filtering based on those thresholds.
    
-   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjectsFilter>` filter.
+   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`simplnx.MultiThresholdObjectsFilter() <MultiThresholdObjectsFilter>` filter.
    This parameter should not be directly invoked but instead its ArrayThresholdSet_ is invoked and used.
 
    Inputs
@@ -188,7 +188,7 @@ General Parameters
 .. _ArrayThreshold:
 .. py:class:: ArrayThresholdSet.ArrayThreshold
 
-  This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjectsFilter>` filter.
+  This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjectsFilter() <MultiThresholdObjectsFilter>` filter.
 
   :ivar array_path: The :ref:`DataPath <DataPath>` to the array to use for this ArrayThreshold
   :ivar comparison: Int. The comparison operator to use. 0=">", 1="<", 2="=", 3="!="
