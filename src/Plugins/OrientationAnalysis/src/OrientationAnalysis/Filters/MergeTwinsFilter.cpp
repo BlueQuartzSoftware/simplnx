@@ -226,11 +226,10 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
   dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   MergeTwinsInputValues inputValues;
-  GroupFeaturesInputValues groupInputValues;
 
-  groupInputValues.UseNonContiguousNeighbors = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
-  groupInputValues.NonContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
-  groupInputValues.ContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
+  inputValues.UseNonContiguousNeighbors = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
+  inputValues.NonContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
+  inputValues.ContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
   inputValues.AxisTolerance = filterArgs.value<float32>(k_AxisTolerance_Key);
   inputValues.AngleTolerance = filterArgs.value<float32>(k_AngleTolerance_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
@@ -238,13 +237,13 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   DataPath cellFeatureDataPath = inputValues.FeaturePhasesArrayPath.getParent();
-  inputValues.CellParentIdsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
-  inputValues.NewCellFeatureAttributeMatrixName = cellFeatureDataPath.replaceName(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
-  inputValues.FeatureParentIdsArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
-  inputValues.ActiveArrayName = inputValues.NewCellFeatureAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.CellParentIdsArrayPath = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
+  inputValues.NewCellFeatureAttributeMatrixPath = cellFeatureDataPath.replaceName(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
+  inputValues.FeatureParentIdsArrayPath = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
+  inputValues.ActiveArrayPath = inputValues.NewCellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.Seed = seed;
 
-  return MergeTwins(dataStructure, messageHandler, shouldCancel, &inputValues, &groupInputValues)();
+  return MergeTwins(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

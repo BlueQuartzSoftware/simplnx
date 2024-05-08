@@ -189,7 +189,6 @@ set(filter_algorithms
   GenerateGBCDPoleFigure
   GenerateIPFColors
   GenerateQuaternionConjugate
-  GroupFeatures
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
