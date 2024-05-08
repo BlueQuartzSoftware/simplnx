@@ -201,6 +201,9 @@ Result<> MergeTwins::operator()()
   }
   numParents += 1;
 
+  // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
+  // allows users visualizing the data to better discern each grain otherwise the coloring
+  // would look like a smooth gradient. This is a user input parameter
   { // Randomize Parent IDs
     m_MessageHandler({IFilter::Message::Type::Info, "Randomizing Parent Ids...."});
 

@@ -207,9 +207,6 @@ Result<> ScalarSegmentFeatures::operator()()
     m_CompareFunctor = std::shared_ptr<SegmentFeatures::CompareFunctor>(new SegmentFeatures::CompareFunctor()); // The default CompareFunctor which ALWAYS returns false for the comparison
   }
 
-  // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
-  auto totalPoints = inputDataArray->getNumberOfTuples();
-
   //  // Add compare function to arguments
   //  Arguments newArgs = args;
   //  newArgs.insert(k_CompareFunctKey, compare.get());
@@ -232,12 +229,7 @@ Result<> ScalarSegmentFeatures::operator()()
   // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->pShouldRandomizeFeatureIds)
   {
-    const int64 rangeMin = 0;
-    const int64 rangeMax = totalPoints - 1;
-    Int64Distribution distribution;
-    initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
-    totalPoints = gridGeom->getNumberOfCells();
-    randomizeFeatureIds(m_FeatureIdsArray, totalPoints, totalFeatures, distribution);
+    randomizeFeatureIds(m_FeatureIdsArray, totalFeatures);
   }
 
   return {};
