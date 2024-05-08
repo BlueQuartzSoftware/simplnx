@@ -29,8 +29,8 @@ MergeTwins::~MergeTwins() noexcept = default;
 // -----------------------------------------------------------------------------
 int MergeTwins::getSeed(int32 newFid) const
 {
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  auto& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath);
+  auto& phases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
+  auto& featureParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
   auto& cellFeaturesAttMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->NewCellFeatureAttributeMatrixPath);
 
   auto numFeatures = static_cast<int32>(phases.getNumberOfTuples());
@@ -69,10 +69,10 @@ int MergeTwins::getSeed(int32 newFid) const
 // -----------------------------------------------------------------------------
 bool MergeTwins::determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid)
 {
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  auto& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
+  auto& phases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
+  auto& featureParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
+  auto& crystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
+  auto& avgQuats = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgQuatsArrayPath)->getDataStoreRef();
   auto axisToleranceRad = m_InputValues->AxisTolerance * numbers::pi_v<float32> / 180.0f;
 
   bool twin = false;
@@ -114,13 +114,13 @@ Result<> MergeTwins::operator()()
   /* Sanity check that each phase is Cubic High (m3m) Laue class. If not then warn the user.
    * There is code later on to ensure that only m3m Laue class is used.
    */
-  auto& laueClasses = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& cellParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellParentIdsArrayPath);
+  auto& laueClasses = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
+  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto& cellParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellParentIdsArrayPath)->getDataStoreRef();
   cellParentIds.fill(-1);
-  auto& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath);
+  auto& featureParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
   featureParentIds.fill(-1);
-  auto& active = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->ActiveArrayPath);
+  auto& active = m_DataStructure.getDataAs<BoolArray>(m_InputValues->ActiveArrayPath)->getDataStoreRef();
   active.fill(true);
 
   for(usize i = 1; i < laueClasses.getSize(); i++)
