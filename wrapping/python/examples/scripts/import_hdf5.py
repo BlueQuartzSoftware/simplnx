@@ -85,7 +85,7 @@ import_hdf5_param.datasets = [dataset1, dataset2]
 # import_hdf5_param.parent = nx.DataPath(["Imported Data"])
 
 result = nx.ReadHDF5DatasetFilter.execute(data_structure=data_structure,
-                                      import_hd_f5_file=import_hdf5_param
+                                          import_hdf5_object=import_hdf5_param
                                       )
 nxtest.check_filter_result(nx.ReadHDF5DatasetFilter, result)
 
