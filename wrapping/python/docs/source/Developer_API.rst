@@ -43,7 +43,7 @@ General Parameters
       
       import simplnx as nx
       
-      data_path = nx.DataPath(["Small IN100", "Scan Data", "Data"])
+      data_path = nx.DataPath(["Small IN100/Scan Data/Data"])
       params.insert(nx.ArrayCreationParameter(ExampleFilter2.PARAM5_KEY, 'Array Creation', 'Example array creation help text', data_path))
 
 .. _ArraySelectionParameter:
@@ -96,7 +96,7 @@ General Parameters
 
       import simplnx as nx
 
-      data_path = nx.DataPath(["Small IN100", "Scan Data", "Data"])
+      data_path = nx.DataPath(["Small IN100/Scan Data/Data"])
       params.insert(nx.ArraySelectionParameter(ExampleFilter2.PARAM6_KEY, 'Array Selection', 'Example array selection help text', data_path, nx.get_all_data_types(), [[1]]))
 
 .. _ArrayThresholdsParameter:
@@ -201,12 +201,12 @@ General Parameters
   .. code:: python
 
    threshold_1 = nx.ArrayThreshold()
-   threshold_1.array_path = nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"])
+   threshold_1.array_path = nx.DataPath(["Small IN100/Scan Data/Confidence Index"])
    threshold_1.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_1.value = 0.1
 
    threshold_2 = nx.ArrayThreshold()
-   threshold_2.array_path = nx.DataPath(["Small IN100", "Scan Data", "Image Quality"])
+   threshold_2.array_path = nx.DataPath(["Small IN100/Scan Data/Image Quality"])
    threshold_2.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_2.value = 120
 
@@ -255,7 +255,7 @@ General Parameters
 
       import simplnx as nx
 
-      params.insert(nx.AttributeMatrixSelectionParameter('cell_attr_matrix_key', "Cell Attribute Matrix", "Example attribute matrix selection help text", nx.DataPath(["Image Geometry", "Cell Data"])))
+      params.insert(nx.AttributeMatrixSelectionParameter('cell_attr_matrix_key', "Cell Attribute Matrix", "Example attribute matrix selection help text", nx.DataPath(["Image Geometry/Cell Data"])))
 
 .. _BoolParameter:
 .. py:class:: BoolParameter
@@ -362,7 +362,7 @@ General Parameters
 
       import simplnx as nx
 
-      calc_param = nx.CalculatorParameter.ValueType( nx.DataPath(["Small IN100","Scan Data"]), "Confidence Index * 10", nx.CalculatorParameter.AngleUnits.Radians)
+      calc_param = nx.CalculatorParameter.ValueType( nx.DataPath(["Small IN100/Scan Data"]), "Confidence Index * 10", nx.CalculatorParameter.AngleUnits.Radians)
       params.insert(nx.CalculatorParameter(ExampleFilter2.PARAM18_KEY, "CalculatorParameter", "Example help text for calculator parameter", calc_param))
 
 .. _ChoicesParameter:
@@ -1508,7 +1508,7 @@ General Parameters
 
       import simplnx as nx
       
-      params.insert(nx.MultiPathSelectionParameter('objects_to_copy_key', "Objects to copy", "A list of DataPaths to the DataObjects to be copied", [nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), nx.DataPath(["Small IN100", "Scan Data", "Euler Angles"])]))
+      params.insert(nx.MultiPathSelectionParameter('objects_to_copy_key', "Objects to copy", "A list of DataPaths to the DataObjects to be copied", [nx.DataPath(["Small IN100/Scan Data/Confidence Index"]), nx.DataPath(["Small IN100/Scan Data/Euler Angles"])]))
 
 .. _NeighborListSelectionParameter:
 .. py:class:: NeighborListSelectionParameter
@@ -1811,391 +1811,60 @@ Usage
       params.insert(nx.VectorInt32Parameter('3d_dimensions_key', '3D Dimensions', 'Example int32 vector help text', [-19, -100, 456], ["X", "Y", "Z"]))
       params.insert(nx.VectorFloat64Parameter('quaternion_key', 'Quaternion', 'Example float64 vector help text', [0, 84.98, 234.12, 985.98], ["U", "V", "W", "X"]))
 
-Actions
--------
+Preflight Actions
+-----------------
 
-.. _CopyArrayInstanceAction:
-.. py:class:: CopyArrayInstanceAction
+Preflight actions perform modifications to the DataStructure before executing the filter.  Some examples include:
 
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
++ Creating a data array
++ Creating a geometry
++ Deleting a data object
++ Moving a data object
 
-      CopyArrayInstanceAction(selected_data_path: nx.DataPath, created_data_path: nx.DataPath) -> None
+The following is an example that shows how to create an action and append it to the OutputActions object that gets returned by preflight.  In this example, we are deleting an array from the DataStructure.
 
-   Description
-   ~~~~~~~~~~~
-   The ``CopyArrayInstanceAction`` is used to create a copy of an array from a selected data path to a newly specified data path.
+.. code-block:: python
 
-   Inputs
-   ~~~~~~
-   - ``selected_data_path``
-      - **Description**: The DataPath to the array instance that will be copied.
-      - **Type**: nx.DataPath
+   import simplnx as nx
 
-   - ``created_data_path``
-      - **Description**: The DataPath to the newly copied array instance.
-      - **Type**: nx.DataPath
+   output_actions = nx.OutputActions()
+   output_actions.append_action(nx.DeleteDataAction(nx.DataPath(['Path/To/Data']), nx.DeleteDataAction.DeleteType.JustObject))
 
-   Usage
-   ~~~~~~
+Preflight actions can also be deferred, which means that they are applied after the filter is finished executing, instead of before execution.  An example of when using a deferred action might be useful is if the filter developer needs a data object to exist during filter execution, but does not want that data object to exist afterwards.  In that case, the filter developer could write the following code:
 
-   .. code-block:: python
-      
-      import simplnx as nx
+.. code-block:: python
 
-      # Copy the array at /Original/Path to /New/Path
-      selected_data_path = nx.DataPath(['Original', 'Path'])
-      created_data_path = nx.DataPath(['New', 'Path'])
+   import simplnx as nx
 
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CopyArrayInstanceAction(selected_data_path, created_data_path))
+   output_actions = nx.OutputActions()
+   output_actions.append_deferred_action(nx.DeleteDataAction(nx.DataPath(['Path/To/Data']), nx.DeleteDataAction.DeleteType.JustObject))
 
+There are two main types of Preflight Actions:
 
-.. _CopyDataObjectAction:
-.. py:class:: CopyDataObjectAction
+1. Creation Actions
+2. Modification Actions
 
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      CopyDataObjectAction(path: nx.DataPath, new_path: nx.DataPath, all_created_paths: list[nx.DataPath]) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``CopyDataObjectAction`` is used to copy a data object from one path to another within a data structure, tracking all newly created paths.
-
-   Inputs
-   ~~~~~~
-   - ``path``
-      - **Description**: The DataPath to the data object that will be copied.
-      - **Type**: nx.DataPath
-
-   - ``new_path``
-      - **Description**: The DataPath where the copied data object will be placed.
-      - **Type**: nx.DataPath
-
-   - ``all_created_paths``
-      - **Description**: A list that keeps track of all DataPaths where new data objects are created during the operation.
-      - **Type**: list[nx.DataPath]
-
-   Usage
-   ~~~~~
-
-   .. code-block:: python
-      
-      import simplnx as nx
-
-      # Copy the data object from /Original/Path to /New/Path
-      path = nx.DataPath(['Original', 'Path'])
-      new_path = nx.DataPath(['New', 'Path'])
-      all_created_paths = []
-
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CopyDataObjectAction(path, new_path, []))
-
-.. _CreateArrayAction:
-.. py:class:: CreateArrayAction
-
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      CreateArrayAction(type: nx.DataType, t_dims: list[int], c_dims: list[int], path: nx.DataPath, data_format: str = ...) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``CreateArrayAction`` is used to create a new array with specific data type, tuple dimensions, and component dimensions at a specified path within the data structure.
-
-   Inputs
-   ~~~~~~
-   - ``type``
-      - **Description**: The data type of the array to be created.
-      - **Type**: nx.DataType
-
-   - ``t_dims``
-      - **Description**: The tuple dimensions of the array.
-      - **Type**: list[int]
-
-   - ``c_dims``
-      - **Description**: The component dimensions of the array.
-      - **Type**: list[int]
-
-   - ``path``
-      - **Description**: The DataPath where the new array will be created.
-      - **Type**: nx.DataPath
-
-   - ``data_format``
-      - **Description**: Format for the data, either an empty string for an in-memory array or "Zarr" for an out-of-core array.
-      - **Type**: str
-      - **Default**: Empty string
-
-   Usage
-   ~~~~~
-
-   In-memory example:
-
-   .. code-block:: python
-      
-      import simplnx as nx
-
-      # Create an array with specified dimensions and data type at /Data Array
-      dtype = nx.DataType.float32
-      t_dims = [100,100]
-      c_dims = [3]
-      path = nx.DataPath(['Data Array'])
-
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateArrayAction(dtype, t_dims, c_dims, path))    # In-memory
-   
-   Out-of-core:
-
-   .. code-block:: python
-
-      output_actions.append_action(nx.CreateArrayAction(dtype, t_dims, c_dims, path, 'Zarr'))    # Out-of-core
-
-.. _CreateAttributeMatrixAction:
-.. py:class:: CreateAttributeMatrixAction
-
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      CreateAttributeMatrixAction(path: nx.DataPath, shape: list[int]) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``CreateAttributeMatrixAction`` is used to create an attribute matrix at a specified path with a given shape.
-
-   Inputs
-   ~~~~~~
-   - ``path``
-      - **Description**: The DataPath where the attribute matrix will be created.
-      - **Type**: nx.DataPath
-
-   - ``shape``
-      - **Description**: The shape of the attribute matrix, defined as a list of integers representing the tuple dimensions.
-      - **Type**: list[int]
-
-   Usage
-   ~~~~~
-
-   .. code-block:: python
-      
-      import simplnx as nx
-
-      # Create an attribute matrix at /Image Geometry/Cell Attribute Matrix
-      path = nx.DataPath(['Image Geometry', 'Cell Attribute Matrix'])
-      shape = [100, 200]
-
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateAttributeMatrixAction(path, shape))
-
-.. _CreateDataGroupAction:
-.. py:class:: CreateDataGroupAction
-
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      CreateDataGroupAction(path: nx.DataPath) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``CreateDataGroupAction`` is used to create a new data group within the data structure at a specified path.
-
-   Inputs
-   ~~~~~~
-   - ``path``
-      - **Description**: The DataPath where the new data group will be created.
-      - **Type**: nx.DataPath
-
-   Usage
-   ~~~~~
-
-   .. code-block:: python
-      
-      import simplnx as nx
-
-      # Create a data group at /Data Group
-      path = nx.DataPath(['Data Group'])
-
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateDataGroupAction(path))
-
-.. _CreateEdgeGeometryAction:
-.. py:class:: CreateEdgeGeometryAction
-
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      CreateEdgeGeometryAction(geometry_path: nx.DataPath, num_edges: int, num_vertices: int, vertex_attribute_matrix_name: str, edge_attribute_matrix_name: str, shared_vertices_name: str, shared_edges_name: str) -> None
-      CreateEdgeGeometryAction(geometry_path: nx.DataPath, input_vertices_array_path: nx.DataPath, input_edges_array_path: nx.DataPath, vertex_attribute_matrix_name: str, edge_attribute_matrix_name: str, array_type: nx.IDataCreationAction.ArrayHandlingType) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``CreateEdgeGeometryAction`` is used to create an edge geometry in a data structure. There are two ways to create the geometry:
-   
-   1. Specifying the number of edges and vertices along with attribute matrix and data array names (the vertex and edge arrays will be created for you).
-   
-   2. Using existing arrays for vertices and edges and including an array handling type (Copy, Move, Reference, or Create) that determines how these existing arrays are handled by the action.
-
-   Inputs
-   ~~~~~~
-   First Constructor:
-
-   - ``geometry_path``
-      - **Description**: The path where the edge geometry will be created.
-      - **Type**: nx.DataPath
-   - ``num_edges``
-      - **Description**: The number of edges to be created.
-      - **Type**: int
-   - ``num_vertices``
-      - **Description**: The number of vertices to be created.
-      - **Type**: int
-   - ``vertex_attribute_matrix_name``
-      - **Description**: The name for the newly created vertex attribute matrix.
-      - **Type**: str
-   - ``edge_attribute_matrix_name``
-      - **Description**: The name for the newly created edge attribute matrix.
-      - **Type**: str
-   - ``shared_vertices_name``
-      - **Description**: The name for the newly created vertices array.
-      - **Type**: str
-   - ``shared_edges_name``
-      - **Description**: The name for the newly created edges array.
-      - **Type**: str
-
-   Second Constructor:
-
-   - ``geometry_path``
-      - **Description**: The path where the edge geometry will be created.
-      - **Type**: nx.DataPath
-   - ``input_vertices_array_path``
-      - **Description**: The path to the input array of vertices.
-      - **Type**: nx.DataPath
-   - ``input_edges_array_path``
-      - **Description**: The path to the input array of edges.
-      - **Type**: nx.DataPath
-   - ``vertex_attribute_matrix_name``
-      - **Description**: The name for the newly created vertex attribute matrix.
-      - **Type**: str
-   - ``edge_attribute_matrix_name``
-      - **Description**: The name for the newly created edge attribute matrix.
-      - **Type**: str
-   - ``array_type``
-      - **Description**: Specifies how the input arrays should be handled when creating new arrays in the edge geometry.  Possible values are Copy, Move, Reference, or Create.
-      - **Type**: nx.IDataCreationAction.ArrayHandlingType
-
-   Usage
-   ~~~~~
-
-   .. code-block:: python
-      
-      import simplnx as nx
-
-      # Example using the first constructor
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateEdgeGeometryAction(nx.DataPath(['Edge Geometry'], 100, 200, 'Vertex Matrix', 'Edge Matrix', 'Vertices', 'Edges'))
-
-      # Example using the second constructor
-      vertices_path = nx.DataPath(['Other Edge Geometry', 'Vertices'])
-      edges_path = nx.DataPath(['Other Edge Geometry', 'Edges'])
-      output_actions.append_action(nx.CreateEdgeGeometryAction(nx.DataPath(['Edge Geometry'], vertices_path, edges_path, 'Vertex Matrix', 'Edge Matrix', nx.IDataCreationAction.ArrayHandlingType.Copy))
-
-.. _CreateHexahedralGeometryAction:
-.. py:class:: CreateHexahedralGeometryAction
-
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      CreateHexahedralGeometryAction(geometry_path: nx.DataPath, num_cells: int, num_vertices: int, vertex_data_name: str, cell_data_name: str, shared_vertices_name: str, shared_cells_name: str) -> None
-      CreateHexahedralGeometryAction(geometry_path: nx.DataPath, input_vertices_array_path: nx.DataPath, input_cell_array_path: nx.DataPath, vertex_attribute_matrix_name: str, cell_attribute_matrix_name: str, array_type: nx.IDataCreationAction.ArrayHandlingType) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``CreateHexahedralGeometryAction`` is designed to create a hexahedral geometry within the data structure, either by specifying the counts of cells and vertices, or by directly using existing vertex and cell arrays.
-
-   Inputs
-   ~~~~~~
-   First Constructor:
-
-   - ``geometry_path``
-      - **Description**: The path where the hexahedral geometry will be created.
-      - **Type**: nx.DataPath
-   - ``num_cells``
-      - **Description**: Number of hexahedral cells to create.
-      - **Type**: int
-   - ``num_vertices``
-      - **Description**: Number of vertices to create.
-      - **Type**: int
-   - ``vertex_data_name``
-      - **Description**: Name for the newly created vertex data array.
-      - **Type**: str
-   - ``cell_data_name``
-      - **Description**: Name for the newly created cell data array.
-      - **Type**: str
-   - ``shared_vertices_name``
-      - **Description**: Name for the newly created vertex array.
-      - **Type**: str
-   - ``shared_cells_name``
-      - **Description**: Name for the newly created cells array.
-      - **Type**: str
-
-   Second Constructor:
-
-   - ``geometry_path``
-      - **Description**: The path where the hexahedral geometry will be created.
-      - **Type**: nx.DataPath
-   - ``input_vertices_array_path``
-      - **Description**: The path to the input vertex array.
-      - **Type**: nx.DataPath
-   - ``input_cell_array_path``
-      - **Description**: The path to the input cell array.
-      - **Type**: nx.DataPath
-   - ``vertex_attribute_matrix_name``
-      - **Description**: The name for the newly created vertex attribute matrix.
-      - **Type**: str
-   - ``cell_attribute_matrix_name``
-      - **Description**: The name for the newly created cell attribute matrix.
-      - **Type**: str
-   - ``array_type``
-      - **Description**: Specifies how the input arrays should be handled when creating new arrays in the hexahedral geometry.  Possible values are Copy, Move, Reference, or Create.
-      - **Type**: nx.IDataCreationAction.ArrayHandlingType
-
-   Usage
-   ~~~~~
-
-   .. code-block:: python
-      
-      import simplnx as nx
-
-      # Example using the first constructor to create a hexahedral geometry
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateHexahedralGeometryAction(nx.DataPath(['Hexahedral Geometry'], 100, 200, 'Vertex Data', 'Cell Data', 'Shared Vertices', 'Shared Hexahedrals'))
-
-      # Example using the second constructor to create a hexahedral geometry using existing arrays
-      vertices_path = nx.DataPath(['Other Hexahedral Geometry', 'Vertices'])
-      cells_path = nx.DataPath(['Other Hexahedral Geometry', 'Hexahedrals'])
-      output_actions.append_action(nx.CreateHexahedralGeometryAction(nx.DataPath(['Hexahedral Geometry'], vertices_path, cells_path, 'Vertex Matrix', 'Cell Matrix', nx.IDataCreationAction.ArrayHandlingType.Copy))
+Creation Actions
+~~~~~~~~~~~~~~~~
 
 .. _CreateImageGeometryAction:
 .. py:class:: CreateImageGeometryAction
 
    Declaration
    ~~~~~~~~~~~
+
    .. code-block:: python
 
       CreateImageGeometryAction(path: nx.DataPath, dims: list[int], origin: list[float], spacing: list[float], cell_attribute_matrix_name: str) -> None
 
    Description
    ~~~~~~~~~~~
+
    The ``CreateImageGeometryAction`` is used to create a structured grid or image geometry, specifying dimensions, origin, and spacing, with an attribute matrix that can store cell data arrays.
 
    Inputs
    ~~~~~~
+
    - ``path``
       - **Description**: The path where the image geometry will be created.
       - **Type**: nx.DataPath
@@ -2229,129 +1898,12 @@ Actions
       output_actions = nx.OutputActions()
       output_actions.append_action(nx.CreateImageGeometryAction(geom_path, dims, origin, spacing, cell_matrix_name))
 
-.. _CreateNeighborListAction:
-.. py:class:: CreateNeighborListAction
-
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      CreateNeighborListAction(type: nx.DataType, tuple_count: int, path: nx.DataPath) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``CreateNeighborListAction`` is used to create a neighbor list data structure at a specific path by specifying the data type and number of tuples.
-
-   Inputs
-   ~~~~~~
-   - ``type``
-      - **Description**: Data type of the elements in the neighbor list.
-      - **Type**: nx.DataType
-   - ``tuple_count``
-      - **Description**: Number of tuples or entries in the neighbor list.
-      - **Type**: int
-   - ``path``
-      - **Description**: The path where the neighbor list will be stored.
-      - **Type**: nx.DataPath
-
-   Usage
-   ~~~~~
-
-   .. code-block:: python
-      
-      import simplnx as nx
-
-      # Create a neighbor list for integer data type with 100 tuples at /Data/Neighbors
-      data_type = nx.DataType.int32
-      tuple_count = 100
-      path = nx.DataPath(['Data', 'Neighbors'])
-
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateNeighborListAction(data_type, tuple_count, path))
-
-.. _CreateQuadGeometryAction:
-.. py:class:: CreateQuadGeometryAction
-
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      CreateQuadGeometryAction(geometry_path: DataPath, num_faces: int, num_vertices: int, vertex_attribute_matrix_name: str, face_attribute_matrix_name: str, shared_vertices_name: str, shared_faces_name: str) -> None
-      CreateQuadGeometryAction(geometry_path: DataPath, input_vertices_array_path: DataPath, input_faces_array_path: DataPath, vertex_attribute_matrix_name: str, face_attribute_matrix_name: str, array_type: IDataCreationAction.ArrayHandlingType) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``CreateQuadGeometryAction`` is designed to create a quad geometry within the data structure, either by specifying the counts of faces and vertices along with associated attribute matrix and data names, or by directly using existing vertex and face arrays.
-
-   Inputs
-   ~~~~~~
-   First Constructor:
-
-   - ``geometry_path``
-      - **Description**: The path where the quad geometry will be created.
-      - **Type**: DataPath
-   - ``num_faces``
-      - **Description**: Number of quad faces to create.
-      - **Type**: int
-   - ``num_vertices``
-      - **Description**: Number of vertices to create.
-      - **Type**: int
-   - ``vertex_attribute_matrix_name``
-      - **Description**: Name for the newly created vertex attribute matrix.
-      - **Type**: str
-   - ``face_attribute_matrix_name``
-      - **Description**: Name for the newly created face attribute matrix.
-      - **Type**: str
-   - ``shared_vertices_name``
-      - **Description**: Name for the newly created shared vertices array.
-      - **Type**: str
-   - ``shared_faces_name``
-      - **Description**: Name for the newly created shared faces array.
-      - **Type**: str
-
-   Second Constructor:
-
-   - ``geometry_path``
-      - **Description**: The path where the quad geometry will be created.
-      - **Type**: DataPath
-   - ``input_vertices_array_path``
-      - **Description**: The path to the input vertex array.
-      - **Type**: DataPath
-   - ``input_faces_array_path``
-      - **Description**: The path to the input face array.
-      - **Type**: DataPath
-   - ``vertex_attribute_matrix_name``
-      - **Description**: The name for the newly created vertex attribute matrix.
-      - **Type**: str
-   - ``face_attribute_matrix_name``
-      - **Description**: The name for the newly created face attribute matrix.
-      - **Type**: str
-   - ``array_type``
-      - **Description**: Specifies how the input arrays should be handled when creating new arrays in the quad geometry. Possible values are Copy, Move, Reference, or Create.
-      - **Type**: IDataCreationAction.ArrayHandlingType
-
-   Usage
-   ~~~~~
-
-   .. code-block:: python
-
-      import simplnx as nx
-
-      # Example using the first constructor to create a quad geometry
-      output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateQuadGeometryAction(nx.DataPath(['Quad Geometry']), 50, 100, 'Vertex Matrix', 'Face Matrix', 'Shared Vertices', 'Shared Faces'))
-
-      # Example using the second constructor to create a quad geometry using existing arrays
-      vertices_path = DataPath(['Other Quad Geometry', 'Vertices'])
-      faces_path = DataPath(['Other Quad Geometry', 'Faces'])
-      output_actions.append_action(nx.CreateQuadGeometryAction(nx.DataPath(['Quad Geometry'], vertices_path, faces_path, 'Vertex Matrix', 'Face Matrix', nx.IDataCreationAction.ArrayHandlingType.Copy))
-
-
 .. _CreateRectGridGeometryAction:
 .. py:class:: CreateRectGridGeometryAction
 
    Declaration
    ~~~~~~~~~~~
+
    .. code-block:: python
 
       CreateRectGridGeometryAction(path: DataPath, x_bounds_dim: int, y_bounds_dim: int, z_bounds_dim: int, cell_attribute_matrix_name: str, x_bounds_name: str, y_bounds_name: str, z_bounds_name: str) -> None
@@ -2359,10 +1911,12 @@ Actions
 
    Description
    ~~~~~~~~~~~
+
    The ``CreateRectGridGeometryAction`` is intended to create rectilinear grid geometries either by specifying dimensions and boundary array names or by utilizing existing boundary arrays.
 
    Inputs
    ~~~~~~
+
    First Constructor:
 
    - ``path``
@@ -2428,30 +1982,54 @@ Actions
       z_bounds_path = DataPath(['Other Rect Grid Geometry', 'Z Bounds'])
       output_actions.append_action(nx.CreateRectGridGeometryAction(nx.DataPath(['Rect Grid Geometry'], x_bounds_path, y_bounds_path, z_bounds_path, 'Cell Matrix', nx.IDataCreationAction.ArrayHandlingType.Copy))
 
-.. _CreateStringArrayAction:
-.. py:class:: CreateStringArrayAction
+.. _CreateVertexGeometryAction:
+.. py:class:: CreateVertexGeometryAction
 
    Declaration
    ~~~~~~~~~~~
+
    .. code-block:: python
 
-      CreateStringArrayAction(t_dims: list[int], path: DataPath, initialize_value: str = ...) -> None
+      CreateVertexGeometryAction(geometry_path: DataPath, num_vertices: int, vertex_attribute_matrix_name: str, shared_vertex_list_name: str) -> None
+      CreateVertexGeometryAction(geometry_path: DataPath, input_vertices_array_path: DataPath, vertex_attribute_matrix_name: str, array_type: IDataCreationAction.ArrayHandlingType) -> None
 
    Description
    ~~~~~~~~~~~
-   The ``CreateStringArrayAction`` is designed to create a string array at a specified path within the data structure, with the option to initialize all elements with a given value.
+
+   The ``CreateVertexGeometryAction`` is used to create a vertex geometry within the data structure, either by specifying the number of vertices and a vertex data array name, or by utilizing an existing vertex data array.
 
    Inputs
    ~~~~~~
-   - ``t_dims``
-      - **Description**: The tuple dimensions of the string array to be created.
-      - **Type**: list[int]
-   - ``path``
-      - **Description**: The path in the data structure where the string array will be stored.
-      - **Type**: DataPath
-   - ``initialize_value`` (optional)
-      - **Description**: The initial value to set for all elements of the string array.
+
+   First Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the vertex geometry will be created.
+      - **Type**: nx.DataPath
+   - ``num_vertices``
+      - **Description**: Number of vertices to create.
+      - **Type**: int
+   - ``vertex_attribute_matrix_name``
+      - **Description**: Name for the newly created vertex attribute matrix.
       - **Type**: str
+   - ``shared_vertex_list_name``
+      - **Description**: Name for the newly created shared vertex list.
+      - **Type**: str
+
+   Second Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the vertex geometry will be created.
+      - **Type**: nx.DataPath
+   - ``input_vertices_array_path``
+      - **Description**: The path to the input vertex array.
+      - **Type**: nx.DataPath
+   - ``vertex_attribute_matrix_name``
+      - **Description**: The name for the newly created vertex attribute matrix.
+      - **Type**: str
+   - ``array_type``
+      - **Description**: Specifies how the input array should be handled when creating new arrays in the vertex geometry. Possible values are Copy, Move, Reference, or Create.
+      - **Type**: IDataCreationAction.ArrayHandlingType
 
    Usage
    ~~~~~
@@ -2460,15 +2038,344 @@ Actions
 
       import simplnx as nx
 
-      # Example of creating a 2D string array initialized with "foo"
+      # Example using the first constructor to create a vertex geometry
       output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateStringArrayAction([10, 20], nx.DataPath(['String Array'], 'foo'))
+      output_actions.append_action(nx.CreateVertexGeometryAction(nx.DataPath(['Vertex Geometry']), 1000, 'Vertex Matrix', 'Shared Vertex List'))
+
+      # Example using the second constructor to create a vertex geometry using an existing array
+      vertices_path = nx.DataPath(['Other Vertex Geometry/Vertices'])
+      output_actions.append_action(nx.CreateVertexGeometryAction(nx.DataPath(['Vertex Geometry']), vertices_path, 'Vertex Matrix', nx.IDataCreationAction.ArrayHandlingType.Reference))
+
+.. _CreateEdgeGeometryAction:
+.. py:class:: CreateEdgeGeometryAction
+
+   Declaration
+   ~~~~~~~~~~~
+
+   .. code-block:: python
+
+      CreateEdgeGeometryAction(geometry_path: nx.DataPath, num_edges: int, num_vertices: int, vertex_attribute_matrix_name: str, edge_attribute_matrix_name: str, shared_vertices_name: str, shared_edges_name: str) -> None
+      CreateEdgeGeometryAction(geometry_path: nx.DataPath, input_vertices_array_path: nx.DataPath, input_edges_array_path: nx.DataPath, vertex_attribute_matrix_name: str, edge_attribute_matrix_name: str, array_type: nx.IDataCreationAction.ArrayHandlingType) -> None
+
+   Description
+   ~~~~~~~~~~~
+
+   The ``CreateEdgeGeometryAction`` is used to create an edge geometry in a data structure. There are two ways to create the geometry:
+   
+   1. Specifying the number of edges and vertices along with attribute matrix and data array names (the vertex and edge arrays will be created for you).
+   
+   2. Using existing arrays for vertices and edges and including an array handling type (Copy, Move, Reference, or Create) that determines how these existing arrays are handled by the action.
+
+   Inputs
+   ~~~~~~
+
+   First Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the edge geometry will be created.
+      - **Type**: nx.DataPath
+   - ``num_edges``
+      - **Description**: The number of edges to be created.
+      - **Type**: int
+   - ``num_vertices``
+      - **Description**: The number of vertices to be created.
+      - **Type**: int
+   - ``vertex_attribute_matrix_name``
+      - **Description**: The name for the newly created vertex attribute matrix.
+      - **Type**: str
+   - ``edge_attribute_matrix_name``
+      - **Description**: The name for the newly created edge attribute matrix.
+      - **Type**: str
+   - ``shared_vertices_name``
+      - **Description**: The name for the newly created vertices array.
+      - **Type**: str
+   - ``shared_edges_name``
+      - **Description**: The name for the newly created edges array.
+      - **Type**: str
+
+   Second Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the edge geometry will be created.
+      - **Type**: nx.DataPath
+   - ``input_vertices_array_path``
+      - **Description**: The path to the input array of vertices.
+      - **Type**: nx.DataPath
+   - ``input_edges_array_path``
+      - **Description**: The path to the input array of edges.
+      - **Type**: nx.DataPath
+   - ``vertex_attribute_matrix_name``
+      - **Description**: The name for the newly created vertex attribute matrix.
+      - **Type**: str
+   - ``edge_attribute_matrix_name``
+      - **Description**: The name for the newly created edge attribute matrix.
+      - **Type**: str
+   - ``array_type``
+      - **Description**: Specifies how the input arrays should be handled when creating new arrays in the edge geometry.  Possible values are Copy, Move, Reference, or Create.
+      - **Type**: nx.IDataCreationAction.ArrayHandlingType
+
+   Usage
+   ~~~~~
+
+   .. code-block:: python
+      
+      import simplnx as nx
+
+      # Example using the first constructor
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CreateEdgeGeometryAction(nx.DataPath(['Edge Geometry'], 100, 200, 'Vertex Matrix', 'Edge Matrix', 'Vertices', 'Edges'))
+
+      # Example using the second constructor
+      vertices_path = nx.DataPath(['Other Edge Geometry/Vertices'])
+      edges_path = nx.DataPath(['Other Edge Geometry/Edges'])
+      output_actions.append_action(nx.CreateEdgeGeometryAction(nx.DataPath(['Edge Geometry'], vertices_path, edges_path, 'Vertex Matrix', 'Edge Matrix', nx.IDataCreationAction.ArrayHandlingType.Copy))
+
+.. _CreateTriangleGeometryAction:
+.. py:class:: CreateTriangleGeometryAction
+
+   Declaration
+   ~~~~~~~~~~~
+
+   .. code-block:: python
+
+      CreateTriangleGeometryAction(geometry_path: DataPath, num_faces: int, num_vertices: int, vertex_attribute_matrix_name: str, face_attribute_matrix_name: str, shared_vertices_name: str, shared_faces_name: str) -> None
+      CreateTriangleGeometryAction(geometry_path: DataPath, input_vertices_array_path: DataPath, input_faces_array_path: DataPath, vertex_attribute_matrix_name: str, face_attribute_matrix_name: str, array_type: IDataCreationAction.ArrayHandlingType) -> None
+
+   Description
+   ~~~~~~~~~~~
+
+   The ``CreateTriangleGeometryAction`` is designed to create a triangle geometry within the data structure, either by specifying the counts of faces and vertices along with their data names, or by directly using existing vertex and face arrays.
+
+   Inputs
+   ~~~~~~
+
+   First Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the triangular geometry will be created.
+      - **Type**: nx.DataPath
+   - ``num_faces``
+      - **Description**: Number of triangular faces to create.
+      - **Type**: int
+   - ``num_vertices``
+      - **Description**: Number of vertices to create.
+      - **Type**: int
+   - ``vertex_attribute_matrix_name``
+      - **Description**: Name for the newly created vertex attribute matrix.
+      - **Type**: str
+   - ``face_attribute_matrix_name``
+      - **Description**: Name for the newly created face attribute matrix.
+      - **Type**: str
+   - ``shared_vertices_name``
+      - **Description**: Name for the newly created shared vertices array.
+      - **Type**: str
+   - ``shared_faces_name``
+      - **Description**: Name for the newly created shared faces array.
+      - **Type**: str
+
+   Second Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the triangular geometry will be created.
+      - **Type**: nx.DataPath
+   - ``input_vertices_array_path``
+      - **Description**: The path to the input vertex array.
+      - **Type**: nx.DataPath
+   - ``input_faces_array_path``
+      - **Description**: The path to the input face array.
+      - **Type**: nx.DataPath
+   - ``vertex_attribute_matrix_name``
+      - **Description**: The name for the newly created vertex attribute matrix.
+      - **Type**: str
+   - ``face_attribute_matrix_name``
+      - **Description**: The name for the newly created face attribute matrix.
+      - **Type**: str
+   - ``array_type``
+      - **Description**: Specifies how the input arrays should be handled when creating new arrays in the triangular geometry. Possible values are Copy, Move, Reference, or Create.
+      - **Type**: IDataCreationAction.ArrayHandlingType
+
+   Usage
+   ~~~~~
+
+   .. code-block:: python
+
+      import simplnx as nx
+
+      # Example using the first constructor to create a triangle geometry
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CreateTriangleGeometryAction(nx.DataPath(['Triangle Geometry']), 150, 300, 'Vertex Matrix', 'Face Matrix', 'Shared Vertices', 'Shared Faces'))
+
+      # Example using the second constructor to create a triangle geometry using existing arrays
+      vertices_path = nx.DataPath(['Other Triangle Geometry/Vertices'])
+      faces_path = nx.DataPath(['Other Triangle Geometry/Faces'])
+      output_actions.append_action(nx.CreateTriangleGeometryAction(nx.DataPath(['Triangle Geometry']), vertices_path, faces_path, 'Vertex Matrix', 'Face Matrix', nx.IDataCreationAction.ArrayHandlingType.Move))
+
+.. _CreateQuadGeometryAction:
+.. py:class:: CreateQuadGeometryAction
+
+   Declaration
+   ~~~~~~~~~~~
+
+   .. code-block:: python
+
+      CreateQuadGeometryAction(geometry_path: DataPath, num_faces: int, num_vertices: int, vertex_attribute_matrix_name: str, face_attribute_matrix_name: str, shared_vertices_name: str, shared_faces_name: str) -> None
+      CreateQuadGeometryAction(geometry_path: DataPath, input_vertices_array_path: DataPath, input_faces_array_path: DataPath, vertex_attribute_matrix_name: str, face_attribute_matrix_name: str, array_type: IDataCreationAction.ArrayHandlingType) -> None
+
+   Description
+   ~~~~~~~~~~~
+
+   The ``CreateQuadGeometryAction`` is designed to create a quad geometry within the data structure, either by specifying the counts of faces and vertices along with associated attribute matrix and data names, or by directly using existing vertex and face arrays.
+
+   Inputs
+   ~~~~~~
+
+   First Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the quad geometry will be created.
+      - **Type**: DataPath
+   - ``num_faces``
+      - **Description**: Number of quad faces to create.
+      - **Type**: int
+   - ``num_vertices``
+      - **Description**: Number of vertices to create.
+      - **Type**: int
+   - ``vertex_attribute_matrix_name``
+      - **Description**: Name for the newly created vertex attribute matrix.
+      - **Type**: str
+   - ``face_attribute_matrix_name``
+      - **Description**: Name for the newly created face attribute matrix.
+      - **Type**: str
+   - ``shared_vertices_name``
+      - **Description**: Name for the newly created shared vertices array.
+      - **Type**: str
+   - ``shared_faces_name``
+      - **Description**: Name for the newly created shared faces array.
+      - **Type**: str
+
+   Second Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the quad geometry will be created.
+      - **Type**: DataPath
+   - ``input_vertices_array_path``
+      - **Description**: The path to the input vertex array.
+      - **Type**: DataPath
+   - ``input_faces_array_path``
+      - **Description**: The path to the input face array.
+      - **Type**: DataPath
+   - ``vertex_attribute_matrix_name``
+      - **Description**: The name for the newly created vertex attribute matrix.
+      - **Type**: str
+   - ``face_attribute_matrix_name``
+      - **Description**: The name for the newly created face attribute matrix.
+      - **Type**: str
+   - ``array_type``
+      - **Description**: Specifies how the input arrays should be handled when creating new arrays in the quad geometry. Possible values are Copy, Move, Reference, or Create.
+      - **Type**: IDataCreationAction.ArrayHandlingType
+
+   Usage
+   ~~~~~
+
+   .. code-block:: python
+
+      import simplnx as nx
+
+      # Example using the first constructor to create a quad geometry
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CreateQuadGeometryAction(nx.DataPath(['Quad Geometry']), 50, 100, 'Vertex Matrix', 'Face Matrix', 'Shared Vertices', 'Shared Faces'))
+
+      # Example using the second constructor to create a quad geometry using existing arrays
+      vertices_path = DataPath(['Other Quad Geometry', 'Vertices'])
+      faces_path = DataPath(['Other Quad Geometry', 'Faces'])
+      output_actions.append_action(nx.CreateQuadGeometryAction(nx.DataPath(['Quad Geometry'], vertices_path, faces_path, 'Vertex Matrix', 'Face Matrix', nx.IDataCreationAction.ArrayHandlingType.Copy))
+
+.. _CreateHexahedralGeometryAction:
+.. py:class:: CreateHexahedralGeometryAction
+
+   Declaration
+   ~~~~~~~~~~~
+
+   .. code-block:: python
+
+      CreateHexahedralGeometryAction(geometry_path: nx.DataPath, num_cells: int, num_vertices: int, vertex_data_name: str, cell_data_name: str, shared_vertices_name: str, shared_cells_name: str) -> None
+      CreateHexahedralGeometryAction(geometry_path: nx.DataPath, input_vertices_array_path: nx.DataPath, input_cell_array_path: nx.DataPath, vertex_attribute_matrix_name: str, cell_attribute_matrix_name: str, array_type: nx.IDataCreationAction.ArrayHandlingType) -> None
+
+   Description
+   ~~~~~~~~~~~
+
+   The ``CreateHexahedralGeometryAction`` is designed to create a hexahedral geometry within the data structure, either by specifying the counts of cells and vertices, or by directly using existing vertex and cell arrays.
+
+   Inputs
+   ~~~~~~
+
+   First Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the hexahedral geometry will be created.
+      - **Type**: nx.DataPath
+   - ``num_cells``
+      - **Description**: Number of hexahedral cells to create.
+      - **Type**: int
+   - ``num_vertices``
+      - **Description**: Number of vertices to create.
+      - **Type**: int
+   - ``vertex_data_name``
+      - **Description**: Name for the newly created vertex data array.
+      - **Type**: str
+   - ``cell_data_name``
+      - **Description**: Name for the newly created cell data array.
+      - **Type**: str
+   - ``shared_vertices_name``
+      - **Description**: Name for the newly created vertex array.
+      - **Type**: str
+   - ``shared_cells_name``
+      - **Description**: Name for the newly created cells array.
+      - **Type**: str
+
+   Second Constructor:
+
+   - ``geometry_path``
+      - **Description**: The path where the hexahedral geometry will be created.
+      - **Type**: nx.DataPath
+   - ``input_vertices_array_path``
+      - **Description**: The path to the input vertex array.
+      - **Type**: nx.DataPath
+   - ``input_cell_array_path``
+      - **Description**: The path to the input cell array.
+      - **Type**: nx.DataPath
+   - ``vertex_attribute_matrix_name``
+      - **Description**: The name for the newly created vertex attribute matrix.
+      - **Type**: str
+   - ``cell_attribute_matrix_name``
+      - **Description**: The name for the newly created cell attribute matrix.
+      - **Type**: str
+   - ``array_type``
+      - **Description**: Specifies how the input arrays should be handled when creating new arrays in the hexahedral geometry.  Possible values are Copy, Move, Reference, or Create.
+      - **Type**: nx.IDataCreationAction.ArrayHandlingType
+
+   Usage
+   ~~~~~
+
+   .. code-block:: python
+      
+      import simplnx as nx
+
+      # Example using the first constructor to create a hexahedral geometry
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CreateHexahedralGeometryAction(nx.DataPath(['Hexahedral Geometry'], 100, 200, 'Vertex Data', 'Cell Data', 'Shared Vertices', 'Shared Hexahedrals'))
+
+      # Example using the second constructor to create a hexahedral geometry using existing arrays
+      vertices_path = nx.DataPath(['Other Hexahedral Geometry/Vertices'])
+      cells_path = nx.DataPath(['Other Hexahedral Geometry/Hexahedrals'])
+      output_actions.append_action(nx.CreateHexahedralGeometryAction(nx.DataPath(['Hexahedral Geometry'], vertices_path, cells_path, 'Vertex Matrix', 'Cell Matrix', nx.IDataCreationAction.ArrayHandlingType.Copy))
 
 .. _CreateTetrahedralGeometryAction:
 .. py:class:: CreateTetrahedralGeometryAction
 
    Declaration
    ~~~~~~~~~~~
+
    .. code-block:: python
 
       CreateTetrahedralGeometryAction(geometry_path: DataPath, num_cells: int, num_vertices: int, vertex_data_name: str, cell_data_name: str, shared_vertices_name: str, shared_cells_name: str) -> None
@@ -2476,10 +2383,12 @@ Actions
 
    Description
    ~~~~~~~~~~~
+
    The ``CreateTetrahedralGeometryAction`` creates a tetrahedral geometry within the data structure, either by specifying the counts of cells and vertices along with cell and vertex data names, or by directly using existing vertex and cell arrays.
 
    Inputs
    ~~~~~~
+
    First Constructor:
 
    - ``geometry_path``
@@ -2541,66 +2450,214 @@ Actions
       cells_path = DataPath(['Other Tetrahedral Geometry', 'Tetrahedrals'])
       output_actions.append_action(nx.CreateTetrahedralGeometryAction(nx.DataPath(['Tetrahedral Geometry'], vertices_path, cells_path, 'Vertex Matrix', 'Cell Matrix', nx.IDataCreationAction.ArrayHandlingType.Copy))
 
-.. _CreateTriangleGeometryAction:
-.. py:class:: CreateTriangleGeometryAction
+.. _CreateArrayAction:
+.. py:class:: CreateArrayAction
 
    Declaration
    ~~~~~~~~~~~
+
    .. code-block:: python
 
-      CreateTriangleGeometryAction(geometry_path: DataPath, num_faces: int, num_vertices: int, vertex_attribute_matrix_name: str, face_attribute_matrix_name: str, shared_vertices_name: str, shared_faces_name: str) -> None
-      CreateTriangleGeometryAction(geometry_path: DataPath, input_vertices_array_path: DataPath, input_faces_array_path: DataPath, vertex_attribute_matrix_name: str, face_attribute_matrix_name: str, array_type: IDataCreationAction.ArrayHandlingType) -> None
+      CreateArrayAction(type: nx.DataType, t_dims: list[int], c_dims: list[int], path: nx.DataPath, data_format: str = ...) -> None
 
    Description
    ~~~~~~~~~~~
-   The ``CreateTriangleGeometryAction`` is designed to create a triangle geometry within the data structure, either by specifying the counts of faces and vertices along with their data names, or by directly using existing vertex and face arrays.
+
+   The ``CreateArrayAction`` is used to create a new array with specific data type, tuple dimensions, and component dimensions at a specified path within the data structure.
 
    Inputs
    ~~~~~~
-   First Constructor:
 
-   - ``geometry_path``
-      - **Description**: The path where the triangular geometry will be created.
+   - ``type``
+      - **Description**: The data type of the array to be created.
+      - **Type**: nx.DataType
+
+   - ``t_dims``
+      - **Description**: The tuple dimensions of the array.
+      - **Type**: list[int]
+
+   - ``c_dims``
+      - **Description**: The component dimensions of the array.
+      - **Type**: list[int]
+
+   - ``path``
+      - **Description**: The DataPath where the new array will be created.
       - **Type**: nx.DataPath
-   - ``num_faces``
-      - **Description**: Number of triangular faces to create.
+
+   - ``data_format``
+      - **Description**: Format for the data, either an empty string for an in-memory array or "Zarr" for an out-of-core array.
+      - **Type**: str
+      - **Default**: Empty string
+
+   Usage
+   ~~~~~
+
+   In-memory example:
+
+   .. code-block:: python
+      
+      import simplnx as nx
+
+      # Create an array with specified dimensions and data type at /Data Array
+      dtype = nx.DataType.float32
+      t_dims = [100,100]
+      c_dims = [3]
+      path = nx.DataPath(['Data Array'])
+
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CreateArrayAction(dtype, t_dims, c_dims, path))    # In-memory
+   
+   Out-of-core:
+
+   .. code-block:: python
+
+      output_actions.append_action(nx.CreateArrayAction(dtype, t_dims, c_dims, path, 'Zarr'))    # Out-of-core
+
+.. _CreateAttributeMatrixAction:
+.. py:class:: CreateAttributeMatrixAction
+
+   Declaration
+   ~~~~~~~~~~~
+
+   .. code-block:: python
+
+      CreateAttributeMatrixAction(path: nx.DataPath, shape: list[int]) -> None
+
+   Description
+   ~~~~~~~~~~~
+
+   The ``CreateAttributeMatrixAction`` is used to create an :ref:`AttributeMatrix<AttributeMatrix>` at a specified path with a given shape.
+
+   Inputs
+   ~~~~~~
+
+   - ``path``
+      - **Description**: The DataPath where the attribute matrix will be created.
+      - **Type**: nx.DataPath
+
+   - ``shape``
+      - **Description**: The shape of the attribute matrix, defined as a list of integers representing the tuple dimensions.
+      - **Type**: list[int]
+
+   Usage
+   ~~~~~
+
+   .. code-block:: python
+      
+      import simplnx as nx
+
+      # Create an attribute matrix at /Image Geometry/Cell Attribute Matrix
+      path = nx.DataPath(['Image Geometry/Cell Attribute Matrix'])
+      shape = [100, 200]
+
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CreateAttributeMatrixAction(path, shape))
+
+.. _CreateDataGroupAction:
+.. py:class:: CreateDataGroupAction
+
+   Declaration
+   ~~~~~~~~~~~
+
+   .. code-block:: python
+
+      CreateDataGroupAction(path: nx.DataPath) -> None
+
+   Description
+   ~~~~~~~~~~~
+
+   The ``CreateDataGroupAction`` is used to create a new data group within the data structure at a specified path.
+
+   Inputs
+   ~~~~~~
+
+   - ``path``
+      - **Description**: The DataPath where the new data group will be created.
+      - **Type**: nx.DataPath
+
+   Usage
+   ~~~~~
+
+   .. code-block:: python
+      
+      import simplnx as nx
+
+      # Create a data group at /Data Group
+      path = nx.DataPath(['Data Group'])
+
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CreateDataGroupAction(path))
+
+.. _CreateNeighborListAction:
+.. py:class:: CreateNeighborListAction
+
+   Declaration
+   ~~~~~~~~~~~
+
+   .. code-block:: python
+
+      CreateNeighborListAction(type: nx.DataType, tuple_count: int, path: nx.DataPath) -> None
+
+   Description
+   ~~~~~~~~~~~
+
+   The ``CreateNeighborListAction`` is used to create a neighbor list data structure at a specific path by specifying the data type and number of tuples.
+
+   Inputs
+   ~~~~~~
+
+   - ``type``
+      - **Description**: Data type of the elements in the neighbor list.
+      - **Type**: nx.DataType
+   - ``tuple_count``
+      - **Description**: Number of tuples or entries in the neighbor list.
       - **Type**: int
-   - ``num_vertices``
-      - **Description**: Number of vertices to create.
-      - **Type**: int
-   - ``vertex_attribute_matrix_name``
-      - **Description**: Name for the newly created vertex attribute matrix.
-      - **Type**: str
-   - ``face_attribute_matrix_name``
-      - **Description**: Name for the newly created face attribute matrix.
-      - **Type**: str
-   - ``shared_vertices_name``
-      - **Description**: Name for the newly created shared vertices array.
-      - **Type**: str
-   - ``shared_faces_name``
-      - **Description**: Name for the newly created shared faces array.
-      - **Type**: str
+   - ``path``
+      - **Description**: The path where the neighbor list will be stored.
+      - **Type**: nx.DataPath
 
-   Second Constructor:
+   Usage
+   ~~~~~
 
-   - ``geometry_path``
-      - **Description**: The path where the triangular geometry will be created.
-      - **Type**: nx.DataPath
-   - ``input_vertices_array_path``
-      - **Description**: The path to the input vertex array.
-      - **Type**: nx.DataPath
-   - ``input_faces_array_path``
-      - **Description**: The path to the input face array.
-      - **Type**: nx.DataPath
-   - ``vertex_attribute_matrix_name``
-      - **Description**: The name for the newly created vertex attribute matrix.
+   .. code-block:: python
+      
+      import simplnx as nx
+
+      # Create a neighbor list for integer data type with 100 tuples at /Data/Neighbors
+      data_type = nx.DataType.int32
+      tuple_count = 100
+      path = nx.DataPath(['Data/Neighbors'])
+
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CreateNeighborListAction(data_type, tuple_count, path))
+
+.. _CreateStringArrayAction:
+.. py:class:: CreateStringArrayAction
+
+   Declaration
+   ~~~~~~~~~~~
+
+   .. code-block:: python
+
+      CreateStringArrayAction(t_dims: list[int], path: DataPath, initialize_value: str = ...) -> None
+
+   Description
+   ~~~~~~~~~~~
+
+   The ``CreateStringArrayAction`` is designed to create a string array at a specified path within the data structure, with the option to initialize all elements with a given value.
+
+   Inputs
+   ~~~~~~
+
+   - ``t_dims``
+      - **Description**: The tuple dimensions of the string array to be created.
+      - **Type**: list[int]
+   - ``path``
+      - **Description**: The path in the data structure where the string array will be stored.
+      - **Type**: DataPath
+   - ``initialize_value`` (optional)
+      - **Description**: The initial value to set for all elements of the string array.
       - **Type**: str
-   - ``face_attribute_matrix_name``
-      - **Description**: The name for the newly created face attribute matrix.
-      - **Type**: str
-   - ``array_type``
-      - **Description**: Specifies how the input arrays should be handled when creating new arrays in the triangular geometry. Possible values are Copy, Move, Reference, or Create.
-      - **Type**: IDataCreationAction.ArrayHandlingType
 
    Usage
    ~~~~~
@@ -2609,60 +2666,34 @@ Actions
 
       import simplnx as nx
 
-      # Example using the first constructor to create a triangle geometry
+      # Example of creating a 2D string array initialized with "foo"
       output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateTriangleGeometryAction(nx.DataPath(['Triangle Geometry']), 150, 300, 'Vertex Matrix', 'Face Matrix', 'Shared Vertices', 'Shared Faces'))
+      output_actions.append_action(nx.CreateStringArrayAction([10, 20], nx.DataPath(['String Array'], 'foo'))
 
-      # Example using the second constructor to create a triangle geometry using existing arrays
-      vertices_path = nx.DataPath(['Other Triangle Geometry', 'Vertices'])
-      faces_path = nx.DataPath(['Other Triangle Geometry', 'Faces'])
-      output_actions.append_action(nx.CreateTriangleGeometryAction(nx.DataPath(['Triangle Geometry']), vertices_path, faces_path, 'Vertex Matrix', 'Face Matrix', nx.IDataCreationAction.ArrayHandlingType.Move))
-
-.. _CreateVertexGeometryAction:
-.. py:class:: CreateVertexGeometryAction
+.. _ImportH5ObjectPathsAction:
+.. py:class:: ImportH5ObjectPathsAction
 
    Declaration
    ~~~~~~~~~~~
+
    .. code-block:: python
 
-      CreateVertexGeometryAction(geometry_path: DataPath, num_vertices: int, vertex_attribute_matrix_name: str, shared_vertex_list_name: str) -> None
-      CreateVertexGeometryAction(geometry_path: DataPath, input_vertices_array_path: DataPath, vertex_attribute_matrix_name: str, array_type: IDataCreationAction.ArrayHandlingType) -> None
+      ImportH5ObjectPathsAction(import_file: os.PathLike, paths: list[DataPath] | None) -> None
 
    Description
    ~~~~~~~~~~~
-   The ``CreateVertexGeometryAction`` is used to create a vertex geometry within the data structure, either by specifying the number of vertices and a vertex data array name, or by utilizing an existing vertex data array.
+
+   The ``ImportH5ObjectPathsAction`` is used to import specific objects from an HDF5 file into the data structure. This action allows for selective data import based on provided paths.
 
    Inputs
    ~~~~~~
-   First Constructor:
 
-   - ``geometry_path``
-      - **Description**: The path where the vertex geometry will be created.
-      - **Type**: nx.DataPath
-   - ``num_vertices``
-      - **Description**: Number of vertices to create.
-      - **Type**: int
-   - ``vertex_attribute_matrix_name``
-      - **Description**: Name for the newly created vertex attribute matrix.
-      - **Type**: str
-   - ``shared_vertex_list_name``
-      - **Description**: Name for the newly created shared vertex list.
-      - **Type**: str
-
-   Second Constructor:
-
-   - ``geometry_path``
-      - **Description**: The path where the vertex geometry will be created.
-      - **Type**: nx.DataPath
-   - ``input_vertices_array_path``
-      - **Description**: The path to the input vertex array.
-      - **Type**: nx.DataPath
-   - ``vertex_attribute_matrix_name``
-      - **Description**: The name for the newly created vertex attribute matrix.
-      - **Type**: str
-   - ``array_type``
-      - **Description**: Specifies how the input array should be handled when creating new arrays in the vertex geometry. Possible values are Copy, Move, Reference, or Create.
-      - **Type**: IDataCreationAction.ArrayHandlingType
+   - ``import_file``
+      - **Description**: The file path of the HDF5 file from which to import data.
+      - **Type**: os.PathLike
+   - ``paths``
+      - **Description**: A list of paths specifying which objects to import from the HDF5 file.  If `None`, all objects will be imported.  If list is empty, nothing will be imported.
+      - **Type**: list[nx.DataPath] | None
 
    Usage
    ~~~~~
@@ -2670,14 +2701,113 @@ Actions
    .. code-block:: python
 
       import simplnx as nx
+      import os
 
-      # Example using the first constructor to create a vertex geometry
+      # Example of importing specific object paths from an H5 file
       output_actions = nx.OutputActions()
-      output_actions.append_action(nx.CreateVertexGeometryAction(nx.DataPath(['Vertex Geometry']), 1000, 'Vertex Matrix', 'Shared Vertex List'))
+      h5_file_path = os.path.join('path', 'to', 'file.h5')
+      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, ['Data/Object1', 'Data/Object2']))
 
-      # Example using the second constructor to create a vertex geometry using an existing array
-      vertices_path = nx.DataPath(['Other Vertex Geometry', 'Vertices'])
-      output_actions.append_action(nx.CreateVertexGeometryAction(nx.DataPath(['Vertex Geometry']), vertices_path, 'Vertex Matrix', nx.IDataCreationAction.ArrayHandlingType.Reference))
+      # Example of importing all objects from an H5 file
+      output_actions = nx.OutputActions()
+      h5_file_path = os.path.join('path', 'to', 'file.h5')
+      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, None))
+
+      # Example of importing nothing from an H5 file
+      output_actions = nx.OutputActions()
+      h5_file_path = os.path.join('path', 'to', 'file.h5')
+      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, []))
+
+Modification Actions
+~~~~~~~~~~~~~~~~~~~~
+
+.. _CopyArrayInstanceAction:
+.. py:class:: CopyArrayInstanceAction
+
+   Declaration
+   ~~~~~~~~~~~
+   .. code-block:: python
+
+      CopyArrayInstanceAction(selected_data_path: nx.DataPath, created_data_path: nx.DataPath) -> None
+
+   Description
+   ~~~~~~~~~~~
+   The ``CopyArrayInstanceAction`` is used to create a copy of an array from a selected data path to a newly specified data path.
+
+   The copied array will be created out-of-core if the source array at the selected data path is also out-of-core.
+
+   This action will also check that the copied array has the appropriate tuple dimensions if copied into an Attribute Matrix.
+
+   Inputs
+   ~~~~~~
+   - ``selected_data_path``
+      - **Description**: The DataPath to the array instance that will be copied.
+      - **Type**: nx.DataPath
+
+   - ``created_data_path``
+      - **Description**: The DataPath to the newly copied array instance.
+      - **Type**: nx.DataPath
+
+   Usage
+   ~~~~~~
+
+   .. code-block:: python
+      
+      import simplnx as nx
+
+      # Copy the array at /Original/Path to /New/Path
+      selected_data_path = nx.DataPath(['Original/Path'])
+      created_data_path = nx.DataPath(['New/Path'])
+
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CopyArrayInstanceAction(selected_data_path, created_data_path))
+
+
+.. _CopyDataObjectAction:
+.. py:class:: CopyDataObjectAction
+
+   Declaration
+   ~~~~~~~~~~~
+   .. code-block:: python
+
+      CopyDataObjectAction(path: nx.DataPath, new_path: nx.DataPath, all_created_paths: list[nx.DataPath]) -> None
+
+   Description
+   ~~~~~~~~~~~
+   The ``CopyDataObjectAction`` is used to copy a data object from one path to another within a data structure.
+
+   If copying a Data Group, Attribute Matrix, or Geometry, this action will also recursively copy all children.
+
+   *Note*: For copying data arrays, we recommend using :ref:`CopyArrayInstanceAction <CopyArrayInstanceAction>`.  This action offers enhanced error-checking and superior out-of-core handling tailored specifically for data arrays.
+
+   Inputs
+   ~~~~~~
+   - ``path``
+      - **Description**: The DataPath to the data object that will be copied.
+      - **Type**: nx.DataPath
+
+   - ``new_path``
+      - **Description**: The DataPath where the copied data object will be placed.
+      - **Type**: nx.DataPath
+
+   - ``all_created_paths``
+      - **Description**: A list that keeps track of all DataPaths where new data objects are created during the operation.
+      - **Type**: list[nx.DataPath]
+
+   Usage
+   ~~~~~
+
+   .. code-block:: python
+      
+      import simplnx as nx
+
+      # Copy the data object from /Original/Path to /New/Path
+      path = nx.DataPath(['Original/Path'])
+      new_path = nx.DataPath(['New/Path'])
+      all_created_paths = []
+
+      output_actions = nx.OutputActions()
+      output_actions.append_action(nx.CopyDataObjectAction(path, new_path, []))
 
 .. _DeleteDataAction:
 .. py:class:: DeleteDataAction
@@ -2714,53 +2844,7 @@ Actions
 
       # Example of deleting data using the DeleteDataAction
       output_actions = nx.OutputActions()
-      output_actions.append_action(nx.DeleteDataAction(nx.DataPath(['Path', 'To', 'Data']), nx.DeleteDataAction.DeleteType.JustObject))
-
-.. _ImportH5ObjectPathsAction:
-.. py:class:: ImportH5ObjectPathsAction
-
-   Declaration
-   ~~~~~~~~~~~
-   .. code-block:: python
-
-      ImportH5ObjectPathsAction(import_file: os.PathLike, paths: list[DataPath] | None) -> None
-
-   Description
-   ~~~~~~~~~~~
-   The ``ImportH5ObjectPathsAction`` is used to import specific objects from an HDF5 file into the data structure. This action allows for selective data import based on provided paths.
-
-   Inputs
-   ~~~~~~
-   - ``import_file``
-      - **Description**: The file path of the HDF5 file from which to import data.
-      - **Type**: os.PathLike
-   - ``paths``
-      - **Description**: A list of paths specifying which objects to import from the HDF5 file.  If `None`, all objects will be imported.  If list is empty, nothing will be imported.
-      - **Type**: list[nx.DataPath] | None
-
-   Usage
-   ~~~~~
-
-   .. code-block:: python
-
-      import simplnx as nx
-      import os
-
-      # Example of importing specific object paths from an H5 file
-      output_actions = nx.OutputActions()
-      h5_file_path = os.path.join('path', 'to', 'file.h5')
-      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, ['Data/Object1', 'Data/Object2']))
-
-      # Example of importing all objects from an H5 file
-      output_actions = nx.OutputActions()
-      h5_file_path = os.path.join('path', 'to', 'file.h5')
-      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, None))
-
-      # Example of importing nothing from an H5 file
-      output_actions = nx.OutputActions()
-      h5_file_path = os.path.join('path', 'to', 'file.h5')
-      output_actions.append_action(nx.ImportH5ObjectPathsAction(h5_file_path, []))
-
+      output_actions.append_action(nx.DeleteDataAction(nx.DataPath(['Path/To/Data']), nx.DeleteDataAction.DeleteType.JustObject))
 
 .. _MoveDataAction:
 .. py:class:: MoveDataAction
@@ -2793,8 +2877,8 @@ Actions
 
       # Example of moving data within the data structure
       output_actions = nx.OutputActions()
-      data_path = nx.DataPath(['Current', 'Location', 'Data'])
-      new_parent = nx.DataPath(['New', 'Location'])
+      data_path = nx.DataPath(['Current/Location/Data'])
+      new_parent = nx.DataPath(['New/Location'])
       output_actions.append_action(nx.MoveDataAction(data_path, new_parent))
 
 .. _RenameDataAction:
@@ -2828,10 +2912,9 @@ Actions
 
       # Example of renaming a data object
       output_actions = nx.OutputActions()
-      data_path = nx.DataPath(['Current', 'Name'])
+      data_path = nx.DataPath(['Current/Name'])
       new_data_name = 'New Name'
       output_actions.append_action(nx.RenameDataAction(data_path, new_data_name))
-
 
 .. _UpdateImageGeomAction:
 .. py:class:: UpdateImageGeomAction
