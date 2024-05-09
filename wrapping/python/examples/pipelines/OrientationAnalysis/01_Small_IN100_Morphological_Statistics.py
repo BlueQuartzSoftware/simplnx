@@ -69,7 +69,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = cxor.FindShapesFilter()
+nx_filter = cxor.ComputeShapesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -110,7 +110,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = nx.FindNeighborhoodsFilter()
+nx_filter = nx.ComputeNeighborhoodsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -149,7 +149,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
 # Instantiate Filter
-nx_filter = nx.FindSurfaceAreaToVolumeFilter()
+nx_filter = nx.ComputeSurfaceAreaToVolumeFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

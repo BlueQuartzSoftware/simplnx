@@ -1135,7 +1135,7 @@
                     "uuid": "{6cc3148c-0bad-53b4-9568-ee1971cadb00}"
                 },
                 {
-                    "name": "FindNeighborListStatisticsFilter",
+                    "name": "ComputeNeighborListStatisticsFilter",
                     "parameters": [
                         {
                             "name": "FindLength",
@@ -8945,7 +8945,7 @@
                     "uuid": "{9f77b4a9-6416-5220-a688-115f4e14c90d}"
                 },
                 {
-                    "name": "FindNeighborhoods",
+                    "name": "ComputeNeighborhoods",
                     "parameters": [
                         {
                             "name": "MultiplesOfAverage",
@@ -9041,7 +9041,7 @@
                     "uuid": "{97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac}"
                 },
                 {
-                    "name": "FindNumFeatures",
+                    "name": "ComputeNumFeatures",
                     "parameters": [
                         {
                             "name": "",
@@ -9063,7 +9063,7 @@
                     "uuid": "{529743cf-d5d5-5d5a-a79f-95c84a5ddbb5}"
                 },
                 {
-                    "name": "FindShapes",
+                    "name": "ComputeShapes",
                     "parameters": [
                         {
                             "name": "",
@@ -9155,7 +9155,7 @@
                     "uuid": "{656f144c-a120-5c3b-bee5-06deab438588}"
                 },
                 {
-                    "name": "FindSurfaceAreaToVolume",
+                    "name": "ComputeSurfaceAreaToVolume",
                     "parameters": [
                         {
                             "name": "",
@@ -10484,7 +10484,7 @@
                     "uuid": "{a69d8d43-5be9-59a0-b997-81773a635673}"
                 },
                 {
-                    "name": "FindTriangleGeomCentroids",
+                    "name": "TriangleGeomCentroids",
                     "parameters": [
                         {
                             "name": "",
@@ -11083,7 +11083,7 @@
                     "uuid": "{64d20c7b-697c-5ff1-9d1d-8a27b071f363}"
                 },
                 {
-                    "name": "FindSurfaceFeaturesFilter",
+                    "name": "ComputeSurfaceFeaturesFilter",
                     "parameters": [
                         {
                             "name": "",
@@ -14121,7 +14121,7 @@
                     "uuid": "{286dd493-4fea-54f4-b59e-459dd13bbe57}"
                 },
                 {
-                    "name": "FindSchmids",
+                    "name": "ComputeSchmids",
                     "parameters": [
                         {
                             "name": "LoadingDirection",
@@ -14191,7 +14191,7 @@
                     "uuid": "{e67ca06a-176f-58fc-a676-d6ee5553511a}"
                 },
                 {
-                    "name": "FindSlipTransmissionMetrics",
+                    "name": "ComputeSlipTransmissionMetrics",
                     "parameters": [
                         {
                             "name": "",
